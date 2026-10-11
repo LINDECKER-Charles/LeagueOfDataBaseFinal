@@ -8,6 +8,10 @@ internal sealed class AnalyticsOptionsValidator : IValidateOptions<AnalyticsOpti
     private const int MaxBatchSize = 10_000;
     private const int MaxPartitionsAhead = 31;
 
+    // Two runs of the daily job can be two days apart (AnalyticsOptions.ClientDataEraseDays):
+    // a shorter erasure window would leave the views between them with their client data.
+    private const int MinClientDataEraseDays = 2;
+
     // The CNIL's ceiling for the data of an audience measurement.
     private const int MaxEventRetentionMonths = 25;
 
@@ -42,9 +46,23 @@ internal sealed class AnalyticsOptionsValidator : IValidateOptions<AnalyticsOpti
             failures,
             options.PartitionsAhead is < 1 or > MaxPartitionsAhead,
             $"PartitionsAhead must lie between 1 and {MaxPartitionsAhead}.");
+        AddDailyBoundFailures(failures, options);
         return failures.Count == 0
             ? ValidateOptionsResult.Success
             : ValidateOptionsResult.Fail(failures);
+    }
+
+    private static void AddDailyBoundFailures(List<string> failures, AnalyticsOptions options)
+    {
+        AddIf(
+            failures,
+            options.ClientDataEraseDays < MinClientDataEraseDays,
+            $"ClientDataEraseDays must be at least {MinClientDataEraseDays}.");
+        AddIf(failures, options.MaxVisitorsPerDay < 1, "MaxVisitorsPerDay must be positive.");
+        AddIf(
+            failures,
+            options.MaxRefererHostsPerDay < 1,
+            "MaxRefererHostsPerDay must be positive.");
     }
 
     private static bool IsWithinEventRetention(TimeSpan retention, int eventMonths) =>

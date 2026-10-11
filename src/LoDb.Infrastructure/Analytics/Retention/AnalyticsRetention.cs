@@ -8,6 +8,13 @@ namespace LoDb.Infrastructure.Analytics.Retention;
 /// Partitions ahead, retention behind, on the clock of <see cref="TimeProvider"/>. The daily
 /// aggregates hold neither address nor user agent and are left alone.
 /// </summary>
+/// <remarks>
+/// The capture no longer stores addresses nor user agents: the erasure only clears the views
+/// written before, as they come of age. It reads the partitions next to the cutoff alone,
+/// from <see cref="AnalyticsOptions.ClientDataEraseDays"/> days before the cutoff's day, so
+/// that two runs overlap even when a restart or a failure puts days between them: an
+/// unbounded one would scan every older partition each day, to rewrite none of them.
+/// </remarks>
 internal sealed class AnalyticsRetention(
     IAnalyticsPartitions partitions,
     NpgsqlDataSource dataSource,
@@ -16,7 +23,8 @@ internal sealed class AnalyticsRetention(
 {
     private const string EraseSql = """
         UPDATE analytics_event SET ip = NULL, user_agent = NULL
-        WHERE occurred_at < @cutoff AND (ip IS NOT NULL OR user_agent IS NOT NULL)
+        WHERE occurred_at >= @from AND occurred_at < @cutoff
+            AND (ip IS NOT NULL OR user_agent IS NOT NULL)
         """;
 
     public async Task<RetentionSummary> ApplyAsync(CancellationToken cancellationToken)
@@ -31,14 +39,25 @@ internal sealed class AnalyticsRetention(
         var dropped = await partitions.DropBeforeAsync(
             today.AddMonths(-settings.EventRetentionMonths),
             cancellationToken);
-        await using var erase = dataSource.CreateCommand(EraseSql);
-        erase.Parameters.AddWithValue("cutoff", now - settings.ClientDataRetention);
-        var erased = await erase.ExecuteNonQueryAsync(cancellationToken);
         return new RetentionSummary
         {
             PartitionsCreated = created,
             PartitionsDropped = dropped,
-            ClientDataErased = erased,
+            ClientDataErased = await EraseClientDataAsync(settings, now, cancellationToken),
         };
+    }
+
+    private async Task<int> EraseClientDataAsync(
+        AnalyticsOptions settings,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        var cutoff = now - settings.ClientDataRetention;
+        var firstDay = DateOnly.FromDateTime(cutoff.UtcDateTime)
+            .AddDays(-settings.ClientDataEraseDays);
+        await using var erase = dataSource.CreateCommand(EraseSql);
+        erase.Parameters.AddWithValue("from", AnalyticsPartitionNames.StartOf(firstDay));
+        erase.Parameters.AddWithValue("cutoff", cutoff);
+        return await erase.ExecuteNonQueryAsync(cancellationToken);
     }
 }

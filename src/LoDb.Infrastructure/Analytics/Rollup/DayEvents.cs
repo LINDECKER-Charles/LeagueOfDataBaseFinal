@@ -1,15 +1,17 @@
 using LoDb.Infrastructure.Analytics.Aggregation;
 using LoDb.Infrastructure.Persistence.Analytics;
 using LoDb.Infrastructure.Persistence.Analytics.Partitions;
+using Microsoft.Extensions.Options;
 using Npgsql;
 
 namespace LoDb.Infrastructure.Analytics.Rollup;
 
 /// <summary>
-/// Folds the views of one UTC day, read from its partition alone, in the order they came.
+/// Folds the views of one UTC day, read from its partition alone, in the order they came,
+/// into an aggregate bounded by <see cref="DailyLimits"/>.
 /// </summary>
 /// <remarks>Neither the address nor the user agent is read: no aggregate holds them.</remarks>
-internal sealed class DayEvents(NpgsqlDataSource dataSource)
+internal sealed class DayEvents(NpgsqlDataSource dataSource, IOptions<AnalyticsOptions> options)
 {
     private const string Sql = """
         SELECT occurred_at, route, path, type, kind, entity, status, lang, locale, visitor,
@@ -21,7 +23,7 @@ internal sealed class DayEvents(NpgsqlDataSource dataSource)
 
     public async Task<DailyAggregate> FoldAsync(DateOnly day, CancellationToken cancellationToken)
     {
-        var daily = new DailyAggregate(day);
+        var daily = new DailyAggregate(day, DailyLimits.Of(options.Value));
         await using var command = dataSource.CreateCommand(Sql);
         command.Parameters.AddWithValue("from", AnalyticsPartitionNames.StartOf(day));
         command.Parameters.AddWithValue("to", AnalyticsPartitionNames.StartOf(day.AddDays(1)));

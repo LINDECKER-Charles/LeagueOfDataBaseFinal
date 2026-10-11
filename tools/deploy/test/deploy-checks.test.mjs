@@ -24,13 +24,14 @@ const HEREDOC = "<<'EOSSH'";
 const FIRST_LINE = 'set -euo pipefail';
 const STOP_MARKER = '# ── Pull, then migrations';
 const EDGE_SUBNET = '172.18.0.0/16';
-// git and docker answer as on a host whose checkout and edge network are in place.
+// git and docker answer as on a host whose checkout, edge network and Engine 25+ are in place.
 const STUBS = [
   'git() { :; }',
   'docker() {',
   '  case "$*" in',
   '    "network inspect edge") ;;',
   `    "network inspect edge --format "*) echo ${EDGE_SUBNET} ;;`,
+  '    "version --format "*) echo 1.47 ;;',
   '    *) echo "unexpected: docker $*" >&2; return 1 ;;',
   '  esac',
   '}',
@@ -114,6 +115,7 @@ describe('_deploy.yml, the dotenv against the target', () => {
     assert.match(read(dir, '.env'), /^COMPOSE_PROJECT_NAME=lodb-prod$/m);
     assert.match(read(dir, '.env'), /^LODB_SECRETS_REVISION=1$/m);
     assert.match(read(dir, '.env'), new RegExp(`^LODB_EDGE_CIDR=${EDGE_SUBNET}$`, 'm'));
+    assert.match(read(dir, '.env'), /^COMPOSE_FILE=compose\.yaml:compose\.deploy\.yaml$/m);
     assert.doesNotMatch(read(dir, '.env'), /database-secret/);
     assert.deepEqual(leftovers(dir), []);
   });

@@ -7,10 +7,11 @@ namespace LoDb.Infrastructure.Persistence.Analytics;
 /// <remarks>
 /// The table is partitioned by UTC day on <see cref="OccurredAt"/> and holds no partition
 /// until <see cref="Partitions.IAnalyticsPartitions"/> creates them: a view outside every
-/// partition is refused. Retention drops whole partitions; <see cref="Ip"/> and
-/// <see cref="UserAgent"/> are erased earlier, hence nullable. The classification columns
-/// keep the legacy vocabulary as text, with no check, so that the analytics zone can refine
-/// it without a migration.
+/// partition is refused. Retention drops whole partitions. <see cref="Ip"/> and
+/// <see cref="UserAgent"/> are no longer written: the rows written before keep theirs until
+/// the retention erases them, and the columns stay, nullable, until the schema's contract
+/// step. The classification columns keep the legacy vocabulary as text, with no check, so
+/// that the analytics zone can refine it without a migration.
 /// </remarks>
 public sealed class AnalyticsEvent
 {

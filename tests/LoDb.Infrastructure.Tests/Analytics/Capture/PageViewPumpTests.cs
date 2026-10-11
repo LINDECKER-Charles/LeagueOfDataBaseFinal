@@ -54,7 +54,8 @@ public sealed class PageViewPumpTests(PostgresContainerFixture postgres)
         Assert.All(rows, static row =>
         {
             Assert.Equal(("Firefox", "Linux", "desktop"), (row.Browser, row.Os, row.Device));
-            Assert.Equal("203.0.113.7", row.Ip);
+            Assert.Null(row.Ip);
+            Assert.Null(row.UserAgent);
         });
     }
 
@@ -103,6 +104,29 @@ public sealed class PageViewPumpTests(PostgresContainerFixture postgres)
 
         var drop = Assert.Single(dropped.GetMeasurementSnapshot());
         Assert.Equal(AnalyticsMetrics.Unresolved, drop.Tags[AnalyticsMetrics.ReasonTag]);
+        AssertNoClientDataLogged();
+    }
+
+    [Fact]
+    public async Task UnresolvedViewsOfABatchMakeOneLine()
+    {
+        using var dropped = Collect("lodb.analytics.views.dropped");
+        var capture = Services.GetRequiredService<IPageViewCapture>();
+        for (var second = 0; second < 3; second++)
+        {
+            capture.TryCapture(View(StubPageResolver.Failing, AnalyticsCaptureOrigin.Navigation));
+        }
+
+        capture.TryCapture(View("/fr/items", AnalyticsCaptureOrigin.ServedPage));
+
+        Assert.Equal(1, await Pump(Services).FlushAsync(Cancellation));
+
+        var drop = Assert.Single(dropped.GetMeasurementSnapshot());
+        Assert.Equal(3, drop.Value);
+        var line = Assert.Single(
+            Services.GetFakeLogCollector().GetSnapshot(),
+            static log => log.Id.Name == "analytics.views.unresolved");
+        Assert.Contains("3 page views", line.Message, StringComparison.Ordinal);
         AssertNoClientDataLogged();
     }
 

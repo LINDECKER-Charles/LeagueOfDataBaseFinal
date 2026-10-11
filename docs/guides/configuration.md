@@ -222,6 +222,9 @@ création d'une base, sur un volume vide.
 | `LODB_ADMIN_LOGIN` | 🔁 `ADMIN_LOGIN` | idem | ➖ | Administrateur racine, tenu par le job à chaque déploiement (`api admin root`) : compte de ce nom, rôle admin, TOTP enrôlé depuis le lien d'invitation que `api admin mfa-invite --email …` affiche sur l'hôte (15 min ; `api admin mfa-reset` retire un TOTP perdu). Absent : aucun, seulement `api admin create`. |
 | `LODB_ADMIN_PASSWORD` 🔒 | 🔁 `ADMIN_PASSWORD` | idem | avec le précédent | Son mot de passe, 12 caractères au moins, sans apostrophe ni guillemet. Changé ici, il est réappliqué au déploiement suivant (sessions fermées). Reste dans le `.env` : le job le passe à la commande par son entrée. |
 | `LODB_ADMIN_EMAIL` | ➖ | ➖ | ➖ | Son e-mail, qui identifie le compte ; défaut `<login>@<LODB_CANONICAL_HOST>`. |
+| `LODB_PG_MAX_CONNECTIONS`, `LODB_PG_SLOW_STATEMENT`, `LODB_PG_IDLE_IN_TRANSACTION_TIMEOUT`, `LODB_PG_SHM_SIZE` | ➖ | ➖ | ➖ | Serveur Postgres (`compose.yaml`) : connexions (`60`, pour un pool de l'API à `32` plus `migrate`, la sauvegarde du déploiement, les verrous des tâches et `psql`), requêtes journalisées au-delà de `500ms` (sans leurs paramètres, jamais), session laissée inactive dans une transaction fermée après `60s`, `/dev/shm` de `256m`. `pg_stat_statements` est toujours chargé. |
+| `COMPOSE_FILE` | — | — | — | **Jamais dans `ENV_*`** : le job l'écrit dans le `.env` de l'hôte, avec les calques de l'environnement (§ 4.5), pour qu'une commande `docker compose` lancée à la main depuis le dossier les applique aussi. |
+| `LODB_STAGING_BASIC_AUTH_USER`, `LODB_STAGING_BASIC_AUTH_HASH` 🔒 | ➖ | **jamais** | ➖ | Identifiant demandé sur les pages du staging (§ 4.5). Les deux ou aucun ; en prod, le job refuse de déployer. |
 
 Chaque environnement a son propre service `postgres` dans son projet, comme avant.
 `CONTACT_RECIPIENT` et `PUBLIC_API_BASE_URL` n'ont d'effet qu'en local : sur un
@@ -268,6 +271,25 @@ pool borné par `Maximum Pool Size=32;Timeout=5`, **sans mot de passe** : l'API 
 `NODE_OPTIONS`. `ASPNETCORE_ENVIRONMENT` reste **absente** sur un hôte : `Development`
 exposerait OpenAPI et retirerait `Secure` des cookies.
 
+Ressources de chaque service, dans `compose.deploy.yaml` (la prod, et le staging sous son
+calque, § 4.5) : quota CPU (`cpus`), poids sous contention (`cpu_shares`) et plafond de
+processus (`pids`).
+
+| Service | `cpus` | `cpu_shares` | `pids` | Mémoire |
+|---|---|---|---|---|
+| `web-ssr` | `1.0` | `1024` | `256` | `704m` |
+| `api` | `1.25` | `1024` | `512` | `1152m` |
+| `postgres` | `0.5` | `1024` | `256` | `512m` |
+| `nginx` | `0.25` | `2048` | `256` | `256m` |
+| `migrate` | — | — | `256` | `128m` |
+
+Les quotas totalisent 3 des 4 vCPU de l'hôte : sous une charge qui les dépasse, la stack
+déleste (`503` avec `Retry-After`) au lieu de prendre l'hôte des autres projets. Le bridage se
+lit dans `container_cpu_cfs_throttled_seconds_total` (alerte `ConteneurCpuBride`,
+`infra-vps`) : recalibrer après 7 jours, en regard de la latence. La sonde de santé de l'API
+démarre un runtime .NET dans ce quota : toutes les 60 s en marche, toutes les 2 s au
+démarrage (`start_interval`, Docker Engine 25 au moins, vérifié par le job).
+
 <details>
 <summary>Réglages internes de l'API, avec leur défaut (non transmis par compose)</summary>
 
@@ -282,7 +304,7 @@ Pour en changer un sur un hôte, l'ajouter sous `services.api.environment` de
 | `LoDb:Accounts` | `SecureCookies` (vrai hors Development) |
 | `LoDb:Mail` | `Timeout` (`00:00:30`) |
 | `LoDb:Outbox` | `BatchSize` (20), `PollInterval` (5 s), `MaxAttempts` (10), `RetryDelay` (30 s), `MaxRetryDelay` (1 h), `Lease` (5 min) |
-| `LoDb:Analytics` | `GeoIpDatabase` (aucune), `QueueCapacity` (10000), `BatchSize` (500), `BatchWindow` (2 s), `ClientDataRetention` (30 j), `EventRetentionMonths` (13, plafond CNIL 25), `PartitionsAhead` (7) |
+| `LoDb:Analytics` | `GeoIpDatabase` (aucune), `QueueCapacity` (10000), `BatchSize` (500), `BatchWindow` (2 s), `ClientDataRetention` (30 j : adresse et user-agent des vues stockées avant qu'ils ne le soient plus), `ClientDataEraseDays` (3, au moins 2 : jours lus avant celui du seuil ; deux passages de la tâche quotidienne peuvent être séparés de deux jours après un redémarrage, de trois après un échec ; à relever le temps d'un passage après une panne plus longue), `EventRetentionMonths` (13, plafond CNIL 25), `PartitionsAhead` (7), `MaxVisitorsPerDay` (200000 empreintes par jour, au-delà le jour est marqué `visitorsTruncated` dans `totals`), `MaxRefererHostsPerDay` (200 hôtes référents par jour, les moins comptés au-delà sous `(autres)`) |
 | `LoDb:Egress` | `AllowedHosts` (`ddragon.leagueoflegends.com`, `raw.communitydragon.org`), `FetchConcurrency` (16), `AttemptTimeout` (15 s), `MaxRetryAttempts` (3), `RetryBaseDelay` (1 s), `MaxRedirects` (10), `MaxResponseBytes` (32 Mio) |
 | `LoDb:Ingestion` | `WatchPeriod` (10 min), `MaxAttempts` (5), `RetryDelay` (10 min), `LanguageConcurrency` (4), `RecordBatchSize` (64), `SyncConcurrency` (4), `QueueCapacity` (256), `CrawlerRequestsPerMinute` (30) |
 | `LoDb:Catalog` | `VersionsLifetime` (1 min) |
@@ -308,12 +330,54 @@ Valable pour les deux environnements : chacun reprend les valeurs de son propre 
 | `GEOIP_DB_PATH` | aucune sur un hôte (§ 8) |
 | `HTTP_PORT`, `MAILPIT_UI_PORT` | aucune : ports locaux de l'ancienne stack |
 
+### 4.5 Calques du staging
+
+Le staging tourne sur l'hôte de la prod et sert les mêmes chemins : un crawl de `test.*`
+coûte autant qu'un crawl du site. Le job de déploiement lui ajoute donc
+[`compose.staging.yaml`](../../compose.staging.yaml), jamais en prod : environ 0,75 cœur en
+tout, le poids le plus bas (`cpu_shares: 128`) et des files à sa taille. Les réglages de
+l'API et du SSR se changent par une ligne du `.env` du staging, sous le même nom ; les
+quotas se revoient avec ceux de la prod :
+
+| Réglage | Staging | Prod (défaut) |
+|---|---|---|
+| `cpus` : `api`, `web-ssr`, `postgres`, `nginx` | `0.25`, `0.25`, `0.15`, `0.1` | § 4.3 |
+| `LODB_RENDER_MAX_IN_FLIGHT`, `LODB_PINNED_RENDER_MAX_IN_FLIGHT` | `3`, `1` | `8`, `3` |
+| `LODB_PINNED_RENDERS_PER_MINUTE`, `LODB_PINNED_RENDER_BURST` | `10`, `5` | `60`, `10` |
+| `LoDb__Ingestion__SyncConcurrency`, `LoDb__Ingestion__LanguageConcurrency`, `LoDb__Egress__FetchConcurrency` | `1`, `1`, `1` | `4`, `4`, `16` |
+| Sonde de santé de l'API au démarrage | toutes les 10 s pendant 60 s | toutes les 2 s pendant 20 s |
+
+Le couloir épinglé reste strictement sous le total des rendus, sinon le SSR refuse de
+démarrer ; la part d'un client (`2` rendus, `6` épinglés par minute) tient dans ces totaux.
+Un nouveau patch met plus longtemps à arriver sur le staging.
+
+**Identifiant sur les pages (facultatif).** Avec `LODB_STAGING_BASIC_AUTH_USER` et
+`LODB_STAGING_BASIC_AUTH_HASH` dans le `.env` du staging, le job ajoute
+[`compose.staging-auth.yaml`](../../compose.staging-auth.yaml) : l'edge demande cet
+identifiant (`basic_auth` de Caddy) sur les pages, jamais sur `/api/*`, `/v1/*`,
+`/webhooks/*`, `/healthz`, `/build/*`, `/cdn/blobs/*` ni `/u/*` (apps, canal desktop beta,
+webhooks Stripe de test, retours OAuth, sondes). Il écarte les robots et l'indexation ; ce
+n'est pas une frontière d'authentification.
+
+- Le hash : bcrypt, par `caddy hash-password` (présent dans le conteneur de l'edge), mis
+  **entre apostrophes** dans le `.env` (il contient des `$`) ; le job refuse un hash mal formé
+  ou non quoté avant toute modification, car il atteindrait l'edge, partagé par tous les
+  projets. Le nom : lettres, chiffres et `-` seulement (un `.` ou un `_` y prendrait un
+  sens pour l'edge, qui lit le nom dans la clé d'un label).
+- Pour le retirer : supprimer les deux lignes du secret `ENV_STAGING`, puis redéployer.
+- **Compromis à peser avant de l'activer** : l'edge vérifie l'identifiant par bcrypt, sur le
+  CPU que partagent tous les projets de l'hôte et qu'aucun quota de cette stack ne borne.
+  Désactivé par défaut ; à n'activer que si des robots coûtent au staging, en surveillant le
+  CPU de l'edge, et à retirer s'il monte.
+- Les smoke tests du déploiement passent par l'intérieur de la stack ; le test TLS public lit
+  `/healthz`, exclu de l'identifiant.
+
 ## 5. Fichiers et volumes de l'hôte
 
 | Chemin, dans `$STAGING_PATH` ou `$PROD_PATH` | Écrit par | Rôle |
 |---|---|---|
 | dépôt (branche `test` ou `main`) | le job (`git reset --hard`) | Fichiers compose à la racine. |
-| `.env` | le job (`ENV_STAGING`, `ENV_PROD` sans ses secrets, plus `LODB_SECRETS_REVISION` et `LODB_EDGE_CIDR`), mode 600 | § 4. |
+| `.env` | le job (`ENV_STAGING`, `ENV_PROD` sans ses secrets, plus `LODB_SECRETS_REVISION`, `LODB_EDGE_CIDR` et `COMPOSE_FILE`), mode 600 | § 4. |
 | `.deploy/secrets/` | le job (`ENV_STAGING`, `ENV_PROD`), à chaque déploiement | Un fichier par secret (§ 4), monté dans `/run/secrets` des services qui le lisent. Dossier en 700, fichiers en 444 : Compose monte un fichier secret avec son propriétaire et son mode, et l'API comme l'entrée de Postgres le lisent sans être root. Tous présents, vides pour un secret absent : Docker monterait un fichier manquant comme un dossier. |
 | `.deploy/incoming.env` | le job, le temps d'un déploiement | `ENV_*` tel quel, root seul, supprimé dès qu'il est séparé (et à la fin du script, quoi qu'il arrive). |
 | `.deploy/data-protection.pfx` | le job (`*_DATA_PROTECTION_PFX`) | Monté en secret dans `api`. Dossier en 700, fichier en 644 : l'utilisateur non root de l'API le lit. Absent, la stack ne démarre pas. |

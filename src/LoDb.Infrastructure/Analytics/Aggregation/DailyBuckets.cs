@@ -30,6 +30,12 @@ internal static class DailyBuckets
     /// <summary>Between the type and the key of an entity: <c>champion:Ahri</c>.</summary>
     public const char EntitySeparator = ':';
 
+    /// <summary>
+    /// Key of <see cref="RefHost"/> that counts the hosts beyond the day's bound. No host name
+    /// holds a parenthesis, so it never stands for a real referrer.
+    /// </summary>
+    public const string OtherRefererHosts = "(autres)";
+
     private const char CellSeparator = ':';
 
     /// <summary>Every counter map, in the order of the legacy files.</summary>

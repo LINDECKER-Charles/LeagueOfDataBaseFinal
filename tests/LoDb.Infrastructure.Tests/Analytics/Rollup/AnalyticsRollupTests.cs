@@ -1,15 +1,18 @@
+using System.Globalization;
 using LoDb.Infrastructure.Analytics.Aggregation;
 using LoDb.Infrastructure.Analytics.Rollup;
 using LoDb.Infrastructure.Persistence.Analytics;
 using LoDb.Infrastructure.Persistence.Analytics.Partitions;
 using LoDb.Infrastructure.Tests.Analytics.Support;
+using LoDb.Infrastructure.Tests.Persistence.Analytics;
 using LoDb.Testing;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LoDb.Infrastructure.Tests.Analytics.Rollup;
 
 /// <summary>
 /// The rollup into <c>analytics_daily</c>: today continuously, a closed day once for all
-/// after its close, idempotent, and never over an imported day.
+/// after its close, idempotent, never over an imported day, and within the day's bounds.
 /// </summary>
 public sealed class AnalyticsRollupTests(PostgresContainerFixture postgres)
     : AnalyticsDatabase(postgres)
@@ -74,6 +77,34 @@ public sealed class AnalyticsRollupTests(PostgresContainerFixture postgres)
     }
 
     [Fact]
+    public async Task FoldedDayStaysWithinItsBounds()
+    {
+        await using var services = AnalyticsServices.Build(
+            Database.ConnectionString,
+            Time,
+            static options =>
+            {
+                options.MaxVisitorsPerDay = 2;
+                options.MaxRefererHostsPerDay = 2;
+            });
+        await services.GetRequiredService<IAnalyticsPartitions>()
+            .CreateAsync(Today, Today, Cancellation);
+        await services.GetRequiredService<IAnalyticsEventWriter>()
+            .WriteAsync([.. Enumerable.Range(0, 5).Select(DistinctView)], Cancellation);
+
+        await services.GetRequiredService<IAnalyticsRollup>().RollupTodayAsync(Cancellation);
+
+        var row = Assert.Single(await services.GetRequiredService<DailyStore>()
+            .ReadAsync(Today, Today, Cancellation));
+        var daily = DailyColumns.Read(row);
+        var hosts = daily.Buckets[DailyBuckets.RefHost];
+        Assert.Equal((5L, 2, true), (daily.Views, daily.Visitors.Count, daily.VisitorsTruncated));
+        Assert.InRange(hosts.Count, 1, 3);
+        Assert.Contains(DailyBuckets.OtherRefererHosts, hosts.Keys);
+        Assert.Equal(5, hosts.Values.Sum());
+    }
+
+    [Fact]
     public async Task ImportedDayIsNeverReplaced()
     {
         var yesterday = Today.AddDays(-1);
@@ -89,5 +120,14 @@ public sealed class AnalyticsRollupTests(PostgresContainerFixture postgres)
         Assert.Equal(
             [(AnalyticsDailySource.Import, 100L), (AnalyticsDailySource.Import, 200L)],
             rows.Select(static row => (row.Source, DailyColumns.Read(row).Views)));
+    }
+
+    // A view of its own visitor, referred by a host of its own.
+    private AnalyticsEvent DistinctView(int index)
+    {
+        var view = AnalyticsSamples.View(At(9, index));
+        view.Visitor = new string((char)('a' + index), view.Visitor.Length);
+        view.RefererHost = string.Create(CultureInfo.InvariantCulture, $"h{index}.example");
+        return view;
     }
 }
