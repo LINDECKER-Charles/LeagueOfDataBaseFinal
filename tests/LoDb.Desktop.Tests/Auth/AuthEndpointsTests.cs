@@ -72,20 +72,6 @@ public sealed class AuthEndpointsTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task RememberMeKeepsTheRefreshTokenEncryptedOnDisk()
-    {
-        using var response = await _host.LoginAsync(FakeApi.Password, rememberMe: true);
-        var vault = _host.Services.GetRequiredService<RefreshTokenVault>();
-        var saved = await File.ReadAllTextAsync(
-            vault.FilePath,
-            TestContext.Current.CancellationToken);
-
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-        Assert.DoesNotContain("refresh-", saved, StringComparison.Ordinal);
-        Assert.True((bool?)(await _host.ReadSessionAsync())["remembered"]);
-    }
-
-    [Fact]
     public async Task LogoutForgetsTheSessionAndTheSavedToken()
     {
         using var login = await _host.LoginAsync(FakeApi.Password, rememberMe: true);

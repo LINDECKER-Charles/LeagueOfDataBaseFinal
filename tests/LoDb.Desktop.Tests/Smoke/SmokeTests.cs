@@ -86,13 +86,12 @@ public sealed class SmokeTests : IDisposable
         Assert.Contains("api: reachable HTTP 200 /api/meta", Lines());
     }
 
-    [Theory]
-    [InlineData("--api-origin", "http://api.example")]
-    [InlineData("--api-origin", "https://api.example/api")]
-    [InlineData("--data-dir")]
-    public void RefusesACommandLineItCannotRunWith(params string[] args)
+    // The argument rules are DesktopArguments' (launch tests): one refusal proves the smoke
+    // check reports it as a usage error.
+    [Fact]
+    public void RefusesACommandLineItCannotRunWith()
     {
-        var exitCode = DesktopEntry.Run(["--smoke", .. args], _output, _error);
+        var exitCode = DesktopEntry.Run(["--smoke", "--data-dir"], _output, _error);
 
         Assert.Equal(DesktopEntry.UsageError, exitCode);
         Assert.NotEmpty(_error.ToString());

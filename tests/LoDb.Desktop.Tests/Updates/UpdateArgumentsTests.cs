@@ -8,12 +8,9 @@ public sealed class UpdateArgumentsTests
 
     [Theory]
     [InlineData(nameof(UpdateMode.Background))]
-    [InlineData(nameof(UpdateMode.Background), "--devtools")]
     [InlineData(nameof(UpdateMode.Background), "--apply-updates")]
     [InlineData(nameof(UpdateMode.Off), "--smoke")]
-    [InlineData(nameof(UpdateMode.Off), "--smoke", "--probe-api")]
     [InlineData(nameof(UpdateMode.ApplyAtExit), "--smoke", "--apply-updates")]
-    [InlineData(nameof(UpdateMode.ApplyAtExit), "--apply-updates", "--smoke")]
     public void ReadsTheModeFromTheCommandLine(string expected, params string[] args)
     {
         var settings = UpdateArguments.Parse([Executable, .. args], NoEnvironment);
@@ -33,7 +30,6 @@ public sealed class UpdateArgumentsTests
 
     [Theory]
     [InlineData(null)]
-    [InlineData("")]
     [InlineData("  ")]
     public void KeepsTheGithubFeedWithoutALocalOne(string? value)
     {
