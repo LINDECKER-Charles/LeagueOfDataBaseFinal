@@ -91,6 +91,7 @@ Logs et requêtes LogsQL : [`observabilite.md`](observabilite.md) et [`logging.m
 | `lodb_job_failures_total` | compteur | `task` | non | `LoDb.Jobs` |
 | `lodb_outbox_messages_total` | compteur | `outcome` (`sent`, `retried`, `dead`) | non | `LoDb.Outbox` |
 | `lodb_outbox_pending` | jauge | — | oui (tâches de fond actives) | `LoDb.Outbox` |
+| `lodb_outbox_deferred` | jauge | — | oui (tâches de fond actives) | `LoDb.Outbox`, messages dus que le plafond horaire de leur modèle retient (`LoDb:Outbox:HourlyCaps`) |
 | `lodb_outbox_batch_duration_seconds`, `lodb_outbox_batch_failures_total` | histogramme, compteur | — | non | `LoDb.Outbox` |
 | `lodb_analytics_views_queued_total`, `…_written_total`, `…_dropped_total` | compteurs | `origin` ; `reason` (`queue_full`, `unresolved`, `write_failed`) | non | `LoDb.Analytics` |
 | `lodb_publicapi_refusals_total` | compteur | `code` (codes d'erreur de `/v1`) | non | `LoDb.PublicApi` |
