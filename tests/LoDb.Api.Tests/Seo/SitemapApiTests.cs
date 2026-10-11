@@ -47,6 +47,7 @@ public sealed class SitemapApiTests(SeoApiFixture api)
         Assert.Equal(Hour, CacheHeaderTests.CacheControlOf(response));
         Assert.Equal($"{Origin}/fr/", pages[0]);
         Assert.Contains($"{Origin}/fr/about/data", pages);
+        Assert.Equal($"{Origin}/fr/patches", pages[5]);
         Assert.Contains($"{Origin}/fr/items/1004-faerie-charm", pages);
         Assert.Equal(
             expected.Order(StringComparer.Ordinal),
