@@ -113,7 +113,10 @@ remove it. Only the lockfile decides; `npm audit fix` is not run by the CI.
 2. **Scan** the pushed digest with Trivy (pinned by digest, `TRIVY_IMAGE`): pulled, saved as
    an archive and handed to the scanner, which gets no registry credential. HIGH and CRITICAL
    vulnerabilities that have a fixed version fail the build: OS packages and the libraries the
-   image ships (`.deps.json` of .NET, `package.json` of Node).
+   image ships (`.deps.json` of .NET, `package.json` of Node). The scanner runs in a folder
+   that holds the archive and `.trivyignore` only, never in the checkout: Trivy reads its
+   configuration (`trivy.yaml`) from its working folder, and a file committed there could
+   narrow what it reports.
 3. **Tag `:staging`** once the three scans passed, from the scanned digests
    (`tag-image.sh`): the moving tag never names a mix of two builds nor an unscanned image.
    The digests are the workflow's outputs.
@@ -140,11 +143,13 @@ CVE-2026-12345 exp:2026-11-10
 Past its date the line no longer applies, and the scan blocks again. `.trivyignore` is one of
 the `stack-paths` of `ci.yml`: pushing it alone runs the pipeline, hence a new build and scan.
 To read a report locally,
-build the image, then (Git Bash: `MSYS_NO_PATHCONV=1`):
+build the image, then, as the CI does (Git Bash: `MSYS_NO_PATHCONV=1`):
 
 ```sh
-docker save --output image.tar lodb-api:local
-docker run --rm -v "$PWD/image.tar:/scan/image.tar:ro" -v "$PWD:/repo:ro" -w /repo \
+scan="$(dirname "$PWD")/lodb-scan"   # outside the checkout
+mkdir -p "$scan" && docker save --output "$scan/image.tar" lodb-api:local
+if [ -f .trivyignore ]; then cp .trivyignore "$scan/"; fi
+docker run --rm -v "$scan:/scan:ro" -w /scan \
   ghcr.io/aquasecurity/trivy:0.74.0@sha256:62b1e65e8869bc4b4c6aa4fa2b21595256c7c2f6018a9d9ad61caf87187c1969 \
   image --input /scan/image.tar --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed
 ```

@@ -122,16 +122,20 @@ jobs:
           tags: ${{ env.IMAGE }}:${{ env.REVISION }}
 
       # The image as pushed, pulled by its digest and handed to the scanner as an archive: the
-      # scanner gets no registry credential. Its working folder is the checkout, where it reads
-      # .trivyignore when there is one.
+      # scanner gets no registry credential, nor the checkout. Its working folder holds the
+      # archive and the repository's .trivyignore, when there is one, and nothing else: the
+      # scanner also reads its configuration (trivy.yaml) from there, and a file of the
+      # checkout must not change what the scan reports.
       - name: Scan ${{ matrix.image }}
         env:
           DIGEST: ${{ steps.push.outputs.digest }}
         run: |
-          archive="$RUNNER_TEMP/image.tar"
+          scan="$RUNNER_TEMP/scan"
+          mkdir -p "$scan"
           docker pull --quiet "$IMAGE@$DIGEST"
-          docker save --output "$archive" "$IMAGE@$DIGEST"
-          docker run --rm -v "$archive:/scan/image.tar:ro" -v "$PWD:/repo:ro" -w /repo \
+          docker save --output "$scan/image.tar" "$IMAGE@$DIGEST"
+          if [ -f .trivyignore ]; then cp .trivyignore "$scan/.trivyignore"; fi
+          docker run --rm -v "$scan:/scan:ro" -w /scan \
             "$TRIVY_IMAGE" image --input /scan/image.tar --scanners vuln \
             --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 --no-progress \
             --skip-version-check --timeout 10m
