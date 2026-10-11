@@ -45,19 +45,22 @@ public sealed class PatchVersionParsingTests
     }
 
     [Theory]
-    [InlineData("16.14.1")]
-    [InlineData("lolpatch_3.7")]
-    [InlineData("16")]
-    [InlineData("16.1.1\n")]
-    public void ThePublishedPatternAgreesWithTheParser(string text)
+    [InlineData("16.14.1", true)]
+    [InlineData("lolpatch_3.7", false)]
+    [InlineData("16", false)]
+    [InlineData("16.1.1\n", false)]
+    public void ThePublishedPatternAgreesWithTheParser(string text, bool isVersion)
     {
         var contract = new Regex(
             $"^(?:{PatchVersion.Pattern})$",
             RegexOptions.ECMAScript,
             TimeSpan.FromSeconds(1));
 
-        var isContractMatch = contract.IsMatch(text) && !text.EndsWith('\n');
+        // JavaScript's $ is the end of the input: a match that stops before a final newline,
+        // as .NET's $ allows, is none.
+        var match = contract.Match(text);
 
-        Assert.Equal(isContractMatch, PatchVersion.TryParse(text, out _));
+        Assert.Equal(isVersion, match.Success && match.Length == text.Length);
+        Assert.Equal(isVersion, PatchVersion.TryParse(text, out _));
     }
 }
