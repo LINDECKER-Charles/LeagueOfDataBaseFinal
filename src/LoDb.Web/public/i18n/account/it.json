@@ -38,5 +38,11 @@
     "loading": "Caricamento del tuo profilo…",
     "load_error": "Impossibile caricare il tuo profilo.",
     "version_error": "Impossibile cambiare la versione dei tuoi preferiti."
+  },
+  "sessions": {
+    "title": "Sessioni",
+    "help": "Disconnetti il tuo account da tutti i browser e le app in cui è aperto, compreso questo, in caso di dispositivo perso o condiviso. Gli altri dispositivi vengono disconnessi entro pochi minuti.",
+    "sign_out_everywhere": "Esci da tutti i dispositivi",
+    "signed_out": "Sei uscito da tutti i tuoi dispositivi."
   }
 }

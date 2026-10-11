@@ -27,13 +27,14 @@ import { PickerOpener } from './picker/picker-opener';
 import { DangerPanel } from './settings/danger-panel';
 import { IdentityPanel } from './settings/identity-panel';
 import { PasswordPanel } from './settings/password-panel';
+import { SessionsPanel } from './settings/sessions-panel';
 import { ProfileForm } from './store/profile-form';
 import { ProfileStore } from './store/profile-store';
 
 /**
  * The profile of the signed-in account, `/{locale}/account/profile`: the favorites and the
- * visibility, saved as they change; the identity, the first password and the erasure, each
- * sent by its own form. Pinning the favorites to a version reads them again on that patch.
+ * visibility, saved as they change; the identity, the first password, the sessions and the
+ * erasure, each sent by its own form. Pinning the favorites to a version reads them again on that patch.
  */
 @Component({
   selector: 'lodb-profile-editor',
@@ -46,6 +47,7 @@ import { ProfileStore } from './store/profile-store';
     IdentityPanel,
     PasswordPanel,
     ProfileCover,
+    SessionsPanel,
     TranslocoPipe,
   ],
   templateUrl: './profile-editor.html',

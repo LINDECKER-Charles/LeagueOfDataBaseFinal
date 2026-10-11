@@ -81,6 +81,22 @@ describe('HostAuthStrategy', () => {
     await expect(done).resolves.toBeUndefined();
   });
 
+  it('signs out everywhere through the proxy, then with the host', async () => {
+    const done = firstValueFrom(strategy.signOutEverywhere());
+
+    const everywhere = http.expectOne({
+      method: 'POST',
+      url: `${ORIGIN}/api/account/logout-everywhere`,
+    });
+    expect(everywhere.request.headers.has('Authorization')).toBe(false);
+    everywhere.flush(null, { status: 204, statusText: 'No Content' });
+    http
+      .expectOne({ method: 'POST', url: `${ORIGIN}/desktop/auth/logout` })
+      .flush(null, { status: 204, statusText: 'No Content' });
+
+    await expect(done).resolves.toBeUndefined();
+  });
+
   it('lands on a return URL only when it stays in the application', () => {
     expect(strategy.landingUrl('/fr/builds?page=2', '/fr/account/profile')).toBe(
       '/fr/builds?page=2',

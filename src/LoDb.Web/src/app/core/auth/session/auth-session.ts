@@ -80,6 +80,15 @@ export class AuthSession {
     this.apply({ user: null });
   }
 
+  /**
+   * Signs out of every session of the account, this one included; the session stays as it
+   * was when the call fails.
+   */
+  async signOutEverywhere(): Promise<void> {
+    await firstValueFrom(this.strategy.signOutEverywhere(), { defaultValue: undefined });
+    this.apply({ user: null });
+  }
+
   /** Leaves for Google's sign-in, the way the platform does it. */
   startGoogleSignIn(request: GoogleSignIn): Promise<void> {
     return this.strategy.startGoogleSignIn(request);

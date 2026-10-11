@@ -38,5 +38,11 @@
     "loading": "A profilod betöltése…",
     "load_error": "Nem sikerült betölteni a profilodat.",
     "version_error": "Nem sikerült módosítani a kedvenceid verzióját."
+  },
+  "sessions": {
+    "title": "Munkamenetek",
+    "help": "Jelentkeztesd ki a fiókodat minden böngészőből és alkalmazásból, ahol nyitva van, ezt is beleértve, elveszett vagy megosztott eszköz esetén. A többi eszköz néhány percen belül kijelentkezik.",
+    "sign_out_everywhere": "Kijelentkezés minden eszközről",
+    "signed_out": "Minden eszközödön kijelentkeztél."
   }
 }

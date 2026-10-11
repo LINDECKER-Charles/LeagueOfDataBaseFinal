@@ -22,6 +22,12 @@ export interface AuthStrategy {
   /** Closes the session. */
   signOut(): Observable<void>;
 
+  /**
+   * Closes every session of the account, on every browser and in every app, this one
+   * included: an app's tokens, which the API cannot take back, are forgotten as at a sign-out.
+   */
+  signOutEverywhere(): Observable<void>;
+
   /** Leaves for Google's sign-in: a full-page navigation, or the system browser. */
   startGoogleSignIn(request: GoogleSignIn): Promise<void>;
 

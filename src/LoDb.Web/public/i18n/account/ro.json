@@ -38,5 +38,11 @@
     "loading": "Se încarcă profilul tău…",
     "load_error": "Profilul tău nu a putut fi încărcat.",
     "version_error": "Versiunea favoritelor tale nu a putut fi schimbată."
+  },
+  "sessions": {
+    "title": "Sesiuni",
+    "help": "Deconectează-ți contul din toate browserele și aplicațiile în care este deschis, inclusiv acesta, în cazul unui dispozitiv pierdut sau partajat. Celelalte dispozitive sunt deconectate în câteva minute.",
+    "sign_out_everywhere": "Deconectare de pe toate dispozitivele",
+    "signed_out": "Ai fost deconectat de pe toate dispozitivele tale."
   }
 }

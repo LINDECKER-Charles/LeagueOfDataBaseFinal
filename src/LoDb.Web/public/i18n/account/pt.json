@@ -38,5 +38,11 @@
     "loading": "Carregando seu perfil…",
     "load_error": "Não foi possível carregar seu perfil.",
     "version_error": "Não foi possível mudar a versão dos seus favoritos."
+  },
+  "sessions": {
+    "title": "Sessões",
+    "help": "Saia da sua conta em todos os navegadores e aplicativos em que ela está aberta, incluindo este, em caso de dispositivo perdido ou compartilhado. Os outros dispositivos são desconectados em poucos minutos.",
+    "sign_out_everywhere": "Sair de todos os dispositivos",
+    "signed_out": "Você saiu de todos os seus dispositivos."
   }
 }
