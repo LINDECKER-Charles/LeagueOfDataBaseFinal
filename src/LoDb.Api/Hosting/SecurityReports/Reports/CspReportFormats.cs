@@ -3,9 +3,10 @@ using System.Text.Json;
 namespace LoDb.Api.Hosting.SecurityReports.Reports;
 
 /// <summary>
-/// Reads the violations of a report body, in either format browsers send: the Reporting API's
-/// array of reports (<c>report-to</c>), or one legacy <c>{"csp-report": …}</c> object
-/// (<c>report-uri</c>).
+/// Reads the violations of a report body, in the formats browsers send: the Reporting API's
+/// array of reports (<c>report-to</c>), one legacy <c>{"csp-report": …}</c> object
+/// (<c>report-uri</c>), or one report of the Reporting API's shape on its own, as WebKit posts
+/// each violation (under the legacy media type, whichever directive named the endpoint).
 /// </summary>
 internal static class CspReportFormats
 {
@@ -35,7 +36,7 @@ internal static class CspReportFormats
             return root.ValueKind switch
             {
                 JsonValueKind.Array => FromReports(root),
-                JsonValueKind.Object => FromLegacy(root),
+                JsonValueKind.Object => FromObject(root),
                 _ => null,
             };
         }
@@ -50,11 +51,14 @@ internal static class CspReportFormats
         reports.EnumerateArray()
             .Take(MaxReportsPerBody)
             .Where(IsViolation)
-            .Select(static report => ViolationOf(
-                report.GetProperty(BodyProperty),
-                EffectiveDirective,
-                ViolatedDirective))
+            .Select(FromReport)
             .ToArray();
+
+    private static CspViolation[]? FromObject(JsonElement root) =>
+        IsViolation(root) ? [FromReport(root)] : FromLegacy(root);
+
+    private static CspViolation FromReport(JsonElement report) =>
+        ViolationOf(report.GetProperty(BodyProperty), EffectiveDirective, ViolatedDirective);
 
     private static CspViolation[]? FromLegacy(JsonElement root) =>
         root.TryGetProperty(LegacyProperty, out var report)

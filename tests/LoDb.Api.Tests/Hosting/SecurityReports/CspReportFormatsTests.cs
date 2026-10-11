@@ -38,6 +38,27 @@ public sealed class CspReportFormatsTests
         Assert.Equal(counted, violation.Disposition);
     }
 
+    // What WebKit posts for one violation, as captured: a lone report of the Reporting API's
+    // shape when the page names a Reporting-Endpoints group, its legacy report under a `type`
+    // otherwise.
+    [Theory]
+    [InlineData("""
+        {"type":"csp-violation","url":"https://site.test/","body":{
+         "documentURL":"https://site.test/","disposition":"enforce",
+         "effectiveDirective":"script-src-elem","blockedURL":"inline"}}
+        """)]
+    [InlineData("""
+        {"type":"csp-violation","url":"https://site.test/","csp-report":{
+         "document-uri":"https://site.test/","violated-directive":"script-src-elem",
+         "effective-directive":"script-src-elem","blocked-uri":"inline"}}
+        """)]
+    public void ReadsTheLoneReportsOfWebKit(string body)
+    {
+        var violation = Assert.Single(CspReportFormats.Parse(Bytes(body)) ?? []);
+
+        Assert.Equal("script-src-elem", violation.Directive);
+    }
+
     [Fact]
     public void ReadsNoMoreReportsThanABrowserBatches()
     {
