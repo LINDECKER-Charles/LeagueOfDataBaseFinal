@@ -1,7 +1,8 @@
 // Checks what Compose makes of the served overlays, from the .env examples: the production
 // stack's CPU quotas, weights and process caps (compose.deploy.yaml), the smaller share of
-// the staging stack (compose.staging.yaml), and the optional login on the staging pages
-// (compose.staging-auth.yaml), whose bcrypt hash must reach the edge's label intact.
+// the staging stack (compose.staging.yaml), the optional login on the staging pages
+// (compose.staging-auth.yaml), whose bcrypt hash must reach the edge's label intact, and the
+// production's declaration to Umami (compose.umami.yaml).
 // Needs the Docker CLI only: `compose config` reads files, it starts nothing.
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
@@ -17,6 +18,9 @@ const ROOT = resolve(fileURLToPath(new URL('../../../', import.meta.url)));
 const SERVED = ['compose.yaml', 'compose.deploy.yaml'];
 const STAGING = [...SERVED, 'compose.staging.yaml'];
 const STAGING_AUTH = [...STAGING, 'compose.staging-auth.yaml'];
+const PROD_UMAMI = [...SERVED, 'compose.umami.yaml'];
+const DASHBOARD = 'stats.league-of-data-base.com';
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const RUNNING = ['api', 'web-ssr', 'nginx', 'postgres'];
 // What the deploy job writes on a host, absent from the examples.
 const HOST_ADDITIONS = 'LODB_EDGE_CIDR=172.18.0.0/16\nLODB_STACK_SUBNET=10.231.1.0/24\n';
@@ -101,6 +105,31 @@ describe('served overlays through Compose',
       // `compose config` writes each `$` of a value doubled, as Compose reads it back.
       assert.equal(labels['caddy_0.basic_auth.tester'], HASH.replaceAll('$', () => '$$'));
       assert.equal(labels['caddy_1.basic_auth'], undefined, 'the API subdomain stays open');
+    });
+
+    test('declares the production site to Umami, its dashboard and its pull', async () => {
+      const services = await servicesOf([join(ROOT, '.env.prod.example'),
+        join(folder, 'host.env')], PROD_UMAMI);
+      const labels = services.nginx.labels;
+      const website = labels['umami.website'];
+      assert.match(website, UUID);
+      assert.equal(labels['caddy_0.import'], 'umami');
+      assert.equal(labels['umami.domain'], 'league-of-data-base.com');
+      assert.equal(labels.caddy_2, DASHBOARD);
+      assert.equal(labels['caddy_2.import'], `umami-tableau ${website}`);
+      assert.equal(labels['caddy_1.import'], undefined, 'the API subdomain has no audience');
+      assert.equal(labels['caddy_0.reverse_proxy'], prod.nginx.labels['caddy_0.reverse_proxy']);
+      const api = services.api.environment;
+      assert.equal(api.LoDb__Audience__WebsiteId, website);
+      assert.equal(api.LoDb__Audience__Host, DASHBOARD);
+      // The overlay comes after compose.deploy.yaml: its resets of the private ranges hold.
+      assert.equal(api.LoDb__Hosting__KnownProxyNetworks__1, undefined);
+    });
+
+    test('leaves staging out of Umami', () => {
+      assert.equal(Object.keys(staging.nginx.labels).some((key) => key.startsWith('umami.')),
+        false);
+      assert.equal(staging.api.environment.LoDb__Audience__WebsiteId, undefined);
     });
 
     test('refuses the staging login without its two settings', async () => {

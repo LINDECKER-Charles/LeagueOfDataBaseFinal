@@ -1,0 +1,36 @@
+# Production only: declares the site to the host's shared Umami, the audience measurement of
+# infra-vps (its docs/APPLICATIONS.md § 6). The deploy job adds this file to COMPOSE_FILE for
+# prod alone, as a list element and never through a variable: an `import` without argument
+# makes the edge refuse its whole configuration, every site of the host with it. Staging has
+# no site in Umami and never carries these labels.
+#
+# nginx carries numbered sites: caddy_0 is the site, caddy_1 the API subdomain (no audience
+# there), caddy_2 the dashboard. The import targets caddy_0, never an unnumbered `caddy.import`,
+# which would land outside every site block. The edge then routes the site's /u/script.js and
+# /u/api/send to Umami: the front posts to /u/api/send itself (core/analytics) and never loads
+# /u/script.js, which would run Umami's code with the site's rights.
+#
+# The website id is chosen by the project, once, and versioned: the front holds the same
+# literal (src/LoDb.Web/src/app/core/analytics/audience/audience-site.ts) and
+# tools/umami/test checks that every copy agrees.
+services:
+  nginx:
+    labels:
+      caddy_0.import: umami
+      umami.website: &website deee1958-0f6c-4a32-a327-aad389836c3b
+      umami.domain: league-of-data-base.com
+      umami.name: LeagueOfDataBase
+      # The team a read-only account joins to read the site's figures (the dashboard and the
+      # pull of the trends below): rights in Umami are given per team.
+      umami.team: lodb
+      # The dashboard on its own host; the id must be umami.website's (tableau_incoherent).
+      caddy_2: &dashboard stats.league-of-data-base.com
+      caddy_2.import: umami-tableau deee1958-0f6c-4a32-a327-aad389836c3b
+
+  api:
+    environment:
+      # The hourly pull of the views per page for /v1/trends (Workers/Analytics), read on the
+      # dashboard's host. Dormant until LoDb__Audience__Username and __Password, the read-only
+      # account, are set (secrets, compose.deploy.yaml).
+      LoDb__Audience__WebsiteId: *website
+      LoDb__Audience__Host: *dashboard
