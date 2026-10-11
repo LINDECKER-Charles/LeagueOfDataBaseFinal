@@ -3,11 +3,14 @@
 # the release workflow, where it runs in a job without any signing secret, and local.sh.
 #
 # Usage: build.sh --rid RID --version VERSION --channel stable|beta --shell-dir DIR
-#                 --publish-dir DIR
+#                 --publish-dir DIR [--feed-key BASE64]
+#   --feed-key  the Ed25519 key the build trusts for its update feeds, instead of the one
+#               compiled into the app: local.sh only, which signs its feeds with a throwaway
+#               key. A release never passes it, and its gate checks the key of the build.
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-rid="" version="" channel="" shell_dir="" publish_dir=""
+rid="" version="" channel="" shell_dir="" publish_dir="" feed_key=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --rid) rid="$2"; shift 2 ;;
@@ -15,6 +18,7 @@ while [ $# -gt 0 ]; do
     --channel) channel="$2"; shift 2 ;;
     --shell-dir) shell_dir="$2"; shift 2 ;;
     --publish-dir) publish_dir="$2"; shift 2 ;;
+    --feed-key) feed_key="$2"; shift 2 ;;
     *) lodb_fail "build.sh: unknown argument '$1'" ;;
   esac
 done
@@ -27,6 +31,9 @@ lodb_velopack_channel "$rid" "$channel" >/dev/null
 # MSBuild resolves a relative LoDbShellDir against the project folder, not the caller's.
 shell_dir="$(lodb_native_path "$shell_dir")"
 
+key_args=()
+[ -z "$feed_key" ] || key_args=(-p:LoDbDesktopFeedKey="$feed_key")
+
 lodb_log "publish $LODB_PACK_ID $version ($channel) for $rid"
 rm -rf "$publish_dir"
 # Version: the tag's version, checked against VersionPrefix by the workflow before this.
@@ -37,4 +44,5 @@ dotnet publish "$(lodb_repo_root)/$LODB_DESKTOP_PROJECT" \
   -o "$publish_dir" \
   -p:Version="$version" \
   -p:LoDbDesktopChannel="$channel" \
-  -p:LoDbShellDir="$shell_dir"
+  -p:LoDbShellDir="$shell_dir" \
+  ${key_args[@]+"${key_args[@]}"}

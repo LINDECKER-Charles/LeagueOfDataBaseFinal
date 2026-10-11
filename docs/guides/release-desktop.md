@@ -8,13 +8,19 @@ chantier dans le [lot 9](../reecriture/implementation/lot-09-10-apps.md) (L9.4).
 | Élément | Emplacement |
 |---|---|
 | Mises à jour dans l'app | `src/LoDb.Desktop/Updates/` |
+| Vérification des flux signés | `src/LoDb.Desktop/Updates/Engine/Signing/` |
 | Workflow de release | `.github/workflows/release-desktop.yml` |
 | Scripts (build, pack, porte, publication, E2E local) | `tools/desktop-update-e2e/` |
+| Signature des flux (clé, signature, vérification) | `tools/desktop-update-signing/` |
 
 ## Côté app
 
-- **Source** : les GitHub Releases du dépôt public (`GithubSource`). Le dépôt est une
-  constante de `Updates/Engine/UpdateFeeds.cs` : un fork doit la changer.
+- **Source** : les GitHub Releases du dépôt public, lues par `SignedGithubSource`. Le dépôt
+  et les clés publiques des flux sont des constantes de `Updates/Engine/UpdateFeeds.cs` : un
+  fork doit changer les deux.
+- **Flux signés** : l'app ne lit que les flux `releases.<canal>.json` dont la signature
+  Ed25519 tient, et n'accepte que les paquets conformes à ces flux (voir
+  [Flux signés](#flux-signés)).
 - **Canal** : fixé au build (`-p:LoDbDesktopChannel=stable|beta`). Une installation
   `stable` ne lit que les releases publiées ; une installation `beta` lit aussi les
   pre-releases.
@@ -25,14 +31,17 @@ chantier dans le [lot 9](../reecriture/implementation/lot-09-10-apps.md) (L9.4).
 - **Hors installation Velopack** (développement, `dotnet run`) : rien n'est vérifié,
   l'état reste « aucune mise à jour ».
 - **Journaux** : événements `desktop.update.*` (`check_failed`, `download_failed`,
-  `downloaded`, `handed_over`, `handover_failed`, `feed_invalid`, `check_timed_out`).
+  `downloaded`, `handed_over`, `handover_failed`, `feed_invalid`, `check_timed_out`,
+  `feed_refused`, `package_refused`).
+- **Rapport `--smoke`** : la ligne `feed-key: ed25519 <clés>` donne les clés de confiance du
+  build ; la porte E2E les compare à celles de `UpdateFeeds.cs`.
 
-Deux entrées cachées servent aux tests de bout en bout et n'ont aucun effet sans `--smoke` :
+Deux entrées cachées servent aux tests de bout en bout :
 
 | Entrée | Effet |
 |---|---|
 | `--smoke --apply-updates` | vérifie et télécharge la mise à jour avant le rapport (`updates: ready N`), puis la confie à l'updater à la sortie |
-| `LODB_DESKTOP_UPDATE_SOURCE` | dossier local de releases (chemin absolu) à la place de GitHub ; une valeur invalide coupe les mises à jour (`feed_invalid`) |
+| `LODB_DESKTOP_UPDATE_SOURCE` | dossier local de releases (chemin absolu) à la place de GitHub, lu à chaque lancement et pas seulement avec `--smoke` ; tenu aux mêmes flux signés que GitHub (`SignedFolderSource`), jamais reconstruit depuis les paquets du dossier ; une valeur invalide coupe les mises à jour (`feed_invalid`) |
 
 ## Versions et canaux
 
@@ -53,7 +62,8 @@ Deux entrées cachées servent aux tests de bout en bout et n'ont aucun effet sa
 
 Noms des assets : `LoDb.Desktop-<version>-<canal>-full.nupkg`, `…-delta.nupkg`,
 `LoDb.Desktop-<canal>-Setup.pkg` (ou `-Setup.exe`), `LoDb.Desktop-<canal>-Portable.zip`,
-`releases.<canal>.json`. Une release GitHub porte tous les RID d'une même version.
+`releases.<canal>.json` et sa signature `releases.<canal>.json.sig`. Une release GitHub
+porte tous les RID d'une même version.
 
 ## Publier une version stable
 
@@ -97,20 +107,25 @@ SHA exact ; le staging fait de même avec `channel: beta`.
 
 | Job | Rôle |
 |---|---|
-| `prepare` | Valide les entrées. Résout la version (`release-version.sh`) et celle de `vpk`, qui est celle du package `Velopack`. Saute une release déjà promue. |
+| `prepare` | Valide les entrées. Teste `tools/desktop-update-signing`. Résout la version (`release-version.sh`) et celle de `vpk`, qui est celle du package `Velopack`. Saute une release déjà promue. |
 | `shell` | `npm ci` puis `npm run build:shell` : le front embarqué. |
 | `build` (×4) | `build.sh` : `dotnet publish` du RID avec le front embarqué. **Sans environnement ni secret.** Le dossier publié passe à `pack` en tar (artefact `desktop-publish-<rid>`, 1 jour), qui garde les bits d'exécution. |
-| `pack` (×4) | N-1 (`previous.sh`), signature (`signing.sh`), `pack.sh` (`vpk pack` seul, sans build), présence du delta. Seul job de l'environnement `desktop-release`. Artefact `desktop-packed-<rid>` (1 jour). |
-| `gate` (×4) | Porte (`gate.sh`) sur les paquets signés, **sans secret**. Seul un RID qui la passe est transmis à `publish` (`desktop-releases-<rid>`). |
-| `publish` | `publish.sh` : RID requis présents, upload en *pre-release*, puis promotion (stable) ou purge des vieilles betas. |
+| `pack` (×4) | N-1 (`previous.sh`), signature de plateforme (`signing.sh`), `pack.sh` (`vpk pack` seul, sans build), présence du delta. Environnement `desktop-release`. Artefacts `desktop-packed-<rid>` et, flux seul, `desktop-feed-<rid>` (1 jour). |
+| `sign` | Signe le flux de chaque RID (`sign-feed.mjs`), après avoir vérifié que la clé est la paire d'une clé compilée dans l'app. Environnement `desktop-release`, Node seul, aucun paquet. Artefact `desktop-signed-feeds` (7 jours). |
+| `gate` (×4) | Porte (`gate.sh`) sur les paquets signés et le flux signé, **sans secret**. Seul un RID qui la passe est transmis à `publish` (`desktop-releases-<rid>`). |
+| `publish` | `publish.sh` : RID requis présents, paquets conformes au flux signé, upload en *pre-release*, flux signé et sa signature à la place de celui de vpk, relus et vérifiés, puis promotion (stable) ou purge des vieilles betas. |
 
 - **Deltas** : `previous.sh` lance `vpk download github` sur N-1 **avant** `vpk pack`. vpk
   écrit donc le delta N-1 → N, et le job échoue si N-1 existe sans delta produit.
-- **Porte E2E** : `gate.sh` installe le build portable de N-1, pris sur sa release. Il
-  vérifie ensuite trois rapports `--smoke` : N-1 avant, `updates: ready N` avec
+- **Porte E2E** : `gate.sh` vérifie d'abord le flux signé et les paquets du dossier
+  (`verify-feed.mjs --packages`). Il installe ensuite le build portable de N-1, pris sur sa
+  release, et vérifie trois rapports `--smoke` : N-1 avant, `updates: ready N` avec
   `--apply-updates` et le dossier de releases local, puis N après le passage de l'updater.
-  Sur la première release d'un canal, sans N-1, il vérifie seulement que N démarre. Les
-  rapports sont en artefact `desktop-gate-<rid>`.
+  Sur la première release d'un canal, sans N-1, il vérifie seulement que N démarre. Dans les
+  deux cas, N doit montrer les clés de `UpdateFeeds.cs` (`feed-key: ed25519 …`), puis ignorer
+  son propre flux une fois altéré d'un octet : `updates: none` et
+  `"Refusal":"InvalidSignature"` dans ses journaux. Les rapports sont en artefact
+  `desktop-gate-<rid>`.
 - **Rien n'est publié** si un RID requis (`win-x64`, `osx-arm64`, `osx-x64`) a échoué.
   `linux-x64` est publié quand il passe, sans jamais bloquer.
 - **Isolation de la signature** : le build .NET exécute les cibles MSBuild de ses paquets
@@ -118,18 +133,23 @@ SHA exact ; le staging fait de même avec `channel: beta`.
   secret. `pack`, seul à recevoir les certificats et le jeton OIDC d'Azure, n'extrait du
   commit que `tools/desktop-update-e2e`, ne restaure aucun cache et ne lance que `vpk` (le
   paquet `Velopack` de l'app), qui signe les fichiers du dossier publié en les empaquetant.
-  Le trousseau macOS est supprimé dès `vpk pack` terminé. La séparation protège les clés,
-  pas le contenu : `pack` signe ce que `build` a produit, et la porte reste le contrôle de
-  ce qui est publié.
+  Le trousseau macOS est supprimé dès `vpk pack` terminé. `sign`, seul à recevoir la clé
+  des flux, n'extrait que les scripts de signature et `UpdateFeeds.cs`, et ne lance que
+  Node sur des fichiers JSON. La séparation protège les clés, pas le contenu : `pack` signe
+  ce que `build` a produit, et la porte reste le contrôle de ce qui est publié.
 
 Première mise à jour après une installation : le postinstall du `.pkg` vide le cache de
 l'updater, et un portable n'en a pas encore. Ce premier téléchargement est donc complet ;
 les suivants passent par les deltas.
 
-## E2E local (macOS arm64, non signé)
+## E2E local (macOS arm64, sans signature de plateforme)
 
 C'est le critère de sortie du lot 9. Il se rejoue sur l'hôte, sans Docker ni réseau autre
-que NuGet, avec les mêmes `build.sh`, `pack.sh` et `gate.sh` que la CI.
+que NuGet, avec les mêmes `build.sh`, `pack.sh`, `sign-feed.mjs` et `gate.sh` que la CI. Il
+demande Node, mais aucun secret : il génère une clé de flux jetable dans son dossier de
+travail, que ses builds approuvent (`build.sh --feed-key`, propriété MSBuild
+`LoDbDesktopFeedKey`) et qui signe ses flux. Une release ne passe jamais cette option : sa
+porte vérifie que N approuve les clés de `UpdateFeeds.cs`.
 
 ```bash
 npm ci --prefix src/LoDb.Web
@@ -140,8 +160,8 @@ tools/desktop-update-e2e/local.sh        # --keep pour garder les rapports
 
 Déroulé, en une minute environ :
 
-1. pack de 1.0.0 dans un flux local ;
-2. `vpk download local`, puis pack de 1.0.1 par-dessus, avec delta ;
+1. clé de flux jetable, pack de 1.0.0 dans un flux local ;
+2. `vpk download local`, puis pack de 1.0.1 par-dessus, avec delta, et signature du flux ;
 3. installation du portable 1.0.0, puis porte 1.0.0 → 1.0.1 ;
 4. saut 1.0.1 → 1.0.2, qui doit passer par le delta (`--no-delta-hop` pour l'omettre).
 
@@ -205,9 +225,86 @@ entitlements par défaut de vpk (hardened runtime, JIT de .NET) suffisent.
 
 ### Linux
 
-L'AppImage n'a pas de signature de plateforme. Le RID est en best effort, et son intégrité
-repose sur HTTPS et sur les empreintes du flux `releases.linux-x64.json`. **À trancher**
-avant l'ouverture publique : le publier ainsi, ou le retirer de la matrice.
+L'AppImage n'a pas de signature de plateforme. Le RID est en best effort. Ses mises à jour
+sont authentifiées comme les autres par le flux signé `releases.linux-x64.json`, mais la
+première installation ne repose que sur HTTPS. **À trancher** avant l'ouverture publique : le
+publier ainsi, ou le retirer de la matrice.
+
+## Flux signés
+
+Velopack compare chaque paquet téléchargé à la taille et au SHA-256 que donne le flux
+`releases.<canal>.json` de la même release. C'est un contrôle d'intégrité : il ne dit pas
+qui a publié le flux. L'app ne lit donc un flux que si sa signature Ed25519 tient contre une
+clé compilée dans l'app. Les empreintes signées authentifient alors chaque paquet, quel que
+soit l'hébergement des releases.
+
+| Élément | Valeur |
+|---|---|
+| Signature | Ed25519 (RFC 8032) de `releases.<canal>.json`, en base64 sur une ligne dans `releases.<canal>.json.sig` |
+| Message signé | `lodb-desktop-feed-v1\n` + nom du flux + `\n` + octets du flux publié : une signature ne vaut que pour son RID et son canal |
+| Clés publiques | `UpdateFeeds.FeedPublicKeys` (32 octets en base64), une seule hors rotation |
+| Clé privée | secret `LODB_DESKTOP_UPDATE_PRIVATE_KEY` (PEM PKCS#8), lu par le seul job `sign` |
+| Entrées du flux | chacune avec sa taille et son SHA-256 ; sans eux, l'app ignore le flux |
+| Outils | `tools/desktop-update-signing` (Node seul) : `generate-key`, `sign-feed`, `verify-feed`, `app-key` |
+
+### Dans l'app
+
+- `SignedGithubSource` lit les releases comme Velopack, mais n'en garde que les flux dont la
+  signature tient. Un flux refusé compte comme absent : l'app reste sur sa version et
+  journalise `desktop.update.feed_refused` avec la raison (`MissingSignature`,
+  `InvalidSignature`, `Unreadable`, `IncompleteEntry`).
+- Chaque paquet téléchargé, complet ou delta, doit avoir la taille et le SHA-256 de son entrée
+  signée, sinon il est refusé (`desktop.update.package_refused`) et jamais appliqué. Velopack
+  refait ensuite son propre contrôle.
+- Le dossier local de la porte (`SignedFolderSource`) suit la même règle. Sans flux signé, il
+  n'offre rien : il ne reconstruit jamais un flux depuis les paquets du dossier.
+
+### Dans la release
+
+1. `pack` publie le flux de chaque RID à part (`desktop-feed-<rid>`).
+2. `sign` réécrit chaque flux tel que la release GitHub le publiera : les seuls paquets de la
+   version, sans le N-1 que `vpk pack` liste aussi. Puis il le signe. Il refuse une clé
+   privée dont la moitié publique n'est pas dans `UpdateFeeds.cs` : une release que les
+   installations refuseraient ne part pas.
+3. `gate` remplace le flux de vpk par le flux signé et vérifie les paquets. N doit montrer
+   les clés attendues et ignorer son flux altéré.
+4. `publish` revérifie les paquets contre le flux signé. Après `vpk upload`, qui écrit son
+   propre flux, il le remplace par le flux signé et sa signature (`gh release upload
+   --clobber`). Il relit enfin les deux depuis la release, les compare et les vérifie avant la
+   promotion.
+
+### Signature de plateforme avant application
+
+Aucune release desktop n'est encore signée Authenticode ni Developer ID : l'environnement
+`desktop-release` et ses certificats ([Signature](#signature)) restent à créer par le
+propriétaire. L'app ne vérifie donc pas de signature de plateforme avant d'appliquer un
+paquet. Elle vérifie le SHA-256 que le flux signé donne pour ce paquet, ce qui l'authentifie
+déjà. Ce contrôle épingle notre clé, là où Authenticode accepterait tout éditeur reconnu par
+l'OS. La signature de plateforme reste nécessaire à la confiance de l'OS à l'installation
+(SmartScreen, Gatekeeper). Un contrôle WinVerifyTrust ou `codesign --verify` du paquet avant
+application pourra s'ajouter quand les releases seront signées.
+
+### La clé
+
+- Paire générée par `generate-key.mjs`, qui refuse un chemin dans un dépôt git et n'écrase
+  jamais un fichier. La clé privée vit dans le dossier de secrets local du propriétaire,
+  hors de tout dépôt, et dans le secret `LODB_DESKTOP_UPDATE_PRIVATE_KEY` :
+  `gh secret set LODB_DESKTOP_UPDATE_PRIVATE_KEY < <fichier>`. Secret de dépôt pour
+  commencer ; le déplacer dans l'environnement `desktop-release` une fois celui-ci créé, pour
+  profiter de ses règles de protection.
+- Seule la clé publique entre dans le dépôt, dans `UpdateFeeds.FeedPublicKeys`.
+
+### Bascule vers les flux signés
+
+- Une installation qui ne vérifie rien (antérieure aux flux signés) lit le flux comme avant
+  et ignore le `.sig` : la première release signée s'installe chez elle normalement.
+- Toute version qui vérifie refuse ensuite les releases non signées encore en ligne. Ce
+  n'est pas gênant : elles sont plus anciennes qu'elle.
+- La porte de la première release signée part d'un N-1 qui ne vérifie pas. Elle ne prouve
+  donc la vérification que sur N : clés attendues et refus du flux altéré. Dès la release
+  suivante, N-1 vérifie lui-même le flux de N.
+- Au 2026-10-11, aucune release desktop n'est publiée : la première release publique sera
+  déjà signée.
 
 ## Sauvegarde hors ligne
 
@@ -216,6 +313,7 @@ avant l'ouverture publique : le publier ainsi, ou le retirer de la matrice.
 | Developer ID (Application et Installer) | le `.p12` et son mot de passe | nouveau certificat sous le même Team ID : les mises à jour continuent |
 | Clé d'API de notarisation | le `.p8`, son id et l'issuer id | nouvelle clé, sans effet sur les versions publiées |
 | Artifact Signing | nom du compte, profil, tenant, pièces de la validation d'identité | aucune clé à perdre ; revalider l'identité si le compte disparaît |
+| Clé des flux (Ed25519) | le PEM de `LODB_DESKTOP_UPDATE_PRIVATE_KEY` | **plus aucune mise à jour possible** pour les installations existantes : il faudra réinstaller l'app |
 
 - **Deux copies chiffrées** hors ligne, dans deux lieux distincts : coffre d'un
   gestionnaire de mots de passe exporté, ou clés USB chiffrées. Jamais dans le dépôt, ni
@@ -224,6 +322,9 @@ avant l'ouverture publique : le publier ainsi, ou le retirer de la matrice.
 - Velopack n'épingle aucun certificat : changer de certificat ne coupe pas les mises à jour
   des installations existantes. Seule la confiance de l'OS compte (Gatekeeper,
   SmartScreen).
+- La clé des flux, elle, est épinglée par chaque installation : sa perte coupe les mises à
+  jour, sa fuite permet de signer des flux acceptés. C'est l'élément le plus précieux de
+  cette table.
 
 ## Rotation
 
@@ -242,10 +343,22 @@ avant l'ouverture publique : le publier ainsi, ou le retirer de la matrice.
      secrets `AZURE_*`.
    - Un nouveau profil de certificat change l'éditeur affiché, et la réputation
      SmartScreen repart de zéro.
-4. **Vérifier** :
+4. **Clé des flux** (par hygiène, ou si elle a fuité) : les installations ne connaissent
+   que les clés compilées, d'où une release relais.
+   1. générer la nouvelle paire (`generate-key.mjs --out <nouveau fichier>`) ;
+   2. release relais R : ajouter la nouvelle clé publique à `UpdateFeeds.FeedPublicKeys`,
+      à côté de l'ancienne, et la publier **signée par l'ancienne** (secret inchangé) ;
+   3. remplacer `LODB_DESKTOP_UPDATE_PRIVATE_KEY` par la nouvelle clé privée ;
+   4. release suivante : retirer l'ancienne clé de la liste.
+
+   Une installation antérieure à R passe d'abord par R, puis par la suivante. R doit donc
+   rester parmi les dix releases les plus récentes du dépôt, celles que lit l'app. En cas de
+   fuite, aller vite : une installation qui fait encore confiance à l'ancienne clé accepte
+   les flux qu'elle signe, jusqu'à la release qui la retire.
+5. **Vérifier** :
    1. lancer une beta à la main
       (`gh workflow run release-desktop.yml -f sha=<sha> -f channel=beta`) ;
-   2. contrôler les jobs `pack` (signature, notarisation) et `gate` (porte) ;
+   2. contrôler les jobs `pack` (signature, notarisation), `sign` et `gate` (porte) ;
    3. sauvegarder les nouveaux éléments hors ligne.
 
 ## Dépannage
@@ -258,7 +371,13 @@ avant l'ouverture publique : le publier ainsi, ou le retirer de la matrice.
 | `vpk wrote no delta` | N-1 ≥ N, ou `vpk download` n'a rien trouvé |
 | `<rid> has no release folder: nothing is published` | un RID requis a échoué : relancer les jobs en échec |
 | `… has no feed for <rid>: it stays a pre-release` | upload incomplet : relancer `publish` |
-| l'app ne voit pas la mise à jour | canal du build, `LODB_DESKTOP_UPDATE_SOURCE` vide, événements `desktop.update.*` |
+| `LODB_DESKTOP_UPDATE_PRIVATE_KEY is not set` | poser le secret (§ Flux signés, La clé) |
+| `… is not the pair of a key the app trusts` | le secret ne correspond à aucune clé de `UpdateFeeds.FeedPublicKeys` : corriger le secret, ou la liste lors d'une rotation |
+| `the release folder of <rid> does not match its signed feed` | un paquet a changé entre `pack` et `publish` : relancer depuis `pack` |
+| `the published releases.<canal>.json … is not the signed one` | upload interrompu ou concurrent : relancer `publish` |
+| `… does not trust the feed key …` | N n'approuve pas les clés de `UpdateFeeds.cs` : build fait avec `--feed-key`, à refaire sans |
+| `… did not refuse a feed whose signature no longer holds` | N ne vérifie pas ses flux : régression à corriger avant toute release |
+| l'app ne voit pas la mise à jour | canal du build, `LODB_DESKTOP_UPDATE_SOURCE` vide, événements `desktop.update.*` (dont `feed_refused`) |
 
 ## Limites connues
 
@@ -268,4 +387,12 @@ avant l'ouverture publique : le publier ainsi, ou le retirer de la matrice.
 - `GithubSource` ne lit qu'une page de l'API des releases, les plus récentes toutes
   confondues. D'où la purge des betas. D'autres releases du dépôt, comme les bundles
   Android, pèsent aussi.
-- La porte d'une première release de canal ne teste que le démarrage de N.
+- La porte d'une première release de canal ne teste que le démarrage de N, ses clés et son
+  refus d'un flux altéré.
+- Les flux signés n'ont tourné qu'en tests (xUnit, `node --test`) : le premier run réel de
+  `sign` → `gate` → `publish` est à suivre de près, en particulier le remplacement du flux
+  de vpk après `vpk upload`.
+- `previous.sh` récupère N-1 par `vpk download` sans le comparer au flux signé de sa
+  release, et `vpk pack` calcule le delta N-1 → N sur ce paquet. Reste à faire : vérifier ce
+  paquet contre le flux signé de N-1 avant `vpk pack`, avec les clés que N-1 approuve (une
+  rotation les change).
