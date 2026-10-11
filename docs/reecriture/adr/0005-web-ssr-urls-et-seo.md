@@ -142,7 +142,9 @@ chunks.
   main quand le chrome, la CSP ou le contrat `/api` changent de façon visible, et après tout
   correctif de sécurité du front, avec le retrait du chunk vulnérable
   ([procédure](../../guides/configuration.md)). Compromis assumé : entre deux montées, le
-  chrome d'une page d'ancien patch peut dater d'une semaine.
+  chrome d'une page d'ancien patch peut dater de deux semaines (une semaine de `s-maxage`,
+  puis une dernière copie périmée servie pendant son rafraîchissement, avant 7 jours
+  d'inactivité).
 - **Gardée à la 2ᵉ demande** (`LODB_ARCHIVE_CACHE_MIN_USES`, `2`) : un balayage de tous les
   patchs, qui ne repasse pas, n'écrit pas ses rendus sur le disque et n'évince jamais le
   dernier patch, rangé à part. Chaque URL distincte y tient pourtant une clé jusqu'à son

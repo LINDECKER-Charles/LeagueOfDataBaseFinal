@@ -195,8 +195,9 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   sans le port).
 - **Pages des anciens patchs** (`location ~ "^/{locale}/[0-9]"`, `snippets/archive-cache.conf`) :
   clé **sans révision**, préfixée par `LODB_ARCHIVE_EPOCH`. Elles survivent aux déploiements
-  et gardent jusqu'à une semaine le chrome, la CSP et les bundles du build qui les a rendues :
-  voulu. Monter l'epoch quand le chrome, la CSP ou le contrat `/api` changent de façon
+  et gardent jusqu'à deux semaines le chrome, la CSP et les bundles du build qui les a
+  rendues (une semaine de `s-maxage`, puis une dernière copie périmée servie pendant son
+  rafraîchissement tant que la page n'a pas atteint ses 7 jours d'inactivité) : voulu. Monter l'epoch quand le chrome, la CSP ou le contrat `/api` changent de façon
   visible, et après tout correctif de sécurité du front (procédure :
   [`configuration.md`](../guides/configuration.md)). Gardées à la **2ᵉ** demande
   (`LODB_ARCHIVE_CACHE_MIN_USES`, `2`) : `MISS`, `MISS`, puis `HIT` ; une spec qui attend un
