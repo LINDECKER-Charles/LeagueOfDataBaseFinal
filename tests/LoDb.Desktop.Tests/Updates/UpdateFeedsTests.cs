@@ -54,13 +54,13 @@ public sealed class UpdateFeedsTests
     }
 
     [Fact]
-    public void TrustsTheCompiledKeyUnlessALocalE2EBuildSetsItsOwn()
+    public void TrustsTheCompiledKeysUnlessALocalE2EBuildSetsItsOwn()
     {
         var release = new DesktopBuild { Version = "1.4.0", Channel = "stable" };
         var localE2E = release with { FeedKey = new TestFeedKey().PublicKey };
 
-        Assert.Equal(UpdateFeeds.FeedPublicKey, UpdateFeeds.TrustedKey(release));
-        Assert.Equal(localE2E.FeedKey, UpdateFeeds.TrustedKey(localE2E));
+        Assert.Equal(UpdateFeeds.FeedPublicKeys, UpdateFeeds.TrustedKeys(release));
+        Assert.Equal([localE2E.FeedKey], UpdateFeeds.TrustedKeys(localE2E));
     }
 
     [Fact]

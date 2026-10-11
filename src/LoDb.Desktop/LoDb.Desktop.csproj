@@ -30,7 +30,7 @@
     <AssemblyMetadata Include="LoDbDesktopChannel" Value="$(LoDbDesktopChannel)" />
     <AssemblyMetadata Include="LoDbDesktopGoogleClientId" Value="$(LoDbDesktopGoogleClientId)" />
     <!--
-      Empty in a release: the app then trusts the feed key compiled into UpdateFeeds.cs. The
+      Empty in a release: the app then trusts the feed keys compiled into UpdateFeeds.cs. The
       local update E2E sets it to a throwaway key it signs its feeds with.
     -->
     <AssemblyMetadata Include="LoDbDesktopFeedKey" Value="$(LoDbDesktopFeedKey)" />

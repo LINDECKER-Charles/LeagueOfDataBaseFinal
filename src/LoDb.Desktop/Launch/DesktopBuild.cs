@@ -25,7 +25,7 @@ internal sealed record DesktopBuild
 
     public string? GoogleClientId { get; init; }
 
-    /// <summary>Null in a release, which trusts the key compiled into the update code.</summary>
+    /// <summary>Null in a release, which trusts the keys compiled into the update code.</summary>
     public string? FeedKey { get; init; }
 
     public static DesktopBuild Of(Assembly assembly) => new()

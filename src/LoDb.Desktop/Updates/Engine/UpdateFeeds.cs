@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using LoDb.Desktop.Launch;
 using LoDb.Desktop.Updates.Engine.Signing;
 using Velopack.Sources;
@@ -15,18 +16,23 @@ internal static class UpdateFeeds
     public const string Repository = "https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal";
 
     /// <summary>
-    /// The Ed25519 public key the release feeds are signed with, base64 of its 32 raw bytes:
-    /// the app reads no feed whose signature does not hold against it. Its private half is
-    /// the release secret <c>LODB_DESKTOP_UPDATE_PRIVATE_KEY</c>. The release tools read this
-    /// constant here (tools/desktop-update-signing): a release signed with any other key
-    /// stops before it is published.
+    /// The Ed25519 public keys of the release feeds, base64 of their 32 raw bytes: the app
+    /// reads no feed whose signature holds against none of them. One key, whose private half
+    /// is the release secret <c>LODB_DESKTOP_UPDATE_PRIVATE_KEY</c>; two only while a key is
+    /// rotated, the old one still signing the release that brings the new one. The release
+    /// tools read this list here (tools/desktop-update-signing), one key per line: a release
+    /// signed with a key it does not hold stops before it is published.
     /// </summary>
-    public const string FeedPublicKey = "5kthbfZlQuxpzc4bLzvpi0hAq/2i/g9Zocih4rzggTs=";
+    public static readonly ImmutableArray<string> FeedPublicKeys =
+    [
+        "5kthbfZlQuxpzc4bLzvpi0hAq/2i/g9Zocih4rzggTs=",
+    ];
 
     /// <summary>
-    /// The key a build trusts: the compiled one, unless a local E2E build set its own.
+    /// The keys a build trusts: the compiled ones, unless a local E2E build set its own.
     /// </summary>
-    public static string TrustedKey(DesktopBuild build) => build.FeedKey ?? FeedPublicKey;
+    public static ImmutableArray<string> TrustedKeys(DesktopBuild build) =>
+        build.FeedKey is { } key ? [key] : FeedPublicKeys;
 
     /// <param name="settings">The update settings of the run.</param>
     /// <param name="channel">The build's release channel (<c>stable</c> or <c>beta</c>).</param>

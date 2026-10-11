@@ -17,7 +17,7 @@ internal static class UpdateServices
             Environment.GetCommandLineArgs(),
             Environment.GetEnvironmentVariable));
         services.AddSingleton(_ => new FeedSignature(
-            UpdateFeeds.TrustedKey(DesktopBuild.Of(typeof(UpdateServices).Assembly))));
+            UpdateFeeds.TrustedKeys(DesktopBuild.Of(typeof(UpdateServices).Assembly))));
         services.AddSingleton<SignedFeeds>();
         services.AddSingleton<IUpdateEngine, VelopackEngine>();
         services.AddSingleton<VelopackUpdates>();

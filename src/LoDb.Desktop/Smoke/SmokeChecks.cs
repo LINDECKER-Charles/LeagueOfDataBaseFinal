@@ -53,12 +53,12 @@ internal sealed class SmokeChecks(LoopbackHost host, HttpClient loopback)
         return Check("updates", true, stage, current.Version ?? string.Empty);
     }
 
-    // The update gate checks that a release trusts the key its feeds are signed with: a build
-    // with another key would refuse every later update.
+    // The update gate checks that a release trusts the keys its feeds are signed with: a
+    // build with other keys would refuse every later update.
     public SmokeCheck CheckFeedKey()
     {
-        var key = host.Services.GetRequiredService<FeedSignature>().PublicKey;
-        return Check("feed-key", true, "ed25519", key);
+        var keys = host.Services.GetRequiredService<FeedSignature>().PublicKeys;
+        return Check("feed-key", true, "ed25519", string.Join(' ', keys));
     }
 
     public async Task<SmokeCheck> ProbeApiAsync(

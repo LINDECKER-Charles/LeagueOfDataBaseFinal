@@ -16,7 +16,7 @@ internal sealed class TestFeedKey
 
     public string PublicKey => Convert.ToBase64String(_key.GeneratePublicKey().GetEncoded());
 
-    public FeedSignature Verifier() => new(PublicKey);
+    public FeedSignature Verifier() => new([PublicKey]);
 
     /// <summary>The signature file of the feed: context line, file name, then its bytes.</summary>
     public string Sign(byte[] feed, string feedName = TestReleases.FeedName)
