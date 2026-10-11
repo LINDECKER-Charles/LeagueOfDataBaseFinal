@@ -246,6 +246,8 @@ describe('lodb-catalogue-list', () => {
   it('jumps to the laid-out search on `/`, not while typing elsewhere', async () => {
     const fixture = await render('/en/items', sourceOf(WHOLE).source);
     const [rail] = all(fixture, 'lodb-filter-console input[type=search]');
+    // The rail shows from 64rem on, which jsdom never lays out: shown and measured by hand.
+    rail.closest<HTMLElement>('.list__console')?.style.setProperty('display', 'block');
     vi.spyOn(rail, 'getClientRects').mockReturnValue([new DOMRect()] as unknown as DOMRectList);
     document.dispatchEvent(new KeyboardEvent('keydown', { key: '/' }));
     expect(document.activeElement).toBe(rail);
