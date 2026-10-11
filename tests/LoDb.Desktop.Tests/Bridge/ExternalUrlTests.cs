@@ -6,9 +6,8 @@ public sealed class ExternalUrlTests
 {
     [Theory]
     [InlineData("https://league-of-data-base.com/fr/champions")]
-    [InlineData("http://example.com")]
     [InlineData("https://www.leagueoflegends.com/en-us/news/?page=2#top")]
-    public void AcceptsRemoteWebAddresses(string value)
+    public void AcceptsRemoteHttpsAddresses(string value)
     {
         Assert.True(ExternalUrl.TryParse(value, out var url));
         Assert.Equal(new Uri(value), url);
@@ -18,6 +17,7 @@ public sealed class ExternalUrlTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData("/fr/champions")]
+    [InlineData("http://example.com")]
     [InlineData("javascript:alert(1)")]
     [InlineData("file:///etc/passwd")]
     [InlineData("ms-msdt:/id PCWDiagnostic")]

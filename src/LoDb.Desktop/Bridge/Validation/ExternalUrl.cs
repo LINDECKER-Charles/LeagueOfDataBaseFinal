@@ -3,9 +3,10 @@ using System.Diagnostics.CodeAnalysis;
 namespace LoDb.Desktop.Bridge.Validation;
 
 /// <summary>
-/// A URL the page may open in the system browser: absolute http(s) of a remote host. Any
+/// A URL the page may open in the system browser: absolute https of a remote host. Any
 /// other scheme could start a local program through its protocol handler (<c>file:</c>,
-/// <c>ms-msdt:</c>…), which is what the bridge must never be used for.
+/// <c>ms-msdt:</c>…), which is what the bridge must never be used for; cleartext http could be
+/// read or altered on the way.
 /// </summary>
 internal static class ExternalUrl
 {
@@ -31,7 +32,7 @@ internal static class ExternalUrl
     // Credentials in a URL are a phishing device ("https://site@evil"); loopback addresses
     // are the app's own or another local service, never a page to send the user to.
     private static bool IsRemoteWebAddress(Uri url) =>
-        (url.Scheme == Uri.UriSchemeHttps || url.Scheme == Uri.UriSchemeHttp)
+        url.Scheme == Uri.UriSchemeHttps
         && url.Host.Length > 0
         && url.UserInfo.Length == 0
         && !url.IsLoopback;

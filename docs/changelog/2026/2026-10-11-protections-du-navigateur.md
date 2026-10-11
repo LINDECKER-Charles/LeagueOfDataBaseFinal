@@ -2,8 +2,8 @@
 date: 2026-10-11
 type: fix
 scope: full-stack
-title: Le navigateur protège mieux vos pages
-summary: Les pages n'acceptent plus que leurs propres scripts et le navigateur nous signale toute anomalie.
+title: Le navigateur protège mieux vos pages, et les liens sortants sont tous chiffrés
+summary: Les pages n'acceptent plus que leurs propres scripts, le navigateur nous signale toute anomalie, et l'application desktop reçoit les mêmes protections.
 tags: [securite]
 ---
 
@@ -11,6 +11,9 @@ tags: [securite]
 
 Chaque page dit désormais au navigateur quels scripts sont les siens, un par un : un script
 qui ne vient pas du site n'est pas exécuté, et le navigateur nous le signale.
+
+L'application desktop applique les mêmes règles à ses pages, et un lien vers un autre site ne
+s'ouvre plus que s'il est chiffré (https), sur le web, sur Android comme sur le desktop.
 
 ## Technique
 
@@ -24,3 +27,7 @@ qui ne vient pas du site n'est pas exécuté, et le navigateur nous le signale.
   client gardé ; une ligne `web.csp.violated` par minute et `lodb_csp_reports_total`.
 - Trusted Types en `Content-Security-Policy-Report-Only` (politiques `angular`,
   `angular#unsafe-bypass`, `lodb#worker` pour l'enregistrement du service worker).
+- Coquille desktop : son `index.html` part avec sa propre CSP (scripts inline de la coquille et
+  marqueur du lancement hachés, API par le proxy local, médias de l'API et des CDN de Riot).
+- Liens externes : `https` seulement (`isHttpsUrl` des trois plateformes, `ExternalUrl` du pont
+  desktop).
