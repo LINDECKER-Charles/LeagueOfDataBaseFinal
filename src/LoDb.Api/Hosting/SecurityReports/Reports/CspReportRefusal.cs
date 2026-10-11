@@ -3,7 +3,9 @@ namespace LoDb.Api.Hosting.SecurityReports.Reports;
 /// <summary>Why a report body was not read.</summary>
 internal enum CspReportRefusal
 {
-    /// <summary>Neither <c>application/csp-report</c> nor <c>application/reports+json</c>.</summary>
+    /// <summary>
+    /// Neither <c>application/csp-report</c> nor <c>application/reports+json</c>.
+    /// </summary>
     UnsupportedType,
 
     /// <summary>Larger than <see cref="SecurityReportsOptions.MaxBodyBytes"/>.</summary>
