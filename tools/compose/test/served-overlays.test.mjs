@@ -26,7 +26,7 @@ const HOST_ADDITIONS = 'LODB_EDGE_CIDR=172.18.0.0/16\nLODB_STACK_SUBNET=10.231.1
 // Every service of the stack, the one-shot migrate included.
 const SERVICES = [...RUNNING, 'migrate'];
 // What postgres's entrypoint needs, as root, before it becomes `postgres`.
-const POSTGRES_CAPABILITIES = ['CHOWN', 'DAC_READ_SEARCH', 'SETGID', 'SETUID'];
+const POSTGRES_CAPABILITIES = ['CHOWN', 'DAC_READ_SEARCH', 'FOWNER', 'SETGID', 'SETUID'];
 const NGINX_UPSTREAM = '{{upstreams 8080}}';
 // The staging share of the host: about three quarters of a core.
 const STAGING_CORES = 0.75;

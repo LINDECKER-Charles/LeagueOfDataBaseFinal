@@ -299,11 +299,12 @@ services:
     # Parallel queries share memory through /dev/shm, of which Docker gives 64 MiB.
     shm_size: ${LODB_PG_SHM_SIZE:-256m}
     <<: *hardening
-    # The image's entrypoint starts as root: it walks the data folder (owned by `postgres`,
-    # mode 700), gives it and the socket folder to `postgres`, then becomes that user. Each of
-    # the four is needed, on a new volume as on an existing one; its chmod of a folder it does
-    # not own may fail, the entrypoint ignores it (initdb and the volume set the modes).
-    cap_add: [CHOWN, DAC_READ_SEARCH, SETGID, SETUID]
+    # The image's entrypoint starts as root at every start: it walks the data folder (owned
+    # by `postgres`, mode 700), sets its mode, gives it and the socket folder to `postgres`,
+    # then becomes that user, which holds none of these. The server works without FOWNER, but
+    # the entrypoint's chmod of the data folder then fails and writes an error line at each
+    # start.
+    cap_add: [CHOWN, DAC_READ_SEARCH, FOWNER, SETGID, SETUID]
     # The server's socket and lock files, and the entrypoint's scratch files.
     tmpfs:
       - /var/run/postgresql:size=8m

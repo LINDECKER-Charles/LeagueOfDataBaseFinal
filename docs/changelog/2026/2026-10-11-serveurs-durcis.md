@@ -24,8 +24,8 @@ droits supplémentaires, ni fichiers modifiables, ni accès à la base de donné
 
 - `compose.yaml`, ancre `x-hardening` sur tous les services, en local comme sur un hôte :
   `read_only: true`, `cap_drop: [ALL]`, `no-new-privileges`, tmpfs bornés (`/tmp` ;
-  `/var/run/postgresql` pour Postgres, qui reprend `CHOWN`, `DAC_READ_SEARCH`, `SETGID` et
-  `SETUID` pour son entrée).
+  `/var/run/postgresql` pour Postgres, qui reprend `CHOWN`, `DAC_READ_SEARCH`, `FOWNER`,
+  `SETGID` et `SETUID` pour son entrée).
 - nginx sans privilège (utilisateur `nginx`, port 8080) : configuration rendue, pid et
   fichiers temporaires dans `/tmp`, `absolute_redirect off`, labels de l'edge
   `{{upstreams 8080}}`, sonde, smoke tests et port local suivent. Caches `lodb_seo` et
