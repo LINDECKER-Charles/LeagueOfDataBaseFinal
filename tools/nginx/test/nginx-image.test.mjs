@@ -186,6 +186,15 @@ describe('nginx image', { skip: IMAGE ? false : 'LODB_NGINX_IMAGE is not set' },
     }
   });
 
+  test('keeps a file of /build/ opened directly from running anything', async () => {
+    for (const path of ['/build/main-ABCD1234.js', '/build/media/logo-ABCD1234.svg',
+      '/build/gone-ABCD1234.js']) {
+      const answer = await get(path);
+      assert.equal(answer.headers['content-security-policy'], "default-src 'none'; sandbox",
+        path);
+    }
+  });
+
   test('keeps the crawler files once, whatever their query', async () => {
     assert.equal(await cacheOf('/robots.txt?utm_source=x'), 'MISS');
     assert.equal(await cacheOf('/robots.txt'), 'HIT');

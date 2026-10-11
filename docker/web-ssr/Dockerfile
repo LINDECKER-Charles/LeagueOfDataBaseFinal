@@ -26,6 +26,8 @@ WORKDIR /app
 COPY --from=build /source/src/LoDb.Web/dist/web ./
 # Mount point of the bundles every build shares (volume `front-builds`, compose.yaml): created
 # here, owned by `node`, so that a new volume starts writable for the bundles each start adds.
+# The renderer's only writable place that outlives a deploy: nginx keeps its files from
+# running when opened directly, and docs/guides/configuration.md says how to empty it.
 RUN mkdir -p /srv/front-builds && chown node:node /srv/front-builds
 USER node
 EXPOSE 4000

@@ -214,7 +214,11 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   servi, pas celle du démarrage : sans le rafraîchissement horaire, un build resté en service
   plus de 30 jours perdrait ses bundles au déploiement qui le remplace. Un chunk introuvable
   recharge la page une fois (`ChunkReload`, drapeau en `sessionStorage`), puis affiche la
-  500 : un rechargement en boucle se cherche là.
+  500 : un rechargement en boucle se cherche là. Le volume est écrit par le SSR et survit aux
+  déploiements : nginx sert `/build/` sous `default-src 'none'; sandbox` (un fichier ouvert
+  directement n'exécute rien ; la politique est ignorée pour un script ou un style qu'une
+  page charge), et après une compromission du SSR on vide `front-builds` et `assets-cache`
+  ([`configuration.md`](../guides/configuration.md)).
 - SSR : `LODB_TRUST_PROXY_HEADERS` obligatoire derrière nginx, `LODB_ALLOWED_HOSTS` liste
   les hôtes acceptés ; `public/` ne contient ni `media/` ni script racine nommé comme un
   bundle (cache `immutable`).

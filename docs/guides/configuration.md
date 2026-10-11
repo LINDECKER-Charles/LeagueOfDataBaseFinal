@@ -184,6 +184,17 @@ docker compose exec -T nginx sh -c \
   "grep -rlax 'KEY: /build/<chunk>.js' /var/cache/nginx/assets | xargs -r rm -f"
 ```
 
+Le volume `front-builds` est le seul endroit où le serveur SSR écrit, et ce qu'il y écrit
+survit aux déploiements. Après un correctif du **serveur SSR lui-même** (exécution de code
+dans le conteneur `web-ssr`), monter l'epoch comme ci-dessus, puis, une fois le build corrigé
+en service, vider ce volume et le cache des bundles de nginx en entier : le build corrigé y
+republie les siens dans l'heure, et `/build/` sert ceux de son image entre-temps.
+
+```bash
+docker compose exec -T web-ssr find /srv/front-builds -mindepth 1 -delete
+docker compose exec -T nginx find /var/cache/nginx/assets -mindepth 1 -delete
+```
+
 Chaque environnement a son propre service `postgres` dans son projet, comme avant.
 `CONTACT_RECIPIENT` et `PUBLIC_API_BASE_URL` n'ont d'effet qu'en local : sur un
 environnement servi, `LoDb__Contact__Recipient` et `LODB_PUBLIC_API_ORIGIN` les remplacent.

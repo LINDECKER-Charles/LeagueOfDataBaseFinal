@@ -39,7 +39,9 @@ recharge une fois, de lui-même, et vous arrivez directement sur la page demand�
   puis ceux du volume (`LODB_FRONT_BUILDS_DIR`). Le job de déploiement supprime ceux qu'aucun
   build en service n'a livrés depuis `LODB_FRONT_BUILDS_RETENTION_DAYS` jours (30).
 - nginx : zone `lodb_assets` pour `/build/` (clé `$uri`, 1 Go, 30 j d'inactivité, réglables
-  par `LODB_ASSETS_CACHE_*`), sur un volume ; un `404` n'est jamais gardé.
+  par `LODB_ASSETS_CACHE_*`), sur un volume ; un `404` n'est jamais gardé. `/build/` répond
+  sous `Content-Security-Policy: default-src 'none'; sandbox` : un fichier ouvert directement
+  n'exécute rien (les fichiers du volume sont écrits par le SSR, pas tirés de son image).
 - Le SSR compresse le HTML d'une page une fois, au rendu (gzip niveau 6, `zlib` asynchrone,
   après le calcul de la CSP ; `LODB_HTML_GZIP_LEVEL`) ; nginx demande gzip à l'amont, garde
   la copie compressée (plus de recompression à chaque HIT, cache plusieurs fois plus dense),
