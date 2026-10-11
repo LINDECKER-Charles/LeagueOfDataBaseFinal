@@ -80,6 +80,9 @@ public sealed class CspReportEndpointTests
     [InlineData("text/plain", Legacy, HttpStatusCode.UnsupportedMediaType)]
     [InlineData(ReportingType, "{\"not\": \"a report\"}", HttpStatusCode.BadRequest)]
     [InlineData(ReportingType, "[{\"type\": ", HttpStatusCode.BadRequest)]
+    // Well-formed, but its string is half a surrogate pair: found only as it is read.
+    [InlineData(LegacyType, "{\"csp-report\": {\"violated-directive\": \"\\uD800\"}}",
+        HttpStatusCode.BadRequest)]
     public async Task RefusesWhatIsNotAReport(string type, string body, HttpStatusCode status)
     {
         await using var factory = new ApiFactory();

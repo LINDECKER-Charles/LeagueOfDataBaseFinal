@@ -8,6 +8,9 @@ namespace LoDb.Api.Tests.Hosting.SecurityReports;
 /// </summary>
 public sealed class CspReportFormatsTests
 {
+    // Never a byte of UTF-8, whatever its position.
+    private const byte NotUtf8 = 0xFF;
+
     [Theory]
     [InlineData("script-src-elem", "script-src-elem")]
     [InlineData("SCRIPT-SRC 'self' 'sha256-x'", "script-src")]
@@ -77,6 +80,26 @@ public sealed class CspReportFormatsTests
     [InlineData("[{\"type\": ")]
     public void FindsNothingInWhatIsNotAReport(string body) =>
         Assert.Null(CspReportFormats.Parse(Bytes(body)));
+
+    // Well-formed JSON whose text the parser only decodes when it is read: a byte that is not
+    // UTF-8 (written `#` here), or an escaped half of a surrogate pair, in a string the reading
+    // looks at.
+    [Theory]
+    [InlineData("""{"csp-report": {"effective-directive": "#"}}""")]
+    [InlineData("""{"csp-report": {"effective-directive": "\uD800"}}""")]
+    [InlineData("""[{"type": "#", "body": {}}]""")]
+    [InlineData("""{"type": "csp-violation", "body": {"disposition": "\uDC00"}}""")]
+    public void FindsNothingInATextThatIsNotUnicode(string body)
+    {
+        var bytes = Encoding.UTF8.GetBytes(body);
+        var mark = Array.IndexOf(bytes, (byte)'#');
+        if (mark >= 0)
+        {
+            bytes[mark] = NotUtf8;
+        }
+
+        Assert.Null(CspReportFormats.Parse(bytes));
+    }
 
     private static ReadOnlyMemory<byte> Bytes(string text) => Encoding.UTF8.GetBytes(text);
 }

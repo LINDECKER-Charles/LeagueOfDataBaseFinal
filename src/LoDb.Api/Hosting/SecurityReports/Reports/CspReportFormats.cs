@@ -44,6 +44,13 @@ internal static class CspReportFormats
         {
             return null;
         }
+        catch (InvalidOperationException)
+        {
+            // Well-formed JSON whose strings are not Unicode (a byte that is not UTF-8, half a
+            // surrogate pair): the parser only finds it when a string is read. Not a browser's
+            // report, and never an error of the server.
+            return null;
+        }
     }
 
     // Other report types (deprecations, interventions) are not this endpoint's to count.
