@@ -21,6 +21,9 @@ public sealed class SignInTests(PostgresContainerFixture postgres)
     private const string AttemptsCounter = "lodb.sign_in.attempts";
     private const string LockoutsCounter = "lodb.lockouts";
 
+    // The digits of an authenticator code before the apps' separator.
+    private const int CodeGroup = 3;
+
     private AccountsApp? _app;
 
     private AccountsApp App =>
@@ -163,6 +166,25 @@ public sealed class SignInTests(PostgresContainerFixture postgres)
             await ApiJson.ProblemCodeAsync(wrongCode, HttpStatusCode.Unauthorized));
         var user = (await ApiJson.ReadAsync(rightCode, HttpStatusCode.OK)).GetProperty("user");
         Assert.True(user.GetProperty("twoFactorEnabled").GetBoolean());
+        Assert.True(user.GetProperty("multiFactor").GetBoolean());
+    }
+
+    // As the authenticator apps show their codes, in two groups.
+    [Theory]
+    [InlineData(" ")]
+    [InlineData("-")]
+    public async Task CodeGroupedAsTheAppShowsItSignsIn(string separator)
+    {
+        await App.SeedAsync(new AccountSeed());
+        var secrets = await App.EnableTwoFactorAsync(AccountSeed.Name);
+        var code = Totp.Code(secrets.Key, App.Clock);
+        using var browser = App.Browser();
+
+        using var signIn = await SignInWithAsync(
+            browser,
+            twoFactorCode: code[..CodeGroup] + separator + code[CodeGroup..]);
+
+        var user = (await ApiJson.ReadAsync(signIn, HttpStatusCode.OK)).GetProperty("user");
         Assert.True(user.GetProperty("multiFactor").GetBoolean());
     }
 
