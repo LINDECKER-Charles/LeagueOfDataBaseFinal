@@ -10,6 +10,7 @@ import {
   contentChild,
   inject,
   input,
+  linkedSignal,
   signal,
   viewChild,
 } from '@angular/core';
@@ -45,8 +46,9 @@ const MAX_SKELETON_TILES = 24;
  * `<key>_all`), so a filtered list is a link. `/` jumps to the search.
  *
  * The rail's console is hydrated once the reader points at it, focuses, clicks or types in
- * it, or presses `/`: until then its server-rendered markup costs no script, and on a phone,
- * where it is hidden, it never runs.
+ * it, or presses `/`, else once its server-rendered markup is out of date (the whole list
+ * read, the state moved): until then that markup costs no script, during the page's load
+ * above all.
  */
 @Component({
   selector: 'lodb-catalogue-list',
@@ -101,6 +103,16 @@ export class CatalogueList<C> implements OnInit {
   private readonly barSearch = viewChild.required(FilterSearch);
   /** `/` was pressed before the console was hydrated: it hydrates, then takes the focus. */
   protected readonly isConsoleWanted = signal(false);
+  /**
+   * What the server drew the rail from has changed: the whole list came (the counts and
+   * options were the first page's), or the state moved without the rail (a filter cleared
+   * from the results, another language). Left dehydrated, the rail would show its old copy.
+   */
+  private readonly isRailOutdated = linkedSignal<unknown, boolean>({
+    source: () => [this.source().dataset(), this.filter.state()],
+    computation: (_, previous) => previous !== undefined,
+  });
+  protected readonly isConsoleDue = computed(() => this.isConsoleWanted() || this.isRailOutdated());
 
   /** What the list says instead of, or above, its cards when the API could not answer. */
   protected readonly notice = computed(() => {

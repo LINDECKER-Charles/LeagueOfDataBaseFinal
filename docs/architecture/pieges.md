@@ -69,7 +69,10 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   (`@defer (on immediate; hydrate on …)`). D'ici là, leurs éléments gardent leur `jsaction`
   et un clic n'agit qu'une fois rejoué, après l'hydratation : voulu. Un bloc qui se mesure
   une fois hydraté (pager, pied de page) s'hydrate un écran à l'avance (`rootMargin`), sinon
-  son ajustement devient un décalage visible (CLS). La console se lit par sa référence
+  son ajustement devient un décalage visible (CLS). Un bloc déshydraté n'est jamais mis à
+  jour : la console s'hydrate donc aussi dès que sa copie serveur est périmée (liste entière
+  lue, état changé hors d'elle : filtre retiré des résultats, autre langue), sinon elle
+  garderait les comptes de la première page. La console se lit par sa référence
   (`#console`), jamais par sa classe, qui la chargerait avec la liste.
 - **Liste complète à l'intention** : une liste ne lit sa liste entière qu'à l'intention du
   lecteur (recherche, facette, page, taille, feuille des filtres, URL filtrée) ou au repos

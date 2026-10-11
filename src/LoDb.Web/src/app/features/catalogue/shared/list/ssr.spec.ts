@@ -142,6 +142,16 @@ describe('lodb-catalogue-list rendered on the server', () => {
     expect(rail?.querySelector('.console__foot')).not.toBeNull();
   });
 
+  // What a search field holds beyond this default value is what the reader typed before the
+  // hydration (FilterSearch). A second render: the first one also loads the rail's code.
+  it('writes the query of the URL as the default value of both search fields', async () => {
+    await renderOnServer('/en/items', []);
+    const html = await renderOnServer('/en/items?q=dag', []);
+    const parsed = new DOMParser().parseFromString(html, 'text/html');
+    const fields = [...parsed.querySelectorAll<HTMLInputElement>('input[type=search]')];
+    expect(fields.map((field) => field.defaultValue)).toEqual(['dag', 'dag']);
+  });
+
   it('keeps a card whose rich text holds a bare <li> inside its cell once parsed', async () => {
     const html = await renderOnServer('/en/rich', []);
     // The browser parses the server's HTML as a whole document, as hydration then finds it.

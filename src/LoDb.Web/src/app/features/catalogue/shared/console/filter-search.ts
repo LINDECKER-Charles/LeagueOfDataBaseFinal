@@ -62,11 +62,13 @@ export class FilterSearch {
   constructor() {
     // Hydrated after the reader started typing (the rail's console waits for them), the
     // field already holds their text: drawing the state's query would erase it before the
-    // replayed keystrokes hand it over. A field the browser builds itself is empty here.
-    const typed =
-      inject<ElementRef<HTMLElement>>(ElementRef).nativeElement.querySelector('input')?.value;
-    if (typed !== undefined && typed !== '') {
-      this.text.set(typed);
+    // replayed keystrokes hand it over. Their text is what departs from the value the server
+    // wrote (`defaultValue`), which itself may be out of date: a query cleared since, from
+    // the results. A field the browser builds itself is not there yet (the server's DOM then
+    // answers undefined, not null).
+    const field = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement.querySelector('input');
+    if (field && field.value !== field.defaultValue) {
+      this.text.set(field.value);
     }
   }
 

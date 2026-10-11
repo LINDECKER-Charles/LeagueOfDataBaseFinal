@@ -16,14 +16,10 @@
     </div>
   </div>
 
-  <!-- Hover includes the focus: a field filled without a click or a key still hydrates. -->
+  <!-- Hover includes the focus: a field filled without a click or a key still hydrates.
+       `when`: the `/` shortcut, or the server's copy of the rail gone out of date. -->
   <aside #consoleRail class="list__console">
-    @defer (
-      on immediate;
-      hydrate on interaction;
-      hydrate on hover;
-      hydrate when isConsoleWanted()
-    ) {
+    @defer (on immediate; hydrate on interaction; hydrate on hover; hydrate when isConsoleDue()) {
       <lodb-filter-console #console [searchLabel]="searchLabel()" />
     }
   </aside>
