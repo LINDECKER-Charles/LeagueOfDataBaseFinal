@@ -92,6 +92,16 @@ describe('served overlays through Compose',
       assert.equal(prod['web-ssr'].environment.LODB_RENDER_MAX_IN_FLIGHT, '');
     });
 
+    // The renderer's copy of /api/meta: its default in code, or the host's `.env` value.
+    test('hands the renderer the lifetime of its /api/meta copy from the host', async () => {
+      assert.equal(prod['web-ssr'].environment.LODB_API_META_TTL_SECONDS, '');
+      const meta = join(folder, 'meta.env');
+      await writeFile(meta, 'LODB_API_META_TTL_SECONDS=15\n');
+      const services = await servicesOf(
+        [join(ROOT, '.env.prod.example'), join(folder, 'host.env'), meta], SERVED);
+      assert.equal(services['web-ssr'].environment.LODB_API_META_TTL_SECONDS, '15');
+    });
+
     test('asks for the staging login on the pages only, its hash intact', async () => {
       const services = await servicesOf([join(ROOT, '.env.staging.example'),
         join(folder, 'host.env'), join(folder, 'auth.env')], STAGING_AUTH);

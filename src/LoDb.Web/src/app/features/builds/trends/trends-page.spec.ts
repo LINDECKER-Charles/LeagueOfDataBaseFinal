@@ -9,13 +9,13 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { provideTransloco, type Translation } from '@jsverse/transloco';
-import { provideTranslocoMessageformat } from '@jsverse/transloco-messageformat';
+import { TRANSLOCO_TRANSPILER, provideTransloco, type Translation } from '@jsverse/transloco';
 import { of } from 'rxjs';
 import { API_BASE_URL } from '../../../core/api/api-base-url';
 import type { TrendsPage as TrendsPageModel } from '../../../core/api/generated/models/trends-page';
 import { AuthSession } from '../../../core/auth/session/auth-session';
 import type { SessionStatus } from '../../../core/auth/session/session-status';
+import { PrecompiledTranspiler } from '../../../core/i18n/messages/precompiled-transpiler';
 import { CANONICAL_ORIGIN } from '../../../core/seo/canonical-origin';
 import { Seo } from '../../../core/seo/seo';
 import type { TrendsView } from './loading/trends-view';
@@ -35,7 +35,15 @@ const CATALOGUES: Record<string, Translation> = {
       },
     },
     filter: {
-      results: '{count, plural, one {# résultat} other {# résultats}}',
+      // `{count, plural, one {# résultat} other {# résultats}}`, compiled as the build ships it.
+      results: [
+        [
+          'plural',
+          'count',
+          0,
+          { one: [['#', 'count', 0], ' résultat'], other: [['#', 'count', 0], ' résultats'] },
+        ],
+      ],
       page: 'page {{ page }} / {{ count }}',
       prev: 'Précédent',
       next: 'Suivant',
@@ -90,7 +98,7 @@ async function visit(page: TrendsPageModel, status: SessionStatus = 'unknown', u
           getTranslation = (path: string) => of(CATALOGUES[path] ?? {});
         },
       }),
-      provideTranslocoMessageformat({ strictPluralKeys: false }),
+      { provide: TRANSLOCO_TRANSPILER, useClass: PrecompiledTranspiler },
     ],
   });
   const apply = vi.spyOn(TestBed.inject(Seo), 'apply');

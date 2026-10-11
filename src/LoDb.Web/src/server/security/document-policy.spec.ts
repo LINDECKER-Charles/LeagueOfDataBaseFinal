@@ -13,11 +13,11 @@ describe('documentPolicy', () => {
   it('admits the site scripts and exactly the hashed inline ones', () => {
     const policy = directives(documentPolicy(["'sha256-a'", "'sha256-b'"]));
 
-    expect(policy.get('script-src')).toBe("'self' 'unsafe-eval' 'sha256-a' 'sha256-b'");
+    expect(policy.get('script-src')).toBe("'self' 'sha256-a' 'sha256-b'");
   });
 
   it('admits no inline script when there is none', () => {
-    expect(directives(documentPolicy([])).get('script-src')).toBe("'self' 'unsafe-eval'");
+    expect(directives(documentPolicy([])).get('script-src')).toBe("'self'");
   });
 
   it('writes the policy of ADR 0005', () => {
@@ -30,7 +30,7 @@ describe('documentPolicy', () => {
       'frame-src': "'none'",
       'frame-ancestors': "'none'",
       'form-action': "'self' https://checkout.stripe.com https://billing.stripe.com",
-      'script-src': "'self' 'unsafe-eval'",
+      'script-src': "'self'",
       'style-src': "'self' 'unsafe-inline'",
       'img-src':
         "'self' data: https://ddragon.leagueoflegends.com https://raw.communitydragon.org https://d28xe8vt774jo5.cloudfront.net",
@@ -47,5 +47,10 @@ describe('documentPolicy', () => {
     expect(documentPolicy(["'sha256-a'"])).not.toMatch(
       /strict-dynamic|unsafe-hashes|script-src[^;]*unsafe-inline/,
     );
+  });
+
+  // Nothing compiles code in the page any more: the i18n messages are compiled at build time.
+  it('lets no script evaluate code', () => {
+    expect(documentPolicy(["'sha256-a'"])).not.toContain('unsafe-eval');
   });
 });

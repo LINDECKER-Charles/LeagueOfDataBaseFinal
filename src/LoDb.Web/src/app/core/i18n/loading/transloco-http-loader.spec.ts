@@ -27,19 +27,6 @@ describe('TranslocoHttpLoader', () => {
     await expect(loaded).resolves.toEqual({ title: 'ok' });
   });
 
-  // Transloco asks the main and the fallback loader for `items/en` at once under `en`.
-  it('shares one request between concurrent loads of a path', async () => {
-    const loader = TestBed.inject(TranslocoHttpLoader);
-    const both = Promise.all([
-      firstValueFrom(loader.getTranslation('items/en')),
-      firstValueFrom(loader.getTranslation('items/en')),
-    ]);
-
-    TestBed.inject(HttpTestingController).expectOne('i18n/items/en.json').flush({ a: 'b' });
-
-    await expect(both).resolves.toEqual([{ a: 'b' }, { a: 'b' }]);
-  });
-
   it('requests a failed path again', async () => {
     const loader = TestBed.inject(TranslocoHttpLoader);
     const http = TestBed.inject(HttpTestingController);

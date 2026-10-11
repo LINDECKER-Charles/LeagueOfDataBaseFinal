@@ -8,76 +8,103 @@ import { REQUEST, REQUEST_CONTEXT } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL } from '../api/api-base-url';
+import { ApiResponseMemo } from './api-response-memo';
 import { provideSsrHttp } from './provide-ssr-http';
-import { SelfOriginFetchBackend } from './self-origin-fetch-backend';
+import { SsrHttpBackend } from './ssr-http-backend';
 import type { SsrRequestContext } from './ssr-request-context';
 
 const PAGE = 'https://league-of-data-base.com';
-const CONTEXT: SsrRequestContext = {
-  apiOrigin: 'http://api:8080',
-  selfOrigin: 'http://127.0.0.1:4000',
-};
+const API = 'http://api:8080';
+const META_TTL_MS = 60_000;
+const CATALOGUE = Object.freeze({ title: 'Objets' });
 
 describe('provideSsrHttp', () => {
   let fetch: ReturnType<typeof vi.fn>;
+  let now: number;
 
-  function configure(context: SsrRequestContext | null, request: Request | null): void {
+  function context(buildFiles: SsrRequestContext['buildFiles']): SsrRequestContext {
+    return {
+      apiOrigin: API,
+      buildFiles,
+      apiResponses: new ApiResponseMemo(new Set([`${API}/api/meta`]), META_TTL_MS, () => now),
+    };
+  }
+
+  function configure(value: SsrRequestContext | null, request: Request | null): void {
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(),
         provideSsrHttp(),
         { provide: REQUEST, useValue: request },
-        { provide: REQUEST_CONTEXT, useValue: context },
+        { provide: REQUEST_CONTEXT, useValue: value },
       ],
     });
   }
 
-  function fetchedUrl(url: string): Promise<string> {
-    return firstValueFrom(TestBed.inject(HttpClient).get(url)).then(
-      () => fetch.mock.calls[0][0] as string,
-    );
-  }
+  const get = (url: string) => firstValueFrom(TestBed.inject(HttpClient).get(url));
+  const fetchedUrls = () => fetch.mock.calls.map(([url]) => url as string);
 
   beforeEach(() => {
-    fetch = vi.fn(() => Promise.resolve(Response.json({})));
+    now = 0;
+    fetch = vi.fn(() => Promise.resolve(Response.json({ answered: true })));
     vi.stubGlobal('fetch', fetch);
   });
 
   afterEach(() => vi.unstubAllGlobals());
 
   it('calls the API on its internal origin', () => {
-    configure(CONTEXT, new Request(`${PAGE}/fr/`));
+    configure(context(null), new Request(`${PAGE}/fr/`));
 
-    expect(TestBed.inject(API_BASE_URL)).toBe('http://api:8080');
+    expect(TestBed.inject(API_BASE_URL)).toBe(API);
   });
 
   it('keys API responses under the public origin the browser will request', () => {
-    configure(CONTEXT, new Request(`${PAGE}/fr/`));
+    configure(context(null), new Request(`${PAGE}/fr/`));
 
-    expect(TestBed.inject(HTTP_TRANSFER_CACHE_ORIGIN_MAP)).toEqual({ 'http://api:8080': PAGE });
+    expect(TestBed.inject(HTTP_TRANSFER_CACHE_ORIGIN_MAP)).toEqual({ [API]: PAGE });
   });
 
-  it('fetches same-origin files from the SSR server itself', async () => {
-    configure(CONTEXT, new Request(`${PAGE}/fr/`));
+  it("answers the page's own files from the build files, without a request", async () => {
+    configure(context(new Map([['i18n/fr.json', CATALOGUE]])), new Request(`${PAGE}/fr/`));
 
-    expect(TestBed.inject(HttpBackend)).toBeInstanceOf(SelfOriginFetchBackend);
-    await expect(fetchedUrl(`${PAGE}/i18n/fr.json`)).resolves.toBe(
-      'http://127.0.0.1:4000/i18n/fr.json',
-    );
+    expect(TestBed.inject(HttpBackend)).toBeInstanceOf(SsrHttpBackend);
+    await expect(get(`${PAGE}/i18n/fr.json`)).resolves.toBe(CATALOGUE);
+    await expect(get(`${PAGE}/i18n/zz.json`)).rejects.toMatchObject({ status: 404 });
+    expect(fetch).not.toHaveBeenCalled();
   });
 
-  it('leaves API requests untouched', async () => {
-    configure(CONTEXT, new Request(`${PAGE}/fr/`));
+  it('leaves the API and every other origin to fetch', async () => {
+    configure(context(new Map()), new Request(`${PAGE}/fr/`));
 
-    await expect(fetchedUrl('http://api:8080/api/meta')).resolves.toBe('http://api:8080/api/meta');
+    await get(`${API}/api/catalog/16.1.1/fr_FR/items`);
+    await get('https://ddragon.leagueoflegends.com/api/versions.json');
+
+    expect(fetchedUrls()).toEqual([
+      `${API}/api/catalog/16.1.1/fr_FR/items`,
+      'https://ddragon.leagueoflegends.com/api/versions.json',
+    ]);
   });
 
-  it('leaves same-origin files to the host server when it does not listen itself', async () => {
-    configure({ ...CONTEXT, selfOrigin: null }, new Request('http://localhost:4200/fr/'));
+  it("leaves the page's files to the host server when it holds none (ng serve)", async () => {
+    configure(context(null), new Request('http://localhost:4200/fr/'));
 
-    await expect(fetchedUrl('http://localhost:4200/i18n/fr.json')).resolves.toBe(
-      'http://localhost:4200/i18n/fr.json',
-    );
+    await get('http://localhost:4200/i18n/fr.json');
+
+    expect(fetchedUrls()).toEqual(['http://localhost:4200/i18n/fr.json']);
+  });
+
+  it('asks the API for /api/meta once a minute, and serves its last copy when it fails', async () => {
+    configure(context(new Map()), new Request(`${PAGE}/fr/`));
+
+    await get(`${API}/api/meta`);
+    now = META_TTL_MS - 1;
+    await get(`${API}/api/meta`);
+    expect(fetch).toHaveBeenCalledOnce();
+
+    now = META_TTL_MS;
+    fetch.mockRejectedValueOnce(new TypeError('fetch failed'));
+    await expect(get(`${API}/api/meta`)).resolves.toEqual({ answered: true });
+    expect(fetch).toHaveBeenCalledTimes(2);
   });
 
   it('degrades to relative API URLs outside a request (route extraction)', () => {

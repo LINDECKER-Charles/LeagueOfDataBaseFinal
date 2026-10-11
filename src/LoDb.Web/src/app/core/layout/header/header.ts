@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { provideTranslocoScope, TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { PAYMENTS_ENABLED } from '../../../../environments/payments-enabled';
 import { Button } from '../../../ui/controls/button';
 import { Icon } from '../../../ui/media/icon';
@@ -28,7 +28,8 @@ import { CODEX_ENTRIES } from './codex-entries';
  * name and the chip at more widths, but let them overlap the logo and the navigation there.
  * The Codex menu keeps the page's version and variant (`injectChromeLinks`), and lights up on
  * any page of the catalogue. The developers entry is labelled from the `api` catalogue scope,
- * loaded here since the header sits outside the pages that provide it.
+ * whose label the build lends to the root catalogue (src/LoDb.Web/i18n/chrome-keys.json): no
+ * page loads the whole scope for it.
  */
 @Component({
   selector: 'lodb-header',
@@ -42,7 +43,6 @@ import { CODEX_ENTRIES } from './codex-entries';
     ThemePicker,
     TranslocoPipe,
   ],
-  providers: [provideTranslocoScope('api')],
   templateUrl: './header.html',
   host: { class: 'relative z-30 block' },
   changeDetection: ChangeDetectionStrategy.OnPush,
