@@ -4,8 +4,10 @@ using LoDb.Infrastructure.Outbox.Delivery;
 using LoDb.Infrastructure.Persistence.Outbox;
 using LoDb.Infrastructure.Tests.Persistence;
 using LoDb.Testing;
+using System.Diagnostics.Metrics;
 using MailKit.Net.Smtp;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.Metrics.Testing;
 using MimeKit;
 
 namespace LoDb.Infrastructure.Tests.Outbox;
@@ -13,11 +15,14 @@ namespace LoDb.Infrastructure.Tests.Outbox;
 /// <summary>
 /// The worker's batches: a due message is sent once, a failure comes back after an
 /// exponential backoff, a message is dead after its last attempt or at once when its model
-/// is unusable, and a lease that runs out gives the message to the next batch.
+/// is unusable, a lease that runs out gives the message to the next batch, and a template
+/// past its hourly cap waits for the hour to free a place.
 /// </summary>
 public sealed class OutboxDispatcherTests(PostgresContainerFixture postgres)
     : MigratedDatabase(postgres)
 {
+    private const string ConfirmEmailCap = "LoDb:Outbox:HourlyCaps:ConfirmEmail";
+
     private readonly FakeMailTransport _transport = new();
     private readonly List<OutboxHarness> _harnesses = [];
 
@@ -141,8 +146,9 @@ public sealed class OutboxDispatcherTests(PostgresContainerFixture postgres)
         await harness.EnqueueAsync(OutboxHarness.Confirmation(UiLocale.En), Cancellation);
 
         // An instance takes the message, then dies before recording anything.
-        var taken = await harness.Services.GetRequiredService<OutboxQueue>()
-            .ClaimAsync(Cancellation);
+        var queue = harness.Services.GetRequiredService<OutboxQueue>();
+        var budget = SendingBudget.Of(await queue.LoadsAsync(Cancellation), new OutboxOptions());
+        var taken = await queue.ClaimAsync(budget, Cancellation);
         var duringLease = await harness.Dispatcher.DispatchAsync(Cancellation);
         harness.Time.Advance(new OutboxOptions().Lease);
         var afterLease = await harness.Dispatcher.DispatchAsync(Cancellation);
@@ -191,6 +197,64 @@ public sealed class OutboxDispatcherTests(PostgresContainerFixture postgres)
         Assert.Equal((EmailOutboxStatus.Pending, 0), (row.Status, row.Attempts));
     }
 
+    [Fact]
+    public async Task HourlyCapDefersTheExcessOfItsTemplateOnly()
+    {
+        var harness = NewHarness(new() { [ConfirmEmailCap] = "2" });
+        for (var index = 0; index < 5; index++)
+        {
+            var message = OutboxHarness.Confirmation(UiLocale.En, $"player{index}@example.com");
+            await harness.EnqueueAsync(message, Cancellation);
+        }
+
+        await harness.EnqueueAsync(Reset("reset@example.com"), Cancellation);
+        using var deferred = DeferredGauge(harness);
+
+        var first = await harness.Dispatcher.DispatchAsync(Cancellation);
+        var capped = await harness.Dispatcher.DispatchAsync(Cancellation);
+        var heldBack = (await harness.RowsAsync(Cancellation))
+            .Where(static row => row.Status == EmailOutboxStatus.Pending)
+            .ToList();
+        deferred.RecordObservableInstruments();
+        harness.Time.Advance(TimeSpan.FromMinutes(59));
+        var stillCapped = await harness.Dispatcher.DispatchAsync(Cancellation);
+        harness.Time.Advance(TimeSpan.FromMinutes(1));
+        var nextHour = await harness.Dispatcher.DispatchAsync(Cancellation);
+
+        Assert.Equal(new DispatchSummary(3, 3, 0, 0, BatchWasFull: false), first);
+        Assert.Equal(
+            (DispatchSummary.Empty, DispatchSummary.Empty),
+            (capped, stillCapped));
+        Assert.Equal(3, heldBack.Count);
+        Assert.All(heldBack, static row => Assert.Equal(0, row.Attempts));
+        Assert.Equal(3, deferred.LastMeasurement?.Value);
+        Assert.Equal(2, nextHour.Sent);
+        Assert.Equal(
+            ["player0", "player1", "reset", "player2", "player3"],
+            _transport.Sent.Select(static sent =>
+                sent.To.Mailboxes.Single().Address.Split('@')[0]));
+        Assert.Single(harness.Logs, static log => log.Id.Name == "outbox.hourly_cap.reached");
+        Assert.Single(harness.Logs, static log => log.Id.Name == "outbox.hourly_cap.released");
+    }
+
+    [Fact]
+    public async Task OtherTemplatesKeepTheirOwnBudget()
+    {
+        var harness = NewHarness(new() { [ConfirmEmailCap] = "1" });
+        await harness.EnqueueAsync(OutboxHarness.Confirmation(UiLocale.En), Cancellation);
+        await harness.Dispatcher.DispatchAsync(Cancellation);
+        await harness.EnqueueAsync(OutboxHarness.Confirmation(UiLocale.En), Cancellation);
+        await harness.EnqueueAsync(Reset("reset@example.com"), Cancellation);
+
+        var summary = await harness.Dispatcher.DispatchAsync(Cancellation);
+
+        Assert.Equal(1, summary.Sent);
+        Assert.Equal("reset@example.com", _transport.Sent.Last().To.Mailboxes.Single().Address);
+        Assert.Equal(
+            [EmailOutboxStatus.Sent, EmailOutboxStatus.Pending, EmailOutboxStatus.Sent],
+            (await harness.RowsAsync(Cancellation)).Select(static row => row.Status));
+    }
+
     protected override async ValueTask DisposeServicesAsync()
     {
         foreach (var harness in _harnesses)
@@ -198,6 +262,18 @@ public sealed class OutboxDispatcherTests(PostgresContainerFixture postgres)
             await harness.DisposeAsync();
         }
     }
+
+    private static EmailMessage Reset(string recipient) =>
+        OutboxHarness.Confirmation(UiLocale.En, recipient) with
+        {
+            Template = EmailTemplate.ResetPassword,
+        };
+
+    private static MetricCollector<long> DeferredGauge(OutboxHarness harness) =>
+        new(
+            harness.Services.GetRequiredService<IMeterFactory>(),
+            OutboxMetrics.MeterName,
+            "lodb.outbox.deferred");
 
     private static async Task DrainAsync(OutboxHarness harness)
     {

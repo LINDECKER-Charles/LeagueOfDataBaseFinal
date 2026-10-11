@@ -114,6 +114,15 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
 - **E-mails** : le modèle d'un `EmailMessage` s'écrit avec `EmailModelKeys`, jamais en
   littéral (sinon `dead` dès le premier essai). L'outbox n'envoie rien sans
   `LoDb:Mail:Host` : voulu. En local, Mailpit sur http://localhost:18025.
+- **Plafond horaire de l'outbox** (`LoDb:Outbox:HourlyCaps`, 100 confirmations, 50
+  réinitialisations, 20 messages de contact par heure glissante, pour tout le site) : au-delà,
+  les messages restent `pending` avec 0 tentative jusqu'à ce que l'heure libère une place.
+  Un e-mail « qui n'arrive pas » se cherche d'abord dans la jauge `lodb_outbox_deferred` et
+  le journal `outbox.hourly_cap.reached` ; un lien retenu plus d'une heure arrive expiré.
+- **Comptes non vérifiés effacés après 7 jours** (tâche `accounts.unverified_purge`, horaire),
+  sauf build, clé API, don, rôle, bannissement, soutien ou connexion Google : un compte de
+  test non vérifié d'une pile locale qui tourne depuis une semaine disparaît, c'est voulu.
+  Le renvoi de l'e-mail de vérification est limité à 5 par compte, puis 1 par jour.
 - Bannir, c'est `IsBanned` plus `UpdateSecurityStampAsync`. Un hash argon2id **plus fort**
   que la cible est conservé (`Argon2Passwords.IsTarget`) ; un compte hérité arrive sans
   `security_stamp`, la connexion le remplit.
@@ -146,6 +155,14 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   locale, jamais `compose.deploy.yaml`. Les 4 échecs par identifiant et par adresse ne se
   relèvent pas (ils restent sous le verrouillage à 5) ; les tests xUnit gardent les valeurs
   de production.
+- **Âge minimal pour voter** : un compte vote 24 h après sa création
+  (`LoDb:Builds:Votes:MinimumAccountAge`), et le compte de chaque worker est créé au début
+  du passage : `compose.override.yaml` ramène l'âge à zéro pour la pile locale, jamais
+  `compose.deploy.yaml`. L'e-mail vérifié reste exigé (le compte du worker l'est). Les
+  limites horaires par compte (`LoDb:RateLimiting:CheckoutsPerHour` 10,
+  `ApiKeyIssuesPerHour` 5, `BuildEditsPerHour` 60, `VotesPerHour` 120) ne sont pas
+  relevées : la suite reste loin en dessous ; un `429 rate-limited` sur un build, une clé
+  ou un vote se cherche d'abord là.
 - Comparer le chemin d'une réponse (`new URL(url).pathname`), jamais `url.endsWith(...)`.
   Limiter les comptes de titres ou de boutons à `main` ou au composant visé. Une spec qui
   compte les POST exclut `/api/analytics/`. Un parcours qui crée un compte le supprime aussi

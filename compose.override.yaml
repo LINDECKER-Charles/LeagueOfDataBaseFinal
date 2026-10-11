@@ -35,6 +35,9 @@ services:
       # The E2E suite signs every account in through the API from one address, far more
       # often than a served host allows one client (docs/architecture/pieges.md).
       LoDb__RateLimiting__SignInPerWindow: "1000"
+      # The E2E accounts vote the minute they exist: a served host makes an account wait a
+      # day before it votes (docs/architecture/pieges.md, Tests E2E).
+      LoDb__Builds__Votes__MinimumAccountAge: "00:00:00"
 
   web-ssr:
     ports:

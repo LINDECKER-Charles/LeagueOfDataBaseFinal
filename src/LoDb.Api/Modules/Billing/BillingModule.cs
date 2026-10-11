@@ -1,4 +1,5 @@
 using LoDb.Api.Modules.Accounts.Links;
+using LoDb.Api.Modules.Accounts.Security.Limits;
 using LoDb.Api.Modules.Billing.Checkout;
 using LoDb.Api.Modules.Billing.Donations;
 using LoDb.Api.Modules.Billing.Expiry;
@@ -62,6 +63,7 @@ internal static class BillingModule
         services.TryAddScoped<OffersEndpoint>();
         services.TryAddScoped<PackCheckoutEndpoint>();
         services.TryAddScoped<PlanCheckoutEndpoint>();
+        services.AddAccountActionLimit(PurchaseLimits.Checkout);
     }
 
     private static void AddWebhook(IServiceCollection services)

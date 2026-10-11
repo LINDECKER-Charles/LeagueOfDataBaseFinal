@@ -31,12 +31,14 @@ internal sealed class PackCheckoutEndpoint(
                     HttpContext context) => endpoint.OpenAsync(request, context))
             .WithTags(BillingRoutes.BillingTag)
             .RequireAuthorization(AuthorizationPolicies.Authenticated)
+            .RequireRateLimiting(PurchaseLimits.Checkout.Policy)
             .WithName("openPackCheckout")
             .WithSummary("Opens the Stripe checkout of a credit pack for the caller's API key.")
             .ProducesProblem(StatusCodes.Status400BadRequest)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status409Conflict)
+            .ProducesProblem(StatusCodes.Status429TooManyRequests)
             .ProducesProblem(StatusCodes.Status502BadGateway)
             .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
 

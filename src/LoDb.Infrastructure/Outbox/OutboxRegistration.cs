@@ -39,6 +39,7 @@ public static class OutboxRegistration
         services.TryAddSingleton<EmailComposer>();
         services.TryAddSingleton<OutboxQueue>();
         services.TryAddSingleton<OutboxMetrics>();
+        services.TryAddSingleton<HourlyCapWatch>();
         services.TryAddSingleton<IOutboxDispatcher, OutboxDispatcher>();
         return services;
     }

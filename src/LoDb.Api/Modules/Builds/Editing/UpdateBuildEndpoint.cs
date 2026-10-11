@@ -28,10 +28,12 @@ internal sealed class UpdateBuildEndpoint(
                     [FromServices] UpdateBuildEndpoint endpoint) =>
                     endpoint.UpdateAsync(id, request))
             .RequireAuthorization(AuthorizationPolicies.VerifiedEmail)
+            .RequireRateLimiting(BuildLimits.Edit.Policy)
             .WithName("updateBuild")
             .WithSummary("Replaces a build, pinned again to the patch and the mode checked.")
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status429TooManyRequests)
             .ProducesProblem(StatusCodes.Status503ServiceUnavailable);
 
     public async Task<Results<Ok<EditableBuild>, BuildProblem, SubmissionRefusal>> UpdateAsync(

@@ -502,10 +502,10 @@
       "banned": "This account has been suspended by the moderation team."
     },
     "verify": {
-      "banner": "Confirm your email address to unlock build creation.",
+      "banner": "Confirm your email address to create builds and vote: an unconfirmed account is deleted after 7 days.",
       "banner_cta": "Resend the email",
       "resend_done": "Confirmation email resent.",
-      "resend_throttled": "An email was already sent recently — wait a few minutes before trying again.",
+      "resend_throttled": "A confirmation email was already sent recently — check your spam folder, or try again later.",
       "gate_build": "Confirm your email address before creating a build.",
       "gate_api": "Confirm your email address before generating an API key."
     },
@@ -906,6 +906,9 @@
       "down": "Downvote this build",
       "score_label": "Community score",
       "login": "Sign in to vote",
+      "refused_unverified": "Confirm your email address to vote.",
+      "refused_too_recent": "A new account can vote one day after signing up.",
+      "refused_too_many": "Too many votes in a short time — try again later.",
       "invalid": "Invalid vote."
     },
     "supporter": {

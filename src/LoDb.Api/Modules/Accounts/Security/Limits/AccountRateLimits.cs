@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using System.Threading.RateLimiting;
 using LoDb.Api.Hosting;
 using Microsoft.AspNetCore.RateLimiting;
@@ -29,8 +28,6 @@ internal static class AccountRateLimits
     /// <summary>Confirmations of an action by the account's password, by account.</summary>
     public const string PasswordConfirm = "password-confirm";
 
-    private const int SegmentsPerWindow = 15;
-
     public static void AddTo(RateLimiterOptions options, IOptions<SignInLimitOptions> limits)
     {
         ArgumentNullException.ThrowIfNull(options);
@@ -38,24 +35,10 @@ internal static class AccountRateLimits
         var bounds = limits.Value;
         options.AddPolicy(SignIn, context => RateLimitPartition.GetSlidingWindowLimiter(
             RateLimitingPolicies.ClientKey(context.Connection.RemoteIpAddress),
-            _ => Window(bounds.SignInPerWindow, bounds.AccountWindow)));
-        options.AddPolicy(PasswordConfirm, context => AccountOf(context) is { } account
-            ? RateLimitPartition.GetSlidingWindowLimiter(
-                account,
-                _ => Window(bounds.PasswordConfirmsPerWindow, bounds.AccountWindow))
-            // Authorization runs first and refuses an anonymous call: nothing to count.
-            : RateLimitPartition.GetNoLimiter(string.Empty));
+            _ => AccountPartitions.Window(bounds.SignInPerWindow, bounds.AccountWindow)));
+        options.AddPolicy(PasswordConfirm, context => AccountPartitions.OfAccount(
+            context,
+            bounds.PasswordConfirmsPerWindow,
+            bounds.AccountWindow));
     }
-
-    private static string? AccountOf(HttpContext context) =>
-        context.User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-    private static SlidingWindowRateLimiterOptions Window(int permits, TimeSpan window) => new()
-    {
-        PermitLimit = permits,
-        Window = window,
-        SegmentsPerWindow = SegmentsPerWindow,
-        QueueLimit = 0,
-        AutoReplenishment = true,
-    };
 }

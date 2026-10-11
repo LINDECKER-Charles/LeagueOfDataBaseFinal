@@ -10,7 +10,7 @@ namespace LoDb.Api.Tests.Builds;
 
 /// <summary>
 /// One vote per account and public build: the same vote again withdraws it, the other one
-/// switches it, and only the net score is shown.
+/// switches it, and only the net score is shown. Only a verified account a day old votes.
 /// </summary>
 [Collection(BuildsGroup.Name)]
 public sealed class VoteTests(BuildsApp app)
@@ -19,7 +19,7 @@ public sealed class VoteTests(BuildsApp app)
     public async Task VoteIsCastSwitchedAndWithdrawn()
     {
         var build = await app.InsertAsync((await app.SeedAsync()).Username, new StoredBuild());
-        var account = await app.SeedAsync();
+        var account = await app.SeedAsync(AccountSeed.Seasoned);
         using var voter = await app.SignInAsync(account);
 
         Assert.Equal((1, 1), await VoteAsync(voter, build.Id, "up"));
@@ -38,9 +38,9 @@ public sealed class VoteTests(BuildsApp app)
     public async Task ScoreIsTheNetOfEveryVoter()
     {
         var build = await app.InsertAsync((await app.SeedAsync()).Username, new StoredBuild());
-        using var first = await app.SignInAsync(await app.SeedAsync());
-        using var second = await app.SignInAsync(await app.SeedAsync());
-        using var third = await app.SignInAsync(await app.SeedAsync());
+        using var first = await app.SignInAsync(await app.SeedAsync(AccountSeed.Seasoned));
+        using var second = await app.SignInAsync(await app.SeedAsync(AccountSeed.Seasoned));
+        using var third = await app.SignInAsync(await app.SeedAsync(AccountSeed.Seasoned));
 
         await VoteAsync(first, build.Id, "up");
         await VoteAsync(second, build.Id, "up");
@@ -58,7 +58,7 @@ public sealed class VoteTests(BuildsApp app)
     public async Task OnlyUpOrDownIsAVote(string? value)
     {
         var build = await app.InsertAsync((await app.SeedAsync()).Username, new StoredBuild());
-        using var voter = await app.SignInAsync(await app.SeedAsync());
+        using var voter = await app.SignInAsync(await app.SeedAsync(AccountSeed.Seasoned));
 
         using var response = await voter.VoteAsync(build.Id, value);
 
@@ -69,9 +69,9 @@ public sealed class VoteTests(BuildsApp app)
     [Fact]
     public async Task PrivateOrUnknownBuildIsNotFound()
     {
-        var owner = await app.SeedAsync();
+        var owner = await app.SeedAsync(AccountSeed.Seasoned);
         var hidden = await app.InsertAsync(owner.Username, new StoredBuild { IsPublic = false });
-        using var voter = await app.SignInAsync(await app.SeedAsync());
+        using var voter = await app.SignInAsync(await app.SeedAsync(AccountSeed.Seasoned));
         using var author = await app.SignInAsync(owner);
 
         using var other = await voter.VoteAsync(hidden.Id, "up");
@@ -102,7 +102,7 @@ public sealed class VoteTests(BuildsApp app)
     {
         var author = await app.SeedAsync();
         var build = await app.InsertAsync(author.Username, new StoredBuild());
-        using var voter = await app.SignInAsync(await app.SeedAsync());
+        using var voter = await app.SignInAsync(await app.SeedAsync(AccountSeed.Seasoned));
         await VoteAsync(voter, build.Id, "up");
         using var owner = await app.SignInAsync(author);
 
@@ -110,6 +110,48 @@ public sealed class VoteTests(BuildsApp app)
 
         Assert.Equal(HttpStatusCode.NoContent, deleted.StatusCode);
         Assert.Empty(await app.VotesAsync(build.Id));
+    }
+
+    [Fact]
+    public async Task UnverifiedAccountCannotVote()
+    {
+        var build = await app.InsertAsync((await app.SeedAsync()).Username, new StoredBuild());
+        var unverified = AccountSeed.Seasoned with { EmailConfirmed = false };
+        using var voter = await app.SignInAsync(await app.SeedAsync(unverified));
+
+        using var response = await voter.VoteAsync(build.Id, "up");
+
+        Assert.Equal(
+            "email-not-verified",
+            await ApiJson.ProblemCodeAsync(response, HttpStatusCode.Forbidden));
+        Assert.Empty(await app.VotesAsync(build.Id));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(23)]
+    public async Task AccountUnderADayOldCannotVoteYet(int hours)
+    {
+        var build = await app.InsertAsync((await app.SeedAsync()).Username, new StoredBuild());
+        var recent = new AccountSeed { Age = TimeSpan.FromHours(hours) };
+        using var voter = await app.SignInAsync(await app.SeedAsync(recent));
+
+        using var response = await voter.VoteAsync(build.Id, "up");
+
+        Assert.Equal(
+            "account-too-recent",
+            await ApiJson.ProblemCodeAsync(response, HttpStatusCode.Forbidden));
+        Assert.Empty(await app.VotesAsync(build.Id));
+    }
+
+    [Fact]
+    public async Task AccountADayOldVotes()
+    {
+        var build = await app.InsertAsync((await app.SeedAsync()).Username, new StoredBuild());
+        var dayOld = new AccountSeed { Age = TimeSpan.FromHours(24) + TimeSpan.FromMinutes(1) };
+        using var voter = await app.SignInAsync(await app.SeedAsync(dayOld));
+
+        Assert.Equal((1, 1), await VoteAsync(voter, build.Id, "up"));
     }
 
     private static async Task<(int Score, int MyVote)> VoteAsync(

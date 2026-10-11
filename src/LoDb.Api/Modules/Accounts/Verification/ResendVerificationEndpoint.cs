@@ -7,18 +7,24 @@ using LoDb.Infrastructure.Persistence.Accounts;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace LoDb.Api.Modules.Accounts.Verification;
 
 /// <summary>
 /// <c>POST /api/account/verify-email/resend</c>: sends the verification e-mail of the
-/// signed-in account again, 3 times per 15 minutes at most.
+/// signed-in account again, a few times in all, then once a day
+/// (<see cref="VerificationResendOptions"/>).
 /// </summary>
+/// <remarks>
+/// Limited by account, never by address: the request needs a session (ADR 0009).
+/// </remarks>
 internal sealed class ResendVerificationEndpoint(
     UserManager<User> users,
     MailThrottle throttle,
     AccountMail mail,
-    LoDbDbContext db)
+    LoDbDbContext db,
+    IOptions<VerificationResendOptions> options)
 {
     public static void Map(IEndpointRouteBuilder account) =>
         account.MapPost(
@@ -53,13 +59,15 @@ internal sealed class ResendVerificationEndpoint(
             return AccountProblem.EmailAlreadyVerified();
         }
 
-        var rule = MailThrottleRule.ConfirmEmail;
-        if (await throttle.RemainingWaitAsync(user.Id, rule, cancellationToken) is { } wait)
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await throttle.HoldAsync(user.Id, cancellationToken);
+        if (await throttle.RemainingWaitAsync(user.Id, Rule, cancellationToken) is { } wait)
         {
             return AccountProblem.ResendThrottled(wait);
         }
 
         await SendAsync(user, request?.Locale ?? UiLocales.Fallback, cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
         return TypedResults.Accepted((string?)null);
     }
 
@@ -68,8 +76,10 @@ internal sealed class ResendVerificationEndpoint(
     {
         if (await mail.SendConfirmationAsync(user, locale, cancellationToken))
         {
-            await throttle.RecordAsync(user.Id, MailThrottleRule.ConfirmEmail, cancellationToken);
+            await throttle.RecordAsync(user.Id, Rule, cancellationToken);
             await db.SaveChangesAsync(cancellationToken);
         }
     }
+
+    private MailThrottleRule Rule => MailThrottleRule.ConfirmEmail(options.Value);
 }

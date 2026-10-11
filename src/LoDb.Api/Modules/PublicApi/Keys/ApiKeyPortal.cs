@@ -1,4 +1,5 @@
 using LoDb.Api.Hosting;
+using LoDb.Api.Modules.Accounts.Security.Limits;
 using LoDb.Api.Modules.Audit.Http;
 using LoDb.Api.Modules.PublicApi.Keys.Reference;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -29,6 +30,7 @@ internal static class ApiKeyPortal
         services.TryAddScoped<OwnedKeys>();
         services.TryAddScoped<ApiKeyEndpoints>();
         services.TryAddScoped<ReferenceEndpoint>();
+        services.AddAccountActionLimit(ApiKeyLimits.Issue);
         services.AddOptions<ReferenceOptions>()
             .BindConfiguration(ReferenceOptions.SectionName)
             .ValidateOnStart();

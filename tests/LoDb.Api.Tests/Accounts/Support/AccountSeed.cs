@@ -23,4 +23,10 @@ public sealed record AccountSeed
     public string? GoogleId { get; init; }
 
     public string? RiotTagline { get; init; }
+
+    /// <summary>How long before the seeding the account was created; just now by default.</summary>
+    public TimeSpan Age { get; init; }
+
+    /// <summary>An account two days old, whose votes count.</summary>
+    public static AccountSeed Seasoned { get; } = new() { Age = TimeSpan.FromDays(2) };
 }

@@ -10,7 +10,8 @@ import {
 } from './accounts';
 import { accountLinkIn, lastMailTo } from './mailbox';
 
-const BANNER = 'Confirm your email address to unlock build creation.';
+const BANNER =
+  'Confirm your email address to create builds and vote: an unconfirmed account is deleted after 7 days.';
 
 // The account of the journey, deleted even when a step fails: no run leaves one behind.
 let created: TestAccount | undefined;
