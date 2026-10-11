@@ -17,6 +17,7 @@ public sealed class MigrationCommandsTests(PostgresContainerFixture postgres)
     private const string Lot6 = "20260926185409_Lot6BillingAnalyticsApps";
     private const string PaymentStates = "20261010231234_StripePaymentStates";
     private const string QueryStatistics = "20261010232259_QueryStatistics";
+    private const string AudienceEntityDaily = "20261011092929_AudienceEntityDaily";
     private const string EfHistory = "__EFMigrationsHistory";
 
     private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
@@ -45,7 +46,7 @@ public sealed class MigrationCommandsTests(PostgresContainerFixture postgres)
         Assert.Equal(CliExitCodes.Success, first);
         Assert.Equal(CliExitCodes.Success, second);
         Assert.Equal(
-            [Baseline, Lot1, Lot4, Lot6, PaymentStates, QueryStatistics],
+            [Baseline, Lot1, Lot4, Lot6, PaymentStates, QueryStatistics, AudienceEntityDaily],
             await database.AppliedMigrationsAsync(Cancellation));
     }
 
@@ -58,7 +59,7 @@ public sealed class MigrationCommandsTests(PostgresContainerFixture postgres)
 
         Assert.Equal(CliExitCodes.Success, exitCode);
         Assert.Equal(
-            [Baseline, Lot1, Lot4, Lot6, PaymentStates, QueryStatistics],
+            [Baseline, Lot1, Lot4, Lot6, PaymentStates, QueryStatistics, AudienceEntityDaily],
             await database.AppliedMigrationsAsync(Cancellation));
     }
 

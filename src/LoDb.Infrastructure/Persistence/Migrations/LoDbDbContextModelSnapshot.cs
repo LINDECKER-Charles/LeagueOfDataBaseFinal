@@ -475,6 +475,39 @@ namespace LoDb.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("LoDb.Infrastructure.Persistence.Audience.AudienceEntityDay", b =>
+                {
+                    b.Property<DateOnly>("Day")
+                        .HasColumnType("date")
+                        .HasColumnName("day");
+
+                    b.Property<string>("Entity")
+                        .HasMaxLength(161)
+                        .HasColumnType("character varying(161)")
+                        .HasColumnName("entity");
+
+                    b.Property<long>("Views")
+                        .HasColumnType("bigint")
+                        .HasColumnName("views");
+
+                    b.Property<long>("Visitors")
+                        .HasColumnType("bigint")
+                        .HasColumnName("visitors");
+
+                    b.HasKey("Day", "Entity")
+                        .HasName("pk_audience_entity_daily");
+
+                    b.HasIndex("Entity", "Day")
+                        .HasDatabaseName("ix_audience_entity_daily_entity_day");
+
+                    b.ToTable("audience_entity_daily", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_audience_entity_daily_views", "views >= 0");
+
+                            t.HasCheckConstraint("ck_audience_entity_daily_visitors", "visitors >= 0");
+                        });
+                });
+
             modelBuilder.Entity("LoDb.Infrastructure.Persistence.Audit.AuditLogEntry", b =>
                 {
                     b.Property<long>("Id")
