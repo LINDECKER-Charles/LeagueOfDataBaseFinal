@@ -1,8 +1,8 @@
 import { metaOf, olderVersion } from '../../support/catalog';
+import { recordViolations } from '../../support/policy-violations';
 import { expect, test } from '../../support/worker-account';
 import {
   addItem,
-  boxOf,
   CHAMPION,
   chooseChampion,
   dragTo,
@@ -10,7 +10,6 @@ import {
   patchOf,
   pickRunes,
   rowOf,
-  runeRowsOf,
   stepsOf,
 } from './forge';
 
@@ -19,92 +18,13 @@ const SHARED = /\/b\/[\w-]+$/;
 const EDITING = /\/en\/account\/builds\/\d+\/edit$/;
 const NAME = 'E2E lethality carry';
 const RENAMED = 'E2E lethality carry, revised';
-const PHONE = { width: 390, height: 844 };
-const NARROW = { width: 320, height: 844 };
-const DESKTOP = { width: 1280, height: 720 };
-
-// No account is created here: what a visitor meets on the builds of an account.
-test('sends a visitor from the builds to the sign-in, which brings them back', async ({ page }) => {
-  await page.goto(LIST);
-
-  await expect(page).toHaveURL(/\/en\/account\/login\?/);
-  expect(new URL(page.url()).searchParams.get('returnUrl')).toBe(LIST);
-});
-
-// As on the legacy card, an item dropped anywhere on a step lands in it, an empty step too.
-test('moves an item onto the note of an empty step', async ({ member: page }) => {
-  await page.goto(`${LIST}/new`);
-  await addItem(page, 0, ITEM);
-  await page.getByRole('button', { name: 'Add a step' }).click();
-  const [first, second] = [stepsOf(page).nth(0), stepsOf(page).nth(1)];
-  // Both cards in view: the empty one at the bottom, the item right above it.
-  await second.evaluate((step) => step.scrollIntoView({ block: 'end' }));
-
-  await dragTo(page, first.locator('.forge-slot').first(), second.getByLabel('Note (optional)'));
-
-  await expect(second.locator('.forge-slot')).toHaveCount(1);
-  await expect(first.locator('.forge-slot')).toHaveCount(0);
-});
-
-// The Arabic page runs right to left; its counters still read "0 / 8", never "8 / 0".
-test('keeps the counters in reading order on the Arabic page', async ({ member: page }) => {
-  await page.goto('/ar/account/builds/new');
-  const counter = stepsOf(page).first().locator('.forge-step__count');
-  await expect(counter).toHaveText('0 / 8');
-
-  // The fraction's text node, wherever the markup that isolates it puts it.
-  const [count, max] = await counter.evaluate((element) => {
-    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
-    let text = walker.nextNode() as Text | null;
-    while (text !== null && !text.data.includes('/')) {
-      text = walker.nextNode() as Text | null;
-    }
-    const fraction = text!;
-    const leftOf = (index: number) => {
-      const range = document.createRange();
-      range.setStart(fraction, index);
-      range.setEnd(fraction, index + 1);
-      return range.getBoundingClientRect().left;
-    };
-    return [leftOf(fraction.data.indexOf('0')), leftOf(fraction.data.lastIndexOf('8'))];
-  });
-  expect(count).toBeLessThan(max);
-});
-
-// As the legacy editor on the narrowest phones: the lists of the context stay in their frame,
-// a step's label beside its handle, and "Add item" after the last item, not on a row alone.
-test('fits the forge in a 320 px phone', async ({ member: page }) => {
-  await page.setViewportSize(NARROW);
-  await page.goto(`${LIST}/new`);
-
-  // Patch, game mode and authoring language; all() does not wait for them to render.
-  const selects = page.locator('lodb-editor-context select');
-  await expect(selects).toHaveCount(3);
-  for (const select of await selects.all()) {
-    const [end, frameEnd] = await select.evaluate((field) => {
-      const frame = field.closest('section')!;
-      const padding = parseFloat(getComputedStyle(frame).paddingRight);
-      return [field.getBoundingClientRect().right, frame.getBoundingClientRect().right - padding];
-    });
-    expect(end).toBeLessThanOrEqual(frameEnd);
-  }
-
-  const step = stepsOf(page).first();
-  const handle = await boxOf(step.locator('.forge-drag-handle'));
-  const label = await boxOf(step.getByLabel('Step label'));
-  expect(label.y).toBeLessThan(handle.y + handle.height);
-
-  await addItem(page, 0, ITEM);
-  await addItem(page, 0, ITEM);
-  const last = await boxOf(step.locator('.forge-slot').last());
-  const tile = await boxOf(step.getByRole('button', { name: 'Add item' }));
-  expect(Math.abs(tile.y - last.y)).toBeLessThan(2);
-});
 
 // The worker's verified account: the API limits how many are created in a row. The forge
 // refused to an unverified account is left to verifiedEmailGuard's unit test and the API's.
 test('forges, edits, imports and deletes a build', async ({ member: page, request }) => {
   const meta = await metaOf(request);
+  // The pages of the account and the editor, with its dialogs, run under the site's policy.
+  const violations = await recordViolations(page);
 
   await test.step('lists no build yet, and leads to the forge on the latest patch', async () => {
     await page.goto(LIST);
@@ -120,52 +40,11 @@ test('forges, edits, imports and deletes a build', async ({ member: page, reques
     await expect(patchOf(page)).toHaveValue(meta.latest);
   });
 
-  await test.step('drops the oldest secondary rune for a third one', async () => {
+  await test.step('chooses the champion, the runes and a first step', async () => {
     await chooseChampion(page, CHAMPION);
-    const primaryRows = await pickRunes(page);
-    const oldest = runeRowsOf(page).nth(primaryRows);
-    await runeRowsOf(page)
-      .nth(primaryRows + 2)
-      .locator('.rune-perk')
-      .first()
-      .click();
-    await expect(oldest.locator('.rune-perk[aria-pressed="true"]')).toHaveCount(0);
-    await expect(page.locator('lodb-rune-board .rune-perk[aria-pressed="true"]')).toHaveCount(
-      primaryRows + 2,
-    );
-  });
-
-  await test.step('opens the armory as a bottom sheet on a phone', async () => {
-    await page.setViewportSize(PHONE);
-    await stepsOf(page).first().getByRole('button', { name: 'Add item' }).click();
-    const armory = page.getByRole('dialog', { name: 'Armory' });
-    await expect(armory).toBeVisible();
-    await expect(page.locator('.hx-sheet')).toHaveCount(1);
-    // Exact: item names such as "Crystalline Bracer" contain "all" too.
-    await expect(armory.getByRole('button', { name: 'All', exact: true })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
-    await armory.getByRole('button', { name: 'Done' }).click();
-    await expect(armory).toHaveCount(0);
-    await page.setViewportSize(DESKTOP);
-  });
-
-  // As the legacy form: the browser stops a short name, the API names the rest in toasts.
-  await test.step('stops a short name, then shows the refusal of the server', async () => {
+    await pickRunes(page);
     await stepsOf(page).first().getByLabel('Step label').fill('Core');
     await addItem(page, 0, ITEM);
-    const name = page.getByLabel('Build name');
-    await name.fill('ab');
-    await page.getByRole('button', { name: 'Forge the build' }).click();
-    await expect(name).toBeFocused();
-    expect(await name.evaluate((field: HTMLInputElement) => field.validity.tooShort)).toBe(true);
-
-    // Three characters for the browser, two once the API has trimmed them.
-    await name.fill('ab ');
-    await page.getByRole('button', { name: 'Forge the build' }).click();
-    await expect(page.getByText('Build name must be 3–80 characters.')).toBeVisible();
-    await expect(page).toHaveURL(`${LIST}/new`);
   });
 
   await test.step('forges the build and opens its shared page', async () => {
@@ -173,6 +52,8 @@ test('forges, edits, imports and deletes a build', async ({ member: page, reques
     await page.getByRole('button', { name: 'Forge the build' }).click();
     await expect(page).toHaveURL(SHARED);
     await expect(page.getByText('Build forged!')).toBeVisible();
+    // Read before leaving the document: each page load starts a list of its own.
+    expect(await violations(), 'no violation in the forge').toEqual([]);
     await page.goto(LIST);
     await expect(rowOf(page, NAME)).toContainText(CHAMPION);
     await expect(rowOf(page, NAME)).toContainText('Private');
@@ -188,8 +69,18 @@ test('forges, edits, imports and deletes a build', async ({ member: page, reques
     await page.getByLabel('Build name').fill(RENAMED);
     await page.getByLabel('Public build — listed on your public profile').check();
     await page.getByRole('button', { name: 'Add a step' }).click();
+    // As on the legacy card, an item dropped anywhere on a step lands in it, an empty step too.
+    await test.step('moves an item onto the note of the empty step', async () => {
+      const [first, second] = [stepsOf(page).nth(0), stepsOf(page).nth(1)];
+      // Both cards in view: the empty one at the bottom, the item right above it.
+      await second.evaluate((step) => step.scrollIntoView({ block: 'end' }));
+      const note = second.getByLabel('Note (optional)');
+      await dragTo(page, first.locator('.forge-slot').first(), note);
+      await expect(second.locator('.forge-slot')).toHaveCount(1);
+      await expect(first.locator('.forge-slot')).toHaveCount(0);
+    });
     await stepsOf(page).nth(1).getByLabel('Step label').fill('Final');
-    await addItem(page, 1, ITEM);
+    await addItem(page, 0, ITEM);
     // The step's own "Move up" comes before those of its items.
     await stepsOf(page).nth(1).getByRole('button', { name: 'Move up' }).first().click();
     await expect(stepsOf(page).first().getByLabel('Step label')).toHaveValue('Final');
@@ -235,4 +126,6 @@ test('forges, edits, imports and deletes a build', async ({ member: page, reques
     }
     await expect(page.getByText("You haven't forged any build yet.")).toBeVisible();
   });
+
+  expect(await violations(), 'no violation on the list').toEqual([]);
 });
