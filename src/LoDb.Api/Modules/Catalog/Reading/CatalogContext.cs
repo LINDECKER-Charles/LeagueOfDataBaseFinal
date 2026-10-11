@@ -42,6 +42,28 @@ internal sealed class CatalogContext(
     }
 
     /// <summary>
+    /// The art variants among <paramref name="art"/> that the store already holds, added to
+    /// <paramref name="images"/>: never fetched nor queued here, a job stores them, and never
+    /// a reason to retry the answer.
+    /// </summary>
+    public async Task<ImageSet> WithStoredArtAsync(
+        ImageSet images,
+        IEnumerable<DdragonImage> art,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(images);
+        List<DdragonImage> wanted = [.. art];
+        if (wanted.Count == 0)
+        {
+            return images;
+        }
+
+        var resolution = await resolver
+            .ResolveAsync(catalog.Version, wanted, ColdDemand.StoredOnly, cancellationToken);
+        return images.WithArt(resolution);
+    }
+
+    /// <summary>
     /// The answer, cached as its version allows, or briefly with a <c>Retry-After</c> while
     /// one of <paramref name="images"/> is still a pending placeholder.
     /// </summary>

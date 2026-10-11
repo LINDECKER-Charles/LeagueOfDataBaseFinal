@@ -1,3 +1,4 @@
+using LoDb.Ingestion.Catalog.Art;
 using LoDb.Ingestion.Catalog.Export;
 using LoDb.Ingestion.Catalog.Images;
 using LoDb.Ingestion.Catalog.Reading;
@@ -9,8 +10,8 @@ using Microsoft.Extensions.Options;
 namespace LoDb.Ingestion.Catalog;
 
 /// <summary>
-/// Registrations of the catalog zone: the in-memory catalog, its cold gate and pinning, and
-/// the image resolution.
+/// Registrations of the catalog zone: the in-memory catalog, its cold gate and pinning, the
+/// image resolution and the art variants of the latest version.
 /// </summary>
 /// <remarks>
 /// Program.cs calls it from the start and the zone's owner fills it, so no shared file
@@ -35,8 +36,10 @@ public static class CatalogRegistration
         services.TryAddSingleton<CatalogCache>();
         services.TryAddSingleton<ICatalogReader, CatalogReader>();
         services.TryAddSingleton<ICatalogPinning, CatalogPinning>();
+        services.TryAddSingleton<ImageVerdicts>();
         services.TryAddSingleton<IImageResolver, ImageResolver>();
         services.TryAddSingleton<CatalogExport>();
+        services.TryAddSingleton<IArtVariantIngestion, ArtVariantIngestion>();
         return services;
     }
 }

@@ -17,13 +17,18 @@ namespace LoDb.Ingestion.Catalog.Images;
 /// hotlinked instead (<see cref="Hotlinks.ChampionHotlinks"/>).
 /// </para>
 /// <para>
-/// Nothing is cached here: an image that failed transiently stays pending, and the next
-/// resolution asks for it again.
+/// The verdicts read are memoised per version (<see cref="ImageVerdicts"/>): a page whose
+/// images are all settled costs no query. Only a pending image is not settled: an image that
+/// failed transiently, or was never tried, is read again by the next resolution that may
+/// fetch or queue it.
 /// </para>
 /// </remarks>
 public interface IImageResolver
 {
-    /// <summary>One manifest query, whatever the number of images.</summary>
+    /// <summary>
+    /// At most one manifest query for the keys the memo does not settle, whatever their
+    /// number, and one more after waiting for an ingestion.
+    /// </summary>
     Task<ImageResolution> ResolveAsync(
         PatchVersion version,
         IReadOnlyCollection<DdragonImage> images,

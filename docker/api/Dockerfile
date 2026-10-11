@@ -4,7 +4,8 @@
 # the solution-wide build settings and the four server projects.
 
 # The SDK runs on the build machine and cross-publishes for the target architecture: the
-# output is IL plus the target's native assets, so no emulation is needed.
+# output is IL precompiled for the target (ReadyToRun) plus the target's native assets, so
+# no emulation is needed.
 FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG TARGETARCH
 WORKDIR /source
@@ -17,10 +18,23 @@ COPY src/LoDb.Domain/LoDb.Domain.csproj src/LoDb.Domain/
 COPY src/LoDb.Infrastructure/LoDb.Infrastructure.csproj src/LoDb.Infrastructure/
 COPY src/LoDb.Ingestion/LoDb.Ingestion.csproj src/LoDb.Ingestion/
 COPY src/LoDb.Api/LoDb.Api.csproj src/LoDb.Api/
-RUN dotnet restore src/LoDb.Api/LoDb.Api.csproj -a "$TARGETARCH"
+# ReadyToRun compiles the IL ahead for one runtime identifier, named explicitly from the
+# target architecture: the restore then fetches that runtime's packs and the crossgen2
+# compiler of the build machine, which emits code for the target (linux-x64 on the hosts)
+# without emulation, whatever the build platform. The RID is kept for the publish layer.
+RUN case "$TARGETARCH" in \
+        amd64) echo linux-x64 ;; \
+        arm64) echo linux-arm64 ;; \
+        *) echo "unsupported architecture: $TARGETARCH" >&2; exit 1 ;; \
+    esac > /tmp/lodb-rid \
+    && dotnet restore src/LoDb.Api/LoDb.Api.csproj -r "$(cat /tmp/lodb-rid)" \
+        -p:PublishReadyToRun=true
 
 COPY src/ src/
-RUN dotnet publish src/LoDb.Api/LoDb.Api.csproj -c Release -a "$TARGETARCH" --no-restore \
+# Precompiled code starts the API, and each `healthcheck` probe, without JIT-compiling the
+# whole application; tiered compilation still re-optimises the hot paths.
+RUN dotnet publish src/LoDb.Api/LoDb.Api.csproj -c Release -r "$(cat /tmp/lodb-rid)" \
+        --self-contained false --no-restore -p:PublishReadyToRun=true \
         -p:UseAppHost=false -o /out/app \
     # The storage mount point, created here because the runtime image has no shell. Docker
     # seeds an empty named volume from the image, ownership included: the API can then

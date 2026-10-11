@@ -119,7 +119,10 @@ Chaque point devient un cas de test du lot 1 ([ADR 0010](adr/0010-observabilite-
    Classic.
 7. **Fiddlesticks** : l'art actuel n'existe que sous `FiddleSticks`.
 8. Splash, skins et vidéos de sorts **non versionnés** : hotlink assumé, avec un
-   avertissement.
+   avertissement. Seule exception : le splash centré et le portrait de chargement du skin
+   de base du dernier patch sont aussi stockés en variantes WebP (480, 960 et 1280 px ;
+   308 px) dans les blobs, par la tâche `catalog.art-variants` (type `championArt` de
+   `ddragon_asset`) ; le hotlink reste le repli des autres versions.
 9. **Chromas uniquement via CommunityDragon** : chemins en minuscules, repli sur
    `latest`, étiquette de couleur dérivée de la teinte. Filtrer les chromas des skins
    Data Dragon.

@@ -39,6 +39,26 @@ public sealed class CatalogOptionsTests
                 options.InternalColdLoadWait, options.MaxPendingLoads));
     }
 
+    [Fact]
+    public void DefaultsReuseImageVerdictsTenMinutes()
+    {
+        var options = Resolve(new());
+
+        Assert.Equal(
+            (TimeSpan.FromMinutes(10), 32),
+            (options.ImageVerdictsLifetime, options.ImageVerdictVersions));
+    }
+
+    [Fact]
+    public void DefaultsStoreTheArtVariantsTwoAtATimeHalfHourly()
+    {
+        var options = Resolve(new());
+
+        Assert.Equal(
+            (TimeSpan.FromMinutes(30), 2),
+            (options.ArtVariantsPeriod, options.ArtVariantsConcurrency));
+    }
+
     [Theory]
     [InlineData("MaxEntries", "0")]
     [InlineData("MaxEntries", "1025")]
@@ -54,6 +74,14 @@ public sealed class CatalogOptionsTests
     [InlineData("InternalColdLoadWait", "00:00:00")]
     [InlineData("InternalColdLoadWait", "00:00:31")]
     [InlineData("MaxPendingLoads", "-1")]
+    [InlineData("ImageVerdictsLifetime", "00:00:00")]
+    [InlineData("ImageVerdictsLifetime", "01:00:01")]
+    [InlineData("ImageVerdictVersions", "0")]
+    [InlineData("ImageVerdictVersions", "1025")]
+    [InlineData("ArtVariantsPeriod", "00:00:59")]
+    [InlineData("ArtVariantsPeriod", "1.00:00:01")]
+    [InlineData("ArtVariantsConcurrency", "0")]
+    [InlineData("ArtVariantsConcurrency", "17")]
     public void OutOfBoundsSettingIsRefused(string setting, string value)
     {
         var failure = Assert.Throws<OptionsValidationException>(

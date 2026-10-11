@@ -1,3 +1,5 @@
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Component } from '@angular/core';
 import { DeferBlockState, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
@@ -6,6 +8,7 @@ import { provideTransloco } from '@jsverse/transloco';
 import { of } from 'rxjs';
 import type { ChampionCard } from '../../../../core/api/generated/models/champion-card';
 import type { ChampionDetails } from '../../../../core/api/generated/models/champion-details';
+import type { ChampionSkins } from '../../../../core/api/generated/models/champion-skins';
 import type { DetailNeighbour } from '../../../../core/api/generated/models/detail-neighbour';
 import type { PageContext } from '../../../../core/context/page-context';
 import type { CatalogueEntry } from '../../../../core/routing/catalogue/catalogue-entry';
@@ -15,6 +18,8 @@ import { provideMeta } from '../../shared/testing/provide-meta';
 import { ChampionPage } from './champion-page';
 
 const CONTEXT: PageContext = { locale: 'en', version: '16.19.1', pinned: false, language: 'en_US' };
+const ART = { splash: 'splash.jpg', centered: 'centered.jpg', loading: 'loading.jpg' };
+const SKINS = '/api/catalog/16.19.1/en_US/champions/Annie/skins';
 
 function cardOf(id: string): ChampionCard {
   return {
@@ -25,6 +30,7 @@ function cardOf(id: string): ChampionCard {
     title: 'the Dark Child',
     image: { status: 'absent' },
     loadingArt: `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${id}_0.jpg`,
+    loadingArtVariants: [],
     blurb: 'Dangerous, yet disarmingly precocious.',
     partype: 'Mana',
     resource: 'mana',
@@ -38,28 +44,35 @@ function neighbourOf(id: string): DetailNeighbour {
 }
 
 function detailsOf(overrides: Partial<ChampionDetails> = {}): ChampionDetails {
-  const art = { splash: 'splash.jpg', centered: 'centered.jpg', loading: 'loading.jpg' };
   return {
     canonicalPath: 'champions/Annie',
     version: '16.19.1',
     language: 'en_US',
     profile: cardOf('Annie'),
-    art,
+    art: ART,
+    centeredArtVariants: [],
     blurb: 'Dangerous, yet disarmingly precocious.',
     lore: 'Annie is a <i>child</i> mage<script>alert(1)</script>.',
     abilities: [
       { slot: 'q', name: 'Disintegrate', description: 'Burns.', image: { status: 'absent' } },
     ],
-    skins: [
-      { id: '1000', number: 0, name: 'default', art, chromas: [] },
-      { id: '1001', number: 1, name: 'Goth Annie', art, chromas: [] },
-    ],
+    alternateSkinCount: 1,
     allyTips: ['Stun with the passive.', ' '],
     enemyTips: [],
     neighbours: { previous: neighbourOf('Ahri'), next: neighbourOf('Brand') },
     ...overrides,
   };
 }
+
+const ANNIE_SKINS: ChampionSkins = {
+  version: '16.19.1',
+  language: 'en_US',
+  champion: 'Annie',
+  skins: [
+    { id: '1000', number: 0, name: 'Annie', art: ART, chromas: [] },
+    { id: '1001', number: 1, name: 'Goth Annie', art: ART, chromas: [] },
+  ],
+};
 
 const EN = {
   champion: {
@@ -81,6 +94,8 @@ async function visit(details: ChampionDetails, url = '/en/champions/Annie') {
   const entry: CatalogueEntry<ChampionDetails> = { context: CONTEXT, details };
   TestBed.configureTestingModule({
     providers: [
+      provideHttpClient(),
+      provideHttpClientTesting(),
       provideMeta(),
       provideRouter([
         { path: 'en/champions/:id', resolve: { entry: () => entry }, component: ChampionPage },
@@ -122,6 +137,7 @@ describe('ChampionPage', () => {
   });
 
   afterEach(() => {
+    TestBed.inject(HttpTestingController).verify();
     TestBed.resetTestingModule();
     Reflect.deleteProperty(document.defaultView ?? {}, 'matchMedia');
     vi.unstubAllGlobals();
@@ -154,21 +170,27 @@ describe('ChampionPage', () => {
   });
 
   it('leaves out the sections a champion has nothing for, the blurb standing for its lore', async () => {
-    const { host } = await visit(detailsOf({ lore: null, skins: [], allyTips: [' '] }));
+    const { host } = await visit(detailsOf({ lore: null, alternateSkinCount: 0, allyTips: [' '] }));
     const sections = [...host.querySelectorAll('section[id], aside[id]')].map((node) => node.id);
 
     expect(sections).toEqual(['abilities', 'lore', 'stats']);
     expect(host.querySelector('#lore')?.textContent).toContain('disarmingly precocious');
   });
 
-  it('loads the skin gallery once its section is scrolled to', async () => {
+  it('reads the skins once their section is scrolled to, then shows the gallery', async () => {
     const { harness, host } = await visit(detailsOf());
-    expect(host.querySelector('lodb-skin-gallery')).toBeNull();
+    const http = TestBed.inject(HttpTestingController);
+    expect(host.querySelector('#skins .codex-header__meta')?.textContent?.trim()).toBe('1');
     expect(host.querySelectorAll('#skins lodb-skeleton')).toHaveLength(3);
+    http.expectNone(SKINS);
 
     const [gallery] = await harness.fixture.getDeferBlocks();
     await gallery?.render(DeferBlockState.Complete);
+    expect(host.querySelectorAll('#skins lodb-skeleton')).toHaveLength(3);
+    http.expectOne(SKINS).flush(ANNIE_SKINS);
+    await harness.fixture.whenStable();
 
+    expect(host.querySelectorAll('#skins lodb-skeleton')).toHaveLength(0);
     expect(host.querySelectorAll('#skins button.tile')).toHaveLength(1);
   });
 

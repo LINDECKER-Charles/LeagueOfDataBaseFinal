@@ -5,6 +5,7 @@ import { AttackRangeClass } from '../models/attack-range-class';
 import { CatalogImage } from '../models/catalog-image';
 import { ChampionRatings } from '../models/champion-ratings';
 import { ChampionStat } from '../models/champion-stat';
+import { ImageVariant } from '../models/image-variant';
 
 /**
  * A champion as the list shows it: its portrait, its lore teaser, and the values its facets
@@ -35,6 +36,13 @@ export interface ChampionCard {
    * the list's card.
    */
   loadingArt: string;
+
+  /**
+   * The same portrait as WebP, from the site's blobs: candidates of a srcset; none until
+   * the latest version's variants are stored, nor for an older version,
+   * the hotlinked `loadingArt` standing in.
+   */
+  loadingArtVariants: Array<ImageVariant>;
   name: string;
 
   /**
