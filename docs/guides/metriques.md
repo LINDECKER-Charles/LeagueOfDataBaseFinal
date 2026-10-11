@@ -118,9 +118,11 @@ Noms à confirmer au premier scrape d'un hôte (`.NET 10`, OpenTelemetry 1.x) :
 - Données : meters `Npgsql` (pool de connexions) et `Microsoft.EntityFrameworkCore`.
 - Client HTTP sortant (Data Dragon) : `http_client_request_duration_seconds`.
 
-Traces : sans `OTEL_EXPORTER_OTLP_ENDPOINT`, aucune n'est enregistrée
-(`ParentBased(TraceIdRatioBased(0))`, y compris sous un `traceparent` marqué échantillonné) ;
-l'identifiant de trace reste dans chaque ligne de log (`trace_id`).
+Traces : sans `OTEL_EXPORTER_OTLP_ENDPOINT`, aucune n'est enregistrée ; avec lui, 5 % le sont
+(`LoDb:Telemetry:TraceSampleRatio`), choisies par leur identifiant
+(`TraceIdRatioBased`, y compris sous un `traceparent` reçu, marqué échantillonné ou non : nginx
+démarre la trace de chaque requête, le SSR la transmet à l'API). L'identifiant de trace reste
+dans chaque ligne de log (`trace_id`), échantillonnée ou non.
 
 ## SSR
 

@@ -212,7 +212,7 @@ création d'une base, sur un volume vide.
 | `LODB_DB_PASSWORD` 🔒 ⚙️ | 🔁 `POSTGRES_PASSWORD` | idem | ✅ | Idem. Fichier (§ 4) : `api` et `migrate` le lisent en `LoDb__Database__Password`, que l'API pose dans la chaîne de connexion (un `;` y est donc permis), `postgres` en `POSTGRES_PASSWORD_FILE`. |
 | `LODB_SECRETS_REVISION` | — | — | — | **Jamais dans `ENV_*`** : le job l'écrit et le monte d'un cran quand un fichier secret change ; label de `api`, il fait recréer l'API (§ 4). |
 | `LODB_DATA_PROTECTION_CERT_FILE`, `LODB_ANDROID_DIR` | défauts | défauts | — | Ne pas définir : le job écrit aux emplacements par défaut (§ 5). |
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | ➖ | ➖ | ➖ | Collecteur de traces OTLP, quand `infra-vps` en expose un. |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | ➖ | ➖ | ➖ | Collecteur de traces OTLP, quand `infra-vps` en expose un. L'API en exporte alors une part (`LoDb:Telemetry:TraceSampleRatio`, 5 %), choisie par l'identifiant de trace ; `OTEL_TRACES_SAMPLER` est sans effet. Sans lui, aucune n'est enregistrée. |
 | `LODB_RENDER_MAX_IN_FLIGHT`, `LODB_PINNED_RENDER_MAX_IN_FLIGHT`, `LODB_PINNED_RENDERS_PER_MINUTE`, `LODB_PINNED_RENDER_BURST` | ➖ | ➖ | ➖ | Admission des rendus du SSR : rendus simultanés (`8`), dont pages d'une version épinglée dans l'URL (`3`), rendus de versions épinglées par minute (`60`) et d'affilée (`10`). Au-delà, `503` immédiat avec `Retry-After` (nginx sert sa copie périmée s'il en a une). Absents : ces défauts. |
 | `LODB_CURRENT_RENDERS_PER_MINUTE`, `LODB_CURRENT_RENDER_BURST` | ➖ | ➖ | ➖ | Rendus des pages du dernier patch par minute (`300`) et d'affilée (`60`), tous clients confondus. |
 | `LODB_RENDER_PER_CLIENT_MAX_IN_FLIGHT`, `LODB_PINNED_RENDERS_PER_CLIENT_PER_MINUTE`, `LODB_RENDER_TRACKED_CLIENTS` | ➖ | ➖ | ➖ | Part d'un client (une adresse IPv4, un /64 IPv6) : rendus simultanés (`2`), rendus de versions épinglées par minute (`6`) ; clients suivis en mémoire (`50000`). Une part ne dépasse jamais le tout : absente, elle s'y ramène ; posée au-dessus, le serveur refuse de démarrer. |
@@ -344,6 +344,7 @@ Pour en changer un sur un hôte, l'ajouter sous `services.api.environment` de
 | `LoDb:Egress` | `AllowedHosts` (`ddragon.leagueoflegends.com`, `raw.communitydragon.org`), `FetchConcurrency` (16), `AttemptTimeout` (15 s), `MaxRetryAttempts` (3), `RetryBaseDelay` (1 s), `MaxRedirects` (10), `MaxResponseBytes` (32 Mio) |
 | `LoDb:Ingestion` | `WatchPeriod` (10 min), `MaxAttempts` (5), `RetryDelay` (10 min), `LanguageConcurrency` (4), `RecordBatchSize` (64), `SyncConcurrency` (4), `QueueCapacity` (256), `CrawlerRequestsPerMinute` (30) |
 | `LoDb:Catalog` | `VersionsLifetime` (1 min) |
+| `LoDb:Telemetry` | `TraceSampleRatio` (`0.05`, de `0` à `1` : part des traces enregistrées et exportées quand `OTEL_EXPORTER_OTLP_ENDPOINT` est posé, choisie par l'identifiant de trace, jamais par le drapeau `sampled` d'un `traceparent` reçu) |
 | `LoDb:PublicApi` | `KeyCacheLifetime` (1 min), `TrendsLifetime` (5 min), `MeteringInterval` (1 s) |
 
 </details>
