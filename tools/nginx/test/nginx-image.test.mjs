@@ -11,6 +11,9 @@ const IMAGE = process.env.LODB_NGINX_IMAGE;
 const API_HOST = 'api.localhost';
 const KIB = 1024;
 const BLOB = 'ab'.repeat(32);
+// W3C traceparent of version 00, nothing appended: version, trace id, parent id, flags.
+const TRACEPARENT = /^00-([0-9a-f]{32})-([0-9a-f]{16})-00$/;
+const CLIENT_TRACEPARENT = '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01';
 const BLOCKED_AGENT = 'Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTML, like Gecko) '
   + 'Chrome/139.0.0.0 Safari/537.36';
 
@@ -57,9 +60,44 @@ describe('nginx image', { skip: IMAGE ? false : 'LODB_NGINX_IMAGE is not set' },
     assert.match(stderr, /test is successful/);
   });
 
+  test('starts a W3C trace for each request it proxies, from its own id', async () => {
+    const traces = [];
+    for (let sent = 0; sent < 2; sent += 1) {
+      traces.push((await get('/api/trace')).headers['x-seen-traceparent']);
+    }
+
+    for (const trace of traces) {
+      const [, traceId, parentId] = TRACEPARENT.exec(trace) ?? [];
+      assert.ok(traceId, trace);
+      assert.equal(parentId, traceId.slice(0, 16));
+    }
+    assert.notEqual(traces[0], traces[1]);
+  });
+
+  test("replaces a client's trace context rather than continuing it", async () => {
+    const client = { headers: {
+      traceparent: CLIENT_TRACEPARENT,
+      tracestate: 'vendor=1',
+      baggage: 'user=someone',
+    } };
+
+    const seen = (await get('/api/trace', client)).headers;
+
+    assert.match(seen['x-seen-traceparent'], TRACEPARENT);
+    assert.ok(!seen['x-seen-traceparent'].includes(CLIENT_TRACEPARENT.split('-')[1]));
+    assert.equal(seen['x-seen-tracestate'], undefined);
+    assert.equal(seen['x-seen-baggage'], undefined);
+  });
+
+  test('hands the SSR server the trace of the page request', async () => {
+    const page = await get('/en/trace', { forwardedFor: '203.0.113.9' });
+
+    assert.match(page.headers['x-seen-traceparent'], TRACEPARENT);
+  });
+
   test('denies the unused device features and isolates the pages from their opener',
     async () => {
-      const answers = [await get('/healthz'), await get('/api/account/me'),
+      const answers = [await get('/healthz'), await get('/api/trace'),
         await get('/v1/champions', { host: API_HOST }), await get('/cdn/x')];
       for (const answer of answers) {
         assert.equal(answer.headers['cross-origin-opener-policy'], 'same-origin');

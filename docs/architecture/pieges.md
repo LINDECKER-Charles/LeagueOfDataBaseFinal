@@ -248,7 +248,10 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   `/cdn/blobs/` en `cross-origin` (coquille Android) ; COOP `same-origin` et
   `Permissions-Policy` (caméra, micro, position, paiement… refusés ; plein écran, lecture
   automatique, partage et presse-papiers laissés) sur toute réponse : une fonction nouvelle du
-  navigateur se vérifie contre cette liste (`snippets/security-headers.conf`) ; `access_log off`
+  navigateur se vérifie contre cette liste (`snippets/security-headers.conf`). Chaque requête
+  relayée part avec un `traceparent` neuf tiré de `$request_id` (`snippets/proxy-headers.conf`),
+  celui d'un client est **remplacé**, jamais continué, et `tracestate`/`baggage` retirés : le
+  SSR le relaie à l'API, dont l'échantillonnage ne lit que l'identifiant ; `access_log off`
   voulu (l'edge journalise) ; tous les `.conf` de `sites/`, `server.d/` et `snippets/` passent par
   `envsubst`, filtré sur `^LODB_` (défauts dans le `Dockerfile`, jamais une valeur vide).
   Une variable `LODB_*` de nginx passe par `compose.yaml` avec son défaut
