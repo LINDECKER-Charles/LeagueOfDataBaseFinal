@@ -3,7 +3,9 @@ using LoDb.Api.Modules.Accounts.Security.Authenticator;
 using LoDb.Api.Tests.Accounts.Support;
 using LoDb.Api.Workers;
 using LoDb.Api.Workers.Accounts;
+using LoDb.Infrastructure.Persistence.Accounts;
 using LoDb.Testing;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -92,6 +94,27 @@ public sealed class AuthenticatorSecretsTests(PostgresContainerFixture postgres)
         }
     }
 
+    // The sign-ins above queue for the hashing admission, one after the other. Here each
+    // check reads the account and the step of its last code before either saves, as two
+    // requests at once would: the account's concurrency stamp turns the second one down.
+    [Fact]
+    public async Task OfTwoChecksOfOneCodeReadAtOnceOnlyOneSucceeds()
+    {
+        await App.SeedAsync(new AccountSeed());
+        var secrets = await App.EnableTwoFactorAsync(AccountSeed.Name);
+        await using var earlier = App.Services.CreateAsyncScope();
+        Assert.True(await VerifyAsync(await ReadAsync(earlier), Code(secrets.Key)));
+        await using var first = App.Services.CreateAsyncScope();
+        await using var second = App.Services.CreateAsyncScope();
+        var firstCheck = await ReadAsync(first);
+        var secondCheck = await ReadAsync(second);
+        var code = Code(secrets.Key, NextStep);
+
+        var accepted = (await VerifyAsync(firstCheck, code), await VerifyAsync(secondCheck, code));
+
+        Assert.Equal((true, false), accepted);
+    }
+
     [Fact]
     public async Task ARecoveryCodeLeavesTheOthersHashed()
     {
@@ -162,6 +185,24 @@ public sealed class AuthenticatorSecretsTests(PostgresContainerFixture postgres)
             recoveryCode,
         });
 
+    // The account as a request reads it, the step of its last code included.
+    private static async Task<AccountCheck> ReadAsync(AsyncServiceScope scope)
+    {
+        var users = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+        var account = await users.FindByNameAsync(AccountSeed.Name);
+        await users.GetAuthenticationTokenAsync(
+            account!,
+            IdentityTokenNames.LoDbProvider,
+            IdentityTokenNames.AuthenticatorStep);
+        return new AccountCheck(users, account!);
+    }
+
+    private static Task<bool> VerifyAsync(AccountCheck check, string code) =>
+        check.Users.VerifyTwoFactorTokenAsync(
+            check.Account,
+            check.Users.Options.Tokens.AuthenticatorTokenProvider,
+            code);
+
     // As the host's clock reads it, which the provider of the codes follows.
     private string Code(string key, TimeSpan? later = null) =>
         Totp.Code(key, App.Clock.GetUtcNow() + (later ?? TimeSpan.Zero));
@@ -208,4 +249,7 @@ public sealed class AuthenticatorSecretsTests(PostgresContainerFixture postgres)
         return await scope.ServiceProvider.GetRequiredService<AuthenticatorSecretsUpkeep>()
             .ProtectAsync(Cancellation);
     }
+
+    // One request's user manager, and the account as it loaded it.
+    private sealed record AccountCheck(UserManager<User> Users, User Account);
 }

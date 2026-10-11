@@ -2,6 +2,7 @@ using System.Net;
 using LoDb.Api.Tests.Accounts.Support;
 using LoDb.Infrastructure.Audit;
 using LoDb.Testing;
+using Microsoft.EntityFrameworkCore;
 
 namespace LoDb.Api.Tests.Accounts;
 
@@ -14,6 +15,7 @@ public sealed class SignOutEverywhereTests(PostgresContainerFixture postgres)
     : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
 {
     private const string Path = "/api/account/logout-everywhere";
+    private const string RevokedCounter = "lodb.sessions.revoked";
     private static readonly TimeSpan PastRevalidation = TimeSpan.FromMinutes(6);
 
     private AccountsApp? _app;
@@ -75,6 +77,34 @@ public sealed class SignOutEverywhereTests(PostgresContainerFixture postgres)
         Assert.Null(await browser.SignedInAsAsync());
     }
 
+    // The new security stamp alone refuses every refresh token: the families are read in the
+    // table, where only the revocation shows.
+    [Fact]
+    public async Task EveryRefreshTokenFamilyOfTheAccountIsRevoked()
+    {
+        var account = await App.SeedAsync(new AccountSeed());
+        var other = await App.SeedAsync(
+            new AccountSeed { Username = "Autre_7", Email = "autre@example.test" });
+        using var revoked = App.Security<long>(RevokedCounter);
+        using var browser = App.Browser();
+        using var phone = App.App();
+        using var desktop = App.App();
+        using var otherPhone = App.App();
+        using var signIn = await browser.SignInAsync(AccountSeed.Name);
+        await AppTokens.SignInAsync(phone);
+        await AppTokens.SignInAsync(desktop);
+        await AppTokens.SignInAsync(otherPhone, other.UserName!);
+
+        using var response = await browser.PostAsync(Path);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(
+            [(account.Id, true), (account.Id, true), (other.Id, false)],
+            await FamiliesAsync());
+        var counted = Assert.Single(revoked.GetMeasurementSnapshot());
+        Assert.Equal("sign_out_everywhere", counted.Tags["reason"]);
+    }
+
     [Fact]
     public async Task ItNeedsASessionAndItsXsrfToken()
     {
@@ -118,6 +148,17 @@ public sealed class SignOutEverywhereTests(PostgresContainerFixture postgres)
 
     public async ValueTask InitializeAsync() =>
         _app = await AccountsApp.StartAsync(postgres, withGoogle: false);
+
+    // Each family as its account and whether it is revoked, the account's first.
+    private async Task<List<(int Account, bool IsRevoked)>> FamiliesAsync()
+    {
+        await using var database = App.Database();
+        var families = await database.RefreshTokenFamilies.AsNoTracking()
+            .OrderBy(static family => family.UserId)
+            .Select(static family => new { family.UserId, family.RevokedAt })
+            .ToListAsync(TestContext.Current.CancellationToken);
+        return [.. families.Select(static family => (family.UserId, family.RevokedAt != null))];
+    }
 
     public async ValueTask DisposeAsync()
     {
