@@ -290,7 +290,9 @@ services:
       start_period: 5s
 
   postgres:
-    image: postgres:17-alpine
+    # Pinned by digest like the images built here (docker/), its tag kept for the reader;
+    # Dependabot bumps both (.github/dependabot.yml, docker-compose).
+    image: postgres:17-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
     # The same server settings on every environment, each tunable from the host's .env:
     # - max_connections: the API's pool (32) plus migrate, the deploy backup, the jobs'
     #   lock sessions and psql, far from what the memory limit of a served host holds;
