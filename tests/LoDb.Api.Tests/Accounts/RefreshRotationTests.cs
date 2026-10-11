@@ -135,6 +135,26 @@ public sealed class RefreshRotationTests(PostgresContainerFixture postgres)
     }
 
     [Fact]
+    public async Task ATokenOfBeforeTheFamiliesServesOnceWhateverItsSpelling()
+    {
+        var account = await App.SeedAsync(new AccountSeed());
+        using var app = App.App();
+        var legacy = await LegacyRefreshTokenAsync(account);
+
+        using var first = await RefreshAsync(app, legacy);
+        await ApiJson.ReadAsync(first, HttpStatusCode.OK);
+        App.Clock.Advance(PastGrace);
+
+        foreach (var spelling in OtherSpellingsOf(legacy))
+        {
+            using var again = await RefreshAsync(app, spelling);
+            Assert.Equal(
+                Invalid,
+                await ApiJson.ProblemCodeAsync(again, HttpStatusCode.Unauthorized));
+        }
+    }
+
+    [Fact]
     public async Task FamiliesWhoseTokensRanOutArePurged()
     {
         await App.SeedAsync(new AccountSeed());
@@ -181,6 +201,15 @@ public sealed class RefreshRotationTests(PostgresContainerFixture postgres)
             new Uri("/api/account/refresh", UriKind.Relative),
             new { refreshToken },
             Cancellation);
+
+    // Other texts a base64url decoder reads as the same bytes: the standard alphabet, and the
+    // padding the URL-safe form leaves out.
+    private static IEnumerable<string> OtherSpellingsOf(string token)
+    {
+        const int Quantum = 4;
+        yield return token.Replace('-', '+').Replace('_', '/');
+        yield return token + new string('=', (Quantum - (token.Length % Quantum)) % Quantum);
+    }
 
     // A refresh token as the API handed them out before the families: no family named.
     private async Task<string> LegacyRefreshTokenAsync(User account)
