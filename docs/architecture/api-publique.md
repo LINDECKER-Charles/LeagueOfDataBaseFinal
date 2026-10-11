@@ -252,7 +252,7 @@ le dashboard), **carte uniquement** (`payment_method_types = ["card"]`). Webhook
 | Événement | Effet |
 |---|---|
 | Session terminée et payée (`paid`, `no_payment_required`) au prix du catalogue | Pack crédité, plan appliqué ou don enregistré ; session `paid` |
-| Session terminée `unpaid` (moyen différé) | Rien d'accordé ; session `pending` jusqu'à `async_payment_succeeded` (accordé) ou `async_payment_failed` (`failed`) |
+| Session terminée `unpaid` (moyen différé) | Rien d'accordé ; session `pending` jusqu'à `async_payment_succeeded` (accordé) ou `async_payment_failed` (`failed`) ; un remboursement total ou un litige reçu avant le succès la passe `revoked`, et le succès arrivé ensuite n'accorde rien |
 | Montant ou devise hors catalogue (prix du pack ou du plan, dons de 1 à 500 €, en euros) | Rien d'accordé, session `refused`, avertissement `billing.checkout.refused` : à rembourser ou régulariser à la main |
 | Abonnement `past_due`, `unpaid`, `paused`, `canceled`, `incomplete_expired`, ou facture impayée | Clé au plan Free, abonnement conservé sur la clé ; crédits et plancher de 60 req/min conservés |
 | Abonnement de nouveau `active` (ou `trialing`) | Plan de l'abonnement rétabli |
@@ -263,8 +263,9 @@ le dashboard), **carte uniquement** (`payment_method_types = ["card"]`). Webhook
 | Remboursement **partiel** | Rien n'est repris (geste commercial) |
 
 À reprendre à la main, signalés par `billing.payment.unmatched` : le remboursement ou le
-litige d'un paiement antérieur à `stripe_checkout`, et le litige d'un paiement d'abonnement
-(mettre fin à l'abonnement dans le dashboard). Un litige gagné ne rend rien de lui-même.
+litige d'un paiement antérieur à `stripe_checkout`, celui reçu avant tout événement de sa
+session (qui sera accordée à son arrivée), et le litige d'un paiement d'abonnement (mettre
+fin à l'abonnement dans le dashboard). Un litige gagné ne rend rien de lui-même.
 
 ## Notes d'implémentation (résumé)
 

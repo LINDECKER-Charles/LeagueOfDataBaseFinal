@@ -60,15 +60,27 @@ internal sealed partial class PaymentRevocation(
         if (checkout.Status != StripeCheckoutStatus.Paid)
         {
             LogNotGranted(logger, checkout.Id, checkout.Status, payment.Cause);
+            // Stripe does not deliver in order: the success of a payment taken back may still
+            // be on its way, and must then grant nothing.
+            if (checkout.Status == StripeCheckoutStatus.Pending)
+            {
+                Close(checkout, payment);
+            }
+
             return;
         }
 
         await (checkout.Kind == StripeCheckoutKind.Donation
             ? donations.RevokeAsync(checkout.Id, cancellationToken)
             : credits.RevokeAsync(checkout.Id, payment.At, cancellationToken));
+        Close(checkout, payment);
+        LogRevoked(logger, checkout.Id, checkout.Kind, payment.Cause);
+    }
+
+    private static void Close(StripeCheckout checkout, PaymentEvent payment)
+    {
         checkout.Status = StripeCheckoutStatus.Revoked;
         checkout.UpdatedAt = payment.At;
-        LogRevoked(logger, checkout.Id, checkout.Kind, payment.Cause);
     }
 
     [LoggerMessage(

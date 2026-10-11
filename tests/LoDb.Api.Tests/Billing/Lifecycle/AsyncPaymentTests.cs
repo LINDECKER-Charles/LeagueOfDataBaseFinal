@@ -106,6 +106,33 @@ public sealed class AsyncPaymentTests(PostgresContainerFixture postgres)
         Assert.Equal(StripeCheckoutStatus.Paid, (await CheckoutAsync()).Status);
     }
 
+    // Stripe does not deliver in order: the refund or the dispute of the payment may come in
+    // before its success.
+    [Theory]
+    [InlineData("refund")]
+    [InlineData("dispute")]
+    public async Task PaymentTakenBackBeforeItsSuccessGrantsNothing(string cause)
+    {
+        var buyer = await App.SeedUserAsync("Acheteur");
+        var key = await App.SeedKeyAsync(buyer);
+        var session = StripePayloads.Pack(SessionId, buyer.Id, Requests);
+        var payment = StripePayloads.PaymentOf(SessionId);
+
+        await DeliverAsync(StripePayloads.Completed("evt_completed", Unpaid(session)));
+        await DeliverAsync(cause == "refund"
+            ? StripePayloads.Refunded("evt_taken_back", payment)
+            : StripePayloads.Disputed("evt_taken_back", payment));
+        await DeliverAsync(StripePayloads.Event(
+            "evt_paid",
+            StripePayloads.AsyncPaymentSucceeded,
+            Paid(session)));
+
+        Assert.Equal(0, (await App.KeyAsync(key.Id)).CreditsBalance);
+        Assert.Empty(await App.GrantsOfAsync(key.Id));
+        Assert.Empty(App.KeyCache.Invalidated);
+        Assert.Equal(StripeCheckoutStatus.Revoked, (await CheckoutAsync()).Status);
+    }
+
     public async ValueTask InitializeAsync() => _app = await BillingApp.StartAsync(postgres);
 
     public async ValueTask DisposeAsync()

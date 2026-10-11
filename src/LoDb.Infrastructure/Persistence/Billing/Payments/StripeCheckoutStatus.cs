@@ -18,6 +18,9 @@ public enum StripeCheckoutStatus
     /// <summary>Paid another amount or currency than the catalogue's: nothing granted.</summary>
     Refused,
 
-    /// <summary>Refunded in full or disputed once paid: what it granted was taken back.</summary>
+    /// <summary>
+    /// Refunded in full or disputed: what it granted was taken back, or, taken back while
+    /// still pending, it is never granted.
+    /// </summary>
     Revoked,
 }
