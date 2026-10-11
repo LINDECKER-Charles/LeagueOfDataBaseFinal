@@ -68,7 +68,7 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
 
 ## API, données et comptes
 
-- `/readyz` se lit sur l'API (18081 ou `api:8080`) et, par nginx, sur le sous-domaine `api.`
+- `/readyz` se lit sur l'API (18081 ou `lodb-api:8080`) et, par nginx, sur le sous-domaine `api.`
   seulement (1 requête/s par adresse, sonde externe) ; demandé au site, il part au SSR (404).
 - En local, les URLs absolues perdent le port (nginx transmet `Host: $host`) : l'origine
   canonique se fixe par `LoDb__Seo__CanonicalOrigin` et `LoDb__Accounts__SiteOrigin`.
@@ -86,10 +86,16 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   (`Hosting/Support/KestrelApi.cs`) : le serveur en mémoire n'applique aucune limite, et
   Development transforme un corps invalide en exception.
 - `/api/pickers/*` exige `version` et `lang` (400 `invalid-version` sinon).
-- **Porte froide des catalogues** : un appel direct à l'API (18081, `api:8080`) depuis une
-  adresse privée et sans `X-Forwarded-For` est compté comme le SSR (débit interne, attente
-  de 2 s permise). Pour reproduire un client public, passer par nginx (18080). Un `503`
-  « en attente » sous charge est un délestage voulu, pas une panne.
+- **Porte réseau de l'API** : le port 8080 ne répond qu'au réseau de la stack
+  (`LoDb:Hosting:KnownProxyNetworks`, le seul `LODB_STACK_SUBNET` sur un hôte, les trois
+  plages privées en local) et à la loopback ; tout autre pair reçoit un 404 vide, compté par
+  `lodb_network_gate_refusals_total`, sans log. Un conteneur d'un réseau partagé
+  (`observability`) ne joint que le port 9464. Un nouveau service qui appelle l'API doit
+  être sur le réseau `default` de la stack.
+- **Porte froide des catalogues** : un appel direct à l'API (18081, `lodb-api:8080`) depuis le
+  réseau de la stack (ou la loopback) et sans `X-Forwarded-For` est compté comme le SSR
+  (débit interne, attente de 2 s permise). Pour reproduire un client public, passer par nginx
+  (18080). Un `503` « en attente » sous charge est un délestage voulu, pas une panne.
 - **Warm-up à court d'images** : une trame `done` avec `settled` < `total` est voulue. Le
   budget d'images par minute est partagé (≈ 900 images par warm-up froid de l'accueil,
   1 500 par minute) : refusé, le flux ne demande plus d'images et finit `done`, le
@@ -169,6 +175,12 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
 
 - Variables Compose préfixées **`LODB_`**. En dev, les images s'appellent
   `<projet>-<service>` : un emplacement n'écrase pas les images de la stack locale.
+- **`!reset` et l'ordre des fichiers** : Compose ignore un `!reset` placé après un autre
+  fichier qui touche déjà l'`environment` du même service. Les `!reset null` de
+  `compose.deploy.yaml` (`KnownProxyNetworks__1`, `__2`) ne tiennent donc que s'il suit
+  directement `compose.yaml` : un calque d'hôte (staging…) se place **après** lui. Sinon,
+  l'API croirait encore les plages privées de `compose.yaml`, celles des réseaux partagés
+  comprises ; le déploiement le vérifie sur la configuration résolue et s'arrête.
 - Sur l'hôte, la stack occupe le projet de l'ancienne (`lodb-staging`, `lodb-prod`) : elle
   reprend son volume `pgdata` et range ses blobs dans `ddragon`. Le volume `storage` de
   l'ancienne stack (propriété de `www-data`) n'est ni réutilisé ni supprimé : le nommer
@@ -212,7 +224,19 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   sans le port).
 - SSR : `LODB_TRUST_PROXY_HEADERS` obligatoire derrière nginx, `LODB_ALLOWED_HOSTS` liste
   les hôtes acceptés ; `public/` ne contient ni `media/` ni script racine nommé comme un
-  bundle (cache `immutable`).
+  bundle (cache `immutable`). Ses métriques sont sur un second serveur HTTP, port 9464
+  (`LODB_METRICS_PORT`), que nginx ne route pas et qu'aucun port ne publie ; `/metrics`
+  demandé au site reste la 404 statique du pré-routeur.
+- **Porte réseau du SSR** : comme l'API, le port 4000 ne répond qu'aux réseaux de
+  `LODB_STACK_NETWORKS` (le seul `LODB_STACK_SUBNET` sur un hôte, les trois plages privées
+  en local) et à la loopback ; tout autre pair reçoit un 404 vide, compté par
+  `lodb_ssr_network_gate_refusals_total`, sans log. Vide ou absente, la variable laisse la
+  seule loopback : un `node server.mjs` lancé hors de la stack ne sert que la machine.
+- Collecte (`compose.deploy.yaml`) : `api` et `web-ssr` rejoignent le réseau partagé
+  `observability` avec les labels `prometheus.scrape`/`prometheus.port`. Sur ce réseau, le
+  nom court d'un service (`api`, `postgres`) désigne aussi ceux des autres projets : un
+  conteneur de la stack n'appelle ses voisins que par les alias préfixés (`lodb-api`,
+  `lodb-postgres`, `lodb-web-ssr`).
 - Constats de logs (lignes hors JSON, erreurs multi-lignes) : **à corriger à la source,
   jamais à filtrer**.
 

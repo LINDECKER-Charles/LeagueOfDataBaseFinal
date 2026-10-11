@@ -19,7 +19,7 @@ const STAGING = [...SERVED, 'compose.staging.yaml'];
 const STAGING_AUTH = [...STAGING, 'compose.staging-auth.yaml'];
 const RUNNING = ['api', 'web-ssr', 'nginx', 'postgres'];
 // What the deploy job writes on a host, absent from the examples.
-const HOST_ADDITIONS = 'LODB_EDGE_CIDR=172.18.0.0/16\n';
+const HOST_ADDITIONS = 'LODB_EDGE_CIDR=172.18.0.0/16\nLODB_STACK_SUBNET=10.231.1.0/24\n';
 // The staging share of the host: about three quarters of a core.
 const STAGING_CORES = 0.75;
 const HASH = '$2a$14$jM2G4xK0ZDa8W6PF31H9BOKCv81PEwu/7g692HVRaN72tRoi1jH52';

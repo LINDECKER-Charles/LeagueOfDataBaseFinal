@@ -41,7 +41,7 @@
 #
 # Same string as compose.yaml, without the password: the API adds LoDb__Database__Password.
 x-lodb-connection: &lodb-connection >-
-  Host=postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=${LODB_DB_USER:-lodb};Gss Encryption Mode=Disable;Maximum Pool Size=32;Timeout=5;Application Name=lodb-api
+  Host=lodb-postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=${LODB_DB_USER:-lodb};Gss Encryption Mode=Disable;Maximum Pool Size=32;Timeout=5;Application Name=lodb-api
 
 x-database-password: &database-password
   source: LODB_DB_PASSWORD
@@ -53,6 +53,12 @@ services:
     build: !reset null
     environment:
       ConnectionStrings__LoDb: *lodb-connection
+      # The stack's own subnet only (networks.default below): X-Forwarded-* are trusted from
+      # nginx and web-ssr, and port 8080 answers them and the loopback alone, never a
+      # container of a shared network the API joins. compose.yaml's other ranges are dropped.
+      LoDb__Hosting__KnownProxyNetworks__0: ${LODB_STACK_SUBNET:?LODB_STACK_SUBNET is required (set by the deploy job)}
+      LoDb__Hosting__KnownProxyNetworks__1: !reset null
+      LoDb__Hosting__KnownProxyNetworks__2: !reset null
       # Every origin the API publishes is the canonical host's: e-mail links, sitemaps,
       # share_url of /v1, and the origin /developers documents for /v1.
       LoDb__Accounts__SiteOrigin: https://${LODB_CANONICAL_HOST:?LODB_CANONICAL_HOST is required}
@@ -111,7 +117,15 @@ services:
       # start-up only, and Compose recreates a service whose definition changed, not one
       # whose mounted files did.
       league-of-data-base.secrets-revision: ${LODB_SECRETS_REVISION:-0}
+      prometheus.scrape: "true"
+      prometheus.port: "9464"
     cpu_shares: 1024
+    # The host's collector scrapes port 9464 over `observability` (infra-vps,
+    # docs/APPLICATIONS.md § 4); never published nor routed. There, every container of the
+    # host can reach this one: port 8080 answers the stack's subnet only (NetworkGate), and the
+    # API calls its peers by their prefixed aliases (lodb-postgres), never by a short name.
+    networks:
+      observability: {}
     deploy:
       resources:
         limits:
@@ -144,7 +158,17 @@ services:
     environment:
       # The public hosts of CADDY_DOMAINS, comma-separated: any other Host is refused.
       LODB_ALLOWED_HOSTS: ${LODB_ALLOWED_HOSTS:?LODB_ALLOWED_HOSTS is required (the public hosts)}
+      # The stack's subnet alone, as the API's: the site's port answers nginx and the loopback,
+      # never a container of `observability` (src/server/security/network-gate.ts).
+      LODB_STACK_NETWORKS: ${LODB_STACK_SUBNET:?LODB_STACK_SUBNET is required (set by the deploy job)}
+    # Scraped on its metrics port (9464, src/server/metrics) over `observability`, as the API;
+    # the renderer calls the API by its alias, lodb-api, never by the short name.
+    networks:
+      observability: {}
     cpu_shares: 1024
+    labels:
+      prometheus.scrape: "true"
+      prometheus.port: "9464"
     deploy:
       resources:
         limits:
@@ -220,11 +244,25 @@ services:
           pids: 256
 
 networks:
+  # The stack's private network, on a subnet fixed per environment (staging and prod share the
+  # host), outside Docker's default pools: the API trusts it by name (KnownProxyNetworks).
+  # The deploy job picks it per target, writes it to the host's .env and recreates the
+  # network once when its subnet differs. compose.yaml lets Docker choose, so that the local
+  # stacks coexist.
+  default:
+    ipam:
+      config:
+        - subnet: ${LODB_STACK_SUBNET:?LODB_STACK_SUBNET is required (set by the deploy job)}
   # Shared ingress network, created once per host by infra-vps; the deploy job only
   # asserts that it exists.
   edge:
     external: true
     name: edge
+  # Shared collection network, created once per host by infra-vps like `edge`: the scrape of
+  # the metrics ports. The deploy job asserts that it exists.
+  observability:
+    external: true
+    name: observability
 
 secrets:
   # PKCS#12 file of the Data Protection certificate, written by the deploy job from a

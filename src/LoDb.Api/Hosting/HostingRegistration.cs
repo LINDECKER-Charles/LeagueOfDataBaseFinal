@@ -38,6 +38,7 @@ internal static class HostingRegistration
             .AddLoDbTelemetry(builder.Configuration)
             .AddLoDbHealthChecks()
             .AddLoDbOpenApi()
+            .AddLoDbNetworkGate()
             .AddLoDbForwardedHeaders()
             .AddLoDbCors()
             .AddLoDbRateLimiting(builder.Configuration)
@@ -53,6 +54,7 @@ internal static class HostingRegistration
     public static WebApplication UseLoDbHosting(this WebApplication app)
     {
         app.UseLoDbMetricsEndpoint();
+        app.UseLoDbNetworkGate();
         app.UseForwardedHeaders();
         app.UseExceptionHandler();
         app.UseWhen(

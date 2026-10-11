@@ -138,9 +138,9 @@ niveau deviné par Vector ([`observabilite.md`](../../docs/guides/observabilite.
 
 `monitoring/metrics.promql` donne les métriques d'ingestion, des tâches, des 5xx de l'API et
 de l'outbox. Les noms sont ceux de l'exportateur Prometheus, relevés sur `/metrics` d'un
-emplacement. Ces métriques ne sont visibles que si l'hôte collecte `api:9464` dans le réseau
-de la stack ; ce port n'est jamais publié. Un compteur n'apparaît qu'à sa première
-incrémentation.
+emplacement. L'hôte les collecte sur le port 9464 de l'API par le réseau `observability` ; ce
+port n'est jamais publié ([contrat](../../docs/guides/metriques.md)). Un compteur n'apparaît
+qu'à sa première incrémentation.
 
 ```bash
 tools/cutover/monitoring/check-queries.sh lodb-dev-e2

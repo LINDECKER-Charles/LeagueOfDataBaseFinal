@@ -86,15 +86,23 @@ La nouvelle stack prend la place de l'ancienne dans le même projet Compose
 2. Contrôle ce `.env` (lignes marquées ⚙️ dans [`configuration.md`](configuration.md)) :
    `COMPOSE_PROJECT_NAME` = `lodb-<env>`, `IMAGE_TAG` = `<env>`, `LODB_NOINDEX` (`1` sur
    `staging`, `0` en `prod`), mot de passe de la base présent ; en `prod`, relais SMTP et
-   clés Stripe présents (leurs fichiers non vides). Exige le réseau `edge` (jamais créé).
-   Contrôles passés seulement, sépare `ENV_*` en place (`.deploy/secrets/`, `.env` en mode
-   600), supprime `.deploy/incoming.env` et le dossier temporaire, puis écrit le sous-réseau
-   d'`edge` dans le `.env` (`LODB_EDGE_CIDR`, seul pair dont nginx croit `X-Forwarded-For`).
+   clés Stripe présents (leurs fichiers non vides). Exige les réseaux `edge` et
+   `observability` (jamais créés), et s'arrête si un autre réseau Docker recouvre le
+   sous-réseau de la stack, fixé par cible (`LODB_STACK_SUBNET`, `10.231.1.0/24` en staging,
+   `10.231.2.0/24` en prod). Contrôles passés seulement, sépare `ENV_*` en place
+   (`.deploy/secrets/`, `.env` en mode 600), supprime `.deploy/incoming.env` et le dossier
+   temporaire, puis écrit dans le `.env` le sous-réseau d'`edge` (`LODB_EDGE_CIDR`, seul pair
+   dont nginx croit `X-Forwarded-For`) et celui de la stack ; s'arrête si la configuration
+   résolue fait croire à l'API ou au SSR un autre réseau que celui-là.
 3. `docker compose pull` (5 tentatives), sauvegarde de la base en service (`.deploy/backups/`), l'hôte connecté à GHCR avec le `GITHUB_TOKEN` du
    run le temps du seul `pull` (transmis par l'entrée de `ssh`, jamais en ligne de
-   commande), puis `docker compose run --rm migrate` : la base du
+   commande). Si le réseau de la stack existe sur un autre sous-réseau, `docker compose
+   down` (sans `-v`) le libère une fois (environ une minute de coupure). Puis
+   `docker compose run --rm migrate` : la base du
    volume `pgdata` passe à la dernière migration (une base Doctrine est d'abord marquée à
-   `Baseline`). Un échec arrête le job ; les conteneurs en place continuent de servir.
+   `Baseline`). Un échec arrête le job ; les conteneurs en place continuent de servir, sauf
+   juste après ce changement de réseau : la stack reste alors arrêtée jusqu'au déploiement
+   suivant.
 4. `docker compose up -d --no-build --remove-orphans --wait` : les conteneurs de la nouvelle
    stack remplacent ceux de l'ancienne, dont `php`, `go-fetcher`, `go-api` et `mailer` sont
    retirés comme orphelins. `pgdata` est gardé ; les blobs vont dans le volume `ddragon` ;

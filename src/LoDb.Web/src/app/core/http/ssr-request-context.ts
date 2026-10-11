@@ -5,7 +5,7 @@ import type { RenderBudget } from './render-budget';
  * comes from the server environment, never from the incoming request.
  */
 export interface SsrRequestContext {
-  /** Origin the render calls the API on, e.g. `http://api:8080` inside compose. */
+  /** Origin the render calls the API on, e.g. `http://lodb-api:8080` inside compose. */
   readonly apiOrigin: string;
   /**
    * Origin of the SSR server itself, e.g. `http://127.0.0.1:4000`, or null when another

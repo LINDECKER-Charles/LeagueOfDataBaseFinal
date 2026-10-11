@@ -24,14 +24,20 @@ const HEREDOC = "<<'EOSSH'";
 const FIRST_LINE = 'set -euo pipefail';
 const STOP_MARKER = '# ── Pull, then migrations';
 const EDGE_SUBNET = '172.18.0.0/16';
-// git and docker answer as on a host whose checkout, edge network and Engine 25+ are in place.
+const OBSERVABILITY_SUBNET = '172.19.0.0/16';
+// git and docker answer as on a host whose checkout, shared networks and Engine 25+ are in
+// place; OBSERVABILITY_SUBNET in the environment moves that network onto another subnet.
 const STUBS = [
   'git() { :; }',
   'docker() {',
   '  case "$*" in',
-  '    "network inspect edge") ;;',
+  '    "network inspect edge" | "network inspect observability") ;;',
   `    "network inspect edge --format "*) echo ${EDGE_SUBNET} ;;`,
+  '    "network inspect observability --format "*)',
+  `      echo "\${OBSERVABILITY_SUBNET:-${OBSERVABILITY_SUBNET}}" ;;`,
+  '    "network ls --format "*) printf "edge\\nobservability\\n" ;;',
   '    "version --format "*) echo 1.47 ;;',
+  '    "compose config api web-ssr") echo "      LODB_STACK_NETWORKS: $STACK_SUBNET" ;;',
   '    *) echo "unexpected: docker $*" >&2; return 1 ;;',
   '  esac',
   '}',
@@ -41,12 +47,14 @@ const STAGING = {
   EXPECTED_PROJECT: 'lodb-staging',
   IMAGE_TAG: 'staging',
   EXPECTED_NOINDEX: '1',
+  STACK_SUBNET: '10.231.1.0/24',
 };
 const PROD = {
   TARGET: 'prod',
   EXPECTED_PROJECT: 'lodb-prod',
   IMAGE_TAG: 'prod',
   EXPECTED_NOINDEX: '0',
+  STACK_SUBNET: '10.231.2.0/24',
 };
 const workspaces = [];
 after(() => workspaces.forEach((dir) => rmSync(dir, { recursive: true, force: true })));
@@ -116,7 +124,21 @@ describe('_deploy.yml, the dotenv against the target', () => {
     assert.match(read(dir, '.env'), /^LODB_SECRETS_REVISION=1$/m);
     assert.match(read(dir, '.env'), new RegExp(`^LODB_EDGE_CIDR=${EDGE_SUBNET}$`, 'm'));
     assert.match(read(dir, '.env'), /^COMPOSE_FILE=compose\.yaml:compose\.deploy\.yaml$/m);
+    assert.match(read(dir, '.env'), /^LODB_STACK_SUBNET=10\.231\.2\.0\/24$/m);
     assert.doesNotMatch(read(dir, '.env'), /database-secret/);
+    assert.deepEqual(leftovers(dir), []);
+  });
+
+  it('leaves the .env and the secret files in place when a network overlaps the stack', () => {
+    const dir = host();
+    assert.equal(deploy(dir, PROD, dotenvFor(PROD)).status, 0);
+    const before = snapshot(dir);
+
+    const run = deploy(dir, { ...PROD, OBSERVABILITY_SUBNET: '10.231.0.0/16' }, dotenvFor(PROD));
+
+    assert.notEqual(run.status, 0);
+    assert.match(run.stderr, /overlaps 10\.231\.2\.0\/24/);
+    assert.deepEqual(snapshot(dir), before);
     assert.deepEqual(leftovers(dir), []);
   });
 

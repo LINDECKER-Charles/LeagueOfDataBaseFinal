@@ -227,6 +227,26 @@ describe('RenderAdmission', () => {
     expect(hold(admission, CURRENT).isStarted()).toBe(true);
   });
 
+  it('hands the render its lane and reports the renders in flight per lane', async () => {
+    const admission = admissionOf();
+    const render = vi.fn(async () => undefined);
+    const pinned = hold(admission, PINNED);
+    hold(admission, CURRENT, OTHER);
+    hold(admission, CURRENT, OTHER);
+
+    expect(admission.inFlightOf('pinned')).toBe(1);
+    expect(admission.inFlightOf('current')).toBe(2);
+    await settle([pinned]);
+    await admission.run(
+      { url: PINNED, client: VISITOR },
+      responseOf({ headers: {}, locals: {} }),
+      render,
+    );
+
+    expect(render).toHaveBeenCalledWith('pinned');
+    expect(admission.inFlightOf('pinned')).toBe(0);
+  });
+
   it('counts every decision per lane and refusal', () => {
     const admission = admissionOf({ perClientMaxInFlight: 1 });
     hold(admission, CURRENT);

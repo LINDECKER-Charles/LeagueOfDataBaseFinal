@@ -25,5 +25,6 @@ WORKDIR /app
 # Owned by root and read-only for `node`: a compromised renderer cannot rewrite the app.
 COPY --from=build /source/src/LoDb.Web/dist/web ./
 USER node
-EXPOSE 4000
+# 4000 for nginx; 9464 for the host's metrics collector only, never published.
+EXPOSE 4000 9464
 CMD ["node", "server/server.mjs"]

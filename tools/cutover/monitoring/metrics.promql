@@ -1,6 +1,6 @@
 # Metrics of the cutover window (plan-migration.md, cutover step 4.6; L8.2), in PromQL, next to
-# queries.logsql. The API exposes them on its port 9464, inside the stack's network only: they
-# are visible once the host's collector scrapes api:9464 (never a published port).
+# queries.logsql. The API exposes them on its port 9464, never published: the host's collector
+# scrapes it over the shared `observability` network (docs/guides/metriques.md).
 #
 # Names as the OpenTelemetry Prometheus exporter writes them, read from /metrics of a slot:
 # dots become underscores, a {unit} is dropped, "s" becomes _seconds, counters end in _total.
@@ -32,11 +32,15 @@ max by (queue) (lodb_ingestion_queue_depth)
 # name: on-demand-refused: on-demand work refused, by reason (queue full, crawler budget)
 sum by (reason) (increase(lodb_ingestion_on_demand_refused_total[{{window}}]))
 
-# name: jobs-failed: failed runs of the periodic jobs, by job
-sum by (job) (increase(lodb_job_failures_total[{{window}}]))
+# name: jobs-failed: failed runs of the periodic jobs, by task (`job` names the scrape target)
+sum by (task) (increase(lodb_job_failures_total[{{window}}]))
 
 # name: jobs-stale: seconds since each job last succeeded
-time() - max by (job) (lodb_job_last_success_seconds)
+time() - max by (task) (lodb_job_last_success_seconds)
+
+# name: jobs-late: jobs whose last success is older than three of their periods
+(time() - max by (task) (lodb_job_last_success_seconds))
+  > 3 * max by (task) (lodb_job_period_seconds)
 
 # name: api-5xx: 5xx the API answered, by route
 sum by (http_route) (increase(http_server_request_duration_seconds_count{http_response_status_code=~"5.."}[{{window}}]))
