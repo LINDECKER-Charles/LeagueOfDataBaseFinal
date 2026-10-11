@@ -37,7 +37,10 @@ gh secret set LODB_DESKTOP_UPDATE_PRIVATE_KEY < <secure folder>/feed-signing.pem
 ```
 
 It prints the public key only, which goes into `UpdateFeeds.FeedPublicKeys`. Every installed
-copy carries those keys: changing one is a rotation (guide § Flux signés).
+copy carries those keys: changing one is a rotation (guide § Flux signés). The file is created
+with mode 0600, which only Unix honours: on Windows it inherits the ACL of its folder, so
+restrict that folder to your own account (`icacls <folder> /inheritance:r /grant:r
+"%USERNAME%:(OI)(CI)F"`) and check the file with `icacls <file>`.
 
 ## Sign
 

@@ -2,10 +2,11 @@
 //
 //   node tools/desktop-update-signing/generate-key.mjs --out <secure folder>/feed-signing.pem
 //
-// Writes the private key (PKCS#8 PEM, readable by its owner only) to --out, which must not
-// exist yet nor lie inside a git work tree, and prints the public key only: it goes into
-// UpdateFeeds.FeedPublicKeys. The private key becomes the release secret
-// (`gh secret set LODB_DESKTOP_UPDATE_PRIVATE_KEY < <file>`) and its offline backups.
+// Writes the private key (PKCS#8 PEM) to --out, which must not exist yet nor lie inside a git
+// work tree, and prints the public key only: it goes into UpdateFeeds.FeedPublicKeys. The
+// private key becomes the release secret (`gh secret set LODB_DESKTOP_UPDATE_PRIVATE_KEY <
+// <file>`) and its offline backups. Modes 0600/0700 keep it to its owner on Unix only: Windows
+// ignores them and the file inherits the ACL of its folder, which the owner must restrict.
 import { generateKeyPairSync } from 'node:crypto';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
