@@ -328,7 +328,8 @@ diffère.
 
 Chaque passage rend les objets du schéma à leur propriétaire et refait les droits de
 `lodb_app` (un droit accordé à la main, sur une table, le schéma ou la base, comme une
-appartenance à un autre rôle, ne survit pas au déploiement suivant) ; les privilèges
+appartenance à un autre rôle ou un réglage du rôle, même propre à une base, ne survit pas au
+déploiement suivant) ; les privilèges
 par défaut couvrent une table qu'une migration crée, dès sa création. Les tâches qui lisent
 une journée entière de vues (agrégation, effacement des données client) relèvent leur propre
 délai le temps de leur transaction (`LoDb:Analytics:JobStatementTimeout`, 5 min). Une commande

@@ -37,6 +37,14 @@ public sealed class DatabaseRolesTests(IsolatedPostgres isolated) : IClassFixtur
     private const string AppMembershipsSql =
         "SELECT roleid::regrole::text FROM pg_auth_members WHERE member = 'lodb_app'::regrole";
 
+    // Every setting of the role: role-wide (database 0) and per database.
+    private const string AllAppSettingsSql = """
+        SELECT s.setdatabase::text || ' ' || unnest(s.setconfig)
+        FROM pg_db_role_setting s
+        WHERE s.setrole = 'lodb_app'::regrole
+        ORDER BY 1
+        """;
+
     private const string AppVerifierSql =
         "SELECT rolpassword FROM pg_authid WHERE rolname = 'lodb_app'";
 
@@ -167,6 +175,27 @@ public sealed class DatabaseRolesTests(IsolatedPostgres isolated) : IClassFixtur
             await database.QueryAsync(RolesSql, Cancellation),
             static role =>
                 Assert.Contains("createdb=f createrole=f", role, StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task SettingsChangedByHandAreTakenBack()
+    {
+        await using var database = await Server.CreateDatabaseAsync(Cancellation);
+        var options = new AppRoleOptions { Password = Password };
+        await ApplyAsync(database, options);
+        await database.ExecuteAsync(
+            "ALTER ROLE lodb_app SET idle_in_transaction_session_timeout = 0;"
+                + $" ALTER ROLE lodb_app IN DATABASE \"{database.Name}\" SET statement_timeout = 0",
+            Cancellation);
+
+        var changes = await ApplyAsync(database, options);
+
+        Assert.Equal(new RoleChanges(0, 1, PasswordSet: false), changes);
+        Assert.Equal(
+            ["0 statement_timeout=15000ms"],
+            await database.QueryAsync(AllAppSettingsSql, Cancellation));
+        Assert.Equal("15s", await ShowAsAppAsync(database, Password, "statement_timeout"));
+        Assert.True((await ApplyAsync(database, options)).IsEmpty);
     }
 
     [Fact]

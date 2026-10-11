@@ -23,6 +23,8 @@ internal static class ClusterRoles
     private const string Restricted =
         "NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS";
 
+    private const string AlterApp = $"ALTER ROLE {DatabaseRoleNames.App}";
+    private const string ResetAll = "RESET ALL";
     private const string StatementTimeout = "statement_timeout";
     private const string Milliseconds = "ms";
     private const string NamesParameter = "names";
@@ -30,12 +32,18 @@ internal static class ClusterRoles
     private const string SuperuserQuery =
         "SELECT rolsuper FROM pg_roles WHERE rolname = current_user";
 
-    // The role-wide settings (database 0), as ALTER ROLE … SET writes them: name=value.
+    // The role-wide settings (database 0), as ALTER ROLE … SET writes them: name=value; then
+    // the databases, quoted, where ALTER ROLE … IN DATABASE gave the role settings of its own.
     private const string StateQuery = """
         SELECT a.rolname, a.rolcanlogin,
             a.rolsuper OR a.rolcreatedb OR a.rolcreaterole OR a.rolreplication
                 OR a.rolbypassrls,
-            a.rolconnlimit, a.rolpassword, coalesce(s.setconfig, '{}')
+            a.rolconnlimit, a.rolpassword, coalesce(s.setconfig, '{}'),
+            ARRAY(
+                SELECT quote_ident(d.datname)
+                FROM pg_db_role_setting o
+                JOIN pg_database d ON d.oid = o.setdatabase
+                WHERE o.setrole = a.oid AND o.setdatabase <> 0)
         FROM pg_authid a
         LEFT JOIN pg_db_role_setting s ON s.setrole = a.oid AND s.setdatabase = 0
         WHERE a.rolname = ANY(@names)
@@ -59,7 +67,7 @@ internal static class ClusterRoles
 
         var run = new Run(transaction, options, await ReadAsync(transaction, cancellationToken));
         var (created, altered) = await EnsureAttributesAsync(run, cancellationToken);
-        if (await EnsureStatementTimeoutAsync(run, cancellationToken)
+        if (await EnsureSettingsAsync(run, cancellationToken)
             && run.States.ContainsKey(DatabaseRoleNames.App))
         {
             altered.Add(DatabaseRoleNames.App);
@@ -101,22 +109,33 @@ internal static class ClusterRoles
         return (created, altered);
     }
 
-    private static async Task<bool> EnsureStatementTimeoutAsync(
+    // The API's sessions get the statement timeout and nothing else: a setting added by hand,
+    // or by the role itself (a role may set its own), such as a timeout of 0 for one database,
+    // which would prevail over the role-wide one, is reset.
+    private static async Task<bool> EnsureSettingsAsync(
         Run run,
         CancellationToken cancellationToken)
     {
         var value = string.Create(
             CultureInfo.InvariantCulture,
             $"{(long)run.Options.StatementTimeout.TotalMilliseconds}{Milliseconds}");
-        var settings = run.States.GetValueOrDefault(DatabaseRoleNames.App)?.Settings ?? [];
-        if (settings.Contains($"{StatementTimeout}={value}", StringComparer.Ordinal))
+        var state = run.States.GetValueOrDefault(DatabaseRoleNames.App);
+        var isRoleWideKept = state?.Settings is [var only] && only == $"{StatementTimeout}={value}";
+        var statements = (state?.DatabasesWithSettings ?? [])
+            .Select(static database => $"{AlterApp} IN DATABASE {database} {ResetAll}")
+            .ToList();
+        if (!isRoleWideKept)
         {
-            return false;
+            statements.Add($"{AlterApp} {ResetAll}");
+            statements.Add($"{AlterApp} SET {StatementTimeout} = '{value}'");
         }
 
-        var sql = $"ALTER ROLE {DatabaseRoleNames.App} SET {StatementTimeout} = '{value}'";
-        await ExecuteAsync(run, sql, cancellationToken);
-        return true;
+        foreach (var statement in statements)
+        {
+            await ExecuteAsync(run, statement, cancellationToken);
+        }
+
+        return statements.Count > 0;
     }
 
     // The verifier holds base64, digits, '$' and ':' only: it needs no escaping in a literal.
@@ -166,7 +185,8 @@ internal static class ClusterRoles
                 IsPrivileged: reader.GetBoolean(2),
                 ConnectionLimit: reader.GetInt32(3),
                 Password: reader.IsDBNull(4) ? null : reader.GetString(4),
-                Settings: reader.GetFieldValue<string[]>(5));
+                Settings: reader.GetFieldValue<string[]>(5),
+                DatabasesWithSettings: reader.GetFieldValue<string[]>(6));
             states.Add(reader.GetString(0), state);
         }
 
@@ -195,7 +215,8 @@ internal static class ClusterRoles
         bool IsPrivileged,
         int ConnectionLimit,
         string? Password,
-        string[] Settings);
+        string[] Settings,
+        string[] DatabasesWithSettings);
 
     private sealed record RoleSpec(string Name, bool CanLogin, int ConnectionLimit)
     {
