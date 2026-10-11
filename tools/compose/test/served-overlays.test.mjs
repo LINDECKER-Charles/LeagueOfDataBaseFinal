@@ -1,7 +1,8 @@
 // Checks what Compose makes of the served overlays, from the .env examples: the production
 // stack's CPU quotas, weights and process caps (compose.deploy.yaml), the smaller share of
-// the staging stack (compose.staging.yaml), and the optional login on the staging pages
-// (compose.staging-auth.yaml), whose bcrypt hash must reach the edge's label intact.
+// the staging stack (compose.staging.yaml), the hosts the API answers, and the optional login
+// on the staging pages (compose.staging-auth.yaml), whose bcrypt hash must reach the edge's
+// label intact.
 // Needs the Docker CLI only: `compose config` reads files, it starts nothing.
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
@@ -26,6 +27,8 @@ const HASH = '$2a$14$jM2G4xK0ZDa8W6PF31H9BOKCv81PEwu/7g692HVRaN72tRoi1jH52';
 const AUTH_ENV = `LODB_STAGING_BASIC_AUTH_USER=tester\nLODB_STAGING_BASIC_AUTH_HASH='${HASH}'\n`;
 const OPEN_PATHS = '/api/* /v1/* /webhooks/* /healthz /build/* /cdn/blobs/* /u/*';
 const IS_CALLER_SETTING = /^(?:LODB_|LoDb__|COMPOSE_)|^(?:IMAGE_TAG|APP_REVISION)$/;
+// Called by these names inside the stack: the renderer, nginx's probes, the healthcheck.
+const INTERNAL_HOSTS = ['lodb-api', 'localhost', '127.0.0.1'];
 
 const hasCompose = await run('docker', ['compose', 'version']).then(() => true, () => false);
 
@@ -90,6 +93,18 @@ describe('served overlays through Compose',
       assert.ok(Number(ssr.LODB_PINNED_RENDER_MAX_IN_FLIGHT)
         < Number(ssr.LODB_RENDER_MAX_IN_FLIGHT), 'the pinned lane stays under the total');
       assert.equal(prod['web-ssr'].environment.LODB_RENDER_MAX_IN_FLIGHT, '');
+    });
+
+    test('lets the API answer its public hosts and its stack names only', () => {
+      const hostsOf = (setting) => setting.split(/[,;]/).map((host) => host.trim())
+        .filter((host) => host.length > 0);
+      for (const [name, services] of [['prod', prod], ['staging', staging]]) {
+        const hosts = hostsOf(services.api.environment.AllowedHosts);
+        const labels = services.nginx.labels;
+        const routed = hostsOf(`${labels.caddy_0},${labels.caddy_1}`);
+        assert.deepEqual(hosts, [...routed, ...INTERNAL_HOSTS], `${name} AllowedHosts`);
+        assert.ok(!hosts.includes('*'), `${name} filters the hosts`);
+      }
     });
 
     test('asks for the staging login on the pages only, its hash intact', async () => {

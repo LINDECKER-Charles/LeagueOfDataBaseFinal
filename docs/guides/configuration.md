@@ -298,7 +298,9 @@ pool borné par `Maximum Pool Size=32;Timeout=5`, **sans mot de passe** : l'API 
 `LoDb__Accounts__SiteOrigin`, `LoDb__Seo__CanonicalOrigin` et `LoDb__PublicApi__SiteOrigin`
 (`https://` + `LODB_CANONICAL_HOST`), `LoDb__PublicApi__Reference__BaseUrl`
 (`LODB_PUBLIC_API_ORIGIN`), `LoDb__DataProtection__CertificatePath`,
-`LoDb__Hosting__KnownProxyNetworks__0` (`LODB_STACK_SUBNET` seul), `LoDb__Storage__Root` (`/srv/storage`, volume
+`LoDb__Hosting__KnownProxyNetworks__0` (`LODB_STACK_SUBNET` seul), `AllowedHosts` (les hôtes de
+`CADDY_DOMAINS` et `API_CADDY_DOMAINS`, puis `lodb-api`, `localhost` et `127.0.0.1` : tout autre
+`Host` reçoit un `400`, le port des métriques excepté), `LoDb__Storage__Root` (`/srv/storage`, volume
 `ddragon`, que nginx sert), et côté SSR `LODB_API_ORIGIN`, `LODB_TRUST_PROXY_HEADERS`,
 `LODB_STACK_NETWORKS` (`LODB_STACK_SUBNET` seul), `LODB_FRONT_BUILDS_DIR` (`/srv/front-builds`,
 volume `front-builds`), `NODE_OPTIONS`. `ASPNETCORE_ENVIRONMENT` reste **absente** sur un hôte : `Development`

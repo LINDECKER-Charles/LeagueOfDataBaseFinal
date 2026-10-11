@@ -59,6 +59,10 @@ services:
       LoDb__Hosting__KnownProxyNetworks__0: ${LODB_STACK_SUBNET:?LODB_STACK_SUBNET is required (set by the deploy job)}
       LoDb__Hosting__KnownProxyNetworks__1: !reset null
       LoDb__Hosting__KnownProxyNetworks__2: !reset null
+      # The hosts the API answers (src/LoDb.Api/Hosting/HostFilteringSetup.cs), any other one
+      # refused with a 400: the public ones nginx forwards, the alias the renderer calls and
+      # the loopback of the healthcheck. The metrics port is not filtered.
+      AllowedHosts: ${CADDY_DOMAINS:?CADDY_DOMAINS is required},${API_CADDY_DOMAINS:?API_CADDY_DOMAINS is required},lodb-api,localhost,127.0.0.1
       # Every origin the API publishes is the canonical host's: e-mail links, sitemaps,
       # share_url of /v1, and the origin /developers documents for /v1.
       LoDb__Accounts__SiteOrigin: https://${LODB_CANONICAL_HOST:?LODB_CANONICAL_HOST is required}
