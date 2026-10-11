@@ -12,7 +12,7 @@ test.describe('headers of a page', { tag: '@readonly' }, () => {
     const response = await request.get('/en/about');
     const policy = response.headers()['content-security-policy'] ?? '';
     const inlineScripts = (await response.text()).match(
-      /<script>|<script type="text\/javascript"/g,
+      /<script>|<script type="text\/javascript"/gi,
     );
 
     expect(response.status()).toBe(200);
