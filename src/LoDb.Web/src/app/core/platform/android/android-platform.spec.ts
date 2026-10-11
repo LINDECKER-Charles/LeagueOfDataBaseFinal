@@ -144,13 +144,16 @@ describe('AndroidPlatform', () => {
     expect(native.opened).toEqual(['https://www.leagueoflegends.com/']);
   });
 
-  it.each(['javascript:alert(1)', 'intent://scan#Intent;end', 'file:///sdcard/x', 'nope'])(
-    'refuses to open anything but a web link (%s)',
-    async (url) => {
-      await expect(start().openExternal(url)).rejects.toThrow(/http\(s\)/);
-      expect(native.opened).toEqual([]);
-    },
-  );
+  it.each([
+    'http://www.leagueoflegends.com/',
+    'javascript:alert(1)',
+    'intent://scan#Intent;end',
+    'file:///sdcard/x',
+    'nope',
+  ])('refuses to open anything but an https link (%s)', async (url) => {
+    await expect(start().openExternal(url)).rejects.toThrow(/https/);
+    expect(native.opened).toEqual([]);
+  });
 
   it('shares through the native sheet', async () => {
     const content = { title: 'Jinx', text: 'A build', url: 'https://league-of-data-base.com/b/1' };
