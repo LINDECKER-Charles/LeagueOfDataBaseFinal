@@ -138,7 +138,10 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   (`specs/admin/admin-account.ts` attend ; les tests xUnit calculent le code à l'horloge de
   l'hôte, `Totp.Code(key, App.Clock)`, jamais à l'heure réelle). La clé est scellée par Data
   Protection : si le trousseau est perdu (certificat compris), les TOTP ne s'ouvrent plus et
-  un administrateur se rétablit par `admin mfa-reset` puis `admin mfa-invite`.
+  un administrateur se rétablit par `admin mfa-reset` puis `admin mfa-invite`. Même remède
+  après un retour arrière de l'API vers une image antérieure au scellement : elle ne lit ni
+  la clé scellée (`dp1:…`) ni les codes de secours hachés, et la connexion au second facteur
+  y échoue.
 - Bannir, c'est `IsBanned` plus `UpdateSecurityStampAsync`. Un hash argon2id **plus fort**
   que la cible est conservé (`Argon2Passwords.IsTarget`) ; un compte hérité arrive sans
   `security_stamp`, la connexion le remplit.
