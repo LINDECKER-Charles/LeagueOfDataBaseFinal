@@ -90,6 +90,12 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   adresse privée et sans `X-Forwarded-For` est compté comme le SSR (débit interne, attente
   de 2 s permise). Pour reproduire un client public, passer par nginx (18080). Un `503`
   « en attente » sous charge est un délestage voulu, pas une panne.
+- **Warm-up à court d'images** : une trame `done` avec `settled` < `total` est voulue. Le
+  budget d'images par minute est partagé (≈ 900 images par warm-up froid de l'accueil,
+  1 500 par minute) : refusé, le flux ne demande plus d'images et finit `done`, le
+  catalogue ouvert ; les images restantes restent en attente et les listes les confient à
+  la file de fond. Un catalogue qui ne s'ouvre pas et un flux expiré finissent toujours
+  `failed`, en gardant les comptes atteints.
 - Une URL de l'ancien site sur une version non stockée répond `302` vers la liste de la
   version, sans rien ingérer : voulu (une entrée retirée du jeu ne devient pas une 404).
 - **E-mails** : le modèle d'un `EmailMessage` s'écrit avec `EmailModelKeys`, jamais en

@@ -24,18 +24,17 @@ internal sealed record WarmUpProgress
     /// <summary>The problem code that ended a failed run, as a catalog call answers it.</summary>
     public string? Failure { get; init; }
 
-    public static WarmUpProgress Preparing(IReadOnlyList<ResourceType> resources) =>
-        Waiting(WarmUpStage.Preparing, resources);
-
-    public static WarmUpProgress Failed(IReadOnlyList<ResourceType> resources, string code) =>
-        Waiting(WarmUpStage.Failed, resources) with { Failure = code };
-
-    private static WarmUpProgress Waiting(WarmUpStage stage, IReadOnlyList<ResourceType> resources)
+    /// <summary>
+    /// The only frame of a run refused before it started, nothing counted; a run that started
+    /// has its frames from <see cref="WarmUpTracker"/>.
+    /// </summary>
+    public static WarmUpProgress Failed(IReadOnlyList<ResourceType> resources, string code)
     {
         ArgumentNullException.ThrowIfNull(resources);
         return new WarmUpProgress
         {
-            Stage = stage,
+            Stage = WarmUpStage.Failed,
+            Failure = code,
             Total = 0,
             Settled = 0,
             Resources =

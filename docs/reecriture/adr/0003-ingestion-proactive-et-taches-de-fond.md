@@ -8,7 +8,9 @@
   `GET /api/catalog/{version}/{lang}/warm-up`, un flux SSE asynchrone dont chaque trame
   est l'état complet, répétée toutes les 5 s pendant l'ingestion des datasets.
 - **Amendement** : le 2026-10-10, les points 4 et 5 sont précisés : le coût de la longue
-  traîne est borné à chaque étage de l'API (voir § « Amendement du 2026-10-10 »).
+  traîne est borné à chaque étage de l'API (voir § « Amendement du 2026-10-10 »). Le
+  2026-10-11, un warm-up dont les images sont refusées se termine `done` (même section,
+  point 4).
 
 ## Contexte
 
@@ -152,10 +154,17 @@ clients. Toutes les valeurs ci-dessous sont des défauts, réglables par
 - `GET /api/catalog/{version}/{lang}/warm-up` et `/api/pickers` passent par la porte
   froide et le budget. Le warm-up est en plus limité à **20** démarrages par heure et par
   client (adresse, ou /64 en IPv6, politique `cold-work`), à **8** flux ouverts, **2** par
-  client, de **120 s** chacun (`LoDb:Catalog:WarmUp`). Un refus ou une expiration clôt le
-  flux par une trame `failed` de code `catalog-pending` : la visite continue. Jamais de
-  limite par adresse sur `/api/pickers`, lu par des membres qui peuvent partager une
-  adresse ([ADR 0009](0009-identite-authentification-sessions.md)).
+  client, de **120 s** chacun (`LoDb:Catalog:WarmUp`). Un catalogue refusé (porte froide,
+  budget des datasets, aucune place de flux) ou une expiration clôt le flux par une trame
+  `failed` de code `catalog-pending`, qui garde les comptes atteints : la visite continue.
+  Jamais de limite par adresse sur `/api/pickers`, lu par des membres qui peuvent partager
+  une adresse ([ADR 0009](0009-identite-authentification-sessions.md)).
+- *Précisé le 2026-10-11.* Les budgets sont partagés par tous les visiteurs : un warm-up de
+  l'accueil sur un patch froid demande environ 900 images, et deux dans la même minute
+  épuisent le budget d'images. Une fois le catalogue ouvert, un refus du travail d'images
+  (budget, emplacement) ne demande plus d'images et clôt le flux par `done` : les images
+  non admises restent en attente, sans verdict (`settled` < `total`), et les listes les
+  confient à la file de fond. Un seul refus est compté par flux.
 - Une URL de l'ancien site **n'ingère jamais** : son nom se cherche dans le catalogue du
   dernier patch (les ids sont stables), puis dans celui de la version visée si elle est
   déjà stockée ; sinon, `302` vers la liste de cette version, pour qu'une entrée retirée
