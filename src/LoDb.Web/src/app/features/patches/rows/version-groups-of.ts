@@ -14,7 +14,7 @@ export interface VersionGroup {
 export function versionGroupsOf(versions: readonly string[]): VersionGroup[] {
   const groups = new Map<string, string[]>();
   for (const version of versions) {
-    const [major = version] = version.split(SEGMENT_SEPARATOR, 1);
+    const major = version.split(SEGMENT_SEPARATOR, 1)[0];
     const group = groups.get(major);
     if (group === undefined) {
       groups.set(major, [version]);
