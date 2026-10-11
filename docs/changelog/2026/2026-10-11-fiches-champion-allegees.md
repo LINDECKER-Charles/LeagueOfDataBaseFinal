@@ -18,7 +18,10 @@ skins reste affiché dans l'en-tête de la section dès l'ouverture de la page.
 
 - Nouvel endpoint `GET /api/catalog/{version}/{lang}/champions/{id}/skins` (`ChampionSkins`) :
   mêmes porte froide, budget et en-têtes de cache que le reste du catalogue, aucune limite par
-  adresse. Le détail ne porte plus `skins` mais `alternateSkinCount`.
+  adresse. Le détail ne porte plus `skins` mais `alternateSkinCount`, sauf pour une app
+  installée (en-tête `X-LoDb-Client`, réponse `Vary`) : son front peut précéder `/skins`, et
+  l'API des apps ne fait que grandir (ADR 0008). Le champ partira quand la version minimale
+  de la politique client de chaque app lira `/skins`.
 - Front : `lodb-skin-shelf` lit les skins (`injectChampionSkins`, une seconde tentative après
   5 s) dans le bloc `@defer (on viewport)` de la section, donc jamais côté serveur ; la page
   rendue et son `ng-state` ne contiennent plus ni art ni chroma de skin.

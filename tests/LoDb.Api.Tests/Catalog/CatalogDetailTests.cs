@@ -10,6 +10,8 @@ namespace LoDb.Api.Tests.Catalog;
 public sealed class CatalogDetailTests(CatalogApiFixture api)
 {
     private const string Latest = "/api/catalog/16.19.1/en_US";
+    private const string ClientHeader = "X-LoDb-Client";
+    private const string AndroidApp = "android/1.0.0";
 
     [Fact]
     public async Task ChampionDetailCarriesAbilitiesArtAndItsSkinCount()
@@ -31,6 +33,24 @@ public sealed class CatalogDetailTests(CatalogApiFixture api)
         Assert.Equal(
             skins.Items("skins").Count(static skin => skin.GetProperty("number").GetInt32() != 0),
             ahri.GetProperty("alternateSkinCount").GetInt32());
+    }
+
+    [Fact]
+    public async Task InstalledAppStillReadsTheSkinsInTheChampionPage()
+    {
+        using var web = await api.GetAsync($"{Latest}/champions/Ahri");
+        var page = await api.GetJsonAsync($"{Latest}/champions/Ahri");
+        var app = await api.GetJsonAsync($"{Latest}/champions/Ahri", AndroidApp);
+        var skins = await api.GetJsonAsync($"{Latest}/champions/Ahri/skins");
+
+        Assert.Contains(ClientHeader, web.Headers.Vary);
+        Assert.False(page.TryGetProperty("skins", out _));
+        Assert.Equal(
+            skins.GetProperty("skins").GetRawText(),
+            app.GetProperty("skins").GetRawText());
+        Assert.Equal(
+            page.GetProperty("alternateSkinCount").GetInt32(),
+            app.GetProperty("alternateSkinCount").GetInt32());
     }
 
     [Fact]

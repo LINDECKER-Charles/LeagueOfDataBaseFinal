@@ -1,6 +1,7 @@
 using LoDb.Api.Modules.Catalog.Champions.Details;
 using LoDb.Api.Modules.Catalog.Http;
 using LoDb.Api.Modules.Catalog.Reading;
+using LoDb.Api.Modules.ClientPolicy.Versions;
 using LoDb.Domain.Catalog;
 using LoDb.Domain.Catalog.Champions;
 using LoDb.Domain.Paths;
@@ -8,6 +9,7 @@ using LoDb.Ingestion.Catalog;
 using LoDb.Ingestion.Images;
 using LoDb.Ingestion.Images.Art;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.Net.Http.Headers;
 
 namespace LoDb.Api.Modules.Catalog.Champions;
 
@@ -79,7 +81,12 @@ internal static class ChampionEndpoints
             icons,
             ArtVariants.Of(champion),
             request.CancellationToken);
-        return context.Answer(ChampionDetails.Of(champion, context.Catalog, images), images);
+        var details = ChampionDetails.Of(champion, context.Catalog, images);
+        // An app gets more than the web: no cache may hand one the other's page.
+        request.Context.Response.Headers.Append(HeaderNames.Vary, ClientHeader.Name);
+        return context.Answer(
+            IsApp(request.Context) ? details.WithSkins(champion, context.Catalog) : details,
+            images);
     }
 
     // The art is hotlinked (UP 8): nothing to resolve.
@@ -97,6 +104,10 @@ internal static class ChampionEndpoints
             ? context.Answer(ChampionSkins.Of(champion, context.Catalog), ImageSet.Empty)
             : CatalogProblem.UnknownEntity(Segment, request.Id);
     }
+
+    // An installed app names itself on every call (ADR 0008); the web and the renderer never do.
+    private static bool IsApp(HttpContext context) =>
+        ClientHeader.Read(context.Request) is not null;
 
     private static ChampionDetail? Find(CatalogContext context, string segment) =>
         CanonicalPath.IdOf(ResourceType.Champions, segment) is { } id

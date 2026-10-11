@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using LoDb.Api.Modules.Catalog.Reading;
 using LoDb.Api.Modules.Catalog.Shared;
 using LoDb.Domain.Catalog.Champions;
@@ -13,7 +14,8 @@ namespace LoDb.Api.Modules.Catalog.Champions.Details;
 /// champions on either side of it in the list.
 /// </summary>
 /// <remarks>
-/// The skins themselves are read apart (<see cref="ChampionSkins"/>), by the gallery alone.
+/// The skins themselves are read apart (<see cref="ChampionSkins"/>), by the gallery alone;
+/// only an installed app still gets them here (<see cref="Skins"/>).
 /// </remarks>
 internal sealed record ChampionDetails
 {
@@ -58,6 +60,14 @@ internal sealed record ChampionDetails
     /// </summary>
     public required int AlternateSkinCount { get; init; }
 
+    /// <summary>
+    /// Every skin, the base one first, for an installed app alone: its front may predate
+    /// <c>…/skins</c> and read them here, the app's API only growing (ADR 0008). Left out for
+    /// the web; to remove once the client policy's minimum of each app reads <c>…/skins</c>.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public IReadOnlyList<ChampionSkin>? Skins { get; init; }
+
     /// <summary>The champions before and after it in the list's order.</summary>
     public required DetailNeighbours Neighbours { get; init; }
 
@@ -87,4 +97,8 @@ internal sealed record ChampionDetails
             Neighbours = ChampionList.NeighboursOf(champion, catalog),
         };
     }
+
+    /// <summary>The same page with every skin, for an app whose front reads them here.</summary>
+    public ChampionDetails WithSkins(ChampionDetail champion, CatalogSnapshot catalog) =>
+        this with { Skins = ChampionSkins.Of(champion, catalog).Skins };
 }

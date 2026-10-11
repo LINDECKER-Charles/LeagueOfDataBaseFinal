@@ -4,6 +4,7 @@
 import { ChampionAbility } from '../models/champion-ability';
 import { ChampionArt } from '../models/champion-art';
 import { ChampionCard } from '../models/champion-card';
+import { ChampionSkin } from '../models/champion-skin';
 import { DetailNeighbours } from '../models/detail-neighbours';
 import { ImageVariant } from '../models/image-variant';
 
@@ -57,5 +58,12 @@ export interface ChampionDetails {
    * The facts of the list's card.
    */
   profile: ChampionCard;
+
+  /**
+   * Every skin, the base one first, for an installed app alone: its front may predate
+   * `…/skins` and read them here, the app's API only growing (ADR 0008). Left out for
+   * the web; to remove once the client policy's minimum of each app reads `…/skins`.
+   */
+  skins?: (Array<ChampionSkin> | null);
   version: string;
 }
