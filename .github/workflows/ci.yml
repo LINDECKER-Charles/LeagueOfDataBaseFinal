@@ -4,9 +4,9 @@ name: CI/CD
 # archived under legacy/.github/workflows/ and no longer run; changes under legacy/ trigger
 # nothing. The checks run in parallel: build and tests .NET, front checks, API contract,
 # i18n report (informative), the workflows themselves (actions pinned to a commit,
-# actionlint, deploy tools), the supply chain (base images pinned by digest) and E2E on the
-# local stack. No sensitive value here: hosts, paths and app secrets are repository secrets /
-# live inside the per-host ENV_FILE. The deploy jobs run in the GitHub environments
+# actionlint, deploy tools), the supply chain (base images pinned by digest, npm audit) and
+# E2E on the local stack. No sensitive value here: hosts, paths and app secrets are repository
+# secrets / live inside the per-host ENV_FILE. The deploy jobs run in the GitHub environments
 # `staging` and `production` (_deploy.yml).
 #
 # Two-stage promotion (build once, promote the same artifact, by digest):
@@ -196,7 +196,9 @@ jobs:
           "$RUNNER_TEMP/actionlint" -color
 
   # What the images are made of (tools/ci): every base image pinned to its digest, so that the
-  # build and the scan of _build.yml see what the pull request reviewed.
+  # build and the scan of _build.yml see what the pull request reviewed; no advisory from
+  # `high` up against a production dependency of the web app (bundled into the SSR server and
+  # the browser), except the dated entries of tools/ci/npm-audit-allowlist.json.
   supply-chain:
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -214,6 +216,10 @@ jobs:
 
       - name: Base images pinned by digest
         run: node tools/ci/check-pinned-images.mjs
+
+      # From the lockfile: nothing is installed, no package script runs.
+      - name: npm audit of the production dependencies
+        run: node tools/ci/check-npm-audit.mjs
 
   e2e:
     if: github.ref != 'refs/heads/main'

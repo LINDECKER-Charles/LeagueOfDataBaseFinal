@@ -66,6 +66,41 @@ The `# syntax=` line (`docker/dockerfile`) is not a `FROM`: check it by hand at 
 The images that only the workflows run (Trivy, the SBOM generator in `_build.yml`, actionlint
 below) are pinned the same way, and bumped by hand.
 
+## npm audit of the production dependencies
+
+```sh
+node tools/ci/check-npm-audit.mjs                       # src/LoDb.Web, level high
+node tools/ci/check-npm-audit.mjs --report audit.json   # a saved `npm audit --json`
+```
+
+Runs `npm audit --omit=dev --package-lock-only --json` in `src/LoDb.Web`: from the lockfile,
+nothing installed. Only the production dependencies count: they are bundled into the SSR
+server and the browser, while the development ones (build, tests, client generator) never
+leave the CI. The E2E package ships nothing and is not audited.
+
+**Blocking, with dated exceptions.** An advisory from `high` up fails the `supply-chain` job,
+which gates the merge into `test`, hence every deploy: a known flaw does not reach the site
+silently, and the fix is usually a lockfile bump within the ranges already allowed. An
+advisory that cannot be fixed yet (a transitive dependency pinned by its parent, no patched
+version) must not block the deploys forever: it is accepted in
+`tools/ci/npm-audit-allowlist.json`, one entry per advisory and package:
+
+```json
+[
+  {
+    "advisory": "GHSA-xxxx-xxxx-xxxx",
+    "package": "example-lib",
+    "reason": "Only the build-time CSS inliner reaches it, on our own CSS; fixed with its parent.",
+    "expires": "2026-12-31"
+  }
+]
+```
+
+All four fields are required, and `expires` is at most 90 days ahead: past it the entry no
+longer applies and the advisory blocks again, so that it is looked at anew. A malformed list
+accepts nothing. An entry that names an advisory no longer reported is flagged (warning):
+remove it. Only the lockfile decides; `npm audit fix` is not run by the CI.
+
 ## Images built, attested and scanned
 
 `_build.yml` resolves `test` to one commit, then builds `api`, `web-ssr` and `nginx` from it:
@@ -94,7 +129,8 @@ that digest.
 **A finding that blocks.** Rebuild first: a newer base digest (Dependabot) or the fixes of the
 day often clear it. If the fix cannot ship yet (a library pinned by a dependency, a base image
 not rebuilt), accept it in `.trivyignore` at the repository root, one line per vulnerability,
-with an expiry date at most 30 days ahead and the reason above it:
+with an expiry date at most 30 days ahead (an image's fixes come with its base's next rebuild,
+weeks, where a transitive npm fix waits for its parent's release) and the reason above it:
 
 ```text
 # libfoo in the nginx base: fixed upstream, image not rebuilt yet; not reachable (module unused).
