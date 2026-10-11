@@ -11,7 +11,7 @@ namespace LoDb.Api.Tests.Admin;
 /// one else; one without a second factor only reaches the enrollment.
 /// </summary>
 public sealed class AdminAccessTests(PostgresContainerFixture postgres)
-    : AdminTestBase(postgres), IClassFixture<PostgresContainerFixture>
+    : AdminTestBase(postgres)
 {
     private static readonly string[] Panels =
     [

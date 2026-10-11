@@ -13,7 +13,7 @@ namespace LoDb.Api.Tests.Billing;
 /// signed-in account onto its active key, a plan only once, ten checkouts an hour at most.
 /// </summary>
 public sealed class PurchaseCheckoutTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string OffersPath = "/api/billing/offers";
     private const string PackPath = "/api/billing/checkout/pack";

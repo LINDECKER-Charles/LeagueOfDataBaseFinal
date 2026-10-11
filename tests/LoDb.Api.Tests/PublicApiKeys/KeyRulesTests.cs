@@ -14,7 +14,7 @@ namespace LoDb.Api.Tests.PublicApiKeys;
 /// at most, its secret shown by the answer that issues it and never again.
 /// </summary>
 public sealed class KeyRulesTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const int IssuesPerHour = 5;
 

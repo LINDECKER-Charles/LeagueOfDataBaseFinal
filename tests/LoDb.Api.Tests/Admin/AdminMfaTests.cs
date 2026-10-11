@@ -14,7 +14,7 @@ namespace LoDb.Api.Tests.Admin;
 /// second factor the admin asks for. Without the invitation, the password opens nothing.
 /// </summary>
 public sealed class AdminMfaTests(PostgresContainerFixture postgres)
-    : AdminTestBase(postgres), IClassFixture<PostgresContainerFixture>
+    : AdminTestBase(postgres)
 {
     private const string EnrollmentPath = "/api/admin/mfa/enrollment";
     private const string ConfirmPath = "/api/admin/mfa/confirm";

@@ -13,7 +13,6 @@ namespace LoDb.Api.Tests.Catalog;
 /// run once per period on one instance; with no version ready yet, it stores nothing.
 /// </summary>
 public sealed class ArtVariantsJobTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>
 {
     private static CancellationToken Token => IngestionHost.Token;
 

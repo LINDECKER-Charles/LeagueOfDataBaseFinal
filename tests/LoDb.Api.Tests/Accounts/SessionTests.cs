@@ -11,7 +11,7 @@ namespace LoDb.Api.Tests.Accounts;
 /// me" and thirty with it, closed by a sign-out, and by a ban at its next revalidation.
 /// </summary>
 public sealed class SessionTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private static readonly TimeSpan PastRevalidation = TimeSpan.FromMinutes(6);
 

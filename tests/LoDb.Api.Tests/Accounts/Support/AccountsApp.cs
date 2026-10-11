@@ -93,8 +93,7 @@ public sealed class AccountsApp : IAsyncDisposable
         bool withGoogle = true,
         SmtpSink? relay = null)
     {
-        var database = await postgres.CreateDatabaseAsync(Cancellation);
-        await database.MigrateAsync(Cancellation);
+        var database = await postgres.CreateMigratedDatabaseAsync(Cancellation);
         return new AccountsApp(database, withGoogle, relay);
     }
 

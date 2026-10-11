@@ -14,7 +14,7 @@ namespace LoDb.Api.Tests.Accounts;
 /// whatever its case, and one address registers five accounts an hour at most.
 /// </summary>
 public sealed class RegistrationTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string RegisterPath = "/api/account/register";
     private const string ForwardedFor = "X-Forwarded-For";

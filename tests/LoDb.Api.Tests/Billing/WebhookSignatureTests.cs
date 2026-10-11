@@ -14,7 +14,7 @@ namespace LoDb.Api.Tests.Billing;
 /// ignored and acknowledged.
 /// </summary>
 public sealed class WebhookSignatureTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string OtherSecret = "whsec_another_placeholder";
 

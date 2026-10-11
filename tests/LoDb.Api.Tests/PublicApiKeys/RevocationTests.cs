@@ -12,7 +12,7 @@ namespace LoDb.Api.Tests.PublicApiKeys;
 /// waited up to a minute of go-api's cache; the account may then issue another.
 /// </summary>
 public sealed class RevocationTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private KeysApp? _app;
 

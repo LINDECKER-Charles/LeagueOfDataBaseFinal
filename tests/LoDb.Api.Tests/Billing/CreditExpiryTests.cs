@@ -15,7 +15,7 @@ namespace LoDb.Api.Tests.Billing;
 /// covers is dated first, from the day it is found.
 /// </summary>
 public sealed class CreditExpiryTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private static readonly TimeSpan Precision = TimeSpan.FromMilliseconds(1);
 

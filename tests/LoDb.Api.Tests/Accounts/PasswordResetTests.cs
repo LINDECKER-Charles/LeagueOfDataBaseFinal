@@ -14,7 +14,7 @@ namespace LoDb.Api.Tests.Accounts;
 /// sessions.
 /// </summary>
 public sealed class PasswordResetTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string ForgotPath = "/api/account/forgot-password";
     private const string ResetPath = "/api/account/reset-password";

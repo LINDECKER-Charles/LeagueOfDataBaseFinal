@@ -13,15 +13,13 @@ namespace LoDb.Api.Tests.PublicApi.Behaviour;
 /// go-api keyed them; before any ingestion they go unnamed.
 /// </summary>
 public sealed class CatalogTrendNamesTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>
 {
     private static CancellationToken Token => TestContext.Current.CancellationToken;
 
     [Fact]
     public async Task TheLatestCatalogNamesEveryType()
     {
-        await using var database = await postgres.CreateDatabaseAsync(Token);
-        await database.MigrateAsync(Token);
+        await using var database = await postgres.CreateMigratedDatabaseAsync(Token);
         await using var factory = new ApiFactory
         {
             PostgresConnectionString = database.AppConnectionString,

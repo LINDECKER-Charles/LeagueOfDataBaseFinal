@@ -22,7 +22,7 @@ namespace LoDb.Api.Tests.Accounts;
 /// a lost answer or two refreshes at once are forgiven for a few seconds.
 /// </summary>
 public sealed class RefreshRotationTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string Invalid = "invalid-refresh-token";
     private const string RevokedCounter = "lodb.sessions.revoked";

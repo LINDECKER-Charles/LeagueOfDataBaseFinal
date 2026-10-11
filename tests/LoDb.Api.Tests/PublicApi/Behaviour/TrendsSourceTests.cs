@@ -15,7 +15,6 @@ namespace LoDb.Api.Tests.PublicApi.Behaviour;
 /// Umami's figures from it on, each entity's day bounded by the median of its recent days.
 /// </summary>
 public sealed class TrendsSourceTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>
 {
     private const string EmptyObject = "{}";
 
@@ -71,8 +70,7 @@ public sealed class TrendsSourceTests(PostgresContainerFixture postgres)
     [Fact]
     public async Task ADayFarAboveItsMedianCountsThreeTimesIt()
     {
-        await using var database = await postgres.CreateDatabaseAsync(Token);
-        await database.MigrateAsync(Token);
+        await using var database = await postgres.CreateMigratedDatabaseAsync(Token);
         for (var day = 0; day < 10; day++)
         {
             await PullAsync(database, First.AddDays(day), ("champion:Ahri", 100));
@@ -117,8 +115,7 @@ public sealed class TrendsSourceTests(PostgresContainerFixture postgres)
     // Three days of the in-house measure, then Umami's figures of the third and fourth days.
     private async Task<TestDatabase> SeededAsync()
     {
-        var database = await postgres.CreateDatabaseAsync(Token);
-        await database.MigrateAsync(Token);
+        var database = await postgres.CreateMigratedDatabaseAsync(Token);
         for (var day = 0; day < 3; day++)
         {
             var buckets = JsonSerializer.Serialize(new

@@ -14,7 +14,7 @@ namespace LoDb.Api.Tests.Accounts;
 /// page of L3.1 that calls the API back.
 /// </summary>
 public sealed partial class AccountEmailDeliveryTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string NewPassword = "N0uvelle-phrase!";
     private const int MaxBatches = 50;

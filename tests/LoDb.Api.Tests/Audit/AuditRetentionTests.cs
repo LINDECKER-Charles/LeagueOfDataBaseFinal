@@ -14,7 +14,7 @@ namespace LoDb.Api.Tests.Audit;
 /// day after day, without anyone asking.
 /// </summary>
 public sealed class AuditRetentionTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private AccountsApp? _app;
 

@@ -14,7 +14,7 @@ namespace LoDb.Api.Tests.Admin;
 /// </summary>
 [Collection(ShellCommandsGroup.Name)]
 public sealed class AdminMfaCommandTests(PostgresContainerFixture postgres)
-    : AdminTestBase(postgres), IClassFixture<PostgresContainerFixture>
+    : AdminTestBase(postgres)
 {
     private const string InvitationLine =
         "Invitation to enrol an authenticator, valid 15 minutes: ";

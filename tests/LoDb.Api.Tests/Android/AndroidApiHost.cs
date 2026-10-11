@@ -45,8 +45,7 @@ public sealed class AndroidApiHost : IAsyncDisposable
     public static async Task<AndroidApiHost> StartAsync(PostgresContainerFixture postgres)
     {
         ArgumentNullException.ThrowIfNull(postgres);
-        var database = await postgres.CreateDatabaseAsync(Cancellation);
-        await database.MigrateAsync(Cancellation);
+        var database = await postgres.CreateMigratedDatabaseAsync(Cancellation);
         return new AndroidApiHost(database);
     }
 

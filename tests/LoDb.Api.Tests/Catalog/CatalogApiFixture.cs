@@ -23,12 +23,11 @@ namespace LoDb.Api.Tests.Catalog;
 /// call ingests their datasets before it answers, and their images only when it resolves
 /// them synchronously, the background workers being off.
 /// </summary>
-public sealed class CatalogApiFixture : IAsyncLifetime
+public sealed class CatalogApiFixture(PostgresContainerFixture postgres) : IAsyncLifetime
 {
     private const string ProblemContentType = "application/problem+json";
     private const string ClientHeader = "X-LoDb-Client";
 
-    private readonly PostgresContainerFixture _postgres = new();
     private TestDatabase? _database;
     private ApiFactory? _factory;
     private HttpClient? _client;
@@ -41,9 +40,7 @@ public sealed class CatalogApiFixture : IAsyncLifetime
 
     public async ValueTask InitializeAsync()
     {
-        await _postgres.InitializeAsync();
-        _database = await _postgres.CreateDatabaseAsync(Token);
-        await _database.MigrateAsync(Token);
+        _database = await postgres.CreateMigratedDatabaseAsync(Token);
         _factory = new ApiFactory
         {
             PostgresConnectionString = _database.AppConnectionString,
@@ -133,8 +130,6 @@ public sealed class CatalogApiFixture : IAsyncLifetime
         {
             await _database.DisposeAsync();
         }
-
-        await _postgres.DisposeAsync();
     }
 
     private static async Task IngestAsync(IVersionIngestion ingestion, PatchVersion version)

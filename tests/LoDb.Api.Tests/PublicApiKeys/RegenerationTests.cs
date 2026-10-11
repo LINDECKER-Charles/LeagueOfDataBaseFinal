@@ -15,7 +15,7 @@ namespace LoDb.Api.Tests.PublicApiKeys;
 /// <c>/v1</c> knows it from the next request.
 /// </summary>
 public sealed class RegenerationTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private KeysApp? _app;
 

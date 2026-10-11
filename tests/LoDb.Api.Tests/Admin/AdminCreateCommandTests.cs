@@ -13,7 +13,7 @@ namespace LoDb.Api.Tests.Admin;
 /// </summary>
 [Collection(ShellCommandsGroup.Name)]
 public sealed class AdminCreateCommandTests(PostgresContainerFixture postgres)
-    : AdminTestBase(postgres), IClassFixture<PostgresContainerFixture>
+    : AdminTestBase(postgres)
 {
     private const string FirstEmail = "first.admin@example.test";
     private const string PasswordLine = "Password, shown only now: ";

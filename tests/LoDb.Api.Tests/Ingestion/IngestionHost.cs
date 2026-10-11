@@ -45,8 +45,7 @@ internal sealed class IngestionHost : IAsyncDisposable
     public static async Task<IngestionHost> CreateAsync(PostgresContainerFixture postgres)
     {
         ArgumentNullException.ThrowIfNull(postgres);
-        var database = await postgres.CreateDatabaseAsync(Token);
-        await database.MigrateAsync(Token);
+        var database = await postgres.CreateMigratedDatabaseAsync(Token);
         var root = Directory.CreateTempSubdirectory(StoragePrefix).FullName;
         return new IngestionHost(database, root);
     }

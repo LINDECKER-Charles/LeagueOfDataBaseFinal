@@ -18,7 +18,7 @@ namespace LoDb.Api.Tests.Analytics;
 /// the beacon of a signed-in reader needs no XSRF token.
 /// </summary>
 public sealed class AnalyticsAdminTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string Report = "/api/admin/analytics/report";
     private const string Rollup = "/api/admin/analytics/rollup";
