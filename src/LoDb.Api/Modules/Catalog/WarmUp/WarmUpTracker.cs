@@ -19,7 +19,7 @@ internal sealed class WarmUpTracker : IProgress<DdragonImage>
     private readonly Lock gate = new();
     private readonly IReadOnlyList<ResourceType> resources;
     private readonly ChannelWriter<WarmUpProgress> frames;
-    private readonly Dictionary<(string Type, string File), PlannedImage> unsettled = [];
+    private readonly Dictionary<(string Type, string Key), PlannedImage> unsettled = [];
     private readonly Dictionary<ResourceType, int> totals;
     private readonly Dictionary<ResourceType, int> settled;
     private readonly HashSet<ResourceType> ready = [];
@@ -146,8 +146,8 @@ internal sealed class WarmUpTracker : IProgress<DdragonImage>
         }
     }
 
-    private static (string Type, string File) KeyOf(DdragonImage image) =>
-        (image.ManifestType, image.File);
+    private static (string Type, string Key) KeyOf(DdragonImage image) =>
+        (image.ManifestType, image.ManifestKey);
 
     private void Publish() => frames.TryWrite(new WarmUpProgress
     {

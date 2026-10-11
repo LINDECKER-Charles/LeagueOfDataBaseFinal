@@ -5,8 +5,8 @@ namespace LoDb.Ingestion.Catalog;
 
 /// <summary>
 /// Refuses at startup a catalog that could hold nothing, versions or image verdicts cached
-/// for too long, an unreadable pinned language, or a cold gate that would admit nothing or
-/// never let go.
+/// for too long, an unreadable pinned language, a cold gate that would admit nothing or never
+/// let go, or art variants stored too often or with no bound.
 /// </summary>
 internal sealed class CatalogOptionsValidator : IValidateOptions<CatalogOptions>
 {
@@ -15,10 +15,13 @@ internal sealed class CatalogOptionsValidator : IValidateOptions<CatalogOptions>
     private const int MaxColdLoadConcurrency = 64;
     private const int MaxPendingLoadsLimit = 1024;
     private const int MaxImageVerdictVersions = 1024;
+    private const int MaxArtVariantsConcurrency = 16;
 
     private static readonly TimeSpan MinDuration = TimeSpan.FromMilliseconds(1);
     private static readonly TimeSpan MaxLifetime = TimeSpan.FromHours(1);
     private static readonly TimeSpan MaxInternalWait = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan MinArtVariantsPeriod = TimeSpan.FromMinutes(1);
+    private static readonly TimeSpan MaxArtVariantsPeriod = TimeSpan.FromDays(1);
 
     public ValidateOptionsResult Validate(string? name, CatalogOptions options)
     {
@@ -69,6 +72,17 @@ internal sealed class CatalogOptionsValidator : IValidateOptions<CatalogOptions>
         if (options.ImageVerdictVersions is < 1 or > MaxImageVerdictVersions)
         {
             yield return "ImageVerdictVersions must lie between 1 and 1024.";
+        }
+
+        if (options.ArtVariantsPeriod < MinArtVariantsPeriod
+            || options.ArtVariantsPeriod > MaxArtVariantsPeriod)
+        {
+            yield return "ArtVariantsPeriod must lie between one minute and one day.";
+        }
+
+        if (options.ArtVariantsConcurrency is < 1 or > MaxArtVariantsConcurrency)
+        {
+            yield return "ArtVariantsConcurrency must lie between 1 and 16.";
         }
     }
 

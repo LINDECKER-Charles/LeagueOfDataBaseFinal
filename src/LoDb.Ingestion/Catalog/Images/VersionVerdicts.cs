@@ -18,7 +18,8 @@ namespace LoDb.Ingestion.Catalog.Images;
 /// </remarks>
 internal sealed class VersionVerdicts(DateTimeOffset readAt)
 {
-    private readonly ConcurrentDictionary<(string Type, string Key), ResolvedImage> verdicts = new();
+    private readonly ConcurrentDictionary<(string Type, string Key), ResolvedImage> verdicts =
+        new();
 
     /// <summary>When the first verdict was read: the memo expires from it.</summary>
     public DateTimeOffset ReadAt => readAt;
@@ -46,7 +47,7 @@ internal sealed class VersionVerdicts(DateTimeOffset readAt)
         ArgumentNullException.ThrowIfNull(rows);
         foreach (var image in asked)
         {
-            var key = (image.ManifestType, image.File);
+            var key = (image.ManifestType, image.ManifestKey);
             if (rows.TryGetValue(key, out var row))
             {
                 verdicts[key] = VerdictOf(row);

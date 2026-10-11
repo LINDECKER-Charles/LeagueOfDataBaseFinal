@@ -6,6 +6,7 @@ using LoDb.Domain.Catalog.Champions;
 using LoDb.Domain.Paths;
 using LoDb.Ingestion.Catalog;
 using LoDb.Ingestion.Images;
+using LoDb.Ingestion.Images.Art;
 using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace LoDb.Api.Modules.Catalog.Champions;
@@ -44,9 +45,13 @@ internal static class ChampionEndpoints
 
         var context = read.Context;
         var shown = page.Slice(ChampionList.EntriesOf(context.Catalog));
-        var images = await context.ResolveAsync(
+        var portraits = await context.ResolveAsync(
             shown.Select(EntityImages.Portrait),
             ColdDemand.Queued,
+            request.CancellationToken);
+        var images = await context.WithStoredArtAsync(
+            portraits,
+            shown.SelectMany(ArtVariants.LoadingOf),
             request.CancellationToken);
         return context.Answer(ChampionList.Of(context.Catalog, page, images), images);
     }
@@ -66,9 +71,13 @@ internal static class ChampionEndpoints
             return CatalogProblem.UnknownEntity(Segment, request.Id);
         }
 
-        var images = await context.ResolveAsync(
+        var icons = await context.ResolveAsync(
             VersionImages.Of(champion),
             ColdDemand.Synchronous,
+            request.CancellationToken);
+        var images = await context.WithStoredArtAsync(
+            icons,
+            ArtVariants.Of(champion),
             request.CancellationToken);
         return context.Answer(ChampionDetails.Of(champion, context.Catalog, images), images);
     }

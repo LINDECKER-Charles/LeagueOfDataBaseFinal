@@ -25,6 +25,8 @@ public sealed class CatalogOptions
     private const int DefaultMaxPendingLoads = 16;
     private const int DefaultImageVerdictsMinutes = 10;
     private const int DefaultImageVerdictVersions = 32;
+    private const int DefaultArtVariantsMinutes = 30;
+    private const int DefaultArtVariantsConcurrency = 2;
 
     /// <summary>
     /// Catalogs kept in memory besides the pinned ones, one per (version, language), about
@@ -90,4 +92,17 @@ public sealed class CatalogOptions
     /// at most.
     /// </summary>
     public int ImageVerdictVersions { get; set; } = DefaultImageVerdictVersions;
+
+    /// <summary>
+    /// Period of the job storing the WebP variants of the latest version's champion art: a
+    /// promoted version shows them within this delay, the hotlinked art meanwhile.
+    /// </summary>
+    public TimeSpan ArtVariantsPeriod { get; set; } =
+        TimeSpan.FromMinutes(DefaultArtVariantsMinutes);
+
+    /// <summary>
+    /// Arts fetched and transcoded at once by that job: each transcode takes a processor
+    /// for some tens of milliseconds, taken from the pages the API serves meanwhile.
+    /// </summary>
+    public int ArtVariantsConcurrency { get; set; } = DefaultArtVariantsConcurrency;
 }

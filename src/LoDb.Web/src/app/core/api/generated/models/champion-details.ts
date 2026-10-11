@@ -5,6 +5,7 @@ import { ChampionAbility } from '../models/champion-ability';
 import { ChampionArt } from '../models/champion-art';
 import { ChampionCard } from '../models/champion-card';
 import { DetailNeighbours } from '../models/detail-neighbours';
+import { ImageVariant } from '../models/image-variant';
 
 /**
  * `GET /api/catalog/{version}/{lang}/champions/{id}`: the card, then the lore, the
@@ -35,6 +36,13 @@ export interface ChampionDetails {
    * The page the routing redirects a stale or slugless URL to.
    */
   canonicalPath: string;
+
+  /**
+   * The base skin's centered art as WebP, from the site's blobs: candidates of a srcset,
+   * the narrowest first; none until the latest version's variants are stored, nor for an
+   * older version, the hotlinked `art.centered` standing in.
+   */
+  centeredArtVariants: Array<ImageVariant>;
   contentLanguage?: (string | null);
   enemyTips: Array<string>;
   language: string;

@@ -3,6 +3,7 @@ using LoDb.Api.Modules.Catalog.Shared;
 using LoDb.Domain.Catalog.Champions;
 using LoDb.Domain.Text;
 using LoDb.Ingestion.Catalog.Snapshots;
+using LoDb.Ingestion.Images.Art;
 
 namespace LoDb.Api.Modules.Catalog.Champions.Details;
 
@@ -45,6 +46,13 @@ internal sealed record ChampionDetails
     public required ChampionArt Art { get; init; }
 
     /// <summary>
+    /// The base skin's centered art as WebP, from the site's blobs: candidates of a srcset,
+    /// the narrowest first; none until the latest version's variants are stored, nor for an
+    /// older version, the hotlinked <c>art.centered</c> standing in.
+    /// </summary>
+    public required IReadOnlyList<ImageVariant> CenteredArtVariants { get; init; }
+
+    /// <summary>
     /// The skins besides the base one, which the hero wears: those the gallery shows once it
     /// reads them from <c>…/skins</c>.
     /// </summary>
@@ -74,6 +82,7 @@ internal sealed record ChampionDetails
             EnemyTips = champion.EnemyTips,
             Abilities = ChampionAbility.AllOf(champion, images),
             Art = ChampionArt.Of(profile.Id, BaseSkin),
+            CenteredArtVariants = images.VariantsOf(ArtVariants.CenteredOf(champion)),
             AlternateSkinCount = champion.Skins.Count(static skin => skin.Number != BaseSkin),
             Neighbours = ChampionList.NeighboursOf(champion, catalog),
         };

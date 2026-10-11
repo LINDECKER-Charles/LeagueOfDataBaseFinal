@@ -36,8 +36,8 @@ internal sealed partial class ImageResolver(
             refused);
     }
 
-    private static (string Type, string File) KeyOf(DdragonImage image) =>
-        (image.ManifestType, image.File);
+    private static (string Type, string Key) KeyOf(DdragonImage image) =>
+        (image.ManifestType, image.ManifestKey);
 
     // One manifest query for the keys the memo cannot answer: never read, or without a row
     // when last read, which only a reader of what is stored accepts as it is.

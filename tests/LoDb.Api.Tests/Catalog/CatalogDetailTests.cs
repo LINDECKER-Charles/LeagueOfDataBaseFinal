@@ -34,6 +34,29 @@ public sealed class CatalogDetailTests(CatalogApiFixture api)
     }
 
     [Fact]
+    public async Task ChampionPagesCarryTheArtVariantsStoredAlone()
+    {
+        var ahri = await api.GetJsonAsync($"{Latest}/champions/Ahri");
+        var garen = await api.GetJsonAsync($"{Latest}/champions/Garen");
+        var card = (await api.GetJsonAsync($"{Latest}/champions")).Entry("entries", "Ahri");
+
+        var centered = ahri.Items("centeredArtVariants");
+        Assert.Equal(
+            [480, 960, 1280],
+            centered.Select(static variant => variant.GetProperty("width").GetInt32()));
+        Assert.All(centered, static variant =>
+            Assert.Matches(@"^/cdn/blobs/[0-9a-f]{64}\.webp$", variant.Text("url")));
+        Assert.Equal(3, centered.Select(static variant => variant.Text("url")).Distinct().Count());
+        var loading = Assert.Single(card.Items("loadingArtVariants"));
+        Assert.Equal(308, loading.GetProperty("width").GetInt32());
+        Assert.Equal(
+            loading.Text("url"),
+            Assert.Single(ahri.GetProperty("profile").Items("loadingArtVariants")).Text("url"));
+        Assert.Empty(garen.Items("centeredArtVariants"));
+        Assert.Empty(garen.GetProperty("profile").Items("loadingArtVariants"));
+    }
+
+    [Fact]
     public async Task ChampionSkinsAreReadApartWithTheirArtAndChromas()
     {
         using var response = await api.GetAsync($"{Latest}/champions/Ahri/skins");

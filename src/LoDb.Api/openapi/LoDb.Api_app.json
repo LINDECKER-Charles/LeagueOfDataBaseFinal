@@ -7865,6 +7865,7 @@
           "canonicalPath",
           "image",
           "loadingArt",
+          "loadingArtVariants",
           "blurb",
           "tags",
           "resource",
@@ -7896,6 +7897,13 @@
             "type": "string",
             "description": "The base skin's loading-screen portrait, hotlinked from Data Dragon (UP 8): the art of\nthe list's card.",
             "format": "uri"
+          },
+          "loadingArtVariants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImageVariant"
+            },
+            "description": "The same portrait as WebP, from the site's blobs: candidates of a srcset; none until\nthe latest version's variants are stored, nor for an older version,\nthe hotlinked `loadingArt` standing in."
           },
           "blurb": {
             "type": "string",
@@ -7994,6 +8002,7 @@
           "enemyTips",
           "abilities",
           "art",
+          "centeredArtVariants",
           "alternateSkinCount",
           "neighbours"
         ],
@@ -8050,6 +8059,13 @@
           "art": {
             "description": "The base skin's art.",
             "$ref": "#/components/schemas/ChampionArt"
+          },
+          "centeredArtVariants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImageVariant"
+            },
+            "description": "The base skin's centered art as WebP, from the site's blobs: candidates of a srcset,\nthe narrowest first; none until the latest version's variants are stored, nor for an\nolder version, the hotlinked `art.centered` standing in."
           },
           "alternateSkinCount": {
             "type": "integer",
@@ -9266,6 +9282,25 @@
         ],
         "type": "string",
         "description": "What an image resolves to."
+      },
+      "ImageVariant": {
+        "required": [
+          "url",
+          "width"
+        ],
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "`/cdn/blobs/{sha256}.webp`."
+          },
+          "width": {
+            "type": "integer",
+            "description": "Its width in pixels, the `w` descriptor of the candidate.",
+            "format": "int32"
+          }
+        },
+        "description": "A WebP variant of an art, stored by the site: one candidate of a srcset."
       },
       "ImportPreview": {
         "required": [

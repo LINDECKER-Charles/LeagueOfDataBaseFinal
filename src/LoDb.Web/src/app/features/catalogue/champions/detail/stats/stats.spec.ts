@@ -33,6 +33,7 @@ function cardOf(overrides: Partial<ChampionCard> = {}): ChampionCard {
     title: 'the Dark Child',
     image: { status: 'absent' },
     loadingArt: 'https://ddragon.leagueoflegends.com/cdn/img/champion/loading/Annie_0.jpg',
+    loadingArtVariants: [],
     blurb: 'Dangerous, yet disarmingly precocious.',
     partype: 'Mana',
     resource: 'mana',

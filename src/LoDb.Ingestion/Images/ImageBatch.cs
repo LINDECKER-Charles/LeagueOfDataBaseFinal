@@ -19,4 +19,10 @@ internal sealed record ImageBatch(
     /// chunk are recorded. An image skipped as already recorded is not reported.
     /// </summary>
     public IProgress<DdragonImage>? Progress { get; init; }
+
+    /// <summary>
+    /// Sources fetched and transcoded at once; <see langword="null"/> for the egress's
+    /// <c>FetchConcurrency</c>. Bounds the CPU a batch of art variants takes from the API.
+    /// </summary>
+    public int? MaxParallelism { get; init; }
 }

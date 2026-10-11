@@ -30,6 +30,7 @@ function cardOf(id: string): ChampionCard {
     title: 'the Dark Child',
     image: { status: 'absent' },
     loadingArt: `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${id}_0.jpg`,
+    loadingArtVariants: [],
     blurb: 'Dangerous, yet disarmingly precocious.',
     partype: 'Mana',
     resource: 'mana',
@@ -49,6 +50,7 @@ function detailsOf(overrides: Partial<ChampionDetails> = {}): ChampionDetails {
     language: 'en_US',
     profile: cardOf('Annie'),
     art: ART,
+    centeredArtVariants: [],
     blurb: 'Dangerous, yet disarmingly precocious.',
     lore: 'Annie is a <i>child</i> mage<script>alert(1)</script>.',
     abilities: [

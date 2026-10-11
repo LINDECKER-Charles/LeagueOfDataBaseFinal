@@ -14,7 +14,7 @@ internal static class OnDemandUnits
         $"datasets|{version.Value}|{language.Code}";
 
     public static string Image(PatchVersion version, DdragonImage image) =>
-        $"image|{version.Value}|{image.ManifestType}|{image.File}";
+        $"image|{version.Value}|{image.ManifestType}|{image.ManifestKey}";
 
     /// <summary>The units a queued request covers, each once.</summary>
     public static List<string> Of(OnDemandRequest request)

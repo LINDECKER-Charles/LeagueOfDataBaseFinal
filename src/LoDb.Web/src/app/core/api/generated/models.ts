@@ -103,6 +103,7 @@ export type { GoogleExchangeRequest } from './models/google-exchange-request';
 export type { HttpValidationProblemDetails } from './models/http-validation-problem-details';
 export type { IdentityRequest } from './models/identity-request';
 export type { ImageStatus } from './models/image-status';
+export type { ImageVariant } from './models/image-variant';
 export type { ImportPreview } from './models/import-preview';
 export type { ImportReport } from './models/import-report';
 export type { IngestionState } from './models/ingestion-state';

@@ -36,7 +36,8 @@ internal static class WarmUpPlan
                         ? new PlannedImage(resource, image, named.Name)
                         : null))
                 .OfType<PlannedImage>()
-                .DistinctBy(static planned => (planned.Image.ManifestType, planned.Image.File)),
+                .DistinctBy(static planned =>
+                    (planned.Image.ManifestType, planned.Image.ManifestKey)),
         ];
     }
 
