@@ -1,30 +1,22 @@
-import type { Page } from '@playwright/test';
+import { recordViolations } from '../../support/policy-violations';
 import { expect, test } from '../../support/test';
 
-// The main kinds of page: home, list, detail in two locales, missing page.
+// The main kinds of page: home, list, detail in two locales, missing page, a page prerendered
+// at build time, and the account's pages, rendered in the browser.
 const PAGES = [
   '/fr/',
   '/fr/items',
   '/fr/champions/Annie',
   '/en/items/3031-infinity-edge',
   '/fr/champions/nowhere/at/all',
+  '/en/about',
+  '/en/account/login',
+  '/fr/account/register',
 ];
-
-// Every violation the browser reports for the page, recorded from its very first script.
-async function recordViolations(page: Page): Promise<() => Promise<string[]>> {
-  await page.addInitScript(() => {
-    const seen: string[] = [];
-    Reflect.set(window, '__lodbViolations', seen);
-    document.addEventListener('securitypolicyviolation', (event) => {
-      seen.push(`${event.effectiveDirective} ${event.blockedURI} ${event.sourceFile}`);
-    });
-  });
-  return () => page.evaluate(() => Reflect.get(window, '__lodbViolations') as string[]);
-}
 
 test.describe('the content security policy of the pages', { tag: '@readonly' }, () => {
   for (const path of PAGES) {
-    test(`lets ${path} hydrate without a violation, and without eval`, async ({
+    test(`lets ${path} hydrate without a violation, Trusted Types included`, async ({
       page,
       consoleErrors,
     }) => {
@@ -33,7 +25,11 @@ test.describe('the content security policy of the pages', { tag: '@readonly' }, 
       const response = await page.goto(path);
       await page.waitForLoadState('networkidle');
 
-      expect(response?.headers()['content-security-policy']).not.toContain('unsafe-eval');
+      const headers = response?.headers() ?? {};
+      expect(headers['content-security-policy']).not.toContain('unsafe-eval');
+      expect(headers['content-security-policy-report-only']).toContain(
+        "require-trusted-types-for 'script'",
+      );
       expect(await violations()).toEqual([]);
       expect(consoleErrors.filter((error) => /Content Security Policy/i.test(error))).toEqual([]);
     });
@@ -48,5 +44,20 @@ test.describe('the content security policy of the pages', { tag: '@readonly' }, 
 
     await expect(page.locator('.toolbar__count').first()).toContainText(/résultats?/);
     expect(await violations()).toEqual([]);
+  });
+
+  // The theme, set before the first paint by an inline script, still applies.
+  test('runs the inline script of the theme', async ({ page }) => {
+    await page.goto('/en/');
+
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'hextech');
+  });
+
+  test('names the endpoint its violations are reported to', async ({ request }) => {
+    const headers = (await request.get('/en/about')).headers();
+
+    expect(headers['reporting-endpoints']).toBe('csp="/api/csp-reports"');
+    expect(headers['content-security-policy']).toContain('report-to csp');
+    expect(headers['content-security-policy-report-only']).toContain('report-to csp');
   });
 });

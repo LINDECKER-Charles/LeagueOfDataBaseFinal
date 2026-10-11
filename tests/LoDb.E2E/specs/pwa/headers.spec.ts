@@ -32,6 +32,9 @@ test.describe('headers of a page', { tag: '@readonly' }, () => {
     );
     expect(headers['x-content-type-options']).toBe('nosniff');
     expect(headers['x-frame-options']).toBe('DENY');
+    expect(headers['cross-origin-opener-policy']).toBe('same-origin');
+    expect(headers['permissions-policy']).toContain('camera=()');
+    expect(headers['permissions-policy']).not.toContain('fullscreen');
   });
 
   test('come from the shared cache on the second request', async ({ request }) => {
