@@ -10,6 +10,10 @@ une décision du propriétaire, puis les étapes ci-dessous.
 - Ce qui borne déjà le coût, étage par étage : `docker/nginx/sites/site.conf` (débits par
   adresse), admission des rendus du SSR (`src/server/admission`), porte des lectures froides
   de l'API, refus d'un User-Agent exact (`docker/nginx/nginx.conf`).
+- Les étapes nomment `ENV_STAGING` et `ENV_PROD`. Une fois le
+  [déploiement par clé restreinte](deploiement-cle-restreinte.md) en place, c'est le `.env`
+  chiffré du poste, posé sur l'hôte par `lodb-env` (§ 7 de ce guide) ; la relance du dernier
+  déploiement ne change pas.
 
 ## 1. Avant le siège : ce qui protège déjà
 
@@ -35,7 +39,9 @@ humains (a), ou quand le coût du refus lui-même devient le problème (b).
 
 Dans Grafana, *Explore* : source `victorialogs` pour le journal de l'edge, `victoriametrics`
 pour les métriques. Hôtes de prod : `league-of-data-base.com`, `league-of-data-base.fr` et
-leurs `api.*` ; le staging (`test.*`) partage l'hôte, ne pas le confondre.
+leurs `api.*` ; le staging (`test.*`) partage l'hôte, ne pas le confondre. D'où
+`hote:in(…)`, qui compare la valeur entière : un filtre de phrase (`hote:"…"`) prendrait
+aussi `test.` et `api.`.
 
 ```logsql
 # (a) Adresses distinctes par heure sur les pages d'une version épinglée (/{locale}/{version}/…)
@@ -143,7 +149,7 @@ demande pas : elle peut être fusionnée à froid, et l'activation se réduit al
 | `compose.siege.yaml` | le service `anubis` (ci-dessous) |
 | `tools/deploy/split-env.sh`, `.env.prod.example` | secret `LODB_ANUBIS_KEY` ; ligne `LODB_SIEGE=off` commentée |
 | `.github/workflows/_deploy.yml` | `LODB_SIEGE` vaut `off` ou `anubis`, rien d'autre ; `anubis` ajoute `compose.siege.yaml` aux calques et exige le secret non vide |
-| `tools/nginx/test`, `tools/compose/test`, `tools/deploy/test` | rendu `off` sans `auth_request`, rendu `anubis` avec, location `^~ /.within.website/` prioritaire sur la garde des fichiers cachés ; calque servi ; cas du job |
+| `tools/nginx/test`, `tools/compose/test`, `tools/deploy/test` | rendu `off` sans `auth_request`, rendu `anubis` avec, location `^~ /.within.website/` prioritaire sur la garde des fichiers cachés ; calque servi ; cas du job ; `compose-secrets.test.mjs`, qui exige aujourd'hui que chaque clé de `split-env.sh` soit déclarée par `compose.deploy.yaml` et montée par l'API, en exempte `LODB_ANUBIS_KEY`, vérifiée dans le rendu avec `compose.siege.yaml`, montée par `anubis` seul |
 | `features/editorial/legal/texts/cookies-{fr,en}.html` | les deux cookies d'Anubis (`lodb-siege-auth-…`, `lodb-siege-cookie-verification-…`), posés seulement pendant un épisode d'abus ; entrée de changelog dans le même commit |
 
 ```nginx
@@ -273,7 +279,7 @@ Puis : Search Console, *Inspection de l'URL* › *Tester l'URL en direct* sur un
 (rendue, sans défi). Dans le journal de l'edge, les défis et leurs réussites :
 
 ```logsql
-stack:edge service:caddy journal:acces hote:"league-of-data-base.com" _time:1h
+stack:edge service:caddy journal:acces hote:in("league-of-data-base.com") _time:1h
   chemin:~"^/[.]within[.]website/"
   | stats by (chemin, statut) count() requetes, count_uniq(ip_client) adresses
 ```
@@ -347,7 +353,9 @@ de site par zone et d'un retour arrière qui doit d'abord rendre un certificat p
 1. **Autorité des tirages authentifiés** : une autorité propre (`openssl`), son certificat
    posé dans `/etc/edge/certs/lodb-aop-ca.pem` de l'hôte ; le certificat client qu'elle signe
    est téléversé dans Cloudflare (*SSL/TLS › Origin Server › Authenticated Origin Pulls*,
-   niveau **zone**, certificat propre). Jamais le certificat global de Cloudflare.
+   niveau **zone**, certificat propre) **dans chacune des deux zones**, `.com` et `.fr` :
+   une zone oubliée verrait ses hôtes, dont `api.league-of-data-base.fr`, refusés par
+   l'origine à l'étape 7. Jamais le certificat global de Cloudflare.
 2. **infra-vps** (accord) : dans le `Caddyfile`, au bloc `servers :443`, à côté de `trace` :
    `trusted_proxies static <plages>` et `client_ip_headers CF-Connecting-IP`, les plages
    relevées le jour même (`curl -s https://api.cloudflare.com/client/v4/ips`, champs
@@ -389,7 +397,12 @@ de site par zone et d'un retour arrière qui doit d'abord rendre un certificat p
    Chaque clé de label garde son index (`caddy_N.`) : une clé sans index viderait l'edge de
    ses options globales. Avant ce déploiement : adapter le bloc équivalent avec l'image de
    l'edge (`IMG_CADDY` d'`infra-vps`), `caddy validate --adapter caddyfile`. Le job vérifie
-   que `/certs/lodb-aop-ca.pem` existe dans le conteneur de l'edge avant `up`.
+   que `/certs/lodb-aop-ca.pem` existe dans le conteneur de l'edge avant `up`. Effet hors de
+   LoDb, couvert par l'accord de l'étape 2 : dès qu'un site exige un certificat client, Caddy
+   impose à **tout** le serveur `:443`, donc aux autres projets de l'hôte, qu'une requête
+   porte le même nom dans `Host` et dans le SNI (`enabling strict SNI-Host enforcement`,
+   relevé par `caddy validate` sur cette image) ; les navigateurs le respectent, un outil
+   qui les dissocie est refusé.
 8. Politique de confidentialité (`legal/texts/privacy-{fr,en}.html`, § 5 sous-traitants et
    § 6 transferts : Cloudflare, adresse IP traitée, transfert encadré) et politique de
    cookies (`cf_clearance`, `__cf_bm` s'ils apparaissent), avec une entrée de changelog.
@@ -424,7 +437,7 @@ curl -sS --resolve league-of-data-base.com:443:<adresse-du-vps> https://league-o
 
 ```logsql
 # L'adresse réelle traverse : « Cloudflare » ne doit PAS dominer les systèmes autonomes
-stack:edge service:caddy journal:acces hote:"league-of-data-base.com" _time:10m
+stack:edge service:caddy journal:acces hote:in("league-of-data-base.com") _time:10m
   | stats by (asn_org) count_uniq(ip_client) adresses | sort by (adresses desc) | limit 5
 ```
 
