@@ -81,7 +81,8 @@ La nouvelle stack prend la place de l'ancienne dans le même projet Compose
    réseaux `edge` et `observability` (jamais créés) et écrit le sous-réseau d'`edge` dans le
    `.env` (`LODB_EDGE_CIDR`, seul pair dont nginx croit `X-Forwarded-For`), ainsi que celui
    de la stack, fixé par cible (`LODB_STACK_SUBNET`, `10.231.1.0/24` en staging,
-   `10.231.2.0/24` en prod) ; s'arrête si un autre réseau Docker le recouvre.
+   `10.231.2.0/24` en prod) ; s'arrête si un autre réseau Docker le recouvre, ou si la
+   configuration résolue fait croire à l'API ou au SSR un autre réseau que celui-là.
 3. `docker compose pull` (5 tentatives), sauvegarde de la base en service (`.deploy/backups/`), l'hôte connecté à GHCR avec le `GITHUB_TOKEN` du
    run le temps du seul `pull` (transmis par l'entrée de `ssh`, jamais en ligne de
    commande). Si le réseau de la stack existe sur un autre sous-réseau, `docker compose

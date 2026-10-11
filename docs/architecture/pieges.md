@@ -160,6 +160,12 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
 
 - Variables Compose préfixées **`LODB_`**. En dev, les images s'appellent
   `<projet>-<service>` : un emplacement n'écrase pas les images de la stack locale.
+- **`!reset` et l'ordre des fichiers** : Compose ignore un `!reset` placé après un autre
+  fichier qui touche déjà l'`environment` du même service. Les `!reset null` de
+  `compose.deploy.yaml` (`KnownProxyNetworks__1`, `__2`) ne tiennent donc que s'il suit
+  directement `compose.yaml` : un calque d'hôte (staging…) se place **après** lui. Sinon,
+  l'API croirait encore les plages privées de `compose.yaml`, celles des réseaux partagés
+  comprises ; le déploiement le vérifie sur la configuration résolue et s'arrête.
 - Sur l'hôte, la stack occupe le projet de l'ancienne (`lodb-staging`, `lodb-prod`) : elle
   reprend son volume `pgdata` et range ses blobs dans `ddragon`. Le volume `storage` de
   l'ancienne stack (propriété de `www-data`) n'est ni réutilisé ni supprimé : le nommer

@@ -275,6 +275,16 @@ jobs:
             done
             sed -i '/^LODB_STACK_SUBNET=/d' .env
             echo "LODB_STACK_SUBNET=$STACK_SUBNET" >> .env
+            # The API and the renderer answer, and believe X-Forwarded-*, from this subnet
+            # alone. Compose drops a `!reset` that follows another file setting the same
+            # service's environment: compose.yaml's private ranges, which hold the shared
+            # networks' subnets, would then stay. Read from the resolved configuration, before
+            # anything changes; only the networks are printed.
+            trusted="$(docker compose config api web-ssr \
+              | sed -nE 's/^ +(LoDb__Hosting__KnownProxyNetworks__[0-9]+|LODB_STACK_NETWORKS): //p' \
+              | tr -d "\"'" | sort -u | xargs)"
+            [ "$trusted" = "$STACK_SUBNET" ] \
+              || fail "The API or the renderer would trust '$trusted', not $STACK_SUBNET alone."
 
             # ── Pull, then migrations before the traffic switch ────────────────────────
             # Logged in with this run's token for the pull only: the packages may be private,
