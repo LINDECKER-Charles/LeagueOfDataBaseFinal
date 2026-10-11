@@ -96,7 +96,7 @@ describe('served overlays through Compose',
     });
 
     test('lets the API answer its public hosts and its stack names only', () => {
-      const hostsOf = (setting) => setting.split(/[,;]/).map((host) => host.trim())
+      const hostsOf = (setting) => setting.split(/[\s,;]/).map((host) => host.trim())
         .filter((host) => host.length > 0);
       for (const [name, services] of [['prod', prod], ['staging', staging]]) {
         const hosts = hostsOf(services.api.environment.AllowedHosts);

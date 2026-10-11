@@ -58,6 +58,7 @@ public sealed class HostFilteringTests : IAsyncDisposable
     [InlineData(null, new[] { "*" })]
     [InlineData(" ; , ", new[] { "*" })]
     [InlineData("a.test, b.test;A.TEST", new[] { "a.test", "b.test" })]
+    [InlineData("a.test b.test,c.test", new[] { "a.test", "b.test", "c.test" })]
     public void SettingListsItsHostsOrAllowsEvery(string? setting, string[] hosts) =>
         Assert.Equal(hosts, HostFilteringSetup.Parse(setting));
 

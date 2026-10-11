@@ -9,10 +9,10 @@ namespace LoDb.Api.Hosting;
 /// <para>
 /// A served host lists its public hosts (the site and the API subdomain), the alias the
 /// renderer and nginx call the API by and the loopback of the healthcheck, separated by
-/// commas or semicolons, so that Compose can join the lists of the .env. <c>*</c>, the
-/// default, lets every host through, as the local stacks need. Links of the e-mails, return
-/// URLs and the own-origin check of the forgery guard then never rest on a host the edge
-/// did not route.
+/// commas, semicolons or spaces: Compose joins the lists of the .env, whose hosts Caddy and
+/// the deploy job also take separated by spaces. <c>*</c>, the default, lets every host
+/// through, as the local stacks need. Links of the e-mails, return URLs and the own-origin
+/// check of the forgery guard then never rest on a host the edge did not route.
 /// </para>
 /// <para>
 /// ASP.NET Core filters hosts before any middleware, the metrics port included, whose
@@ -27,7 +27,7 @@ internal static class HostFilteringSetup
 
     private const string AnyHost = "*";
     private const string FrameworkFilter = "Microsoft.AspNetCore.HostFilteringStartupFilter";
-    private static readonly char[] Separators = [',', ';'];
+    private static readonly char[] Separators = [',', ';', ' ', '\t'];
 
     public static IServiceCollection AddLoDbHostFiltering(
         this IServiceCollection services,
@@ -50,7 +50,9 @@ internal static class HostFilteringSetup
     public static List<string> Parse(string? setting)
     {
         var hosts = (setting ?? string.Empty)
-            .Split(Separators, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Split(
+                Separators,
+                StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
         return hosts.Count == 0 ? [AnyHost] : hosts;
