@@ -20,6 +20,7 @@ function sectionOf(
       image: entry.image,
       edition: entry.edition,
       art: entry.art,
+      artVariants: entry.artVariants,
     })),
   };
 }

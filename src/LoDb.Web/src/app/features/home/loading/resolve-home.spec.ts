@@ -51,6 +51,7 @@ const META: CatalogMeta = {
 };
 const IMAGE = { status: 'ready', url: '/cdn/blobs/abc.png', webpUrl: '/cdn/blobs/abc.webp' };
 const LOADING_ART = 'https://ddragon.leagueoflegends.com/cdn/img/champion/loading/Aatrox_0.jpg';
+const ART_VARIANTS = [{ url: '/cdn/blobs/aatrox.webp', width: 308 }];
 const CHAMPIONS = {
   total: 171,
   entries: [
@@ -60,6 +61,7 @@ const CHAMPIONS = {
       title: 'the Darkin Blade',
       image: IMAGE,
       loadingArt: LOADING_ART,
+      loadingArtVariants: ART_VARIANTS,
     },
   ],
 };
@@ -197,6 +199,7 @@ describe('resolveHome', () => {
         image: IMAGE,
         edition: 'modern',
         art: LOADING_ART,
+        artVariants: ART_VARIANTS,
       },
     ]);
     expect(home.sections.items.cards[0]?.caption).toBe('id 1001');
@@ -210,7 +213,9 @@ describe('resolveHome', () => {
     const { home } = await visit('/en');
 
     expect(home.sections.champions.cards[0]?.art).toBe(LOADING_ART);
+    expect(home.sections.champions.cards[0]?.artVariants).toEqual(ART_VARIANTS);
     expect(home.sections.items.cards[0]?.art).toBeNull();
+    expect(home.sections.items.cards[0]?.artVariants).toEqual([]);
     expect(home.sections.runes.cards[0]?.art).toBeNull();
     expect(home.sections.summoners.cards[0]?.art).toBeNull();
   });

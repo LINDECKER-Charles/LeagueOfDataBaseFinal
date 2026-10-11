@@ -10,6 +10,7 @@ import { Backdrop } from '../../../../ui/surfaces/backdrop';
 import { Skeleton } from '../../../../ui/surfaces/skeleton';
 import { PreviousPatches } from '../../shared/codex/history/previous-patches';
 import { injectDetailPager } from '../../shared/codex/pager/inject-detail-pager';
+import { injectArtPreconnect } from '../../shared/network/inject-art-preconnect';
 import { applyChampionsHead } from '../seo/apply-champions-head';
 import { championSeo } from '../seo/champion-seo';
 import { AbilityShowcase } from './abilities/ability-showcase';
@@ -82,6 +83,8 @@ export class ChampionPage {
       const entry = this.entry();
       return { locale: entry.context.locale, build: (translate) => championSeo(entry, translate) };
     });
+    const { art, centeredArtVariants } = this.details();
+    injectArtPreconnect()(art.centered, centeredArtVariants);
   }
 
   private isShown(id: SectionId): boolean {

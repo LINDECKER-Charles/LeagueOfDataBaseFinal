@@ -50,6 +50,8 @@
                   class="size-full"
                   imgClass="object-cover object-top transition-transform duration-500 group-hover:scale-105"
                   [src]="art"
+                  [variants]="card.artVariants"
+                  [sizes]="loadingArtSizes"
                   [alt]="card.name"
                   [width]="loadingArtWidth"
                   [height]="loadingArtHeight"

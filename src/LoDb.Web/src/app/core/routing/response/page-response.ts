@@ -47,24 +47,45 @@ export class PageResponse {
     }
   }
 
+  /**
+   * Has the browser open the connection to an origin the page's first image comes from as
+   * soon as the headers arrive, before any HTML is parsed (`Link: <origin>; rel=preconnect`).
+   */
+  preconnect(origin: string): void {
+    const headers = this.headers();
+    const link = `<${origin}>; rel=preconnect`;
+    if (headers !== null && !(headers.get('Link') ?? '').includes(link)) {
+      headers.append('Link', link);
+    }
+  }
+
   private status(status: HttpStatusCode): void {
     if (this.init !== null) {
       this.init.status = status;
     }
   }
 
-  // Null removes the header. The engine passes `Headers`; any other form is converted once.
+  // Null removes the header.
   private header(name: string, value: string | null): void {
-    const init = this.init;
-    if (init === null) {
+    const headers = this.headers();
+    if (headers === null) {
       return;
     }
-    const headers = init.headers instanceof Headers ? init.headers : new Headers(init.headers);
-    init.headers = headers;
     if (value === null) {
       headers.delete(name);
     } else {
       headers.set(name, value);
     }
+  }
+
+  // The engine passes `Headers`; any other form is converted once.
+  private headers(): Headers | null {
+    const init = this.init;
+    if (init === null) {
+      return null;
+    }
+    const headers = init.headers instanceof Headers ? init.headers : new Headers(init.headers);
+    init.headers = headers;
+    return headers;
   }
 }

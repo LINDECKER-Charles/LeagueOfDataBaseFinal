@@ -1,5 +1,6 @@
 import type { CatalogImage } from '../../../core/api/generated/models/catalog-image';
 import type { Edition } from '../../../core/api/generated/models/edition';
+import type { ImageVariant } from '../../../core/api/generated/models/image-variant';
 
 /** One entry of a preview, as the list endpoint gives it. */
 export interface PreviewEntry {
@@ -13,4 +14,6 @@ export interface PreviewEntry {
   readonly edition: Edition;
   /** A champion's loading-screen portrait, hotlinked from Data Dragon; null for the others. */
   readonly art: string | null;
+  /** The same portrait as the WebP the site stores for the latest patch; none otherwise. */
+  readonly artVariants: readonly ImageVariant[];
 }
