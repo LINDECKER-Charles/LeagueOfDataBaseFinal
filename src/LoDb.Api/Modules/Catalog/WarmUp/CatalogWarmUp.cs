@@ -17,11 +17,19 @@ namespace LoDb.Api.Modules.Catalog.WarmUp;
 /// (version, language), then the images its lists show, and streams how far it got.
 /// </summary>
 /// <remarks>
+/// <para>
 /// It waits on the on-demand ingestion the pages use: a warm-up and a visit needing the same
 /// image share one fetch, the synchronous slots and the budget of cold work bound them
 /// together. A client leaving stops the stream, never the ingestion, whose work stays for the
-/// next visit. A stream lives <c>LoDb:Catalog:WarmUp:StreamLifetime</c> at most: past it, or
-/// when the work is refused, it ends with a failed frame and the client visits the page.
+/// next visit.
+/// </para>
+/// <para>
+/// Image work refused for now (budget spent, no slot) asks for no more images: the run ends
+/// done, the catalog being open, and the images left stay pending for the pages, which show
+/// them as they arrive. A catalog that cannot be opened (refused as well, unknown, Data Dragon
+/// down) ends the run with a failed frame, as does a stream past
+/// <c>LoDb:Catalog:WarmUp:StreamLifetime</c>; the client visits the page all the same.
+/// </para>
 /// </remarks>
 internal sealed class CatalogWarmUp(
     CatalogGateway gateway,
@@ -65,12 +73,13 @@ internal sealed class CatalogWarmUp(
         }
     }
 
-    // The code a failed frame tells: an outage upstream, or a run cut short (work refused,
-    // stream expired, client gone) whose work goes on for the next visit.
+    // The code a failed frame tells: an outage upstream, or a run cut short (stream expired,
+    // client gone) whose work goes on for the next visit. No refusal gets here: the gateway
+    // answers the catalog's own as pending, and the images stage ends done on its own.
     private static string? FailureCode(Exception exception) => exception switch
     {
         EgressException => CatalogProblem.UpstreamUnavailable().Code,
-        OnDemandRefusedException or OperationCanceledException => CatalogProblem.Pending().Code,
+        OperationCanceledException => CatalogProblem.Pending().Code,
         _ => null,
     };
 
@@ -81,25 +90,25 @@ internal sealed class CatalogWarmUp(
         ChannelWriter<WarmUpProgress> frames,
         CancellationToken cancellationToken)
     {
+        var tracker = new WarmUpTracker(scope.Resources, frames);
         try
         {
-            frames.TryWrite(WarmUpProgress.Preparing(scope.Resources));
+            tracker.Prepare();
             var read = await gateway.ReadAsync(scope.Catalog, cancellationToken);
             if (read.IsOpen)
             {
-                var tracker = new WarmUpTracker(scope.Resources, frames);
                 await WarmImagesAsync(read.Context, tracker, cancellationToken);
             }
             else
             {
-                frames.TryWrite(WarmUpProgress.Failed(scope.Resources, read.Problem.Code));
+                tracker.Fail(read.Problem.Code);
             }
 
             frames.TryComplete();
         }
         catch (Exception exception) when (FailureCode(exception) is { } code)
         {
-            frames.TryWrite(WarmUpProgress.Failed(scope.Resources, code));
+            tracker.Fail(code);
             frames.TryComplete();
         }
         catch (Exception exception)
@@ -108,7 +117,8 @@ internal sealed class CatalogWarmUp(
         }
     }
 
-    // One resource after the other, so that their rows turn ready in the order shown.
+    // One resource after the other, so that their rows turn ready in the order shown. The
+    // first refusal ends the run: the rows it did not reach stay unready.
     private async Task WarmImagesAsync(
         CatalogContext context,
         WarmUpTracker tracker,
@@ -123,22 +133,43 @@ internal sealed class CatalogWarmUp(
             [.. plan.Where(planned => stored.Of(planned.Image).Status == ImageStatus.Pending)]);
         foreach (var resource in tracker.Resources)
         {
-            var images = tracker.PendingOf(resource);
-            if (images.Count > 0)
+            var watched = new WatchedImages
             {
-                var watched = new WatchedImages
-                {
-                    Version = context.Catalog.Version,
-                    Images = images,
-                    Progress = tracker,
-                };
-                await onDemand.EnsureImagesAsync(watched, cancellationToken);
+                Version = context.Catalog.Version,
+                Images = tracker.PendingOf(resource),
+                Progress = tracker,
+            };
+            if (!await SettleAsync(watched, cancellationToken))
+            {
+                break;
             }
 
             tracker.Complete(resource);
         }
 
         tracker.Finish();
+    }
+
+    // False when the work was refused: what landed before stays, the rest is left pending.
+    // The ingestion counted the refusal once; asking for more would only count it again.
+    private async Task<bool> SettleAsync(
+        WatchedImages watched,
+        CancellationToken cancellationToken)
+    {
+        if (watched.Images.Count == 0)
+        {
+            return true;
+        }
+
+        try
+        {
+            await onDemand.EnsureImagesAsync(watched, cancellationToken);
+            return true;
+        }
+        catch (OnDemandRefusedException)
+        {
+            return false;
+        }
     }
 
     // The newest frame as soon as there is one, and the last one again after each silence
