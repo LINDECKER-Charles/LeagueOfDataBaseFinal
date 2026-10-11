@@ -172,6 +172,7 @@ prerendered /en/legal/terms
 row /en/trends 200 transient - -
 row /en/developers 200 transient - -
 row /en/donate 200 transient - -
+row /fr/patches 200 latest - -
 
 # ── Private pages: rendered in the browser, never stored, never indexed ──────────────
 row /en/account/login 200 private noindex -
@@ -189,6 +190,7 @@ row /en/u/faker 404 transient noindex -
 row /b 404 transient noindex -
 row /b/Zx81kQ 404 transient noindex -
 row "/en/$older" 404 transient noindex -
+row "/en/$older/patches" 404 transient noindex -
 row /en/99.99.99/champions 404 transient noindex -
 row "/en/items/$MISSING_ITEM" 404 transient noindex -
 

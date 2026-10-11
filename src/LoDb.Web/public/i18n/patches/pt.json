@@ -1,0 +1,8 @@
+{
+  "title": "Histórico de patches",
+  "description": "Todos os patches de League of Legends listados pelo Data Dragon, cada um com seus campeões, itens, runas e feitiços de invocador como eram naquele patch.",
+  "intro": "Todos os patches listados pelo Data Dragon, do mais recente ao mais antigo. Cada um abre seus campeões, itens, runas e feitiços de invocador como eram na época.",
+  "group": "Patches {{ major }}.x",
+  "latest": "Atual",
+  "empty": "Nenhum patch listado por enquanto."
+}

@@ -5,9 +5,10 @@ using LoDb.Domain.Languages;
 namespace LoDb.Api.Tests.Seo;
 
 /// <summary>
-/// The sitemaps as a crawler gets them: the index, the primary sitemap of each locale with
-/// the paths the catalog answers, and the sitemap of a past version, pending until its
-/// datasets are stored.
+/// The sitemaps as a crawler gets them: the index of the latest version and of a window of
+/// past ones, the primary sitemap of each locale with the paths the catalog answers, and the
+/// sitemap of a past version, pending until its datasets are stored, served immutable once
+/// they are, inside the window or not.
 /// </summary>
 [Collection(SeoApiGroup.Name)]
 public sealed class SitemapApiTests(SeoApiFixture api)
@@ -19,21 +20,43 @@ public sealed class SitemapApiTests(SeoApiFixture api)
     private static readonly string[] Lists = ["champions", "items", "runes", "summoners"];
 
     [Fact]
-    public async Task IndexListsEveryLocaleOfEveryVersion()
+    public async Task IndexListsEveryLocaleOfTheLatestAndTheWindowOfPastVersions()
     {
         using var response = await api.GetAsync("/sitemap.xml");
         var index = SitemapXmlTests.Parse(await BodyAsync(response));
-        var meta = await api.GetJsonAsync("/api/meta");
         var locations = SitemapXmlTests.Locations(index);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(XmlType, response.Content.Headers.ContentType?.MediaType);
         Assert.Equal(Hour, CacheHeaderTests.CacheControlOf(response));
         Assert.Equal(SitemapXmlTests.Sitemaps + "sitemapindex", index.Root!.Name);
-        Assert.Equal(meta.Texts("versions").Count * UiLocales.All.Count, locations.Count);
+        Assert.Equal(
+            (1 + SeoApiFixture.SitemapVersionWindow) * UiLocales.All.Count,
+            locations.Count);
         Assert.Equal($"{Origin}/sitemaps/ar/latest.xml", locations[0]);
         Assert.Contains($"{Origin}/sitemaps/zh-hant/16.18.1.xml", locations);
         Assert.DoesNotContain($"{Origin}/sitemaps/en/16.19.1.xml", locations);
+        Assert.DoesNotContain(
+            $"{Origin}/sitemaps/en/{SeoApiFixture.Archived.Value}.xml",
+            locations);
+    }
+
+    [Fact]
+    public async Task PastVersionOutsideTheWindowKeepsItsImmutableSitemap()
+    {
+        var archived = SeoApiFixture.Archived.Value;
+
+        using var response = await api.GetAsync($"/sitemaps/fr/{archived}.xml");
+        var pages = SitemapXmlTests.Locations(SitemapXmlTests.Parse(await BodyAsync(response)));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(
+            "public, max-age=31536000, immutable",
+            CacheHeaderTests.CacheControlOf(response));
+        Assert.Equal(
+            Lists.Select(list => $"{Origin}/fr/{archived}/{list}"),
+            pages.Take(Lists.Length));
+        Assert.Contains($"{Origin}/fr/{archived}/champions/Garen", pages);
     }
 
     [Fact]
@@ -47,6 +70,7 @@ public sealed class SitemapApiTests(SeoApiFixture api)
         Assert.Equal(Hour, CacheHeaderTests.CacheControlOf(response));
         Assert.Equal($"{Origin}/fr/", pages[0]);
         Assert.Contains($"{Origin}/fr/about/data", pages);
+        Assert.Equal($"{Origin}/fr/patches", pages[5]);
         Assert.Contains($"{Origin}/fr/items/1004-faerie-charm", pages);
         Assert.Equal(
             expected.Order(StringComparer.Ordinal),

@@ -1,0 +1,8 @@
+{
+  "title": "Patch-Verlauf",
+  "description": "Jeder League-of-Legends-Patch, den Data Dragon auflistet, mit seinen Champions, Items, Runen und Beschwörerzaubern, wie sie in diesem Patch waren.",
+  "intro": "Alle Patches, die Data Dragon auflistet, der neueste zuerst. Jeder öffnet seine Champions, Items, Runen und Beschwörerzauber so, wie sie damals waren.",
+  "group": "Patches {{ major }}.x",
+  "latest": "Aktuell",
+  "empty": "Derzeit ist kein Patch aufgeführt."
+}

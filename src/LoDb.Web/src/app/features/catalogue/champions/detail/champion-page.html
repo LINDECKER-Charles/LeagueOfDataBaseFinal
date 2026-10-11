@@ -94,6 +94,7 @@
   </div>
 
   <div class="relative mx-auto mt-14 max-w-7xl">
+    <lodb-previous-patches class="mb-14" [context]="context()" [path]="details().canonicalPath" />
     <lodb-pager [previous]="pager().previous" [next]="pager().next" [hub]="pager().hub" />
   </div>
 </div>

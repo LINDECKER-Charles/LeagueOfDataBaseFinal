@@ -50,6 +50,13 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   qu'une montée de version peut déplacer.
 - Points d'accroche de `app.config.ts` : chaque propriétaire remplit son dossier
   (`core/auth`, `core/analytics`, `core/update`) sans toucher `app.config.ts` ni `app.html`.
+- **Historique des patchs** (`/{locale}/patches`) : quatre liens par version listée, des
+  centaines de versions. Balisage nu et `ViewEncapsulation.None` voulus (l'attribut
+  d'encapsulation pesait un tiers de la page) : ni attribut, ni classe, ni pipe par lien.
+  L'index des sitemaps n'annonce que le dernier patch et les 12 versions suivantes
+  (`LoDb__Seo__SitemapVersionWindow`) : un ancien sitemap absent de l'index reste servi, ce
+  n'est pas une régression. Les anciens patchs se découvrent par cette page et le bloc
+  « Dans les patchs précédents » des fiches, qui ne chargent aucun catalogue.
 - Une page qui oublie `Seo.apply` n'a ni canonique ni hreflang. Une clé `about.*`, `api.*`
   ou `seo.*` n'est traduite que si un ancêtre fournit son scope (`provideTranslocoScope`) ;
   sinon la clé brute sort dans le HTML, sans erreur.

@@ -1,0 +1,8 @@
+{
+  "title": "Istoricul patch-urilor",
+  "description": "Toate patch-urile League of Legends listate de Data Dragon, fiecare cu campionii, obiectele, runele și vrăjile de invocator așa cum erau în acel patch.",
+  "intro": "Toate patch-urile listate de Data Dragon, de la cel mai recent. Fiecare își deschide campionii, obiectele, runele și vrăjile de invocator așa cum erau atunci.",
+  "group": "Patch-uri {{ major }}.x",
+  "latest": "Actual",
+  "empty": "Momentan nu este listat niciun patch."
+}

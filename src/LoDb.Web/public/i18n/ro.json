@@ -171,6 +171,11 @@
     },
     "slot": "Loc"
   },
+  "detail": {
+    "history": {
+      "title": "În patch-urile anterioare"
+    }
+  },
   "common": {
     "back": "Înapoi",
     "search": "Caută…",
@@ -194,7 +199,8 @@
       "item": "Obiect",
       "runes": "Rune",
       "summoner": "Invocator",
-      "sitemap": "Harta site-ului"
+      "sitemap": "Harta site-ului",
+      "patches": "Istoricul patch-urilor"
     },
     "links": {
       "title": "Linkuri utile",

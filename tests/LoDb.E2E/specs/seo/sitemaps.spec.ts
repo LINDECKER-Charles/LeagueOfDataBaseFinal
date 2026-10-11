@@ -2,24 +2,42 @@ import { expect, test } from '../../support/test';
 
 const XML_TYPE = 'application/xml; charset=utf-8';
 const LOCALE_COUNT = 21;
+// The past versions the index announces after the latest one (LoDb__Seo__SitemapVersionWindow).
+const SITEMAP_VERSION_WINDOW = 12;
 const SITEMAP_FILE = /\/sitemaps\/[a-z-]+\/(?:latest|\d+(?:\.\d+)+)\.xml$/;
+
+// What the index is built from: the versions Data Dragon lists, the latest one aside.
+interface ListedVersions {
+  readonly latest: string | null;
+  readonly versions: readonly string[];
+}
 
 function locations(xml: string): string[] {
   return [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1] ?? '');
 }
 
 test.describe('sitemaps', { tag: '@readonly' }, () => {
-  test('indexes every locale sitemap of every version', async ({ request }) => {
+  test('indexes every locale sitemap of the latest version and of the recent ones', async ({
+    request,
+  }) => {
     const response = await request.get('/sitemap.xml');
     // Without Data Dragon's list of versions the index is unavailable, never wrong.
     test.skip(response.status() === 503, 'Data Dragon unreachable from the stack');
     const sitemaps = locations(await response.text());
+    const meta = (await (await request.get('/api/meta')).json()) as ListedVersions;
+    const past = meta.versions.filter((version) => version !== meta.latest);
+    const announced = past.slice(0, SITEMAP_VERSION_WINDOW);
+    // The past versions of the English sitemaps, in the order the index lists them.
+    const english = sitemaps
+      .map((url) => /\/sitemaps\/en\/(\d[\d.]*)\.xml$/.exec(url)?.[1])
+      .filter((version) => version !== undefined);
 
     expect(response.status()).toBe(200);
     expect(response.headers()['content-type']).toBe(XML_TYPE);
     expect(sitemaps[0]).toMatch(/\/sitemaps\/ar\/latest\.xml$/);
-    expect(sitemaps.length % LOCALE_COUNT).toBe(0);
+    expect(sitemaps).toHaveLength((1 + announced.length) * LOCALE_COUNT);
     expect(sitemaps.filter((url) => !SITEMAP_FILE.test(url))).toEqual([]);
+    expect(english).toEqual(announced);
   });
 
   test("lists a locale's static pages under their short URLs", async ({ request }) => {
@@ -38,6 +56,7 @@ test.describe('sitemaps', { tag: '@readonly' }, () => {
       '/fr/runes',
       '/fr/summoners',
     ]);
+    expect(pages[5]).toBe('/fr/patches');
     expect(pages).toContain('/fr/legal/privacy');
   });
 

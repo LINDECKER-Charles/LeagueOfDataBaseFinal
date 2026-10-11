@@ -171,6 +171,11 @@
     },
     "slot": "Slot"
   },
+  "detail": {
+    "history": {
+      "title": "Nelle patch precedenti"
+    }
+  },
   "common": {
     "back": "Indietro",
     "search": "Cerca…",
@@ -194,7 +199,8 @@
       "item": "Oggetto",
       "runes": "Rune",
       "summoner": "Evocatore",
-      "sitemap": "Mappa del sito"
+      "sitemap": "Mappa del sito",
+      "patches": "Cronologia delle patch"
     },
     "links": {
       "title": "Link Utili",

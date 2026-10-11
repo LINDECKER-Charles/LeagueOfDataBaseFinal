@@ -136,6 +136,8 @@
       <lodb-item-aside class="mt-12 lg:mt-0" lodbReveal [details]="details" [context]="context" />
     </div>
 
+    <lodb-previous-patches class="mt-14" [context]="context" [path]="details.canonicalPath" />
+
     <lodb-pager
       class="mt-14"
       [previous]="pager().previous"

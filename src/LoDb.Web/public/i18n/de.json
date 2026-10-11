@@ -171,6 +171,11 @@
     },
     "slot": "Slot"
   },
+  "detail": {
+    "history": {
+      "title": "In früheren Patches"
+    }
+  },
   "common": {
     "back": "Zurück",
     "search": "Suchen…",
@@ -194,7 +199,8 @@
       "item": "Item",
       "runes": "Runen",
       "summoner": "Beschwörer",
-      "sitemap": "Sitemap"
+      "sitemap": "Sitemap",
+      "patches": "Patch-Verlauf"
     },
     "links": {
       "title": "Nützliche Links",

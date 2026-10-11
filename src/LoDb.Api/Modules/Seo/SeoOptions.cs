@@ -7,6 +7,9 @@ internal sealed class SeoOptions
 {
     public const string SectionName = "LoDb:Seo";
 
+    /// <summary>Default of <see cref="SitemapVersionWindow"/>: half a year of patches.</summary>
+    public const int DefaultSitemapVersionWindow = 12;
+
     /// <summary>
     /// Origin every published URL points to, such as <c>https://league-of-data-base.com</c>;
     /// unset, the files use the origin of the request.
@@ -18,4 +21,16 @@ internal sealed class SeoOptions
     /// <c>Host</c> header.
     /// </remarks>
     public string? CanonicalOrigin { get; set; }
+
+    /// <summary>
+    /// How many versions before the latest one the sitemap index announces; <c>0</c> leaves
+    /// only the latest version's sitemaps.
+    /// </summary>
+    /// <remarks>
+    /// Older versions keep their sitemaps, served and immutable, and their pages stay
+    /// canonical and indexable: crawlers reach them through the patch history and the
+    /// previous patches of each page. The index only stops pushing hundreds of versions
+    /// times 21 locales at every crawler.
+    /// </remarks>
+    public int SitemapVersionWindow { get; set; } = DefaultSitemapVersionWindow;
 }

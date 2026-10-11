@@ -1,0 +1,80 @@
+/*
+ * The patch history: one column, a section per first segment, a flush table whose rows name
+ * a version and link its four lists. Not encapsulated (patch-history-page.ts), hence every
+ * rule scoped under `.patches-page`; the links wrap under each other on a phone rather than
+ * widen the page.
+ */
+@layer components {
+  .patches-page {
+    position: relative;
+    max-inline-size: 56rem;
+    margin-inline: auto;
+  }
+
+  .patches-page__title {
+    font-family: var(--font-beaufort);
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 2rem;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+  }
+
+  @media (width >= 40rem) {
+    .patches-page__title {
+      font-size: 2.25rem;
+      line-height: 2.5rem;
+    }
+  }
+
+  .patches-page__intro {
+    margin-block-start: 1rem;
+    max-inline-size: 42rem;
+    color: var(--color-text-muted);
+  }
+
+  .patches-page .patches-group {
+    margin-block-start: 2.5rem;
+  }
+
+  .patches-page .patches-table {
+    margin-block-start: 0.75rem;
+  }
+
+  .patches-page .patches-table th {
+    inline-size: 1%;
+    white-space: nowrap;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
+    text-transform: none;
+    color: var(--color-text);
+  }
+
+  .patches-page .patches-table .hx-chip-hex {
+    margin-inline-start: 0.5rem;
+    padding: 0.05rem 0.4rem;
+    font-size: 0.6rem;
+  }
+
+  .patches-page .patches-table a {
+    display: inline-block;
+    margin-inline-end: 1.25rem;
+    transition: color 300ms;
+  }
+
+  .patches-page .patches-table a:hover {
+    color: var(--color-hex);
+  }
+
+  .patches-page .patches-table a:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-hex) 40%, transparent);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .patches-page .patches-table a {
+      transition: none;
+    }
+  }
+}

@@ -23,6 +23,7 @@ import { EditionCounterpart } from '../../shared/codex/edition/edition-counterpa
 import { CatalogueHead } from '../../shared/codex/head/catalogue-head';
 import { HERO_STYLES } from '../../shared/codex/hero/hero-styles';
 import { injectCatalogueLink } from '../../shared/codex/links/inject-catalogue-link';
+import { PreviousPatches } from '../../shared/codex/history/previous-patches';
 import { injectDetailPager } from '../../shared/codex/pager/inject-detail-pager';
 import { RichText } from '../../shared/codex/rich-text/rich-text';
 import { LoadTime } from '../../shared/codex/timing/load-time';
@@ -39,7 +40,8 @@ const UPGRADE_ICON_SIZE = 48;
 /**
  * An item page, `/{locale}/[{version}/]items/{id}-{slug}`: the item and its price, its
  * crafting tree and upgrades, Riot's description, its stats, gold ledger and availability,
- * and, for a LoL Classic twin, its edition and the link to the other game's item.
+ * and, for a LoL Classic twin, its edition and the link to the other game's item; then the
+ * same item in the previous patches.
  */
 @Component({
   selector: 'lodb-item-detail',
@@ -53,6 +55,7 @@ const UPGRADE_ICON_SIZE = 48;
     ItemAside,
     LoadTime,
     Pager,
+    PreviousPatches,
     RecipeTree,
     Reveal,
     RichText,

@@ -68,6 +68,7 @@ export const PUBLIC_PAGES: readonly PublicPage[] = [
   indexed('legal/cookies'),
   { path: 'trends', kind: 'provisional', types: [] },
   indexed('developers', ['BreadcrumbList']),
+  indexed('patches', ['BreadcrumbList']),
   { path: 'donate', kind: 'provisional', types: [] },
   { path: 'account/login', kind: 'visitor', types: [] },
   { path: 'account/register', kind: 'visitor', types: [] },

@@ -189,6 +189,9 @@
       "previous": "Previous",
       "next": "Next",
       "back_to_list": "Back to list"
+    },
+    "history": {
+      "title": "In previous patches"
     }
   },
   "common": {
@@ -320,7 +323,8 @@
       "item": "Item",
       "runes": "Runes",
       "summoner": "Summoner",
-      "sitemap": "Sitemap"
+      "sitemap": "Sitemap",
+      "patches": "Patch history"
     },
     "links": {
       "title": "Useful Links",

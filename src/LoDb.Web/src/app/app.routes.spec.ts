@@ -41,6 +41,7 @@ import { ChangelogPage } from './features/editorial/changelog/changelog-page';
 import { LegalPage } from './features/editorial/legal/legal-page';
 import { ErrorPage } from './features/errors/error-page';
 import { HomePage } from './features/home/home-page';
+import { PatchHistoryPage } from './features/patches/patch-history-page';
 import { ProfilePage } from './features/profile/profile-page';
 
 const LATEST = '16.19.1';
@@ -141,6 +142,7 @@ const PUBLIC_PAGES: Page[] = [
   { url: '/en/trends', page: TrendsPage },
   { url: '/en/u/faker', page: ProfilePage },
   { url: '/en/developers', page: DevelopersPage },
+  { url: '/fr/patches', page: PatchHistoryPage },
   { url: '/en/donate', page: DonatePage },
   { url: '/b/Zx81kQ', page: SharePage },
 ];
@@ -212,6 +214,7 @@ describe('routes (ADR 0005)', () => {
     '/en/nowhere',
     `/en/${OLDER}`,
     `/en/${OLDER}/trends`,
+    `/en/${OLDER}/patches`,
     '/en/account',
     '/en/account/nowhere',
     '/en/u',

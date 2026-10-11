@@ -11,6 +11,7 @@ import type { CatalogueEntry } from '../../../../core/routing/catalogue/catalogu
 import type { SeoPage } from '../../../../core/seo/seo-page';
 import { CatalogueHead } from '../../shared/codex/head/catalogue-head';
 import type { CatalogueTexts } from '../../shared/codex/head/catalogue-texts';
+import { provideMeta } from '../../shared/testing/provide-meta';
 import { RuneDetail } from './rune-detail';
 
 const CONTEXT: PageContext = { locale: 'en', version: '16.19.1', pinned: false, language: 'en_US' };
@@ -71,6 +72,7 @@ async function render(entry = ENTRY) {
   const write = (_: string, build: (texts: CatalogueTexts) => SeoPage) => heads.push(build(TEXTS));
   TestBed.configureTestingModule({
     providers: [
+      provideMeta(),
       provideRouter([{ path: 'en/runes/:id', component: RuneDetail, data: { entry } }]),
       provideTransloco({
         config: { defaultLang: 'en', missingHandler: { logMissingKey: false }, prodMode: true },
