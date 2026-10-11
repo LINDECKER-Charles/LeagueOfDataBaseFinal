@@ -38,7 +38,10 @@ Logs et requêtes LogsQL : [`observabilite.md`](observabilite.md) et [`logging.m
 - **SSR** : `prom-client`, noms tels que déclarés (`src/server/metrics/ssr-metrics.ts`).
 - Un compteur de l'API n'a de série qu'à sa **première incrémentation** : une série absente
   veut dire « rien n'est arrivé », pas « requête cassée ». Une alerte `absent()` ne cite que
-  les familles marquées « dès le démarrage » ci-dessous.
+  les familles marquées « dès le démarrage » ci-dessous. Une jauge n'existe qu'une fois créé
+  le service qui la porte : « tâches de fond actives » veut dire créée au démarrage par une
+  tâche de fond (`LoDb:Workers:Enabled`, le cas des hôtes), sinon à la première requête qui
+  s'en sert.
 - Le label `job` est réservé à la cible (`job="applications"`) : une série qui en porte un
   le verrait renommé `exported_job`. Les tâches périodiques sont donc étiquetées `task`.
 
@@ -64,7 +67,7 @@ Logs et requêtes LogsQL : [`observabilite.md`](observabilite.md) et [`logging.m
 | `lodb_build_info` | jauge, toujours 1 | `revision`, `version` | oui | `LoDb.Api` |
 | `lodb_network_gate_refusals_total` | compteur | — | non | `LoDb.Api`, requêtes du port 8080 venues hors du réseau de la stack |
 | `lodb_db_unavailable_total` | compteur | — | non | `LoDb.Database` : serveur injoignable, délai de commande dépassé, session refusée (500 compté ; le pool plein donne un 503 non compté) |
-| `lodb_hashing_in_flight` | jauge | — | oui | `LoDb.Security` |
+| `lodb_hashing_in_flight` | jauge | — | non : à la première requête qui sollicite les comptes | `LoDb.Security` |
 | `lodb_hashing_wait_seconds` | histogramme | — | non | `LoDb.Security`, attente d'un permis de hachage |
 | `lodb_hashing_refused_total` | compteur | `reason` (`queue_full`, `timeout`) | non | `LoDb.Security` |
 | `lodb_sign_in_attempts_total` | compteur | `result` (`success`, `failure`, `two_factor_required`, `locked_out`, `throttled`, `banned`), `account` (`member`, `admin`, `none`, `unchecked`), `channel` | non | `LoDb.Security` |
@@ -75,8 +78,8 @@ Logs et requêtes LogsQL : [`observabilite.md`](observabilite.md) et [`logging.m
 | `lodb_catalog_load_duration_seconds` | histogramme | `outcome` (`built`, `missing`, `failed`) | non | `LoDb.Catalog` |
 | `lodb_catalog_loads_in_flight` | jauge | — | non | `LoDb.Catalog` |
 | `lodb_catalog_cold_admissions_total` | compteur | `partition` (`internal`, `public`), `result` (`admitted`, `refused`) | non | `LoDb.Catalog`, porte froide |
-| `lodb_ingestion_sync_waiting` | jauge | — | oui | `LoDb.Ingestion`, ingestions à la demande en attente d'un créneau |
-| `lodb_ingestion_queue_depth` | jauge | `queue` (`versions`, `on_demand`) | oui, file par file | `LoDb.Ingestion` |
+| `lodb_ingestion_sync_waiting` | jauge | — | oui (tâches de fond actives) | `LoDb.Ingestion`, ingestions à la demande en attente d'un créneau |
+| `lodb_ingestion_queue_depth` | jauge | `queue` (`versions`, `on_demand`) | oui, file par file (tâches de fond actives) | `LoDb.Ingestion` |
 | `lodb_ingestion_on_demand_refused_total` | compteur | `reason` (`full`, `crawler_budget`, `dataset_budget`, `image_budget`, `backlog`, `slot_wait`) | non | `LoDb.Ingestion` |
 | `lodb_ingestion_duration_seconds` | histogramme | `stage` (`version`, `datasets`, `images`) | non | `LoDb.Ingestion` |
 | `lodb_ingestion_versions_ready_total`, `lodb_ingestion_fetch_failures_total`, `lodb_ingestion_absences_total{type}`, `lodb_ingestion_blobs_written_total{format}` | compteurs | `type` (type d'image du manifeste), `format` (`source`, `webp`) | non | `LoDb.Ingestion` |
@@ -85,7 +88,7 @@ Logs et requêtes LogsQL : [`observabilite.md`](observabilite.md) et [`logging.m
 | `lodb_job_duration_seconds` | histogramme | `task`, `outcome` (`succeeded`, `failed`) | non | `LoDb.Jobs` |
 | `lodb_job_failures_total` | compteur | `task` | non | `LoDb.Jobs` |
 | `lodb_outbox_messages_total` | compteur | `outcome` (`sent`, `retried`, `dead`) | non | `LoDb.Outbox` |
-| `lodb_outbox_pending` | jauge | — | oui | `LoDb.Outbox` |
+| `lodb_outbox_pending` | jauge | — | oui (tâches de fond actives) | `LoDb.Outbox` |
 | `lodb_outbox_batch_duration_seconds`, `lodb_outbox_batch_failures_total` | histogramme, compteur | — | non | `LoDb.Outbox` |
 | `lodb_analytics_views_queued_total`, `…_written_total`, `…_dropped_total` | compteurs | `origin` ; `reason` (`queue_full`, `unresolved`, `write_failed`) | non | `LoDb.Analytics` |
 | `lodb_publicapi_refusals_total` | compteur | `code` (codes d'erreur de `/v1`) | non | `LoDb.PublicApi` |
