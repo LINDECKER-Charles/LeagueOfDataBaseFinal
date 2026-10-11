@@ -29,7 +29,8 @@ s'ouvre plus que s'il est chiffré (https), sur le web, sur Android comme sur le
   `Reporting-Endpoints`) : corps borné, débit par adresse et global, rien de la page ni du
   client gardé ; une ligne `web.csp.violated` par minute et `lodb_csp_reports_total`.
 - Trusted Types en `Content-Security-Policy-Report-Only` (politiques `angular`,
-  `angular#unsafe-bypass`, `lodb#worker` pour l'enregistrement du service worker).
+  `angular#unsafe-bypass`, `lodb#worker` pour l'enregistrement du service worker, `lodb#json-ld`
+  pour le texte des données structurées).
 - Coquille desktop : son `index.html` part avec sa propre CSP (scripts inline de la coquille et
   marqueur du lancement hachés, API par le proxy local, médias de l'API et des CDN de Riot).
 - Liens externes : `https` seulement (`isHttpsUrl` des trois plateformes, `ExternalUrl` du pont

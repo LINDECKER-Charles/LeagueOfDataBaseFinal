@@ -39,8 +39,10 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   un chargeur refusé laisse les feuilles différées en `media="print"`. Un script inline ajouté
   à `src/index.html` est admis de lui-même ; un script ajouté au rendu ne l'est jamais.
 - **Trusted Types en Report-Only** (`Content-Security-Policy-Report-Only`) : politiques
-  `angular`, `angular#unsafe-bypass` et `lodb#worker` (enregistrement du service worker) ; tout
-  autre `innerHTML`, `eval` ou URL de script en chaîne est signalé, rien n'est bloqué. Un
+  `angular`, `angular#unsafe-bypass`, `lodb#worker` (enregistrement du service worker) et
+  `lodb#json-ld` (texte des données structurées que `HeadWriter` écrit : affecter le texte d'un
+  `<script>` est un puits, même `application/ld+json`) ; tout autre `innerHTML`, `eval`, texte
+  ou URL de script en chaîne est signalé, rien n'est bloqué. Un
   nouveau puits (une bibliothèque, un `innerHTML` direct) fait échouer la spec E2E de la CSP :
   passer par le sanitizer d'Angular ou déclarer la politique dans `trusted-types-policy.ts`.
 - **Rapports CSP** : `report-to` et `report-uri` visent `POST /api/csp-reports` (API, même

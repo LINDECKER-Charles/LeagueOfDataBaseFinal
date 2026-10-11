@@ -5,7 +5,8 @@ const THEME = '\n      (function () { paint(); })();\n    ';
 const CONTRACT = '(()=>{window.__jsaction_bootstrap=c;})();\n';
 const LOADER = "document.querySelectorAll('link[data-beasties-media]')";
 const REPLAY = 'window.__jsaction_bootstrap(document.body,"ng",["click","keydown"],[]);';
-const CONTRACT_TAG = `<script type="text/javascript" id="ng-event-dispatch-contract">${CONTRACT}</script>`;
+const CONTRACT_OPEN = '<script type="text/javascript" id="ng-event-dispatch-contract">';
+const CONTRACT_TAG = `${CONTRACT_OPEN}${CONTRACT}</script>`;
 
 // The two index templates of a build: the server render's and the browser's.
 const SERVER_TEMPLATE = `<head><script>${THEME}</script></head><body>${CONTRACT_TAG}</body>`;

@@ -3,6 +3,7 @@ import { Title } from '@angular/platform-browser';
 import type { JsonLdNode } from '../json-ld/core/json-ld-node';
 import { serializeJsonLd } from '../json-ld/core/serialize-json-ld';
 import type { HeadTags } from './head-tags';
+import { jsonLdScriptText } from './json-ld-script-text';
 
 /** Marks the elements the writer owns, so the next page replaces them all. */
 const MARKER = 'data-lodb-seo';
@@ -16,6 +17,7 @@ const JSON_LD_TYPE = 'application/ld+json';
 export class HeadWriter {
   private readonly document = inject(DOCUMENT);
   private readonly title = inject(Title);
+  private readonly scriptText = jsonLdScriptText(this.document.defaultView);
 
   write(tags: HeadTags): void {
     const head = this.document.head;
@@ -47,7 +49,7 @@ export class HeadWriter {
     const script = this.document.createElement('script');
     script.setAttribute(MARKER, '');
     script.type = JSON_LD_TYPE;
-    script.textContent = serializeJsonLd(node);
+    script.textContent = this.scriptText(serializeJsonLd(node));
     return script;
   }
 }

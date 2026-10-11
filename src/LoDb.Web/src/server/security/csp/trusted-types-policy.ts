@@ -1,8 +1,9 @@
 import { CSP_REPORTING } from './csp-reporting';
 
 // The policies the pages create: Angular's own (its sanitizer, and the bypass the Riot rich
-// text goes through) and the site's worker registration (src/sw/registration).
-const POLICY_NAMES = ['angular', 'angular#unsafe-bypass', 'lodb#worker'];
+// text goes through), the site's worker registration (src/sw/registration) and the text of its
+// structured data (core/seo/head).
+const POLICY_NAMES = ['angular', 'angular#unsafe-bypass', 'lodb#worker', 'lodb#json-ld'];
 
 /**
  * The Trusted Types policy of a page, sent as `Content-Security-Policy-Report-Only`: the
