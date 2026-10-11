@@ -61,6 +61,7 @@ Pour développer : guide [developpement.md](guides/developpement.md) et
 | [secrets-poste.md](guides/secrets-poste.md) | Procédure du propriétaire : secrets du poste chiffrés avec `sops` et `age`, clé hors du dépôt et du dossier |
 | [migration-edge-proxy.md](guides/migration-edge-proxy.md) | Edge proxy partagé du VPS : porté par le dépôt d'infrastructure `infra-vps`, ce que ce projet attend de l'hôte et déclare |
 | [observabilite.md](guides/observabilite.md) | Chaîne de logs vers Grafana : fonctionnement, ce qu'il ne faut surtout pas déclarer, requêtes LogsQL / PromQL, dépannage |
+| [mode-siege.md](guides/mode-siege.md) | Runbook préparé, non activé : Anubis devant les pages épinglées (crawl résidentiel), Cloudflare devant les domaines de LoDb (attaque volumétrique) |
 | [logging.md](guides/logging.md) | Convention de journalisation applicative : clé d'événement, contexte, niveaux, canaux, interdictions |
 | [metriques.md](guides/metriques.md) | Contrat des métriques de l'API et du SSR : port 9464, collecte par `observability`, noms, labels, règle de cardinalité |
 | [oauth-google-setup.md](guides/oauth-google-setup.md) | Configuration « Sign in with Google » côté Google Cloud Console |
