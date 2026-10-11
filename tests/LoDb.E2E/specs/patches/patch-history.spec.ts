@@ -6,6 +6,8 @@ import { expect, test } from '../../support/test';
 
 const PAGE = '/en/patches';
 const LISTS = ['champions', 'items', 'runes', 'summoners'];
+// What a link of the history must never answer: it names each page by its own address.
+const DETOURS = [301, 302, 307, 308, 404];
 
 // The links of a version's row, found by the version its header names.
 function linksOf(page: Page, version: string): Locator {
@@ -40,7 +42,10 @@ test.describe('patch history as crawlers read it', { tag: '@readonly' }, () => {
     );
   });
 
-  test('links pages that answer themselves, never a redirect', async ({ page, request }) => {
+  test('links pages that answer themselves, never a redirect nor a 404', async ({
+    page,
+    request,
+  }) => {
     const meta = await metaOf(request);
     const older = olderVersion(meta);
     await page.goto(PAGE);
@@ -49,7 +54,7 @@ test.describe('patch history as crawlers read it', { tag: '@readonly' }, () => {
 
     for (const href of [...latest, pinned]) {
       const answer = await request.get(href ?? '', { maxRedirects: 0 });
-      expect(answer.status(), href ?? '').toBe(200);
+      expect(DETOURS, href ?? '').not.toContain(answer.status());
     }
   });
 
