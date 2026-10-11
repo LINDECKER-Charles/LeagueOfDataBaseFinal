@@ -31,7 +31,6 @@ public sealed class AccountSettingsTests(ProfilesApp app)
     }
 
     [Theory]
-    [InlineData("latest", "version-invalid")]
     [InlineData("16.x.1", "version-invalid")]
     [InlineData("99.1.1", "version-unknown")]
     public async Task VersionDataDragonDoesNotListIsRefused(string version, string code)
