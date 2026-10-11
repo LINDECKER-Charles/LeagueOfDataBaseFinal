@@ -35,6 +35,7 @@ public static class CatalogRegistration
         services.TryAddSingleton<CatalogCache>();
         services.TryAddSingleton<ICatalogReader, CatalogReader>();
         services.TryAddSingleton<ICatalogPinning, CatalogPinning>();
+        services.TryAddSingleton<ImageVerdicts>();
         services.TryAddSingleton<IImageResolver, ImageResolver>();
         services.TryAddSingleton<CatalogExport>();
         return services;

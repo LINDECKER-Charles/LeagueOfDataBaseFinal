@@ -1,6 +1,4 @@
 using LoDb.Domain.Versions;
-using LoDb.Infrastructure.Persistence.Ddragon;
-using LoDb.Infrastructure.Storage.Blobs;
 using LoDb.Ingestion.Egress.Errors;
 using LoDb.Ingestion.Images;
 using LoDb.Ingestion.Queue;
@@ -11,6 +9,7 @@ namespace LoDb.Ingestion.Catalog.Images;
 /// <inheritdoc cref="IImageResolver"/>
 internal sealed partial class ImageResolver(
     ImageManifest manifest,
+    ImageVerdicts verdicts,
     IOnDemandIngestion onDemand,
     ILogger<ImageResolver> logger) : IImageResolver
 {
@@ -24,48 +23,60 @@ internal sealed partial class ImageResolver(
         ArgumentNullException.ThrowIfNull(images);
         ArgumentNullException.ThrowIfNull(demand);
         List<DdragonImage> wanted = [.. images.DistinctBy(KeyOf)];
-        var rows = await manifest.FindAsync(version, wanted, cancellationToken)
+        var memo = verdicts.Of(version);
+        await ReadAsync(new Batch(version, wanted, memo), demand, cancellationToken)
             .ConfigureAwait(false);
-        List<DdragonImage> unknown = [.. wanted.Where(image => !rows.ContainsKey(KeyOf(image)))];
+        List<DdragonImage> unknown =
+            [.. wanted.Where(image => memo.Get(KeyOf(image)).Status == ImageStatus.Pending)];
         var refused = unknown.Count > 0
-            && await SettleAsync(version, unknown, rows, demand, cancellationToken)
+            && await SettleAsync(new Batch(version, unknown, memo), demand, cancellationToken)
                 .ConfigureAwait(false);
         return new ImageResolution(
-            wanted.ToDictionary(KeyOf, image => Resolve(rows, image)),
+            wanted.ToDictionary(KeyOf, image => memo.Get(KeyOf(image))),
             refused);
     }
 
     private static (string Type, string File) KeyOf(DdragonImage image) =>
         (image.ManifestType, image.File);
 
-    private static ResolvedImage Resolve(
-        Dictionary<(string Type, string Key), DdragonAsset> rows,
-        DdragonImage image) =>
-        rows.TryGetValue(KeyOf(image), out var row) ? Verdict(row) : ResolvedImage.Pending;
+    // One manifest query for the keys the memo cannot answer: never read, or without a row
+    // when last read, which only a reader of what is stored accepts as it is.
+    private async Task ReadAsync(
+        Batch batch,
+        ColdDemand demand,
+        CancellationToken cancellationToken)
+    {
+        var acceptsUnrecorded = demand.Effective == ColdPolicy.StoredOnly;
+        List<DdragonImage> asked =
+        [
+            .. batch.Images.Where(image =>
+                batch.Memo.Lookup(KeyOf(image), acceptsUnrecorded) is null),
+        ];
+        if (asked.Count == 0)
+        {
+            return;
+        }
 
-    private static ResolvedImage Verdict(DdragonAsset row) =>
-        row is { Status: DdragonAssetStatus.Present, Sha256: { } sha, Extension: { } extension }
-            ? ResolvedImage.Present(new BlobKey(sha, extension))
-            : ResolvedImage.Absent;
+        var rows = await manifest.FindAsync(batch.Version, asked, cancellationToken)
+            .ConfigureAwait(false);
+        batch.Memo.Record(asked, rows);
+    }
 
-    // Records the verdicts it waited for into the rows; true when the work was refused.
+    // Records the verdicts it waited for into the memo; true when the work was refused.
     private async Task<bool> SettleAsync(
-        PatchVersion version,
-        List<DdragonImage> unknown,
-        Dictionary<(string Type, string Key), DdragonAsset> rows,
+        Batch unsettled,
         ColdDemand demand,
         CancellationToken cancellationToken)
     {
         switch (demand.Effective)
         {
             case ColdPolicy.Synchronous:
-                return await WaitAsync(version, unknown, rows, cancellationToken)
-                    .ConfigureAwait(false);
+                return await WaitAsync(unsettled, cancellationToken).ConfigureAwait(false);
             case ColdPolicy.Queued:
                 return !onDemand.TryEnqueue(new OnDemandRequest
                 {
-                    Version = version,
-                    Images = unknown,
+                    Version = unsettled.Version,
+                    Images = unsettled.Images,
                     Origin = demand.Origin,
                 });
             default:
@@ -76,12 +87,9 @@ internal sealed partial class ImageResolver(
     // An upstream failure leaves the images pending: the page still renders, with placeholders.
     // A refusal (budget spent, no slot) leaves pending what it did not admit, and is told; the
     // verdicts of the images it admitted are read all the same.
-    private async Task<bool> WaitAsync(
-        PatchVersion version,
-        List<DdragonImage> unknown,
-        Dictionary<(string Type, string Key), DdragonAsset> rows,
-        CancellationToken cancellationToken)
+    private async Task<bool> WaitAsync(Batch unsettled, CancellationToken cancellationToken)
     {
+        var (version, unknown, memo) = unsettled;
         var refused = false;
         try
         {
@@ -100,11 +108,7 @@ internal sealed partial class ImageResolver(
 
         var settled = await manifest.FindAsync(version, unknown, cancellationToken)
             .ConfigureAwait(false);
-        foreach (var (key, row) in settled)
-        {
-            rows[key] = row;
-        }
-
+        memo.Record(unknown, settled);
         return refused;
     }
 
@@ -117,4 +121,10 @@ internal sealed partial class ImageResolver(
         string version,
         int count,
         Exception exception);
+
+    // Images of one version, and the memo their verdicts go to.
+    private sealed record Batch(
+        PatchVersion Version,
+        List<DdragonImage> Images,
+        VersionVerdicts Memo);
 }

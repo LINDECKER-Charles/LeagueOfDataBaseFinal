@@ -1,5 +1,6 @@
 using System.Net;
 using LoDb.Domain.Versions;
+using LoDb.Infrastructure.Persistence.Ddragon;
 using LoDb.Ingestion.Catalog;
 using LoDb.Ingestion.Catalog.Images;
 using LoDb.Ingestion.Images;
@@ -14,7 +15,8 @@ namespace LoDb.Ingestion.Tests.Catalog;
 
 /// <summary>
 /// The images of a page: a blob, a placeholder for good, or pending while the ingestion
-/// catches up, fetched or queued as the caller asks and never fetched twice once settled.
+/// catches up, fetched or queued as the caller asks and never fetched twice once settled;
+/// the verdicts read are reused for a while, by version.
 /// </summary>
 public sealed class ImageResolverTests(PostgresContainerFixture postgres)
 {
@@ -152,6 +154,60 @@ public sealed class ImageResolverTests(PostgresContainerFixture postgres)
         Assert.Empty(await harness.AssetRowsAsync(Latest.Value));
     }
 
+    [Fact]
+    public async Task SettledVerdictsAreReusedUntilTheirLifetimeEnds()
+    {
+        await using var harness = await IngestionHarness.CreateAsync(postgres);
+        var instance = harness.StartInstance();
+        var fetched = await ResolveAsync(instance, ColdDemand.Synchronous, Ahri);
+        await ReplaceWithAbsenceAsync(instance, Latest, Ahri);
+
+        var reused = await ResolveAsync(instance, ColdDemand.Synchronous, Ahri);
+        harness.Clock.Advance(TimeSpan.FromMinutes(10));
+        var reread = await ResolveAsync(instance, ColdDemand.StoredOnly, Ahri);
+
+        Assert.Equal(ImageStatus.Present, fetched[Ahri].Status);
+        Assert.Equal(fetched[Ahri], reused[Ahri]);
+        Assert.Equal(ResolvedImage.Absent, reread[Ahri]);
+        Assert.Single(instance.Replay.Requests, static url => Is(url, Ahri));
+    }
+
+    [Fact]
+    public async Task UnrecordedKeyStaysPendingForAStoredReadOnly()
+    {
+        await using var harness = await IngestionHarness.CreateAsync(postgres);
+        var instance = harness.StartInstance();
+        var before = await ResolveAsync(instance, ColdDemand.StoredOnly, Ahri);
+        await ReplaceWithAbsenceAsync(instance, Latest, Ahri);
+
+        var stored = await ResolveAsync(instance, ColdDemand.StoredOnly, Ahri);
+        var queued = await ResolveAsync(instance, ColdDemand.Queued, Ahri);
+
+        Assert.Equal(ResolvedImage.Pending, before[Ahri]);
+        Assert.Equal(ResolvedImage.Pending, stored[Ahri]);
+        Assert.Equal(ResolvedImage.Absent, queued[Ahri]);
+        Assert.Equal(0, instance.Get<IOnDemandBacklog>().Count);
+        Assert.Empty(instance.Replay.Requests);
+    }
+
+    [Fact]
+    public async Task LeastRecentlyReadVersionIsForgottenPastTheLimit()
+    {
+        await using var harness = await IngestionHarness.CreateAsync(
+            postgres,
+            new Dictionary<string, string?> { ["LoDb:Catalog:ImageVerdictVersions"] = "1" });
+        var instance = harness.StartInstance();
+        var previous = DdragonFixtures.Previous;
+        await ResolveAsync(instance, ColdDemand.Synchronous, Ahri);
+        await instance.Get<IImageResolver>()
+            .ResolveAsync(previous, [Ahri], ColdDemand.Synchronous, Token);
+        await ReplaceWithAbsenceAsync(instance, Latest, Ahri);
+
+        var reread = await ResolveAsync(instance, ColdDemand.StoredOnly, Ahri);
+
+        Assert.Equal(ResolvedImage.Absent, reread[Ahri]);
+    }
+
     private static Task<ImageResolution> ResolveAsync(
         IngestionInstance instance,
         ColdDemand demand,
@@ -159,4 +215,14 @@ public sealed class ImageResolverTests(PostgresContainerFixture postgres)
         instance.Get<IImageResolver>().ResolveAsync(Latest, images, demand, Token);
 
     private static bool Is(Uri url, DdragonImage image) => OnDemandIngestionTests.Is(url, image);
+
+    // What `ingest --force` does from another process: the row changes under the memo.
+    private static Task<int> ReplaceWithAbsenceAsync(
+        IngestionInstance instance,
+        PatchVersion version,
+        DdragonImage image) =>
+        instance.Get<IDdragonAssetStore>().RecordAsync(
+            [DdragonAssetEntry.Absent(version.Value, image.ManifestType, image.File)],
+            force: true,
+            Token);
 }

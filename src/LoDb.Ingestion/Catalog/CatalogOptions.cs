@@ -23,6 +23,8 @@ public sealed class CatalogOptions
     private const int DefaultColdLoadBurst = 6;
     private const int DefaultInternalColdLoadWaitSeconds = 2;
     private const int DefaultMaxPendingLoads = 16;
+    private const int DefaultImageVerdictsMinutes = 10;
+    private const int DefaultImageVerdictVersions = 32;
 
     /// <summary>
     /// Catalogs kept in memory besides the pinned ones, one per (version, language), about
@@ -74,4 +76,18 @@ public sealed class CatalogOptions
 
     /// <summary>Internal loads waiting for their turn; more are refused at once.</summary>
     public int MaxPendingLoads { get; set; } = DefaultMaxPendingLoads;
+
+    /// <summary>
+    /// How long the image verdicts read for a version are reused before the manifest is read
+    /// again: the delay before a verdict replaced by <c>ingest --force</c> shows.
+    /// </summary>
+    public TimeSpan ImageVerdictsLifetime { get; set; } =
+        TimeSpan.FromMinutes(DefaultImageVerdictsMinutes);
+
+    /// <summary>
+    /// Versions whose image verdicts are memoised, the least recently read one dropped first;
+    /// a version holds the verdicts of the images its pages showed, a few hundred kilobytes
+    /// at most.
+    /// </summary>
+    public int ImageVerdictVersions { get; set; } = DefaultImageVerdictVersions;
 }
