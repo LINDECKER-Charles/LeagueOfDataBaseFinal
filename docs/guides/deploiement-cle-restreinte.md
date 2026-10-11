@@ -43,8 +43,11 @@ approbation de la prod, [`configuration.md`](configuration.md) § 3.3), pas l'h�
 
 ### 3.1 Clés et commandes forcées
 
-`/home/deploy/.ssh/authorized_keys` (propriété de `root`, `0644` ; dossier `.ssh` à `root`,
-`0755` : le compte ne réécrit pas ce que ses clés permettent) :
+Les clés vont dans `/home/deploy/.ssh/authorized_keys`, propriété de `root`, `0644`, dossier
+`.ssh` à `root`, `0755` : rien de ce qu'elles lancent n'y écrit. Le compte possède toutefois
+son dossier personnel, où il pourrait remplacer `.ssh`, et le groupe `docker` vaut `root` :
+ce qui borne une clé, c'est sa commande forcée, qui n'exécute que du code déjà sur `test` ou
+`main`. Une ligne par clé :
 
 ```
 restrict,command="/usr/local/sbin/lodb-deploy staging" ssh-ed25519 AAAA… lodb-staging deploy
@@ -76,9 +79,12 @@ autres, celles du propriétaire (avec phrase de passe, jamais dans GitHub).
 
 Court et stable : il borne ce que la clé permet, puis passe la main à la révision.
 
-1. `set -euo pipefail`, `umask 077`, `PATH` fixé ; environnement pris de `$1`, `staging` ou
+1. `set -euo pipefail`, `umask 022`, `PATH` fixé ; environnement pris de `$1`, `staging` ou
    `prod` ; `/etc/lodb-deploy/<env>.conf` (à `root`, `0644`) donne `DEPLOY_PATH` et `BRANCH`
-   (`test`, `main`) ; l'URL du dépôt y est fixe.
+   (`test`, `main`) ; l'URL du dépôt y est fixe. Pas `umask 077` : le dépôt extrait est
+   public, et des conteneurs non root en lisent des fichiers montés (la politique d'Anubis
+   du [mode siège](mode-siege.md), lue par l'utilisateur `1000` de son image) ; les secrets
+   ont leurs propres modes (`split-env.sh`, sauvegardes).
 2. Tag validé (§ 3.2) ; `flock` sur `/run/lock/lodb-deploy-<env>.lock` : un déploiement à la
    fois par environnement, une seconde demande échoue au lieu d'attendre.
 3. Jeton éventuel lu, entrée fermée ; une ligne `logger -t lodb-deploy` au début et à la fin
@@ -182,7 +188,10 @@ La seule voie d'écriture du `.env` et des secrets, pour la clé du propriétair
 k=lodb-staging-deploy; h=deploy@<hôte>
 ssh -i $k $h id                    # refus, code 64 : un tag d'image est attendu
 ssh -i $k $h                       # même refus : aucun shell, aucun terminal
-ssh -i $k -N -L 15432:127.0.0.1:5432 $h            # redirection refusée (restrict)
+# Redirection refusée (restrict) : -N n'ouvre aucune session, la commande forcée ne tourne
+# pas, et le refus de l'hôte arrête ssh aussitôt (code 255). Un -L, lui, ne serait refusé
+# qu'à la première connexion locale : seul, il attendrait sans rien prouver.
+ssh -i $k -N -o ExitOnForwardFailure=yes -R 18022:127.0.0.1:22 $h
 ssh -i $k $h 0000000000000000000000000000000000000000   # refus : absent de test
 ssh -i lodb-prod-deploy $h <sha présent sur test, pas sur main>   # refus : absent de main
 ssh -i lodb-prod-env $h id         # refus : env ou pfx seulement

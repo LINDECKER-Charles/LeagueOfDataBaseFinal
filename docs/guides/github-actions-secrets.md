@@ -81,8 +81,10 @@ la nouvelle, et les images de l'ancienne restent accessibles par leur tag `:<sha
 La nouvelle stack prend la place de l'ancienne dans le même projet Compose
 (`lodb-staging`, `lodb-prod`) et le même dossier (`STAGING_PATH`, `PROD_PATH`). Avec le
 déploiement par clé restreinte, les étapes 2 à 5 restent, dans le même ordre, dans
-`tools/deploy/remote.sh` ; de l'étape 1, la synchronisation du dépôt passe à `lodb-deploy`, la
-pose du `.env`, des secrets et du certificat au propriétaire
+`tools/deploy/remote.sh`, à deux points près de l'étape 2 : `IMAGE_TAG` n'y est plus contrôlé
+mais écrit (la révision reçue), et la séparation de `ENV_*` passe à `lodb-env`. De l'étape 1,
+la synchronisation du dépôt passe à `lodb-deploy`, la pose du `.env`, des secrets et du
+certificat au propriétaire
 ([`deploiement-cle-restreinte.md`](deploiement-cle-restreinte.md), § 3.3, § 3.4 et § 7).
 
 1. Garde le `.env` en place sous `.deploy/backups/`, pose `ENV_*` dans
