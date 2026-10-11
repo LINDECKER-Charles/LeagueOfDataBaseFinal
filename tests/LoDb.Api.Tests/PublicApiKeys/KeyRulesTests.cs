@@ -48,7 +48,7 @@ public sealed class KeyRulesTests(PostgresContainerFixture postgres)
     }
 
     [Fact]
-    public async Task SecretIsShownOnceAndOnlyItsFingerprintIsStored()
+    public async Task SecretIsShownOnceItsFingerprintStoredAndTheCreationReported()
     {
         var owner = await App.SeedUserAsync("Createur");
         using var browser = await App.SignedInAsync(owner);
@@ -69,19 +69,6 @@ public sealed class KeyRulesTests(PostgresContainerFixture postgres)
         var overview = JsonDocument.Parse(body).RootElement.GetProperty("key");
         Assert.Equal(secret[..12], ApiJson.Text(overview, "prefix"));
         Assert.Equal("no-store", created.Headers.CacheControl?.ToString());
-    }
-
-    [Fact]
-    public async Task CreationIsAuditedAndReportedToV1()
-    {
-        var owner = await App.SeedUserAsync("Journal");
-        using var browser = await App.SignedInAsync(owner);
-
-        using var created = await browser.PostAsync(KeysApp.PortalPath, new { });
-
-        Assert.Equal(HttpStatusCode.OK, created.StatusCode);
-        var key = Assert.Single(await App.KeysOfAsync(owner.Id));
-        Assert.Equal("default", key.Name);
         Assert.Equal([key.Id], App.KeyCache.Invalidated);
         var entry = Assert.Single(
             await App.AuditAsync(),
