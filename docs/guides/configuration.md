@@ -324,10 +324,11 @@ diffère.
 |---|---|---|
 | `lodb_owner` | jamais | Propriétaire des tables, vues et séquences du schéma `public`. |
 | `lodb_partitions` | jamais | Propriétaire d'`analytics_event`, de ses partitions quotidiennes et des deux fonctions `SECURITY DEFINER` qui les créent et les suppriment (`lodb_create_analytics_partition(date)`, `lodb_drop_analytics_partition(date)`). |
-| `lodb_app` (l'API) | oui, `CONNECTION LIMIT 60` | Lecture et écriture de lignes (`SELECT`, `INSERT`, `UPDATE`, `DELETE`), lecture seule des historiques de migration, séquences ; `EXECUTE` sur les deux fonctions, son seul DDL. Ni `TRUNCATE`, ni création (tables, index, tables temporaires, fonctions), ni rôle superutilisateur ; `statement_timeout` de 15 s. |
+| `lodb_app` (l'API) | oui, `CONNECTION LIMIT 60` | Lecture et écriture de lignes (`SELECT`, `INSERT`, `UPDATE`, `DELETE`), lecture seule des historiques de migration, séquences ; `EXECUTE` sur les deux fonctions, son seul DDL. Ni `TRUNCATE`, ni création (tables, index, schémas, tables temporaires, fonctions), ni appartenance à un autre rôle, ni rôle superutilisateur ; `statement_timeout` de 15 s. |
 
 Chaque passage rend les objets du schéma à leur propriétaire et refait les droits de
-`lodb_app` (un droit accordé à la main ne survit pas au déploiement suivant) ; les privilèges
+`lodb_app` (un droit accordé à la main, sur une table, le schéma ou la base, comme une
+appartenance à un autre rôle, ne survit pas au déploiement suivant) ; les privilèges
 par défaut couvrent une table qu'une migration crée, dès sa création. Les tâches qui lisent
 une journée entière de vues (agrégation, effacement des données client) relèvent leur propre
 délai le temps de leur transaction (`LoDb:Analytics:JobStatementTimeout`, 5 min). Une commande

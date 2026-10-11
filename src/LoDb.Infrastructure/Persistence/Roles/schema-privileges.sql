@@ -11,17 +11,36 @@
 -- The superuser, as which the legacy stack still connects, keeps every right.
 
 -- Only the owners create objects in the schema, and nobody gets temporary tables: a
--- database created before PostgreSQL 15 still let anyone create in `public`.
+-- database created before PostgreSQL 15 still let anyone create in `public`. The API's role
+-- first loses whatever a grant made by hand gave it on the schema and the database.
 REVOKE CREATE ON SCHEMA public FROM PUBLIC;
+REVOKE ALL ON SCHEMA public FROM lodb_app;
 GRANT USAGE, CREATE ON SCHEMA public TO lodb_owner, lodb_partitions;
 GRANT USAGE ON SCHEMA public TO lodb_app;
 
 DO $database$
 BEGIN
     EXECUTE format('REVOKE TEMPORARY ON DATABASE %I FROM PUBLIC', current_database());
+    EXECUTE format('REVOKE ALL ON DATABASE %I FROM lodb_app', current_database());
     EXECUTE format('GRANT CONNECT ON DATABASE %I TO lodb_app', current_database());
 END
 $database$;
+
+-- The API's role is a member of no role: a membership granted by hand would lend it another
+-- role's rights (an owner's, a reader of the server's files), whoever granted it.
+DO $memberships$
+DECLARE
+    granted record;
+BEGIN
+    FOR granted IN
+        SELECT m.roleid::regrole AS role, m.grantor::regrole AS grantor
+        FROM pg_auth_members m
+        WHERE m.member = 'lodb_app'::regrole
+    LOOP
+        EXECUTE format('REVOKE %s FROM lodb_app GRANTED BY %s', granted.role, granted.grantor);
+    END LOOP;
+END
+$memberships$;
 
 -- Owners: analytics_event and its partitions to lodb_partitions, everything else to
 -- lodb_owner. An extension keeps its own objects; the sequence of an identity or serial

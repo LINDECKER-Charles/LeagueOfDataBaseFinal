@@ -34,6 +34,9 @@ public sealed class DatabaseRolesTests(IsolatedPostgres isolated) : IClassFixtur
     private const string AppRowVersionSql =
         "SELECT xmin::text FROM pg_authid WHERE rolname = 'lodb_app'";
 
+    private const string AppMembershipsSql =
+        "SELECT roleid::regrole::text FROM pg_auth_members WHERE member = 'lodb_app'::regrole";
+
     private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
 
     private PostgresContainerFixture Server => isolated.Server;
@@ -136,6 +139,21 @@ public sealed class DatabaseRolesTests(IsolatedPostgres isolated) : IClassFixtur
             await database.QueryAsync(RolesSql, Cancellation),
             static role =>
                 Assert.Contains("createdb=f createrole=f", role, StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task MembershipGrantedByHandIsTakenBack()
+    {
+        await using var database = await Server.CreateDatabaseAsync(Cancellation);
+        var options = new AppRoleOptions { Password = Password };
+        await ApplyAsync(database, options);
+        await database.ExecuteAsync(
+            "GRANT lodb_owner, pg_read_server_files TO lodb_app",
+            Cancellation);
+
+        await ApplyAsync(database, options);
+
+        Assert.Empty(await database.QueryAsync(AppMembershipsSql, Cancellation));
     }
 
     private static async Task<RoleChanges> ApplyAsync(

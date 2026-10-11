@@ -75,6 +75,33 @@ public sealed class AppRolePrivilegesTests(PostgresContainerFixture postgres)
     }
 
     [Fact]
+    public async Task RightsGrantedByHandAreTakenBackByTheNextRun()
+    {
+        await Database.ExecuteAsync(
+            "GRANT CREATE ON SCHEMA public TO lodb_app;"
+                + $" GRANT CREATE, TEMPORARY ON DATABASE \"{Database.Name}\" TO lodb_app;"
+                + " GRANT TRUNCATE ON users TO lodb_app",
+            Cancellation);
+
+        await Database.MigrateAsync(Cancellation);
+
+        string[] takenBack =
+        [
+            "CREATE TABLE intruder (id int)",
+            "CREATE TEMP TABLE intruder (id int)",
+            "CREATE SCHEMA intruder",
+            "TRUNCATE users",
+        ];
+        foreach (var sql in takenBack)
+        {
+            await using var command = App.CreateCommand(sql);
+            var refusal = await Assert.ThrowsAsync<PostgresException>(
+                () => command.ExecuteNonQueryAsync(Cancellation));
+            Assert.Equal(InsufficientPrivilege, refusal.SqlState);
+        }
+    }
+
+    [Fact]
     public async Task ApiRoleReadsAndWritesRows()
     {
         await using var db = CreateAppContext();
