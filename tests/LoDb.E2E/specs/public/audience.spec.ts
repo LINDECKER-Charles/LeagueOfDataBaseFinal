@@ -5,7 +5,9 @@ import { expect, test } from '../../support/test';
 // host, never reaches Umami, neither its tracker nor its collection, whatever the visitor
 // does; and the privacy policy keeps the visitor's own choice about it on this browser.
 const UMAMI_PATHS = ['/u/api/send', '/u/script.js'];
+const LIST = '/en/items';
 const SEARCH = 'lodb-filter-console input[type=search]';
+const CARD_LINK = 'lodb-catalogue-list .grid__cell a';
 const OPT_OUT_KEY = 'lodb.audience.opt-out';
 
 function umamiRequests(page: Page): string[] {
@@ -19,6 +21,8 @@ function umamiRequests(page: Page): string[] {
   return seen;
 }
 
+const pathOf = (page: Page) => new URL(page.url()).pathname;
+
 test.describe('audience measure off the canonical host', { tag: '@readonly' }, () => {
   test('sends nothing to Umami while browsing, searching and failing', async ({
     page,
@@ -26,18 +30,21 @@ test.describe('audience measure off the canonical host', { tag: '@readonly' }, (
   }) => {
     const sent = umamiRequests(page);
 
-    await page.goto('/en/');
+    // A served page, a search that rewrites the query, then a page opened by the router.
+    await page.goto(LIST);
     await page.waitForLoadState('networkidle');
-    await page.locator('a[href="/en/champions"]').first().click();
-    await expect.poll(() => new URL(page.url()).pathname).toBe('/en/champions');
-    await page.locator(SEARCH).fill('Annie');
-    await expect.poll(() => new URL(page.url()).searchParams.get('q')).toBe('Annie');
-    await page.goto('/en/champions/Annie');
-    await page.goto('/en/champions/nowhere/at/all');
+    await page.locator(SEARCH).fill('boots');
+    await expect.poll(() => new URL(page.url()).searchParams.get('q')).toBe('boots');
+    await page.locator(CARD_LINK).first().click();
+    await expect.poll(() => pathOf(page)).toMatch(/^\/en\/items\/.+/);
+    await page.waitForLoadState('networkidle');
+    // The browser reports the 404 below as a console error of its own.
+    const errorsBeforeTheFailure = [...consoleErrors];
+    await page.goto('/en/items/nowhere/at/all');
     await page.waitForLoadState('networkidle');
 
     expect(sent).toEqual([]);
-    expect(consoleErrors).toEqual([]);
+    expect(errorsBeforeTheFailure).toEqual([]);
   });
 
   test('keeps the opt-out of the privacy policy on this browser', async ({ page }) => {
