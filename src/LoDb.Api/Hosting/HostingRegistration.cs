@@ -2,6 +2,7 @@ using LoDb.Api.Hosting.Errors;
 using LoDb.Api.Hosting.Health;
 using LoDb.Api.Hosting.Logging;
 using LoDb.Api.Hosting.OpenApi;
+using LoDb.Api.Hosting.Secrets;
 using LoDb.Api.Hosting.Telemetry;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -17,9 +18,13 @@ namespace LoDb.Api.Hosting;
 /// </remarks>
 internal static class HostingRegistration
 {
-    /// <summary>Services shared by the web host and the command host.</summary>
+    /// <summary>Settings and services shared by the web host and the command host.</summary>
+    /// <remarks>
+    /// The secret files come first: every setting read afterwards already sees them.
+    /// </remarks>
     public static IHostApplicationBuilder AddLoDbCommon(this IHostApplicationBuilder builder)
     {
+        builder.AddLoDbSecrets();
         builder.Logging.AddLoDbJsonConsole();
         builder.Services.TryAddSingleton(TimeProvider.System);
         return builder;

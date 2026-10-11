@@ -4,8 +4,9 @@
 #   COMPOSE_FILE=compose.yaml:compose.deploy.yaml docker compose up -d
 #
 # Driven by .github/workflows/_deploy.yml. The host's .env (secret ENV_STAGING or ENV_PROD,
-# templates .env.staging.example and .env.prod.example) sets the project, the images, the
-# public hosts and the secrets. Like legacy/compose.deploy.yaml, it publishes no host port:
+# templates .env.staging.example and .env.prod.example) sets the project, the images and the
+# public hosts; the job moves its secrets to files first (`secrets` at the end of this file).
+# Like legacy/compose.deploy.yaml, it publishes no host port:
 # the shared edge (caddy-docker-proxy, owned by infra-vps) reads the labels of nginx and
 # reaches it over the external `edge` network.
 #
@@ -20,15 +21,24 @@
 #   max_over_time(container_memory_working_set_bytes{stack=~"lodb-(staging|prod)"}[7d])
 # No `cpus` ceiling: set too low, it throttles silently.
 
+# Secrets: the deploy job writes each one to a file of .deploy/secrets
+# (tools/deploy/split-env.sh) and leaves it out of the .env; a service mounts in /run/secrets
+# only those it reads. The API's are named after their setting key, which the API reads from
+# the file: none is in a container's environment, which `docker inspect` would show.
+#
+# Same string as compose.yaml, without the password: the API adds LoDb__Database__Password.
 x-lodb-connection: &lodb-connection >-
-  Host=postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=${LODB_DB_USER:-lodb};Password=${LODB_DB_PASSWORD:?LODB_DB_PASSWORD is required on a served environment};Gss Encryption Mode=Disable;Maximum Pool Size=32;Timeout=5;Application Name=lodb-api
+  Host=postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=${LODB_DB_USER:-lodb};Gss Encryption Mode=Disable;Maximum Pool Size=32;Timeout=5;Application Name=lodb-api
+
+x-database-password: &database-password
+  source: LODB_DB_PASSWORD
+  target: LoDb__Database__Password
 
 services:
   api:
     image: ${REGISTRY:?REGISTRY is required (ghcr.io/<owner>/lodb)}/api:${IMAGE_TAG:?IMAGE_TAG is required}
     build: !reset null
     environment:
-      # Same string as compose.yaml, the password made mandatory.
       ConnectionStrings__LoDb: *lodb-connection
       # Every origin the API publishes is the canonical host's: e-mail links, sitemaps,
       # share_url of /v1, and the origin /developers documents for /v1.
@@ -40,25 +50,18 @@ services:
       # created without it. The file comes from a secret (_deploy.yml).
       LoDb__DataProtection__CertificatePath: /run/secrets/data-protection.pfx
       # Settings without a key of their own: passed only when the host's .env sets them,
-      # under these exact names, so an absent one keeps the API's default.
-      LoDb__DataProtection__CertificatePassword:
+      # under these exact names, so an absent one keeps the API's default. Never a secret:
+      # those are files (`secrets` below).
       LoDb__Mail__Host:
       LoDb__Mail__Port:
       LoDb__Mail__Security:
       LoDb__Mail__Username:
-      LoDb__Mail__Password:
       LoDb__Mail__From:
-      LoDb__Billing__StripeSecretKey:
-      LoDb__Billing__StripeWebhookSecret:
       LoDb__Accounts__Google__ClientId:
-      LoDb__Accounts__Google__ClientSecret:
       LoDb__Accounts__Google__AppClients__0__ClientId:
-      LoDb__Accounts__Google__AppClients__0__ClientSecret:
       LoDb__Accounts__Google__AppClients__1__ClientId:
-      LoDb__Accounts__Google__AppClients__1__ClientSecret:
       LoDb__Contact__Recipient:
       LoDb__Contact__NotificationLocale:
-      LoDb__Analytics__VisitorKey:
       # Bounds of the catalogs in memory and of the cold work (ADR 0003, amendment of
       # 2026-10-10); configuration.md gives their defaults.
       LoDb__Catalog__MaxEntries:
@@ -81,6 +84,20 @@ services:
     secrets:
       - source: data-protection
         target: data-protection.pfx
+      - *database-password
+      - LoDb__DataProtection__CertificatePassword
+      - LoDb__Mail__Password
+      - LoDb__Billing__StripeSecretKey
+      - LoDb__Billing__StripeWebhookSecret
+      - LoDb__Accounts__Google__ClientSecret
+      - LoDb__Accounts__Google__AppClients__0__ClientSecret
+      - LoDb__Accounts__Google__AppClients__1__ClientSecret
+      - LoDb__Analytics__VisitorKey
+    labels:
+      # Raised by the deploy job when a secret file changes. The API reads its files at
+      # start-up only, and Compose recreates a service whose definition changed, not one
+      # whose mounted files did.
+      league-of-data-base.secrets-revision: ${LODB_SECRETS_REVISION:-0}
     deploy:
       resources:
         limits:
@@ -93,6 +110,8 @@ services:
     build: !reset null
     environment:
       ConnectionStrings__LoDb: *lodb-connection
+    secrets:
+      - *database-password
     deploy:
       resources:
         limits:
@@ -155,7 +174,13 @@ services:
 
   postgres:
     environment:
-      POSTGRES_PASSWORD: ${LODB_DB_PASSWORD:?LODB_DB_PASSWORD is required on a served environment}
+      # Read by the image's entrypoint, as root, only when it creates the database on an
+      # empty volume: the password of an existing database changes by ALTER ROLE.
+      POSTGRES_PASSWORD: !reset null
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres-password
+    secrets:
+      - source: LODB_DB_PASSWORD
+        target: postgres-password
     deploy:
       resources:
         limits:
@@ -174,3 +199,24 @@ secrets:
   # secret. Missing, the stack does not start.
   data-protection:
     file: ${LODB_DATA_PROTECTION_CERT_FILE:-./.deploy/data-protection.pfx}
+  # One file per secret line of the environment's dotenv, named after it (the list of
+  # tools/deploy/split-env.sh). The job writes each one even when its line is absent, empty
+  # then (an unset setting): Docker would mount a missing file as a folder.
+  LODB_DB_PASSWORD:
+    file: ./.deploy/secrets/LODB_DB_PASSWORD
+  LoDb__DataProtection__CertificatePassword:
+    file: ./.deploy/secrets/LoDb__DataProtection__CertificatePassword
+  LoDb__Mail__Password:
+    file: ./.deploy/secrets/LoDb__Mail__Password
+  LoDb__Billing__StripeSecretKey:
+    file: ./.deploy/secrets/LoDb__Billing__StripeSecretKey
+  LoDb__Billing__StripeWebhookSecret:
+    file: ./.deploy/secrets/LoDb__Billing__StripeWebhookSecret
+  LoDb__Accounts__Google__ClientSecret:
+    file: ./.deploy/secrets/LoDb__Accounts__Google__ClientSecret
+  LoDb__Accounts__Google__AppClients__0__ClientSecret:
+    file: ./.deploy/secrets/LoDb__Accounts__Google__AppClients__0__ClientSecret
+  LoDb__Accounts__Google__AppClients__1__ClientSecret:
+    file: ./.deploy/secrets/LoDb__Accounts__Google__AppClients__1__ClientSecret
+  LoDb__Analytics__VisitorKey:
+    file: ./.deploy/secrets/LoDb__Analytics__VisitorKey

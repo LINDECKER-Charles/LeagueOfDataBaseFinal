@@ -4,8 +4,9 @@ name: CI/CD
 # archived under legacy/.github/workflows/ and no longer run; changes under legacy/ trigger
 # nothing. The checks run in parallel: build and tests .NET, front checks, API contract,
 # i18n report (informative), the workflows themselves (actions pinned to a commit,
-# actionlint) and E2E on the local stack. No sensitive value here: hosts,
-# paths and app secrets are repository secrets / live inside the per-host ENV_FILE.
+# actionlint, deploy tools) and E2E on the local stack. No sensitive value here: hosts,
+# paths and app secrets are repository secrets / live inside the per-host ENV_FILE. The
+# deploy jobs run in the GitHub environments `staging` and `production` (_deploy.yml).
 #
 # Two-stage promotion (build once, promote the same artifact):
 #   push dev  ─▶ checks ─▶ merge dev→test ─▶ _build (:sha + :staging) ─▶ _deploy STAGING
@@ -15,7 +16,8 @@ name: CI/CD
 # merge — that human gate promotes to production (prod never rebuilds nor reruns checks).
 on:
   push:
-    branches: [docs/reecriture-dotnet-angular, dev, main]
+    # Only the branches that deploy: a push runs this workflow with the deployment secrets.
+    branches: [dev, main]
     paths: &stack-paths
       - src/**
       - tests/**
@@ -174,6 +176,11 @@ jobs:
       - name: Test the pin check
         run: node --test tools/ci/test/*.test.mjs
 
+      # The split of the dotenv into secret files on the host, and the overlay that mounts
+      # them (Compose renders it from the .env templates).
+      - name: Test the deploy tools
+        run: node --test tools/deploy/test/*.test.mjs
+
       - name: Actions pinned to a full commit SHA
         run: node tools/ci/check-pinned-actions.mjs
 
@@ -287,6 +294,7 @@ jobs:
       SSH_HOST: ${{ secrets.STAGING_HOST }}
       DEPLOY_PATH: ${{ secrets.STAGING_PATH }}
       SSH_USER: ${{ secrets.STAGING_SSH_USER }}
+      SSH_KNOWN_HOSTS: ${{ secrets.STAGING_SSH_KNOWN_HOSTS }}
       ENV_FILE: ${{ secrets.ENV_STAGING }}
       DATA_PROTECTION_PFX: ${{ secrets.STAGING_DATA_PROTECTION_PFX }}
 
@@ -315,5 +323,6 @@ jobs:
       SSH_HOST: ${{ secrets.PROD_HOST }}
       DEPLOY_PATH: ${{ secrets.PROD_PATH }}
       SSH_USER: ${{ secrets.PROD_SSH_USER }}
+      SSH_KNOWN_HOSTS: ${{ secrets.PROD_SSH_KNOWN_HOSTS }}
       ENV_FILE: ${{ secrets.ENV_PROD }}
       DATA_PROTECTION_PFX: ${{ secrets.PROD_DATA_PROTECTION_PFX }}
