@@ -1,4 +1,4 @@
-namespace LoDb.Desktop.Hosting;
+namespace LoDb.Desktop.Hosting.Policy;
 
 /// <summary>
 /// The shell's index as served: its HTML, and the policy that admits its scripts.

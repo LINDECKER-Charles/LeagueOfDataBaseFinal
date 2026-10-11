@@ -2,7 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace LoDb.Desktop.Hosting;
+namespace LoDb.Desktop.Hosting.Policy;
 
 /// <summary>
 /// The CSP sources (<c>'sha256-…'</c>) of the inline scripts a page runs, as the web's

@@ -1,4 +1,4 @@
-namespace LoDb.Desktop.Hosting;
+namespace LoDb.Desktop.Hosting.Policy;
 
 /// <summary>
 /// The Content-Security-Policy of the shell's index: the page holds the bridge to the host

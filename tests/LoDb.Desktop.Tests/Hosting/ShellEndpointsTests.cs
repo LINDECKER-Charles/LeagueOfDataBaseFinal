@@ -1,5 +1,6 @@
 using System.Net;
 using LoDb.Desktop.Hosting;
+using LoDb.Desktop.Hosting.Policy;
 using LoDb.Desktop.Tests.Support;
 using Microsoft.Extensions.DependencyInjection;
 
