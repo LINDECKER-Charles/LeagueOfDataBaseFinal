@@ -197,6 +197,11 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   bundle (cache `immutable`). Ses métriques sont sur un second serveur HTTP, port 9464
   (`LODB_METRICS_PORT`), que nginx ne route pas et qu'aucun port ne publie ; `/metrics`
   demandé au site reste la 404 statique du pré-routeur.
+- **Porte réseau du SSR** : comme l'API, le port 4000 ne répond qu'aux réseaux de
+  `LODB_STACK_NETWORKS` (le seul `LODB_STACK_SUBNET` sur un hôte, les trois plages privées
+  en local) et à la loopback ; tout autre pair reçoit un 404 vide, compté par
+  `lodb_ssr_network_gate_refusals_total`, sans log. Vide ou absente, la variable laisse la
+  seule loopback : un `node server.mjs` lancé hors de la stack ne sert que la machine.
 - Collecte (`compose.deploy.yaml`) : `api` et `web-ssr` rejoignent le réseau partagé
   `observability` avec les labels `prometheus.scrape`/`prometheus.port`. Sur ce réseau, le
   nom court d'un service (`api`, `postgres`) désigne aussi ceux des autres projets : un

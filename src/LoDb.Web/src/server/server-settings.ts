@@ -11,6 +11,11 @@ export interface ServerSettings {
   readonly allowedHosts: readonly string[];
   /** Proxy headers Angular may read, or undefined to fall back to NG_TRUST_PROXY_HEADERS. */
   readonly trustProxyHeaders: readonly string[] | undefined;
+  /**
+   * CIDR networks whose connections the site's port answers besides the loopback
+   * (`networkGate`): nginx's. Empty: the loopback alone.
+   */
+  readonly stackNetworks: readonly string[];
   readonly apiOrigin: string;
   /** Loopback origin of this very server, or null when another server hosts the handler. */
   readonly selfOrigin: string | null;

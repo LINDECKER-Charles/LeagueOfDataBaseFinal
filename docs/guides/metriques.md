@@ -22,9 +22,11 @@ Logs et requêtes LogsQL : [`observabilite.md`](observabilite.md) et [`logging.m
   (`compose.deploy.yaml`, contrat d'`infra-vps` `docs/APPLICATIONS.md` § 4). La collecte
   (job `applications`) ajoute `stack` (`lodb-prod`, `lodb-staging`), `service` et
   `container`. Toute requête filtre sur `stack` : staging et prod partagent l'hôte.
-- Sur ce réseau partagé, tout conteneur de l'hôte joint l'API : son port 8080 ne répond
-  qu'au réseau de la stack et à la loopback (`NetworkGate`, 404 sinon), et les conteneurs
-  de la stack ne s'appellent que par leurs alias préfixés (`lodb-api`, `lodb-postgres`).
+- Sur ce réseau partagé, tout conteneur de l'hôte joint l'API et le SSR : le port 8080 de
+  l'API et le port 4000 du SSR ne répondent qu'au réseau de la stack et à la loopback
+  (`NetworkGate`, `networkGate`, 404 sinon), et les conteneurs de la stack ne s'appellent
+  que par leurs alias préfixés (`lodb-api`, `lodb-postgres`). Ce que les ports 9464
+  exposent est lisible de tout l'hôte : jamais de donnée personnelle ni de secret.
 - En local, lire depuis le réseau de la stack :
   `docker compose -p lodb-dev -f compose.yaml -f compose.override.yaml exec -T nginx wget -qO- http://lodb-api:9464/metrics`
   et `… exec -T web-ssr node -e "fetch('http://127.0.0.1:9464/metrics').then(r => r.text()).then(console.log)"`.
@@ -127,6 +129,7 @@ l'identifiant de trace reste dans chaque ligne de log (`trace_id`).
 | `lodb_ssr_renders_in_flight` | jauge | `lane` | oui | rendus en cours de l'admission |
 | `lodb_ssr_render_duration_seconds` | histogramme, bornes 0,1 · 0,25 · 0,5 · 1 · 1,5 · 3 · 5 · 10 · 20 s | `lane`, `status_class` (`2xx`…`5xx`, `aborted` quand le client est parti) | non | de l'admission à la fin de la réponse |
 | `lodb_ssr_normalized_redirects_total` | compteur | `reason` : `query` (301 du pré-routeur, paramètres que la page ne lit pas, sans rendu), `canonical` (301/308 d'une page vers son URL canonique : slug, dernier patch dans le chemin, `?version=`) | oui (0) | pré-routeur, réponse du rendu |
+| `lodb_ssr_network_gate_refusals_total` | compteur | — | oui (0) | requêtes du port 4000 venues hors du réseau de la stack (`networkGate`) |
 | `nodejs_*`, `process_*` | — | `nodejs_eventloop_lag_seconds`, `nodejs_eventloop_lag_p99_seconds`, `nodejs_heap_size_used_bytes`, `nodejs_gc_duration_seconds{kind}`, `process_cpu_seconds_total`… | oui | `collectDefaultMetrics` de `prom-client` |
 
 Un refus d'admission n'écrit pas de ligne de log par requête : la ligne `ssr.admission.summary`

@@ -25,6 +25,8 @@ import { preRouter } from './server/routing/pre-router';
 import { applyServerTimeouts } from './server/security/apply-server-timeouts';
 import { boundedRequests } from './server/security/bounded-requests';
 import { documentPolicy } from './server/security/document-policy';
+import { networkGate } from './server/security/network-gate';
+import { StackPeers } from './server/security/stack-peers';
 import { withDocumentPolicy } from './server/security/with-document-policy';
 import { staticCacheControl } from './server/static-cache-control';
 
@@ -32,13 +34,15 @@ import { staticCacheControl } from './server/static-cache-control';
 // the proxy may cache them, and a compromised renderer has nothing to leak. It is still an
 // exposed surface (ADR 0005): hosts allowed, requests and timeouts bounded, a CSP per page.
 
-// nginx is the only peer, and writes X-Forwarded-For itself (snippets/proxy-headers.conf):
-// one hop names the visitor's address, which the render admission counts per client.
+// nginx is the only peer past the network gate besides the loopback, and writes
+// X-Forwarded-For itself (snippets/proxy-headers.conf): one hop names the visitor's address,
+// which the render admission counts per client.
 const TRUSTED_PROXY_HOPS = 1;
 
 // Under `ng serve`, the dev server mounts `reqHandler` instead of running this file.
 const listening = isMainModule(import.meta.url);
 const settings = readServerSettings(process.env, listening);
+const stackPeers = new StackPeers(settings.stackNetworks);
 const logger = createLogger();
 const browserDistFolder = join(import.meta.dirname, '../browser');
 const angularApp = new AngularNodeAppEngine({
@@ -56,6 +60,9 @@ const app = express();
 
 app.disable('x-powered-by');
 app.set('trust proxy', TRUSTED_PROXY_HOPS);
+
+// Before anything else, the request log included: the site's port answers the stack alone.
+app.use(networkGate(stackPeers, () => metrics.countGateRefusal()));
 
 // Registered before the request log: Docker polls it every few seconds.
 app.get('/healthz', (_request, response) => {

@@ -113,6 +113,16 @@ describe('SsrMetrics', () => {
     expect(sampleOf(exposition, redirects, { reason: 'canonical' })).toBe(2);
   });
 
+  it('counts the refusals of the network gate, from zero', async () => {
+    const refusals = 'lodb_ssr_network_gate_refusals_total';
+    expect(sampleOf(await scrape(), refusals)).toBe(0);
+
+    metrics.countGateRefusal();
+    metrics.countGateRefusal();
+
+    expect(sampleOf(await scrape(), refusals)).toBe(2);
+  });
+
   it("serves Node's own metrics, and no label outside the contract", async () => {
     counts.record('pinned', 'client_capacity');
     metrics.timeRender('pinned', responseOf(503, true));

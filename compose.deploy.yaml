@@ -120,6 +120,9 @@ services:
     environment:
       # The public hosts of CADDY_DOMAINS, comma-separated: any other Host is refused.
       LODB_ALLOWED_HOSTS: ${LODB_ALLOWED_HOSTS:?LODB_ALLOWED_HOSTS is required (the public hosts)}
+      # The stack's subnet alone, as the API's: the site's port answers nginx and the loopback,
+      # never a container of `observability` (src/server/security/network-gate.ts).
+      LODB_STACK_NETWORKS: ${LODB_STACK_SUBNET:?LODB_STACK_SUBNET is required (set by the deploy job)}
     # Scraped on its metrics port (9464, src/server/metrics) over `observability`, as the API;
     # the renderer calls the API by its alias, lodb-api, never by the short name.
     networks:

@@ -53,7 +53,7 @@ function rendersInFlight(admission: InFlight): Gauge<'lane'> {
  * The renderer's metrics (docs/guides/metriques.md), in a registry of their own that the
  * metrics port serves (`serveMetrics`): the admission's decisions and renders in flight, read
  * from the admission at each scrape; the duration of the renders; the normalizing redirects;
- * and Node's own (event loop lag, heap, garbage collection). No label carries a path, a
+ * the network gate's refusals; and Node's own (event loop lag, heap, garbage collection). No label carries a path, a
  * version, a language or an address.
  */
 export class SsrMetrics {
@@ -74,6 +74,13 @@ export class SsrMetrics {
     registers: [],
   });
 
+  // The network gate's only signal: it writes no log line per refusal.
+  private readonly gateRefusals = new Counter({
+    name: 'lodb_ssr_network_gate_refusals_total',
+    help: "Requests to the site's port from outside the stack's networks.",
+    registers: [],
+  });
+
   constructor(counts: RenderCounts, admission: InFlight) {
     collectDefaultMetrics({ register: this.registry });
     REDIRECT_REASONS.forEach((reason) => this.redirects.inc({ reason }, 0));
@@ -81,12 +88,18 @@ export class SsrMetrics {
     this.registry.registerMetric(rendersInFlight(admission));
     this.registry.registerMetric(this.renderDuration);
     this.registry.registerMetric(this.redirects);
+    this.registry.registerMetric(this.gateRefusals);
   }
 
   /** Times a render of `lane` until its response ends, under the status class it got. */
   timeRender(lane: RenderLane, response: ServerResponse): void {
     const stop = this.renderDuration.startTimer({ lane });
     response.once('close', () => stop({ status_class: statusClassOf(response) }));
+  }
+
+  /** Counts a connection the network gate turned away (`networkGate`). */
+  countGateRefusal(): void {
+    this.gateRefusals.inc();
   }
 
   countRedirect(reason: NormalizedRedirectReason): void {

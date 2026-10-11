@@ -207,6 +207,7 @@ et l'API garde sa valeur par défaut.
 (`LODB_PUBLIC_API_ORIGIN`), `LoDb__DataProtection__CertificatePath`,
 `LoDb__Hosting__KnownProxyNetworks__0` (`LODB_STACK_SUBNET` seul), `LoDb__Storage__Root` (`/srv/storage`, volume
 `ddragon`, que nginx sert), et côté SSR `LODB_API_ORIGIN`, `LODB_TRUST_PROXY_HEADERS`,
+`LODB_STACK_NETWORKS` (`LODB_STACK_SUBNET` seul),
 `NODE_OPTIONS`. `ASPNETCORE_ENVIRONMENT` reste **absente** sur un hôte : `Development`
 exposerait OpenAPI et retirerait `Secure` des cookies.
 
@@ -344,8 +345,9 @@ ce dossier. Une ligne `LODB_EDGE_CIDR` venue de `ENV_*` est remplacée.
 Rien à relever non plus. Le réseau privé de la stack (`default`, celui de nginx, du SSR, de
 l'API et de Postgres) a un sous-réseau figé par cible, hors des plages que Docker distribue
 (172.17-31/16, 192.168/16) : `10.231.1.0/24` en staging, `10.231.2.0/24` en prod. L'API ne
-croit les `X-Forwarded-*` que de lui et ne sert le port 8080 qu'à lui et à la loopback : un
-conteneur d'un réseau partagé (`observability`) reçoit un 404. Le job écrit
+croit les `X-Forwarded-*` que de lui et ne sert le port 8080 qu'à lui et à la loopback ; le
+SSR ne sert son port 4000 qu'à eux aussi (`LODB_STACK_NETWORKS`) : un conteneur d'un réseau
+partagé (`observability`) reçoit un 404, et ne joint que les ports 9464. Le job écrit
 `LODB_STACK_SUBNET` dans le `.env`, refuse de continuer si un autre réseau Docker recouvre ce
 sous-réseau, et recrée une fois le réseau de la stack s'il en a un autre (`docker compose
 down` sans `-v`, environ une minute de coupure, volumes conservés).

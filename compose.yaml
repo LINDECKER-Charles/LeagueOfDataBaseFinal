@@ -107,6 +107,10 @@ services:
       LODB_ALLOWED_HOSTS: ${LODB_ALLOWED_HOSTS:-localhost,127.0.0.1}
       # Set by nginx (snippets/proxy-headers.conf); Angular ignores them unless listed.
       LODB_TRUST_PROXY_HEADERS: x-forwarded-proto,x-forwarded-host,x-forwarded-for
+      # Peers the site's port answers besides the loopback (src/server/security/network-gate.ts):
+      # the private ranges, as the API's KnownProxyNetworks. A served host names its stack's
+      # subnet alone (compose.deploy.yaml).
+      LODB_STACK_NETWORKS: 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
       # Render admission (src/server/admission): empty keeps the defaults sized for the host.
       LODB_RENDER_MAX_IN_FLIGHT: ${LODB_RENDER_MAX_IN_FLIGHT:-}
       LODB_PINNED_RENDER_MAX_IN_FLIGHT: ${LODB_PINNED_RENDER_MAX_IN_FLIGHT:-}
