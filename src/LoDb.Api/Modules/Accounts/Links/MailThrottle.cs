@@ -1,5 +1,6 @@
 using LoDb.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace LoDb.Api.Modules.Accounts.Links;
 
@@ -8,13 +9,23 @@ namespace LoDb.Api.Modules.Accounts.Links;
 /// sees the same counts, and they go with the account.
 /// </summary>
 /// <remarks>
-/// Two requests at the same instant may both pass: the limit is there against a mailbox
-/// flooded by a script, which one e-mail more does not change.
+/// A caller reads the count and records its e-mail within one transaction, after
+/// <see cref="HoldAsync"/>: requests of one account sent at once would otherwise all read
+/// the same count and all pass, as many e-mails as requests.
 /// </remarks>
 internal sealed class MailThrottle(LoDbDbContext db, TimeProvider clock)
 {
     // Identity's own rows use "[AspNetUserStore]".
     private const string LoginProvider = "LoDb";
+
+    /// <summary>
+    /// Locks the account's row until the caller's transaction ends: the next request of the
+    /// account reads the count once this one has recorded its e-mail, or given up.
+    /// </summary>
+    public async Task HoldAsync(int userId, CancellationToken cancellationToken) =>
+        await db.Database.ExecuteSqlAsync(
+            $"SELECT 1 FROM users WHERE id = {userId} FOR UPDATE",
+            cancellationToken);
 
     /// <summary>
     /// How long before <paramref name="rule"/> lets another e-mail go; null if it does now.

@@ -39,7 +39,9 @@ oublié n'arrivent bien que si le site garde la confiance des messageries.
   `LoDb:Accounts:UnverifiedPurge` (`After` 7 j, `BatchSize` 500).
 - Renvoi de vérification : `MailThrottleRule.ConfirmEmail` passe de 3 par 15 min à 5 en tout
   puis 1 par 24 h, par compte (`LoDb:Accounts:VerificationResend`) ; la ligne de comptage
-  garde le total sur la vie du compte.
+  garde le total sur la vie du compte. Le renvoi et le mot de passe oublié lisent et
+  inscrivent ce compte sous le verrou de la ligne du compte (`MailThrottle.HoldAsync`) :
+  des demandes simultanées sont comptées l'une après l'autre.
 - Vote : politique `VerifiedEmail` et compte de 24 h au moins (`LoDb:Builds:Votes`), sinon
   `403 email-not-verified` ou `account-too-recent`. `compose.override.yaml` ramène l'âge à
   zéro pour l'E2E seulement.

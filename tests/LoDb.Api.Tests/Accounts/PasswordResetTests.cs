@@ -25,6 +25,9 @@ public sealed class PasswordResetTests(PostgresContainerFixture postgres)
     private const int FailuresToLock = 5;
     private const int ChecksPerHour = 30;
 
+    // One request each from as many addresses, far more than the e-mails one hour allows.
+    private const int StrangersAtOnce = 20;
+
     private AccountsApp? _app;
 
     private AccountsApp App =>
@@ -78,6 +81,29 @@ public sealed class PasswordResetTests(PostgresContainerFixture postgres)
 
         Assert.Equal(HttpStatusCode.Accepted, tooSoon.StatusCode);
         Assert.Equal(1, sentWithinTheHour);
+        Assert.Equal(2, App.Outbox.Sent(EmailTemplate.ResetPassword).Count);
+    }
+
+    [Fact]
+    public async Task RequestsSentTogetherStillGetTheAccountOneEmailAnHour()
+    {
+        await App.SeedAsync(new AccountSeed());
+        using var browser = App.Browser();
+        using var first = await ForgotAsync(browser, AccountSeed.Address);
+        App.Clock.Advance(TimeSpan.FromHours(1));
+        var strangers = Enumerable.Range(1, StrangersAtOnce)
+            .Select(index => App.Browser().From($"198.51.100.{index}"))
+            .ToList();
+
+        var together = await Task.WhenAll(
+            strangers.Select(static stranger => ForgotAsync(stranger, AccountSeed.Address)));
+        var statuses = together.Select(static response => response.StatusCode).ToList();
+        foreach (var disposable in together.Concat<IDisposable>(strangers))
+        {
+            disposable.Dispose();
+        }
+
+        Assert.All(statuses, static status => Assert.Equal(HttpStatusCode.Accepted, status));
         Assert.Equal(2, App.Outbox.Sent(EmailTemplate.ResetPassword).Count);
     }
 

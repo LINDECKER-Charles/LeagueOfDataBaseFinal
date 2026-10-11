@@ -24,6 +24,7 @@ public sealed class EmailVerificationTests(PostgresContainerFixture postgres)
     private const string VerifyPath = "/api/account/verify-email";
     private const string ResendPath = "/api/account/verify-email/resend";
     private const int FreeResends = 5;
+    private const int ResendsAtOnce = 12;
     private static readonly TimeSpan ResendInterval = TimeSpan.FromDays(1);
     private static readonly TimeSpan Minute = TimeSpan.FromMinutes(1);
 
@@ -122,6 +123,32 @@ public sealed class EmailVerificationTests(PostgresContainerFixture postgres)
         Assert.All(
             App.Outbox.Messages,
             static message => Assert.Equal(UiLocale.En, message.Locale));
+    }
+
+    [Fact]
+    public async Task ResendsAskedTogetherAreCountedOneByOne()
+    {
+        await App.SeedAsync(new AccountSeed { EmailConfirmed = false });
+        using var browser = App.Browser();
+        using var signIn = await browser.SignInAsync(AccountSeed.Name);
+        using var first = await browser.PostAsync(ResendPath);
+
+        var together = await Task.WhenAll(
+            Enumerable.Range(0, ResendsAtOnce).Select(_ => browser.PostAsync(ResendPath)));
+        var statuses = together.Select(static response => response.StatusCode).ToList();
+        foreach (var response in together)
+        {
+            response.Dispose();
+        }
+
+        Assert.Equal(HttpStatusCode.Accepted, first.StatusCode);
+        Assert.Equal(
+            FreeResends - 1,
+            statuses.Count(static status => status == HttpStatusCode.Accepted));
+        Assert.Equal(
+            ResendsAtOnce - (FreeResends - 1),
+            statuses.Count(static status => status == HttpStatusCode.TooManyRequests));
+        Assert.Equal(FreeResends, App.Outbox.Sent(EmailTemplate.ConfirmEmail).Count);
     }
 
     [Fact]

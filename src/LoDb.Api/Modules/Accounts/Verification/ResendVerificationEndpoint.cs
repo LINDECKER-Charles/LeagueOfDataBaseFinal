@@ -59,12 +59,15 @@ internal sealed class ResendVerificationEndpoint(
             return AccountProblem.EmailAlreadyVerified();
         }
 
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await throttle.HoldAsync(user.Id, cancellationToken);
         if (await throttle.RemainingWaitAsync(user.Id, Rule, cancellationToken) is { } wait)
         {
             return AccountProblem.ResendThrottled(wait);
         }
 
         await SendAsync(user, request?.Locale ?? UiLocales.Fallback, cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
         return TypedResults.Accepted((string?)null);
     }
 
