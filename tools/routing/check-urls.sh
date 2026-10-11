@@ -159,6 +159,7 @@ prerendered /en/legal/terms
 row /en/trends 200 latest - -
 row /en/u/faker 200 latest - -
 row /en/developers 200 latest - -
+row /fr/patches 200 latest - -
 row /en/donate 200 latest - -
 row /b/Zx81kQ 200 latest noindex -
 
@@ -176,6 +177,7 @@ row /en/nowhere 404 transient noindex -
 row /en/u 404 transient noindex -
 row /b 404 transient noindex -
 row "/en/$older" 404 transient noindex -
+row "/en/$older/patches" 404 transient noindex -
 row /en/99.99.99/champions 404 transient noindex -
 row "/en/items/$MISSING_ITEM" 404 transient noindex -
 
