@@ -31,3 +31,7 @@ barre ne revient plus en arrière, même quand le chargement est interrompu.
 - Chargeur (`core/context/warm-up/`) : la barre garde la part atteinte d'un flux `failed` ou
   d'un `done` incomplet (`percentOf`) ; la pause de 450 ms reste réservée à une barre pleine
   (`isComplete`), la visite part aussitôt sinon.
+- File de fond (`OnDemandIngestion`) : un travail en file qui rejoint le vol d'un visiteur
+  refusé (pas d'emplacement, budget épuisé) est repris une fois par la tâche elle-même, au
+  lieu d'être abandonné avec une erreur au journal ; les images en attente finissent par
+  arriver.
