@@ -16,7 +16,16 @@ COPY src/LoDb.Web/ ./
 RUN npm run build:web && test -f dist/web/browser/changelog/manifest.json
 
 # The server bundle inlines its dependencies: the runtime needs no node_modules.
-FROM node:24-slim@sha256:d6aa754f16b3197301076f047b5def2f02ea1dbbc2ca920407d46d7ec7f87b20
+FROM node:24-slim@sha256:d6aa754f16b3197301076f047b5def2f02ea1dbbc2ca920407d46d7ec7f87b20 AS runtime
+# The distribution's security fixes published since the base image was built: _build.yml
+# rebuilds this stage without its cache, so that each build takes those of the day, before its
+# scan. Then Node's package managers go: the server runs `node` alone, and npm, corepack and
+# yarn would only hand a compromised renderer more tools, and ship advisories of their own.
+RUN apt-get update \
+ && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y \
+ && rm -rf /var/lib/apt/lists/* \
+ && rm -rf /usr/local/lib/node_modules /opt/yarn-v* /usr/local/bin/npm /usr/local/bin/npx \
+      /usr/local/bin/corepack /usr/local/bin/yarn /usr/local/bin/yarnpkg
 ARG APP_REVISION=unknown
 LABEL org.opencontainers.image.title="lodb-web-ssr" \
       org.opencontainers.image.source="https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal" \

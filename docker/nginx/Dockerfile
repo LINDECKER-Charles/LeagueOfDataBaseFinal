@@ -11,7 +11,7 @@
 #
 # Every image this file names is pinned by digest, its tag kept for the reader: a moved tag
 # never changes what is built. Dependabot bumps both (tools/ci/README.md, base images).
-FROM nginx:1.31-alpine@sha256:df221db836e1754089190208cee7eeda94f233197056426eda74a43ab1abeac2
+FROM nginx:1.31-alpine@sha256:df221db836e1754089190208cee7eeda94f233197056426eda74a43ab1abeac2 AS runtime
 ARG APP_REVISION=unknown
 LABEL org.opencontainers.image.title="lodb-nginx" \
       org.opencontainers.image.source="https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal" \
@@ -65,9 +65,14 @@ ENV APP_REVISION=${APP_REVISION} \
     LODB_ARCHIVE_CACHE_INACTIVE=7d \
     LODB_ARCHIVE_CACHE_MIN_USES=2
 
+# The distribution's security fixes published since the base image was built: _build.yml
+# rebuilds this stage without its cache, so that each build takes those of the day, before
+# its scan. The nginx packages come from nginx.org, whose repository the base image no longer
+# lists: they stay as the base image installed them.
 # /var/cache/nginx/{pages,archive,assets} hold the caches of sites/site.conf; created here so
 # that the volumes mounted on them (compose.yaml) start owned by the workers' user.
-RUN rm -f /etc/nginx/conf.d/default.conf \
+RUN apk upgrade --no-cache \
+ && rm -f /etc/nginx/conf.d/default.conf \
  && mkdir -p /var/cache/nginx/pages /var/cache/nginx/archive /var/cache/nginx/assets \
  && chown nginx:nginx /var/cache/nginx/pages /var/cache/nginx/archive /var/cache/nginx/assets
 COPY docker/nginx/nginx.conf /etc/nginx/nginx.conf
