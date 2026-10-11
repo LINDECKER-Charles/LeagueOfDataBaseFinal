@@ -6,6 +6,12 @@ const FRONT_BUILDS = '/srv/front-builds';
 const IMMUTABLE = 'public, max-age=31536000, immutable';
 const HASH_LENGTH = 8;
 const BASE36 = 36;
+const NOT_BUNDLES = [
+  '/build/',
+  '/build/en/about',
+  '/build/offline.html',
+  '/build/main-00000000.js',
+];
 
 // A bundle name of another build (src/server/hashed-asset.ts), new on each run.
 function previousBundleName(): string {
@@ -36,5 +42,25 @@ test.describe('bundles of a previous build', () => {
     } finally {
       execInStack('web-ssr', ['rm', '-f', `${FRONT_BUILDS}/${name}`]);
     }
+
+    await test.step('cache the hashed bundles of /build/ for a year', async () => {
+      const html = await (await page.request.get('/en/about')).text();
+      const bundle = /<script src="(\/build\/main-[\w-]+\.js)"/.exec(html)?.[1];
+
+      expect(bundle).toBeDefined();
+      const response = await page.request.get(bundle ?? '');
+      expect(response.status()).toBe(200);
+      expect(response.headers()['cache-control']).toBe(IMMUTABLE);
+    });
+
+    // A name no build has is a plain 404 of the SSR server, never a page it renders.
+    await test.step('route no page under /build/', async () => {
+      for (const path of NOT_BUNDLES) {
+        const response = await page.request.get(path);
+
+        expect(response.status(), path).toBe(404);
+        expect(response.headers()['content-type'], path).toContain('text/plain');
+      }
+    });
   });
 });
