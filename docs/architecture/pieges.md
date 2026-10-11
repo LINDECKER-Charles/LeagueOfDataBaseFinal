@@ -49,7 +49,11 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   origine, sans `AllowAnonymous` : le garde vérifie l'`Origin`). Un rapport envoyé avec le
   cookie de session sans jeton XSRF est refusé comme toute requête de ce genre : celui d'un
   visiteur connecté dont le navigateur joint ses cookies (`report-uri`) est perdu, voulu.
-  Rien de la page ni du client n'est gardé ; une ligne `web.csp.violated` par minute.
+  Rien de la page ni du client n'est gardé ; une ligne `web.csp.violated` par minute. Sur la
+  pile locale (http), Chromium n'enregistre pas l'endpoint de `Reporting-Endpoints` (il le veut
+  en https) : ses rapports restent en file et n'arrivent jamais, voulu. L'E2E vérifie l'absence
+  de violation par l'événement `securitypolicyviolation`, qui précède tout rapport, et
+  l'endpoint par des envois directs ; la livraison réelle se vérifie sur le staging.
 - Issues de navigation **rendues en place** : 301, 302, 404 et 5xx s'affichent à l'URL
   demandée (`PageResponse`), jamais d'`UrlTree` de redirection côté serveur.
   `/{locale}/account`, `/{locale}/u` et `/b` ont une route 404 explicite (`bareNotFound`).
