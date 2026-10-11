@@ -31,8 +31,8 @@ sélecteurs, trouvent enfin chaque ancien patch en suivant les liens du site.
   `/api/meta` seul : toutes les versions que Data Dragon liste (`versions`, pas seulement
   celles déjà prêtes), groupées par premier segment. Les listes du dernier patch pointent vers
   les URL courtes, les autres vers l'URL épinglée : aucun lien ne répond par une redirection.
-- Aucun catalogue n'est lu pour rendre la page : son coût ne dépend pas du nombre de versions.
-  Balisage allégé (sans encapsulation de styles), quatre liens `UrlTree` par version.
+- Aucun catalogue n'est lu pour rendre la page, quel que soit le nombre de versions. Balisage
+  allégé (sans encapsulation de styles), quatre liens `UrlTree` par version.
 - Bloc `lodb-previous-patches` (`features/catalogue/shared/codex/history/`) sous les quatre
   fiches : la même entrée dans les six versions listées avant celle de la page, par
   `injectCatalogueLink` (UrlTree, `?lang=` conservé), à partir du `/api/meta` déjà lu par le
