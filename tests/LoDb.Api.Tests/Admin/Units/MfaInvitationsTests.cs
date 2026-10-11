@@ -17,6 +17,8 @@ public sealed class MfaInvitationsTests
     private const int LongestInvitation = 1024;
     private const string Purpose = "LoDb.Accounts.MfaInvitation";
 
+    private static readonly TimeSpan OneSecond = TimeSpan.FromSeconds(1);
+
     // A whole second: the expiry is sealed in Unix seconds.
     private readonly FakeTimeProvider _clock =
         new(new DateTimeOffset(2026, 10, 11, 12, 0, 0, TimeSpan.Zero));
@@ -39,12 +41,15 @@ public sealed class MfaInvitationsTests
     }
 
     [Fact]
-    public void InvitationPastItsLifetimeAdmitsNoOne()
+    public void InvitationExpiresAtTheEndOfItsLifetime()
     {
         var invitation = _invitations.Issue(Account);
 
-        _clock.Advance(_invitations.Lifetime + TimeSpan.FromMinutes(1));
+        _clock.Advance(_invitations.Lifetime - OneSecond);
+        var justBefore = _invitations.Admits(Account, invitation);
+        _clock.Advance(OneSecond);
 
+        Assert.True(justBefore);
         Assert.False(_invitations.Admits(Account, invitation));
     }
 
