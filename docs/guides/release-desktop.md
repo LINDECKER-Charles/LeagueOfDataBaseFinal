@@ -398,3 +398,11 @@ application pourra s'ajouter quand les releases seront signées.
   release, et `vpk pack` calcule le delta N-1 → N sur ce paquet. Reste à faire : vérifier ce
   paquet contre le flux signé de N-1 avant `vpk pack`, avec les clés que N-1 approuve (une
   rotation les change).
+- Une mise à jour par deltas n'est pas comparée au SHA-256 du paquet complet signé : Velopack
+  réassemble ce paquet, dont les octets diffèrent de celui publié. Les deltas, eux, sont
+  vérifiés contre le flux signé, et la base est le paquet déjà installé.
+- La signature atteste ce que ce workflow a construit, au SHA qu'on lui donne : elle protège
+  des écritures directes sur les Releases, pas d'un compte qui peut pousser un commit et
+  lancer le workflow. Ce sont les règles de l'environnement `desktop-release` (relecteur
+  requis, branches autorisées) et la protection des branches qui bornent ce cas ; tant que la
+  clé reste un secret de dépôt, tout workflow du dépôt peut la lire.
