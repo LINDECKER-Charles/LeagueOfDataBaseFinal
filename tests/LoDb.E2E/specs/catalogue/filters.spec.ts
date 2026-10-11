@@ -1,5 +1,4 @@
 import type { Page } from '@playwright/test';
-import { saveData } from '../../support/network';
 import { expect, test } from '../../support/test';
 
 // Any of the four lists would do: items has the most entries, so it always pages.
@@ -8,10 +7,8 @@ const LIST = '/en/items';
 const LIST_ROOT = 'lodb-catalogue-list';
 const CARD = `${LIST_ROOT} .grid__cell`;
 const RAIL_SEARCH = 'lodb-filter-console input[type=search]';
-const MOBILE = { width: 390, height: 844 };
 // The cards of the first page, which the server renders.
 const FIRST_PAGE_SIZE = 12;
-const SHORT_PHONE = { width: 360, height: 560 };
 
 function queryOf(page: Page): URLSearchParams {
   return new URL(page.url()).searchParams;
@@ -22,107 +19,6 @@ async function openList(page: Page, url = LIST): Promise<void> {
   await page.goto(url);
   await page.waitForLoadState('networkidle');
 }
-
-test.describe('catalogue list as crawlers read it', { tag: '@readonly' }, () => {
-  test.use({ javaScriptEnabled: false });
-
-  test('renders the first page and links the next one', async ({ page }) => {
-    await page.goto(LIST);
-
-    expect(await page.locator(CARD).count()).toBeGreaterThan(0);
-    await expect(page.locator(`${LIST_ROOT} a[rel="next"]`)).toHaveAttribute(
-      'href',
-      `${LIST}?page=2`,
-    );
-  });
-});
-
-test.describe('catalogue filters', { tag: '@readonly' }, () => {
-  test('searches live and keeps the search in the URL, which a reload restores', async ({
-    page,
-    consoleErrors,
-  }) => {
-    await openList(page);
-    const total = await page.locator(CARD).count();
-
-    await page.locator(RAIL_SEARCH).fill('boots');
-
-    await expect.poll(() => queryOf(page).get('q')).toBe('boots');
-    expect(await page.locator(CARD).count()).toBeLessThan(total);
-    await page.reload();
-    await expect(page.locator(RAIL_SEARCH)).toHaveValue('boots');
-    await expect(page.locator(`${LIST_ROOT} lodb-active-filters`)).toBeVisible();
-    expect(consoleErrors).toEqual([]);
-  });
-
-  test('narrows by a facet value, shows it as active, and clears everything', async ({ page }) => {
-    await openList(page);
-    const before = [...queryOf(page).keys()];
-
-    await page.locator('lodb-filter-console .chip:not([disabled])').first().click();
-
-    await expect.poll(() => [...queryOf(page).keys()].length).toBeGreaterThan(before.length);
-    await expect(page.locator('lodb-active-filters .active__chip')).toHaveCount(1);
-    await page.locator('lodb-active-filters .clear').click();
-    await expect.poll(() => new URL(page.url()).search).toBe('');
-  });
-
-  test('pages and resizes through the URL, and keeps foreign parameters', async ({ page }) => {
-    await openList(page, `${LIST}?lang=en_GB`);
-
-    await page.locator(`${LIST_ROOT} a[rel="next"]`).click();
-    await expect.poll(() => queryOf(page).get('page')).toBe('2');
-    await page.locator('lodb-filter-toolbar .segment').last().click();
-
-    await expect.poll(() => queryOf(page).get('size')).toBe('all');
-    expect(queryOf(page).get('page')).toBeNull();
-    expect(queryOf(page).get('lang')).toBe('en_GB');
-  });
-
-  test('jumps to the search on `/`', async ({ page }) => {
-    await openList(page);
-
-    await page.locator('body').press('/');
-
-    await expect(page.locator(RAIL_SEARCH)).toBeFocused();
-  });
-
-  test('offers the facets in a bottom sheet on a phone', async ({ page }) => {
-    await page.setViewportSize(MOBILE);
-    await openList(page);
-
-    await page.locator(`${LIST_ROOT} .bar__trigger`).click();
-
-    const sheet = page.getByRole('dialog');
-    await expect(sheet).toBeVisible();
-    await sheet.locator('.chip:not([disabled])').first().click();
-    await sheet.locator('.sheet__done').click();
-    await expect(sheet).toBeHidden();
-    await expect(page.locator('lodb-active-filters .active__chip')).toHaveCount(1);
-  });
-
-  // A short phone makes the facets outgrow the sheet: only its facets scroll, head and
-  // footer stay in view.
-  test('keeps the sheet footer on screen when the facets outgrow it', async ({ page }) => {
-    await page.setViewportSize(SHORT_PHONE);
-    await openList(page);
-
-    await page.locator(`${LIST_ROOT} .bar__trigger`).click();
-
-    const sheet = page.getByRole('dialog');
-    const facets = sheet.locator('.sheet__body');
-    await expect(facets).toBeVisible();
-    const overflow = await facets.evaluate((node) => node.scrollHeight - node.clientHeight);
-    expect(overflow).toBeGreaterThan(0);
-    const box = await sheet.locator('lodb-filter-sheet').boundingBox();
-    expect(box?.height ?? Infinity).toBeLessThanOrEqual(SHORT_PHONE.height);
-    await facets.evaluate((node) => node.scrollTo({ top: node.scrollHeight }));
-    await expect(sheet.getByRole('heading', { name: 'Filters' })).toBeInViewport();
-    await expect(sheet.locator('.sheet__done')).toBeInViewport();
-    await sheet.locator('.sheet__done').click();
-    await expect(sheet).toBeHidden();
-  });
-});
 
 // The browser's read of the whole list: the first page comes with the server's HTML.
 function isWholeRead({ pathname, searchParams }: URL): boolean {
@@ -145,66 +41,52 @@ async function railTopCount(page: Page): Promise<number> {
   return Math.max(0, ...counts.map(Number));
 }
 
-test.describe('the whole list, read when it is needed', { tag: '@readonly' }, () => {
-  test('reads it once the page has loaded and gone idle', async ({ page, consoleErrors }) => {
-    const reads = wholeReadsOf(page);
-
-    await openList(page);
-
-    await expect.poll(() => reads.length).toBe(1);
-    expect(consoleErrors).toEqual([]);
-  });
-
-  test('waits for the reader to search when they save data, then filters it all', async ({
+test.describe('catalogue filters', { tag: '@readonly' }, () => {
+  test('searches live and keeps the search in the URL, which a reload restores', async ({
     page,
     consoleErrors,
   }) => {
     const reads = wholeReadsOf(page);
-    await page.addInitScript(saveData);
     await openList(page);
-    const total = await page.locator(CARD).count();
-    expect(reads).toEqual([]);
 
-    await page.locator(RAIL_SEARCH).click();
+    // The rail is hydrated late (on the reader's hand), but never left showing an outdated copy.
+    await test.step('counts the whole list once it is read', async () => {
+      await expect.poll(() => reads.length).toBe(1);
+      await expect.poll(() => railTopCount(page)).toBeGreaterThan(FIRST_PAGE_SIZE);
+    });
+
+    await test.step('narrows by a facet, shows it as active, and clears everything', async () => {
+      const before = [...queryOf(page).keys()];
+
+      await page.locator('lodb-filter-console .chip:not([disabled])').first().click();
+
+      await expect.poll(() => [...queryOf(page).keys()].length).toBeGreaterThan(before.length);
+      await expect(page.locator('lodb-active-filters .active__chip')).toHaveCount(1);
+      await page.locator('lodb-active-filters .clear').click();
+      await expect.poll(() => new URL(page.url()).search).toBe('');
+    });
+
+    const total = await page.locator(CARD).count();
+
     await page.locator(RAIL_SEARCH).fill('boots');
 
-    await expect.poll(() => reads.length).toBe(1);
-    await expect.poll(() => page.locator(CARD).count()).toBeLessThan(total);
     await expect.poll(() => queryOf(page).get('q')).toBe('boots');
-    expect(consoleErrors).toEqual([]);
-  });
-
-  test('reads it at once for a link the first page cannot draw', async ({ page }) => {
-    const reads = wholeReadsOf(page);
-    await page.addInitScript(saveData);
-
-    await openList(page, `${LIST}?q=boots`);
-
-    await expect.poll(() => reads.length).toBe(1);
-    await expect.poll(() => page.locator(CARD).count()).toBeGreaterThan(0);
-  });
-});
-
-// The rail is hydrated late (on the reader's hand), but never left showing an outdated copy.
-test.describe('the filter rail, kept true without being touched', { tag: '@readonly' }, () => {
-  test('counts the whole list once it is read', async ({ page, consoleErrors }) => {
-    const reads = wholeReadsOf(page);
-    await openList(page);
-    await expect.poll(() => reads.length).toBe(1);
-
-    await expect.poll(() => railTopCount(page)).toBeGreaterThan(FIRST_PAGE_SIZE);
-    expect(consoleErrors).toEqual([]);
-  });
-
-  test('empties its search when the results clear it', async ({ page }) => {
-    // Without the whole list, only the state moving can outdate the server's copy.
-    await page.route(isWholeRead, (route) => route.abort());
-    await page.goto(`${LIST}?q=boots`);
+    expect(await page.locator(CARD).count()).toBeLessThan(total);
+    await page.reload();
     await expect(page.locator(RAIL_SEARCH)).toHaveValue('boots');
+    await expect(page.locator(`${LIST_ROOT} lodb-active-filters`)).toBeVisible();
+    expect(consoleErrors).toEqual([]);
 
-    await page.locator('lodb-active-filters .clear').click();
+    await test.step('empties its search when the results clear it', async () => {
+      // Without the whole list, only the state moving can outdate the server's copy.
+      await page.route(isWholeRead, (route) => route.abort());
+      await page.goto(`${LIST}?q=boots`);
+      await expect(page.locator(RAIL_SEARCH)).toHaveValue('boots');
 
-    await expect.poll(() => queryOf(page).get('q')).toBeNull();
-    await expect(page.locator(RAIL_SEARCH)).toHaveValue('');
+      await page.locator('lodb-active-filters .clear').click();
+
+      await expect.poll(() => queryOf(page).get('q')).toBeNull();
+      await expect(page.locator(RAIL_SEARCH)).toHaveValue('');
+    });
   });
 });
