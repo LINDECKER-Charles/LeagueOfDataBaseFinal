@@ -1,4 +1,5 @@
 using System.Diagnostics.Metrics;
+using System.Globalization;
 using System.Net;
 using System.Text;
 using LoDb.Api.Hosting.SecurityReports;
@@ -6,6 +7,10 @@ using LoDb.Api.Hosting.SecurityReports.Reports;
 using LoDb.Api.Hosting.SecurityReports.Summary;
 using LoDb.Api.Hosting.Telemetry;
 using LoDb.Testing;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.Metrics.Testing;
 
@@ -88,17 +93,37 @@ public sealed class CspReportEndpointTests
         Assert.Equal(1, Assert.Single(window.Refusals).Value);
     }
 
-    [Fact]
-    public async Task RefusesAndCountsABodyPastItsBound()
+    // A body that states its length is judged by it, unread; a streamed one (chunked, no
+    // Content-Length) is read one byte past the bound at most.
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task RefusesAndCountsABodyPastItsBound(bool statesLength)
     {
-        await using var factory = Bounded("MaxBodyBytes", "64");
-        using var client = factory.CreateClient();
+        await using var factory = Bounded("MaxBodyBytes", Bytes(Legacy, -1));
+        var host = Receiving(factory, statesLength);
+        using var client = host.CreateClient();
 
-        using var response = await PostAsync(client, Batch, ReportingType);
+        using var response = await PostAsync(client, Legacy, LegacyType);
 
         Assert.Equal(HttpStatusCode.RequestEntityTooLarge, response.StatusCode);
-        var refusal = Assert.Single(Drain(factory).Refusals);
+        var refusal = Assert.Single(Drain(host).Refusals);
         Assert.Equal(CspReportRefusal.Oversized, refusal.Key);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task ReadsABodyOfExactlyItsBound(bool statesLength)
+    {
+        await using var factory = Bounded("MaxBodyBytes", Bytes(Legacy, 0));
+        var host = Receiving(factory, statesLength);
+        using var client = host.CreateClient();
+
+        using var response = await PostAsync(client, Legacy, LegacyType);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Single(Drain(host).Violations);
     }
 
     [Fact]
@@ -167,8 +192,25 @@ public sealed class CspReportEndpointTests
             },
         };
 
-    private static CspReportWindow Drain(ApiFactory factory) =>
+    // The test server always states the length of a body: a streamed one loses it on the way in.
+    // The derived host is disposed with its factory.
+    private static WebApplicationFactory<Program> Receiving(
+        ApiFactory factory,
+        bool statesLength) =>
+        factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
+        {
+            if (!statesLength)
+            {
+                services.AddSingleton<IStartupFilter, StreamedBodies>();
+            }
+        }));
+
+    private static CspReportWindow Drain(WebApplicationFactory<Program> factory) =>
         factory.Services.GetRequiredService<CspReportTally>().Drain();
+
+    // The UTF-8 size of a body, shifted by delta, as a setting.
+    private static string Bytes(string body, int delta) =>
+        (Encoding.UTF8.GetByteCount(body) + delta).ToString(CultureInfo.InvariantCulture);
 
     private static async Task<HttpResponseMessage> PostAsync(
         HttpClient client,
@@ -182,5 +224,20 @@ public sealed class CspReportEndpointTests
         };
         request.Headers.Add("Origin", origin);
         return await client.SendAsync(request, TestContext.Current.CancellationToken);
+    }
+
+    /// <summary>Every request body arrives without its length, as a chunked one does.</summary>
+    private sealed class StreamedBodies : IStartupFilter
+    {
+        public Action<IApplicationBuilder> Configure(Action<IApplicationBuilder> next) =>
+            app =>
+            {
+                app.Use((context, nextMiddleware) =>
+                {
+                    context.Request.ContentLength = null;
+                    return nextMiddleware(context);
+                });
+                next(app);
+            };
     }
 }

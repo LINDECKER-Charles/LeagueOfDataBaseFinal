@@ -67,6 +67,13 @@ internal static class CspReportBody
             length += read;
         }
 
-        return length > maxBytes ? null : buffer.AsMemory(0, length);
+        // Not a conditional expression: its `null` would convert to an empty Memory (through
+        // the implicit conversion of a null array), and an oversized body would read as empty.
+        if (length > maxBytes)
+        {
+            return null;
+        }
+
+        return buffer.AsMemory(0, length);
     }
 }
