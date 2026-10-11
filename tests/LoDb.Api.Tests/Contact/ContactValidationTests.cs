@@ -1,4 +1,5 @@
 using System.Net;
+using LoDb.Api.Modules.Contact;
 using LoDb.Api.Tests.Accounts.Support;
 using LoDb.Api.Tests.Contact.Support;
 using LoDb.Testing;
@@ -6,11 +7,11 @@ using LoDb.Testing;
 namespace LoDb.Api.Tests.Contact;
 
 /// <summary>
-/// The rules of the legacy form, every broken one reported at once, and nothing kept or
-/// sent for a refused message.
+/// The rules of the legacy form through the endpoint: every broken one reported at once,
+/// nothing kept or sent for a refused message, and the longest fields stored whole.
 /// </summary>
 public sealed class ContactValidationTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private ContactApp? _app;
 
@@ -33,76 +34,26 @@ public sealed class ContactValidationTests(PostgresContainerFixture postgres)
         Assert.Empty(App.Outbox.Messages);
     }
 
-    [Theory]
-    [InlineData("email", "pas-une-adresse", "invalid")]
-    [InlineData("email", "visiteur@localhost", "invalid")]
-    [InlineData("message", "  Neuf car.  ", "too-short")]
-    public async Task BrokenFieldIsNamed(string field, string value, string code)
-    {
-        using var browser = App.Browser();
-
-        using var response = await browser.PostAsync(
-            ContactForm.Path,
-            ContactForm.With(field, value));
-
-        var errors = await ApiJson.FieldErrorsAsync(response);
-        Assert.Equal([code], Assert.Single(errors, pair => pair.Key == field).Value);
-        Assert.Single(errors);
-    }
-
-    [Theory]
-    [InlineData("name", 120)]
-    [InlineData("subject", 160)]
-    [InlineData("message", 5000)]
-    [InlineData("email", 255)]
-    public async Task FieldLongerThanItsColumnIsRefused(string field, int max)
-    {
-        using var browser = App.Browser();
-        var longest = field == "email" ? Address(max) : new string('a', max);
-        var tooLong = field == "email" ? Address(max + 1) : new string('a', max + 1);
-
-        using var accepted = await browser.PostAsync(
-            ContactForm.Path,
-            ContactForm.With(field, longest));
-        using var refused = await browser.PostAsync(
-            ContactForm.Path,
-            ContactForm.With(field, tooLong));
-
-        Assert.Equal(HttpStatusCode.NoContent, accepted.StatusCode);
-        var errors = await ApiJson.FieldErrorsAsync(refused);
-        Assert.Equal(["too-long"], errors[field]);
-        Assert.Single(await App.MessagesAsync());
-    }
-
+    // The longest fields the rules accept fit their columns; the rules are ContactRulesTests'.
     [Fact]
-    public async Task LengthsCountCharactersNotCodeUnits()
+    public async Task FieldsAtTheirLongestAreStored()
     {
         using var browser = App.Browser();
-        // Ten emojis: twenty UTF-16 units, ten characters as PHP counted them.
-        var emojis = string.Concat(Enumerable.Repeat("\U0001F980", 10));
+        var body = ContactForm.Valid();
+        body["name"] = new string('a', ContactRules.MaxNameLength);
+        body["email"] = Address(ContactRules.MaxEmailLength);
+        body["subject"] = new string('a', ContactRules.MaxSubjectLength);
+        body["message"] = new string('a', ContactRules.MaxMessageLength);
 
-        using var accepted = await browser.PostAsync(
-            ContactForm.Path,
-            ContactForm.With("message", emojis));
-        using var refused = await browser.PostAsync(
-            ContactForm.Path,
-            ContactForm.With("message", emojis[..^2]));
+        using var response = await browser.PostAsync(ContactForm.Path, body);
 
-        Assert.Equal(HttpStatusCode.NoContent, accepted.StatusCode);
-        Assert.Equal(["too-short"], (await ApiJson.FieldErrorsAsync(refused))["message"]);
-    }
-
-    [Fact]
-    public async Task UnknownCategoryIsRefused()
-    {
-        using var browser = App.Browser();
-
-        using var response = await browser.PostAsync(
-            ContactForm.Path,
-            ContactForm.With("category", "sales"));
-
-        Assert.Equal(["invalid"], (await ApiJson.FieldErrorsAsync(response))["category"]);
-        Assert.Empty(await App.MessagesAsync());
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        var stored = Assert.Single(await App.MessagesAsync());
+        Assert.Equal(
+            (ContactRules.MaxNameLength, ContactRules.MaxEmailLength,
+                ContactRules.MaxSubjectLength, ContactRules.MaxMessageLength),
+            (stored.Name?.Length, stored.Email.Length, stored.Subject?.Length,
+                stored.Message.Length));
     }
 
     public async ValueTask InitializeAsync() => _app = await ContactApp.StartAsync(postgres);

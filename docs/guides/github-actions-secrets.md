@@ -14,7 +14,7 @@ plus ; leur guide est
 
 | Fichier | Rôle |
 |---|---|
-| `ci.yml` (*CI/CD*) | Orchestrateur. Déclenché par `push` (`dev`, `main` : les seules branches qui déploient) et `pull_request`, filtré sur les chemins de la nouvelle stack. Checks parallèles, **sauf sur `main`** : `dotnet` (build + tests, Testcontainers), `front` (lint, typecheck, tests, `build:web`, `build:shell`), `contract` (`api:check`), `i18n` (`i18n:report`, non bloquant), `workflows` (actions épinglées, actionlint, outils de déploiement), `supply-chain` (images de base épinglées par digest, `npm audit` des dépendances de production du front : bloquant dès `high`, exceptions datées dans `tools/ci/npm-audit-allowlist.json`), `e2e` (stack `lodb-dev` + Playwright). Sur un push de **`dev`**, checks bloquants verts : `merge-to-test`, `build`, `deploy-staging`, puis `staging-validated` (pose `:staging-validated` sur les digests que `staging` vient de servir, smoke tests passés). Sur un push de **`main`** : `promote`, `deploy-prod`. |
+| `ci.yml` (*CI/CD*) | Orchestrateur. Déclenché par `push` (`dev`, `main` : les seules branches qui déploient) et `pull_request`, filtré sur les chemins de la nouvelle stack. Checks parallèles, **sauf sur `main`** : `dotnet` (build + tests, Testcontainers), `front` (lint, typecheck, tests, `build:web`, `build:shell`), `contract` (`api:check`), `i18n` (`i18n:report`, non bloquant), `workflows` (actions épinglées, actionlint, outils de déploiement), `supply-chain` (images de base épinglées par digest, `npm audit` des dépendances de production du front : bloquant dès `high`, exceptions datées dans `tools/ci/npm-audit-allowlist.json`), `e2e` (stack `lodb-dev`, grammaire d'URL `tools/routing/check-urls.sh`, image nginx `tools/nginx`, puis Playwright). Sur un push de **`dev`**, checks bloquants verts : `merge-to-test`, `build`, `deploy-staging`, puis `staging-validated` (pose `:staging-validated` sur les digests que `staging` vient de servir, smoke tests passés). Sur un push de **`main`** : `promote`, `deploy-prod`. |
 | `_build.yml` | Réutilisable : résout `test` en **un** commit et en construit les images `ghcr.io/<owner>/lodb/{api,web-ssr,nginx}`, poussées sous `:<sha>` (ce commit de `test`) avec leur SBOM et leur attestation de provenance ; label OCI et `APP_REVISION` = ce SHA. Trivy scanne chaque image poussée et **bloque** sur une vulnérabilité HIGH ou CRITICAL corrigée en amont ; `:staging` n'est posé qu'ensuite, sur les digests scannés ([`tools/ci/README.md`](../../tools/ci/README.md)). |
 | `_deploy.yml` | Réutilisable : déploiement SSH d'un hôte, même logique pour `staging` et `prod`. Entrées `environment` (`staging` ou `prod`) et `branch` (`test` ou `main`) ; secrets passés par `ci.yml` (§ Secrets). Son job tourne dans l'environnement GitHub `staging` ou `production`. |
 | `_promote.yml` | Réutilisable : pose `:prod` et `:latest` sur les digests que `staging` a validés, **sans rebuild** (`tools/ci/promote-images.sh`). Refuse si `:staging` ne désigne plus ces digests, ou si leur révision n'a pas le code du commit promu. |
@@ -74,10 +74,6 @@ deux certificats sont nouveaux ([`configuration.md`](configuration.md), § 2 et 
 clés de l'hôte (`*_SSH_KNOWN_HOSTS`) sont à créer (§ 6.3 du même guide) : absentes, le job
 les lit par `ssh-keyscan`, sans vérification, et le run porte un avertissement.
 
-Cible, non activée : des clés qui ne peuvent que déployer un tag d'image (commande forcée,
-compte `deploy`), sans `ENV_*`, `*_DATA_PROTECTION_PFX` ni `*_PATH` dans GitHub :
-[`deploiement-cle-restreinte.md`](deploiement-cle-restreinte.md).
-
 **Tags d'images** : `:<sha>` (immuable, poussé par `_build.yml` : le commit de `test`
 construit, que la notice *Deployed revision* du déploiement affiche), `:staging` (dernier
 build de `dev` dont le scan est passé), `:staging-validated` (ce que `staging` a servi, smoke
@@ -90,13 +86,7 @@ la nouvelle, et les images de l'ancienne restent accessibles par leur tag `:<sha
 ## Ce que fait le job sur l'hôte, dans l'ordre
 
 La nouvelle stack prend la place de l'ancienne dans le même projet Compose
-(`lodb-staging`, `lodb-prod`) et le même dossier (`STAGING_PATH`, `PROD_PATH`). Avec le
-déploiement par clé restreinte, les étapes 2 à 5 restent, dans le même ordre, dans
-`tools/deploy/remote.sh`, à deux points près de l'étape 2 : `IMAGE_TAG` n'y est plus contrôlé
-mais écrit (la révision reçue), et la séparation de `ENV_*` passe à `lodb-env`. De l'étape 1,
-la synchronisation du dépôt passe à `lodb-deploy`, la pose du `.env`, des secrets et du
-certificat au propriétaire
-([`deploiement-cle-restreinte.md`](deploiement-cle-restreinte.md), § 3.3, § 3.4 et § 7).
+(`lodb-staging`, `lodb-prod`) et le même dossier (`STAGING_PATH`, `PROD_PATH`).
 
 1. Garde le `.env` en place sous `.deploy/backups/`, pose `ENV_*` dans
    `.deploy/incoming.env` (root seul) et `.deploy/data-protection.pfx`, puis synchronise le

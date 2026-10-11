@@ -10,14 +10,15 @@ namespace LoDb.Api.Tests.Analytics;
 
 /// <summary>
 /// <c>analytics import</c> over a legacy <c>analytics/daily</c> folder: the day files become
-/// <c>import</c> aggregates, anything else is refused, and a second run adds nothing.
+/// <c>import</c> aggregates and anything else is refused.
 /// </summary>
 /// <remarks>
-/// The equivalence of an imported day with the legacy one is the infrastructure's tests'
-/// (<c>LegacyDailyImportTests</c>); these check the command around it.
+/// The equivalence of an imported day with the legacy one, and a second run adding nothing,
+/// are the infrastructure's tests' (<c>LegacyDailyImportTests</c>); the arguments are
+/// <c>AnalyticsImportArgumentsTests</c>'; these check the command around them.
 /// </remarks>
 public sealed class AnalyticsImportCommandTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private static readonly DateOnly Day = new(2026, 7, 14);
 
@@ -32,15 +33,6 @@ public sealed class AnalyticsImportCommandTests(PostgresContainerFixture postgre
         _database ?? throw new InvalidOperationException("The database is not created yet.");
 
     [Fact]
-    public void ApiDeclaresTheAnalyticsImportCommand()
-    {
-        var catalog = CliCommandCatalog.Discover(typeof(Program).Assembly);
-
-        var command = Assert.Single(catalog.Commands, static c => c.Name == "analytics import");
-        Assert.True(command.RequiresHost);
-    }
-
-    [Fact]
     public async Task DayFilesBecomeImportedAggregates()
     {
         WriteSample();
@@ -53,19 +45,6 @@ public sealed class AnalyticsImportCommandTests(PostgresContainerFixture postgre
         using var totals = JsonDocument.Parse(row.Totals);
         Assert.Equal(3, totals.RootElement.GetProperty("views").GetInt64());
         Assert.Equal(1, totals.RootElement.GetProperty("botViews").GetInt64());
-    }
-
-    [Fact]
-    public async Task SecondRunAddsNothing()
-    {
-        WriteSample();
-        await RunAsync("--source", _source.FullName);
-        var first = Assert.Single(await DailyAsync());
-
-        var exitCode = await RunAsync("--source", _source.FullName);
-
-        Assert.Equal(CliExitCodes.Success, exitCode);
-        Assert.Equal(first.UpdatedAt, Assert.Single(await DailyAsync()).UpdatedAt);
     }
 
     [Fact]
@@ -87,20 +66,15 @@ public sealed class AnalyticsImportCommandTests(PostgresContainerFixture postgre
         Assert.Equal(CliExitCodes.Failure, exitCode);
     }
 
-    [Theory]
-    [InlineData("--dry-run")]
-    [InlineData("--source")]
-    [InlineData("--source", "a", "--source", "b")]
-    [InlineData("--source", "a", "--days", "3")]
-    public async Task InvalidArgumentsAreAUsageError(params string[] arguments)
+    [Fact]
+    public async Task InvalidArgumentsAreAUsageError()
     {
-        Assert.Equal(CliExitCodes.Usage, await RunAsync(arguments));
+        Assert.Equal(CliExitCodes.Usage, await RunAsync("--dry-run"));
     }
 
     public async ValueTask InitializeAsync()
     {
-        _database = await postgres.CreateDatabaseAsync(Cancellation);
-        await _database.MigrateAsync(Cancellation);
+        _database = await postgres.CreateMigratedDatabaseAsync(Cancellation);
     }
 
     public async ValueTask DisposeAsync()

@@ -2,7 +2,6 @@ using System.Globalization;
 using LoDb.Api.Modules.Accounts.Verification;
 using LoDb.Api.Tests.Accounts.Support;
 using LoDb.Api.Tests.Builds.Support;
-using LoDb.Api.Workers;
 using LoDb.Api.Workers.Accounts;
 using LoDb.Infrastructure.Audit;
 using LoDb.Infrastructure.Jobs;
@@ -23,7 +22,7 @@ namespace LoDb.Api.Tests.Accounts;
 /// something worth keeping, stays.
 /// </summary>
 public sealed class UnverifiedAccountPurgeTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private static readonly TimeSpan Week = TimeSpan.FromDays(7);
     private static readonly TimeSpan Minute = TimeSpan.FromMinutes(1);
@@ -37,26 +36,23 @@ public sealed class UnverifiedAccountPurgeTests(PostgresContainerFixture postgre
     private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
 
     [Fact]
-    public void PurgeIsDiscoveredAsAWorker() =>
-        Assert.Contains(
-            typeof(UnverifiedAccountPurgeJob),
-            ConventionalWorkers.Discover(typeof(Program).Assembly));
-
-    [Fact]
-    public async Task UnverifiedAccountIsErasedOnceAWeekOld()
+    public async Task UnverifiedAccountIsErasedOnceAWeekOldByAnHourlyRun()
     {
         var forgotten = await App.SeedAsync(Unverified("Oublie"));
         await App.SeedAsync(Named("Fidele"));
         App.Clock.Advance(Week - Minute);
         await App.SeedAsync(Unverified("Recent"));
 
-        await RunAsync();
+        var first = await RunAsync();
+        var early = await RunAsync();
         var keptAtFirst = await NamesAsync();
         App.Clock.Advance(Hour);
-        var outcome = await RunAsync();
+        var next = await RunAsync();
 
         Assert.Equal(["Fidele", "Oublie", "Recent"], keptAtFirst);
-        Assert.Equal(JobRunOutcome.Succeeded, outcome);
+        Assert.Equal(
+            (JobRunOutcome.Succeeded, JobRunOutcome.NotDue, JobRunOutcome.Succeeded),
+            (first, early, next));
         Assert.Equal(["Fidele", "Recent"], await NamesAsync());
         var erasure = Assert.Single(
             await App.AuditAsync(),
@@ -130,21 +126,6 @@ public sealed class UnverifiedAccountPurgeTests(PostgresContainerFixture postgre
         Assert.DoesNotContain(
             await App.AuditAsync(),
             static entry => entry.Action == AuditAction.AccountDelete);
-    }
-
-    [Fact]
-    public async Task PurgeRunsOnceAnHour()
-    {
-        var job = ActivatorUtilities.CreateInstance<UnverifiedAccountPurgeJob>(App.Services);
-
-        var first = await job.RunIfDueAsync(Cancellation);
-        var early = await job.RunIfDueAsync(Cancellation);
-        App.Clock.Advance(Hour);
-        var next = await job.RunIfDueAsync(Cancellation);
-
-        Assert.Equal(
-            (JobRunOutcome.Succeeded, JobRunOutcome.NotDue, JobRunOutcome.Succeeded),
-            (first, early, next));
     }
 
     public async ValueTask InitializeAsync() =>

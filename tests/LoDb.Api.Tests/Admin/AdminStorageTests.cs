@@ -15,47 +15,13 @@ namespace LoDb.Api.Tests.Admin;
 /// their WebP siblings, the datasets and what the content addressing saves.
 /// </summary>
 public sealed class AdminStorageTests(PostgresContainerFixture postgres)
-    : AdminTestBase(postgres), IClassFixture<PostgresContainerFixture>
+    : AdminTestBase(postgres)
 {
     private const string StoragePath = "/api/admin/storage?refresh=true";
     private const string MonitoringPath = "/api/admin/monitoring?refresh=true";
 
     private static readonly string Portrait = new('a', 64);
     private static readonly string Splash = new('b', 64);
-
-    [Fact]
-    public async Task TheReportSortsTheObjectsOfTheRoot()
-    {
-        using var admin = await AdminBrowser.OpenAsync(App);
-        await LayOutAsync();
-
-        var report = await ReadAsync(admin, StoragePath);
-
-        Assert.True(report.GetProperty("ok").GetBoolean());
-        Assert.Equal((7, 99), (Int(report, "objects"), Int(report, "bytes")));
-        Assert.Equal(
-            ["data:60", "blobs:34", "other:5"],
-            Rows(report.GetProperty("families")));
-        var blobs = report.GetProperty("blobs");
-        Assert.Equal(["jpg:20", "png:10", "webp:4"], Rows(blobs.GetProperty("byExt")));
-        Assert.Equal(
-            (1, 1, 1.0, 10, 4),
-            (Int(blobs, "sources"), Int(blobs, "webpSiblings"),
-                blobs.GetProperty("webpCoverage").GetDouble(), Int(blobs, "sourceBytes"),
-                Int(blobs, "webpBytes")));
-        var data = report.GetProperty("data");
-        Assert.Equal(["16.19.1:40", "16.9.1:20"], Rows(data.GetProperty("byVersion")));
-        Assert.Equal(["champion:40", "item:20"], Rows(data.GetProperty("byType")));
-        var coverage = report.GetProperty("coverage").EnumerateArray().ToList();
-        Assert.Equal(
-            ["16.19.1", "16.9.1"],
-            coverage.Select(static version => ApiJson.Text(version, "version")));
-        Assert.Equal(
-            ["en_US", "fr_FR"],
-            coverage[0].GetProperty("langs").EnumerateArray().Select(static l => l.GetString()));
-        Assert.Equal("data/16.19.1/fr_FR/champion.json", ApiJson.Text(
-            report.GetProperty("largest")[0], "path"));
-    }
 
     [Fact]
     public async Task TheSavingsCountTheReferencesBeyondTheBlobs()
@@ -72,9 +38,17 @@ public sealed class AdminStorageTests(PostgresContainerFixture postgres)
             return await context.SaveChangesAsync(Cancellation);
         });
 
-        var dedup = (await ReadAsync(admin, StoragePath)).GetProperty("dedup");
+        var report = await ReadAsync(admin, StoragePath);
 
+        // The PNG has its WebP sibling; how the root is sorted is StorageScanTests'.
+        var blobs = report.GetProperty("blobs");
+        Assert.Equal(
+            (1, 1, 1.0, 10, 4),
+            (Int(blobs, "sources"), Int(blobs, "webpSiblings"),
+                blobs.GetProperty("webpCoverage").GetDouble(), Int(blobs, "sourceBytes"),
+                Int(blobs, "webpBytes")));
         // Two blobs besides the sibling, of 15 bytes on average; one reference beyond them.
+        var dedup = report.GetProperty("dedup");
         Assert.Equal(
             (3, 2, 1.5, 15),
             (Int(dedup, "logicalRefs"), Int(dedup, "physicalBlobs"),
@@ -120,12 +94,6 @@ public sealed class AdminStorageTests(PostgresContainerFixture postgres)
 
     private static int Int(JsonElement element, string name) =>
         element.GetProperty(name).GetInt32();
-
-    private static List<string> Rows(JsonElement rows) =>
-        [
-            .. rows.EnumerateArray().Select(static row =>
-                $"{row.GetProperty("name").GetString()}:{row.GetProperty("bytes").GetInt64()}"),
-        ];
 
     private static DdragonAsset Asset(string version, string key, string? sha) => new()
     {

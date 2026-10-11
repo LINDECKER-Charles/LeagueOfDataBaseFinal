@@ -12,9 +12,6 @@ public sealed class ResourceTokenTests
 {
     [Theory]
     [InlineData("Energy", "Énergie", "energy")]
-    [InlineData("None", "Aucune", "none")]
-    [InlineData("Blood Well", "Puits de sang", "blood-well")]
-    [InlineData("Mana", "Mana", "mana")]
     [InlineData("", "", "none")]
     public void Up13TheTokenComesFromTheEnglishEntry(string english, string french, string expected)
     {

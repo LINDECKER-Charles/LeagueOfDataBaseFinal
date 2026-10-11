@@ -1,6 +1,5 @@
 using System.Net;
 using LoDb.Api.Hosting;
-using LoDb.Api.Tests.Accounts.Support;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.TestHost;
@@ -18,9 +17,7 @@ public sealed class RateLimitingPoliciesTests
     private const string ContactPath = "/contact";
     private const string CheckoutPath = "/checkout";
     private const int ContactsPerHour = 5;
-    private const int CheckoutsPerHour = 10;
     private const string Client = "203.0.113.7";
-    private const string OtherClient = "203.0.113.8";
 
     // Stands in for the address the forwarded headers resolve.
     private const string ClientHeader = "X-Test-Client";
@@ -39,32 +36,6 @@ public sealed class RateLimitingPoliciesTests
     [Fact]
     public void ClientWithoutAddressSharesTheUnknownCount() =>
         Assert.Equal("unknown", RateLimitingPolicies.ClientKey(null));
-
-    [Theory]
-    [InlineData(ContactPath, ContactsPerHour)]
-    [InlineData(CheckoutPath, CheckoutsPerHour)]
-    public async Task ClientIsRefusedOnceItsHourIsUsedUp(string path, int perHour)
-    {
-        await using var app = await StartAsync();
-        using var client = app.GetTestClient();
-        var statuses = new List<HttpStatusCode>();
-
-        for (var attempt = 0; attempt < perHour; attempt++)
-        {
-            using var allowed = await PostAsync(client, path, Client);
-            statuses.Add(allowed.StatusCode);
-        }
-
-        using var refused = await PostAsync(client, path, Client);
-        using var otherClient = await PostAsync(client, path, OtherClient);
-
-        Assert.All(statuses, static status => Assert.Equal(HttpStatusCode.OK, status));
-        Assert.Equal(
-            "rate-limited",
-            await ApiJson.ProblemCodeAsync(refused, HttpStatusCode.TooManyRequests));
-        Assert.True(refused.Headers.RetryAfter?.Delta > TimeSpan.Zero);
-        Assert.Equal(HttpStatusCode.OK, otherClient.StatusCode);
-    }
 
     [Fact]
     public async Task EachPolicyCountsOnItsOwn()

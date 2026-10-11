@@ -53,8 +53,7 @@ internal sealed class WarmUpBudgetApi : IAsyncDisposable
         (string Key, int PerMinute) budget)
     {
         ArgumentNullException.ThrowIfNull(postgres);
-        var database = await postgres.CreateDatabaseAsync(Token);
-        await database.MigrateAsync(Token);
+        var database = await postgres.CreateMigratedDatabaseAsync(Token);
         var factory = new ApiFactory
         {
             PostgresConnectionString = database.AppConnectionString,

@@ -4,8 +4,7 @@ import type { LegalInfo } from './legal-info';
 /**
  * The legal parameters, kept in configuration rather than in the texts: a change of host or
  * contact address is one line here, the same in both languages. Values of
- * `app/config/packages/legal_info.yaml`; what remains to check before production is listed in
- * docs/guides/legal-info.md.
+ * `app/config/packages/legal_info.yaml`.
  */
 export const LEGAL_INFO = new InjectionToken<LegalInfo>('LEGAL_INFO', {
   providedIn: 'root',

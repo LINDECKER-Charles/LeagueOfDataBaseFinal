@@ -13,7 +13,7 @@ namespace LoDb.Api.Tests.Cli;
 /// </summary>
 [Collection(DevelopmentHostGroup.Name)]
 public sealed class DevelopmentCommandHostTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string EnvironmentVariable = "ASPNETCORE_ENVIRONMENT";
     private const string Development = "Development";
@@ -121,8 +121,7 @@ public sealed class DevelopmentCommandHostTests(PostgresContainerFixture postgre
 
     public async ValueTask InitializeAsync()
     {
-        _database = await postgres.CreateDatabaseAsync(Cancellation);
-        await _database.MigrateAsync(Cancellation);
+        _database = await postgres.CreateMigratedDatabaseAsync(Cancellation);
     }
 
     public async ValueTask DisposeAsync()

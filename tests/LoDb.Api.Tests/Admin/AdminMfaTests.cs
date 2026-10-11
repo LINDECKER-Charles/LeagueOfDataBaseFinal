@@ -14,7 +14,7 @@ namespace LoDb.Api.Tests.Admin;
 /// second factor the admin asks for. Without the invitation, the password opens nothing.
 /// </summary>
 public sealed class AdminMfaTests(PostgresContainerFixture postgres)
-    : AdminTestBase(postgres), IClassFixture<PostgresContainerFixture>
+    : AdminTestBase(postgres)
 {
     private const string EnrollmentPath = "/api/admin/mfa/enrollment";
     private const string ConfirmPath = "/api/admin/mfa/confirm";
@@ -30,9 +30,11 @@ public sealed class AdminMfaTests(PostgresContainerFixture postgres)
 
         var setup = await StartAsync(admin, invitation);
         var key = ApiJson.Text(setup, "sharedKey")!;
+        var code = Totp.Code(key, App.Clock);
+        // As an authenticator app shows it, in two groups.
         using var confirm = await admin.PostAsync(
             ConfirmPath,
-            new { code = Totp.Code(key, App.Clock), invitation });
+            new { code = $"{code[..3]} {code[3..]}", invitation });
 
         var done = await ApiJson.ReadAsync(confirm, HttpStatusCode.OK);
         Assert.Equal(10, done.GetProperty("recoveryCodes").GetArrayLength());
@@ -78,26 +80,6 @@ public sealed class AdminMfaTests(PostgresContainerFixture postgres)
     }
 
     [Fact]
-    public async Task AnInvitationServesOneAccountForAFewMinutes()
-    {
-        await App.SeedAsync(new AccountSeed());
-        var other = await AdminCalls.InvitationAsync(App, AccountSeed.Name);
-        using var admin = await AdminCalls.OpenUnenrolledAsync(App);
-        var invitation = await AdminCalls.InvitationAsync(App, AdminCalls.NewAdminName);
-
-        using var someoneElses = await admin.PostAsync(EnrollmentPath, new { invitation = other });
-        App.Clock.Advance(TimeSpan.FromMinutes(16));
-        using var expired = await admin.PostAsync(EnrollmentPath, new { invitation });
-
-        Assert.Equal(
-            ["invalid-invitation"],
-            (await ApiJson.FieldErrorsAsync(someoneElses))[InvitationField]);
-        Assert.Equal(
-            ["invalid-invitation"],
-            (await ApiJson.FieldErrorsAsync(expired))[InvitationField]);
-    }
-
-    [Fact]
     public async Task AWrongCodeCountsTowardTheLockout()
     {
         using var admin = await AdminCalls.OpenUnenrolledAsync(App);
@@ -140,21 +122,6 @@ public sealed class AdminMfaTests(PostgresContainerFixture postgres)
     }
 
     [Fact]
-    public async Task ACodeWithSeparatorsIsAccepted()
-    {
-        using var admin = await AdminCalls.OpenUnenrolledAsync(App);
-        var invitation = await AdminCalls.InvitationAsync(App, AdminCalls.NewAdminName);
-        var key = ApiJson.Text(await StartAsync(admin, invitation), "sharedKey")!;
-        var code = Totp.Code(key, App.Clock);
-
-        using var confirm = await admin.PostAsync(
-            ConfirmPath,
-            new { code = $"{code[..3]} {code[3..]}", invitation });
-
-        await ApiJson.ReadAsync(confirm, HttpStatusCode.OK);
-    }
-
-    [Fact]
     public async Task AnEnrolledAdministratorKeepsTheirAuthenticator()
     {
         using var admin = await AdminBrowser.OpenAsync(App);
@@ -178,26 +145,6 @@ public sealed class AdminMfaTests(PostgresContainerFixture postgres)
             await users.GetAuthenticatorKeyAsync(
                 (await users.FindByNameAsync(AdminBrowser.AdminName))!));
         Assert.Equal(before, after);
-    }
-
-    [Fact]
-    public async Task TheNextSignInAsksForTheCode()
-    {
-        using (var admin = await AdminCalls.OpenUnenrolledAsync(App))
-        {
-            var invitation = await AdminCalls.InvitationAsync(App, AdminCalls.NewAdminName);
-            var key = ApiJson.Text(await StartAsync(admin, invitation), "sharedKey")!;
-            using var confirm = await admin.PostAsync(
-                ConfirmPath,
-                new { code = Totp.Code(key, App.Clock), invitation });
-            await ApiJson.ReadAsync(confirm, HttpStatusCode.OK);
-        }
-
-        using var browser = App.Browser();
-        using var password = await browser.SignInAsync(AdminCalls.NewAdminName);
-
-        Assert.NotEqual(HttpStatusCode.OK, password.StatusCode);
-        Assert.Null(await browser.SignedInAsAsync());
     }
 
     private static async Task<JsonElement> StartAsync(BrowserClient admin, string invitation)

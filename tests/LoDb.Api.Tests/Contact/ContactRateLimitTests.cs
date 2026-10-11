@@ -10,7 +10,7 @@ namespace LoDb.Api.Tests.Contact;
 /// included, and the others keep theirs.
 /// </summary>
 public sealed class ContactRateLimitTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string ForwardedFor = "X-Forwarded-For";
     private const int MessagesPerHour = 5;

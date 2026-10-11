@@ -1,4 +1,3 @@
-using LoDb.Api.Workers;
 using LoDb.Api.Workers.Catalog;
 using LoDb.Ingestion.Catalog;
 using LoDb.Ingestion.Catalog.Reading;
@@ -10,8 +9,8 @@ using Microsoft.Extensions.Time.Testing;
 namespace LoDb.Api.Tests.Catalog;
 
 /// <summary>
-/// The worker pinning the latest catalogs: found by the convention, it pins at startup, then
-/// again every period, a failed pass logged and retried at the next one.
+/// The worker pinning the latest catalogs: it pins at startup, then again every period, a
+/// failed pass logged and retried at the next one.
 /// </summary>
 public sealed class LatestCatalogWarmerTests
 {
@@ -20,12 +19,6 @@ public sealed class LatestCatalogWarmerTests
     private static readonly TimeSpan Deadline = TimeSpan.FromSeconds(10);
 
     private static CancellationToken Token => TestContext.Current.CancellationToken;
-
-    [Fact]
-    public void ConventionRegistersTheWarmer() =>
-        Assert.Contains(
-            typeof(LatestCatalogWarmer),
-            ConventionalWorkers.Discover(typeof(Program).Assembly));
 
     [Fact]
     public async Task PinsAtStartupThenEveryPeriodPastAFailure()

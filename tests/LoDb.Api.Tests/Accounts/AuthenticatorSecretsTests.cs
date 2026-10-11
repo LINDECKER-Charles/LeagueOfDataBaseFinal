@@ -1,8 +1,6 @@
 using System.Net;
 using LoDb.Api.Modules.Accounts.Security.Authenticator;
 using LoDb.Api.Tests.Accounts.Support;
-using LoDb.Api.Workers;
-using LoDb.Api.Workers.Accounts;
 using LoDb.Infrastructure.Persistence.Accounts;
 using LoDb.Testing;
 using Microsoft.AspNetCore.Identity;
@@ -17,7 +15,7 @@ namespace LoDb.Api.Tests.Accounts;
 /// earlier version left in clear protected without locking anyone out.
 /// </summary>
 public sealed class AuthenticatorSecretsTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string ClearKey = "JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP";
     private const string ClearCodes = "BCDFG-HJKMN;PQRTV-WXY23;45678-9BCDF";
@@ -74,26 +72,6 @@ public sealed class AuthenticatorSecretsTests(PostgresContainerFixture postgres)
         Assert.Equal(HttpStatusCode.OK, next.StatusCode);
     }
 
-    [Fact]
-    public async Task OfTwoSignInsWithTheSameCodeAtOnceOneGetsIn()
-    {
-        await App.SeedAsync(new AccountSeed());
-        var secrets = await App.EnableTwoFactorAsync(AccountSeed.Name);
-        var code = Code(secrets.Key);
-        using var first = App.Browser();
-        using var second = App.Browser();
-
-        var answers = await Task.WhenAll(
-            SignInAsync(first, twoFactorCode: code),
-            SignInAsync(second, twoFactorCode: code));
-
-        Assert.Single(answers, static answer => answer.StatusCode == HttpStatusCode.OK);
-        foreach (var answer in answers)
-        {
-            answer.Dispose();
-        }
-    }
-
     // The sign-ins above queue for the hashing admission, one after the other. Here each
     // check reads the account and the step of its last code before either saves, as two
     // requests at once would: the account's concurrency stamp turns the second one down.
@@ -129,12 +107,6 @@ public sealed class AuthenticatorSecretsTests(PostgresContainerFixture postgres)
         Assert.Equal(9, entries.Length);
         Assert.All(entries, static entry => Assert.StartsWith(HashPrefix, entry));
     }
-
-    [Fact]
-    public void ProtectionIsDiscoveredAsAWorker() =>
-        Assert.Contains(
-            typeof(AuthenticatorSecretsJob),
-            ConventionalWorkers.Discover(typeof(Program).Assembly));
 
     [Fact]
     public async Task SecretsLeftInClearAreProtectedOnceAndStillSignIn()

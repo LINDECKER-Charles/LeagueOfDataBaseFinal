@@ -8,10 +8,11 @@ namespace LoDb.Api.Tests.Accounts;
 
 /// <summary>
 /// The session cookie: <c>__Host-</c>, HttpOnly, Secure and Lax, one day without "remember
-/// me" and thirty with it, closed by a sign-out, and by a ban at its next revalidation.
+/// me" and thirty with it, closed by a sign-out, and by a ban at its next revalidation, the
+/// ban flag alone included.
 /// </summary>
 public sealed class SessionTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private static readonly TimeSpan PastRevalidation = TimeSpan.FromMinutes(6);
 
@@ -127,6 +128,36 @@ public sealed class SessionTests(PostgresContainerFixture postgres)
         Assert.NotNull(cookieBeforeRevalidation);
         Assert.Null(afterRevalidation);
         Assert.Null(browser.Cookie(BrowserClient.SessionCookie));
+    }
+
+    // The ban alone, without the new stamp the admin also writes: the revalidation of the
+    // cookie and the refresh of the tokens read it all the same.
+    [Fact]
+    public async Task BanFlagAloneEndsTheCookieAtRevalidationAndTheRefreshTokens()
+    {
+        await App.SeedAsync(new AccountSeed());
+        using var browser = App.Browser();
+        using var signIn = await browser.SignInAsync(AccountSeed.Name, rememberMe: true);
+        using var app = App.App();
+        var tokens = await AppTokens.SignInAsync(app);
+        var stamp = (await App.FindAsync(AccountSeed.Name)).SecurityStamp;
+
+        await App.UsersAsync(async users =>
+        {
+            var user = await users.FindByNameAsync(AccountSeed.Name);
+            user!.IsBanned = true;
+            return await users.UpdateAsync(user);
+        });
+        App.Clock.Advance(PastRevalidation);
+        var afterRevalidation = await browser.SignedInAsAsync();
+        using var refresh = await AppTokens.RefreshAsync(app, tokens);
+
+        Assert.Equal(stamp, (await App.FindAsync(AccountSeed.Name)).SecurityStamp);
+        Assert.Null(afterRevalidation);
+        Assert.Null(browser.Cookie(BrowserClient.SessionCookie));
+        Assert.Equal(
+            "invalid-refresh-token",
+            await ApiJson.ProblemCodeAsync(refresh, HttpStatusCode.Unauthorized));
     }
 
     [Fact]

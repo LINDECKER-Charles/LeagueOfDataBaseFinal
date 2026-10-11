@@ -11,7 +11,6 @@ public sealed class SlugTests
 {
     [Theory]
     [InlineData("Rabadon's Deathcap", "rabadons-deathcap")]
-    [InlineData("Zaz'Zak's Realmspike", "zazzaks-realmspike")]
     [InlineData("Jak’Sho, The Protean", "jaksho-the-protean")]
     [InlineData("Guardianʼs Horn", "guardians-horn")]
     public void ApostrophesVanishInsideWords(string name, string expected)
@@ -21,8 +20,6 @@ public sealed class SlugTests
 
     [Theory]
     [InlineData("Épée de Démacia", "epee-de-demacia")]
-    [InlineData("Feu à volonté", "feu-a-volonte")]
-    [InlineData("Coup de Grâce", "coup-de-grace")]
     public void AccentsFoldToTheirBaseLetter(string name, string expected)
     {
         Assert.Equal(expected, CanonicalPath.Item("1001", name).Slug);
@@ -32,7 +29,6 @@ public sealed class SlugTests
     [InlineData("B. F. Sword", "b-f-sword")]
     [InlineData("  Legend: Alacrity  ", "legend-alacrity")]
     [InlineData("Poro-Snax", "poro-snax")]
-    [InlineData("Total Biscuit of Everlasting Will", "total-biscuit-of-everlasting-will")]
     public void OtherRunsBecomeOneHyphen(string name, string expected)
     {
         Assert.Equal(expected, CanonicalPath.Item("1001", name).Slug);

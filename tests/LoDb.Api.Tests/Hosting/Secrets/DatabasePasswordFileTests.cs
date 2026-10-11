@@ -18,7 +18,7 @@ namespace LoDb.Api.Tests.Hosting.Secrets;
 /// </remarks>
 [Collection(DevelopmentHostGroup.Name)]
 public sealed class DatabasePasswordFileTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IDisposable
+    : IDisposable
 {
     private readonly SecretFolder _folder = new();
 

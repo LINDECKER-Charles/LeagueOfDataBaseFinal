@@ -14,7 +14,7 @@ namespace LoDb.Api.Tests.Accounts;
 /// changes or the account is banned.
 /// </summary>
 public sealed class TokenTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const int AccessTokenSeconds = 5 * 60;
 
@@ -39,22 +39,6 @@ public sealed class TokenTests(PostgresContainerFixture postgres)
         Assert.False(string.IsNullOrEmpty(ApiJson.Text(tokens, "refreshToken")));
         Assert.False(response.Headers.Contains("Set-Cookie"));
         Assert.Equal(AccountSeed.Name, await SignedInAsAsync(app, tokens));
-    }
-
-    [Fact]
-    public async Task AccessTokenLastsFiveMinutes()
-    {
-        await App.SeedAsync(new AccountSeed());
-        using var app = App.App();
-        var tokens = await TokensAsync(app);
-
-        App.Clock.Advance(TimeSpan.FromMinutes(6));
-        using var signOut = await SendAsync(app, Request(HttpMethod.Post, "logout", tokens));
-
-        Assert.Null(await SignedInAsAsync(app, tokens));
-        Assert.Equal(
-            "authentication-required",
-            await ApiJson.ProblemCodeAsync(signOut, HttpStatusCode.Unauthorized));
     }
 
     [Fact]

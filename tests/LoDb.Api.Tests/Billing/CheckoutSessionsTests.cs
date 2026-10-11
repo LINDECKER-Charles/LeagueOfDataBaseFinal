@@ -56,8 +56,6 @@ public sealed class CheckoutSessionsTests
 
     [Theory]
     [InlineData("small", 500, "5000")]
-    [InlineData("medium", 1_000, "10000")]
-    [InlineData("large", 2_000, "20000")]
     public void PackNamesItsBuyerAndItsRequests(string code, long price, string requests)
     {
         var pack = ApiPacks.Find(code)!;
@@ -85,9 +83,7 @@ public sealed class CheckoutSessionsTests
 
     [Theory]
     [InlineData("monthly", 500, "month", "Mensuel")]
-    [InlineData("monthly_plus", 1_500, "month", "Mensuel+")]
     [InlineData("annual", 4_800, "year", "Annuel")]
-    [InlineData("annual_plus", 14_400, "year", "Annuel+")]
     public void PlanSubscribesAtItsInterval(string code, long price, string interval, string name)
     {
         var plan = ApiPlans.Find(code)!;

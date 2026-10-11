@@ -13,7 +13,7 @@ namespace LoDb.Api.Tests.Billing.Lifecycle;
 /// and never when it fails (<c>checkout.session.async_payment_failed</c>).
 /// </summary>
 public sealed class AsyncPaymentTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string SessionId = "cs_test_sepa";
     private const long Requests = 10_000;

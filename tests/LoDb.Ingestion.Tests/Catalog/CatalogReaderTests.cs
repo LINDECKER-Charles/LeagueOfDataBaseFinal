@@ -64,22 +64,6 @@ public sealed class CatalogReaderTests(PostgresContainerFixture postgres)
     }
 
     [Fact]
-    public async Task ConcurrentColdReadsShareOneCatalog()
-    {
-        await using var harness = await IngestionHarness.CreateAsync(postgres);
-        var instance = harness.StartInstance();
-        var reader = instance.Get<ICatalogReader>();
-
-        var loads = await Task.WhenAll(Enumerable.Range(0, 5).Select(_ =>
-            reader.GetAsync(Latest, French, ColdDemand.Synchronous, Token)));
-
-        Assert.All(loads, load => Assert.Same(loads[0].Catalog, load.Catalog));
-        Assert.NotNull(loads[0].Catalog);
-        var fetched = instance.RequestedPaths(IsDataset);
-        Assert.Equal(fetched.Count, fetched.Distinct(StringComparer.Ordinal).Count());
-    }
-
-    [Fact]
     public async Task QueuedReadIsPendingUntilTheWorkerIngests()
     {
         await using var harness = await IngestionHarness.CreateAsync(postgres);

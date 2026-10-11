@@ -36,20 +36,4 @@ test.describe('missing pages', { tag: '@readonly' }, () => {
     await expect.poll(() => new URL(page.url()).pathname).toBe('/fr/');
     expect(unexpected(consoleErrors)).toEqual([]);
   });
-
-  test('answers a URL outside the 21 locales in English', async ({ page, request }) => {
-    const response = await page.goto('/xx/champions');
-
-    expect(response?.status()).toBe(404);
-    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('404');
-    await expect(page.getByRole('main')).toContainText(await notFoundTitle(request, 'en'));
-  });
-
-  test('answers a pinned version alone with a 404, never a blank page', async ({ page }) => {
-    const response = await page.goto('/en/15.1.1');
-
-    expect(response?.status()).toBe(404);
-    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-  });
 });

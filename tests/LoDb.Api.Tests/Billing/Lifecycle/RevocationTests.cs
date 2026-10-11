@@ -18,7 +18,7 @@ namespace LoDb.Api.Tests.Billing.Lifecycle;
 /// gave; a plan. A partial refund, a repeated one or one the site cannot match takes nothing.
 /// </summary>
 public sealed class RevocationTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string FirstPack = "cs_test_pack_1";
     private const string SecondPack = "cs_test_pack_2";

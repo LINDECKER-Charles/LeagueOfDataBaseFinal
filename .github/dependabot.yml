@@ -68,6 +68,11 @@ updates:
     commit-message:
       prefix: build
       include: scope
+    ignore:
+      # A Stripe.net major pins a new Stripe API version: the checkout options and the API
+      # version of the webhook endpoint (Stripe dashboard) move with it, by hand.
+      - dependency-name: Stripe.net
+        update-types: ["version-update:semver-major"]
     groups:
       nuget-minor-patch:
         patterns: ["*"]

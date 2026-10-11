@@ -1,5 +1,5 @@
 using System.Net;
-using LoDb.Testing;
+using LoDb.Api.Tests.Hosting.Support;
 using Microsoft.AspNetCore.Http;
 
 namespace LoDb.Api.Tests.Hosting;
@@ -9,9 +9,12 @@ namespace LoDb.Api.Tests.Hosting;
 /// network the API shares (the scrape's), forwarded headers or not, gets a 404 and nothing
 /// else, while the metrics port stays open to the scrape.
 /// </summary>
-public sealed class NetworkGateTests : IAsyncDisposable
+/// <remarks>
+/// One host serves them all: the refusals they leave counted only add to the one the
+/// metrics test makes itself.
+/// </remarks>
+public sealed class NetworkGateTests(GatedApi api) : IClassFixture<GatedApi>
 {
-    private const string StackSubnet = "10.231.1.0/24";
     private const string ForwardedFor = "X-Forwarded-For";
     private const int ApiPort = 8080;
     private const int MetricsPort = 9464;
@@ -28,18 +31,8 @@ public sealed class NetworkGateTests : IAsyncDisposable
     // nginx or the renderer, on the stack's own network.
     private static readonly IPAddress StackPeer = IPAddress.Parse("10.231.1.7");
 
-    private readonly ApiFactory _factory = new()
-    {
-        Settings = new Dictionary<string, string?>
-        {
-            ["LoDb:Hosting:KnownProxyNetworks:0"] = StackSubnet,
-        },
-    };
-
     [Theory]
     [InlineData("10.231.1.7")]
-    [InlineData("::ffff:10.231.1.7")]
-    [InlineData("127.0.0.1")]
     [InlineData("::1")]
     public async Task StackAndLoopbackReachTheApi(string address)
     {
@@ -48,18 +41,8 @@ public sealed class NetworkGateTests : IAsyncDisposable
         Assert.Equal(StatusCodes.Status200OK, response.StatusCode);
     }
 
-    [Fact]
-    public async Task InProcessHostReachesTheApi()
-    {
-        var response = await CallApiAsync(address: null);
-
-        Assert.Equal(StatusCodes.Status200OK, response.StatusCode);
-    }
-
     [Theory]
-    [InlineData("172.20.0.3")]
     [InlineData("10.231.2.7")]
-    [InlineData("203.0.113.9")]
     [InlineData("fd00::12")]
     public async Task AnyOtherPeerGetsANotFound(string address)
     {
@@ -110,8 +93,6 @@ public sealed class NetworkGateTests : IAsyncDisposable
             StringComparison.Ordinal);
     }
 
-    public async ValueTask DisposeAsync() => await _factory.DisposeAsync();
-
     private Task<HttpResponse> CallApiAsync(
         IPAddress? address,
         Action<HttpRequest>? withRequest = null) =>
@@ -131,7 +112,7 @@ public sealed class NetworkGateTests : IAsyncDisposable
 
     private async Task<HttpResponse> SendAsync(Action<HttpContext> configure)
     {
-        var sent = await _factory.Server.SendAsync(
+        var sent = await api.Factory.Server.SendAsync(
             request =>
             {
                 request.Request.Method = HttpMethods.Get;

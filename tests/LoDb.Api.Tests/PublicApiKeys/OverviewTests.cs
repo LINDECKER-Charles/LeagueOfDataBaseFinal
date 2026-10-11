@@ -15,7 +15,7 @@ namespace LoDb.Api.Tests.PublicApiKeys;
 /// <c>/developers</c>, public.
 /// </summary>
 public sealed class OverviewTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string ReferencePath = "/api/public-api/reference";
 

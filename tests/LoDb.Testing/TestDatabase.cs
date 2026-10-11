@@ -70,6 +70,21 @@ public sealed class TestDatabase : IAsyncDisposable
     }
 
     /// <summary>
+    /// Migrates the database of <paramref name="connectionString"/> through a pool of its
+    /// own, closed before returning.
+    /// </summary>
+    internal static async Task MigrateAsync(
+        string connectionString,
+        CancellationToken cancellationToken)
+    {
+        await using var dataSource = NpgsqlDataSource.Create(connectionString);
+        var options = new DbContextOptionsBuilder<LoDbDbContext>();
+        options.UseLoDb(dataSource);
+        await using var context = new LoDbDbContext(options.Options);
+        await CreateMigrator(context).MigrateAsync(cancellationToken);
+    }
+
+    /// <summary>
     /// The database as the Doctrine migrations leave it: the frozen schema and the 11 rows of
     /// the legacy history.
     /// </summary>

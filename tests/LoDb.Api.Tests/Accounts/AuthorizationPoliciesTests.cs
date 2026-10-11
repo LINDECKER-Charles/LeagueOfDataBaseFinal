@@ -21,7 +21,7 @@ namespace LoDb.Api.Tests.Accounts;
 /// account as stored now, and <c>Admin</c>, which also needs a second factor.
 /// </summary>
 public sealed class AuthorizationPoliciesTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string ApiPath = "/api/account/anything";
     private const int Allowed = StatusCodes.Status200OK;
@@ -30,16 +30,6 @@ public sealed class AuthorizationPoliciesTests(PostgresContainerFixture postgres
 
     private AccountsApp App =>
         _app ?? throw new InvalidOperationException("The host is not started yet.");
-
-    [Fact]
-    public async Task AnonymousIsAskedToSignIn()
-    {
-        var anonymous = new ClaimsPrincipal(new ClaimsIdentity());
-
-        var answer = await AuthorizeAsync(AuthorizationPolicies.Authenticated, anonymous);
-
-        Assert.Equal((StatusCodes.Status401Unauthorized, "authentication-required"), answer);
-    }
 
     [Fact]
     public async Task VerifiedEmailIsReadFromTheAccountAsStoredNow()

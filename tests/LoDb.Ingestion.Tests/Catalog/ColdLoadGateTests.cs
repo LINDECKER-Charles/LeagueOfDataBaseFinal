@@ -122,14 +122,15 @@ public sealed class ColdLoadGateTests
     [Fact]
     public async Task RendererKeepsItsShareOfTheBurstAtLargeRates()
     {
-        // The burst times the renderer's rate exceeds what an int holds.
+        // The burst times the renderer's rate exceeds what an int holds. The default wait
+        // stays: on the real clock, a wait of a millisecond ran out before a token already
+        // there was taken, whenever the machine was busy.
         var options = new CatalogOptions
         {
             ColdLoadConcurrency = 64,
             ColdLoadsPerSecond = LargeRate,
             PublicColdLoadsPerSecond = 1,
             ColdLoadBurst = LargeRate,
-            InternalColdLoadWait = TimeSpan.FromMilliseconds(1),
         };
         using var harness = new CacheHarness(options);
 

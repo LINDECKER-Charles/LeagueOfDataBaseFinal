@@ -9,23 +9,11 @@ namespace LoDb.Api.Tests.Ingestion;
 /// whether every version completed, and a partial run leaves the version's state alone.
 /// </summary>
 public sealed class IngestCommandTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>
 {
     private const string CountAssets = "SELECT count(*) FROM ddragon_asset";
     private const string CountVersions = "SELECT count(*) FROM ddragon_version";
     private const string Promoted =
         "SELECT version FROM ddragon_version WHERE status = 'ready' AND promoted_at IS NOT NULL";
-
-    [Fact]
-    public void ApiDeclaresTheIngestCommand()
-    {
-        var catalog = CliCommandCatalog.Discover(typeof(Program).Assembly);
-
-        var command = Assert.Single(
-            catalog.Commands,
-            static command => command.Name == "ingest");
-        Assert.True(command.RequiresHost);
-    }
 
     [Fact]
     public async Task NamedVersionIsIngestedInTheLanguagesAsked()

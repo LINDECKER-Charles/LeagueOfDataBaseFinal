@@ -14,7 +14,7 @@ namespace LoDb.Api.Tests.Billing.Lifecycle;
 /// an event older than the last one applied changes nothing; an ended subscription stays gone.
 /// </summary>
 public sealed class SubscriptionLapseTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private BillingApp? _app;
 
@@ -23,14 +23,14 @@ public sealed class SubscriptionLapseTests(PostgresContainerFixture postgres)
 
     private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
 
-    [Theory]
-    [InlineData("past_due")]
-    [InlineData("unpaid")]
-    public async Task LapsedSubscriptionFallsBackToTheFreePlan(string status)
+    // "unpaid", the other lapse, falls back as well in OlderEventChangesNothing.
+    [Fact]
+    public async Task LapsedSubscriptionFallsBackToTheFreePlan()
     {
         var key = await SubscribedKeyAsync();
 
-        await DeliverAsync(StripePayloads.Later(StripePayloads.Updated("evt_lapse", status), 1));
+        await DeliverAsync(
+            StripePayloads.Later(StripePayloads.Updated("evt_lapse", "past_due"), 1));
 
         await AssertFreeAsync(key);
         Assert.Equal(

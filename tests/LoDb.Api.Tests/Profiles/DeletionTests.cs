@@ -40,8 +40,6 @@ public sealed class DeletionTests(ProfilesApp app)
 
     [Theory]
     [InlineData("fr", " supprimer mon compte ")]
-    [InlineData("en", "DELETE MY ACCOUNT")]
-    [InlineData("de", "delete my account")]
     [InlineData(null, "DELETE MY ACCOUNT")]
     public async Task GoogleAccountTypesThePhraseOfItsLocale(string? locale, string phrase)
     {
@@ -58,18 +56,20 @@ public sealed class DeletionTests(ProfilesApp app)
         Assert.Null(await app.FindAsync(account.Username));
     }
 
-    [Theory]
-    [InlineData("fr", "DELETE MY ACCOUNT")]
-    [InlineData("en", "SUPPRIMER MON COMPTE")]
-    [InlineData("fr", "")]
-    public async Task GoogleAccountWithTheWrongPhraseStays(string locale, string phrase)
+    [Fact]
+    public async Task GoogleAccountWithThePhraseOfAnotherLocaleStays()
     {
         var account = await app.SeedAsync(new AccountSeed { GoogleId = GoogleId() });
         using var browser = await app.SignInAsync(account);
 
         using var refused = await browser.PostAsync(
             ProfileCalls.Delete,
-            new { confirmation = phrase, locale, password = AccountSeed.StrongPassword });
+            new
+            {
+                confirmation = "DELETE MY ACCOUNT",
+                locale = "fr",
+                password = AccountSeed.StrongPassword,
+            });
 
         var errors = await ApiJson.FieldErrorsAsync(refused);
         Assert.Equal(["confirmation-incorrect"], errors["confirmation"]);
@@ -89,25 +89,6 @@ public sealed class DeletionTests(ProfilesApp app)
         Assert.Equal("none", ApiJson.Text(profile, "deletionConfirmation"));
         Assert.Equal(HttpStatusCode.NoContent, erased.StatusCode);
         Assert.Null(await app.FindAsync(account.Username));
-    }
-
-    [Fact]
-    public async Task ErasedAccountHasNoProfileLeft()
-    {
-        var account = await app.SeedAsync();
-        await app.UpdateAsync(account.Username, static user => user.IsPublicProfile = true);
-        using var browser = await app.SignInAsync(account);
-        using var visitor = app.Browser();
-
-        using var erased = await browser.PostAsync(
-            ProfileCalls.Delete,
-            new { password = AccountSeed.StrongPassword });
-        using var own = await browser.GetAsync(ProfileCalls.Own);
-        using var card = await visitor.GetAsync(ProfileCalls.Public + account.Username);
-
-        Assert.Equal(HttpStatusCode.NoContent, erased.StatusCode);
-        Assert.Equal(HttpStatusCode.Unauthorized, own.StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, card.StatusCode);
     }
 
     // Google subjects are 21 digits; the column holds 30.

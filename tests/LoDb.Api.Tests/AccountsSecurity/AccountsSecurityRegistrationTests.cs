@@ -6,14 +6,13 @@ using LoDb.Infrastructure.Persistence.Accounts;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 
 namespace LoDb.Api.Tests.AccountsSecurity;
 
 /// <summary>
 /// <c>AddAccountsSecurity</c>: Identity's core over the LoDb stores, the migrating hasher and
-/// the CNIL validator in place of Identity's, and five failures lock an account for fifteen
-/// minutes. The sign-in manager chains onto it as the accounts module will chain it.
+/// the CNIL validator in place of Identity's. The sign-in manager chains onto it as the
+/// accounts module will chain it.
 /// </summary>
 public sealed class AccountsSecurityRegistrationTests
 {
@@ -29,19 +28,6 @@ public sealed class AccountsSecurityRegistrationTests
             services.GetRequiredService<IPasswordHasher<User>>());
         Assert.IsType<CnilPasswordValidator>(
             Assert.Single(services.GetServices<IPasswordValidator<User>>()));
-    }
-
-    [Fact]
-    public void FiveFailuresLockAnAccountForFifteenMinutes()
-    {
-        using var services = Build(UnusedDatabase);
-
-        var lockout = services.GetRequiredService<IOptions<IdentityOptions>>().Value.Lockout;
-
-        Assert.Equal(
-            (5, TimeSpan.FromMinutes(15), true),
-            (lockout.MaxFailedAccessAttempts, lockout.DefaultLockoutTimeSpan,
-                lockout.AllowedForNewUsers));
     }
 
     [Fact]

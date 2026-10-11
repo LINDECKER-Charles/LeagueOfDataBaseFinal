@@ -1,5 +1,4 @@
 import type { Page } from '@playwright/test';
-import { expectNoAccessibilityViolations } from '../../support/accessibility';
 import { expect, test } from '../../support/worker-account';
 
 const CHAMPION = 'Ahri';
@@ -80,25 +79,4 @@ test('makes a profile public, previews it and shows it to anyone', async ({
     expect(page404.status()).toBe(404);
     expect(page404.headers()['x-robots-tag']).toContain('noindex');
   });
-});
-
-// The hairline before "Sign out" is drawn for the eye: the menu's list holds only its items.
-test('opens the member menu of the header, free of accessibility violations', async ({
-  member: page,
-}) => {
-  const menu = page.locator('lodb-account-menu');
-  await menu.locator('summary').click();
-
-  await expect(menu.getByRole('button', { name: 'Sign out' })).toBeVisible();
-  await expectNoAccessibilityViolations(page);
-});
-
-test('answers an unknown summoner with a 404 kept out of the index', { tag: '@readonly' }, async ({
-  page,
-}) => {
-  const response = await page.goto('/en/u/nobody-e2e-at-all');
-
-  expect(response?.status()).toBe(404);
-  await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
-  await expect(page.locator('link[rel="canonical"]')).toHaveCount(0);
 });

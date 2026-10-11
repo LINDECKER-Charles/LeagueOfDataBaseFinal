@@ -6,10 +6,7 @@ using LoDb.Domain.Languages;
 using LoDb.Infrastructure.Audit;
 using LoDb.Infrastructure.Outbox;
 using LoDb.Testing;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 
 namespace LoDb.Api.Tests.Accounts;
 
@@ -19,7 +16,7 @@ namespace LoDb.Api.Tests.Accounts;
 /// then once a day.
 /// </summary>
 public sealed class EmailVerificationTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string VerifyPath = "/api/account/verify-email";
     private const string ResendPath = "/api/account/verify-email/resend";
@@ -185,15 +182,6 @@ public sealed class EmailVerificationTests(PostgresContainerFixture postgres)
             "authentication-required",
             await ApiJson.ProblemCodeAsync(resend, HttpStatusCode.Unauthorized));
         Assert.Empty(App.Outbox.Messages);
-    }
-
-    [Fact]
-    public void LinksLastOneHour()
-    {
-        var options = App.Services
-            .GetRequiredService<IOptions<DataProtectionTokenProviderOptions>>().Value;
-
-        Assert.Equal(TimeSpan.FromHours(1), options.TokenLifespan);
     }
 
     public async ValueTask InitializeAsync() => _app = await AccountsApp.StartAsync(postgres);

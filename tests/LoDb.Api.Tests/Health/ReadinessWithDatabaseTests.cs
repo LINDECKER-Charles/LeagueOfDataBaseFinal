@@ -7,7 +7,6 @@ namespace LoDb.Api.Tests.Health;
 /// With a real PostgreSQL server and a writable storage root, the API is ready.
 /// </summary>
 public sealed class ReadinessWithDatabaseTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>
 {
     [Fact]
     public async Task ReadinessAnswers200WithDatabaseAndStorage()

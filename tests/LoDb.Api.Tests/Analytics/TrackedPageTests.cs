@@ -35,7 +35,6 @@ public sealed class TrackedPageTests(AnalyticsApiFixture api)
 
     [Theory]
     [InlineData("/fr/", "app_home", "home", "home", "/fr/")]
-    [InlineData("/fr", "app_home", "home", "home", "/fr/")]
     [InlineData("/fr/champions", "app_champions", "champion", "list", "/fr/champions")]
     [InlineData("/ko/items/", "app_items", "item", "list", "/ko/items")]
     [InlineData("/en/runes?lang=en_US", "app_runes", "runesReforged", "list", "/en/runes")]
@@ -58,13 +57,7 @@ public sealed class TrackedPageTests(AnalyticsApiFixture api)
 
     [Theory]
     [InlineData("/fr/items/1004-x")]
-    [InlineData("/fr/items/1004")]
-    [InlineData("/fr/runes/8100")]
     [InlineData("/fr/items?version=16.18.1")]
-    [InlineData("/fr/16.19.1/items")]
-    [InlineData("/fr/builds")]
-    [InlineData("/xx/champions")]
-    [InlineData("/")]
     [InlineData("/fr/champions/Ahri/skins")]
     public async Task RedirectedOrForeignAddressIsNotCounted(string target) =>
         Assert.Null(await ResolveAsync(target));
@@ -85,8 +78,6 @@ public sealed class TrackedPageTests(AnalyticsApiFixture api)
     [InlineData("/fr/items?lang=fr_FR", "fr_FR")]
     [InlineData("/fr/items?lang=ko_KR", "fr_FR")]
     [InlineData("/fr/items?lang=xx_XX", "fr_FR")]
-    [InlineData("/ko/items", "ko_KR")]
-    [InlineData("/zh-hans/items", "zh_CN")]
     public async Task LanguageIsTheOneThePageShows(string target, string lang)
     {
         var page = await ResolveAsync(target);

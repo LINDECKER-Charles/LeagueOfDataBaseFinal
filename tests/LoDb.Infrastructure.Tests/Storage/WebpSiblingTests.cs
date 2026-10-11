@@ -12,13 +12,9 @@ public sealed class WebpSiblingTests : IDisposable
 
     [Theory]
     [InlineData("/cdn/blobs/abc.png", "/cdn/blobs/abc.webp")]
-    [InlineData("blobs/abc.png", "blobs/abc.webp")]
-    [InlineData("abc.png", "abc.webp")]
     [InlineData("/cdn/blobs/abc.svg", null)]
-    [InlineData("/cdn/blobs/abc.jpg", null)]
     [InlineData("/cdn/blobs/abc.webp", null)]
     [InlineData("/cdn/blobs/abc.PNG", null)]
-    [InlineData("/cdn/blobs/abc", null)]
     public void SiblingIsDerivedForPngPathsOnly(string path, string? expected) =>
         Assert.Equal(expected, WebpSibling.Of(path));
 
@@ -52,13 +48,11 @@ public sealed class WebpSiblingTests : IDisposable
         Assert.Equal(Webp, await File.ReadAllBytesAsync(siblingPath, Token));
     }
 
-    [Theory]
-    [InlineData("svg")]
-    [InlineData("jpg")]
-    [InlineData("webp")]
-    public async Task ABlobWithoutWebpSlotHasNoSibling(string extension)
+    // The slot is a single ".png" suffix check: any other extension takes the same branch.
+    [Fact]
+    public async Task ABlobWithoutWebpSlotHasNoSibling()
     {
-        var blob = await _storage.Blobs.StoreAsync(Png, extension, Token);
+        var blob = await _storage.Blobs.StoreAsync(Png, "svg", Token);
 
         Assert.False(blob.Key.HasWebpSlot);
         Assert.Null(blob.Key.WebpPublicPath);

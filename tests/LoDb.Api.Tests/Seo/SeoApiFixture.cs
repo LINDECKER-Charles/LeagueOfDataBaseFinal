@@ -22,7 +22,7 @@ namespace LoDb.Api.Tests.Seo;
 /// pending whatever the order of the tests. The sitemap index announces
 /// <see cref="SitemapVersionWindow"/> past versions, 16.18.1 only: 8.7.1 lies outside.
 /// </summary>
-public sealed class SeoApiFixture : IAsyncLifetime
+public sealed class SeoApiFixture(PostgresContainerFixture postgres) : IAsyncLifetime
 {
     /// <summary>The past versions the index announces, few enough for the fixtures.</summary>
     public const int SitemapVersionWindow = 1;
@@ -30,7 +30,6 @@ public sealed class SeoApiFixture : IAsyncLifetime
     /// <summary>A past version outside the window, its en_US datasets stored.</summary>
     public static readonly PatchVersion Archived = PatchVersion.Parse("8.7.1");
 
-    private readonly PostgresContainerFixture _postgres = new();
     private TestDatabase? _database;
     private ApiFactory? _factory;
     private HttpClient? _client;
@@ -42,9 +41,7 @@ public sealed class SeoApiFixture : IAsyncLifetime
 
     public async ValueTask InitializeAsync()
     {
-        await _postgres.InitializeAsync();
-        _database = await _postgres.CreateDatabaseAsync(Token);
-        await _database.MigrateAsync(Token);
+        _database = await postgres.CreateMigratedDatabaseAsync(Token);
         _factory = new ApiFactory
         {
             PostgresConnectionString = _database.AppConnectionString,
@@ -97,8 +94,6 @@ public sealed class SeoApiFixture : IAsyncLifetime
         {
             await _database.DisposeAsync();
         }
-
-        await _postgres.DisposeAsync();
     }
 
     private static async Task IngestAsync(IServiceProvider services)

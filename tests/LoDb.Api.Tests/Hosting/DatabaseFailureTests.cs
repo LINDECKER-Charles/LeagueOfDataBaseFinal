@@ -15,7 +15,6 @@ namespace LoDb.Api.Tests.Hosting;
 /// retry, a server out of reach answers a 500 and is counted, since it is an outage.
 /// </summary>
 public sealed class DatabaseFailureTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>
 {
     // A share token no build has: the read goes to the database, which answers 404.
     private const string SharedBuildPath = "/api/share/ffffffffffffffffffffffff";
@@ -27,8 +26,7 @@ public sealed class DatabaseFailureTests(PostgresContainerFixture postgres)
     [Fact]
     public async Task BusyPoolAnswers503WithRetryAfter()
     {
-        await using var database = await postgres.CreateDatabaseAsync(Cancellation);
-        await database.MigrateAsync(Cancellation);
+        await using var database = await postgres.CreateMigratedDatabaseAsync(Cancellation);
         await using var factory = new ApiFactory
         {
             PostgresConnectionString = SingleConnectionPool(database.AppConnectionString),

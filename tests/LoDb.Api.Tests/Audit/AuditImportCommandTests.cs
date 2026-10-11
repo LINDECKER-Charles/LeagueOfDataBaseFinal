@@ -20,7 +20,7 @@ namespace LoDb.Api.Tests.Audit;
 /// which the command's host reads, so that they stay within the retention.
 /// </remarks>
 public sealed class AuditImportCommandTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string DayFormat = "yyyy-MM-dd";
     private const string AtomFormat = "yyyy-MM-dd'T'HH:mm:sszzz";
@@ -36,15 +36,6 @@ public sealed class AuditImportCommandTests(PostgresContainerFixture postgres)
 
     private TestDatabase Database =>
         _database ?? throw new InvalidOperationException("The database is not created yet.");
-
-    [Fact]
-    public void ApiDeclaresTheAuditImportCommand()
-    {
-        var catalog = CliCommandCatalog.Discover(typeof(Program).Assembly);
-
-        var command = Assert.Single(catalog.Commands, static c => c.Name == "audit import");
-        Assert.True(command.RequiresHost);
-    }
 
     [Fact]
     public async Task SampleIsImportedWithinTheRetention()
@@ -114,8 +105,7 @@ public sealed class AuditImportCommandTests(PostgresContainerFixture postgres)
 
     public async ValueTask InitializeAsync()
     {
-        _database = await postgres.CreateDatabaseAsync(Cancellation);
-        await _database.MigrateAsync(Cancellation);
+        _database = await postgres.CreateMigratedDatabaseAsync(Cancellation);
     }
 
     public async ValueTask DisposeAsync()

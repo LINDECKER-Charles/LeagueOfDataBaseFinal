@@ -16,8 +16,10 @@ public sealed class CatalogOptionsTests
 {
     private const int InterfaceLocales = 21;
 
+    // The latest pinned and sixteen others, a few cold loads admitted, image verdicts reused
+    // ten minutes, art variants stored one at a time half-hourly.
     [Fact]
-    public void DefaultsHoldTheLatestPinnedAndSixteenOthers()
+    public void DefaultsResolveAndValidate()
     {
         var options = Resolve(new());
 
@@ -25,35 +27,14 @@ public sealed class CatalogOptionsTests
         Assert.Equal(TimeSpan.FromMinutes(1), options.VersionsLifetime);
         Assert.Null(options.PinnedLanguages);
         Assert.Equal(256, options.PinnedBudgetMegabytes);
-    }
-
-    [Fact]
-    public void DefaultsAdmitAFewColdLoads()
-    {
-        var options = Resolve(new());
-
         Assert.Equal(
             (2, 3, 1, 6, TimeSpan.FromSeconds(2), 16),
             (options.ColdLoadConcurrency, options.ColdLoadsPerSecond,
                 options.PublicColdLoadsPerSecond, options.ColdLoadBurst,
                 options.InternalColdLoadWait, options.MaxPendingLoads));
-    }
-
-    [Fact]
-    public void DefaultsReuseImageVerdictsTenMinutes()
-    {
-        var options = Resolve(new());
-
         Assert.Equal(
             (TimeSpan.FromMinutes(10), 32),
             (options.ImageVerdictsLifetime, options.ImageVerdictVersions));
-    }
-
-    [Fact]
-    public void DefaultsStoreTheArtVariantsOneAtATimeHalfHourly()
-    {
-        var options = Resolve(new());
-
         Assert.Equal(
             (TimeSpan.FromMinutes(30), 1),
             (options.ArtVariantsPeriod, options.ArtVariantsConcurrency));

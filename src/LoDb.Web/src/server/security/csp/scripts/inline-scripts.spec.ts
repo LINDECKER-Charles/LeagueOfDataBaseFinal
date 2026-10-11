@@ -7,6 +7,7 @@ describe('inlineScripts', () => {
     "<script type='module'>alert(1)</script>",
     '<script type=application/javascript>alert(1)</script>',
     '<SCRIPT data-src="x">alert(1)</SCRIPT >',
+    '<script>alert(1)</script\t\nfoo="bar">',
   ])('finds the executable script %s', (html) => {
     expect(inlineScripts(html).map((script) => script.text)).toEqual(['alert(1)']);
   });

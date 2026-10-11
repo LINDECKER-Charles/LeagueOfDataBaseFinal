@@ -52,16 +52,6 @@ public sealed class CanonicalPathTests
     }
 
     [Theory]
-    [InlineData(ResourceType.Champions, "champions")]
-    [InlineData(ResourceType.Items, "items")]
-    [InlineData(ResourceType.Runes, "runes")]
-    [InlineData(ResourceType.Summoners, "summoners")]
-    public void EachResourceHasItsSegment(ResourceType type, string segment)
-    {
-        Assert.Equal(segment, CanonicalPath.SegmentOf(type));
-    }
-
-    [Theory]
     [InlineData("Monkey King")]
     [InlineData("../admin")]
     [InlineData("Ahri/")]

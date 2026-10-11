@@ -57,7 +57,7 @@ function titleOf(head) {
 function jsonLdOf(head) {
   const blocks = [];
   const errors = [];
-  for (const match of head.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)) {
+  for (const match of head.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script(?:[\s/][^>]*)?>/gi)) {
     if ((attributesOf(`<script ${match[1]}>`).type ?? '') !== 'application/ld+json') continue;
     try {
       blocks.push(JSON.parse(match[2]));

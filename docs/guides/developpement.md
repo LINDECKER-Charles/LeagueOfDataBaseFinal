@@ -136,6 +136,8 @@ sur la stack d'intégration qu'en connaissance de cause.
 
 ## Tests E2E
 
+Où placer un test et ce que chaque couche coûte : [`tests.md`](tests.md).
+
 Ils exigent une stack démarrée. Par défaut, ils visent la stack d'intégration
 (`http://localhost:18080`).
 
@@ -148,6 +150,16 @@ npm --prefix tests/LoDb.E2E run typecheck
 specs vont dans `tests/LoDb.E2E/specs/<feature>/`. Elles s'appuient sur la fixture
 `consoleErrors` (`support/test.ts`) et sur `expectNoAccessibilityViolations`
 (`support/accessibility.ts`).
+
+La suite ne garde que les parcours critiques : ce qu'aucune couche basse ne voit (un vrai
+navigateur, le rendu serveur puis l'hydratation, nginx de bout en bout), un parcours par
+fonctionnalité, ses variantes en `test.step`. Une règle déjà couverte par Vitest, xUnit ou les
+outils n'y revient pas. L'accessibilité (axe) et la largeur de 320 px y restent sur un
+échantillon : une page par gabarit, plus les langues à risque (de, pl, ar). Les vérifications
+de requête (en-têtes, caches, 404 de nginx, anciennes URLs, grammaire d'URL de l'ADR 0005)
+sont celles de `tools/nginx` et de `tools/routing/check-urls.sh`, que le job `e2e` de la CI
+lance avant Playwright. Les tests marqués `@readonly`, qui n'écrivent rien, servent aussi de
+fumée au staging et à la production (`tools/cutover/readonly-e2e.sh`).
 
 ## Emplacements
 

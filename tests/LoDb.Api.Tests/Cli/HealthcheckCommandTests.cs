@@ -15,7 +15,6 @@ public sealed class HealthcheckCommandTests
     [Theory]
     [InlineData(StatusCodes.Status200OK, CliExitCodes.Success)]
     [InlineData(StatusCodes.Status503ServiceUnavailable, CliExitCodes.Failure)]
-    [InlineData(StatusCodes.Status500InternalServerError, CliExitCodes.Failure)]
     public async Task ExitCodeFollowsTheLivenessAnswer(int status, int expected)
     {
         await using var server = await StubHealthServer.StartAsync(

@@ -25,8 +25,8 @@
   <ItemGroup>
     <!--
       Four test classes at once, as on the CI runner: most of them start the whole API in
-      memory, and xUnit's default of one per logical CPU held two dozen hosts at once, close
-      to 30 GB on a 24-thread workstation.
+      memory, and the run stays within a few gigabytes instead of taking every core of a
+      developer's workstation.
     -->
     <None Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>

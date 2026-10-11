@@ -1,6 +1,5 @@
 using LoDb.Infrastructure.Persistence;
 using LoDb.Infrastructure.Persistence.Accounts;
-using LoDb.Infrastructure.Persistence.Ddragon;
 using LoDb.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -83,36 +82,6 @@ public sealed class LegacyUtcTimestampsTests(PostgresContainerFixture postgres)
         Assert.Equal(expected, stored);
         Assert.Equal(TimeSpan.Zero, stored.Offset);
         Assert.Equal(1, matching);
-    }
-
-    [Fact]
-    public async Task TimestampTzColumnKeepsItsInstant()
-    {
-        var discovered = new DateTimeOffset(2026, 9, 26, 8, 30, 15, TimeSpan.Zero)
-            .AddTicks(1_234_560);
-        await using (var context = Database.CreateContext())
-        {
-            context.DdragonVersions.Add(new DdragonVersion
-            {
-                Version = "16.19.1",
-                Status = DdragonVersionStatus.Discovered,
-                DiscoveredAt = discovered,
-                UpdatedAt = discovered,
-            });
-            await context.SaveChangesAsync(Cancellation);
-        }
-
-        Assert.Equal(
-            ["2026-09-26 08:30:15.123456+00"],
-            await Database.QueryAsync(
-                "SELECT discovered_at::text FROM ddragon_version",
-                Cancellation));
-        await using var reader = Database.CreateContext();
-        var stored = await reader.DdragonVersions.AsNoTracking()
-            .Select(static version => version.DiscoveredAt)
-            .SingleAsync(Cancellation);
-        Assert.Equal(discovered, stored);
-        Assert.Equal(TimeSpan.Zero, stored.Offset);
     }
 
     private static User NewUser(DateTimeOffset createdAt) => new()

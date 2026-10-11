@@ -19,10 +19,25 @@ internal static class EgressResilience
     private static readonly TimeSpan BreakSamplingDuration = TimeSpan.FromSeconds(30);
     private static readonly TimeSpan BreakDuration = TimeSpan.FromSeconds(15);
 
+    // Polly validates each strategy's options with DataAnnotations, whose RangeAttribute
+    // converts its TimeSpan bounds on first use without synchronization: the first requests to
+    // both authorities, building their pipelines at once, could fail with an
+    // InvalidCastException. The pipelines are built one at a time instead.
+    private static readonly Lock BuildGate = new();
+
     public static void Configure(
         ResiliencePipelineBuilder<HttpResponseMessage> builder,
         EgressOptions options)
     {
+        lock (BuildGate)
+        {
+            AddStrategies(builder, options);
+        }
+    }
+
+    private static void AddStrategies(
+        ResiliencePipelineBuilder<HttpResponseMessage> builder,
+        EgressOptions options) =>
         builder
             .AddRetry(new HttpRetryStrategyOptions
             {
@@ -44,7 +59,6 @@ internal static class EgressResilience
                 ShouldHandle = static args => ValueTask.FromResult(IsTransient(args.Outcome)),
             })
             .AddTimeout(options.AttemptTimeout);
-    }
 
     /// <summary>
     /// 5xx, 408, attempt timeout or transport failure. A 403/404 is an answer, not a failure,

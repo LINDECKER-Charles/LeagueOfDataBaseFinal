@@ -9,10 +9,11 @@ namespace LoDb.Api.Tests.Audit;
 
 /// <summary>
 /// <c>GET /api/admin/audit</c>: the journal is the administrators' alone, newest first, paged
-/// by one row read past the page, and filtered by action, group, outcome, actor and period.
+/// by one row read past the page, and filtered by action, group, outcome, actor and period;
+/// its vocabulary lists every action.
 /// </summary>
 public sealed class AuditJournalTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string JournalPath = "/api/admin/audit";
 
@@ -33,11 +34,17 @@ public sealed class AuditJournalTests(PostgresContainerFixture postgres)
         using var anonymous = await visitor.GetAsync(JournalPath);
         using var refused = await member.GetAsync(JournalPath);
         using var allowed = await admin.GetAsync(JournalPath);
+        using var vocabulary = await admin.GetAsync(JournalPath + "/vocabulary");
 
         Assert.Equal(HttpStatusCode.Unauthorized, anonymous.StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, refused.StatusCode);
         Assert.Equal(HttpStatusCode.OK, allowed.StatusCode);
         Assert.Equal("no-store", allowed.Headers.CacheControl?.ToString());
+        // Its groups are AuditVocabularyTests'.
+        Assert.Equal(
+            Enum.GetValues<AuditAction>().Length,
+            (await ApiJson.ReadAsync(vocabulary, HttpStatusCode.OK))
+                .GetProperty("actions").GetArrayLength());
     }
 
     [Fact]
@@ -110,45 +117,6 @@ public sealed class AuditJournalTests(PostgresContainerFixture postgres)
             [Day.AddDays(-1), Day.AddDays(-3)],
             Times(await PageAsync(admin, "?from=2026-09-17&to=2026-09-19")));
         Assert.Empty(Times(await PageAsync(admin, "?category=build&action=user.login")));
-    }
-
-    [Fact]
-    public async Task InvalidFiltersAreReportedTogether()
-    {
-        using var admin = await AdminBrowser.OpenAsync(App);
-
-        using var response = await admin.GetAsync(
-            JournalPath + "?action=user.dance&category=misc&outcome=maybe&actorType=robot"
-            + "&from=2026-09-20&to=2026-09-01&page=0&pageSize=101");
-
-        var errors = await ApiJson.FieldErrorsAsync(response);
-        Assert.Equal(["unknown-action"], errors["action"]);
-        Assert.Equal(["unknown-category"], errors["category"]);
-        Assert.Equal(["unknown-outcome"], errors["outcome"]);
-        Assert.Equal(["unknown-actor-type"], errors["actorType"]);
-        Assert.Equal(["invalid-range"], errors["to"]);
-        Assert.Equal(["out-of-range"], errors["page"]);
-        Assert.Equal(["out-of-range"], errors["pageSize"]);
-    }
-
-    [Fact]
-    public async Task VocabularyListsEveryActionWithItsGroup()
-    {
-        using var admin = await AdminBrowser.OpenAsync(App);
-
-        using var response = await admin.GetAsync(JournalPath + "/vocabulary");
-
-        var vocabulary = await ApiJson.ReadAsync(response, HttpStatusCode.OK);
-        var actions = vocabulary.GetProperty("actions").EnumerateArray().ToList();
-        Assert.Equal(Enum.GetValues<AuditAction>().Length, actions.Count);
-        Assert.Contains(
-            actions,
-            static action => ApiJson.Text(action, "name") == "admin.logs_purge"
-                && ApiJson.Text(action, "category") == "admin");
-        Assert.Equal(
-            ["user", "build", "apikey", "api_client"],
-            vocabulary.GetProperty("targetTypes").EnumerateArray()
-                .Select(static type => type.GetString()));
     }
 
     [Fact]

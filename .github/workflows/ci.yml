@@ -254,6 +254,15 @@ jobs:
           cache: npm
           cache-dependency-path: tests/LoDb.E2E/package-lock.json
 
+      # The request-level checks the Playwright suite leaves to them: the URL grammar of ADR 0005
+      # on the started stack (curl and jq), then the nginx image Compose built for it, behind
+      # stubs of its upstreams (tools/nginx). Compose names a built image <project>-<service>.
+      - name: Check the URL grammar
+        run: bash tools/routing/check-urls.sh
+
+      - name: Test the nginx image
+        run: LODB_NGINX_IMAGE="$COMPOSE_PROJECT_NAME-nginx" node --test tools/nginx/test/*.test.mjs
+
       - name: Install dependencies
         run: npm ci --prefix tests/LoDb.E2E
 

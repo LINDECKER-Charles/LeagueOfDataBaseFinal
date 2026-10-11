@@ -14,23 +14,12 @@ namespace LoDb.Api.Tests.Admin;
 /// </summary>
 [Collection(ShellCommandsGroup.Name)]
 public sealed class AdminMfaCommandTests(PostgresContainerFixture postgres)
-    : AdminTestBase(postgres), IClassFixture<PostgresContainerFixture>
+    : AdminTestBase(postgres)
 {
     private const string InvitationLine =
         "Invitation to enrol an authenticator, valid 15 minutes: ";
     private const string EnrollmentPath = "/api/admin/mfa/enrollment";
     private const string ConfirmPath = "/api/admin/mfa/confirm";
-
-    [Theory]
-    [InlineData("admin mfa-invite")]
-    [InlineData("admin mfa-reset")]
-    public void ApiDeclaresTheCommand(string name)
-    {
-        var catalog = CliCommandCatalog.Discover(typeof(Program).Assembly);
-
-        var command = Assert.Single(catalog.Commands, c => c.Name == name);
-        Assert.True(command.RequiresHost);
-    }
 
     [Fact]
     public async Task TheInvitationLetsTheAdministratorEnrol()

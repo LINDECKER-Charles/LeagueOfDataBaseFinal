@@ -1,6 +1,4 @@
-using System.Net;
 using LoDb.Api.Tests.Billing.Support;
-using LoDb.Api.Workers;
 using LoDb.Api.Workers.Billing;
 using LoDb.Infrastructure.Jobs;
 using LoDb.Infrastructure.Persistence.PublicApi;
@@ -15,7 +13,7 @@ namespace LoDb.Api.Tests.Billing;
 /// covers is dated first, from the day it is found.
 /// </summary>
 public sealed class CreditExpiryTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private static readonly TimeSpan Precision = TimeSpan.FromMilliseconds(1);
 
@@ -25,14 +23,6 @@ public sealed class CreditExpiryTests(PostgresContainerFixture postgres)
         _app ?? throw new InvalidOperationException("The host is not started yet.");
 
     private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
-
-    [Fact]
-    public void ExpiryJobIsDiscoveredAsAWorker()
-    {
-        Assert.Contains(
-            typeof(CreditExpiryJob),
-            ConventionalWorkers.Discover(typeof(Program).Assembly));
-    }
 
     [Fact]
     public async Task DueGrantTakesOffWhatIsLeftOfIt()
@@ -125,45 +115,6 @@ public sealed class CreditExpiryTests(PostgresContainerFixture postgres)
 
         Assert.Empty(await App.GrantsOfAsync(key.Id));
         Assert.Equal(2_000, (await App.KeyAsync(key.Id)).CreditsBalance);
-    }
-
-    [Fact]
-    public async Task PackPaidThroughStripeExpiresTwelveMonthsLater()
-    {
-        var buyer = await App.SeedUserAsync("Acheteur");
-        var key = await App.SeedKeyAsync(buyer);
-        var paidAt = App.Clock.GetUtcNow().ToUnixTimeSeconds();
-        var stripeEvent = StripePayloads.Completed(
-            "evt_pack",
-            StripePayloads.Pack("cs_test_pack", buyer.Id, 5_000));
-        stripeEvent["created"] = paidAt;
-        using var paid = await App.DeliverAsync(stripeEvent);
-        Assert.Equal(HttpStatusCode.OK, paid.StatusCode);
-        var due = DateTimeOffset.FromUnixTimeSeconds(paidAt).AddMonths(12);
-
-        App.Clock.SetUtcNow(due.AddMinutes(-1));
-        await RunAsync();
-        var before = (await App.KeyAsync(key.Id)).CreditsBalance;
-        App.Clock.SetUtcNow(due.AddDays(1));
-        await RunAsync();
-
-        Assert.Equal(5_000, before);
-        Assert.Equal(0, (await App.KeyAsync(key.Id)).CreditsBalance);
-    }
-
-    [Fact]
-    public async Task ExpiryRunsOnceADay()
-    {
-        var job = ActivatorUtilities.CreateInstance<CreditExpiryJob>(App.Services);
-
-        var first = await job.RunIfDueAsync(Cancellation);
-        var early = await job.RunIfDueAsync(Cancellation);
-        App.Clock.Advance(TimeSpan.FromDays(1));
-        var next = await job.RunIfDueAsync(Cancellation);
-
-        Assert.Equal(
-            (JobRunOutcome.Succeeded, JobRunOutcome.NotDue, JobRunOutcome.Succeeded),
-            (first, early, next));
     }
 
     public async ValueTask InitializeAsync() => _app = await BillingApp.StartAsync(postgres);

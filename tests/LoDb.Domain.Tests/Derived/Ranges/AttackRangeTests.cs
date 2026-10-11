@@ -9,12 +9,8 @@ namespace LoDb.Domain.Tests.Derived.Ranges;
 public sealed class AttackRangeTests
 {
     [Theory]
-    [InlineData("Akali", 125, AttackRangeClass.Melee)]
-    [InlineData("Nilah", 225, AttackRangeClass.Melee)]
-    [InlineData("Rakan", 300, AttackRangeClass.Melee)]
     [InlineData("Lillia", 325, AttackRangeClass.Melee)]
     [InlineData("Urgot", 350, AttackRangeClass.Ranged)]
-    [InlineData("Ahri", 550, AttackRangeClass.Ranged)]
     public void Up13MeleeUpTo325RangedFrom350(string id, double range, AttackRangeClass expected)
     {
         var champion = ChampionSamples.Named(id, id) with

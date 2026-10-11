@@ -643,13 +643,13 @@ L'ancienne stack archivée n'a plus de changelog : relancée depuis `legacy/`, s
 | `AGENTS.md` | **fait** : décrit la nouvelle stack (stack, commandes, garde-fous, scopes), seul fichier d'instructions versionné ; les règles PHP sont dans `legacy/AGENTS.md`, supprimé avec `legacy/` |
 | `README.md`, `CONTRIBUTING.md`, `docs/README.md` | **fait** avec l'archivage (l'ancien README est `legacy/README.md`) |
 | `docs/contribution.md` | démarrage, commandes et garde-fous de la nouvelle stack, en FR, EN et ES (bandeau d'avertissement en attendant) |
-| `docs/architecture/` (`architecture.md`, `architecture-report.md`, `analytics.md`, `api-publique.md`, `responsive-mobile.md`) | réécrits d'après `docs/reecriture/README.md` et les ADR |
+| `docs/architecture/` (`architecture.md`, `analytics.md`, `api-publique.md`, `responsive-mobile.md`) | réécrits d'après `docs/reecriture/README.md` et les ADR |
 | `docs/guides/setup.md`, `docker.md`, `configuration.md` | **fait** : archivés sous `legacy/docs/guides/`, remplacés par `developpement.md` et le nouveau `configuration.md` |
 | `docs/guides/github-actions-secrets.md` | **fait** : guide du pipeline de la nouvelle stack ; l'ancien est sous `legacy/docs/guides/` |
 | `docs/guides/observabilite.md`, `logging.md` | exemples sur `api` et `web-ssr` (`EventName`), plus de `php` ni `go-api` |
 | `docs/guides/oauth-google-setup.md` | à jour pour la nouvelle stack ; à la décommission, retirer du client OAuth l'URI `/connect/google/check` et le § 6 |
 | `docs/guides/packaging-apk.md` | **fait** : archivé sous `legacy/docs/guides/`, remplacé par l'ADR 0007 et `release-android.md` |
-| `docs/guides/legal-info.md`, `migration-edge-proxy.md` | relus contre la nouvelle stack |
+| `docs/guides/migration-edge-proxy.md` | relus contre la nouvelle stack |
 | `docs/changelog/README.md` | table des scopes (Twig, îlots Vue, Symfony, Go → front Angular, API .NET) |
 | `docs/reecriture/` | statut « basculé » dans son README ; ce runbook complété des dates et relevés réels |
 

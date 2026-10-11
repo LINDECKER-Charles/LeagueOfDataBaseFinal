@@ -20,10 +20,8 @@ public sealed class LegacyTargetTests
 
     [Theory]
     [InlineData(null, "/en/champions")]
-    [InlineData("", "/en/champions")]
     [InlineData("fr_FR", "/fr/champions")]
     [InlineData("en_GB", "/en/champions?lang=en_GB")]
-    [InlineData("es_MX", "/es/champions?lang=es_MX")]
     [InlineData("zh_TW", "/zh-hant/champions")]
     [InlineData("pt_PT", "/pt/champions")]
     [InlineData("fr-FR", "/en/champions")]

@@ -214,13 +214,10 @@ public sealed class CatalogDetailTests(CatalogApiFixture api)
         Assert.False(jade.GetProperty("globalRange").GetBoolean());
     }
 
-    [Theory]
-    [InlineData("8100")]
-    [InlineData("8100-domination")]
-    [InlineData("8100-stale-slug")]
-    public async Task RuneTreeIsFoundWhateverItsSlug(string segment)
+    [Fact]
+    public async Task RuneTreeIsFoundWhateverItsSlug()
     {
-        var tree = await api.GetJsonAsync($"{Latest}/runes/{segment}");
+        var tree = await api.GetJsonAsync($"{Latest}/runes/8100-stale-slug");
 
         Assert.Equal("runes/8100-domination", tree.Text("canonicalPath"));
         Assert.Equal(4, tree.Items("slots").Count);
@@ -244,7 +241,6 @@ public sealed class CatalogDetailTests(CatalogApiFixture api)
 
     [Theory]
     [InlineData("/api/catalog/99.1.1/en_US/items/1004", "unknown-version")]
-    [InlineData("/api/catalog/99.1.1/en_US/champions", "unknown-version")]
     [InlineData("/api/catalog/16.19.1/de_DE/items/1004", "unknown-language")]
     public async Task UnlistedCatalogIsNotFound(string path, string code)
     {
@@ -255,7 +251,6 @@ public sealed class CatalogDetailTests(CatalogApiFixture api)
 
     [Theory]
     [InlineData("/api/catalog/abc/en_US/items/1004", "invalid-version")]
-    [InlineData("/api/catalog/v16.19.1/en_US/champions", "invalid-version")]
     [InlineData("/api/catalog/16.19.1/english/champions/Ahri", "invalid-language")]
     public async Task MalformedCatalogIsABadRequest(string path, string code)
     {

@@ -51,15 +51,13 @@ public sealed class CatalogWarmUpTests(CatalogApiFixture api)
         Assert.True(done.IsNull("latest"));
     }
 
-    [Theory]
-    [InlineData("99.1.1", "unknown-version")]
-    [InlineData("latest", "invalid-version")]
-    public async Task RefusedCatalogEndsTheStreamWithItsCode(string version, string code)
+    [Fact]
+    public async Task RefusedCatalogEndsTheStreamWithItsCode()
     {
-        using var response = await api.GetAsync($"/api/catalog/{version}/en_US/warm-up");
+        using var response = await api.GetAsync("/api/catalog/99.1.1/en_US/warm-up");
         var last = (await FramesOfAsync(response))[^1];
 
-        Assert.Equal(("failed", code), (last.Text("stage"), last.Text("failure")));
+        Assert.Equal(("failed", "unknown-version"), (last.Text("stage"), last.Text("failure")));
     }
 
     [Fact]

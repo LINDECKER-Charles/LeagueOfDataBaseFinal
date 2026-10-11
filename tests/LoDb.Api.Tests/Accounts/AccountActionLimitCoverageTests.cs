@@ -9,7 +9,9 @@ namespace LoDb.Api.Tests.Accounts;
 /// Each costly action of a signed-in account carries its hourly limit by account: a Stripe
 /// checkout, an API key issued, a build saved, a vote.
 /// </summary>
-public sealed class AccountActionLimitCoverageTests
+/// <remarks>The rows only read the endpoints' metadata: one host serves them all.</remarks>
+public sealed class AccountActionLimitCoverageTests(ApiFactory factory)
+    : IClassFixture<ApiFactory>
 {
     [Theory]
     [InlineData("openPackCheckout", "purchase-checkout")]
@@ -19,9 +21,8 @@ public sealed class AccountActionLimitCoverageTests
     [InlineData("createBuild", "build-edit")]
     [InlineData("updateBuild", "build-edit")]
     [InlineData("voteBuild", "build-vote")]
-    public async Task CostlyActionRequiresItsLimit(string operation, string policy)
+    public void CostlyActionRequiresItsLimit(string operation, string policy)
     {
-        await using var factory = new ApiFactory();
         var endpoints = factory.Services.GetRequiredService<EndpointDataSource>().Endpoints;
 
         var endpoint = Assert.Single(

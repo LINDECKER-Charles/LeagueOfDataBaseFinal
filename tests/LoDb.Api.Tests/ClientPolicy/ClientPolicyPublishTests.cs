@@ -13,7 +13,7 @@ namespace LoDb.Api.Tests.ClientPolicy;
 /// whole; anyone else is refused.
 /// </summary>
 public sealed class ClientPolicyPublishTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string AdminPath = "/api/admin/client-policy/";
     private const string PolicyPath = "/api/client-policy";
@@ -65,27 +65,6 @@ public sealed class ClientPolicyPublishTests(PostgresContainerFixture postgres)
             (ApiJson.Text(bundle, "id"), ApiJson.Text(bundle, "checksum"),
                 ApiJson.Text(bundle, "minimumNativeVersion")));
         Assert.Equal(JsonValueKind.String, android.GetProperty("publishedAt").ValueKind);
-    }
-
-    [Fact]
-    public async Task RepublishingReplacesThePolicyWhole()
-    {
-        using var admin = await AdminBrowser.OpenAsync(App);
-        using var first = await PutAsync(admin, "android", new
-        {
-            minimumVersion = "1.2.0",
-            latestVersion = "1.4.2",
-            bundle = PublishPolicyRulesTests.Bundle,
-        });
-        await ApiJson.ReadAsync(first, HttpStatusCode.OK);
-
-        using var second = await PutAsync(admin, "android", new { latestVersion = "1.4.3" });
-
-        await ApiJson.ReadAsync(second, HttpStatusCode.OK);
-        var android = (await PlatformsAsync(admin))[1];
-        Assert.Equal(JsonValueKind.Null, android.GetProperty("minimumVersion").ValueKind);
-        Assert.Equal(JsonValueKind.Null, android.GetProperty("bundle").ValueKind);
-        Assert.Equal("1.4.3", ApiJson.Text(android, "latestVersion"));
     }
 
     [Fact]

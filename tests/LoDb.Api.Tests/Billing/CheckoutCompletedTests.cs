@@ -18,7 +18,7 @@ namespace LoDb.Api.Tests.Billing;
 /// read it, and a kind the site does not sell is acknowledged and left alone.
 /// </summary>
 public sealed class CheckoutCompletedTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private BillingApp? _app;
 
@@ -94,11 +94,9 @@ public sealed class CheckoutCompletedTests(PostgresContainerFixture postgres)
             Cancellation)).Status);
     }
 
+    // The quota and rate of the other plans are ApiPlansTests'.
     [Theory]
     [InlineData("monthly", 15_000, 120)]
-    [InlineData("monthly_plus", 45_000, 120)]
-    [InlineData("annual", 20_000, 300)]
-    [InlineData("annual_plus", 60_000, 300)]
     public async Task PlanSubscribesTheKey(string plan, int quota, int rate)
     {
         var buyer = await App.SeedUserAsync("Abonne");

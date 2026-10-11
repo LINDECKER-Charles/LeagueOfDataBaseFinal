@@ -14,7 +14,7 @@ namespace LoDb.Api.Tests.Accounts;
 /// the account, under the same linking rules as the web.
 /// </summary>
 public sealed class GoogleAppExchangeTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string ExchangePath = "/api/account/google/app/exchange";
     private const string Subject = "110248495921238986420";
@@ -97,9 +97,7 @@ public sealed class GoogleAppExchangeTests(PostgresContainerFixture postgres)
 
     [Theory]
     [InlineData("code with spaces", Verifier, "code")]
-    [InlineData("code-été", Verifier, "code")]
     [InlineData(FakeGoogle.Code, "too-short-for-pkce", "codeVerifier")]
-    [InlineData(FakeGoogle.Code, "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjX+", "codeVerifier")]
     public async Task MalformedCodeOrVerifierNeverReachesGoogle(
         string code,
         string verifier,
@@ -119,20 +117,6 @@ public sealed class GoogleAppExchangeTests(PostgresContainerFixture postgres)
         var errors = await ApiJson.FieldErrorsAsync(response);
         Assert.Equal(["malformed"], Assert.Single(errors).Value);
         Assert.Equal(field, Assert.Single(errors).Key);
-        Assert.Empty(App.GoogleServer.Exchanges);
-    }
-
-    [Fact]
-    public async Task OverlongCodeNeverReachesGoogle()
-    {
-        using var app = App.App();
-
-        using var response = await ExchangeAsync(
-            app,
-            Exchange(AccountsApp.AndroidClientId, code: new string('a', 513)));
-
-        var errors = await ApiJson.FieldErrorsAsync(response);
-        Assert.Equal(["malformed"], errors["code"]);
         Assert.Empty(App.GoogleServer.Exchanges);
     }
 
@@ -195,19 +179,6 @@ public sealed class GoogleAppExchangeTests(PostgresContainerFixture postgres)
     {
         App.GoogleServer.Unreachable = true;
         using var app = App.App();
-
-        using var response = await ExchangeAsync(app, Exchange());
-
-        Assert.Equal(
-            "google-unavailable",
-            await ApiJson.ProblemCodeAsync(response, HttpStatusCode.ServiceUnavailable));
-    }
-
-    [Fact]
-    public async Task WithoutAClientIdGoogleIsUnavailable()
-    {
-        await using var withoutGoogle = await AccountsApp.StartAsync(postgres, withGoogle: false);
-        using var app = withoutGoogle.App();
 
         using var response = await ExchangeAsync(app, Exchange());
 
