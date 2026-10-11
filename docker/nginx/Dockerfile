@@ -24,13 +24,14 @@ LABEL org.opencontainers.image.title="lodb-nginx" \
 # so a bound written inside a location (a burst) is tunable like one at http level. The
 # filter keeps envsubst away from nginx's own $variables.
 #
-# Defaults suit a local stack; a served environment sets the first three
-# (compose.deploy.yaml). LODB_REVISION, first part of the page cache's key, defaults to the
-# image's revision (compose.yaml sets it); LODB_ARCHIVE_EPOCH, first part of the past
-# patches' cache key, is raised by hand (docs/guides/configuration.md). The others bound each
-# client and the caches (sites/site.conf): a rate in requests per second or minute (r/s,
-# r/m), a burst in requests admitted at once past the rate, sizes in nginx units (k, m, g),
-# durations in s, m, h, d.
+# Defaults suit a local stack; a served environment sets the first four
+# (compose.deploy.yaml). LODB_EDGE_SECRET, the one allowed empty, is empty here: nginx then
+# asks the edge for no header (sites/site.conf). LODB_REVISION, first part of the page
+# cache's key, defaults to the image's revision (compose.yaml sets it); LODB_ARCHIVE_EPOCH,
+# first part of the past patches' cache key, is raised by hand (docs/guides/configuration.md).
+# The others bound each client and the caches (sites/site.conf): a rate in requests per
+# second or minute (r/s, r/m), a burst in requests admitted at once past the rate, sizes in
+# nginx units (k, m, g), durations in s, m, h, d.
 # An empty value makes nginx refuse its configuration, and so does a variable that a
 # container names without a value: Docker then drops the default below. compose.yaml
 # therefore passes each bound with this same default (tools/nginx checks that they agree).
@@ -40,6 +41,7 @@ ENV APP_REVISION=${APP_REVISION} \
     NGINX_ENVSUBST_FILTER=^LODB_ \
     LODB_CANONICAL_HOST=localhost \
     LODB_EDGE_CIDR=127.0.0.1/32 \
+    LODB_EDGE_SECRET= \
     LODB_NOINDEX=0 \
     LODB_REVISION=${APP_REVISION} \
     LODB_PAGES_RATE=20r/s \

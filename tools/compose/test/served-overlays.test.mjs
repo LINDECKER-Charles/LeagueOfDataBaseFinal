@@ -20,7 +20,9 @@ const STAGING = [...SERVED, 'compose.staging.yaml'];
 const STAGING_AUTH = [...STAGING, 'compose.staging-auth.yaml'];
 const RUNNING = ['api', 'web-ssr', 'nginx', 'postgres'];
 // What the deploy job writes on a host, absent from the examples.
-const HOST_ADDITIONS = 'LODB_EDGE_CIDR=172.18.0.0/16\nLODB_STACK_SUBNET=10.231.1.0/24\n';
+const EDGE_SECRET = '5e'.repeat(32);
+const HOST_ADDITIONS = 'LODB_EDGE_CIDR=172.18.0.0/16\nLODB_STACK_SUBNET=10.231.1.0/24\n'
+  + `LODB_EDGE_SECRET=${EDGE_SECRET}\n`;
 // Every service of the stack, the one-shot migrate included.
 const SERVICES = [...RUNNING, 'migrate'];
 // What postgres's entrypoint needs, as root, before it becomes `postgres`.
@@ -101,10 +103,13 @@ describe('served overlays through Compose',
       assert.equal(prod.api.environment.LoDb__Hosting__KnownProxyNetworks__0, subnet);
     });
 
-    test('has the edge reach nginx on its unprivileged port', () => {
+    test('has the edge reach nginx on its port, with the header nginx requires', () => {
+      const labels = prod.nginx.labels;
       for (const site of ['caddy_0', 'caddy_1']) {
-        assert.equal(prod.nginx.labels[`${site}.reverse_proxy`], NGINX_UPSTREAM, site);
+        assert.equal(labels[`${site}.reverse_proxy`], NGINX_UPSTREAM, site);
+        assert.equal(labels[`${site}.reverse_proxy.header_up`], `X-LoDb-Edge ${EDGE_SECRET}`);
       }
+      assert.equal(prod.nginx.environment.LODB_EDGE_SECRET, EDGE_SECRET);
     });
 
     after(() => folder && rm(folder, { recursive: true, force: true }));

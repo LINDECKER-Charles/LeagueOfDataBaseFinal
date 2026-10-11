@@ -1,6 +1,7 @@
 // Starts the nginx image under test behind a stub of its upstreams, on a private Docker
 // network, and removes everything afterwards. Needs the Docker CLI.
 import { execFile } from 'node:child_process';
+import { randomBytes } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { promisify } from 'node:util';
 
@@ -47,16 +48,16 @@ async function startNginx(image, network, name, environment) {
 // nginx itself, then both upstreams once resolved, through paths that no rate limits.
 const READY_PATHS = ['/healthz', '/v1/ready', '/build/ready'];
 
-async function isAnswering(port) {
-  const answers = READY_PATHS.map((path) =>
-    fetch(`http://127.0.0.1:${port}${path}`).then((response) => response.ok, () => false));
+async function isAnswering(port, headers) {
+  const answers = READY_PATHS.map((path) => fetch(`http://127.0.0.1:${port}${path}`, { headers })
+    .then((response) => response.ok, () => false));
   return (await Promise.all(answers)).every(Boolean);
 }
 
-async function waitUntilReady(port) {
+async function waitUntilReady(port, headers) {
   const deadline = Date.now() + READY_TIMEOUT_MS;
   while (Date.now() < deadline) {
-    if (await isAnswering(port)) {
+    if (await isAnswering(port, headers)) {
       return;
     }
     await new Promise((resolve) => setTimeout(resolve, READY_POLL_MS));
@@ -67,18 +68,21 @@ async function waitUntilReady(port) {
 /**
  * Boots the image with the given LODB_* variables; resolves to the published port, an
  * `exec` into the nginx container, and `stop`, which removes the containers and network.
+ * With LODB_EDGE_SECRET set, the readiness probes send it as the edge does.
  */
 export async function startStack(image, environment) {
-  const prefix = `lodb-nginx-check-${process.pid}`;
+  // Unique: a test file may start several stacks.
+  const prefix = `lodb-nginx-check-${process.pid}-${randomBytes(4).toString('hex')}`;
   const [network, stub, nginx] = [prefix, `${prefix}-upstream`, `${prefix}-nginx`];
   const stop = () => docker('rm', '-f', '-v', nginx, stub)
     .catch(() => undefined)
     .then(() => docker('network', 'rm', network).catch(() => undefined));
+  const secret = environment.LODB_EDGE_SECRET;
   await docker('network', 'create', network);
   try {
     await startStub(image, network, stub);
     const port = await startNginx(image, network, nginx, environment);
-    await waitUntilReady(port);
+    await waitUntilReady(port, secret ? { 'x-lodb-edge': secret } : {});
     const exec = (...command) => docker('exec', nginx, ...command);
     return { port, exec, stop };
   } catch (error) {

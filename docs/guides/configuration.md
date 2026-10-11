@@ -207,6 +207,7 @@ création d'une base, sur un volume vide.
 | `LODB_PUBLIC_API_ORIGIN` | `https://api.test.league-of-data-base.com` | `https://api.league-of-data-base.com` | ✅ | Origine de `/v1` documentée par `/developers`. |
 | `LODB_EDGE_CIDR` | — | — | — | Seul pair cru sur `X-Forwarded-For`. **Jamais dans `ENV_*`** : le job l'écrit depuis le réseau `edge` (§ 6.7). |
 | `LODB_STACK_SUBNET` | — | — | — | Sous-réseau du réseau privé de la stack (`10.231.1.0/24` en staging, `10.231.2.0/24` en prod). **Jamais dans `ENV_*`** : le job l'écrit selon la cible (§ 6.8). |
+| `LODB_EDGE_SECRET` | — | — | — | Valeur que l'edge envoie à nginx dans `X-LoDb-Edge` ; sans elle, nginx répond `403` (hors `/healthz`). **Jamais dans `ENV_*`** (une ligne qui la nomme est remplacée) : le job la génère une fois par hôte et l'écrit dans le `.env` (§ 6.7). Vide en local : rien n'est exigé. |
 | `LODB_NOINDEX` ⚙️ | `1` | `0` | ✅ | `X-Robots-Tag: noindex, nofollow` ; le smoke test le vérifie. |
 | `LODB_DB_NAME`, `LODB_DB_USER` | 🔁 `POSTGRES_DB`, `POSTGRES_USER` | idem | ✅ | La base existe déjà dans `pgdata`, créée avec ces identifiants ; chaîne de connexion de `api` et `migrate`. |
 | `LODB_DB_PASSWORD` 🔒 ⚙️ | 🔁 `POSTGRES_PASSWORD` | idem | ✅ | Idem. Fichier (§ 4) : `api` et `migrate` le lisent en `LoDb__Database__Password`, que l'API pose dans la chaîne de connexion (un `;` y est donc permis), `postgres` en `POSTGRES_PASSWORD_FILE`. |
@@ -422,15 +423,17 @@ n'est pas une frontière d'authentification.
   Désactivé par défaut ; à n'activer que si des robots coûtent au staging, en surveillant le
   CPU de l'edge, et à retirer s'il monte.
 - Les smoke tests du déploiement passent par l'intérieur de la stack ; le test TLS public lit
-  `/healthz`, exclu de l'identifiant.
+  `/healthz`, exclu de l'identifiant, comme les deux chemins du contrôle de l'en-tête de
+  l'edge (§ 6.7).
 
 ## 5. Fichiers et volumes de l'hôte
 
 | Chemin, dans `$STAGING_PATH` ou `$PROD_PATH` | Écrit par | Rôle |
 |---|---|---|
 | dépôt (branche `test` ou `main`) | le job (`git reset --hard`) | Fichiers compose à la racine. |
-| `.env` | le job (`ENV_STAGING`, `ENV_PROD` sans ses secrets, plus `LODB_SECRETS_REVISION`, `LODB_EDGE_CIDR`, `LODB_STACK_SUBNET` et `COMPOSE_FILE`), mode 600 | § 4. |
+| `.env` | le job (`ENV_STAGING`, `ENV_PROD` sans ses secrets, plus `LODB_SECRETS_REVISION`, `LODB_EDGE_CIDR`, `LODB_STACK_SUBNET`, `LODB_EDGE_SECRET` et `COMPOSE_FILE`), mode 600 | § 4. |
 | `.deploy/secrets/` | le job (`ENV_STAGING`, `ENV_PROD`), à chaque déploiement | Un fichier par secret (§ 4), monté dans `/run/secrets` des services qui le lisent. Dossier en 700, fichiers en 444 : Compose monte un fichier secret avec son propriétaire et son mode, et l'API comme l'entrée de Postgres le lisent sans être root. Tous présents, vides pour un secret absent : Docker monterait un fichier manquant comme un dossier. |
+| `.deploy/secrets/LODB_EDGE_SECRET` | le job, au premier déploiement qui ne le trouve pas | Valeur de l'en-tête de l'edge (`openssl rand -hex 32`), mode 600, jamais montée : le job la recopie dans le `.env` à chaque déploiement (§ 6.7). |
 | `.deploy/incoming.env` | le job, le temps d'un déploiement | `ENV_*` tel quel, root seul, supprimé dès qu'il est séparé (et à la fin du script, quoi qu'il arrive). |
 | `.deploy/data-protection.pfx` | le job (`*_DATA_PROTECTION_PFX`) | Monté en secret dans `api`. Dossier en 700, fichier en 644 : l'utilisateur non root de l'API le lit. Absent, la stack ne démarre pas. |
 | `.deploy/backups/` | le job, à chaque déploiement | `<horodatage>.env` : le `.env` remplacé (sans secret depuis les fichiers secrets ; les copies plus anciennes en contiennent encore) ; `<horodatage>.dump` : la base avant `migrate` (`pg_dump -Fc`, relu par `pg_restore --list`). Les dix plus récents de chaque, dossier en 700. Ce que le retour arrière restaure ([runbook](../reecriture/bascule.md), § 8.2). |
@@ -543,12 +546,31 @@ Le projet Google Cloud et l'écran de consentement :
   passe par l'App Link `https://<hôte>/app/oauth/google`. Voir § 8 : l'app ne le lit pas
   encore.
 
-### 6.7 Sous-réseau de l'edge
+### 6.7 Sous-réseau et en-tête de l'edge
 
 Rien à relever. Docker choisit ce sous-réseau quand `infra-vps` crée le réseau : à chaque
 déploiement, le job le lit (`docker network inspect edge`) et écrit `LODB_EDGE_CIDR` dans
 le `.env` de l'hôte, qui sert aussi aux commandes `docker compose` lancées à la main depuis
 ce dossier. Une ligne `LODB_EDGE_CIDR` venue de `ENV_*` est remplacée.
+
+Tout conteneur du réseau `edge`, quel que soit son projet, joint le port de nginx : seul
+l'edge doit pouvoir y déclarer l'adresse d'un visiteur. Il pose donc sur chaque requête
+l'en-tête `X-LoDb-Edge` (labels `caddy_0` et `caddy_1` de `compose.deploy.yaml`, qui
+remplacent la valeur qu'un client aurait envoyée) ; nginx répond `403` à toute requête qui ne
+le porte pas avec la bonne valeur, sauf `/healthz` (sonde du conteneur), et ne le transmet ni
+à l'API ni au SSR. La valeur, `LODB_EDGE_SECRET`, n'est à relever nulle part : au premier
+déploiement qui ne la trouve pas, le job la génère (`openssl rand -hex 32`) dans
+`.deploy/secrets/LODB_EDGE_SECRET`, puis la recopie à chaque déploiement dans le `.env`, sans
+jamais l'afficher. Elle n'est secrète que pour les autres conteneurs : les labels de nginx,
+que l'edge lit, la configuration qu'il en tire et le journal où il consigne cette
+configuration à chaque changement la contiennent. Le job vérifie que nginx refuse une
+requête sans l'en-tête, puis, par l'edge, que deux chemins auxquels nginx répond lui-même
+(`/cdn/blobs/edge-check` sur le site, `/edge-check` sur le sous-domaine `api.`) reçoivent
+sa `404`, et non un `403`.
+
+Pour la changer : supprimer le fichier sur l'hôte, puis redéployer. nginx et les labels
+changent ensemble ; le temps que l'edge relise les labels (quelques secondes), les requêtes
+reçoivent un `403`.
 
 ### 6.8 Sous-réseau de la stack
 

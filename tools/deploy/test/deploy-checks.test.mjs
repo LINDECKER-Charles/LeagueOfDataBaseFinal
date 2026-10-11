@@ -165,3 +165,51 @@ describe('_deploy.yml, the dotenv against the target', () => {
     });
   }
 });
+
+describe("_deploy.yml, the edge's secret", () => {
+  const EDGE_SECRET = /^[0-9a-f]{64}$/;
+  const secretOf = (dir) => read(dir, '.deploy', 'secrets', 'LODB_EDGE_SECRET').trim();
+  const edgeLines = (dir) => read(dir, '.env').split('\n')
+    .filter((line) => line.startsWith('LODB_EDGE_SECRET='));
+
+  it('generates it once on the host, hands it to the .env, and never prints it', () => {
+    const dir = host();
+
+    const first = deploy(dir, PROD, dotenvFor(PROD));
+    const secret = secretOf(dir);
+    const second = deploy(dir, PROD, dotenvFor(PROD));
+
+    assert.equal(first.status, 0, first.stderr);
+    assert.equal(second.status, 0, second.stderr);
+    assert.match(secret, EDGE_SECRET);
+    assert.equal(secretOf(dir), secret, 'kept across deploys');
+    assert.deepEqual(edgeLines(dir), [`LODB_EDGE_SECRET=${secret}`]);
+    for (const run of [first, second]) {
+      assert.ok(!`${run.stdout}${run.stderr}`.includes(secret), 'printed');
+    }
+  });
+
+  it('replaces a value that the dotenv names', () => {
+    const dir = host();
+
+    const run = deploy(dir, STAGING, dotenvFor(STAGING, ['LODB_EDGE_SECRET=from-the-dotenv']));
+
+    assert.equal(run.status, 0, run.stderr);
+    assert.deepEqual(edgeLines(dir), [`LODB_EDGE_SECRET=${secretOf(dir)}`]);
+  });
+
+  it('leaves the .env and the secret files in place when the kept one is malformed', () => {
+    const dir = host();
+    assert.equal(deploy(dir, PROD, dotenvFor(PROD)).status, 0);
+    writeFileSync(join(dir, '.deploy', 'secrets', 'LODB_EDGE_SECRET'), 'not-hexadecimal\n');
+    const before = snapshot(dir);
+
+    const run = deploy(dir, PROD, dotenvFor(PROD));
+
+    assert.notEqual(run.status, 0);
+    assert.match(run.stderr, /LODB_EDGE_SECRET must hold 64 hexadecimal digits/);
+    assert.doesNotMatch(run.stderr, /not-hexadecimal/);
+    assert.deepEqual(snapshot(dir), before);
+    assert.deepEqual(leftovers(dir), []);
+  });
+});

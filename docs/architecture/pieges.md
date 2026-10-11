@@ -217,8 +217,8 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
 - nginx : sous-domaine reconnu par `server_name ~^api\.` ; CORP `same-origin` sauf
   `/cdn/blobs/` en `cross-origin` (coquille Android) ; `access_log off` voulu (l'edge
   journalise) ; tous les `.conf` de `sites/`, `server.d/` et `snippets/` passent par
-  `envsubst`, filtré sur `^LODB_` (défauts dans le `Dockerfile`, jamais une valeur vide).
-  Rendus dans `/tmp/{sites,server.d,snippets}`, que
+  `envsubst`, filtré sur `^LODB_` (défauts dans le `Dockerfile`, jamais une valeur vide, sauf
+  `LODB_EDGE_SECRET`). Rendus dans `/tmp/{sites,server.d,snippets}`, que
   `/etc/nginx/{sites,server.d,snippets}` désignent par un lien : les `include` gardent leurs
   chemins. Une variable `LODB_*` de nginx passe par `compose.yaml` avec son défaut
   (`${LODB_X:-défaut}`), **jamais** en clé sans valeur dans un calque comme les réglages de
@@ -267,6 +267,15 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   `absolute_redirect off` : une redirection écrite par nginx garde un `Location` relatif, qui
   sinon porterait `http://` et le port 8080. Pid, fichiers temporaires et configuration
   rendue dans `/tmp`.
+- **En-tête de l'edge** (`X-LoDb-Edge`, `sites/site.conf`) : sur un hôte, nginx répond `403` à
+  toute requête qui ne le porte pas avec la valeur de `LODB_EDGE_SECRET`, `/healthz` excepté,
+  et ne le transmet jamais à l'amont. L'edge le pose (labels `caddy_*.reverse_proxy.header_up`),
+  le job de déploiement génère la valeur une fois par hôte (`.deploy/secrets/LODB_EDGE_SECRET`)
+  et l'écrit dans le `.env`. Vide (local, E2E, banc), rien n'est exigé. Un appel à la main
+  dans la stack d'un hôte le prend dans l'environnement de nginx :
+  `docker compose exec -T nginx sh -c 'wget -qO- --header "X-LoDb-Edge: $LODB_EDGE_SECRET" …'`.
+  Un `403` venu de nginx sur tout le site : labels de l'edge pas encore relus après un `up`
+  (quelques secondes), ou valeur changée d'un seul côté.
 - **HTML compressé une fois, par le SSR** (`src/server/compression`, gzip `6`) : les caches
   de pages de nginx demandent `Accept-Encoding: gzip` à l'amont quel que soit le client,
   gardent cette seule copie et la décompressent (`gunzip`) pour un client sans gzip. Le

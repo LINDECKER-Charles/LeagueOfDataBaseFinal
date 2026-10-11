@@ -209,6 +209,9 @@ services:
     environment:
       LODB_CANONICAL_HOST: ${LODB_CANONICAL_HOST:-localhost}
       LODB_EDGE_CIDR: ${LODB_EDGE_CIDR:-127.0.0.1/32}
+      # The value the edge sends in X-LoDb-Edge, which nginx then requires (sites/site.conf).
+      # Empty, the image's default and the local stack's: no header is required.
+      LODB_EDGE_SECRET: ${LODB_EDGE_SECRET:-}
       LODB_NOINDEX: ${LODB_NOINDEX:-0}
       # First part of the page cache's key: a new revision never serves a page of the previous
       # build, and needs no purge. A served host drops this key (compose.deploy.yaml)
@@ -264,6 +267,7 @@ services:
     restart: unless-stopped
     logging: *default-logging
     healthcheck:
+      # The site's /healthz, which the edge's header is not required for (sites/site.conf).
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
       interval: 15s
       timeout: 5s

@@ -5,7 +5,7 @@
 //
 // BASE_URL is nginx on the stack's network, on its unprivileged port; every request names the
 // site's host and the client it stands for (X-Forwarded-For, believed from the bench's network
-// only).
+// only). A bench stack has no edge secret: nginx asks for no X-LoDb-Edge.
 import http from 'k6/http';
 import exec from 'k6/execution';
 import { Counter, Rate, Trend } from 'k6/metrics';
