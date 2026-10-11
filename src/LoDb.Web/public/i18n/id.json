@@ -171,6 +171,11 @@
     },
     "slot": "Slot"
   },
+  "detail": {
+    "history": {
+      "title": "Di patch sebelumnya"
+    }
+  },
   "common": {
     "back": "Kembali",
     "search": "Cari…",
@@ -194,7 +199,8 @@
       "item": "Item",
       "runes": "Rune",
       "summoner": "Summoner",
-      "sitemap": "Peta situs"
+      "sitemap": "Peta situs",
+      "patches": "Riwayat patch"
     },
     "links": {
       "title": "Tautan Berguna",

@@ -17,6 +17,9 @@ internal static class CheckoutSessions
     /// <summary>Everything is sold in euros; ISO 4217 code, as Stripe writes it.</summary>
     public const string Currency = "eur";
 
+    // Card only: a delayed method (SEPA debit, bank transfer…) completes the session days
+    // before the money is in, or never comes in at all.
+    private const string CardPayment = "card";
     private const string PaymentMode = "payment";
     private const string SubscriptionMode = "subscription";
     private const string DonateSubmit = "donate";
@@ -31,6 +34,7 @@ internal static class CheckoutSessions
         {
             Mode = PaymentMode,
             SubmitType = DonateSubmit,
+            PaymentMethodTypes = [CardPayment],
             LineItems = [Line(page.ProductName, amountCents)],
             SuccessUrl = page.SuccessUrl + "?session_id=" + SessionIdSlot,
             CancelUrl = page.CancelUrl,
@@ -78,6 +82,7 @@ internal static class CheckoutSessions
         SessionLineItemOptions line,
         int buyerId) => new()
     {
+        PaymentMethodTypes = [CardPayment],
         LineItems = [line],
         SuccessUrl = page.SuccessUrl,
         CancelUrl = page.CancelUrl,

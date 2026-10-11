@@ -66,7 +66,7 @@ public sealed class ShareTests(BuildsApp app)
     public async Task SignedInVoterSeesTheirVote()
     {
         var build = await app.InsertAsync((await app.SeedAsync()).Username, new StoredBuild());
-        using var voter = await app.SignInAsync(await app.SeedAsync());
+        using var voter = await app.SignInAsync(await app.SeedAsync(AccountSeed.Seasoned));
         using var cast = await voter.VoteAsync(build.Id, "down");
         Assert.Equal(HttpStatusCode.OK, cast.StatusCode);
 

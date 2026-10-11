@@ -11,7 +11,7 @@ type Extraction = Awaited<ReturnType<typeof extractRoutesAndCreateRouteTree>>;
 
 const DOCUMENT_HTML =
   '<html><head><base href="/"></head><body><lodb-root></lodb-root></body></html>';
-const LATEST = 'public, max-age=0, s-maxage=300, stale-while-revalidate=3600';
+const LATEST = 'public, max-age=0, s-maxage=1800, stale-while-revalidate=86400';
 const PRIVATE = 'private, no-store';
 
 // What the build does before prerendering, through the private entry point it uses itself:
@@ -77,6 +77,7 @@ const CASES: Case[] = [
   { url: '/en/trends', mode: RenderMode.Server, headers: PUBLIC },
   { url: '/en/u/faker', mode: RenderMode.Server, headers: PUBLIC },
   { url: '/en/developers', mode: RenderMode.Server, headers: PUBLIC },
+  { url: '/fr/patches', mode: RenderMode.Server, headers: PUBLIC },
   { url: '/en/donate', mode: RenderMode.Server, headers: PUBLIC },
   { url: '/en/15.14.1', mode: RenderMode.Server, headers: PUBLIC },
   { url: '/en/nowhere/at/all', mode: RenderMode.Server, headers: PUBLIC },

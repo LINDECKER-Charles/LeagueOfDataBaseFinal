@@ -1,5 +1,6 @@
 using System.Net;
 using LoDb.Api.Modules.Trends;
+using LoDb.Api.Tests.Hosting.Support;
 using LoDb.Domain.Languages;
 using LoDb.Ingestion.Catalog;
 using Microsoft.AspNetCore.Http;
@@ -42,5 +43,5 @@ public sealed class TrendsScopeTests
         new(null, null, null, null, Version, null, context);
 
     private static DefaultHttpContext StackCall() =>
-        new() { Connection = { RemoteIpAddress = StackAddress } };
+        StackCalls.From(StackAddress);
 }

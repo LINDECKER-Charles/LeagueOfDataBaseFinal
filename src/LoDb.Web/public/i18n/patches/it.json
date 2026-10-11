@@ -1,0 +1,8 @@
+{
+  "title": "Cronologia delle patch",
+  "description": "Tutte le patch di League of Legends elencate da Data Dragon, ciascuna con campioni, oggetti, rune e incantesimi da evocatore com’erano in quella patch.",
+  "intro": "Tutte le patch elencate da Data Dragon, dalla più recente. Ognuna apre i suoi campioni, oggetti, rune e incantesimi da evocatore com’erano allora.",
+  "group": "Patch {{ major }}.x",
+  "latest": "Attuale",
+  "empty": "Nessuna patch è elencata per ora."
+}

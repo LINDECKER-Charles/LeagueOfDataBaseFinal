@@ -145,7 +145,7 @@ public sealed class TrendsTests(BuildsApp app)
     public async Task SignedInVoterSeesTheirVote()
     {
         var build = await app.InsertAsync((await app.SeedAsync()).Username, Dated("Voted", 1));
-        using var voter = await app.SignInAsync(await app.SeedAsync());
+        using var voter = await app.SignInAsync(await app.SeedAsync(AccountSeed.Seasoned));
         using var cast = await voter.VoteAsync(build.Id, "up");
         Assert.Equal(HttpStatusCode.OK, cast.StatusCode);
         using var visitor = app.Browser();

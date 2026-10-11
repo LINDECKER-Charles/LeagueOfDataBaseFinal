@@ -4,7 +4,7 @@ import type { RenderTimeouts } from './render-timeouts';
 type Environment = Readonly<Record<string, string | undefined>>;
 
 const MS_PER_SECOND = 1_000;
-// nginx gives up on a render after 30 s (snippets/page-cache.conf): a render that stops
+// nginx gives up on a render after 30 s (snippets/rendered-pages.conf): a render that stops
 // calling the API at 20 s still answers in time, and holds its admission slot no longer.
 // One slow call may not take more than half of it, so a page reading /api/meta and then its
 // detail can still fail fast, with a 502, rather than wait for the proxy's timeout.

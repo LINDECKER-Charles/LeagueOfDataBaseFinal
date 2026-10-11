@@ -42,6 +42,12 @@
       <lodb-empty-state />
     }
 
+    <lodb-previous-patches
+      class="mt-14"
+      [context]="context"
+      [path]="current.details.canonicalPath"
+    />
+
     <lodb-pager
       class="mt-14"
       [previous]="pager().previous"

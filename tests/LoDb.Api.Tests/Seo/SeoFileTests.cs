@@ -61,6 +61,10 @@ public sealed class SeoFileTests
             llms,
             StringComparison.Ordinal);
         Assert.Contains(
+            "(https://league-of-data-base.com/en/patches): Every game patch",
+            llms,
+            StringComparison.Ordinal);
+        Assert.Contains(
             "permanent URLs of the form https://league-of-data-base.com/en/{patch}/champions/{id}.",
             llms,
             StringComparison.Ordinal);

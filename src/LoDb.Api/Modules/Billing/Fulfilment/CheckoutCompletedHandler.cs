@@ -1,59 +1,49 @@
-using LoDb.Api.Modules.Billing.Checkout;
+using LoDb.Api.Modules.Billing.Payments;
 using LoDb.Api.Modules.Billing.Webhooks;
+using LoDb.Infrastructure.Persistence.Billing.Payments;
 using Stripe;
-using Stripe.Checkout;
 
 namespace LoDb.Api.Modules.Billing.Fulfilment;
 
 /// <summary>
-/// <c>checkout.session.completed</c>, routed by the session's <c>kind</c>: a credit pack, a
-/// subscription, or a donation, which a session without any kind is too.
+/// <c>checkout.session.completed</c>: a session paid at once is granted, as its <c>kind</c>
+/// says; one whose payment is still on its way, by a delayed method, is recorded as pending
+/// and granted only once <c>checkout.session.async_payment_succeeded</c> arrives.
 /// </summary>
-/// <remarks>
-/// A kind the site does not know is left alone, where the legacy stack took it for a
-/// donation: it is no session the site opened.
-/// </remarks>
 internal sealed partial class CheckoutCompletedHandler(
-    PackFulfilment packs,
-    PlanFulfilment plans,
-    DonationFulfilment donations,
+    SessionEventReader reader,
+    SessionFulfilment fulfilment,
+    CheckoutLedger ledger,
     ILogger<CheckoutCompletedHandler> logger) : IStripeEventHandler
 {
     public string EventType => EventTypes.CheckoutSessionCompleted;
 
-    public Task HandleAsync(Event stripeEvent, CancellationToken cancellationToken)
+    public async Task HandleAsync(Event stripeEvent, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(stripeEvent);
-        if (stripeEvent.Data?.Object is not Session session)
+        if (reader.Read(stripeEvent) is not { } completed)
         {
-            LogNoSession(logger, stripeEvent.Id);
-            return Task.CompletedTask;
+            return;
         }
 
-        var paidAt = StripeTimes.CreatedAt(stripeEvent);
-        switch (SessionFields.Metadata(session, CheckoutMetadata.Kind))
+        if (SessionPayments.IsSettled(completed.Session))
         {
-            case CheckoutMetadata.PackKind:
-                return packs.ApplyAsync(session, paidAt, cancellationToken);
-            case CheckoutMetadata.PlanKind:
-                return plans.ApplyAsync(session, cancellationToken);
-            case null or "" or CheckoutMetadata.DonationKind:
-                return donations.RecordAsync(session, paidAt, cancellationToken);
-            default:
-                LogUnknownKind(logger, session.Id);
-                return Task.CompletedTask;
+            await fulfilment.FulfilAsync(completed, cancellationToken);
+            return;
         }
+
+        // On first sight only: the success of its payment may have come in first.
+        if (await ledger.StatusOfAsync(completed.Session.Id, cancellationToken) is null)
+        {
+            await ledger.RecordAsync(completed, StripeCheckoutStatus.Pending, cancellationToken);
+        }
+
+        LogPending(logger, completed.Session.Id, completed.Session.PaymentStatus);
     }
 
     [LoggerMessage(
-        EventName = "billing.checkout.no_session",
-        Level = LogLevel.Warning,
-        Message = "The completion event {EventId} carries no Checkout session: ignored.")]
-    private static partial void LogNoSession(ILogger logger, string eventId);
-
-    [LoggerMessage(
-        EventName = "billing.checkout.unknown_kind",
-        Level = LogLevel.Warning,
-        Message = "The session {SessionId} is of a kind the site does not sell: ignored.")]
-    private static partial void LogUnknownKind(ILogger logger, string sessionId);
+        EventName = "billing.checkout.pending",
+        Level = LogLevel.Information,
+        Message = "The session {SessionId} completed {PaymentStatus}: nothing granted until "
+            + "its payment comes in.")]
+    private static partial void LogPending(ILogger logger, string sessionId, string? paymentStatus);
 }

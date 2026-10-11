@@ -9,12 +9,21 @@ import type { VoteState } from '../../../../core/api/generated/models/vote-state
 import { API_BASE_URL } from '../../../../core/api/api-base-url';
 import { AuthSession } from '../../../../core/auth/session/auth-session';
 import type { SessionStatus } from '../../../../core/auth/session/session-status';
+import { ToastService } from '../../../../core/layout/toast/toast-service';
 import { VoteScore } from './vote-score';
 
 const VOTE_URL = '/api/builds/7/vote';
 const LABELS = {
   community: {
-    vote: { up: 'Upvote', down: 'Downvote', score_label: 'Score', login: 'Sign in to vote' },
+    vote: {
+      up: 'Upvote',
+      down: 'Downvote',
+      score_label: 'Score',
+      login: 'Sign in to vote',
+      refused_unverified: 'Verify first',
+      refused_too_recent: 'Too new',
+      refused_too_many: 'Too many',
+    },
   },
 };
 
@@ -102,6 +111,32 @@ describe('VoteScore', () => {
     expect(scoreOf(fixture)).toBe('+3');
     expect(arrow(fixture, 1).getAttribute('aria-pressed')).toBe('false');
     expect(arrow(fixture, 1).disabled).toBe(false);
+  });
+
+  it.each([
+    ['email-not-verified', HttpStatusCode.Forbidden, 'Verify first'],
+    ['account-too-recent', HttpStatusCode.Forbidden, 'Too new'],
+    ['rate-limited', HttpStatusCode.TooManyRequests, 'Too many'],
+  ])('says why when the API refuses the vote with %s', async (code, status, message) => {
+    const { fixture, http } = mount({ score: 3, myVote: 0 });
+
+    arrow(fixture, 0).click();
+    http.expectOne(VOTE_URL).flush({ code }, { status, statusText: 'Refused' });
+    await settle(fixture);
+
+    expect(scoreOf(fixture)).toBe('+3');
+    const toasts = TestBed.inject(ToastService).toasts();
+    expect(toasts.map(({ kind, message: text }) => [kind, text])).toEqual([['warning', message]]);
+  });
+
+  it('says nothing more on a refusal the voter cannot act on', async () => {
+    const { fixture, http } = mount({ score: 3, myVote: 0 });
+
+    arrow(fixture, 0).click();
+    http.expectOne(VOTE_URL).flush({ code: 'build-not-found' }, { status: 404, statusText: 'No' });
+    await settle(fixture);
+
+    expect(TestBed.inject(ToastService).toasts()).toEqual([]);
   });
 
   it('rolls back on an answer that is not a vote state', async () => {

@@ -171,6 +171,11 @@
     },
     "slot": "Hely"
   },
+  "detail": {
+    "history": {
+      "title": "Korábbi patchekben"
+    }
+  },
   "common": {
     "back": "Vissza",
     "search": "Keresés…",
@@ -194,7 +199,8 @@
       "item": "Tárgy",
       "runes": "Rúnák",
       "summoner": "Idéző",
-      "sitemap": "Oldaltérkép"
+      "sitemap": "Oldaltérkép",
+      "patches": "Patch-előzmények"
     },
     "links": {
       "title": "Hasznos linkek",

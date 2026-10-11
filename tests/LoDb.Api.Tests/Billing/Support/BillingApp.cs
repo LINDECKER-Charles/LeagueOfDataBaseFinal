@@ -222,8 +222,10 @@ public sealed class BillingApp : IAsyncDisposable
         services.AddSingleton<IApiKeyCache>(KeyCache);
         services.AddSingleton(Fault);
         services.AddScoped<CheckoutCompletedHandler>();
-        services.RemoveAll<IStripeEventHandler>();
+        // Every other handler stays the module's own.
+        services.Remove(services.Single(static service =>
+            service.ServiceType == typeof(IStripeEventHandler)
+            && service.ImplementationType == typeof(CheckoutCompletedHandler)));
         services.AddScoped<IStripeEventHandler, FaultyCheckoutHandler>();
-        services.AddScoped<IStripeEventHandler, SubscriptionDeletedHandler>();
     }
 }

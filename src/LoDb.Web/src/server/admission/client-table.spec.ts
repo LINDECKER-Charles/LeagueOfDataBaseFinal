@@ -1,7 +1,8 @@
 import { ClientTable } from './client-table';
 import { TokenBucket } from './token-bucket';
 
-const tableOf = (capacity: number) => new ClientTable(capacity, () => new TokenBucket(6, 6));
+const budgetsOf = () => ({ pinned: new TokenBucket(6, 6), current: new TokenBucket(60, 20) });
+const tableOf = (capacity: number) => new ClientTable(capacity, budgetsOf);
 
 describe('ClientTable', () => {
   it('gives a client the same state on each request', () => {

@@ -50,6 +50,13 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   qu'une montée de version peut déplacer.
 - Points d'accroche de `app.config.ts` : chaque propriétaire remplit son dossier
   (`core/auth`, `core/analytics`, `core/update`) sans toucher `app.config.ts` ni `app.html`.
+- **Historique des patchs** (`/{locale}/patches`) : quatre liens par version listée, des
+  centaines de versions. Balisage nu et `ViewEncapsulation.None` voulus (l'attribut
+  d'encapsulation pesait un tiers de la page) : ni attribut, ni classe, ni pipe par lien.
+  L'index des sitemaps n'annonce que le dernier patch et les 12 versions suivantes
+  (`LoDb__Seo__SitemapVersionWindow`) : un ancien sitemap absent de l'index reste servi, ce
+  n'est pas une régression. Les anciens patchs se découvrent par cette page et le bloc
+  « Dans les patchs précédents » des fiches, qui ne chargent aucun catalogue.
 - Une page qui oublie `Seo.apply` n'a ni canonique ni hreflang. Une clé `about.*`, `api.*`
   ou `seo.*` n'est traduite que si un ancêtre fournit son scope (`provideTranslocoScope`) ;
   sinon la clé brute sort dans le HTML, sans erreur.
@@ -68,7 +75,7 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
 
 ## API, données et comptes
 
-- `/readyz` se lit sur l'API (18081 ou `api:8080`) et, par nginx, sur le sous-domaine `api.`
+- `/readyz` se lit sur l'API (18081 ou `lodb-api:8080`) et, par nginx, sur le sous-domaine `api.`
   seulement (1 requête/s par adresse, sonde externe) ; demandé au site, il part au SSR (404).
 - En local, les URLs absolues perdent le port (nginx transmet `Host: $host`) : l'origine
   canonique se fixe par `LoDb__Seo__CanonicalOrigin` et `LoDb__Accounts__SiteOrigin`.
@@ -86,15 +93,36 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   (`Hosting/Support/KestrelApi.cs`) : le serveur en mémoire n'applique aucune limite, et
   Development transforme un corps invalide en exception.
 - `/api/pickers/*` exige `version` et `lang` (400 `invalid-version` sinon).
-- **Porte froide des catalogues** : un appel direct à l'API (18081, `api:8080`) depuis une
-  adresse privée et sans `X-Forwarded-For` est compté comme le SSR (débit interne, attente
-  de 2 s permise). Pour reproduire un client public, passer par nginx (18080). Un `503`
-  « en attente » sous charge est un délestage voulu, pas une panne.
+- **Porte réseau de l'API** : le port 8080 ne répond qu'au réseau de la stack
+  (`LoDb:Hosting:KnownProxyNetworks`, le seul `LODB_STACK_SUBNET` sur un hôte, les trois
+  plages privées en local) et à la loopback ; tout autre pair reçoit un 404 vide, compté par
+  `lodb_network_gate_refusals_total`, sans log. Un conteneur d'un réseau partagé
+  (`observability`) ne joint que le port 9464. Un nouveau service qui appelle l'API doit
+  être sur le réseau `default` de la stack.
+- **Porte froide des catalogues** : un appel direct à l'API (18081, `lodb-api:8080`) depuis le
+  réseau de la stack (ou la loopback) et sans `X-Forwarded-For` est compté comme le SSR
+  (débit interne, attente de 2 s permise). Pour reproduire un client public, passer par nginx
+  (18080). Un `503` « en attente » sous charge est un délestage voulu, pas une panne.
+- **Warm-up à court d'images** : une trame `done` avec `settled` < `total` est voulue. Le
+  budget d'images par minute est partagé (≈ 900 images par warm-up froid de l'accueil,
+  1 500 par minute) : refusé, le flux ne demande plus d'images et finit `done`, le
+  catalogue ouvert ; les images restantes restent en attente et les listes les confient à
+  la file de fond. Un catalogue qui ne s'ouvre pas et un flux expiré finissent toujours
+  `failed`, en gardant les comptes atteints.
 - Une URL de l'ancien site sur une version non stockée répond `302` vers la liste de la
   version, sans rien ingérer : voulu (une entrée retirée du jeu ne devient pas une 404).
 - **E-mails** : le modèle d'un `EmailMessage` s'écrit avec `EmailModelKeys`, jamais en
   littéral (sinon `dead` dès le premier essai). L'outbox n'envoie rien sans
   `LoDb:Mail:Host` : voulu. En local, Mailpit sur http://localhost:18025.
+- **Plafond horaire de l'outbox** (`LoDb:Outbox:HourlyCaps`, 100 confirmations, 50
+  réinitialisations, 20 messages de contact par heure glissante, pour tout le site) : au-delà,
+  les messages restent `pending` avec 0 tentative jusqu'à ce que l'heure libère une place.
+  Un e-mail « qui n'arrive pas » se cherche d'abord dans la jauge `lodb_outbox_deferred` et
+  le journal `outbox.hourly_cap.reached` ; un lien retenu plus d'une heure arrive expiré.
+- **Comptes non vérifiés effacés après 7 jours** (tâche `accounts.unverified_purge`, horaire),
+  sauf build, clé API, don, rôle, bannissement, soutien ou connexion Google : un compte de
+  test non vérifié d'une pile locale qui tourne depuis une semaine disparaît, c'est voulu.
+  Le renvoi de l'e-mail de vérification est limité à 5 par compte, puis 1 par jour.
 - Bannir, c'est `IsBanned` plus `UpdateSecurityStampAsync`. Un hash argon2id **plus fort**
   que la cible est conservé (`Argon2Passwords.IsTarget`) ; un compte hérité arrive sans
   `security_stamp`, la connexion le remplit.
@@ -127,6 +155,14 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   locale, jamais `compose.deploy.yaml`. Les 4 échecs par identifiant et par adresse ne se
   relèvent pas (ils restent sous le verrouillage à 5) ; les tests xUnit gardent les valeurs
   de production.
+- **Âge minimal pour voter** : un compte vote 24 h après sa création
+  (`LoDb:Builds:Votes:MinimumAccountAge`), et le compte de chaque worker est créé au début
+  du passage : `compose.override.yaml` ramène l'âge à zéro pour la pile locale, jamais
+  `compose.deploy.yaml`. L'e-mail vérifié reste exigé (le compte du worker l'est). Les
+  limites horaires par compte (`LoDb:RateLimiting:CheckoutsPerHour` 10,
+  `ApiKeyIssuesPerHour` 5, `BuildEditsPerHour` 60, `VotesPerHour` 120) ne sont pas
+  relevées : la suite reste loin en dessous ; un `429 rate-limited` sur un build, une clé
+  ou un vote se cherche d'abord là.
 - Comparer le chemin d'une réponse (`new URL(url).pathname`), jamais `url.endsWith(...)`.
   Limiter les comptes de titres ou de boutons à `main` ou au composant visé. Une spec qui
   compte les POST exclut `/api/analytics/`. Un parcours qui crée un compte le supprime aussi
@@ -139,7 +175,9 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   `compose.deploy.yaml`) : toute la suite arrive d'une adresse et ouvre les anciens patchs
   bien plus vite qu'un hôte servi ne les admet. Admission : `LODB_RENDER_MAX_IN_FLIGHT`,
   `LODB_PINNED_*`, `LODB_CURRENT_*` et la part d'un client (`LODB_RENDER_PER_CLIENT_*`,
-  `LODB_PINNED_RENDERS_PER_CLIENT_PER_MINUTE`). Attente de l'API par un rendu :
+  `LODB_PINNED_RENDERS_PER_CLIENT_PER_MINUTE`, `LODB_CURRENT_RENDERS_PER_CLIENT_PER_MINUTE`,
+  `LODB_CURRENT_RENDER_PER_CLIENT_BURST` : sans elles, la suite entière n'aurait qu'un rendu
+  par seconde des pages du dernier patch). Attente de l'API par un rendu :
   `LODB_RENDER_DEADLINE_SECONDS` et `LODB_RENDER_API_TIMEOUT_SECONDS` à 30 s, car la
   première visite d'un patch attend son ingestion. Une 503 ou une 502 du SSR en E2E se
   cherche d'abord là.
@@ -149,11 +187,24 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   `LODB_PAGES_*`, `LODB_API_READS_*`, `LODB_LEGACY_*` et `LODB_SITEMAPS_*` (débit et rafale) ;
   jamais `compose.deploy.yaml`. Pour retrouver un défaut, retirer la clé (`!reset null`) :
   une valeur vide fait refuser la configuration de nginx.
+- **Tout relèvement ajouté à `compose.override.yaml` s'annule aussi dans
+  `tools/load/compose.bench.yaml`**, le calque du banc de charge, sinon le banc mesure une pile
+  sans borne : `tools/load/test/compose-bench.test.mjs` échoue tant qu'une clé relevée garde sa
+  valeur relevée. Compose n'applique pas le `!reset` par clé d'un troisième fichier à une clé
+  que le deuxième a ajoutée : le calque redonne l'entrée de `compose.yaml` (SSR, nginx) ou
+  nomme la clé sans valeur (API, comme `compose.deploy.yaml`). Le banc ne tourne jamais sur le
+  staging, qui partage les vCPU de la prod ([`tools/load/`](../../tools/load/README.md)).
 
 ## Infra et déploiement
 
 - Variables Compose préfixées **`LODB_`**. En dev, les images s'appellent
   `<projet>-<service>` : un emplacement n'écrase pas les images de la stack locale.
+- **`!reset` et l'ordre des fichiers** : Compose ignore un `!reset` placé après un autre
+  fichier qui touche déjà l'`environment` du même service. Les `!reset null` de
+  `compose.deploy.yaml` (`KnownProxyNetworks__1`, `__2`) ne tiennent donc que s'il suit
+  directement `compose.yaml` : un calque d'hôte (staging…) se place **après** lui. Sinon,
+  l'API croirait encore les plages privées de `compose.yaml`, celles des réseaux partagés
+  comprises ; le déploiement le vérifie sur la configuration résolue et s'arrête.
 - Sur l'hôte, la stack occupe le projet de l'ancienne (`lodb-staging`, `lodb-prod`) : elle
   reprend son volume `pgdata` et range ses blobs dans `ddragon`. Le volume `storage` de
   l'ancienne stack (propriété de `www-data`) n'est ni réutilisé ni supprimé : le nommer
@@ -176,19 +227,76 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   vient de `snippets/server-guards.conf` : une location qui déclare son propre `error_page`
   doit répéter `error_page 429`. `/api/catalog` et `/api/meta` ne sont **jamais** mis en
   cache par nginx (un HIT contournerait le `426` des apps). Les caches `lodb_seo` et
-  `lodb_legacy` vivent dans le conteneur (vides à chaque image), `lodb_pages` sur un volume.
+  `lodb_legacy` vivent dans le conteneur (vides à chaque image), `lodb_pages`,
+  `lodb_archive` et `lodb_assets` (bundles de `/build/`, clé = `$uri` seul) sur des volumes.
   `/cdn/blobs/` ne sert que `{sha256}.{png,jpg,jpeg,webp,gif,webm,mp4}` : une nouvelle
   extension de blob s'ajoute à la regex. La garde des extensions de scripts
   (`snippets/server-guards.conf`) épargne les chemins de profil (`/u/`, `profiles/`) : un
   nom d'utilisateur peut finir en `.bak` ou `.ini`. Vérification : `tools/nginx/`
   (`node --test`).
+- **Secrets en fichiers** (`compose.deploy.yaml`, `tools/deploy/split-env.sh`) : sur un hôte,
+  aucun secret sous `environment:` (une clé sans valeur l'y ramènerait, visible par
+  `docker inspect`) ; un nouveau secret s'ajoute à `SECRET_KEYS` **et** aux `secrets` du
+  calque (`tools/deploy` vérifie l'accord). Le job écrit un fichier par secret, vide s'il est
+  absent : Docker monterait un fichier manquant comme un dossier, et l'API lit un fichier
+  vide comme un réglage absent. Un conteneur garde le fichier monté à sa création et l'API
+  ne lit ses fichiers qu'au démarrage : le label `LODB_SECRETS_REVISION` de `api` est ce qui
+  la fait recréer quand un secret change, ne pas le retirer. `POSTGRES_PASSWORD_FILE` ne
+  sert qu'à la création d'une base (volume vide).
+- **HTML compressé une fois, par le SSR** (`src/server/compression`, gzip `6`) : les caches
+  de pages de nginx demandent `Accept-Encoding: gzip` à l'amont quel que soit le client,
+  gardent cette seule copie et la décompressent (`gunzip`) pour un client sans gzip. Le
+  `Vary` de l'amont est ignoré par le cache et masqué ; `Vary: Accept-Encoding` vient de
+  nginx (`gzip_vary`), une fois : ni `add_header Vary`, ni retrait de `proxy_hide_header`.
+  Le SSR compresse **après** le calcul de la CSP, qui hache le HTML rendu.
 - `gzip_types` de `docker/nginx/nginx.conf` doit lister `text/javascript` et
   `application/manifest+json` (sinon ~1,7 s perdues en 4G lente). Un budget Lighthouse ne
   se relâche jamais ; Lighthouse en local est pessimiste (cache de transfert du SSR rangé
   sans le port).
+- **Pages des anciens patchs** (`location ~ "^/{locale}/[0-9]"`, `snippets/archive-cache.conf`) :
+  clé **sans révision**, préfixée par `LODB_ARCHIVE_EPOCH`. Elles survivent aux déploiements
+  et gardent jusqu'à deux semaines le chrome, la CSP et les bundles du build qui les a
+  rendues (une semaine de `s-maxage`, puis une dernière copie périmée servie pendant son
+  rafraîchissement tant que la page n'a pas atteint ses 7 jours d'inactivité) : voulu. Monter l'epoch quand le chrome, la CSP ou le contrat `/api` changent de façon
+  visible, et après tout correctif de sécurité du front (procédure :
+  [`configuration.md`](../guides/configuration.md)). Gardées à la **2ᵉ** demande
+  (`LODB_ARCHIVE_CACHE_MIN_USES`, `2`) : `MISS`, `MISS`, puis `HIT` ; une spec qui attend un
+  `HIT` les demande trois fois. En deçà, chaque URL distincte tient quand même une clé
+  jusqu'à son inactivité, même une réponse non gardée (`301`, `503`) : la zone des clés borne
+  les URL qu'un balayage parcourt avant d'évincer, pas le disque. En local aussi, une page d'ancien patch survit à un rebuild : `down -v` ou monter
+  l'epoch. `archive-cache.conf` sert la copie périmée pendant le rafraîchissement
+  (`updating`) ; `page-cache.conf` **jamais** (elle primerait sur le
+  `stale-while-revalidate` du dernier patch). Les regex de location contenant `{` sont entre
+  guillemets, sinon nginx refuse sa configuration.
+- **Bundles des builds précédents** : `web-ssr` copie ses bundles hachés dans le volume
+  `front-builds` (`LODB_FRONT_BUILDS_DIR`) sans réécrire l'existant, au démarrage puis
+  **toutes les heures**, et rafraîchit leur date à chaque fois ; `/build/` sert ceux de
+  l'image, puis ceux du volume. Le job de déploiement supprime ce qu'aucun build en service
+  n'a livré depuis `LODB_FRONT_BUILDS_RETENTION_DAYS` (30 j) : jamais sous la durée de vie
+  d'une page en cache. La date d'un fichier est celle de la dernière heure où un build l'a
+  servi, pas celle du démarrage : sans le rafraîchissement horaire, un build resté en service
+  plus de 30 jours perdrait ses bundles au déploiement qui le remplace. Un chunk introuvable
+  recharge la page une fois (`ChunkReload`, drapeau en `sessionStorage`), puis affiche la
+  500 : un rechargement en boucle se cherche là. Le volume est écrit par le SSR et survit aux
+  déploiements : nginx sert `/build/` sous `default-src 'none'; sandbox` (un fichier ouvert
+  directement n'exécute rien ; la politique est ignorée pour un script ou un style qu'une
+  page charge), et après une compromission du SSR on vide `front-builds` et `assets-cache`
+  ([`configuration.md`](../guides/configuration.md)).
 - SSR : `LODB_TRUST_PROXY_HEADERS` obligatoire derrière nginx, `LODB_ALLOWED_HOSTS` liste
   les hôtes acceptés ; `public/` ne contient ni `media/` ni script racine nommé comme un
-  bundle (cache `immutable`).
+  bundle (cache `immutable`). Ses métriques sont sur un second serveur HTTP, port 9464
+  (`LODB_METRICS_PORT`), que nginx ne route pas et qu'aucun port ne publie ; `/metrics`
+  demandé au site reste la 404 statique du pré-routeur.
+- **Porte réseau du SSR** : comme l'API, le port 4000 ne répond qu'aux réseaux de
+  `LODB_STACK_NETWORKS` (le seul `LODB_STACK_SUBNET` sur un hôte, les trois plages privées
+  en local) et à la loopback ; tout autre pair reçoit un 404 vide, compté par
+  `lodb_ssr_network_gate_refusals_total`, sans log. Vide ou absente, la variable laisse la
+  seule loopback : un `node server.mjs` lancé hors de la stack ne sert que la machine.
+- Collecte (`compose.deploy.yaml`) : `api` et `web-ssr` rejoignent le réseau partagé
+  `observability` avec les labels `prometheus.scrape`/`prometheus.port`. Sur ce réseau, le
+  nom court d'un service (`api`, `postgres`) désigne aussi ceux des autres projets : un
+  conteneur de la stack n'appelle ses voisins que par les alias préfixés (`lodb-api`,
+  `lodb-postgres`, `lodb-web-ssr`).
 - Constats de logs (lignes hors JSON, erreurs multi-lignes) : **à corriger à la source,
   jamais à filtrer**.
 

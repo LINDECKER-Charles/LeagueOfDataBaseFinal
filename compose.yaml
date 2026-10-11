@@ -34,8 +34,10 @@ services:
       # Maximum Pool Size=32 keeps the API well under Postgres's max_connections, with room
       # for migrate, the deploy backup and psql. Timeout=5 bounds the wait for a pooled
       # connection (and the connection attempt): past it, /api answers 503 with Retry-After.
+      # Host=lodb-postgres, the project's alias: on a shared network (observability), the
+      # short name `postgres` would also name other projects' databases.
       ConnectionStrings__LoDb: &lodb-connection >-
-        Host=postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=${LODB_DB_USER:-lodb};Password=${LODB_DB_PASSWORD:-lodb};Gss Encryption Mode=Disable;Maximum Pool Size=32;Timeout=5;Application Name=lodb-api
+        Host=lodb-postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=${LODB_DB_USER:-lodb};Password=${LODB_DB_PASSWORD:-lodb};Gss Encryption Mode=Disable;Maximum Pool Size=32;Timeout=5;Application Name=lodb-api
       # X-Forwarded-* are trusted from the private ranges: only nginx and web-ssr reach
       # this port on a served host (no host port, not on the edge network). The stack's
       # own subnet is picked by Docker, so it cannot be named more precisely here.
@@ -54,8 +56,9 @@ services:
       - ddragon:/srv/storage
     networks:
       default:
-        # The name nginx proxies to. On a host, nginx also sits on the shared `edge` network,
-        # where `api` names other projects' services: Docker's DNS answers with theirs too.
+        # The name nginx and web-ssr call. On a host, nginx also sits on the shared `edge`
+        # network and api on `observability`, where `api` names other projects' services:
+        # Docker's DNS answers with theirs too. Containers only ever use the prefixed aliases.
         aliases: [lodb-api]
     depends_on:
       postgres:
@@ -67,11 +70,15 @@ services:
     healthcheck:
       # Exec form: the chiseled image has no shell. The command opens no port and asks
       # /healthz, which checks no dependency (a database outage must not restart the API).
+      # Each probe starts a whole .NET runtime in the API's CPU quota: once a minute when
+      # running, every 2 s while starting, so that `up --wait` still sees it healthy early.
+      # start_interval needs Docker Engine 25 or later (checked by _deploy.yml).
       test: ["CMD", "dotnet", "LoDb.Api.dll", "healthcheck"]
-      interval: 15s
+      interval: 60s
       timeout: 5s
       retries: 5
       start_period: 20s
+      start_interval: 2s
 
   # One-shot: the API's image brings the database to the latest migration (a database
   # created by Doctrine is marked at the baseline first), then exits. The API starts only
@@ -98,11 +105,16 @@ services:
     init: true
     environment:
       PORT: "4000"
-      LODB_API_ORIGIN: http://api:8080
+      # The API's project alias, never the short name `api` (see api's aliases).
+      LODB_API_ORIGIN: http://lodb-api:8080
       # Hosts the renders accept (Host or trusted X-Forwarded-Host); others get a 400.
       LODB_ALLOWED_HOSTS: ${LODB_ALLOWED_HOSTS:-localhost,127.0.0.1}
       # Set by nginx (snippets/proxy-headers.conf); Angular ignores them unless listed.
       LODB_TRUST_PROXY_HEADERS: x-forwarded-proto,x-forwarded-host,x-forwarded-for
+      # Peers the site's port answers besides the loopback (src/server/security/network-gate.ts):
+      # the private ranges, as the API's KnownProxyNetworks. A served host names its stack's
+      # subnet alone (compose.deploy.yaml).
+      LODB_STACK_NETWORKS: 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
       # Render admission (src/server/admission): empty keeps the defaults sized for the host.
       LODB_RENDER_MAX_IN_FLIGHT: ${LODB_RENDER_MAX_IN_FLIGHT:-}
       LODB_PINNED_RENDER_MAX_IN_FLIGHT: ${LODB_PINNED_RENDER_MAX_IN_FLIGHT:-}
@@ -112,6 +124,8 @@ services:
       LODB_CURRENT_RENDER_BURST: ${LODB_CURRENT_RENDER_BURST:-}
       LODB_RENDER_PER_CLIENT_MAX_IN_FLIGHT: ${LODB_RENDER_PER_CLIENT_MAX_IN_FLIGHT:-}
       LODB_PINNED_RENDERS_PER_CLIENT_PER_MINUTE: ${LODB_PINNED_RENDERS_PER_CLIENT_PER_MINUTE:-}
+      LODB_CURRENT_RENDERS_PER_CLIENT_PER_MINUTE: ${LODB_CURRENT_RENDERS_PER_CLIENT_PER_MINUTE:-}
+      LODB_CURRENT_RENDER_PER_CLIENT_BURST: ${LODB_CURRENT_RENDER_PER_CLIENT_BURST:-}
       LODB_RENDER_TRACKED_CLIENTS: ${LODB_RENDER_TRACKED_CLIENTS:-}
       # A render's wait on the API (src/server/rendering), and the query a catalogue page
       # keeps (src/server/routing): empty keeps the defaults.
@@ -119,10 +133,20 @@ services:
       LODB_RENDER_API_TIMEOUT_SECONDS: ${LODB_RENDER_API_TIMEOUT_SECONDS:-}
       LODB_QUERY_MAX_PARAMS: ${LODB_QUERY_MAX_PARAMS:-}
       LODB_QUERY_MAX_PARAM_LENGTH: ${LODB_QUERY_MAX_PARAM_LENGTH:-}
+      # Its hashed bundles are published there at start, then dated again hourly; /build/
+      # serves the previous builds' from there: a tab or a cached page that names one still
+      # loads it after a deploy.
+      LODB_FRONT_BUILDS_DIR: /srv/front-builds
+      # gzip level of a rendered page, compressed once per render: empty keeps the default.
+      LODB_HTML_GZIP_LEVEL: ${LODB_HTML_GZIP_LEVEL:-}
       # Heap ceiling under the container's memory limit (512 MiB when served): V8 collects
       # harder before the kernel kills the renderer. The young generation adds 192 MiB, so the
       # whole heap stops at 448 MiB and leaves room for code and buffers.
       NODE_OPTIONS: --max-old-space-size=256
+    volumes:
+      # Bundles of the builds served lately; the deploy job purges those no build shipped for
+      # 30 days (.github/workflows/_deploy.yml).
+      - front-builds:/srv/front-builds
     networks:
       default:
         # The name nginx proxies to, unique on the shared `edge` network (see api).
@@ -178,13 +202,26 @@ services:
       LODB_WEBHOOK_MAX_BODY_SIZE: ${LODB_WEBHOOK_MAX_BODY_SIZE:-1m}
       LODB_PAGE_CACHE_SIZE: ${LODB_PAGE_CACHE_SIZE:-2g}
       LODB_PAGE_CACHE_KEYS_SIZE: ${LODB_PAGE_CACHE_KEYS_SIZE:-32m}
-      LODB_PAGE_CACHE_INACTIVE: ${LODB_PAGE_CACHE_INACTIVE:-7d}
+      LODB_PAGE_CACHE_INACTIVE: ${LODB_PAGE_CACHE_INACTIVE:-24h}
+      # Raised by hand only, the purge of the past patches' pages (docs/guides/configuration.md).
+      LODB_ARCHIVE_EPOCH: ${LODB_ARCHIVE_EPOCH:-1}
+      LODB_ARCHIVE_CACHE_SIZE: ${LODB_ARCHIVE_CACHE_SIZE:-6g}
+      LODB_ARCHIVE_CACHE_KEYS_SIZE: ${LODB_ARCHIVE_CACHE_KEYS_SIZE:-32m}
+      LODB_ARCHIVE_CACHE_INACTIVE: ${LODB_ARCHIVE_CACHE_INACTIVE:-7d}
+      LODB_ARCHIVE_CACHE_MIN_USES: ${LODB_ARCHIVE_CACHE_MIN_USES:-2}
+      LODB_ASSETS_CACHE_SIZE: ${LODB_ASSETS_CACHE_SIZE:-1g}
+      LODB_ASSETS_CACHE_KEYS_SIZE: ${LODB_ASSETS_CACHE_KEYS_SIZE:-8m}
+      LODB_ASSETS_CACHE_INACTIVE: ${LODB_ASSETS_CACHE_INACTIVE:-30d}
       # Silences the plain-text start-up lines of the image's docker-entrypoint.sh.
       NGINX_ENTRYPOINT_QUIET_LOGS: "1"
     volumes:
       - ddragon:/srv/storage:ro
-      # The page cache outlives a restart or a recreated container; its key sorts revisions.
+      # The page caches outlive a restart or a recreated container. The latest patch's key
+      # sorts the revisions; the past patches' has none, they outlive the deploys too.
       - pages-cache:/var/cache/nginx/pages
+      - archive-cache:/var/cache/nginx/archive
+      # The bundles of /build/, under their name alone: a deploy keeps them warm.
+      - assets-cache:/var/cache/nginx/assets
     depends_on:
       api:
         condition: service_healthy
@@ -201,12 +238,38 @@ services:
 
   postgres:
     image: postgres:17-alpine
+    # The same server settings on every environment, each tunable from the host's .env:
+    # - max_connections: the API's pool (32) plus migrate, the deploy backup, the jobs'
+    #   lock sessions and psql, far from what the memory limit of a served host holds;
+    # - pg_stat_statements, loaded at start, records what each query costs (a migration
+    #   creates the extension that reads it);
+    # - a statement slower than 500 ms is logged, never its parameters (personal data);
+    # - a session left idle inside a transaction for a minute is closed: it would hold its
+    #   locks and its backend.
+    command:
+      - postgres
+      - -c
+      - max_connections=${LODB_PG_MAX_CONNECTIONS:-60}
+      - -c
+      - shared_preload_libraries=pg_stat_statements
+      - -c
+      - log_min_duration_statement=${LODB_PG_SLOW_STATEMENT:-500ms}
+      - -c
+      - log_parameter_max_length=0
+      - -c
+      - idle_in_transaction_session_timeout=${LODB_PG_IDLE_IN_TRANSACTION_TIMEOUT:-60s}
+    # Parallel queries share memory through /dev/shm, of which Docker gives 64 MiB.
+    shm_size: ${LODB_PG_SHM_SIZE:-256m}
     environment:
       POSTGRES_DB: ${LODB_DB_NAME:-lodb}
       POSTGRES_USER: ${LODB_DB_USER:-lodb}
       POSTGRES_PASSWORD: ${LODB_DB_PASSWORD:-lodb}
     volumes:
       - pgdata:/var/lib/postgresql/data
+    networks:
+      default:
+        # The name of the connection strings, unique once api joins a shared network.
+        aliases: [lodb-postgres]
     restart: unless-stopped
     logging: *default-logging
     healthcheck:
@@ -225,3 +288,7 @@ volumes:
   # Shared with the legacy stack on a host: `migrate` brings its database up to date.
   pgdata:
   pages-cache:
+  archive-cache:
+  assets-cache:
+  # Hashed front bundles of the successive builds (web-ssr, src/server/assets).
+  front-builds:

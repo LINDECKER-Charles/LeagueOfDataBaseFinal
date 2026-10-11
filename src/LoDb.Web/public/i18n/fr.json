@@ -189,6 +189,9 @@
       "previous": "Précédent",
       "next": "Suivant",
       "back_to_list": "Retour à la liste"
+    },
+    "history": {
+      "title": "Dans les patchs précédents"
     }
   },
   "common": {
@@ -320,7 +323,8 @@
       "item": "Objets",
       "runes": "Runes",
       "summoner": "Sorts d’invocateur",
-      "sitemap": "Plan du site"
+      "sitemap": "Plan du site",
+      "patches": "Historique des patchs"
     },
     "links": {
       "title": "Liens utiles",
@@ -498,10 +502,10 @@
       "banned": "Ce compte a été suspendu par l'équipe de modération."
     },
     "verify": {
-      "banner": "Confirmez votre adresse e-mail pour débloquer la création de builds.",
+      "banner": "Confirmez votre adresse e-mail pour créer des builds et voter : sans confirmation, le compte est supprimé au bout de 7 jours.",
       "banner_cta": "Renvoyer l'e-mail",
       "resend_done": "E-mail de confirmation renvoyé.",
-      "resend_throttled": "Un e-mail a déjà été envoyé récemment — patientez quelques minutes avant de réessayer.",
+      "resend_throttled": "Un e-mail de confirmation a déjà été envoyé récemment — vérifiez vos courriers indésirables, ou réessayez plus tard.",
       "gate_build": "Confirmez votre adresse e-mail avant de créer un build.",
       "gate_api": "Confirmez votre adresse e-mail avant de générer une clé API."
     },
@@ -902,6 +906,9 @@
       "down": "Voter contre ce build",
       "score_label": "Score communautaire",
       "login": "Connectez-vous pour voter",
+      "refused_unverified": "Confirmez votre adresse e-mail pour voter.",
+      "refused_too_recent": "Un nouveau compte peut voter un jour après son inscription.",
+      "refused_too_many": "Trop de votes en peu de temps — réessayez plus tard.",
       "invalid": "Vote invalide."
     },
     "supporter": {

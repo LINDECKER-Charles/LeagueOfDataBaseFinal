@@ -10,6 +10,14 @@ type Environment = Readonly<Record<string, string | undefined>>;
 // pages get five renders a second, a burst of a minute's worth of their usual misses; one
 // client gets two renders at once and a pinned page every ten seconds, which no reader
 // outpaces, so that it alone never takes what the others need.
+//
+// One client also gets a fifth of the current pages' budget, a render a second and twenty at
+// once: without it, a client asking for pages nginx has not cached spent the whole lane, and
+// every other visitor's uncached page was refused. A visitor's full page load renders once,
+// and its clicks inside the site render nothing here (the browser app navigates by itself):
+// the readers behind one shared address (a home NAT, a carrier's CGNAT) stay far below it. A
+// crawler on one address still gets every page nginx holds in its cache; only its misses past
+// one a second get a 503 and its Retry-After.
 const DEFAULTS: RenderLimits = {
   maxInFlight: 8,
   pinnedMaxInFlight: 3,
@@ -19,6 +27,8 @@ const DEFAULTS: RenderLimits = {
   currentBurst: 60,
   perClientMaxInFlight: 2,
   pinnedPerClientPerMinute: 6,
+  currentPerClientPerMinute: 60,
+  currentPerClientBurst: 20,
   trackedClients: 50_000,
 };
 
@@ -31,6 +41,8 @@ const VARIABLES: Readonly<Record<keyof RenderLimits, string>> = {
   currentBurst: 'LODB_CURRENT_RENDER_BURST',
   perClientMaxInFlight: 'LODB_RENDER_PER_CLIENT_MAX_IN_FLIGHT',
   pinnedPerClientPerMinute: 'LODB_PINNED_RENDERS_PER_CLIENT_PER_MINUTE',
+  currentPerClientPerMinute: 'LODB_CURRENT_RENDERS_PER_CLIENT_PER_MINUTE',
+  currentPerClientBurst: 'LODB_CURRENT_RENDER_PER_CLIENT_BURST',
   trackedClients: 'LODB_RENDER_TRACKED_CLIENTS',
 };
 
@@ -47,6 +59,8 @@ const SHARES: readonly Share[] = [
   { part: 'pinnedMaxInFlight', whole: 'maxInFlight', isStrict: true },
   { part: 'perClientMaxInFlight', whole: 'maxInFlight', isStrict: false },
   { part: 'pinnedPerClientPerMinute', whole: 'pinnedPerMinute', isStrict: false },
+  { part: 'currentPerClientPerMinute', whole: 'currentPerMinute', isStrict: false },
+  { part: 'currentPerClientBurst', whole: 'currentBurst', isStrict: false },
 ];
 
 // A client's share left to its default follows a whole set below it: lowering a lane's
@@ -88,6 +102,8 @@ export function readRenderLimits(env: Environment): RenderLimits {
     currentBurst: read('currentBurst'),
     perClientMaxInFlight: read('perClientMaxInFlight'),
     pinnedPerClientPerMinute: read('pinnedPerClientPerMinute'),
+    currentPerClientPerMinute: read('currentPerClientPerMinute'),
+    currentPerClientBurst: read('currentPerClientBurst'),
     trackedClients: read('trackedClients'),
   };
   const fitted = SHARES.reduce((current, share) => fitShare(current, env, share), limits);

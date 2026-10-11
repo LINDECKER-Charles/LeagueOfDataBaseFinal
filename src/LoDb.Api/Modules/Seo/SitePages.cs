@@ -19,13 +19,21 @@ internal static class SitePages
     public const string Home = "";
 
     /// <summary>
+    /// Path of the patch history below the locale: the page linking every listed version's
+    /// lists, how crawlers reach the versions the sitemap index no longer announces.
+    /// </summary>
+    public const string PatchHistory = "patches";
+
+    /// <summary>
     /// Pages that exist once per locale, never per version, in the order the primary
-    /// sitemap lists them: the home, the four lists, then the editorial pages.
+    /// sitemap lists them: the home, the four lists, the patch history, then the editorial
+    /// pages.
     /// </summary>
     public static IReadOnlyList<string> Unversioned { get; } =
     [
         Home,
         .. Lists,
+        PatchHistory,
         "about",
         "about/data",
         "faq",

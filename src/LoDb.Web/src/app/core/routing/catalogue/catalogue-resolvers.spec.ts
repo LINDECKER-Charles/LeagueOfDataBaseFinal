@@ -163,7 +163,7 @@ function headerOf(init: ResponseInit, name: string): string | null {
 }
 
 describe('catalogue lists (resolveCatalogueContext)', () => {
-  it('renders the latest version at its short URL, cached five minutes', async () => {
+  it('renders the latest version at its short URL, cached thirty minutes', async () => {
     const { leaf, init, requested } = await visit('/en/champions');
 
     expect(leaf.data['context']).toEqual({
@@ -174,7 +174,7 @@ describe('catalogue lists (resolveCatalogueContext)', () => {
     });
     expect(init.status).toBe(HttpStatusCode.Ok);
     expect(headerOf(init, 'Cache-Control')).toBe(
-      'public, max-age=0, s-maxage=300, stale-while-revalidate=3600',
+      'public, max-age=0, s-maxage=1800, stale-while-revalidate=86400',
     );
     expect(requested).toEqual(['/api/meta']);
   });

@@ -1,11 +1,15 @@
 using LoDb.Api.Modules.Accounts.Links;
+using LoDb.Api.Modules.Accounts.Security.Limits;
 using LoDb.Api.Modules.Billing.Checkout;
 using LoDb.Api.Modules.Billing.Donations;
 using LoDb.Api.Modules.Billing.Expiry;
 using LoDb.Api.Modules.Billing.Fulfilment;
 using LoDb.Api.Modules.Billing.Http;
 using LoDb.Api.Modules.Billing.Keys;
+using LoDb.Api.Modules.Billing.Payments;
 using LoDb.Api.Modules.Billing.Purchases;
+using LoDb.Api.Modules.Billing.Revocation;
+using LoDb.Api.Modules.Billing.Subscriptions;
 using LoDb.Api.Modules.Billing.Webhooks;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -59,6 +63,7 @@ internal static class BillingModule
         services.TryAddScoped<OffersEndpoint>();
         services.TryAddScoped<PackCheckoutEndpoint>();
         services.TryAddScoped<PlanCheckoutEndpoint>();
+        services.AddAccountActionLimit(PurchaseLimits.Checkout);
     }
 
     private static void AddWebhook(IServiceCollection services)
@@ -66,13 +71,35 @@ internal static class BillingModule
         services.TryAddScoped<WebhookSignature>();
         services.TryAddScoped<WebhookProcessor>();
         services.TryAddScoped<StripeWebhookEndpoint>();
+        services.TryAddScoped<CheckoutLedger>();
+        services.TryAddScoped<SessionEventReader>();
+        services.TryAddScoped<SessionFulfilment>();
         services.TryAddScoped<BuyerKeys>();
         services.TryAddScoped<PackFulfilment>();
         services.TryAddScoped<PlanFulfilment>();
         services.TryAddScoped<DonationFulfilment>();
-        services.TryAddEnumerable(
-            ServiceDescriptor.Scoped<IStripeEventHandler, CheckoutCompletedHandler>());
-        services.TryAddEnumerable(
-            ServiceDescriptor.Scoped<IStripeEventHandler, SubscriptionDeletedHandler>());
+        services.TryAddScoped<SubscriptionEntitlements>();
+        services.TryAddScoped<PaymentRevocation>();
+        services.TryAddScoped<CreditRevocation>();
+        services.TryAddScoped<DonationRevocation>();
+        AddHandlers(services);
     }
+
+    // One handler per type of event, which the processor picks by its type. The Stripe
+    // endpoint must send each of these types (docs/guides/configuration.md, § 6.5).
+    private static void AddHandlers(IServiceCollection services)
+    {
+        AddHandler<CheckoutCompletedHandler>(services);
+        AddHandler<AsyncPaymentSucceededHandler>(services);
+        AddHandler<AsyncPaymentFailedHandler>(services);
+        AddHandler<SubscriptionUpdatedHandler>(services);
+        AddHandler<SubscriptionDeletedHandler>(services);
+        AddHandler<InvoicePaymentFailedHandler>(services);
+        AddHandler<ChargeRefundedHandler>(services);
+        AddHandler<DisputeCreatedHandler>(services);
+    }
+
+    private static void AddHandler<THandler>(IServiceCollection services)
+        where THandler : class, IStripeEventHandler =>
+        services.TryAddEnumerable(ServiceDescriptor.Scoped<IStripeEventHandler, THandler>());
 }

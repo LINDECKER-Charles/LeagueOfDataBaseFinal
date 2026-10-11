@@ -2,7 +2,8 @@ import type { NavEntry } from '../shell/nav-entry';
 
 /**
  * Pages of the site listed by the footer. The about and api labels live in their own
- * catalogue scopes, hence the prefixed keys.
+ * catalogue scopes, hence the prefixed keys. The patch history links every past patch, which
+ * the version selector, a form, does not offer to crawlers.
  */
 export const SITE_LINKS: readonly NavEntry[] = [
   { path: '', label: 'footer.navigation.home' },
@@ -10,6 +11,7 @@ export const SITE_LINKS: readonly NavEntry[] = [
   { path: 'items', label: 'footer.navigation.item' },
   { path: 'runes', label: 'footer.navigation.runes' },
   { path: 'summoners', label: 'footer.navigation.summoner' },
+  { path: 'patches', label: 'footer.navigation.patches' },
   { path: 'about', label: 'about.index.title' },
   { path: 'about/data', label: 'about.data.title' },
   { path: 'faq', label: 'about.faq.title' },

@@ -1,3 +1,4 @@
+using LoDb.Api.Modules.Seo;
 using LoDb.Api.Modules.Seo.Sitemaps;
 using LoDb.Domain.Languages;
 using LoDb.Domain.Versions;
@@ -62,7 +63,8 @@ public sealed class SitemapFileTests
             Ready = [PatchVersion.Parse("16.19.1")],
         };
 
-        var sitemaps = SitemapLocations.Index(Origin, versions).ToList();
+        var window = SeoOptions.DefaultSitemapVersionWindow;
+        var sitemaps = SitemapLocations.Index(Origin, versions, window).ToList();
 
         Assert.Equal(2 * UiLocales.All.Count, sitemaps.Count);
         Assert.Equal($"{Origin}/sitemaps/ar/latest.xml", sitemaps[0]);

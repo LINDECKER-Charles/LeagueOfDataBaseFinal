@@ -8,12 +8,17 @@ namespace LoDb.Infrastructure.Analytics.Aggregation;
 /// field names of the legacy files: <c>totals</c> holds <c>views</c>, <c>botViews</c>,
 /// <c>byHour</c> and <c>byWeekday</c>; <c>buckets</c> the fifteen counter maps.
 /// </summary>
+/// <remarks>
+/// <c>totals</c> also holds <c>visitorsTruncated: true</c> for a day whose visitors were cut
+/// at their bound, and only then: the other days keep the legacy shape.
+/// </remarks>
 internal static class DailyColumns
 {
     public const string ViewsField = "views";
     public const string BotViewsField = "botViews";
     public const string ByHourField = "byHour";
     public const string ByWeekdayField = "byWeekday";
+    public const string VisitorsTruncatedField = "visitorsTruncated";
 
     public static string TotalsOf(DailyAggregate daily)
     {
@@ -25,6 +30,11 @@ internal static class DailyColumns
             writer.WriteNumber(BotViewsField, daily.BotViews);
             WriteVector(writer, ByHourField, daily.ByHour);
             WriteVector(writer, ByWeekdayField, daily.ByWeekday);
+            if (daily.VisitorsTruncated)
+            {
+                writer.WriteBoolean(VisitorsTruncatedField, true);
+            }
+
             writer.WriteEndObject();
         });
     }
@@ -99,6 +109,23 @@ internal static class DailyColumns
             return;
         }
 
+        ReadViews(totals, daily);
+        if (totals.TryGetProperty(ByHourField, out var byHour))
+        {
+            DailyJson.ReadVector(byHour, daily.ByHour);
+        }
+
+        if (totals.TryGetProperty(ByWeekdayField, out var byWeekday))
+        {
+            DailyJson.ReadVector(byWeekday, daily.ByWeekday);
+        }
+
+        daily.VisitorsTruncated = totals.TryGetProperty(VisitorsTruncatedField, out var cut)
+            && cut.ValueKind == JsonValueKind.True;
+    }
+
+    private static void ReadViews(JsonElement totals, DailyAggregate daily)
+    {
         if (totals.TryGetProperty(ViewsField, out var views)
             && DailyJson.TryCount(views, out var viewCount))
         {
@@ -109,16 +136,6 @@ internal static class DailyColumns
             && DailyJson.TryCount(bots, out var botCount))
         {
             daily.BotViews = botCount;
-        }
-
-        if (totals.TryGetProperty(ByHourField, out var byHour))
-        {
-            DailyJson.ReadVector(byHour, daily.ByHour);
-        }
-
-        if (totals.TryGetProperty(ByWeekdayField, out var byWeekday))
-        {
-            DailyJson.ReadVector(byWeekday, daily.ByWeekday);
         }
     }
 

@@ -34,9 +34,12 @@ public sealed class ApiCreditGrant
     /// <summary>The Checkout session of a purchase, unique; null for any other source.</summary>
     public string? StripeSessionId { get; set; }
 
-    /// <summary>When the expiry job settled the grant; null while it is live.</summary>
+    /// <summary>
+    /// When the grant was settled: by the expiry job, or when a refund or a dispute took its
+    /// pack back; null while it is live.
+    /// </summary>
     public DateTimeOffset? ExpiredAt { get; set; }
 
-    /// <summary>Requests the expiry took off the balance, set with the date.</summary>
+    /// <summary>Requests the settlement took off the balance, set with the date.</summary>
     public long? ExpiredRequests { get; set; }
 }

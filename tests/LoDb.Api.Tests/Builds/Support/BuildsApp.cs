@@ -111,7 +111,7 @@ public sealed class BuildsApp : IAsyncLifetime
             EmailConfirmed = named.EmailConfirmed,
             IsBanned = named.Banned,
             Roles = [],
-            CreatedAt = DateTimeOffset.UtcNow,
+            CreatedAt = DateTimeOffset.UtcNow - named.Age,
         };
         var created = named.Password is null
             ? await users.CreateAsync(user)

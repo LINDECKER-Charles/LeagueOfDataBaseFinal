@@ -79,6 +79,7 @@ public abstract partial class PeriodicJob(PeriodicJobServices services) : Backgr
                 + " and a positive period.");
         }
 
+        services.Metrics.RecordPeriod(Name, Period);
         using var timer = new PeriodicTimer(Period, services.TimeProvider);
         do
         {

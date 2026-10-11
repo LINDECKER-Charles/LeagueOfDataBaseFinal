@@ -181,7 +181,7 @@ describe('resolveHome', () => {
       language: 'fr_FR',
     });
     expect(requested).toContain(`/api/catalog/${LATEST}/fr_FR/champions?page=1&size=4`);
-    expect(cache).toBe('public, max-age=0, s-maxage=300, stale-while-revalidate=3600');
+    expect(cache).toBe('public, max-age=0, s-maxage=1800, stale-while-revalidate=86400');
   });
 
   it('links each portal and card to its page in the latest version', async () => {
@@ -281,7 +281,7 @@ describe('resolveHome', () => {
     const { home, cache } = await visit('/fr', { retryAfter: { items: '5' } });
 
     expect(home.retryAfterMs).toBeNull();
-    expect(cache).toBe('public, max-age=0, s-maxage=300, stale-while-revalidate=3600');
+    expect(cache).toBe('public, max-age=0, s-maxage=1800, stale-while-revalidate=86400');
   });
 });
 

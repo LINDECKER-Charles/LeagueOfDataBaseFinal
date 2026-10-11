@@ -1,5 +1,6 @@
 using System.Net;
 using LoDb.Api.Modules.Profiles.Http;
+using LoDb.Api.Tests.Hosting.Support;
 using LoDb.Domain.Languages;
 using LoDb.Ingestion.Catalog;
 using Microsoft.AspNetCore.Http;
@@ -41,5 +42,5 @@ public sealed class ProfileScopeTests
     }
 
     private static DefaultHttpContext StackCall() =>
-        new() { Connection = { RemoteIpAddress = StackAddress } };
+        StackCalls.From(StackAddress);
 }

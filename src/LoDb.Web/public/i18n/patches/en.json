@@ -1,0 +1,8 @@
+{
+  "title": "Patch history",
+  "description": "Every League of Legends patch Data Dragon lists, each with its champions, items, runes and summoner spells as they were in that patch.",
+  "intro": "Every patch Data Dragon lists, newest first. Each one opens its champions, items, runes and summoner spells as they were at the time.",
+  "group": "Patches {{ major }}.x",
+  "latest": "Current",
+  "empty": "No patch is listed for now."
+}

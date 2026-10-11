@@ -11,6 +11,7 @@ import type { PageContext } from '../../../../core/context/page-context';
 import type { CatalogueEntry } from '../../../../core/routing/catalogue/catalogue-entry';
 import { Seo } from '../../../../core/seo/seo';
 import type { SeoPage } from '../../../../core/seo/seo-page';
+import { provideMeta } from '../../shared/testing/provide-meta';
 import { ChampionPage } from './champion-page';
 
 const CONTEXT: PageContext = { locale: 'en', version: '16.19.1', pinned: false, language: 'en_US' };
@@ -80,6 +81,7 @@ async function visit(details: ChampionDetails, url = '/en/champions/Annie') {
   const entry: CatalogueEntry<ChampionDetails> = { context: CONTEXT, details };
   TestBed.configureTestingModule({
     providers: [
+      provideMeta(),
       provideRouter([
         { path: 'en/champions/:id', resolve: { entry: () => entry }, component: ChampionPage },
         { path: '**', component: Blank },

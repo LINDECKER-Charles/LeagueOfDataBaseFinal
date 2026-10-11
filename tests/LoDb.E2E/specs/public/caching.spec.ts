@@ -2,17 +2,17 @@ import { metaOf, olderVersion } from '../../support/catalog';
 import { expect, test } from '../../support/test';
 
 // The Cache-Control of each class of page (core/routing/response/cache-control.ts), from the
-// server through nginx: the latest version for five minutes of shared cache, an archived one
+// server through nginx: the latest version for thirty minutes of shared cache, an archived one
 // for a week, a private page never. The shared cache itself, the front files and the service
 // worker are specs/pwa's.
-const LATEST = 'public, max-age=0, s-maxage=300, stale-while-revalidate=3600';
+const LATEST = 'public, max-age=0, s-maxage=1800, stale-while-revalidate=86400';
 const ARCHIVED = 'public, max-age=3600, s-maxage=604800';
 const PRIVATE = 'private, no-store';
 const LATEST_PATHS = ['/en/', '/en/champions', '/en/items/3031-infinity-edge', '/fr/runes'];
 const PRIVATE_PATHS = ['/en/account/login', '/en/account/register', '/fr/account/profile'];
 
 test.describe('cache classes of the pages', { tag: '@readonly' }, () => {
-  test('keep a page of the latest version five minutes in the shared cache', async ({
+  test('keep a page of the latest version thirty minutes in the shared cache', async ({
     request,
   }) => {
     for (const path of LATEST_PATHS) {

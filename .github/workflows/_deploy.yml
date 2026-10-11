@@ -4,8 +4,14 @@ name: _deploy
 # the environment is fully parameterized by inputs + secrets (DRY / open-closed).
 # No environment-specific value is hardcoded here; everything sensitive comes from
 # the caller's secrets, and the host config (domains, tags, app secrets) lives in
-# ENV_FILE, pushed to the host as .env. Nothing is built on the host: it pulls the images
+# ENV_FILE, pushed to the host and split there: its secrets each go to a file of
+# .deploy/secrets, which compose.deploy.yaml mounts, and the rest becomes the .env
+# (tools/deploy/split-env.sh). Nothing is built on the host: it pulls the images
 # _build.yml built once.
+#
+# The job runs in the GitHub environment of its target (`staging`, `production`), where the
+# repository's owner sets the protection rules (reviewers, deployment branches). Environment
+# secrets named like the secrets below take precedence over those the caller passes.
 #
 # The stack takes the place of the legacy one in the same Compose project (lodb-staging,
 # lodb-prod): `up --remove-orphans` retires the legacy containers, the database volume
@@ -39,8 +45,15 @@ on:
       SSH_USER:
         description: SSH user (defaults to root when unset).
         required: false
+      SSH_KNOWN_HOSTS:
+        description: >-
+          known_hosts lines of the target host's keys. Unset, they are read by ssh-keyscan,
+          unverified, with a warning.
+        required: false
       ENV_FILE:
-        description: Full dotenv for this host, written to ${DEPLOY_PATH}/.env.
+        description: >-
+          Full dotenv for this host, split on the host into ${DEPLOY_PATH}/.env and one file
+          per secret under ${DEPLOY_PATH}/.deploy/secrets.
         required: true
       DATA_PROTECTION_PFX:
         description: Base64 of the Data Protection certificate (PKCS#12) of this host.
@@ -58,6 +71,9 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # Here rather than on the caller's job: a job that calls a reusable workflow takes no
+    # `environment`. An unknown target falls on `staging` and stops at "Resolve the target".
+    environment: ${{ inputs.environment == 'prod' && 'production' || 'staging' }}
     env:
       TARGET: ${{ inputs.environment }}
       BRANCH: ${{ inputs.branch }}
@@ -94,9 +110,11 @@ jobs:
             echo "Invalid branch name: $BRANCH" >&2
             exit 1
           fi
+          # The stack's private subnet, one per target (both share the host), outside Docker's
+          # default pools (172.17-31/16, 192.168/16): the API trusts it and it alone.
           case "$TARGET" in
-            staging) noindex=1 ;;
-            prod) noindex=0 ;;
+            staging) noindex=1 stack_subnet=10.231.1.0/24 ;;
+            prod) noindex=0 stack_subnet=10.231.2.0/24 ;;
             *)
               echo "Unknown environment: $TARGET (staging or prod)." >&2
               exit 1
@@ -106,6 +124,7 @@ jobs:
             echo "EXPECTED_PROJECT=lodb-$TARGET"
             echo "IMAGE_TAG=$TARGET"
             echo "EXPECTED_NOINDEX=$noindex"
+            echo "STACK_SUBNET=$stack_subnet"
           } >> "$GITHUB_ENV"
 
       # The runner's own agent, no third-party action: the key goes from the secret to the
@@ -123,11 +142,28 @@ jobs:
           } >> "$GITHUB_ENV"
           install -d -m 700 ~/.ssh
 
+      # The host's keys come from the environment's SSH_KNOWN_HOSTS secret (configuration.md,
+      # § 6.3): ssh then refuses any other key. Until the owner sets it, ssh-keyscan reads
+      # them from whoever answers at that address, which a warning on the run says.
       - name: Known hosts
-        run: ssh-keyscan -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+        env:
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          if [ -n "$SSH_KNOWN_HOSTS" ]; then
+            printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          else
+            prefix="$(echo "$TARGET" | tr '[:lower:]' '[:upper:]')"
+            echo "::warning title=Host key not pinned::${prefix}_SSH_KNOWN_HOSTS is not set:" \
+              "the host key comes from ssh-keyscan, unverified."
+            ssh-keyscan -H "$DEPLOY_HOST" > ~/.ssh/known_hosts
+          fi
+          chmod 600 ~/.ssh/known_hosts
+          printf 'StrictHostKeyChecking yes\n' > ~/.ssh/config
 
-      # The .env stays readable by root alone. The certificate is read by the API's non-root
-      # user through a bind mount: the file is world-readable, its folder root's only.
+      # The dotenv goes to a file readable by root alone, which the deploy step splits into
+      # the .env and the secret files once the checkout is at the deployed revision. The
+      # certificate is read by the API's non-root user through a bind mount: the file is
+      # world-readable, its folder root's only.
       - name: Push env and Data Protection certificate to host
         env:
           ENV_FILE: ${{ secrets.ENV_FILE }}
@@ -149,7 +185,8 @@ jobs:
           # shellcheck disable=SC2029
           ssh "$ssh_target" "cd $remote_path && install -d -m 700 .deploy/backups && $keep_env"
           # shellcheck disable=SC2029
-          printf '%s\n' "$ENV_FILE" | ssh "$ssh_target" "umask 077 && cat > $remote_path/.env"
+          printf '%s\n' "$ENV_FILE" \
+            | ssh "$ssh_target" "umask 077 && cat > $remote_path/.deploy/incoming.env"
           # shellcheck disable=SC2029
           printf '%s' "$DATA_PROTECTION_PFX" | base64 -d \
             | ssh "$ssh_target" "umask 022 && cat > $remote_path/.deploy/data-protection.pfx"
@@ -163,7 +200,7 @@ jobs:
           # purpose (SC2029) and quoted for the remote shell; the script is sent verbatim.
           remote_env=""
           for name in DEPLOY_PATH BRANCH REPO_URL TARGET EXPECTED_PROJECT IMAGE_TAG \
-            EXPECTED_NOINDEX GHCR_USER; do
+            EXPECTED_NOINDEX STACK_SUBNET GHCR_USER; do
             remote_env="$remote_env $name=$(printf '%q' "${!name}")"
           done
           # The token goes first on the remote shell's input, never on a command line that
@@ -180,6 +217,8 @@ jobs:
             | ssh "$DEPLOY_USER@$DEPLOY_HOST" "$remote_env bash -c $(printf '%q' "$remote_shell")"
             set -euo pipefail
             cd "$DEPLOY_PATH"
+            # The pushed dotenv holds every secret: it never outlives this script.
+            trap 'rm -f .deploy/incoming.env' EXIT
             fail() {
               echo "$*" >&2
               exit 1
@@ -194,13 +233,25 @@ jobs:
             git checkout -B "$BRANCH" "origin/$BRANCH"
             git reset --hard "origin/$BRANCH"
 
-            # Deploy overlay (edge labels + external network), WITHOUT
-            # compose.override.yaml (dev conveniences).
-            export COMPOSE_FILE=compose.yaml:compose.deploy.yaml
+            # ── Secrets out of the .env ──────────────────────────────────────────────
+            # The script of the deployed revision, whose compose.deploy.yaml mounts the files
+            # it writes. It splits into a scratch folder first, which the checks below read:
+            # the .env and the secret files in place change only once the dotenv passes them,
+            # since a container that restarts mounts the secret files as they are then. The
+            # pushed dotenv and the scratch folder are removed whatever the outcome.
+            scratch="$(mktemp -d .deploy/split.XXXXXX)"
+            trap 'rm -rf .deploy/incoming.env "$scratch"' EXIT
+            dotenv="$scratch/.env"
+            secrets_dir="$scratch/secrets"
+            bash tools/deploy/split-env.sh "$dotenv" "$secrets_dir" < .deploy/incoming.env \
+              > /dev/null || fail "ENV_FILE was refused (above); nothing was deployed."
 
             # ── The .env against the target, before anything changes ─────────────────
             env_value() {
-              grep -E "^$1=" .env | tail -n 1 | cut -d= -f2- | tr -d "\"'" || true
+              grep -E "^$1=" "$dotenv" | tail -n 1 | cut -d= -f2- | tr -d "\"'" || true
+            }
+            secret_set() {
+              [ -s "$secrets_dir/$1" ]
             }
             expect() {
               local actual
@@ -212,24 +263,140 @@ jobs:
             expect IMAGE_TAG "$IMAGE_TAG"
             # staging is never indexed; prod always is.
             expect LODB_NOINDEX "$EXPECTED_NOINDEX" 0
+            secret_set LODB_DB_PASSWORD || fail "LODB_DB_PASSWORD is required on $TARGET."
+            # A page of an older patch names the bundles of its build for up to two weeks (a week of
+            # s-maxage, then a stale copy served while it refreshes): never purge them sooner.
+            retention="$(env_value LODB_FRONT_BUILDS_RETENTION_DAYS)"
+            retention="${retention:-30}"
+            [[ "$retention" =~ ^[0-9]+$ ]] && (( retention >= 15 )) \
+              || fail "LODB_FRONT_BUILDS_RETENTION_DAYS must be a number of days, 15 or more."
             if [ "$TARGET" = prod ]; then
-              for key in LoDb__Mail__Host LoDb__Billing__StripeSecretKey \
-                LoDb__Billing__StripeWebhookSecret; do
-                [ -n "$(env_value "$key")" ] || fail "$key is required in prod."
+              [ -n "$(env_value LoDb__Mail__Host)" ] || fail "LoDb__Mail__Host is required in prod."
+              for key in LoDb__Billing__StripeSecretKey LoDb__Billing__StripeWebhookSecret; do
+                secret_set "$key" || fail "$key is required in prod."
               done
             fi
 
-            # The edge and its network belong to infra-vps; this job only asserts them.
+            # The healthchecks of compose.yaml use start_interval: Docker Engine 25 or later.
+            engine_api="$(docker version --format '{{.Server.APIVersion}}')"
+            [ "$(printf '%s\n' 1.44 "$engine_api" | sort -V | head -n 1)" = 1.44 ] \
+              || fail "Docker Engine 25 or later is required (API $engine_api, 1.44 expected)."
+
+            # The page login of compose.staging-auth.yaml: both values, a plain user name, and
+            # a bcrypt hash that Compose hands over intact (single-quoted, or each `$` doubled).
+            # A malformed one would reach the edge, shared by every project of the host.
+            check_staging_auth() {
+              local bcrypt doubled line pattern
+              [ -n "$1" ] && [ -n "$2" ] \
+                || fail "LODB_STAGING_BASIC_AUTH_USER and _HASH are set together, or neither."
+              # The name is a segment of a label key: the edge reads a `.` as nesting (the
+              # site would be dropped) and an `_<digits>` suffix or a `<digits>_` prefix as
+              # its own ordering marks (the name would lose them).
+              [[ "$1" =~ ^[A-Za-z0-9-]+$ ]] \
+                || fail "LODB_STAGING_BASIC_AUTH_USER: letters, digits and '-' only."
+              # Regular expressions, not expansions: each \$ matches a `$` of the hash.
+              # shellcheck disable=SC2016
+              bcrypt='\$2[aby]\$[0-9]{2}\$[./A-Za-z0-9]{53}'
+              # shellcheck disable=SC2016
+              doubled='\$\$2[aby]\$\$[0-9]{2}\$\$[./A-Za-z0-9]{53}'
+              pattern="^LODB_STAGING_BASIC_AUTH_HASH=('${bcrypt}'|${doubled})\$"
+              line="$(grep -E '^LODB_STAGING_BASIC_AUTH_HASH=' "$dotenv" | tail -n 1 || true)"
+              [[ "$line" =~ $pattern ]] \
+                || fail "LODB_STAGING_BASIC_AUTH_HASH must be a single-quoted bcrypt hash."
+            }
+
+            # ── Compose files: the deploy overlay, then the staging ones ────────────────
+            # Never compose.override.yaml (dev conveniences). Staging takes a small share of
+            # the host (compose.staging.yaml) and, when its .env asks for it, a login on its
+            # pages (compose.staging-auth.yaml). Joined from a list: no empty element.
+            compose_files=(compose.yaml compose.deploy.yaml)
+            auth_user="$(env_value LODB_STAGING_BASIC_AUTH_USER)"
+            auth_hash="$(env_value LODB_STAGING_BASIC_AUTH_HASH)"
+            if [ "$TARGET" = staging ]; then
+              compose_files+=(compose.staging.yaml)
+              if [ -n "$auth_user$auth_hash" ]; then
+                check_staging_auth "$auth_user" "$auth_hash"
+                compose_files+=(compose.staging-auth.yaml)
+              fi
+            elif [ -n "$auth_user$auth_hash" ]; then
+              fail "LODB_STAGING_BASIC_AUTH_* are for staging: remove them from the $TARGET .env."
+            fi
+            COMPOSE_FILE="$(IFS=:; echo "${compose_files[*]}")"
+            export COMPOSE_FILE
+            echo "Compose files: $COMPOSE_FILE"
+
+            # The edge, the collection and their networks belong to infra-vps; this job only
+            # asserts them.
             docker network inspect edge >/dev/null 2>&1 \
               || fail "Docker network 'edge' is missing — deploy infra-vps before this project."
+            docker network inspect observability >/dev/null 2>&1 \
+              || fail "Docker network 'observability' is missing — deploy infra-vps first."
             # nginx trusts X-Forwarded-For from this subnet only. Docker picks it when infra-vps
             # creates the network, so it is read here rather than copied into ENV_FILE, and
             # kept in the .env so manual `docker compose` runs from this folder resolve it too.
             edge_cidr="$(docker network inspect edge --format '{{(index .IPAM.Config 0).Subnet}}')"
             [[ "$edge_cidr" =~ ^[0-9]{1,3}(\.[0-9]{1,3}){3}/[0-9]{1,2}$ ]] \
               || fail "The 'edge' network has no IPv4 subnet for nginx to trust."
+
+            # The stack's own network (compose.deploy.yaml) on the target's fixed subnet, which
+            # no other network may overlap: Docker would refuse to create it once the stack is
+            # stopped to move it. Written to the .env like LODB_EDGE_CIDR, once the dotenv passes.
+            stack_network="${EXPECTED_PROJECT}_default"
+            ipv4_number() {
+              local a b c d
+              IFS=. read -r a b c d <<< "$1"
+              echo $(( (a << 24) | (b << 16) | (c << 8) | d ))
+            }
+            # First and last address of an IPv4 CIDR, as numbers.
+            cidr_bounds() {
+              local size first
+              size=$(( 1 << (32 - ${1#*/}) ))
+              first=$(( $(ipv4_number "${1%/*}") & ~(size - 1) & 0xFFFFFFFF ))
+              echo "$first $(( first + size - 1 ))"
+            }
+            overlaps() {
+              local a_first a_last b_first b_last
+              read -r a_first a_last <<< "$(cidr_bounds "$1")"
+              read -r b_first b_last <<< "$(cidr_bounds "$2")"
+              [ "$a_first" -le "$b_last" ] && [ "$b_first" -le "$a_last" ]
+            }
+            # Space-separated subnets of a network, empty when it does not exist.
+            subnets_of() {
+              local format='{{range .IPAM.Config}}{{.Subnet}} {{end}}'
+              { docker network inspect "$1" --format "$format" 2>/dev/null || true; } | xargs
+            }
+            for network in $(docker network ls --format '{{.Name}}'); do
+              [ "$network" != "$stack_network" ] || continue
+              for subnet in $(subnets_of "$network"); do
+                [[ "$subnet" != *:* ]] || continue
+                if overlaps "$subnet" "$STACK_SUBNET"; then
+                  fail "Docker network '$network' ($subnet) overlaps $STACK_SUBNET."
+                fi
+              done
+            done
+
+            # Checked: the dotenv now becomes the .env and the secret files in place.
+            bash tools/deploy/split-env.sh .env .deploy/secrets < .deploy/incoming.env
+            rm -rf .deploy/incoming.env "$scratch"
+            dotenv=.env
             sed -i '/^LODB_EDGE_CIDR=/d' .env
             echo "LODB_EDGE_CIDR=$edge_cidr" >> .env
+            # Kept in the .env too, so that a manual `docker compose` run from this folder
+            # applies the same overlays (an exported COMPOSE_FILE still takes precedence).
+            sed -i '/^COMPOSE_FILE=/d' .env
+            echo "COMPOSE_FILE=$COMPOSE_FILE" >> .env
+            sed -i '/^LODB_STACK_SUBNET=/d' .env
+            echo "LODB_STACK_SUBNET=$STACK_SUBNET" >> .env
+            # The API and the renderer answer, and believe X-Forwarded-*, from this subnet
+            # alone. Compose drops a `!reset` that follows another file setting the same
+            # service's environment: compose.yaml's private ranges, which hold the shared
+            # networks' subnets, would then stay. Read from the resolved configuration, before
+            # any container changes; only the networks are printed.
+            trusted="$(docker compose config api web-ssr \
+              | sed -nE 's/^ +(LoDb__Hosting__KnownProxyNetworks__[0-9]+|LODB_STACK_NETWORKS): //p' \
+              | tr -d "\"'" | sort -u | xargs)"
+            [ "$trusted" = "$STACK_SUBNET" ] \
+              || fail "The API or the renderer would trust '$trusted', not $STACK_SUBNET alone."
 
             # ── Pull, then migrations before the traffic switch ────────────────────────
             # Logged in with this run's token for the pull only: the packages may be private,
@@ -259,13 +426,36 @@ jobs:
               ls -1t .deploy/backups/*.dump | tail -n +11 | xargs -r rm --
             fi
 
-            # Fail-fast: the containers in place keep serving if it fails. Idempotent: a
-            # database already up to date applies nothing.
+            # A stack network created on another subnet (Docker's choice, before the subnet was
+            # fixed) is recreated once: about a minute without service, volumes kept (never -v).
+            # Before migrate: `compose run` would try to recreate the network under the running
+            # containers and fail. If migrate fails right after this move, the stack stays down.
+            current_subnet="$(subnets_of "$stack_network")"
+            if [ -n "$current_subnet" ] && [ "$current_subnet" != "$STACK_SUBNET" ]; then
+              echo "::notice title=Stack network recreated::$stack_network moves from" \
+                "$current_subnet to $STACK_SUBNET; the stack restarts."
+              docker compose down --remove-orphans
+            fi
+
+            # Fail-fast: the containers in place keep serving if it fails (none after the network
+            # move above). Idempotent: a database already up to date applies nothing.
             docker compose run --rm migrate
 
             # --wait: the job fails if a probe does not turn healthy. --remove-orphans
             # retires the containers of the legacy stack (php, go-fetcher, go-api, mailer).
             docker compose up -d --no-build --remove-orphans --wait --wait-timeout 180
+            [ "$(subnets_of "$stack_network")" = "$STACK_SUBNET" ] \
+              || fail "$stack_network is not on $STACK_SUBNET, the subnet the API trusts."
+
+            # ── Front bundles of the previous builds ───────────────────────────────────
+            # web-ssr publishes its hashed bundles into the front-builds volume at start, and
+            # refreshes their date every hour while it runs; /build/ serves them to the tabs
+            # and the cached pages that still name them. A bundle no running build has shipped
+            # for LODB_FRONT_BUILDS_RETENTION_DAYS (30) goes: longer than any cached page lives.
+            # The retention is read with the checks of the .env, above.
+            docker compose exec -T web-ssr \
+              find /srv/front-builds -type f -mtime +"$retention" -delete \
+              || echo "::warning title=Front bundles::the purge of front-builds failed."
 
             # ── Root administrator of the .env (the legacy ADMIN_LOGIN / ADMIN_PASSWORD) ──
             # The password goes on the command's input, never on a command line; the output,

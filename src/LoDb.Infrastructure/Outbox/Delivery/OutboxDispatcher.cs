@@ -9,19 +9,22 @@ using MimeKit;
 namespace LoDb.Infrastructure.Outbox.Delivery;
 
 /// <summary>
-/// One batch: take the due messages, write each in its locale, send them on one session of
-/// the relay, then record each outcome — sent, due again after a backoff, or dead.
+/// One batch: take the due messages each template's hourly cap still allows, write each in
+/// its locale, send them on one session of the relay, then record each outcome — sent, due
+/// again after a backoff, or dead.
 /// </summary>
 /// <remarks>
 /// Delivery is at least once: an instance that dies between the relay's answer and the
 /// write of the outcome leaves the message to be sent again when its lease is over. The
-/// logs name the message by id and template, never by address.
+/// logs name the message by id and template, never by address. A message a cap holds back
+/// stays pending, untouched, until the hour frees a place (<see cref="OutboxHourlyCaps"/>).
 /// </remarks>
 internal sealed partial class OutboxDispatcher(
     OutboxQueue queue,
     IMailTransport transport,
     EmailComposer composer,
     OutboxMetrics metrics,
+    HourlyCapWatch caps,
     IOptions<MailOptions> mail,
     IOptions<OutboxOptions> options,
     TimeProvider timeProvider,
@@ -34,6 +37,9 @@ internal sealed partial class OutboxDispatcher(
         Dead,
     }
 
+    /// <summary>How a batch ended: the queue's depth, what the caps defer, its duration.</summary>
+    private readonly record struct BatchEnd(long Pending, long Deferred, TimeSpan Duration);
+
     public bool IsSendingEnabled => mail.Value.IsEnabled;
 
     public async Task<DispatchSummary> DispatchAsync(CancellationToken cancellationToken)
@@ -43,19 +49,9 @@ internal sealed partial class OutboxDispatcher(
             return DispatchSummary.Empty;
         }
 
-        var started = timeProvider.GetTimestamp();
         try
         {
-            var claimed = await queue.ClaimAsync(cancellationToken);
-            if (claimed.Count == 0)
-            {
-                metrics.RecordPending(await queue.CountPendingAsync(cancellationToken));
-                return DispatchSummary.Empty;
-            }
-
-            var outcomes = await DeliverAsync(claimed, cancellationToken);
-            var pending = await queue.CountPendingAsync(cancellationToken);
-            return Summarize(outcomes, pending, timeProvider.GetElapsedTime(started));
+            return await DispatchBatchAsync(cancellationToken);
         }
         catch (Exception exception) when (!IsStopping(exception, cancellationToken))
         {
@@ -81,6 +77,34 @@ internal sealed partial class OutboxDispatcher(
         {
             throw new UnknownStoredValueException("Unknown stored template.");
         }
+    }
+
+    private async Task<DispatchSummary> DispatchBatchAsync(CancellationToken cancellationToken)
+    {
+        var started = timeProvider.GetTimestamp();
+        var budget = await BudgetAsync(cancellationToken);
+        IReadOnlyList<ClaimedMessage> claimed = budget.IsEmpty
+            ? []
+            : await queue.ClaimAsync(budget, cancellationToken);
+        if (claimed.Count == 0)
+        {
+            metrics.RecordPending(await queue.CountPendingAsync(cancellationToken));
+            return DispatchSummary.Empty;
+        }
+
+        var outcomes = await DeliverAsync(claimed, cancellationToken);
+        var pending = await queue.CountPendingAsync(cancellationToken);
+        var duration = timeProvider.GetElapsedTime(started);
+        return Summarize(outcomes, new BatchEnd(pending, budget.HeldBack, duration));
+    }
+
+    // What the hour leaves to each template, measured and watched before anything is taken.
+    private async Task<SendingBudget> BudgetAsync(CancellationToken cancellationToken)
+    {
+        var budget = SendingBudget.Of(await queue.LoadsAsync(cancellationToken), options.Value);
+        metrics.RecordDeferred(budget.HeldBack);
+        caps.Observe(budget);
+        return budget;
     }
 
     private async Task<List<Outcome>> DeliverAsync(
@@ -149,7 +173,7 @@ internal sealed partial class OutboxDispatcher(
         return Outcome.Retried;
     }
 
-    private DispatchSummary Summarize(List<Outcome> outcomes, long pending, TimeSpan duration)
+    private DispatchSummary Summarize(List<Outcome> outcomes, BatchEnd end)
     {
         var sent = outcomes.Count(static outcome => outcome == Outcome.Sent);
         var retried = outcomes.Count(static outcome => outcome == Outcome.Retried);
@@ -157,10 +181,17 @@ internal sealed partial class OutboxDispatcher(
         metrics.RecordMessages("sent", sent);
         metrics.RecordMessages("retried", retried);
         metrics.RecordMessages("dead", dead);
-        metrics.RecordBatch(duration);
-        metrics.RecordPending(pending);
-        var durationMs = (long)duration.TotalMilliseconds;
-        LogBatch(logger, outcomes.Count, sent, retried, dead, pending, durationMs);
+        metrics.RecordBatch(end.Duration);
+        metrics.RecordPending(end.Pending);
+        LogBatch(
+            logger,
+            outcomes.Count,
+            sent,
+            retried,
+            dead,
+            end.Pending,
+            end.Deferred,
+            (long)end.Duration.TotalMilliseconds);
         return new DispatchSummary(
             outcomes.Count,
             sent,
@@ -173,7 +204,7 @@ internal sealed partial class OutboxDispatcher(
         EventName = "outbox.batch.completed",
         Level = LogLevel.Information,
         Message = "Outbox took {Claimed} messages: {Sent} sent, {Retried} retried, {Dead} dead"
-            + " in {DurationMs} ms; {Pending} pending.")]
+            + " in {DurationMs} ms; {Pending} pending, {Deferred} deferred by the hourly caps.")]
     private static partial void LogBatch(
         ILogger logger,
         int claimed,
@@ -181,6 +212,7 @@ internal sealed partial class OutboxDispatcher(
         int retried,
         int dead,
         long pending,
+        long deferred,
         long durationMs);
 
     [LoggerMessage(

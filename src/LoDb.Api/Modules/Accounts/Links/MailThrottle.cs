@@ -1,6 +1,6 @@
-using System.Globalization;
 using LoDb.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace LoDb.Api.Modules.Accounts.Links;
 
@@ -9,14 +9,23 @@ namespace LoDb.Api.Modules.Accounts.Links;
 /// sees the same counts, and they go with the account.
 /// </summary>
 /// <remarks>
-/// Two requests at the same instant may both pass: the limit is there against a mailbox
-/// flooded by a script, which one e-mail more does not change.
+/// A caller reads the count and records its e-mail within one transaction, after
+/// <see cref="HoldAsync"/>: requests of one account sent at once would otherwise all read
+/// the same count and all pass, as many e-mails as requests.
 /// </remarks>
 internal sealed class MailThrottle(LoDbDbContext db, TimeProvider clock)
 {
     // Identity's own rows use "[AspNetUserStore]".
     private const string LoginProvider = "LoDb";
-    private const char Separator = ' ';
+
+    /// <summary>
+    /// Locks the account's row until the caller's transaction ends: the next request of the
+    /// account reads the count once this one has recorded its e-mail, or given up.
+    /// </summary>
+    public async Task HoldAsync(int userId, CancellationToken cancellationToken) =>
+        await db.Database.ExecuteSqlAsync(
+            $"SELECT 1 FROM users WHERE id = {userId} FOR UPDATE",
+            cancellationToken);
 
     /// <summary>
     /// How long before <paramref name="rule"/> lets another e-mail go; null if it does now.
@@ -26,10 +35,14 @@ internal sealed class MailThrottle(LoDbDbContext db, TimeProvider clock)
         MailThrottleRule rule,
         CancellationToken cancellationToken)
     {
-        var sent = Recent(await FindAsync(userId, rule, cancellationToken), rule);
-        return sent.Count < rule.Limit
-            ? null
-            : sent[sent.Count - rule.Limit] + rule.Window - clock.GetUtcNow();
+        ArgumentNullException.ThrowIfNull(rule);
+        var tally = Tally(await FindAsync(userId, rule, cancellationToken), rule);
+        if (tally.Total < rule.Allowance || tally.Recent.Count < rule.Limit)
+        {
+            return null;
+        }
+
+        return tally.Recent[tally.Recent.Count - rule.Limit] + rule.Window - clock.GetUtcNow();
     }
 
     /// <summary>Counts an e-mail sent now, written by the caller's next save.</summary>
@@ -38,11 +51,9 @@ internal sealed class MailThrottle(LoDbDbContext db, TimeProvider clock)
         MailThrottleRule rule,
         CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(rule);
         var row = await FindAsync(userId, rule, cancellationToken);
-        var value = string.Join(
-            Separator,
-            Recent(row, rule).Append(clock.GetUtcNow()).Select(static sent =>
-                sent.ToUnixTimeMilliseconds().ToString(CultureInfo.InvariantCulture)));
+        var value = Tally(row, rule).Add(clock.GetUtcNow()).Format();
         if (row is not null)
         {
             row.Value = value;
@@ -65,20 +76,6 @@ internal sealed class MailThrottle(LoDbDbContext db, TimeProvider clock)
         await db.Set<IdentityUserToken<int>>()
             .FindAsync([userId, LoginProvider, rule.Name], cancellationToken);
 
-    // Oldest first, those still within the window.
-    private List<DateTimeOffset> Recent(IdentityUserToken<int>? row, MailThrottleRule rule)
-    {
-        var since = clock.GetUtcNow() - rule.Window;
-        return [.. (row?.Value ?? string.Empty)
-            .Split(Separator, StringSplitOptions.RemoveEmptyEntries)
-            .Select(static part => long.TryParse(
-                part,
-                NumberStyles.None,
-                CultureInfo.InvariantCulture,
-                out var milliseconds)
-                ? DateTimeOffset.FromUnixTimeMilliseconds(milliseconds)
-                : DateTimeOffset.MinValue)
-            .Where(sent => sent > since)
-            .Order()];
-    }
+    private MailTally Tally(IdentityUserToken<int>? row, MailThrottleRule rule) =>
+        MailTally.Parse(row?.Value, clock.GetUtcNow() - rule.Window);
 }
