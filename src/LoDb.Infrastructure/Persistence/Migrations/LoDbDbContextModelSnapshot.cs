@@ -22,6 +22,48 @@ namespace LoDb.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("LoDb.Infrastructure.Persistence.Accounts.RefreshTokenFamily", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<int>("Generation")
+                        .HasColumnType("integer")
+                        .HasColumnName("generation");
+
+                    b.Property<DateTimeOffset?>("RevokedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("revoked_at");
+
+                    b.Property<DateTimeOffset>("RotatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("rotated_at");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_refresh_token_families");
+
+                    b.HasIndex("ExpiresAt")
+                        .HasDatabaseName("ix_refresh_token_families_expires_at");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_refresh_token_families_user_id");
+
+                    b.ToTable("refresh_token_families", (string)null);
+                });
+
             modelBuilder.Entity("LoDb.Infrastructure.Persistence.Accounts.Role", b =>
                 {
                     b.Property<int>("Id")
@@ -1421,6 +1463,16 @@ namespace LoDb.Infrastructure.Persistence.Migrations
                         .HasName("pk_identity_user_tokens");
 
                     b.ToTable("identity_user_tokens", (string)null);
+                });
+
+            modelBuilder.Entity("LoDb.Infrastructure.Persistence.Accounts.RefreshTokenFamily", b =>
+                {
+                    b.HasOne("LoDb.Infrastructure.Persistence.Accounts.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_refresh_token_families_users_user_id");
                 });
 
             modelBuilder.Entity("LoDb.Infrastructure.Persistence.Billing.Donation", b =>

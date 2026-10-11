@@ -1755,6 +1755,40 @@
         }
       }
     },
+    "/api/account/logout-everywhere": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Closes every session of the account, this one included.",
+        "operationId": "signOutEverywhere",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/account/token": {
       "post": {
         "tags": [
@@ -1841,7 +1875,7 @@
         "tags": [
           "Account"
         ],
-        "summary": "Trades a refresh token for a new bearer token and refresh token.",
+        "summary": "Trades a refresh token, once, for a new bearer token and refresh token.",
         "operationId": "refreshAccountToken",
         "requestBody": {
           "content": {

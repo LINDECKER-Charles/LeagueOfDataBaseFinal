@@ -87,6 +87,9 @@ public sealed class AnonymizationTests(PostgresContainerFixture postgres)
         INSERT INTO identity_user_roles (user_id, role_id) VALUES (1, 1);
         INSERT INTO identity_user_tokens (user_id, login_provider, name, value)
         VALUES (1, '[AspNetUserStore]', 'AuthenticatorKey', 'ZQXSECRET');
+        INSERT INTO refresh_token_families (id, user_id, generation, created_at, rotated_at,
+                                           expires_at)
+        VALUES ('5d1f0c4e-8a2b-4c6d-9e0f-1a2b3c4d5e6f', 1, 3, now(), now(), now());
         INSERT INTO data_protection_keys (friendly_name, xml)
         VALUES ('key-zqx', '<key id="zqx" />');
         INSERT INTO email_outbox (recipient, template, locale, model, status, next_attempt_at,
@@ -134,7 +137,7 @@ public sealed class AnonymizationTests(PostgresContainerFixture postgres)
     private static readonly string[] EmptiedTables =
     [
         "data_protection_keys", "email_outbox", "identity_user_tokens", "messenger_messages",
-        "reset_password_request",
+        "refresh_token_families", "reset_password_request",
     ];
 
     [Fact]

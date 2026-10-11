@@ -75,6 +75,7 @@ Logs et requêtes LogsQL : [`observabilite.md`](observabilite.md) et [`logging.m
 | `lodb_sign_in_attempts_total` | compteur | `result` (`success`, `failure`, `two_factor_required`, `locked_out`, `throttled`, `banned`), `account` (`member`, `admin`, `none`, `unchecked`), `channel` | non | `LoDb.Security` |
 | `lodb_lockouts_total` | compteur | `is_admin` (`true`, `false`) | non | `LoDb.Security` |
 | `lodb_admin_security_events_total` | compteur | `event` (`mfa_enrolled`, `mfa_invitation_refused`) | non | `LoDb.Security` |
+| `lodb_sessions_revoked_total` | compteur | `reason` (`sign_out`, `sign_out_everywhere`, `refresh_replayed`) | non | `LoDb.Security` ; `refresh_replayed` : un jeton de rafraîchissement déjà échangé est revenu, sa famille est révoquée |
 | `lodb_catalog_cache_lookups_total` | compteur | `outcome` (`hit`, `joined`, `miss`) | non | `LoDb.Catalog` ; `hit` compte aussi la lecture `en_US` que fait toute lecture froide d'une autre langue |
 | `lodb_catalog_cache_evictions_total` | compteur | — | non | `LoDb.Catalog` |
 | `lodb_catalog_load_duration_seconds` | histogramme | `outcome` (`built`, `missing`, `failed`) | non | `LoDb.Catalog` |

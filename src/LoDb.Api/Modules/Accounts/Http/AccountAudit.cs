@@ -28,6 +28,8 @@ internal sealed class AccountAudit(IAuditLog log, IdentifierDigest identifiers)
     private const string IdentifierKindKey = "identifier_kind";
     private const string IdentifierDigestKey = "identifier_digest";
     private const string ReasonKey = "reason";
+    private const string ScopeKey = "scope";
+    private const string EverywhereScope = "everywhere";
 
     public Task SignedInAsync(
         string method,
@@ -66,6 +68,16 @@ internal sealed class AccountAudit(IAuditLog log, IdentifierDigest identifiers)
 
     public Task SignedOutAsync(CancellationToken cancellationToken) =>
         log.RecordAsync(new AuditEvent { Action = AuditAction.UserLogout }, cancellationToken);
+
+    /// <summary>A sign-out of every session of the account (<c>scope</c>: everywhere).</summary>
+    public Task SignedOutEverywhereAsync(CancellationToken cancellationToken) =>
+        log.RecordAsync(
+            new AuditEvent
+            {
+                Action = AuditAction.UserLogout,
+                Meta = new Dictionary<string, object?> { [ScopeKey] = EverywhereScope },
+            },
+            cancellationToken);
 
     /// <summary>Records <paramref name="action"/> on <paramref name="account"/>.</summary>
     public Task RecordAsync(

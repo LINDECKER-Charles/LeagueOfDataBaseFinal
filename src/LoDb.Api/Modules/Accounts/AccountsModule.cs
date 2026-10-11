@@ -11,6 +11,7 @@ using LoDb.Api.Modules.Accounts.Security;
 using LoDb.Api.Modules.Accounts.Security.Authenticator;
 using LoDb.Api.Modules.Accounts.Session;
 using LoDb.Api.Modules.Accounts.SignIn;
+using LoDb.Api.Modules.Accounts.Tokens;
 using LoDb.Api.Modules.Accounts.Verification;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
@@ -46,6 +47,12 @@ internal static class AccountsModule
         services.AddAccountsAuthentication().AddAccountsGoogle(configuration);
         services.AddAccountsProtection(configuration);
         AddVerification(services, configuration);
+        services.AddOptions<RefreshTokenOptions>()
+            .Bind(configuration.GetSection(RefreshTokenOptions.SectionName))
+            .Validate(
+                static options => options.HasUsableGrace(),
+                $"{RefreshTokenOptions.SectionName}:ReuseGrace must lie in 0 – 5 min.")
+            .ValidateOnStart();
         services.TryAddSingleton<TrustedOrigins>();
         services.AddOptions<AuditIdentifierOptions>()
             .Bind(configuration.GetSection(AuditIdentifierOptions.SectionName));
@@ -62,6 +69,7 @@ internal static class AccountsModule
         MeEndpoint.Map(account);
         LoginEndpoint.Map(account);
         LogoutEndpoint.Map(account);
+        SignOutEverywhereEndpoint.Map(account);
         TokenEndpoint.Map(account);
         RefreshEndpoint.Map(account);
         RegisterEndpoint.Map(account);
@@ -108,6 +116,7 @@ internal static class AccountsModule
         services.TryAddScoped<GoogleSignIn>();
         services.TryAddScoped<GoogleCallback>();
         services.TryAddScoped<GoogleCodeExchange>();
+        services.TryAddScoped<RefreshFamilies>();
     }
 
     private static void AddEndpoints(IServiceCollection services)
@@ -115,6 +124,7 @@ internal static class AccountsModule
         services.TryAddScoped<MeEndpoint>();
         services.TryAddScoped<LoginEndpoint>();
         services.TryAddScoped<LogoutEndpoint>();
+        services.TryAddScoped<SignOutEverywhereEndpoint>();
         services.TryAddScoped<TokenEndpoint>();
         services.TryAddScoped<RefreshEndpoint>();
         services.TryAddScoped<RegisterEndpoint>();

@@ -4,8 +4,8 @@ namespace LoDb.Api.Modules.Accounts.Security;
 
 /// <summary>
 /// Meter <c>LoDb.Security</c>: the password hashing (computations running, wait for a permit,
-/// refusals), the sign-in attempts by result, the lockouts, and the security events of the
-/// administrators.
+/// refusals), the sign-in attempts by result, the lockouts, the security events of the
+/// administrators, and the sessions revoked by reason.
 /// </summary>
 /// <remarks>
 /// Every tag takes its value from the closed lists below: never an identifier, an address or
@@ -44,6 +44,12 @@ internal sealed class SecurityMetrics
     public const string MfaEnrolled = "mfa_enrolled";
     public const string MfaInvitationRefused = "mfa_invitation_refused";
 
+    // Why sessions were revoked: an app's sign-out, a sign-out everywhere, a refresh token
+    // played twice.
+    public const string SignedOut = "sign_out";
+    public const string SignedOutEverywhere = "sign_out_everywhere";
+    public const string RefreshReplayed = "refresh_replayed";
+
     // Prometheus' spelling of a boolean label.
     private const string True = "true";
     private const string False = "false";
@@ -57,6 +63,7 @@ internal sealed class SecurityMetrics
     private readonly Counter<long> _signInAttempts;
     private readonly Counter<long> _lockouts;
     private readonly Counter<long> _adminEvents;
+    private readonly Counter<long> _sessionsRevoked;
     private int _inFlight;
 
     public SecurityMetrics(IMeterFactory meterFactory)
@@ -90,6 +97,10 @@ internal sealed class SecurityMetrics
             "lodb.admin.security_events",
             unit: "{event}",
             description: "Security events of the administrators' second factor.");
+        _sessionsRevoked = meter.CreateCounter<long>(
+            "lodb.sessions.revoked",
+            unit: "{event}",
+            description: "Revocations of sessions and refresh token families, by reason.");
     }
 
     public void ComputationStarted() => Interlocked.Increment(ref _inFlight);
@@ -113,4 +124,7 @@ internal sealed class SecurityMetrics
 
     public void RecordAdminEvent(string adminEvent) =>
         _adminEvents.Add(1, new KeyValuePair<string, object?>(EventTag, adminEvent));
+
+    public void RecordSessionsRevoked(string reason) =>
+        _sessionsRevoked.Add(1, new KeyValuePair<string, object?>(ReasonTag, reason));
 }

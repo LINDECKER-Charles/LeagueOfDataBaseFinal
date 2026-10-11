@@ -28,6 +28,8 @@ public sealed class LoDbDbContext(DbContextOptions<LoDbDbContext> options)
 {
     public DbSet<User> Users => Set<User>();
 
+    public DbSet<RefreshTokenFamily> RefreshTokenFamilies => Set<RefreshTokenFamily>();
+
     public DbSet<Build> Builds => Set<Build>();
 
     public DbSet<BuildVote> BuildVotes => Set<BuildVote>();
