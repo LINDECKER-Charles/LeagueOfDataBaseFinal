@@ -1,9 +1,12 @@
-# syntax=docker/dockerfile:1.7
+# syntax=docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e
 # Image lodb-web-ssr: the Angular SSR server (build `web`, AngularNodeAppEngine on Express).
 # Build context = repository root; Dockerfile.dockerignore admits the Angular workspace only.
+#
+# Every image this file names is pinned by digest, its tag kept for the reader: a moved tag
+# never changes what is built. Dependabot bumps both (tools/ci/README.md, base images).
 
 # The bundles are plain JavaScript: building on the build machine avoids emulating Node.
-FROM --platform=$BUILDPLATFORM node:24 AS build
+FROM --platform=$BUILDPLATFORM node:24@sha256:3d27e5c11e5786e309ec3e03f93ae536eb36e6e5eb3714d5eb3300a36157add0 AS build
 WORKDIR /source/src/LoDb.Web
 COPY src/LoDb.Web/package.json src/LoDb.Web/package-lock.json ./
 RUN --mount=type=cache,id=lodb-npm,target=/root/.npm \
@@ -13,7 +16,7 @@ COPY src/LoDb.Web/ ./
 RUN npm run build:web && test -f dist/web/browser/changelog/manifest.json
 
 # The server bundle inlines its dependencies: the runtime needs no node_modules.
-FROM node:24-slim
+FROM node:24-slim@sha256:d6aa754f16b3197301076f047b5def2f02ea1dbbc2ca920407d46d7ec7f87b20
 ARG APP_REVISION=unknown
 LABEL org.opencontainers.image.title="lodb-web-ssr" \
       org.opencontainers.image.source="https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal" \

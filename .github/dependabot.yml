@@ -127,11 +127,16 @@ updates:
         update-types: [minor, patch]
 
   # ─────────────────────────────── Docker base images ─────────────────────────
+  # Every FROM is pinned as `image:tag@sha256:<digest>` (tools/ci/check-pinned-images.mjs):
+  # Dependabot bumps the tag and the digest together, and proposes a new digest of the same
+  # tag when its publisher rebuilds it (OS security fixes). One weekly PR for all of them;
+  # the images built from it are scanned before staging serves them (_build.yml).
   - package-ecosystem: docker
     directories:
       - /docker/api
       - /docker/web-ssr
       - /docker/nginx
+      - /docker/android-build
     schedule:
       interval: weekly
       day: monday
@@ -143,6 +148,9 @@ updates:
       prefix: build
       include: scope
     ignore:
-      # .NET and Node majors are tied to global.json, the CI and the code: bumped by hand.
+      # .NET, Node and JDK majors are tied to global.json, the CI and the code: by hand.
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
+    groups:
+      docker-base-images:
+        patterns: ["*"]
