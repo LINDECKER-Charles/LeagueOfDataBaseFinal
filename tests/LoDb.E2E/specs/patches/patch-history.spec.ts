@@ -14,7 +14,7 @@ const PINNED_ANSWERS = [OK, 503];
 // The links of a version's row, found by the version its header names.
 function linksOf(page: Page, version: string): Locator {
   const header = page.locator('th', {
-    hasText: new RegExp(`^\\s*${version.replace(/\./g, '\\.')}(?:\\s|$)`),
+    hasText: new RegExp(`^\\s*${version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:\\s|$)`),
   });
   return page.locator('tbody tr').filter({ has: header }).locator('a');
 }
