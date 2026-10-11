@@ -97,9 +97,51 @@ public sealed class AuthEndpointsTests : IAsyncLifetime
             TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Equal(["Bearer access-1"], _api.SignOutsReceived);
         Assert.False(File.Exists(vault.FilePath));
         Assert.False((bool?)(await _host.ReadSessionAsync())["signedIn"]);
         Assert.Equal(string.Empty, (string?)(await _host.EchoAsync())["authorization"]);
+    }
+
+    [Fact]
+    public async Task LogoutForgetsTheTokensEvenWhenTheAPIRefusesIt()
+    {
+        using var login = await _host.LoginAsync(FakeApi.Password, rememberMe: true);
+        _api.IsSignOutFailing = true;
+
+        using var response = await _host.Client.PostAsync(
+            new Uri("/desktop/auth/logout", UriKind.Relative),
+            content: null,
+            TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+        Assert.Single(_api.SignOutsReceived);
+        Assert.False((bool?)(await _host.ReadSessionAsync())["signedIn"]);
+    }
+
+    [Fact]
+    public async Task EachRenewalTradesTheRefreshTokenTheLastOneGave()
+    {
+        using var folder = new TestFolder();
+        var setup = new DesktopHostSetup { ApiOrigin = _api.Origin, DataDirectory = folder.Path };
+        await using (var first = await DesktopTestHost.StartAsync(
+            setup,
+            TestContext.Current.CancellationToken))
+        {
+            using var login = await first.LoginAsync(FakeApi.Password, rememberMe: true);
+            first.Setup.Time.Advance(TimeSpan.FromSeconds(FakeApi.AccessLifetimeSeconds));
+            await first.EchoAsync();
+            first.Setup.Time.Advance(TimeSpan.FromSeconds(FakeApi.AccessLifetimeSeconds));
+            await first.EchoAsync();
+        }
+
+        await using var second = await DesktopTestHost.StartAsync(
+            setup with { Shell = new FakeShell(), Browser = new FakeBrowser() },
+            TestContext.Current.CancellationToken);
+        var received = await second.EchoAsync();
+
+        Assert.Equal(["refresh-1", "refresh-2", "refresh-3"], _api.RefreshesReceived);
+        Assert.Equal("Bearer access-4", (string?)received["authorization"]);
     }
 
     [Fact]
