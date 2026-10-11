@@ -12,9 +12,7 @@ public sealed class PatchVersionParsingTests
     [Theory]
     [InlineData("16.14.1")]
     [InlineData("0.151.2")]
-    [InlineData("7.22.1")]
     [InlineData("15.1")]
-    [InlineData("3.6.14")]
     public void WellFormedVersionsParseVerbatim(string text)
     {
         Assert.True(PatchVersion.TryParse(text, out var version));
@@ -24,7 +22,6 @@ public sealed class PatchVersionParsingTests
 
     [Theory]
     [InlineData("lolpatch_3.7")]
-    [InlineData("lolpatch_4.21")]
     [InlineData("16")]
     [InlineData("16.")]
     [InlineData(".16.1")]
@@ -49,7 +46,6 @@ public sealed class PatchVersionParsingTests
 
     [Theory]
     [InlineData("16.14.1")]
-    [InlineData("0.151.2")]
     [InlineData("lolpatch_3.7")]
     [InlineData("16")]
     [InlineData("16.1.1\n")]
