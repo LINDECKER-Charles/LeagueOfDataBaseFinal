@@ -180,4 +180,24 @@ describe('lodb-champion-hero', () => {
     await fixture.whenStable();
     expect(img()?.getAttribute('src')).toBe('https://cdn.test/Annie_0.splash.jpg');
   });
+
+  it('steps down once for variants that failed before hydration, to the centred art', async () => {
+    // What hydration finds of an image that failed unheard: complete, without a width. The
+    // browser only reloads the image once the render is over, so the DOM still says so then.
+    vi.spyOn(HTMLImageElement.prototype, 'complete', 'get').mockReturnValue(true);
+    vi.spyOn(HTMLImageElement.prototype, 'naturalWidth', 'get').mockReturnValue(0);
+    const fixture = TestBed.createComponent(Host);
+    fixture.componentInstance.details.set({
+      ...detailsOf('Annie', RATINGS),
+      centeredArtVariants: [{ url: '/cdn/blobs/a.webp', width: 480 }],
+    });
+    await fixture.whenStable();
+    vi.restoreAllMocks();
+    const element = fixture.nativeElement as HTMLElement;
+
+    expect(element.querySelector('section picture > source')).toBeNull();
+    expect(element.querySelector('section picture > img')?.getAttribute('src')).toBe(
+      'https://cdn.test/Annie_0.centered.jpg',
+    );
+  });
 });

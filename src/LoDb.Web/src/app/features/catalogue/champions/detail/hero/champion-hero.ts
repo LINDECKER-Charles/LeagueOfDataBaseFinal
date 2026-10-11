@@ -6,6 +6,7 @@ import {
   computed,
   input,
   linkedSignal,
+  untracked,
   viewChild,
 } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -59,10 +60,12 @@ export class ChampionHero {
 
   constructor() {
     // An image that failed before hydration fired its error unheard: the DOM still tells.
+    // Untracked: rerun by the step it takes, the check would read the same failed image
+    // (the browser reloads it only after the render) and step down once more.
     afterRenderEffect(() => {
       const img = this.splash()?.nativeElement;
       if (img && imageStateOf(img.complete, img.naturalWidth) === 'error') {
-        this.fallBack();
+        untracked(() => this.fallBack());
       }
     });
   }
