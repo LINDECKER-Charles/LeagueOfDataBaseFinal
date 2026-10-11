@@ -1,10 +1,11 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  type ElementRef,
+  ElementRef,
   booleanAttribute,
   inject,
   input,
+  linkedSignal,
   viewChild,
 } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
@@ -33,7 +34,7 @@ import { CatalogueFilter } from '../state/catalogue-filter';
       enterkeyhint="search"
       [placeholder]="'common.search' | transloco"
       [attr.aria-label]="label()"
-      [value]="filter.state().query"
+      [value]="text()"
       (focus)="filter.anticipate()"
       (input)="filter.setQuery(field.value)"
       #field
@@ -54,7 +55,20 @@ export class FilterSearch {
 
   protected readonly filter = inject(CatalogueFilter);
   protected readonly shortcut = SEARCH_SHORTCUT_KEY;
+  /** What the field shows: the state's query, once the state has heard what was typed. */
+  protected readonly text = linkedSignal(() => this.filter.state().query);
   private readonly field = viewChild.required<ElementRef<HTMLInputElement>>('field');
+
+  constructor() {
+    // Hydrated after the reader started typing (the rail's console waits for them), the
+    // field already holds their text: drawing the state's query would erase it before the
+    // replayed keystrokes hand it over. A field the browser builds itself is empty here.
+    const typed =
+      inject<ElementRef<HTMLElement>>(ElementRef).nativeElement.querySelector('input')?.value;
+    if (typed !== undefined && typed !== '') {
+      this.text.set(typed);
+    }
+  }
 
   /** Whether the field is laid out: the rail and the bar never show at once. */
   isShown(): boolean {
