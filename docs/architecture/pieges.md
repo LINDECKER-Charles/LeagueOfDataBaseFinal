@@ -49,6 +49,9 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   origine, sans `AllowAnonymous` : le garde vérifie l'`Origin`). Un rapport envoyé avec le
   cookie de session sans jeton XSRF est refusé comme toute requête de ce genre : celui d'un
   visiteur connecté dont le navigateur joint ses cookies (`report-uri`) est perdu, voulu.
+  WebKit (Safari, et tout navigateur sur iOS) poste chaque violation avec `Origin: null` et
+  les cookies de la page : le garde la refuse (403), aucun rapport de WebKit n'arrive tant que
+  ce choix tient. L'API lit pourtant son format (un rapport seul, sous `application/csp-report`).
   Rien de la page ni du client n'est gardé ; une ligne `web.csp.violated` par minute. Sur la
   pile locale (http), Chromium n'enregistre pas l'endpoint de `Reporting-Endpoints` (il le veut
   en https) : ses rapports restent en file et n'arrivent jamais, voulu. L'E2E vérifie l'absence
