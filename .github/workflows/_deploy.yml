@@ -282,6 +282,8 @@ jobs:
             if [ -e "$edge_secret_file" ]; then
               [[ "$(cat "$edge_secret_file")" =~ ^[0-9a-f]{64}$ ]] \
                 || fail "$edge_secret_file must hold 64 hexadecimal digits; remove it to renew."
+            else
+              command -v openssl >/dev/null || fail "openssl is required for the edge's secret."
             fi
 
             # The healthchecks of compose.yaml use start_interval: Docker Engine 25 or later.
@@ -399,7 +401,6 @@ jobs:
             # in ENV_*, kept across deploys; Compose hands it to nginx and to the edge's labels
             # from the .env. A line of ENV_* that names it is replaced.
             if [ ! -e "$edge_secret_file" ]; then
-              command -v openssl >/dev/null || fail "openssl is required for the edge's secret."
               staged="$(mktemp .deploy/secrets/.LODB_EDGE_SECRET.XXXXXX)"
               openssl rand -hex 32 > "$staged"
               mv "$staged" "$edge_secret_file"
