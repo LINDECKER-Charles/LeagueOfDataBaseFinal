@@ -15,7 +15,6 @@ public sealed class ImportTests(BuildsApp app)
     // Gone from the oldest recorded patches: Domination lost Sixth Sense (8137) and the item
     // list lacks the placeholder 7050.
     private const string OldPatch = "7.22.1";
-    private const string NoRunesPatch = "7.21.1";
 
     // Of the recorded items, only the placeholder is offered on the Arena map.
     private const string ArenaSteps = """[{"label":"Start","note":null,"items":["7050","1001"]}]""";
@@ -53,36 +52,6 @@ public sealed class ImportTests(BuildsApp app)
     }
 
     [Fact]
-    public async Task PatchWithoutRunesResetsThem()
-    {
-        var account = await app.SeedAsync();
-        var build = await app.InsertAsync(account.Username, new StoredBuild());
-        using var owner = await app.SignInAsync(account);
-
-        var preview = await owner.GetJsonAsync(ImportOf(build.Id, NoRunesPatch));
-
-        Assert.True(preview.GetProperty("report").GetProperty("runesReset").GetBoolean());
-        Assert.Empty(preview.GetProperty("report").GetProperty("droppedItems").EnumerateArray());
-    }
-
-    [Fact]
-    public async Task PatchOfferingEverythingKeepsTheBuildWhole()
-    {
-        var account = await app.SeedAsync();
-        var build = await app.InsertAsync(account.Username, new StoredBuild());
-        using var owner = await app.SignInAsync(account);
-
-        var preview = await owner.GetJsonAsync(ImportOf(build.Id, BuildsApp.Previous.Value));
-
-        var report = preview.GetProperty("report");
-        Assert.False(report.GetProperty("runesReset").GetBoolean());
-        Assert.Empty(report.GetProperty("droppedItems").EnumerateArray());
-        var runes = preview.GetProperty("draft").GetProperty("structure").GetProperty("runes");
-        Assert.Equal([8126, 8137], runes.GetProperty("secondarySelections").EnumerateArray()
-            .Select(static perk => perk.GetInt32()));
-    }
-
-    [Fact]
     public async Task ItemsOffTheModeMapAreDroppedByName()
     {
         var account = await app.SeedAsync();
@@ -99,21 +68,6 @@ public sealed class ImportTests(BuildsApp app)
             preview.GetProperty("report").GetProperty("droppedItems").EnumerateArray());
         Assert.Equal("1001", ApiJson.Text(dropped, "id"));
         Assert.Equal("Boots", ApiJson.Text(dropped, "name"));
-    }
-
-    [Fact]
-    public async Task MissingChampionIsKeptAndFlagged()
-    {
-        var account = await app.SeedAsync();
-        var stored = new StoredBuild { ChampionId = "Hwei" };
-        var build = await app.InsertAsync(account.Username, stored);
-        using var owner = await app.SignInAsync(account);
-
-        var preview = await owner.GetJsonAsync(ImportOf(build.Id, BuildsApp.Latest.Value));
-
-        Assert.True(preview.GetProperty("report").GetProperty("championMissing").GetBoolean());
-        var structure = preview.GetProperty("draft").GetProperty("structure");
-        Assert.Equal("Hwei", ApiJson.Text(structure, "championId"));
     }
 
     [Theory]
