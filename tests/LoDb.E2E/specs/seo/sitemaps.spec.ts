@@ -2,6 +2,8 @@ import { expect, test } from '../../support/test';
 
 const XML_TYPE = 'application/xml; charset=utf-8';
 const LOCALE_COUNT = 21;
+// The past versions the index announces after the latest one (LoDb__Seo__SitemapVersionWindow).
+const SITEMAP_VERSION_WINDOW = 12;
 const SITEMAP_FILE = /\/sitemaps\/[a-z-]+\/(?:latest|\d+(?:\.\d+)+)\.xml$/;
 
 function locations(xml: string): string[] {
@@ -9,7 +11,9 @@ function locations(xml: string): string[] {
 }
 
 test.describe('sitemaps', { tag: '@readonly' }, () => {
-  test('indexes every locale sitemap of every version', async ({ request }) => {
+  test('indexes every locale sitemap of the latest version and of the recent ones', async ({
+    request,
+  }) => {
     const response = await request.get('/sitemap.xml');
     // Without Data Dragon's list of versions the index is unavailable, never wrong.
     test.skip(response.status() === 503, 'Data Dragon unreachable from the stack');
@@ -19,6 +23,7 @@ test.describe('sitemaps', { tag: '@readonly' }, () => {
     expect(response.headers()['content-type']).toBe(XML_TYPE);
     expect(sitemaps[0]).toMatch(/\/sitemaps\/ar\/latest\.xml$/);
     expect(sitemaps.length % LOCALE_COUNT).toBe(0);
+    expect(sitemaps.length).toBeLessThanOrEqual((1 + SITEMAP_VERSION_WINDOW) * LOCALE_COUNT);
     expect(sitemaps.filter((url) => !SITEMAP_FILE.test(url))).toEqual([]);
   });
 
@@ -38,6 +43,7 @@ test.describe('sitemaps', { tag: '@readonly' }, () => {
       '/fr/runes',
       '/fr/summoners',
     ]);
+    expect(pages[5]).toBe('/fr/patches');
     expect(pages).toContain('/fr/legal/privacy');
   });
 
