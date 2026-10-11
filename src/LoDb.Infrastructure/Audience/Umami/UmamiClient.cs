@@ -51,8 +51,12 @@ internal sealed class UmamiClient(IHttpClientFactory clients, IOptions<AudienceO
     /// <summary>
     /// Every path counted during <paramref name="window"/>, the most viewed first, a page of
     /// <see cref="AudienceOptions.PageSize"/> at a time and
-    /// <see cref="AudienceOptions.MaxPages"/> pages at most.
+    /// <see cref="AudienceOptions.MaxPages"/> pages at most, each path once.
     /// </summary>
+    /// <remarks>
+    /// Umami orders the paths by their counts alone: rows that tie may come back in another
+    /// order for another offset, so a path can show up on two pages. It is counted once.
+    /// </remarks>
     public async Task<IReadOnlyList<UmamiPathViews>> ReadPathsAsync(
         string token,
         UmamiWindow window,
@@ -60,6 +64,7 @@ internal sealed class UmamiClient(IHttpClientFactory clients, IOptions<AudienceO
     {
         var settings = options.Value;
         var paths = new List<UmamiPathViews>();
+        var seen = new HashSet<string>(StringComparer.Ordinal);
         for (var page = 0; page < settings.MaxPages; page++)
         {
             var offset = page * settings.PageSize;
@@ -67,10 +72,12 @@ internal sealed class UmamiClient(IHttpClientFactory clients, IOptions<AudienceO
                 token,
                 PathsQuery(window, offset),
                 cancellationToken);
-            paths.AddRange(rows.Select(static row => new UmamiPathViews(
-                row.Name ?? string.Empty,
-                row.Pageviews,
-                row.Visitors)));
+            paths.AddRange(rows
+                .Select(static row => new UmamiPathViews(
+                    row.Name ?? string.Empty,
+                    row.Pageviews,
+                    row.Visitors))
+                .Where(path => seen.Add(path.Path)));
             if (rows.Length < settings.PageSize)
             {
                 break;

@@ -127,6 +127,25 @@ public sealed class AudiencePullTests(PostgresContainerFixture postgres)
     }
 
     [Fact]
+    public async Task APathThatTwoPagesRepeatCountsOnce()
+    {
+        // Ties reordered between two offsets: the sword closes the first page and opens the
+        // second.
+        _umami.Days[Today] =
+        [
+            (CatalogPages.AhriFr, 50, 20),
+            (CatalogPages.Sword, 30, 12),
+            (CatalogPages.Sword, 30, 12),
+            (CatalogPages.AhriEn, 10, 6),
+        ];
+
+        await Pull().PullAsync(Cancellation);
+
+        Assert.Equal(["2026-10-11 champion:Ahri 60 26", "2026-10-11 item:1036 30 12"],
+            await ReadAsync());
+    }
+
+    [Fact]
     public async Task TheGaugeTakesTheViewsOfTheLastClosedHour()
     {
         _umami.SiteViews = 1234;
