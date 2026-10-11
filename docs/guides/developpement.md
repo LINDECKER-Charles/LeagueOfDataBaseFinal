@@ -136,6 +136,8 @@ sur la stack d'intégration qu'en connaissance de cause.
 
 ## Tests E2E
 
+Où placer un test et ce que chaque couche coûte : [`tests.md`](tests.md).
+
 Ils exigent une stack démarrée. Par défaut, ils visent la stack d'intégration
 (`http://localhost:18080`).
 

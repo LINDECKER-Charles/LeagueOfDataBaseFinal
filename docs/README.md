@@ -55,6 +55,7 @@ Pour développer : guide [developpement.md](guides/developpement.md) et
 | [configuration.md](../legacy/docs/guides/configuration.md) | *Ancienne stack, archivée* — Variables d'environnement et paramètres applicatifs |
 | [docker.md](../legacy/docs/guides/docker.md) | *Ancienne stack, archivée* — Référence des commandes de la stack Compose |
 | [developpement.md](guides/developpement.md) | Nouvelle stack `lodb-dev` (.NET + Angular) : build et tests, stack d'intégration, ports, emplacements, E2E, dépannage |
+| [tests.md](guides/tests.md) | Stratégie de test : quelle couche teste quoi, budgets de durée et de mémoire, infrastructure des tests .NET |
 | [configuration.md](guides/configuration.md) | Nouvelle stack : inventaire des secrets GitHub, des lignes `.env` de `staging` et de `prod`, des fichiers et volumes de l'hôte et des services externes |
 | [github-actions-secrets.md](guides/github-actions-secrets.md) | Nouvelle stack : pipeline CI/CD, `dev` → `test` (déploiement de `staging`) → `main` (promotion en `prod`) |
 | [deploiement-cle-restreinte.md](guides/deploiement-cle-restreinte.md) | Procédure du propriétaire, non activée : clé de déploiement à commande forcée, compte `deploy`, `.env` et secrets posés sur l'hôte |
