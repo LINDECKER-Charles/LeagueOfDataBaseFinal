@@ -70,6 +70,9 @@ test.describe('context switcher', { tag: '@readonly' }, () => {
     context,
     consoleErrors,
   }) => {
+    // Three data sets warmed in one journey (the older patch, then fr, then en_GB): each may
+    // be cold on a fresh stack.
+    test.slow();
     const older = await olderVersion(request);
     const posts: string[] = [];
     page.on('request', (sent) => {
@@ -96,18 +99,21 @@ test.describe('context switcher', { tag: '@readonly' }, () => {
       expect(consoleErrors).toEqual([]);
     });
 
+    // A tab of its own: the pinned patch stays in the session storage of the first one.
     await test.step('moves to another locale, then to a regional variant by ?lang=', async () => {
-      await page.goto('/en/items');
+      const tab = await context.newPage();
+      await tab.goto('/en/items');
 
-      await openSwitcher(page);
-      await switcher(page).locator('#switcher-language').selectOption('fr:fr_FR');
-      await apply(page);
-      await expect.poll(() => pathAndQuery(page)).toBe('/fr/items');
+      await openSwitcher(tab);
+      await switcher(tab).locator('#switcher-language').selectOption('fr:fr_FR');
+      await apply(tab);
+      await expect.poll(() => pathAndQuery(tab)).toBe('/fr/items');
 
-      await openSwitcher(page);
-      await switcher(page).locator('#switcher-language').selectOption('en:en_GB');
-      await apply(page);
-      await expect.poll(() => pathAndQuery(page)).toBe('/en/items?lang=en_GB');
+      await openSwitcher(tab);
+      await switcher(tab).locator('#switcher-language').selectOption('en:en_GB');
+      await apply(tab);
+      await expect.poll(() => pathAndQuery(tab)).toBe('/en/items?lang=en_GB');
+      await tab.close();
     });
   });
 });

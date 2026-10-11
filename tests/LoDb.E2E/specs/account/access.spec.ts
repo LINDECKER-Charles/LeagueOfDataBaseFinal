@@ -14,9 +14,10 @@ test.describe('account pages for a visitor', () => {
 
       await test.step('draws the sign-in form, without console error', async () => {
         await expect(page.getByLabel('Email or summoner name')).toBeVisible();
+        // The registration keeps the way back too.
         await expect(page.getByRole('link', { name: 'Create account' }).last()).toHaveAttribute(
           'href',
-          '/en/account/register',
+          '/en/account/register?returnUrl=%2Fen%2Faccount%2Fprofile',
         );
         await page.waitForLoadState('networkidle');
         expect(consoleErrors).toEqual([]);
