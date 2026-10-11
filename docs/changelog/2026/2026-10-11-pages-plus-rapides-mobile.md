@@ -28,6 +28,7 @@ affichage.
 - La liste complète qui sert à filtrer se charge quand on commence à chercher ou à filtrer, ou
   une fois la page affichée et le navigateur au repos ; en mode économie de données, seulement
   quand on en a besoin.
+- Une page s'ouvre plus vite quand le site a déjà été visité.
 
 ## Technique
 
@@ -55,3 +56,6 @@ affichage.
   des filtres, tout état que la première page ne sait pas dessiner) ou après l'événement `load`
   et un `requestIdleCallback` (2 s au plus) ; jamais d'office sous `Save-Data` ou sur
   connexion lente.
+- Service worker : navigation preload activé ; chaque navigation qu'il voit est servie par ce
+  préchargement (`networkResponse`), y compris celles qu'il laisse sinon passer (compte,
+  admin, partages), qui ne sont jamais mises en cache.

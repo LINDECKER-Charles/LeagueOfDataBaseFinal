@@ -5,7 +5,7 @@ import type { FetchEventLike } from './fetch-event-like';
 export interface WorkerScope {
   readonly location: { readonly origin: string };
   readonly registration: {
-    readonly navigationPreload?: { disable(): Promise<void> };
+    readonly navigationPreload?: { enable(): Promise<void> };
   };
   readonly clients: { claim(): Promise<void> };
   skipWaiting(): Promise<void>;

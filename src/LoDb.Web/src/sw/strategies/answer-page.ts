@@ -2,6 +2,7 @@ import type { FetchEventLike } from '../scope/fetch-event-like';
 import type { CacheSlot } from '../storage/cache-slot';
 import { storeCopy } from '../storage/store-copy';
 import { lastResortPage } from './last-resort-page';
+import { networkResponse } from './network-response';
 import { OFFLINE_URL } from './offline-url';
 import { within } from './within';
 
@@ -20,16 +21,17 @@ async function copyOrFallback(
 }
 
 /**
- * Network first for a page: the fresh page, kept as a copy; past `NETWORK_DELAY_MS`, or
- * offline, the last copy of that page; then the offline page. Always a Response: answering
- * undefined is what gave the previous worker its blank pages (heritage H4).
+ * Network first for a page: the fresh page (the navigation preload, which left while the
+ * worker started), kept as a copy; past `NETWORK_DELAY_MS`, or offline, the last copy of that
+ * page; then the offline page. Always a Response: answering undefined is what gave the
+ * previous worker its blank pages (heritage H4).
  */
 export async function answerPage(
   event: FetchEventLike,
   pages: CacheSlot | undefined,
   offline: Cache | undefined,
 ): Promise<Response> {
-  const network = fetch(event.request);
+  const network = networkResponse(event);
   // Registered before anything reads the response, so the copy is cloned from an unread body.
   // A failed fetch or a copy that cannot be stored is not an error of the answer.
   const stored = network.then((response) => storeCopy(pages, event.request, response));
