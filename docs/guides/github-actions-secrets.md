@@ -14,19 +14,20 @@ plus ; leur guide est
 
 | Fichier | Rôle |
 |---|---|
-| `ci.yml` (*CI/CD*) | Orchestrateur. Déclenché par `push` (`dev`, `main` : les seules branches qui déploient) et `pull_request`, filtré sur les chemins de la nouvelle stack. Checks parallèles, **sauf sur `main`** : `dotnet` (build + tests, Testcontainers), `front` (lint, typecheck, tests, `build:web`, `build:shell`), `contract` (`api:check`), `i18n` (`i18n:report`, non bloquant), `e2e` (stack `lodb-dev` + Playwright). Sur un push de **`dev`**, checks bloquants verts : `merge-to-test`, `build`, `deploy-staging`. Sur un push de **`main`** : `promote`, `deploy-prod`. |
-| `_build.yml` | Réutilisable : construit depuis `test` les images `ghcr.io/<owner>/lodb/{api,web-ssr,nginx}`, taguées `:<sha>` (le commit poussé sur `dev`) + `:staging`, label OCI et `APP_REVISION` = SHA. |
+| `ci.yml` (*CI/CD*) | Orchestrateur. Déclenché par `push` (`dev`, `main` : les seules branches qui déploient) et `pull_request`, filtré sur les chemins de la nouvelle stack. Checks parallèles, **sauf sur `main`** : `dotnet` (build + tests, Testcontainers), `front` (lint, typecheck, tests, `build:web`, `build:shell`), `contract` (`api:check`), `i18n` (`i18n:report`, non bloquant), `workflows` (actions épinglées, actionlint, outils de déploiement), `supply-chain` (images de base épinglées par digest, `npm audit` des dépendances de production du front : bloquant dès `high`, exceptions datées dans `tools/ci/npm-audit-allowlist.json`), `e2e` (stack `lodb-dev` + Playwright). Sur un push de **`dev`**, checks bloquants verts : `merge-to-test`, `build`, `deploy-staging`, puis `staging-validated` (pose `:staging-validated` sur les digests que `staging` vient de servir, smoke tests passés). Sur un push de **`main`** : `promote`, `deploy-prod`. |
+| `_build.yml` | Réutilisable : résout `test` en **un** commit et en construit les images `ghcr.io/<owner>/lodb/{api,web-ssr,nginx}`, poussées sous `:<sha>` (ce commit de `test`) avec leur SBOM et leur attestation de provenance ; label OCI et `APP_REVISION` = ce SHA. Trivy scanne chaque image poussée et **bloque** sur une vulnérabilité HIGH ou CRITICAL corrigée en amont ; `:staging` n'est posé qu'ensuite, sur les digests scannés ([`tools/ci/README.md`](../../tools/ci/README.md)). |
 | `_deploy.yml` | Réutilisable : déploiement SSH d'un hôte, même logique pour `staging` et `prod`. Entrées `environment` (`staging` ou `prod`) et `branch` (`test` ou `main`) ; secrets passés par `ci.yml` (§ Secrets). Son job tourne dans l'environnement GitHub `staging` ou `production`. |
-| `_promote.yml` | Réutilisable : retague `:staging` en `:prod` et `:latest`, **sans rebuild**. |
+| `_promote.yml` | Réutilisable : pose `:prod` et `:latest` sur les digests que `staging` a validés, **sans rebuild** (`tools/ci/promote-images.sh`). Refuse si `:staging` ne désigne plus ces digests, ou si leur révision n'a pas le code du commit promu. |
 | `release-desktop.yml`, `release-android.yml` | Releases signées des apps ([`release-desktop.md`](release-desktop.md), [`release-android.md`](release-android.md)). |
 
 ```
-push dev  ─▶ checks (dotnet, front, contract, e2e ; i18n informatif)
+push dev  ─▶ checks (dotnet, front, contract, workflows, supply-chain, e2e ; i18n informatif)
           ─▶ merge dev → test (créée depuis main si absente)
-          ─▶ _build (GHCR :<sha> + :staging)
+          ─▶ _build (GHCR :<sha> ─▶ scan Trivy ─▶ :staging)
           ─▶ _deploy staging (branche test) : pull ─▶ migrate ─▶ up -d ─▶ smoke test
+          ─▶ :staging-validated (les digests servis)
 fusion manuelle test → main ─▶ push main
-          ─▶ _promote (:staging → :prod + :latest, sans rebuild)
+          ─▶ _promote (:staging-validated → :prod + :latest, par digest, sans rebuild)
           ─▶ _deploy prod (branche main) : pull ─▶ migrate ─▶ up -d ─▶ smoke test
 ```
 
@@ -34,9 +35,15 @@ fusion manuelle test → main ─▶ push main
 - `main` n'est atteint que par la fusion manuelle de `test` : c'est la validation humaine
   qui met en prod. La prod reçoit les images que `staging` a servies, sans rebuild ni
   nouveau passage des checks.
-- `_promote` promeut ce que `:staging` désigne **au moment du push de `main`**, c'est-à-dire
-  le dernier build de `dev`. Ne pas pousser `dev` entre la validation de `staging` et la
-  fusion dans `main`.
+- `_promote` ne promeut que les digests que `staging` a servis avec succès
+  (`:staging-validated`), et seulement si `:staging` les désigne encore et s'ils ont été
+  construits depuis le code de `main` (chemins surveillés par `ci.yml`). Un push de `dev`
+  entre la validation de `staging` et la fusion dans `main`, ou un déploiement de `staging`
+  en échec, **arrête** la promotion au lieu d'envoyer en prod une image que `staging` n'a pas
+  servie. Une fois `staging` vert sur le code de `main`, relancer le run refusé (*Re-run
+  failed jobs* : `promote`, puis `deploy-prod`). Ne fusionner à nouveau `test` dans `main`
+  que si `main` n'a pas le code que `staging` sert : quand `main` contient déjà `test`, la
+  fusion n'a rien à fusionner et ne lance aucun run.
 - Filtre de chemins : un push qui ne touche pas la nouvelle stack (documentation seule) ne
   lance rien, ni fusion dans `test` ni promotion.
 - Sur `dev` et `main`, un push plus récent **attend** la fin du run en cours au lieu de
@@ -71,8 +78,12 @@ Cible, non activée : des clés qui ne peuvent que déployer un tag d'image (com
 compte `deploy`), sans `ENV_*`, `*_DATA_PROTECTION_PFX` ni `*_PATH` dans GitHub :
 [`deploiement-cle-restreinte.md`](deploiement-cle-restreinte.md).
 
-**Tags d'images** : `:<sha>` (immuable, poussé par `_build.yml`), `:staging` (dernier build
-de `dev`), `:prod` et `:latest` (images promues). `ghcr.io/<owner>/lodb/nginx` porte le nom
+**Tags d'images** : `:<sha>` (immuable, poussé par `_build.yml` : le commit de `test`
+construit, que la notice *Deployed revision* du déploiement affiche), `:staging` (dernier
+build de `dev` dont le scan est passé), `:staging-validated` (ce que `staging` a servi, smoke
+tests passés), `:prod` et `:latest` (images promues, mêmes digests). Chaque image
+porte son SBOM et son attestation de provenance (`docker buildx imagetools inspect
+<image> --format '{{json .SBOM}}'`, `.Provenance`). `ghcr.io/<owner>/lodb/nginx` porte le nom
 qu'avait l'image nginx de l'ancienne stack : ses `:staging` et `:prod` désignent désormais
 la nouvelle, et les images de l'ancienne restent accessibles par leur tag `:<sha>`.
 

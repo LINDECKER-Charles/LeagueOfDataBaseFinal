@@ -4,19 +4,23 @@ name: CI/CD
 # archived under legacy/.github/workflows/ and no longer run; changes under legacy/ trigger
 # nothing. The checks run in parallel: build and tests .NET, front checks, API contract,
 # i18n report (informative), the workflows themselves (actions pinned to a commit,
-# actionlint, deploy tools) and E2E on the local stack. No sensitive value here: hosts,
-# paths and app secrets are repository secrets / live inside the per-host ENV_FILE. The
-# deploy jobs run in the GitHub environments `staging` and `production` (_deploy.yml).
+# actionlint, deploy tools), the supply chain (base images pinned by digest, npm audit) and
+# E2E on the local stack. No sensitive value here: hosts, paths and app secrets are repository
+# secrets / live inside the per-host ENV_FILE. The deploy jobs run in the GitHub environments
+# `staging` and `production` (_deploy.yml).
 #
-# Two-stage promotion (build once, promote the same artifact):
-#   push dev  ─▶ checks ─▶ merge dev→test ─▶ _build (:sha + :staging) ─▶ _deploy STAGING
-#   push main ─▶ _promote (:staging → :prod) ─▶ _deploy PROD
+# Two-stage promotion (build once, promote the same artifact, by digest):
+#   push dev  ─▶ checks ─▶ merge dev→test ─▶ _build (:sha, scan, :staging) ─▶ _deploy STAGING
+#             ─▶ :staging-validated
+#   push main ─▶ _promote (:staging-validated → :prod) ─▶ _deploy PROD
 #
 # `test` never triggers this workflow. `main` is reached only by a manual test→main
 # merge — that human gate promotes to production (prod never rebuilds nor reruns checks).
 on:
   push:
     # Only the branches that deploy: a push runs this workflow with the deployment secrets.
+    # .trivyignore is what the image scan of _build.yml accepts: a change of it alone must
+    # rebuild and rescan, or an accepted finding would never unblock the pipeline.
     branches: [dev, main]
     paths: &stack-paths
       - src/**
@@ -28,6 +32,7 @@ on:
       - Directory.*
       - global.json
       - .github/workflows/**
+      - .trivyignore
   pull_request:
     paths: *stack-paths
 
@@ -198,6 +203,32 @@ jobs:
           tar -xzf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP" actionlint
           "$RUNNER_TEMP/actionlint" -color
 
+  # What the images are made of (tools/ci): every base image pinned to its digest, so that the
+  # build and the scan of _build.yml see what the pull request reviewed; no advisory from
+  # `high` up against a production dependency of the web app (bundled into the SSR server and
+  # the browser), except the dated entries of tools/ci/npm-audit-allowlist.json.
+  supply-chain:
+    if: github.ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+
+      - name: Base images pinned by digest
+        run: node tools/ci/check-pinned-images.mjs
+
+      # From the lockfile: nothing is installed, no package script runs.
+      - name: npm audit of the production dependencies
+        run: node tools/ci/check-npm-audit.mjs
+
   e2e:
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -251,7 +282,7 @@ jobs:
 
   # ───────────────────────────────── dev path ────────────────────────────────
   merge-to-test:
-    needs: [dotnet, front, contract, workflows, e2e]
+    needs: [dotnet, front, contract, workflows, supply-chain, e2e]
     if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
     permissions:
@@ -303,6 +334,44 @@ jobs:
       ENV_FILE: ${{ secrets.ENV_STAGING }}
       DATA_PROTECTION_PFX: ${{ secrets.STAGING_DATA_PROTECTION_PFX }}
 
+  # Staging served these digests and passed its smoke tests: `:staging-validated` names them,
+  # the only images _promote.yml may promote. They are the build's outputs, which `:staging`
+  # still named when the deploy pulled it: runs of dev queue (concurrency above).
+  staging-validated:
+    needs: [build, deploy-staging]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout the tools
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: tools/ci
+
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Login to GHCR
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Tag the digests staging validated
+        env:
+          API_DIGEST: ${{ needs.build.outputs.api-digest }}
+          WEB_SSR_DIGEST: ${{ needs.build.outputs.web-ssr-digest }}
+          NGINX_DIGEST: ${{ needs.build.outputs.nginx-digest }}
+        run: |
+          prefix="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/lodb"
+          bash tools/ci/tag-image.sh "$prefix/api" "$API_DIGEST" staging-validated
+          bash tools/ci/tag-image.sh "$prefix/web-ssr" "$WEB_SSR_DIGEST" staging-validated
+          bash tools/ci/tag-image.sh "$prefix/nginx" "$NGINX_DIGEST" staging-validated
+
   # ──────────────────────────────── main path ────────────────────────────────
   promote:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -312,6 +381,7 @@ jobs:
     uses: ./.github/workflows/_promote.yml
     with:
       source_tag: staging
+      validated_tag: staging-validated
       target_tags: prod latest
 
   deploy-prod:

@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.7
+# syntax=docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e
 # Image lodb-nginx: the stack's single HTTP entry point, behind the shared edge (Caddy).
 # Build context = repository root; Dockerfile.dockerignore admits docker/nginx/ only.
 #
@@ -8,7 +8,10 @@
 #               cache zones that LODB_* variables tune
 #   server.d/   *.conf included INSIDE the site's server block (seo, legacy redirects…)
 #   snippets/   files included by a server block or a location (guards, headers, caches…)
-FROM nginx:1.31-alpine
+#
+# Every image this file names is pinned by digest, its tag kept for the reader: a moved tag
+# never changes what is built. Dependabot bumps both (tools/ci/README.md, base images).
+FROM nginx:1.31-alpine@sha256:df221db836e1754089190208cee7eeda94f233197056426eda74a43ab1abeac2 AS runtime
 ARG APP_REVISION=unknown
 LABEL org.opencontainers.image.title="lodb-nginx" \
       org.opencontainers.image.source="https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal" \
@@ -70,11 +73,16 @@ ENV APP_REVISION=${APP_REVISION} \
     LODB_ARCHIVE_CACHE_INACTIVE=7d \
     LODB_ARCHIVE_CACHE_MIN_USES=2
 
+# The distribution's security fixes published since the base image was built: _build.yml
+# rebuilds this stage without its cache, so that each build takes those of the day, before
+# its scan. The nginx packages come from nginx.org, whose repository the base image no longer
+# lists: they stay as the base image installed them.
 # /var/cache/nginx/{pages,archive,assets,seo,legacy} hold the caches of sites/site.conf, and
 # temp/ the temporary files (nginx.conf); created here so that the volumes mounted on them
 # (compose.yaml) start owned by `nginx`. temp/ stays empty: nginx makes its folders there at
 # start, and refuses to start when no volume makes it writable.
-RUN rm -f /etc/nginx/conf.d/default.conf \
+RUN apk upgrade --no-cache \
+ && rm -f /etc/nginx/conf.d/default.conf \
  && cd /var/cache/nginx \
  && mkdir -p pages archive assets seo legacy temp \
  && chown nginx:nginx pages archive assets seo legacy temp \

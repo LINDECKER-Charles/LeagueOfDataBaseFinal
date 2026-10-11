@@ -118,9 +118,9 @@ que sur les pushs des branches qui déploient (`dev`, `main`) et sur les pull re
 par son premier déploiement :
 
 - `production` : *Required reviewers* (le propriétaire) et *Deployment branches* limitées à
-  `main`. Le déploiement de la prod attend alors une approbation. `_promote.yml` retague
-  `:staging` en `:prod` **avant** cette approbation : refusée, `:prod` désigne une image que
-  l'hôte ne sert pas encore, sans effet tant qu'on n'y tire rien à la main.
+  `main`. Le déploiement de la prod attend alors une approbation. `_promote.yml` pose `:prod`
+  sur les digests validés par `staging` **avant** cette approbation : refusée, `:prod` désigne
+  une image que l'hôte ne sert pas encore, sans effet tant qu'on n'y tire rien à la main.
 - `staging` : *Deployment branches* limitées à `dev`.
 
 Les secrets `PROD_*` restent des secrets de dépôt, lisibles par tout workflow d'une branche
