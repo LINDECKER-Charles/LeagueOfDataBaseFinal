@@ -99,6 +99,11 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   `lodb_network_gate_refusals_total`, sans log. Un conteneur d'un réseau partagé
   (`observability`) ne joint que le port 9464. Un nouveau service qui appelle l'API doit
   être sur le réseau `default` de la stack.
+- **Postgres sur le seul réseau `data`**, avec `api` et `migrate` (interne sur un hôte : aucune
+  route vers l'extérieur) : nginx et le SSR ne joignent pas la base, et l'API répond un 404 à
+  un pair de `data` (ce n'est pas le réseau de `KnownProxyNetworks`). Un nouveau service qui
+  lit la base rejoint `data` et appelle `lodb-postgres` ; un outil local passe par le port
+  publié (`LODB_PG_PORT`) ou `docker compose exec postgres`, jamais par nginx.
 - **Porte froide des catalogues** : un appel direct à l'API (18081, `lodb-api:8080`) depuis le
   réseau de la stack (ou la loopback) et sans `X-Forwarded-For` est compté comme le SSR
   (débit interne, attente de 2 s permise). Pour reproduire un client public, passer par nginx
@@ -213,7 +218,9 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   `/cdn/blobs/` en `cross-origin` (coquille Android) ; `access_log off` voulu (l'edge
   journalise) ; tous les `.conf` de `sites/`, `server.d/` et `snippets/` passent par
   `envsubst`, filtré sur `^LODB_` (défauts dans le `Dockerfile`, jamais une valeur vide).
-  Une variable `LODB_*` de nginx passe par `compose.yaml` avec son défaut
+  Rendus dans `/tmp/{sites,server.d,snippets}`, que
+  `/etc/nginx/{sites,server.d,snippets}` désignent par un lien : les `include` gardent leurs
+  chemins. Une variable `LODB_*` de nginx passe par `compose.yaml` avec son défaut
   (`${LODB_X:-défaut}`), **jamais** en clé sans valeur dans un calque comme les réglages de
   l'API : Docker effacerait le défaut `ENV` de l'image et nginx refuserait de démarrer.
   `server.d/legacy-redirects.conf` envoie à `/api/legacy` les premiers segments de l'ancien
@@ -226,9 +233,11 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   `/api/Catalog/…` comme `/api/catalog/…`, que `location /api/` laisserait passer. Le 429
   vient de `snippets/server-guards.conf` : une location qui déclare son propre `error_page`
   doit répéter `error_page 429`. `/api/catalog` et `/api/meta` ne sont **jamais** mis en
-  cache par nginx (un HIT contournerait le `426` des apps). Les caches `lodb_seo` et
-  `lodb_legacy` vivent dans le conteneur (vides à chaque image), `lodb_pages`,
-  `lodb_archive` et `lodb_assets` (bundles de `/build/`, clé = `$uri` seul) sur des volumes.
+  cache par nginx (un HIT contournerait le `426` des apps). Tous les caches sont des volumes :
+  `lodb_pages`, `lodb_seo` et `lodb_legacy` sous une clé préfixée par la révision (un
+  déploiement repart de zéro ; en local, la révision `dev` les garde d'un rebuild à l'autre :
+  `down -v`), `lodb_archive` sous l'epoch, `lodb_assets` (bundles de `/build/`) sous `$uri`
+  seul.
   `/cdn/blobs/` ne sert que `{sha256}.{png,jpg,jpeg,webp,gif,webm,mp4}` : une nouvelle
   extension de blob s'ajoute à la regex. La garde des extensions de scripts
   (`snippets/server-guards.conf`) épargne les chemins de profil (`/u/`, `profiles/`) : un
@@ -243,6 +252,21 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   ne lit ses fichiers qu'au démarrage : le label `LODB_SECRETS_REVISION` de `api` est ce qui
   la fait recréer quand un secret change, ne pas le retirer. `POSTGRES_PASSWORD_FILE` ne
   sert qu'à la création d'une base (volume vide).
+- **Conteneurs durcis, en local comme sur un hôte** (`x-hardening` de `compose.yaml`) :
+  système de fichiers racine en lecture seule, aucune capacité (`cap_drop: [ALL]`), pas
+  d'élévation par un binaire setuid (`no-new-privileges`). Un service n'écrit que dans ses
+  volumes et ses tmpfs (`/tmp`, et `/var/run/postgresql` pour Postgres) : un nouveau chemin
+  écrit va dans l'un ou l'autre, sinon `EROFS` au premier essai. Un `docker compose exec`
+  n'écrit pas ailleurs non plus. Postgres reprend `CHOWN`, `DAC_READ_SEARCH`, `SETGID` et
+  `SETUID`, chacune nécessaire (volume neuf comme existant) : son entrée tourne en root le
+  temps de donner ses dossiers à `postgres`. Un tmpfs compte dans la limite mémoire du
+  conteneur.
+- **nginx sans privilège, sur le port 8080** (utilisateur `nginx` de l'image, maître compris) :
+  sonde, smoke tests du déploiement, labels de l'edge (`{{upstreams 8080}}`), port publié en
+  local (`LODB_HTTP_PORT` → 8080) et banc de charge (`http://nginx:8080`) le visent.
+  `absolute_redirect off` : une redirection écrite par nginx garde un `Location` relatif, qui
+  sinon porterait `http://` et le port 8080. Pid, fichiers temporaires et configuration
+  rendue dans `/tmp`.
 - **HTML compressé une fois, par le SSR** (`src/server/compression`, gzip `6`) : les caches
   de pages de nginx demandent `Accept-Encoding: gzip` à l'amont quel que soit le client,
   gardent cette seule copie et la décompressent (`gunzip`) pour un client sans gzip. Le

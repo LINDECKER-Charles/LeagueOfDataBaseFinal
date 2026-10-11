@@ -482,7 +482,7 @@ jobs:
             api_host="$(env_value API_CADDY_DOMAINS | one_per_line | head -n 1)"
             fetch() {
               docker compose exec -T nginx wget -qO /dev/null --header "Host: $1" \
-                "http://127.0.0.1$2"
+                "http://127.0.0.1:8080$2"
             }
             fetch "$canonical" /healthz
             docker compose exec -T nginx wget -qO- http://lodb-api:8080/readyz
@@ -491,7 +491,7 @@ jobs:
             fetch "$canonical" /en/
             fetch "$api_host" /healthz
             robots="$(docker compose exec -T nginx wget -S -qO /dev/null \
-              --header "Host: $canonical" http://127.0.0.1/en/ 2>&1 \
+              --header "Host: $canonical" http://127.0.0.1:8080/en/ 2>&1 \
               | grep -i 'x-robots-tag' || true)"
             if [ "$EXPECTED_NOINDEX" = 1 ]; then
               [ -n "$robots" ] || fail "$TARGET must answer X-Robots-Tag: noindex."

@@ -11,6 +11,7 @@ const IMAGE = process.env.LODB_NGINX_IMAGE;
 const API_HOST = 'api.localhost';
 const KIB = 1024;
 const BLOB = 'ab'.repeat(32);
+const NGINX_UID = '101';
 const BLOCKED_AGENT = 'Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTML, like Gecko) '
   + 'Chrome/139.0.0.0 Safari/537.36';
 
@@ -55,6 +56,23 @@ describe('nginx image', { skip: IMAGE ? false : 'LODB_NGINX_IMAGE is not set' },
   test('accepts its rendered configuration', async () => {
     const { stderr } = await stack.exec('nginx', '-t');
     assert.match(stderr, /test is successful/);
+  });
+
+  test('runs unprivileged, without any capability, on a read-only root', async () => {
+    const { stdout } = await stack.exec('sh', '-c',
+      'id -u; stat -c %U /proc/1; grep -E "^(CapEff|CapBnd|NoNewPrivs):" /proc/1/status');
+    const [uid, master, ...status] = stdout.trim().split('\n');
+    assert.equal(uid, NGINX_UID);
+    assert.equal(master, 'nginx');
+    assert.deepEqual(status.map((line) => line.replace(/\s+/g, ' ')),
+      ['CapEff: 0000000000000000', 'CapBnd: 0000000000000000', 'NoNewPrivs: 1']);
+    await assert.rejects(stack.exec('touch', '/etc/nginx/nginx.conf'), /Read-only file system/);
+  });
+
+  test('writes its own redirects with a relative Location, never its port', async () => {
+    const moved = await get('/api');
+    assert.equal(moved.status, 301);
+    assert.equal(moved.headers.location, '/api/');
   });
 
   // Before the page and legacy checks: it spends one request of each burst (LIMITS).
@@ -207,6 +225,8 @@ describe('nginx image', { skip: IMAGE ? false : 'LODB_NGINX_IMAGE is not set' },
     // The API receives the path as sent: an encoded slash names another file there (a 404
     // kept a minute), which must never answer for the decoded one.
     assert.equal(await cacheOf('/sitemaps/en%2Flatest.xml'), 'MISS');
+    // On a volume, under the revision: a deploy starts them over, as the pages.
+    assert.ok((await keysOf('seo')).includes('KEY: r1|http://localhost/robots.txt'));
   });
 
   test("keeps the former site's 301 per query, then holds a client to its rate", async () => {
@@ -215,6 +235,8 @@ describe('nginx image', { skip: IMAGE ? false : 'LODB_NGINX_IMAGE is not set' },
     assert.equal(moved.headers['x-cache-status'], 'MISS');
     assert.equal(await cacheOf('/champions/Ahri?lang=fr_FR'), 'HIT');
     assert.equal(await cacheOf('/champions/Ahri'), 'MISS');
+    const legacyKey = 'KEY: r1|http://localhost/champions/Ahri?lang=fr_FR';
+    assert.ok((await keysOf('legacy')).includes(legacyKey));
     assert.deepEqual(await statusesOf(stack.port, '/champions', 4), [301, 301, 301, 429]);
     assert.equal((await get('/champions')).headers['retry-after'], '10');
   });

@@ -1,6 +1,7 @@
 // Checks what Compose makes of the served overlays, from the .env examples: the production
-// stack's CPU quotas, weights and process caps (compose.deploy.yaml), the smaller share of
-// the staging stack (compose.staging.yaml), and the optional login on the staging pages
+// stack's CPU quotas, weights and process caps (compose.deploy.yaml), its runtime hardening
+// and networks, the edge's route to nginx, the smaller share of the staging stack
+// (compose.staging.yaml), and the optional login on the staging pages
 // (compose.staging-auth.yaml), whose bcrypt hash must reach the edge's label intact.
 // Needs the Docker CLI only: `compose config` reads files, it starts nothing.
 import assert from 'node:assert/strict';
@@ -20,6 +21,11 @@ const STAGING_AUTH = [...STAGING, 'compose.staging-auth.yaml'];
 const RUNNING = ['api', 'web-ssr', 'nginx', 'postgres'];
 // What the deploy job writes on a host, absent from the examples.
 const HOST_ADDITIONS = 'LODB_EDGE_CIDR=172.18.0.0/16\nLODB_STACK_SUBNET=10.231.1.0/24\n';
+// Every service of the stack, the one-shot migrate included.
+const SERVICES = [...RUNNING, 'migrate'];
+// What postgres's entrypoint needs, as root, before it becomes `postgres`.
+const POSTGRES_CAPABILITIES = ['CHOWN', 'DAC_READ_SEARCH', 'SETGID', 'SETUID'];
+const NGINX_UPSTREAM = '{{upstreams 8080}}';
 // The staging share of the host: about three quarters of a core.
 const STAGING_CORES = 0.75;
 const HASH = '$2a$14$jM2G4xK0ZDa8W6PF31H9BOKCv81PEwu/7g692HVRaN72tRoi1jH52';
@@ -35,14 +41,17 @@ function isolatedEnvironment() {
     .filter(([key]) => !IS_CALLER_SETTING.test(key)));
 }
 
-async function servicesOf(envFiles, files) {
+async function configOf(envFiles, files) {
   const args = ['compose', '--project-directory', ROOT, '-p', 'lodb-overlays-check',
     ...envFiles.flatMap((file) => ['--env-file', file]),
     ...files.flatMap((file) => ['-f', join(ROOT, file)]), 'config', '--format', 'json'];
   const { stdout } = await run('docker', args,
     { env: isolatedEnvironment(), maxBuffer: 16 * 1024 * 1024 });
-  return JSON.parse(stdout).services;
+  return JSON.parse(stdout);
 }
+
+const servicesOf = async (envFiles, files) => (await configOf(envFiles, files)).services;
+const networksOf = (service) => Object.keys(service.networks ?? {}).sort();
 
 const limitsOf = (service) => service.deploy?.resources?.limits ?? {};
 const coresOf = (services) =>
@@ -51,6 +60,7 @@ const coresOf = (services) =>
 describe('served overlays through Compose',
   { skip: hasCompose ? false : 'docker compose is not available' }, () => {
     let folder;
+    let served;
     let prod;
     let staging;
 
@@ -59,8 +69,42 @@ describe('served overlays through Compose',
       await writeFile(join(folder, 'host.env'), HOST_ADDITIONS);
       await writeFile(join(folder, 'auth.env'), AUTH_ENV);
       const host = join(folder, 'host.env');
-      prod = await servicesOf([join(ROOT, '.env.prod.example'), host], SERVED);
+      served = await configOf([join(ROOT, '.env.prod.example'), host], SERVED);
+      prod = served.services;
       staging = await servicesOf([join(ROOT, '.env.staging.example'), host], STAGING);
+    });
+
+    test('runs every service read-only, without capabilities nor a way to gain one', () => {
+      for (const name of SERVICES) {
+        const service = prod[name];
+        assert.equal(service.read_only, true, `${name} is read-only`);
+        assert.deepEqual(service.cap_drop, ['ALL'], `${name} drops every capability`);
+        assert.deepEqual(service.security_opt, ['no-new-privileges:true'], name);
+        assert.ok(service.tmpfs?.some((mount) => mount.startsWith('/tmp:size=')), name);
+      }
+      assert.deepEqual(prod.postgres.cap_add, POSTGRES_CAPABILITIES);
+      for (const name of SERVICES.filter((service) => service !== 'postgres')) {
+        assert.equal(prod[name].cap_add, undefined, `${name} takes no capability back`);
+      }
+    });
+
+    test('keeps Postgres on an internal network that nginx and the SSR are not on', () => {
+      assert.equal(served.networks.data.internal, true);
+      assert.deepEqual(networksOf(prod.postgres), ['data']);
+      assert.deepEqual(prod.postgres.networks.data.aliases, ['lodb-postgres']);
+      assert.deepEqual(networksOf(prod.api), ['data', 'default', 'observability']);
+      assert.deepEqual(networksOf(prod.migrate), ['data', 'default']);
+      assert.deepEqual(networksOf(prod.nginx), ['default', 'edge']);
+      assert.deepEqual(networksOf(prod['web-ssr']), ['default', 'observability']);
+      // The network nginx reaches the API from is the one the API trusts.
+      const [{ subnet }] = served.networks.default.ipam.config;
+      assert.equal(prod.api.environment.LoDb__Hosting__KnownProxyNetworks__0, subnet);
+    });
+
+    test('has the edge reach nginx on its unprivileged port', () => {
+      for (const site of ['caddy_0', 'caddy_1']) {
+        assert.equal(prod.nginx.labels[`${site}.reverse_proxy`], NGINX_UPSTREAM, site);
+      }
     });
 
     after(() => folder && rm(folder, { recursive: true, force: true }));

@@ -1,13 +1,15 @@
 # tools/nginx
 
 Checks of the built nginx image (`docker/nginx/`): the rendered configuration passes
-`nginx -t`, and the bounds hold — rates per address with their `429` and `Retry-After`,
-body sizes, the paths nginx answers alone, the blobs and their policy, the page caches (one
+`nginx -t`, nginx runs as its unprivileged user without any capability on a read-only root,
+and the bounds hold — rates per address with their `429` and `Retry-After`, body
+sizes, the paths nginx answers alone, the blobs and their policy, the page caches (one
 compressed copy for every client, the past patches' kept from their
 `LODB_ARCHIVE_CACHE_MIN_USES`-th request under a key without revision), the bundles' and
-their policy, the crawler files' and the former site's caches. The image runs behind a stub
-of the API and of the SSR server
-(`lib/upstream-stub.conf`), on a Docker network of its own, removed afterwards.
+their policy, the crawler files' and the former site's caches (under the revision). The image
+runs as `compose.yaml` runs it (`--read-only`, `--cap-drop ALL`, `no-new-privileges`, a tmpfs
+on `/tmp`, a volume per cache), on its port 8080, behind a stub of the API and of the SSR
+server (`lib/upstream-stub.conf`), on a Docker network of its own, removed afterwards.
 
 ```bash
 docker build -f docker/nginx/Dockerfile -t lodb-nginx:check .

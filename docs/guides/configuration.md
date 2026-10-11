@@ -323,6 +323,23 @@ lit dans `container_cpu_cfs_throttled_seconds_total` (alerte `ConteneurCpuBride`
 démarre un runtime .NET dans ce quota : toutes les 60 s en marche, toutes les 2 s au
 démarrage (`start_interval`, Docker Engine 25 au moins, vérifié par le job).
 
+Exécution, dans `compose.yaml` (en local comme sur un hôte) : chaque service tourne sans
+aucune capacité Linux (`cap_drop: [ALL]`), sans élévation possible (`no-new-privileges`) et
+sur un système de fichiers racine en lecture seule ; il n'écrit que dans ses volumes et dans
+un tmpfs borné, compté dans sa limite mémoire.
+
+| Service | Utilisateur | Écrit dans | Capacités reprises |
+|---|---|---|---|
+| `api`, `migrate` | `app` (image chiseled) | `ddragon` (`api`), tmpfs `/tmp` (64 Mio) | — |
+| `web-ssr` | `node` | `front-builds`, tmpfs `/tmp` (16 Mio) | — |
+| `nginx` | `nginx`, port 8080 | caches (volumes), tmpfs `/tmp` (64 Mio : configuration rendue, pid, fichiers temporaires) | — |
+| `postgres` | root, puis `postgres` | `pgdata`, tmpfs `/var/run/postgresql` (8 Mio) et `/tmp` (16 Mio) | `CHOWN`, `DAC_READ_SEARCH`, `SETGID`, `SETUID` (entrée de l'image) |
+
+Réseaux : `default` (nginx, SSR, API, `migrate`) porte le HTTP, sur `LODB_STACK_SUBNET`
+(§ 6.8) ; `data` (Postgres, API, `migrate`) est interne sur un hôte, sans route vers
+l'extérieur : nginx et le SSR ne joignent pas la base. nginx rejoint aussi `edge`, l'API et
+le SSR `observability`.
+
 <details>
 <summary>Réglages internes de l'API, avec leur défaut (non transmis par compose)</summary>
 
@@ -428,6 +445,7 @@ Volumes du projet (`lodb-staging_…`, `lodb-prod_…`) :
 | `pages-cache` | nouveau | Cache des pages de nginx. |
 | `archive-cache` | nouveau | Cache des pages des anciens patchs de nginx, clé sans révision : il survit aux déploiements (`LODB_ARCHIVE_EPOCH`). |
 | `assets-cache` | nouveau | Cache des bundles de `/build/` de nginx, clé = nom du fichier : un déploiement le trouve chaud. |
+| `seo-cache`, `legacy-cache` | nouveaux | Caches de nginx des fichiers pour les robots (sitemaps, `robots.txt`, `llms.txt`) et des 301 de l'ancien site, clé préfixée par la révision : un déploiement repart de zéro, les entrées précédentes s'éteignent (7 jours, 1 heure). |
 | `front-builds` | nouveau | Bundles hachés des builds successifs : `web-ssr` y ajoute les siens au démarrage et rafraîchit leur date toutes les heures, `/build/` y trouve ceux des builds précédents ; le job supprime ceux qu'aucun build en service n'a livrés depuis 30 jours. |
 | `storage`, `app_state` | ancienne stack, **laissés intacts** | Non montés : ni réutilisés (`storage` appartient à `www-data`, l'API ne pourrait pas y écrire) ni supprimés (retour arrière, reprise des agrégats et de l'audit). Supprimés à la décommission, après export. |
 
@@ -535,14 +553,15 @@ ce dossier. Une ligne `LODB_EDGE_CIDR` venue de `ENV_*` est remplacée.
 ### 6.8 Sous-réseau de la stack
 
 Rien à relever non plus. Le réseau privé de la stack (`default`, celui de nginx, du SSR, de
-l'API et de Postgres) a un sous-réseau figé par cible, hors des plages que Docker distribue
-(172.17-31/16, 192.168/16) : `10.231.1.0/24` en staging, `10.231.2.0/24` en prod. L'API ne
-croit les `X-Forwarded-*` que de lui et ne sert le port 8080 qu'à lui et à la loopback ; le
-SSR ne sert son port 4000 qu'à eux aussi (`LODB_STACK_NETWORKS`) : un conteneur d'un réseau
-partagé (`observability`) reçoit un 404, et ne joint que les ports 9464. Le job écrit
-`LODB_STACK_SUBNET` dans le `.env`, refuse de continuer si un autre réseau Docker recouvre ce
-sous-réseau, et recrée une fois le réseau de la stack s'il en a un autre (`docker compose
-down` sans `-v`, environ une minute de coupure, volumes conservés).
+l'API et de `migrate` ; Postgres est sur `data`, § 4.3) a un sous-réseau figé par cible,
+hors des plages que Docker distribue (172.17-31/16, 192.168/16) : `10.231.1.0/24` en
+staging, `10.231.2.0/24` en prod. L'API ne croit les `X-Forwarded-*` que de lui et ne sert
+le port 8080 qu'à lui et à la loopback ; le SSR ne sert son port 4000 qu'à eux aussi
+(`LODB_STACK_NETWORKS`) : un conteneur d'un réseau partagé (`observability`) reçoit un 404,
+et ne joint que les ports 9464. Le job écrit `LODB_STACK_SUBNET` dans le `.env`, refuse de
+continuer si un autre réseau Docker recouvre ce sous-réseau, et recrée une fois le réseau de
+la stack s'il en a un autre (`docker compose down` sans `-v`, environ une minute de coupure,
+volumes conservés).
 
 ## 7. En local
 
