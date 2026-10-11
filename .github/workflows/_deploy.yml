@@ -316,10 +316,12 @@ jobs:
                 || fail "LODB_STAGING_BASIC_AUTH_HASH must be a single-quoted bcrypt hash."
             }
 
-            # ── Compose files: the deploy overlay, then the staging ones ────────────────
+            # ── Compose files: the deploy overlay, then the target's own ───────────────
             # Never compose.override.yaml (dev conveniences). Staging takes a small share of
             # the host (compose.staging.yaml) and, when its .env asks for it, a login on its
-            # pages (compose.staging-auth.yaml). Joined from a list: no empty element.
+            # pages (compose.staging-auth.yaml). Prod alone declares the site to the shared
+            # Umami (compose.umami.yaml): an `import` the edge receives empty would make it
+            # refuse every site of the host. Joined from a list: no empty element.
             compose_files=(compose.yaml compose.deploy.yaml)
             auth_user="$(env_value LODB_STAGING_BASIC_AUTH_USER)"
             auth_hash="$(env_value LODB_STAGING_BASIC_AUTH_HASH)"
@@ -331,6 +333,9 @@ jobs:
               fi
             elif [ -n "$auth_user$auth_hash" ]; then
               fail "LODB_STAGING_BASIC_AUTH_* are for staging: remove them from the $TARGET .env."
+            fi
+            if [ "$TARGET" = prod ]; then
+              compose_files+=(compose.umami.yaml)
             fi
             COMPOSE_FILE="$(IFS=:; echo "${compose_files[*]}")"
             export COMPOSE_FILE
@@ -568,38 +573,66 @@ jobs:
                 curl -sS --max-time 10 -o /dev/null -w '%{http_code} ' "$url" || true
               done
             }
-            finish() {
+            edge_hands_header() {
               local answers=''
               for _ in $(seq 1 12); do
                 answers="$(edge_answers)"
                 if [ "$answers" = '404 404 ' ]; then
                   echo "The edge hands nginx its header."
-                  exit 0
+                  return 0
                 fi
                 sleep 5
               done
               fail "Through the edge, nginx answers '$answers', not '404 404': check its labels."
             }
+            recover_tls() {
+              local caddy_id
+              echo "TLS check failed — forcing the edge to retry certificate issuance…" >&2
+              caddy_id="$(edge_caddy)"
+              [ -n "$caddy_id" ] || fail "Edge Caddy container not found — is infra-vps deployed?"
+              docker restart "$caddy_id" >/dev/null
+              for _ in $(seq 1 18); do
+                sleep 5
+                if assert_tls; then
+                  echo "TLS recovered after edge reload."
+                  return 0
+                fi
+              done
+              echo "TLS still failing after edge reload. Check DNS, CAA, LE rate limits:" >&2
+              docker logs --since 3m "$caddy_id" 2>&1 \
+                | grep -iE 'challenge failed|could not get certificate|rateLimited|unauthorized' >&2 \
+                || true
+              exit 1
+            }
             if assert_tls; then
               echo "TLS OK for all public domains."
-              finish
+            else
+              recover_tls
             fi
-            echo "TLS check failed — forcing the edge to retry certificate issuance…" >&2
-            caddy_id="$(edge_caddy)"
-            [ -n "$caddy_id" ] || fail "Edge Caddy container not found — is infra-vps deployed?"
-            docker restart "$caddy_id" >/dev/null
-            for _ in $(seq 1 18); do
-              sleep 5
-              if assert_tls; then
-                echo "TLS recovered after edge reload."
-                finish
-              fi
-            done
-            echo "TLS still failing after edge reload. Check DNS, CAA, LE rate limits:" >&2
-            docker logs --since 3m "$caddy_id" 2>&1 \
-              | grep -iE 'challenge failed|could not get certificate|rateLimited|unauthorized' >&2 \
-              || true
-            exit 1
+            edge_hands_header
+
+            # ── Audience (prod): Umami's tracker routed under the site ─────────────────
+            # The edge regenerates its configuration from the labels on its own schedule: a
+            # few tries. A GET of the tracker, never a POST to /u/api/send, which would count
+            # a visit. Without the route, nginx would answer /u/script.js itself (an address
+            # of the legacy profiles): only Umami's JavaScript proves the declaration.
+            tracker_routed() {
+              local answer
+              answer="$(curl -sS --max-time 10 -o /dev/null -w '%{http_code} %{content_type}' \
+                "https://${canonical}/u/script.js" || true)"
+              [[ "$answer" == "200 "*javascript* ]]
+            }
+            if [ "$TARGET" = prod ]; then
+              for attempt in $(seq 1 12); do
+                if tracker_routed; then
+                  echo "Umami's tracker answers under https://${canonical}/u/."
+                  break
+                fi
+                [ "$attempt" != 12 ] \
+                  || fail "https://${canonical}/u/script.js is not Umami's: check compose.umami.yaml."
+                sleep 5
+              done
+            fi
           EOSSH
 
       # The key leaves the agent's memory as soon as the job no longer needs it.

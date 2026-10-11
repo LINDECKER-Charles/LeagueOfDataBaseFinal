@@ -180,7 +180,8 @@ mis en fichiers :
 - `LoDb__Billing__StripeSecretKey`, `LoDb__Billing__StripeWebhookSecret` ;
 - `LoDb__Accounts__Google__ClientSecret`, `LoDb__Accounts__Google__AppClients__N__ClientSecret`
   (`N` = `0` ou `1`) ;
-- `LoDb__Analytics__VisitorKey`, `LoDb__Audit__IdentifierKey`.
+- `LoDb__Analytics__VisitorKey`, `LoDb__Audit__IdentifierKey` ;
+- `LoDb__Audience__Username`, `LoDb__Audience__Password` (prod seulement, § 4.6).
 
 Un secret ne vient **jamais** de `ENV_*` : `LODB_APP_DB_PASSWORD`, le mot de passe du rôle
 Postgres de l'API (`lodb_app`, § 4.3). Le premier déploiement le tire sur l'hôte
@@ -247,7 +248,7 @@ création d'une base, sur un volume vide.
 | `LODB_ADMIN_PASSWORD` 🔒 | 🔁 `ADMIN_PASSWORD` | idem | avec le précédent | Son mot de passe, 12 caractères au moins, sans apostrophe ni guillemet. Changé ici, il est réappliqué au déploiement suivant (sessions fermées). Reste dans le `.env` : le job le passe à la commande par son entrée. |
 | `LODB_ADMIN_EMAIL` | ➖ | ➖ | ➖ | Son e-mail, qui identifie le compte ; défaut `<login>@<LODB_CANONICAL_HOST>`. |
 | `LODB_PG_MAX_CONNECTIONS`, `LODB_PG_SLOW_STATEMENT`, `LODB_PG_IDLE_IN_TRANSACTION_TIMEOUT`, `LODB_PG_SHM_SIZE` | ➖ | ➖ | ➖ | Serveur Postgres (`compose.yaml`) : connexions (`60`, pour un pool de l'API à `32` plus `migrate`, la sauvegarde du déploiement, les verrous des tâches et `psql`), requêtes journalisées au-delà de `500ms` (sans leurs paramètres, jamais), session laissée inactive dans une transaction fermée après `60s`, `/dev/shm` de `256m`. `pg_stat_statements` est toujours chargé. |
-| `COMPOSE_FILE` | — | — | — | **Jamais dans `ENV_*`** : le job l'écrit dans le `.env` de l'hôte, avec les calques de l'environnement (§ 4.5), pour qu'une commande `docker compose` lancée à la main depuis le dossier les applique aussi. |
+| `COMPOSE_FILE` | — | — | — | **Jamais dans `ENV_*`** : le job l'écrit dans le `.env` de l'hôte, avec les calques de l'environnement (§ 4.5, § 4.6), pour qu'une commande `docker compose` lancée à la main depuis le dossier les applique aussi. |
 | `LODB_STAGING_BASIC_AUTH_USER`, `LODB_STAGING_BASIC_AUTH_HASH` 🔒 | ➖ | **jamais** | ➖ | Identifiant demandé sur les pages du staging (§ 4.5). Les deux ou aucun ; en prod, le job refuse de déployer. |
 
 **Monter l'epoch des anciens patchs.** Les pages d'une version épinglée dans l'URL sont
@@ -304,6 +305,8 @@ même nom.
 | `LoDb__Contact__NotificationLocale` | ➖ | Langue de la notification, `Fr` par défaut (`Ar`… `ZhHant`). Une valeur invalide ne se voit qu'au premier message. |
 | `LoDb__Analytics__VisitorKey` 🔒 | recommandé | Clé du hachage des visiteurs. Absente : une clé aléatoire par processus, les visiteurs sont recomptés à chaque redémarrage. |
 | `LoDb__Audit__IdentifierKey` 🔒 | recommandé | Clé du condensat (HMAC) que le journal garde à la place de l'identifiant saisi lors d'une connexion refusée : il relie les tentatives sur un même identifiant sans en garder le texte. Absente : une clé aléatoire par processus, les condensats ne se recoupent plus d'un redémarrage à l'autre. |
+| `LoDb__Audience__Username`, `LoDb__Audience__Password` 🔒 | prod, une fois le compte créé | Compte Umami en lecture seule du tirage des tendances (§ 4.6). Absents : le tirage reste en sommeil (une ligne `audience.trends.dormant` au démarrage), `/v1/trends` lit la mesure maison. |
+| `LoDb__Audience__TrendsSwitchDate` | ➖ (prod) | Premier jour où `/v1/trends` lit les chiffres d'Umami (§ 4.6). Absente : la mesure maison seule. |
 | `LoDb__Seo__SitemapVersionWindow` | ➖ | Versions passées annoncées par l'index des sitemaps, après le dernier patch : `12` par défaut, `0` pour le dernier patch seul. Les sitemaps plus anciens restent servis, et leurs pages indexables. |
 | `LoDb__Catalog__MaxEntries`, `PinnedLanguages`, `PinnedBudgetMegabytes` | ➖ | Catalogues en mémoire : ceux du dernier patch dans les langues épinglées (défaut : les 21 de l'interface, en_US en tête), jamais évincés, dans `256` Mio estimés ; `16` autres au plus, le moins récemment lu évincé. |
 | `LoDb__Catalog__ColdLoadConcurrency`, `ColdLoadsPerSecond`, `ColdLoadBurst`, `PublicColdLoadsPerSecond`, `InternalColdLoadWait`, `MaxPendingLoads` | ➖ | Chargement d'un catalogue absent de la mémoire : `2` à la fois, `3` par seconde (rafale `6`), dont `1` pour les appels publics, refusés sans attente ; le SSR attend `2` s au plus, derrière `16` autres. Refus : `503` + `Retry-After`. |
@@ -406,6 +409,7 @@ Pour en changer un sur un hôte, l'ajouter sous `services.api.environment` de
 | `LoDb:Ingestion` | `WatchPeriod` (10 min), `MaxAttempts` (5), `RetryDelay` (10 min), `LanguageConcurrency` (4), `RecordBatchSize` (64), `SyncConcurrency` (4), `QueueCapacity` (256), `CrawlerRequestsPerMinute` (30) |
 | `LoDb:Catalog` | `VersionsLifetime` (1 min), `ImageVerdictsLifetime` (10 min : verdicts d'images lus en base gardés en mémoire, délai avant qu'un `ingest --force` lancé à part se voie), `ImageVerdictVersions` (32 versions gardées), `ArtVariantsPeriod` (30 min : tâche `catalog.art-variants`, qui stocke les variantes WebP de l'art du dernier patch), `ArtVariantsConcurrency` (1 art téléchargé et transcodé à la fois, sous le quota CPU de l'API) |
 | `LoDb:PublicApi` | `KeyCacheLifetime` (1 min), `TrendsLifetime` (5 min), `MeteringInterval` (1 s) |
+| `LoDb:Audience` | `Host`, `WebsiteId` (posés par `compose.umami.yaml`), `Username`, `Password` (secrets) : sans l'un d'eux, le tirage dort ; `PullPeriod` (1 h), `RefreshDays` (2 : aujourd'hui et hier, réécrits à chaque tirage), `PageSize` (500 chemins par requête), `MaxPages` (40 requêtes par jour au plus), `RequestTimeout` (30 s), `MaxResponseBytes` (4 Mio) ; `TrendsSwitchDate` (aucune : `/v1/trends` lit la mesure maison ; posée, Umami à partir de ce jour), `ClipFactor` (3) et `ClipWindowDays` (28) : le jour d'une entité compte au plus 3 fois la médiane de ses jours des 28 derniers (Umami collecte sans authentification) |
 
 </details>
 
@@ -469,6 +473,36 @@ n'est pas une frontière d'authentification.
 - Les smoke tests du déploiement passent par l'intérieur de la stack ; le test TLS public lit
   `/healthz`, exclu de l'identifiant, comme les deux chemins du contrôle de l'en-tête de
   l'edge (§ 6.7).
+
+### 4.6 Calque de la prod : Umami
+
+La prod seule reçoit [`compose.umami.yaml`](../../compose.umami.yaml), ajouté par le job à
+`COMPOSE_FILE` (jamais par une variable que le staging laisserait vide : un `import` vide
+fait refuser à l'edge la configuration de tous les sites de l'hôte). Il déclare le site à
+l'Umami partagé d'`infra-vps` (son `docs/APPLICATIONS.md` § 6) par les labels de nginx :
+
+| Label | Valeur | Rôle |
+|---|---|---|
+| `caddy_0.import` | `umami` | L'edge envoie `/u/script.js` et `/u/api/send` du site à Umami ; jamais `caddy.import` (sans numéro, hors de tout site) ni `caddy_1` (le sous-domaine de l'API n'a pas d'audience). |
+| `umami.website` | l'UUID du site, littéral | Choisi une fois et versionné ; le front en garde la même copie (`core/analytics/audience/audience-site.ts`), `tools/umami/test` vérifie leur accord. |
+| `umami.domain`, `umami.name`, `umami.team` | `league-of-data-base.com`, `LeagueOfDataBase`, `lodb` | La team range le site : c'est par elle qu'un compte en lecture seule le voit. |
+| `caddy_2`, `caddy_2.import` | `stats.league-of-data-base.com`, `umami-tableau <UUID>` | Le tableau de bord sous son propre domaine (DNS vers l'hôte) ; `/` mène au tableau du site. |
+
+Le même calque passe à l'API `LoDb__Audience__WebsiteId` (l'UUID) et `LoDb__Audience__Host`
+(le domaine du tableau) : la tâche `audience.trends` y tire chaque heure les vues par page
+pour `/v1/trends`, avec le compte de `LoDb__Audience__Username` et `__Password`. En fin de
+déploiement, le job attend que `https://<hôte canonique>/u/script.js` réponde le JavaScript
+d'Umami (un GET, jamais un POST qui compterait une visite) et échoue sinon.
+
+`/v1/trends` lit encore la mesure maison : une ligne `LoDb__Audience__TrendsSwitchDate`
+(`aaaa-mm-jj`) du `.env` de la prod, transmise par le même calque, la fait lire les chiffres
+d'Umami à partir de ce jour. La poser après deux semaines de tirage comparé à la mesure
+maison ; la retirer revient à la mesure maison seule.
+
+Une fois, dans l'UI d'Umami, avec le compte `admin` : *Administrateur → Utilisateurs* crée
+le compte du tirage, rôle **Consultation** ; *Administrateur → Équipes → lodb* l'y ajoute,
+rôle **Consultation** ; ses identifiants vont dans `ENV_PROD`. Le site garde le même UUID d'un
+hôte à l'autre : seul son historique dépend de la sauvegarde d'Umami (`infra-vps`).
 
 ## 5. Fichiers et volumes de l'hôte
 

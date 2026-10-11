@@ -191,6 +191,10 @@ jobs:
       - name: Test the desktop update signing
         run: node --test tools/desktop-update-signing/test/*.test.mjs
 
+      # The website id of the production's declaration to Umami, against the front's copy.
+      - name: Test the audience declaration
+        run: node --test tools/umami/test/*.test.mjs
+
       - name: Actions pinned to a full commit SHA
         run: node tools/ci/check-pinned-actions.mjs
 

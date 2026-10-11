@@ -7,8 +7,8 @@
 --
 -- Guard: every column whose type can hold text is reviewed below, anonymized, emptied or
 -- kept on purpose. A column added later stops the script until its lot reviews it here.
--- The objects of lots 4 and 6 and the payment states exist once the new stack has migrated
--- the database: the script takes a dump with or without them.
+-- The objects of lots 4 and 6, the payment states and the audience pulled from Umami exist
+-- once the new stack has migrated the database: the script takes a dump with or without them.
 
 DO $guard$
 DECLARE
@@ -74,6 +74,7 @@ BEGIN
           'analytics_event.version',
           'api_credit_grants.source',
           'api_keys.plan',
+          'audience_entity_daily.entity',
           'audit_log.action', 'audit_log.actor_type', 'audit_log.outcome', 'audit_log.route',
           'audit_log.target_id', 'audit_log.target_type',
           'builds.champion_id', 'builds.game_mode', 'builds.game_version',

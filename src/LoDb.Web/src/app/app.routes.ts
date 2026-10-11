@@ -1,6 +1,7 @@
 import { inject } from '@angular/core';
 import type { CanMatchFn, Route, Routes } from '@angular/router';
 import { PAYMENTS_ENABLED } from '../environments/payments-enabled';
+import { AUDIENCE_ROUTE_DATA } from './core/analytics/audience/audience-route-data';
 import { activateLocale } from './core/i18n/activate-locale';
 import { localeGuard } from './core/i18n/locale-guard';
 import { redirectToPreferredLocale } from './core/routing/locale/redirect-to-preferred-locale';
@@ -110,18 +111,22 @@ const localeRoutes: Routes = [
     canMatch: [paymentsOnly],
     loadChildren: () => import('./features/donate/donate.routes').then((m) => m.DONATE_ROUTES),
   },
+  // The account's pages are never measured, nor their address sent (core/analytics).
   {
     path: 'account/builds',
+    data: AUDIENCE_ROUTE_DATA.none,
     loadChildren: () =>
       import('./features/builds/editor/editor.routes').then((m) => m.EDITOR_ROUTES),
   },
   {
     path: 'account/api',
+    data: AUDIENCE_ROUTE_DATA.none,
     loadChildren: () =>
       import('./features/api-portal/api-portal.routes').then((m) => m.API_PORTAL_ROUTES),
   },
   {
     path: 'account',
+    data: AUDIENCE_ROUTE_DATA.none,
     loadChildren: () => import('./features/account/account.routes').then((m) => m.ACCOUNT_ROUTES),
   },
   ...devRoutes,
@@ -160,10 +165,11 @@ export const routes: Routes = [
   // Outside the locales, outcomes and missing pages speak the default locale.
   { ...outcomeRoute, resolve: { locale: activateLocale, outcome: resolveOutcome } },
   { ...bareNotFound('b'), resolve: { locale: activateLocale, outcome: resolveOutcome } },
-  // The admin draws its own frame, in the default identity, without the site's chrome.
+  // The admin draws its own frame, in the default identity, without the site's chrome; it is
+  // never measured.
   {
     path: 'admin',
-    data: { chrome: 'bare' },
+    data: { chrome: 'bare', ...AUDIENCE_ROUTE_DATA.none },
     loadChildren: () => import('./features/admin/admin.routes').then((m) => m.ADMIN_ROUTES),
   },
   {

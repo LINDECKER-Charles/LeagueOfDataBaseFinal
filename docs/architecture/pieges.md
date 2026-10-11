@@ -227,8 +227,9 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   ou un vote se cherche d'abord là.
 - Comparer le chemin d'une réponse (`new URL(url).pathname`), jamais `url.endsWith(...)`.
   Limiter les comptes de titres ou de boutons à `main` ou au composant visé. Une spec qui
-  compte les POST exclut `/api/analytics/`. Un parcours qui crée un compte le supprime aussi
-  en cas d'échec.
+  compte les POST exclut `/api/analytics/` ; `/u/api/send` ne part jamais d'une pile locale
+  (`specs/public/audience.spec.ts`). Un parcours qui crée un compte le supprime aussi en cas
+  d'échec.
 - Angular laisse des espaces autour d'un texte entre balises : ancrer une regex sur le
   contenu, pas sur `^`/`$`.
 - `disclosure.spec.ts` échoue parfois en suite complète, jamais seul : relancer n'est pas
@@ -403,6 +404,15 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   `lodb-postgres`, `lodb-web-ssr`).
 - Constats de logs (lignes hors JSON, erreurs multi-lignes) : **à corriger à la source,
   jamais à filtrer**.
+- **Umami, en prod seulement** (`compose.umami.yaml`, ajouté par le job) : l'import vise
+  `caddy_0` (le site), **jamais** `caddy.import` sans numéro (hors de tout site, l'edge
+  refuserait sa configuration) ni `caddy_1` (le sous-domaine de l'API). Le front ne charge
+  **jamais** `/u/script.js` : le script d'Umami s'exécuterait avec les droits du site ; il
+  poste lui-même `/u/api/send` (`core/analytics`), et seulement depuis l'hôte canonique :
+  le staging, les piles locales et l'E2E servent le même bundle et restent muets. L'UUID du
+  site est un littéral, dans le calque et dans `audience-site.ts` : `tools/umami/test`
+  vérifie leur accord. Aucune adresse de compte ou d'admin ne part (`audience: 'none'`), les
+  autres pages partent sous leur gabarit, sauf listes et fiches (`audience: 'path'`).
 
 ## Transition (jusqu'à la décommission)
 
