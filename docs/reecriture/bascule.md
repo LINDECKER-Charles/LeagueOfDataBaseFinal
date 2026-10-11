@@ -29,7 +29,11 @@ lot 8, rejoué par son jalon. Tout écart entre la répétition et ce texte se c
 
 Sur l'hôte, en root, toute commande `docker compose` d'un environnement se lance depuis son
 dossier : `cd "$PROD_PATH" && export COMPOSE_FILE=compose.yaml:compose.deploy.yaml` (même
-chose pour l'ancienne stack avant la bascule, et depuis `legacy/` après).
+chose pour l'ancienne stack avant la bascule, et depuis `legacy/` après). Le job de
+déploiement écrit désormais `COMPOSE_FILE` dans le `.env` de l'hôte, avec les calques de
+l'environnement ([`configuration.md`](../guides/configuration.md), § 4.5) : pour la nouvelle
+stack, `cd` suffit. Sur le staging, ne pas exporter `COMPOSE_FILE` : la variable du shell
+prime sur le `.env` et retirerait `compose.staging.yaml`.
 
 ### Calendrier
 
@@ -197,7 +201,7 @@ réelles : fenêtre de quelques heures, `noindex` actif, **relais SMTP coupé**.
    pg_db="$(docker exec lodb-prod-postgres-1 printenv POSTGRES_DB)"
    docker exec lodb-prod-postgres-1 pg_dump -U "$pg_user" -Fc "$pg_db" \
      | gpg --symmetric --cipher-algo AES256 --pinentry-mode loopback -o prod.dump.gpg
-   cd "$STAGING_PATH" && export COMPOSE_FILE=compose.yaml:compose.deploy.yaml
+   cd "$STAGING_PATH"    # COMPOSE_FILE vient du .env, calque du staging compris
    st_user="$(docker compose exec -T postgres printenv POSTGRES_USER)"
    docker compose exec -T postgres pg_dump -U "$st_user" -Fc lodb > /root/lodb-backups/staging.dump
    docker compose exec -T postgres psql -U "$st_user" -d postgres -c 'CREATE DATABASE lodb_rehearsal'
