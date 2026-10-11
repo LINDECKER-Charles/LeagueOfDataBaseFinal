@@ -19,6 +19,9 @@ affichage.
 - L'illustration d'un champion (en tête de sa fiche, sur les cartes de la liste et de
   l'accueil) arrive au format WebP, à la taille de l'écran, depuis le site ; seule l'image
   principale de la page est demandée en priorité.
+- La vidéo d'un sort ne se télécharge que lorsque la moitié de son cadre est à l'écran, et se
+  met en pause quand on s'en éloigne. En mode économie de données ou sur une connexion lente,
+  l'image fixe du sort reste affichée.
 
 ## Technique
 
@@ -35,3 +38,6 @@ affichage.
   rel=preconnect` (`PageResponse.preconnect`) : la connexion s'ouvre dès les en-têtes. Aucun
   préconnect vers CommunityDragon : seules les pastilles de chroma, au fond de la galerie,
   en viennent.
+- Vidéo d'un sort : `preload="none"`, plus d'`autoplay` ; un `IntersectionObserver` (seuil
+  0,5) la crée et la lance, la met en pause hors écran, sans jamais passer outre la pause du
+  lecteur ; poster en `loading="lazy"`. `Save-Data` ou `effectiveType` 2g/3g : poster seul.
