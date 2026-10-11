@@ -117,6 +117,7 @@ services:
       - LoDb__Accounts__Google__AppClients__0__ClientSecret
       - LoDb__Accounts__Google__AppClients__1__ClientSecret
       - LoDb__Analytics__VisitorKey
+      - LoDb__Audit__IdentifierKey
     labels:
       # Raised by the deploy job when a secret file changes. The API reads its files at
       # start-up only, and Compose recreates a service whose definition changed, not one
@@ -296,3 +297,5 @@ secrets:
     file: ./.deploy/secrets/LoDb__Accounts__Google__AppClients__1__ClientSecret
   LoDb__Analytics__VisitorKey:
     file: ./.deploy/secrets/LoDb__Analytics__VisitorKey
+  LoDb__Audit__IdentifierKey:
+    file: ./.deploy/secrets/LoDb__Audit__IdentifierKey

@@ -13,7 +13,10 @@ public enum AuditAction
     /// <summary><c>user.login</c>.</summary>
     UserLogin = 1,
 
-    /// <summary><c>user.login_failed</c>, with the identifier typed in <c>identifier</c>.</summary>
+    /// <summary>
+    /// <c>user.login_failed</c>, the identifier typed as its kind and keyed digest
+    /// (<c>identifier_kind</c>, <c>identifier_digest</c>).
+    /// </summary>
     UserLoginFailed = 2,
 
     /// <summary><c>user.logout</c>.</summary>

@@ -7,15 +7,15 @@ namespace LoDb.Api.Modules.Accounts.Http;
 
 /// <summary>
 /// The audit events of the accounts, shaped as the legacy stack shapes them: sign-in and
-/// sign-out without a target, a failed sign-in anonymous with the identifier typed, the
-/// other actions aimed at the account.
+/// sign-out without a target, a failed sign-in anonymous with what stands for the identifier
+/// typed (<see cref="IdentifierDigest"/>), the other actions aimed at the account.
 /// </summary>
 /// <remarks>
 /// The journal reads the actor from the request: the sign-in manager has set the signed-in
 /// account by the time a sign-in is recorded, and a sign-out is recorded before the session
 /// goes.
 /// </remarks>
-internal sealed class AccountAudit(IAuditLog log)
+internal sealed class AccountAudit(IAuditLog log, IdentifierDigest identifiers)
 {
     /// <summary><c>method</c> of a sign-in with a password.</summary>
     public const string PasswordMethod = "password";
@@ -25,12 +25,9 @@ internal sealed class AccountAudit(IAuditLog log)
 
     private const string MethodKey = "method";
     private const string ChannelKey = "channel";
-    private const string IdentifierKey = "identifier";
+    private const string IdentifierKindKey = "identifier_kind";
+    private const string IdentifierDigestKey = "identifier_digest";
     private const string ReasonKey = "reason";
-
-    // As long as the longest e-mail an account can have: anything longer names no account,
-    // and the journal does not keep whatever a client sends.
-    private const int MaxIdentifierLength = 180;
 
     public Task SignedInAsync(
         string method,
@@ -48,7 +45,9 @@ internal sealed class AccountAudit(IAuditLog log)
             },
             cancellationToken);
 
-    /// <param name="identifier">What was typed, or the e-mail Google gave.</param>
+    /// <param name="identifier">
+    /// What was typed, or the e-mail Google gave: journaled as its kind and digest only.
+    /// </param>
     /// <param name="reason">The code of the refusal answered to the client.</param>
     /// <param name="cancellationToken">Not observed by the journal.</param>
     public Task SignInFailedAsync(
@@ -61,11 +60,7 @@ internal sealed class AccountAudit(IAuditLog log)
                 Action = AuditAction.UserLoginFailed,
                 Outcome = AuditOutcome.Failure,
                 Actor = AuditActor.Anonymous,
-                Meta = new Dictionary<string, object?>
-                {
-                    [IdentifierKey] = Clip(identifier),
-                    [ReasonKey] = reason,
-                },
+                Meta = FailureMeta(identifier, reason),
             },
             cancellationToken);
 
@@ -88,8 +83,16 @@ internal sealed class AccountAudit(IAuditLog log)
             },
             cancellationToken);
 
-    private static string? Clip(string? identifier) =>
-        identifier is { Length: > MaxIdentifierLength }
-            ? identifier[..MaxIdentifierLength]
-            : identifier;
+    // Nothing of an input that names no account in any shape: it may be anything typed.
+    private Dictionary<string, object?> FailureMeta(string? identifier, string reason)
+    {
+        var meta = new Dictionary<string, object?> { [ReasonKey] = reason };
+        if (IdentifierDigest.KindOf(identifier) is { } kind)
+        {
+            meta[IdentifierKindKey] = kind;
+            meta[IdentifierDigestKey] = identifiers.Of(identifier!);
+        }
+
+        return meta;
+    }
 }

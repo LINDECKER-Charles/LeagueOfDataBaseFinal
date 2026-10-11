@@ -185,14 +185,39 @@ public sealed class SignInTests(PostgresContainerFixture postgres)
         Assert.Equal(
             (AuditOutcome.Failure, AuditActorType.Anonymous, (int?)null),
             (failure.Outcome, failure.ActorType, failure.ActorId));
-        Assert.Equal("Legende@Example.test", AccountsApp.Meta(failure, "identifier"));
-        Assert.Equal("invalid-credentials", AccountsApp.Meta(failure, "reason"));
+        Assert.Null(AccountsApp.Meta(failure, "identifier"));
+        Assert.Equal(
+            ("email", AccountsApp.IdentifierDigest(AccountSeed.Address), "invalid-credentials"),
+            (AccountsApp.Meta(failure, "identifier_kind"),
+                AccountsApp.Meta(failure, "identifier_digest"),
+                AccountsApp.Meta(failure, "reason")));
         var success = trail[1];
         Assert.Equal(
             (AuditOutcome.Success, AuditActorType.User, (int?)account.Id),
             (success.Outcome, success.ActorType, success.ActorId));
         Assert.Equal("password", AccountsApp.Meta(success, "method"));
         Assert.Equal("session", AccountsApp.Meta(success, "channel"));
+    }
+
+    [Theory]
+    [InlineData(" legende_42 ", "username")]
+    [InlineData("my password typed here!", null)]
+    public async Task FailedSignInKeepsNoTextOfTheIdentifier(string identifier, string? kind)
+    {
+        await App.SeedAsync(new AccountSeed());
+        using var browser = App.Browser();
+
+        using var failed = await browser.SignInAsync(identifier, WrongPassword);
+
+        var entry = Assert.Single(await App.AuditAsync());
+        Assert.DoesNotContain(
+            identifier.Trim(),
+            entry.Meta ?? string.Empty,
+            StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(kind, AccountsApp.Meta(entry, "identifier_kind"));
+        Assert.Equal(
+            kind is null ? null : AccountsApp.IdentifierDigest(AccountSeed.Name),
+            AccountsApp.Meta(entry, "identifier_digest"));
     }
 
     public async ValueTask InitializeAsync() => _app = await AccountsApp.StartAsync(postgres);

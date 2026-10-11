@@ -1,5 +1,7 @@
 using System.Diagnostics.Metrics;
 using System.Globalization;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using LoDb.Api.Modules.Accounts.Security;
 using LoDb.Infrastructure.Outbox;
@@ -36,6 +38,9 @@ public sealed class AccountsApp : IAsyncDisposable
     public const string AndroidClientId = "android.apps.googleusercontent.com";
     public const string DesktopClientId = "desktop.apps.googleusercontent.com";
     public const string DesktopClientSecret = "desktop-secret";
+
+    /// <summary>The key of the journal's identifier digests.</summary>
+    public const string IdentifierKey = "identifier-key-of-the-tests";
 
     private const string Accounts = "LoDb:Accounts:";
     private const string Google = Accounts + "Google:";
@@ -200,6 +205,15 @@ public sealed class AccountsApp : IAsyncDisposable
         return meta.RootElement.TryGetProperty(key, out var value) ? value.GetString() : null;
     }
 
+    /// <summary>What the journal keeps of a sign-in identifier: its keyed digest.</summary>
+    public static string IdentifierDigest(string identifier)
+    {
+        ArgumentNullException.ThrowIfNull(identifier);
+        var normalized = Encoding.UTF8.GetBytes(identifier.Trim().ToUpperInvariant());
+        return Convert.ToHexStringLower(
+            HMACSHA256.HashData(Encoding.UTF8.GetBytes(IdentifierKey), normalized));
+    }
+
     public Task<IReadOnlyList<string>> QueryAsync(string sql) =>
         _database.QueryAsync(sql, Cancellation);
 
@@ -220,6 +234,7 @@ public sealed class AccountsApp : IAsyncDisposable
         {
             [Accounts + "SecureCookies"] = bool.TrueString,
             [Accounts + "SiteOrigin"] = SiteOrigin,
+            ["LoDb:Audit:IdentifierKey"] = IdentifierKey,
         };
         if (withGoogle)
         {

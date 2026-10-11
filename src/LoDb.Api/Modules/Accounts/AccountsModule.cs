@@ -43,6 +43,9 @@ internal static class AccountsModule
         services.AddAccountsProtection(configuration);
         AddVerification(services, configuration);
         services.TryAddSingleton<TrustedOrigins>();
+        services.AddOptions<AuditIdentifierOptions>()
+            .Bind(configuration.GetSection(AuditIdentifierOptions.SectionName));
+        services.TryAddSingleton<IdentifierDigest>();
         services.Configure<RateLimiterOptions>(ResetCheckRateLimit.AddTo);
         AddAccountServices(services);
         AddEndpoints(services);
