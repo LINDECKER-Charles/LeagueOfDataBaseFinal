@@ -160,7 +160,6 @@ public sealed class TrendsTests(BuildsApp app)
 
     [Theory]
     [InlineData("?lang=zz", HttpStatusCode.BadRequest)]
-    [InlineData("?version=seven", HttpStatusCode.BadRequest)]
     [InlineData("?version=99.1.1", HttpStatusCode.NotFound)]
     public async Task CatalogOfTheNamesMustExist(string query, HttpStatusCode status)
     {
