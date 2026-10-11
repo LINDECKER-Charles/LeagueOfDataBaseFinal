@@ -64,6 +64,18 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   Riot contient des `<li>` nus qui cassent l'hydratation.
 - **Squelette à la hauteur de ce qu'il remplace** (forme `portrait` pour une grille de
   portraits), sinon CLS.
+- **Hydratation incrémentale** : vitrine des sorts, stats, pager des fiches, pied de page et
+  console de filtres sont rendus en entier par le serveur mais hydratés plus tard
+  (`@defer (on immediate; hydrate on …)`). D'ici là, leurs éléments gardent leur `jsaction`
+  et un clic n'agit qu'une fois rejoué, après l'hydratation : voulu. Un bloc qui se mesure
+  une fois hydraté (pager, pied de page) s'hydrate un écran à l'avance (`rootMargin`), sinon
+  son ajustement devient un décalage visible (CLS). La console se lit par sa référence
+  (`#console`), jamais par sa classe, qui la chargerait avec la liste.
+- **Liste complète à l'intention** : une liste ne lit sa liste entière qu'à l'intention du
+  lecteur (recherche, facette, page, taille, feuille des filtres, URL filtrée) ou au repos
+  après `load`, jamais d'office sous `Save-Data` ou en 2g/3g : une liste encore réduite à sa
+  première page juste après le chargement n'est pas une régression. Même règle pour la vidéo
+  d'un sort (poster seul) et le préchargement des chunks du catalogue.
 - **Dialogues CDK** : le focus initial est sur `cdk-dialog-container` ; écouter
   `DialogRef.keydownEvents`, pas `host: {'(keydown)'}`. Un dialogue plus haut que l'écran
   reste défilable jusqu'à son pied.
@@ -169,6 +181,10 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   en cas d'échec.
 - Angular laisse des espaces autour d'un texte entre balises : ancrer une regex sur le
   contenu, pas sur `^`/`$`.
+- Les blocs hydratés plus tard gardent leur `jsaction` jusqu'à leur tour : `hydrated()` vise
+  un composant hydraté d'emblée, jamais la page entière. La vidéo d'un sort n'apparaît qu'une
+  fois sa scène à moitié à l'écran (`scrollIntoViewIfNeeded`) ; `support/network.ts`
+  (`saveData`) simule un lecteur en économie de données.
 - `disclosure.spec.ts` échoue parfois en suite complète, jamais seul : relancer n'est pas
   une correction.
 - **Bornes du SSR relevées en dev** (`compose.override.yaml`, jamais
