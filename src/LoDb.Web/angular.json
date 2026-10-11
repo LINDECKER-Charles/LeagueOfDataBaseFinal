@@ -43,8 +43,7 @@
                 "output": "changelog"
               }
             ],
-            "styles": ["src/styles/index.css"],
-            "allowedCommonJsDependencies": ["@messageformat/core"]
+            "styles": ["src/styles/index.css"]
           },
           "configurations": {
             "web": {

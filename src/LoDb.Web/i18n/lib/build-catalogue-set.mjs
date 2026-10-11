@@ -1,3 +1,4 @@
+import { compileCatalogue } from './compile-catalogue.mjs';
 import { completeCatalogue } from './complete-catalogue.mjs';
 import { pickKeys } from './pick-keys.mjs';
 
@@ -17,7 +18,10 @@ function builtScope(scope, catalogues, locales, errors) {
   }
   const built = new Map();
   for (const locale of locales) {
-    built.set(locale, completeCatalogue(reference, catalogues.get(locale) ?? {}));
+    const complete = completeCatalogue(reference, catalogues.get(locale) ?? {});
+    const { compiled, errors: messages } = compileCatalogue(complete);
+    errors.push(...messages.map((message) => `${filePath(scope, locale)}: ${message}`));
+    built.set(locale, compiled);
   }
   return built;
 }
@@ -42,8 +46,8 @@ function lendChromeKeys(built, chromeKeys, errors) {
 
 /**
  * The catalogues the site ships, from the authored ones (`readSourceCatalogues`): every scope
- * in every locale, completed with `en`, the root carrying the chrome's borrowed labels
- * (`chromeKeys`: scope → dotted keys). `files` maps a path relative to the
+ * in every locale, completed with `en`, its messages compiled, the root carrying the chrome's
+ * borrowed labels (`chromeKeys`: scope → dotted keys). `files` maps a path relative to the
  * `i18n/` folder of the build to its catalogue; `errors` lists what failed, empty on success.
  */
 export function buildCatalogueSet({ locales, scopes }, chromeKeys) {

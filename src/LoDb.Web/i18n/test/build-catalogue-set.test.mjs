@@ -25,7 +25,7 @@ const VALID = {
 };
 
 describe('buildCatalogueSet', () => {
-  test('ships every scope in every locale, completed with en', () => {
+  test('ships every scope in every locale, completed with en and compiled', () => {
     const { files, errors } = buildCatalogueSet(sources(VALID), CHROME_KEYS);
 
     assert.deepEqual(errors, []);
@@ -38,7 +38,7 @@ describe('buildCatalogueSet', () => {
       'ja.json',
     ]);
     assert.equal(files.get('fr.json').nav, 'Accueil');
-    assert.equal(files.get('ja.json').filter.results, VALID[''].en.filter.results);
+    assert.deepEqual(files.get('ja.json').filter.results[0][0], 'plural');
     assert.deepEqual(files.get('about/ja.json'), { index: { title: 'About' }, faq: 'FAQ' });
   });
 
@@ -49,14 +49,16 @@ describe('buildCatalogueSet', () => {
     assert.deepEqual(files.get('ja.json').about, { index: { title: 'About' } });
   });
 
-  test('lists every scope without en, and every label it cannot lend', () => {
+  test('lists every message that does not compile, and every scope without en', () => {
     const broken = {
-      '': { en: { b: 'ok' } },
+      '': { en: { a: '{n, number}', b: 'ok' }, fr: { b: '{oops' } },
       about: { fr: { index: { title: 'À propos' } } },
     };
 
     const { errors } = buildCatalogueSet(sources(broken), CHROME_KEYS);
 
+    assert.ok(errors.some((error) => error.startsWith('fr.json: a: ')));
+    assert.ok(errors.some((error) => error.startsWith('fr.json: b: ')));
     assert.ok(errors.includes('about: no en catalogue'));
     assert.ok(errors.some((error) => error.startsWith('about/en.json: no message at index.title')));
   });

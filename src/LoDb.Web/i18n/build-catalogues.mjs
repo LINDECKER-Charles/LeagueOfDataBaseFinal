@@ -1,8 +1,10 @@
 // `npm run i18n:build`, run before every build of the workspace (`prebuild:*`, `prestart`):
 // turns the authored catalogues (public/i18n) into the ones the site ships (dist/i18n, copied
 // to `i18n/` of each build by angular.json). Each locale's catalogue is completed with `en`,
-// and the root carries the few labels the chrome borrows from other scopes (chrome-keys.json).
-// Fails, listing every problem, when a scope has no `en` or a borrowed label is missing.
+// its ICU messages compiled for PrecompiledTranspiler (src/app/core/i18n/messages), and the
+// root carries the few labels the chrome borrows from other scopes (chrome-keys.json).
+// Fails, listing every problem: a message that does not compile, a scope without `en`, a
+// borrowed label that is missing.
 // Tests: `node --test "i18n/**/*.test.mjs"` (src/LoDb.Web).
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';

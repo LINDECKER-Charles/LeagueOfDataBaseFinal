@@ -6,11 +6,25 @@ import { type Translation, TranslocoService } from '@jsverse/transloco';
 import { firstValueFrom } from 'rxjs';
 import { provideI18n } from './provide-i18n';
 
-const RESULTS_FR = '{count, plural, =1 {# résultat} other {# résultats}}';
-const RESULTS_EN = '{count, plural, =1 {# result} other {# results}}';
+const RESULTS_FR = [
+  [
+    'plural',
+    'count',
+    0,
+    { 1: [['#', 'count', 0], ' résultat'], other: [['#', 'count', 0], ' résultats'] },
+  ],
+];
+const RESULTS_EN = [
+  [
+    'plural',
+    'count',
+    0,
+    { 1: [['#', 'count', 0], ' result'], other: [['#', 'count', 0], ' results'] },
+  ],
+];
 
 // Shaped like the built catalogues (npm run i18n:build): every locale completed with the `en`
-// messages it lacks, `{{ }}` parameters.
+// messages it lacks, `{{ }}` parameters, ICU messages compiled.
 const CATALOGUES: Record<string, Translation> = {
   'i18n/fr.json': { filter: { page: 'page {{ page }} sur {{ count }}', results: RESULTS_FR } },
   'i18n/ja.json': { filter: { page: '{{ page }} / {{ count }} ページ', results: RESULTS_EN } },
@@ -58,12 +72,15 @@ describe('provideI18n', () => {
   it.each([
     ['fr', ['0 résultats', '1 résultat', '2 résultats']],
     ['ja', ['0 results', '1 result', '2 results']],
-  ])('renders the counts of %s with the singular for one exactly', async (locale, results) => {
-    await load(locale);
-    transloco.setActiveLang(locale);
+  ])(
+    'renders the compiled counts of %s with the singular for one exactly',
+    async (locale, results) => {
+      await load(locale);
+      transloco.setActiveLang(locale);
 
-    expect(counts()).toEqual(results);
-  });
+      expect(counts()).toEqual(results);
+    },
+  );
 
   it('formats the parameters of an en message under a locale of its own', async () => {
     await load('ja');

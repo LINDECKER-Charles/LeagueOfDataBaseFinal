@@ -6,12 +6,12 @@ import {
   makeEnvironmentProviders,
   provideAppInitializer,
 } from '@angular/core';
-import { TranslocoService, provideTransloco } from '@jsverse/transloco';
-import { provideTranslocoMessageformat } from '@jsverse/transloco-messageformat';
+import { TRANSLOCO_TRANSPILER, TranslocoService, provideTransloco } from '@jsverse/transloco';
 import { DEFAULT_LOCALE } from './default-locale';
 import { isLocale } from './is-locale';
 import { LOCALES } from './locales';
 import { TranslocoHttpLoader } from './loading/transloco-http-loader';
+import { PrecompiledTranspiler } from './messages/precompiled-transpiler';
 
 /**
  * Makes the locale of the URL the active one before the first render. The chrome sits outside
@@ -34,7 +34,8 @@ function activateUrlLocale(): void {
  * Transloco with ICU messages. A missing key falls back to its `en` translation rather than
  * the whole page switching language (plan, section 5.2): the build completes every catalogue
  * with the `en` messages it lacks (`npm run i18n:build`), so a page loads its own locale's
- * catalogues only, never `en` beside them.
+ * catalogues only, never `en` beside them. The same build compiles the ICU messages, which
+ * `PrecompiledTranspiler` renders.
  */
 export function provideI18n(): EnvironmentProviders {
   return makeEnvironmentProviders([
@@ -49,9 +50,7 @@ export function provideI18n(): EnvironmentProviders {
       },
       loader: TranslocoHttpLoader,
     }),
-    // The build completes every locale with `en` messages, and CLDR has no `one` plural
-    // category in ja, ko, th, vi or zh: strict keys would throw on those messages.
-    provideTranslocoMessageformat({ strictPluralKeys: false }),
+    { provide: TRANSLOCO_TRANSPILER, useClass: PrecompiledTranspiler },
     provideAppInitializer(activateUrlLocale),
   ]);
 }
