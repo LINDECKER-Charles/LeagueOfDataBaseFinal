@@ -1,4 +1,4 @@
-import type { APIRequest, BrowserContext, Locator, Page } from '@playwright/test';
+import type { APIRequest, BrowserContext, Page } from '@playwright/test';
 import { expect, test as base } from '../../support/test';
 import { type AdminAccount, createAdmin, enrollAdmin } from './admin-account';
 
@@ -89,22 +89,4 @@ async function discardAdmin(
 export async function openPanel(page: Page, path: string, title: string): Promise<void> {
   await page.goto(path);
   await expect(page.getByRole('heading', { level: 1, name: title, exact: true })).toBeVisible();
-}
-
-/**
- * Runs an action behind a confirmation within `scope`: its button, then the button that
- * confirms it, which takes its place.
- */
-export async function confirmAction(
-  scope: Locator,
-  action: string,
-  confirmation: string,
-): Promise<void> {
-  await scope.getByRole('button', { name: action, exact: true }).click();
-  await scope.getByRole('button', { name: confirmation, exact: true }).click();
-}
-
-/** Waits for the band at the top of the admin that says `message`, the outcome of an action. */
-export async function expectToast(page: Page, message: string | RegExp): Promise<void> {
-  await expect(page.getByText(message).first()).toBeVisible();
 }
