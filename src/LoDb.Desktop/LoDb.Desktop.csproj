@@ -29,6 +29,11 @@
   <ItemGroup>
     <AssemblyMetadata Include="LoDbDesktopChannel" Value="$(LoDbDesktopChannel)" />
     <AssemblyMetadata Include="LoDbDesktopGoogleClientId" Value="$(LoDbDesktopGoogleClientId)" />
+    <!--
+      Empty in a release: the app then trusts the feed key compiled into UpdateFeeds.cs. The
+      local update E2E sets it to a throwaway key it signs its feeds with.
+    -->
+    <AssemblyMetadata Include="LoDbDesktopFeedKey" Value="$(LoDbDesktopFeedKey)" />
   </ItemGroup>
 
   <ItemGroup>
@@ -45,6 +50,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="BouncyCastle.Cryptography" />
     <!-- Only Shell/Photino references these types (ADR 0007); a test keeps it that way. -->
     <PackageReference Include="Photino.NET" />
     <PackageReference Include="Photino.Native" />

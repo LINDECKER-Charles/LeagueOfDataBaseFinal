@@ -1,5 +1,6 @@
 using LoDb.Desktop.Launch;
 using LoDb.Desktop.Tests.Support;
+using LoDb.Desktop.Updates.Engine;
 
 namespace LoDb.Desktop.Tests.Smoke;
 
@@ -30,7 +31,8 @@ public sealed class SmokeTests : IDisposable
         Assert.Equal("proxy: ready /api/** -> https://league-of-data-base.com", lines[2]);
         Assert.StartsWith("shell: ok ", lines[3], StringComparison.Ordinal);
         Assert.Equal("updates: none", lines[4]);
-        Assert.Equal("api: skipped (--probe-api to call it)", lines[5]);
+        Assert.Equal($"feed-key: ed25519 {UpdateFeeds.FeedPublicKey}", lines[5]);
+        Assert.Equal("api: skipped (--probe-api to call it)", lines[6]);
         Assert.Equal("smoke: ok", lines[^1]);
     }
 

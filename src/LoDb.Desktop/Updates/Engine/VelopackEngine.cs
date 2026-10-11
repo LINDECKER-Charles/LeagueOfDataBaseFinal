@@ -1,4 +1,5 @@
 using LoDb.Desktop.Hosting;
+using LoDb.Desktop.Updates.Engine.Signing;
 using Velopack;
 
 namespace LoDb.Desktop.Updates.Engine;
@@ -6,15 +7,17 @@ namespace LoDb.Desktop.Updates.Engine;
 /// <summary>
 /// <see cref="IUpdateEngine"/> over Velopack's <see cref="UpdateManager"/>, created on first
 /// use. Without an install (development, tests) or with an invalid local feed, it reports
-/// no install, and the app never looks for updates.
+/// no install, and the app never looks for updates. The feed is read through its signature
+/// (<see cref="SignedFeeds"/>): a release it cannot trust is never found, so never applied.
 /// </summary>
 internal sealed partial class VelopackEngine(
     UpdateSettings settings,
     DesktopOptions options,
+    SignedFeeds feeds,
     ILogger<VelopackEngine> logger) : IUpdateEngine
 {
     private readonly Lazy<UpdateManager?> _manager = new(
-        () => Create(settings, options.Channel, logger));
+        () => Create(settings, options.Channel, feeds, logger));
 
     public bool IsInstalled => _manager.Value?.IsInstalled == true;
 
@@ -40,9 +43,10 @@ internal sealed partial class VelopackEngine(
     private static UpdateManager? Create(
         UpdateSettings settings,
         string channel,
+        SignedFeeds feeds,
         ILogger<VelopackEngine> logger)
     {
-        var source = UpdateFeeds.Create(settings, channel);
+        var source = UpdateFeeds.Create(settings, channel, feeds);
         if (source is null)
         {
             LogInvalidLocalFeed(logger, UpdateArguments.LocalFeedVariable);

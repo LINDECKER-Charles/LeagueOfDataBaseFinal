@@ -5,7 +5,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.Testing" />
     <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- A feed signed by tools/desktop-update-signing, which its own tests verify too. -->
+    <None Update="Updates/Signing/Fixtures/**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

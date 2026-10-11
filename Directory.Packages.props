@@ -46,6 +46,11 @@
   </ItemGroup>
 
   <ItemGroup Label="Desktop shell">
+    <!--
+      Ed25519 for the signed update feeds: .NET has none. Already in the solution through
+      MailKit, pinned here to the same version.
+    -->
+    <PackageVersion Include="BouncyCastle.Cryptography" Version="2.7.0" />
     <PackageVersion Include="Photino.Native" Version="4.0.22" />
     <PackageVersion Include="Photino.NET" Version="4.0.16" />
     <!-- Same version as the vpk tool installed on the build machines. -->
