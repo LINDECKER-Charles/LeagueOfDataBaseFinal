@@ -286,6 +286,7 @@ même nom.
 | `LoDb__Contact__NotificationLocale` | ➖ | Langue de la notification, `Fr` par défaut (`Ar`… `ZhHant`). Une valeur invalide ne se voit qu'au premier message. |
 | `LoDb__Analytics__VisitorKey` 🔒 | recommandé | Clé du hachage des visiteurs. Absente : une clé aléatoire par processus, les visiteurs sont recomptés à chaque redémarrage. |
 | `LoDb__Audience__Username`, `LoDb__Audience__Password` 🔒 | prod, une fois le compte créé | Compte Umami en lecture seule du tirage des tendances (§ 4.6). Absents : le tirage reste en sommeil (une ligne `audience.trends.dormant` au démarrage), `/v1/trends` lit la mesure maison. |
+| `LoDb__Audience__TrendsSwitchDate` | ➖ (prod) | Premier jour où `/v1/trends` lit les chiffres d'Umami (§ 4.6). Absente : la mesure maison seule. |
 | `LoDb__Seo__SitemapVersionWindow` | ➖ | Versions passées annoncées par l'index des sitemaps, après le dernier patch : `12` par défaut, `0` pour le dernier patch seul. Les sitemaps plus anciens restent servis, et leurs pages indexables. |
 | `LoDb__Catalog__MaxEntries`, `PinnedLanguages`, `PinnedBudgetMegabytes` | ➖ | Catalogues en mémoire : ceux du dernier patch dans les langues épinglées (défaut : les 21 de l'interface, en_US en tête), jamais évincés, dans `256` Mio estimés ; `16` autres au plus, le moins récemment lu évincé. |
 | `LoDb__Catalog__ColdLoadConcurrency`, `ColdLoadsPerSecond`, `ColdLoadBurst`, `PublicColdLoadsPerSecond`, `InternalColdLoadWait`, `MaxPendingLoads` | ➖ | Chargement d'un catalogue absent de la mémoire : `2` à la fois, `3` par seconde (rafale `6`), dont `1` pour les appels publics, refusés sans attente ; le SSR attend `2` s au plus, derrière `16` autres. Refus : `503` + `Retry-After`. |
@@ -429,6 +430,11 @@ Le même calque passe à l'API `LoDb__Audience__WebsiteId` (l'UUID) et `LoDb__Au
 pour `/v1/trends`, avec le compte de `LoDb__Audience__Username` et `__Password`. En fin de
 déploiement, le job attend que `https://<hôte canonique>/u/script.js` réponde le JavaScript
 d'Umami (un GET, jamais un POST qui compterait une visite) et échoue sinon.
+
+`/v1/trends` lit encore la mesure maison : une ligne `LoDb__Audience__TrendsSwitchDate`
+(`aaaa-mm-jj`) du `.env` de la prod, transmise par le même calque, la fait lire les chiffres
+d'Umami à partir de ce jour. La poser après deux semaines de tirage comparé à la mesure
+maison ; la retirer revient à la mesure maison seule.
 
 Une fois, dans l'UI d'Umami, avec le compte `admin` : *Administrateur → Utilisateurs* crée
 le compte du tirage, rôle **Consultation** ; *Administrateur → Équipes → lodb* l'y ajoute,

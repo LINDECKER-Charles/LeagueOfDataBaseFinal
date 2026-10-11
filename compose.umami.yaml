@@ -34,3 +34,6 @@ services:
       # account, are set (secrets, compose.deploy.yaml).
       LoDb__Audience__WebsiteId: *website
       LoDb__Audience__Host: *dashboard
+      # First day /v1/trends reads Umami's figures (yyyy-MM-dd), once two weeks of pulls agree
+      # with the in-house measure. Passed only when the host's .env sets it.
+      LoDb__Audience__TrendsSwitchDate:
