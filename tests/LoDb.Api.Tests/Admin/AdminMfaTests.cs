@@ -121,6 +121,25 @@ public sealed class AdminMfaTests(PostgresContainerFixture postgres)
     }
 
     [Fact]
+    public async Task ABearerHeaderDoesNotExemptTheSessionFromItsXsrfToken()
+    {
+        using var admin = await AdminCalls.OpenUnenrolledAsync(App);
+        var invitation = await AdminCalls.InvitationAsync(App, AdminCalls.NewAdminName);
+        using var request = admin.Post(EnrollmentPath, new { invitation });
+        request.Headers.Remove(BrowserClient.XsrfHeader);
+        request.Headers.Authorization = new("Bearer", "forged");
+
+        using var response = await admin.SendAsync(request);
+
+        Assert.Equal(
+            "xsrf-invalid",
+            await ApiJson.ProblemCodeAsync(response, HttpStatusCode.Forbidden));
+        Assert.Null(await App.UsersAsync(async users =>
+            await users.GetAuthenticatorKeyAsync(
+                (await users.FindByNameAsync(AdminCalls.NewAdminName))!)));
+    }
+
+    [Fact]
     public async Task ACodeWithSeparatorsIsAccepted()
     {
         using var admin = await AdminCalls.OpenUnenrolledAsync(App);
