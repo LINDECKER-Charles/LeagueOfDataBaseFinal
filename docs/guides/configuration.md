@@ -302,7 +302,8 @@ n'est pas une frontière d'authentification.
 - Le hash : bcrypt, par `caddy hash-password` (présent dans le conteneur de l'edge), mis
   **entre apostrophes** dans le `.env` (il contient des `$`) ; le job refuse un hash mal formé
   ou non quoté avant toute modification, car il atteindrait l'edge, partagé par tous les
-  projets. Le nom : lettres, chiffres, `.`, `_`, `-`.
+  projets. Le nom : lettres, chiffres et `-` seulement (un `.` ou un `_` y prendrait un
+  sens pour l'edge, qui lit le nom dans la clé d'un label).
 - Pour le retirer : supprimer les deux lignes du secret `ENV_STAGING`, puis redéployer.
 - **Compromis à peser avant de l'activer** : l'edge vérifie l'identifiant par bcrypt, sur le
   CPU que partagent tous les projets de l'hôte et qu'aucun quota de cette stack ne borne.
