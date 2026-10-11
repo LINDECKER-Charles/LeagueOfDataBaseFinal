@@ -1,7 +1,7 @@
 using System.Text;
-using LoDb.Ingestion.Images;
+using LoDb.Ingestion.Images.Media;
 
-namespace LoDb.Ingestion.Tests.Images;
+namespace LoDb.Ingestion.Tests.Images.Media;
 
 /// <summary>
 /// A blob is stored only under an extension nginx serves (<c>/cdn/blobs/</c>), and only when

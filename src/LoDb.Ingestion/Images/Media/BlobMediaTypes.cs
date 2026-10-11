@@ -1,6 +1,6 @@
 using LoDb.Infrastructure.Storage.Blobs;
 
-namespace LoDb.Ingestion.Images;
+namespace LoDb.Ingestion.Images.Media;
 
 /// <summary>
 /// The media a blob may be: the extensions nginx serves under <c>/cdn/blobs/</c>

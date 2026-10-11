@@ -4,6 +4,7 @@ using LoDb.Infrastructure.Persistence.Ddragon;
 using LoDb.Infrastructure.Storage.Blobs;
 using LoDb.Ingestion.Egress;
 using LoDb.Ingestion.Egress.Errors;
+using LoDb.Ingestion.Images.Media;
 using LoDb.Ingestion.Pipeline;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
