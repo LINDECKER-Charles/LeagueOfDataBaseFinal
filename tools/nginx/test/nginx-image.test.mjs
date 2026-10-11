@@ -16,6 +16,8 @@ const BLOB = 'ab'.repeat(32);
 const EDGE_SECRET = '5e'.repeat(32);
 const NGINX_UID = '101';
 const DEPLOY_EDGE_CHECKS = [['localhost', '/cdn/blobs/edge-check'], [API_HOST, '/edge-check']];
+// Paths that nginx's maps, which ignore case, or a regex's `$` would take for /healthz.
+const HEALTHZ_LOOKALIKES = ['/HEALTHZ', '/%48ealthz', '/healthz%0A', '/healthz/'];
 const BLOCKED_AGENT = 'Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTML, like Gecko) '
   + 'Chrome/139.0.0.0 Safari/537.36';
 // A client inside the container asks for the stub's large answer, then stops reading for a
@@ -107,6 +109,10 @@ describe('nginx image', { skip: IMAGE ? false : 'LODB_NGINX_IMAGE is not set' },
     }
     for (const host of ['localhost', API_HOST]) {
       assert.equal((await get('/healthz', { host, edge: undefined })).status, 200, host);
+      // `location = /healthz` misses these: they would reach `location /` without the header.
+      for (const path of HEALTHZ_LOOKALIKES) {
+        assert.equal((await get(path, { host, edge: undefined })).status, 403, host + path);
+      }
     }
     assert.equal((await get('/v1/champions', { host: 'www.localhost' })).status, 301);
   });
