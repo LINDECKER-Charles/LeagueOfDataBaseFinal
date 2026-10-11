@@ -56,12 +56,18 @@ jobs:
       - name: Setup Buildx
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
+      # The script's status is the step's: a step that names no shell runs `bash -e` without
+      # pipefail, where the tee would hide a refusal and deploy-prod would still run. Its
+      # output, the reason of a refusal included (stderr), goes to the summary either way.
       - name: Promote ${{ inputs.validated_tag }} → ${{ inputs.target_tags }} (no rebuild)
         env:
           SOURCE_TAG: ${{ inputs.source_tag }}
           VALIDATED_TAG: ${{ inputs.validated_tag }}
           TARGET_TAGS: ${{ inputs.target_tags }}
         run: |
+          set -o pipefail
+          status=0
           IMAGE_PREFIX="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/lodb" bash tools/ci/promote-images.sh \
-            | tee "$RUNNER_TEMP/promote.log"
+            2>&1 | tee "$RUNNER_TEMP/promote.log" || status=$?
           { echo '```'; cat "$RUNNER_TEMP/promote.log"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"
