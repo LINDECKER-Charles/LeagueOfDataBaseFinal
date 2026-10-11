@@ -55,6 +55,11 @@ describe('readServerSettings', () => {
     });
   });
 
+  // compose.yaml hands the variable over empty when the host's .env leaves it out.
+  it('keeps the /api/meta lifetime of the API when the variable is empty', () => {
+    expect(readServerSettings({ LODB_API_META_TTL_SECONDS: '' }).apiMetaTtlMs).toBe(60_000);
+  });
+
   it.each(['0', '-1', '1.5', 'often'])('refuses LODB_API_META_TTL_SECONDS=%s', (seconds) => {
     expect(() => readServerSettings({ LODB_API_META_TTL_SECONDS: seconds })).toThrow(
       /LODB_API_META_TTL_SECONDS/,
