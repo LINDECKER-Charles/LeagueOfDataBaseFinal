@@ -6,6 +6,7 @@ import {
   provideRouter,
   withInMemoryScrolling,
   withNavigationErrorHandler,
+  withPreloading,
   withRouterConfig,
 } from '@angular/router';
 import { routes } from './app.routes';
@@ -23,6 +24,7 @@ import { LocaleHomeLocationStrategy } from './core/routing/locale/locale-home-lo
 import { provideUpdates } from './core/update/provide-updates';
 import { updateInterceptor } from './core/update/update-interceptor';
 import { PORTAL_PAYMENTS } from './features/api-portal/shared/portal-payments';
+import { CataloguePreloading } from './features/catalogue/shared/preloading/catalogue-preloading';
 import { provideReleaseVersion } from './features/editorial/changelog/provide-release-version';
 import { PAYMENTS_ENABLED } from '../environments/payments-enabled';
 
@@ -39,6 +41,7 @@ import { PAYMENTS_ENABLED } from '../environments/payments-enabled';
  * off: pages read their data with `injectRouteData`. A new page starts at its top, history
  * restores its position; a filter that rewrites its query navigates with `scroll: 'manual'`.
  * The address of a locale's home keeps its trailing slash (`LocaleHomeLocationStrategy`).
+ * Once a page is idle, the catalogue's code is read ahead, and only it (CataloguePreloading).
  *
  * `provideAuth`, `provideNavigationBeacon`, `provideUpdates` and the `auth` and `update`
  * interceptors are registered empty, for L4.5, L7.1 and L9.0 to fill in their own folders.
@@ -59,6 +62,7 @@ export const appConfig: ApplicationConfig = {
       }),
       withNavigationErrorHandler(handleNavigationError),
       withInMemoryScrolling({ scrollPositionRestoration: 'enabled', anchorScrolling: 'enabled' }),
+      withPreloading(CataloguePreloading),
     ),
     { provide: LocationStrategy, useClass: LocaleHomeLocationStrategy },
     provideHttpClient(

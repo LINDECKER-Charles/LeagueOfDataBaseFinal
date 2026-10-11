@@ -28,7 +28,8 @@ affichage.
 - La liste complète qui sert à filtrer se charge quand on commence à chercher ou à filtrer, ou
   une fois la page affichée et le navigateur au repos ; en mode économie de données, seulement
   quand on en a besoin.
-- Une page s'ouvre plus vite quand le site a déjà été visité.
+- Une page s'ouvre plus vite quand le site a déjà été visité, et le code des listes et des
+  fiches est préparé pendant que la page est au repos.
 
 ## Technique
 
@@ -59,3 +60,6 @@ affichage.
 - Service worker : navigation preload activé ; chaque navigation qu'il voit est servie par ce
   préchargement (`networkResponse`), y compris celles qu'il laisse sinon passer (compte,
   admin, partages), qui ne sont jamais mises en cache.
+- Routeur : `withPreloading(CataloguePreloading)` charge à l'inactivité le seul code des routes
+  marquées `PRELOADED_ROUTE` (les quatre ressources du catalogue), ni sur le serveur ni sous
+  `Save-Data`.

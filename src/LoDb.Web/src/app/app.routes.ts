@@ -7,6 +7,7 @@ import { redirectToPreferredLocale } from './core/routing/locale/redirect-to-pre
 import { isOutcomeNavigation } from './core/routing/outcome/is-outcome-navigation';
 import { resolveOutcome } from './core/routing/outcome/resolve-outcome';
 import { canMatchVersion } from './core/routing/version/can-match-version';
+import { PRELOADED_ROUTE } from './features/catalogue/shared/preloading/preloaded-route';
 
 // Development gallery of the design system (L3.2), at `/{locale}/dev/gallery`. `ngDevMode` is
 // replaced by `false` in optimized builds, so the route and its lazy chunk leave production.
@@ -58,21 +59,25 @@ function catalogueRoutes(): Routes {
   return [
     {
       path: 'champions',
+      data: PRELOADED_ROUTE,
       loadChildren: () =>
         import('./features/catalogue/champions/champions.routes').then((m) => m.CHAMPIONS_ROUTES),
     },
     {
       path: 'items',
+      data: PRELOADED_ROUTE,
       loadChildren: () =>
         import('./features/catalogue/items/items.routes').then((m) => m.ITEMS_ROUTES),
     },
     {
       path: 'runes',
+      data: PRELOADED_ROUTE,
       loadChildren: () =>
         import('./features/catalogue/runes/runes.routes').then((m) => m.RUNES_ROUTES),
     },
     {
       path: 'summoners',
+      data: PRELOADED_ROUTE,
       loadChildren: () =>
         import('./features/catalogue/summoners/summoners.routes').then((m) => m.SUMMONERS_ROUTES),
     },

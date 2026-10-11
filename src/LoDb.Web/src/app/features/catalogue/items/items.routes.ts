@@ -2,6 +2,7 @@ import type { Routes } from '@angular/router';
 import { resolveCatalogueContext } from '../../../core/routing/catalogue/resolve-catalogue-context';
 import { resolveCatalogueEntry } from '../../../core/routing/catalogue/resolve-catalogue-entry';
 import { withLoadTiming } from '../shared/codex/timing/with-load-timing';
+import { PRELOADED_ROUTE } from '../shared/preloading/preloaded-route';
 
 const loadPage = () => import('./items-page').then((m) => m.ItemsPage);
 
@@ -16,12 +17,14 @@ export const ITEMS_ROUTES: Routes = [
   {
     path: '',
     runGuardsAndResolvers: 'paramsOrQueryParamsChange',
+    data: PRELOADED_ROUTE,
     resolve: { context: resolveCatalogueContext('items') },
     loadComponent: loadPage,
   },
   {
     path: ':id',
     runGuardsAndResolvers: 'paramsOrQueryParamsChange',
+    data: PRELOADED_ROUTE,
     resolve: { entry: withLoadTiming(resolveCatalogueEntry('items')) },
     loadComponent: loadPage,
   },
