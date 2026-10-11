@@ -14,7 +14,7 @@ namespace LoDb.Api.Tests.Accounts;
 /// page of L3.1 that calls the API back.
 /// </summary>
 public sealed partial class AccountEmailDeliveryTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string NewPassword = "N0uvelle-phrase!";
     private const int MaxBatches = 50;
@@ -96,7 +96,8 @@ public sealed partial class AccountEmailDeliveryTests(PostgresContainerFixture p
         await _relay.DisposeAsync();
     }
 
-    [GeneratedRegex(@"^https://\S+$", RegexOptions.Multiline)]
+    // A line of its own, whatever the line endings of the text part.
+    [GeneratedRegex(@"^https://\S+(?=\r?$)", RegexOptions.Multiline)]
     private static partial Regex Url();
 
     private static string Recipient(MimeMessage mail) =>
@@ -109,7 +110,7 @@ public sealed partial class AccountEmailDeliveryTests(PostgresContainerFixture p
     private static Uri ActionUrl(MimeMessage mail, string prefix)
     {
         Assert.NotNull(mail.TextBody);
-        var url = Url().Match(mail.TextBody).Value.TrimEnd('\r');
+        var url = Url().Match(mail.TextBody).Value;
         Assert.StartsWith(prefix, url, StringComparison.Ordinal);
         Assert.Contains(
             $"href=\"{WebUtility.HtmlEncode(url)}\"",

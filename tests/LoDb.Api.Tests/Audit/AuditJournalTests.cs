@@ -12,7 +12,7 @@ namespace LoDb.Api.Tests.Audit;
 /// by one row read past the page, and filtered by action, group, outcome, actor and period.
 /// </summary>
 public sealed class AuditJournalTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string JournalPath = "/api/admin/audit";
 

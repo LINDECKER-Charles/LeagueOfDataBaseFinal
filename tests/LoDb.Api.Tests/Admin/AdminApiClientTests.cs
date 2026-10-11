@@ -14,7 +14,7 @@ namespace LoDb.Api.Tests.Admin;
 /// effective on <c>/v1</c> from the next request.
 /// </summary>
 public sealed class AdminApiClientTests(PostgresContainerFixture postgres)
-    : AdminTestBase(postgres), IClassFixture<PostgresContainerFixture>
+    : AdminTestBase(postgres)
 {
     private const string ClientsPath = "/api/admin/api-clients";
     private const string UsagePath = "/v1/usage";

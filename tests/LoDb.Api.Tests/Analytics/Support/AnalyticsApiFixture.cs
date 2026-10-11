@@ -20,7 +20,7 @@ namespace LoDb.Api.Tests.Analytics.Support;
 /// <remarks>
 /// The writer worker is off, as every worker in the tests: a test flushes the queue itself.
 /// </remarks>
-public sealed class AnalyticsApiFixture : IAsyncLifetime
+public sealed class AnalyticsApiFixture(PostgresContainerFixture postgres) : IAsyncLifetime
 {
     /// <summary>The address nginx mirrors every served page to.</summary>
     public const string MirrorPath = "/internal/analytics/page";
@@ -36,7 +36,6 @@ public sealed class AnalyticsApiFixture : IAsyncLifetime
     private const string OriginalUriHeader = "X-Original-URI";
     private const string UserAgentHeader = "User-Agent";
 
-    private readonly PostgresContainerFixture _postgres = new();
     private TestDatabase? _database;
     private ApiFactory? _factory;
     private WebApplicationFactory<Program>? _host;
@@ -53,9 +52,7 @@ public sealed class AnalyticsApiFixture : IAsyncLifetime
 
     public async ValueTask InitializeAsync()
     {
-        await _postgres.InitializeAsync();
-        _database = await _postgres.CreateDatabaseAsync(Token);
-        await _database.MigrateAsync(Token);
+        _database = await postgres.CreateMigratedDatabaseAsync(Token);
         _factory = new ApiFactory
         {
             PostgresConnectionString = _database.AppConnectionString,
@@ -132,8 +129,6 @@ public sealed class AnalyticsApiFixture : IAsyncLifetime
         {
             await _database.DisposeAsync();
         }
-
-        await _postgres.DisposeAsync();
     }
 
     private static async Task IngestAsync(IVersionIngestion ingestion)

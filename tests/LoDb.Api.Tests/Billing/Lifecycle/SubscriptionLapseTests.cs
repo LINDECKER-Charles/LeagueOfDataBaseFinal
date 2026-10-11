@@ -14,7 +14,7 @@ namespace LoDb.Api.Tests.Billing.Lifecycle;
 /// an event older than the last one applied changes nothing; an ended subscription stays gone.
 /// </summary>
 public sealed class SubscriptionLapseTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private BillingApp? _app;
 

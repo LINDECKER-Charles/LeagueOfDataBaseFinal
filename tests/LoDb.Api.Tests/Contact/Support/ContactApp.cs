@@ -56,8 +56,7 @@ public sealed class ContactApp : IAsyncDisposable
         PostgresContainerFixture postgres,
         string? recipient = Recipient)
     {
-        var database = await postgres.CreateDatabaseAsync(Cancellation);
-        await database.MigrateAsync(Cancellation);
+        var database = await postgres.CreateMigratedDatabaseAsync(Cancellation);
         return new ContactApp(database, recipient);
     }
 

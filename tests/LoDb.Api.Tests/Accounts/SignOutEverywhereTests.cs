@@ -12,7 +12,7 @@ namespace LoDb.Api.Tests.Accounts;
 /// traded any more, whether the call comes from the web or from an app.
 /// </summary>
 public sealed class SignOutEverywhereTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string Path = "/api/account/logout-everywhere";
     private const string RevokedCounter = "lodb.sessions.revoked";

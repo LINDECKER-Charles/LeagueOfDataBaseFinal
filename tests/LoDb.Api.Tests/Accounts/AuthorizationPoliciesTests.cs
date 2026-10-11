@@ -21,7 +21,7 @@ namespace LoDb.Api.Tests.Accounts;
 /// account as stored now, and <c>Admin</c>, which also needs a second factor.
 /// </summary>
 public sealed class AuthorizationPoliciesTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string ApiPath = "/api/account/anything";
     private const int Allowed = StatusCodes.Status200OK;

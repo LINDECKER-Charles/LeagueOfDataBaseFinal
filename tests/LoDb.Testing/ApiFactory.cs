@@ -19,12 +19,18 @@ namespace LoDb.Testing;
 /// </remarks>
 public sealed class ApiFactory : WebApplicationFactory<Program>
 {
-    /// <summary>A port nothing listens on: readiness fails at once instead of timing out.</summary>
-    public const string UnreachablePostgres = "Host=127.0.0.1;Port=1;Timeout=2;Pooling=false";
+    /// <summary>
+    /// A Unix socket that does not exist: the connection fails at once on every platform,
+    /// where a refused TCP port takes two seconds on Windows.
+    /// </summary>
+    public const string UnreachablePostgres =
+        "Host=/nonexistent-lodb-socket;Port=1;Timeout=2;Pooling=false";
 
     private const string StorageDirectoryPrefix = "lodb-tests-";
     private const string QuietLogLevelKey = "Logging:LogLevel:Default";
     private const string QuietLogLevel = "Warning";
+
+    private readonly PipelineRateLimiters _rateLimiters = new();
 
     private readonly Lazy<DirectoryInfo> _storageRoot =
         new(() => Directory.CreateTempSubdirectory(StorageDirectoryPrefix));
@@ -58,6 +64,7 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
         builder.ConfigureTestServices(services =>
         {
             services.AddTransient<IStartupFilter, LocalPortFromHostHeader>();
+            services.AddSingleton<IStartupFilter>(_rateLimiters);
             if (Clock is not null)
             {
                 services.AddSingleton<TimeProvider>(Clock);
@@ -68,6 +75,11 @@ public sealed class ApiFactory : WebApplicationFactory<Program>
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
+        if (disposing)
+        {
+            _rateLimiters.Release();
+        }
+
         if (disposing && _storageRoot.IsValueCreated && _storageRoot.Value.Exists)
         {
             _storageRoot.Value.Delete(recursive: true);

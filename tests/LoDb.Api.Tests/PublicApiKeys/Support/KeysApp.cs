@@ -64,8 +64,7 @@ public sealed class KeysApp : IAsyncDisposable
     public static async Task<KeysApp> StartAsync(PostgresContainerFixture postgres)
     {
         ArgumentNullException.ThrowIfNull(postgres);
-        var database = await postgres.CreateDatabaseAsync(Cancellation);
-        await database.MigrateAsync(Cancellation);
+        var database = await postgres.CreateMigratedDatabaseAsync(Cancellation);
         return new KeysApp(database);
     }
 

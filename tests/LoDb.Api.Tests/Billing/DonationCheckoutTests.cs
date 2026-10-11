@@ -11,7 +11,7 @@ namespace LoDb.Api.Tests.Billing;
 /// 1 and 500 euros, naming a signed-in donor, behind the forgery guard and ten an hour.
 /// </summary>
 public sealed class DonationCheckoutTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string OptionsPath = "/api/donations/options";
     private const string CheckoutPath = "/api/donations/checkout";

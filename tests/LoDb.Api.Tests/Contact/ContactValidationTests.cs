@@ -10,7 +10,7 @@ namespace LoDb.Api.Tests.Contact;
 /// sent for a refused message.
 /// </summary>
 public sealed class ContactValidationTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private ContactApp? _app;
 

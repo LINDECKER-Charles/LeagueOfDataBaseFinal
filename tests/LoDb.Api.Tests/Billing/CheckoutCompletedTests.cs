@@ -18,7 +18,7 @@ namespace LoDb.Api.Tests.Billing;
 /// read it, and a kind the site does not sell is acknowledged and left alone.
 /// </summary>
 public sealed class CheckoutCompletedTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private BillingApp? _app;
 

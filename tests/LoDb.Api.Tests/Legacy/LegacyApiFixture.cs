@@ -17,12 +17,11 @@ namespace LoDb.Api.Tests.Legacy;
 /// <remarks>
 /// The client never follows a redirect: the 301 itself is what the tests read.
 /// </remarks>
-public sealed class LegacyApiFixture : IAsyncLifetime
+public sealed class LegacyApiFixture(PostgresContainerFixture postgres) : IAsyncLifetime
 {
     /// <summary>Prefix nginx writes before an old path.</summary>
     public const string Prefix = "/api/legacy";
 
-    private readonly PostgresContainerFixture _postgres = new();
     private TestDatabase? _database;
     private ApiFactory? _factory;
     private HttpClient? _client;
@@ -47,9 +46,7 @@ public sealed class LegacyApiFixture : IAsyncLifetime
 
     public async ValueTask InitializeAsync()
     {
-        await _postgres.InitializeAsync();
-        _database = await _postgres.CreateDatabaseAsync(Token);
-        await _database.MigrateAsync(Token);
+        _database = await postgres.CreateMigratedDatabaseAsync(Token);
         _factory = new ApiFactory
         {
             PostgresConnectionString = _database.AppConnectionString,
@@ -109,8 +106,6 @@ public sealed class LegacyApiFixture : IAsyncLifetime
         {
             await _database.DisposeAsync();
         }
-
-        await _postgres.DisposeAsync();
     }
 
     private static InvalidOperationException NotInitialized() =>

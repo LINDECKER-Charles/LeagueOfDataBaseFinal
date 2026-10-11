@@ -19,7 +19,7 @@ namespace LoDb.Api.Tests.Accounts;
 /// then once a day.
 /// </summary>
 public sealed class EmailVerificationTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const string VerifyPath = "/api/account/verify-email";
     private const string ResendPath = "/api/account/verify-email/resend";

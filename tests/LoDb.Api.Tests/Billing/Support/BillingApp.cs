@@ -84,8 +84,7 @@ public sealed class BillingApp : IAsyncDisposable
         PostgresContainerFixture postgres,
         bool configured = true)
     {
-        var database = await postgres.CreateDatabaseAsync(Cancellation);
-        await database.MigrateAsync(Cancellation);
+        var database = await postgres.CreateMigratedDatabaseAsync(Cancellation);
         return new BillingApp(database, configured);
     }
 

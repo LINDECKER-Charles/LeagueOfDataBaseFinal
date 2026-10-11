@@ -14,7 +14,7 @@ namespace LoDb.Api.Tests.Audit;
 /// actor or target, and by its e-mail or username as the legacy journal also matched it.
 /// </summary>
 public sealed class AuditActivityTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private static readonly DateTimeOffset Day = new(2026, 9, 20, 12, 0, 0, TimeSpan.Zero);
 

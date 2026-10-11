@@ -10,7 +10,6 @@ namespace LoDb.Api.Tests.Persistence;
 /// run them: the exit code tells whether the database may serve the API.
 /// </summary>
 public sealed class MigrationCommandsTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>
 {
     private const string Baseline = "20260719150001_Baseline";
     private const string Lot1 = "20260926022150_Lot1DataDragon";

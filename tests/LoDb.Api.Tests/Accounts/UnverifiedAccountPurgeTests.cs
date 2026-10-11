@@ -23,7 +23,7 @@ namespace LoDb.Api.Tests.Accounts;
 /// something worth keeping, stays.
 /// </summary>
 public sealed class UnverifiedAccountPurgeTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private static readonly TimeSpan Week = TimeSpan.FromDays(7);
     private static readonly TimeSpan Minute = TimeSpan.FromMinutes(1);

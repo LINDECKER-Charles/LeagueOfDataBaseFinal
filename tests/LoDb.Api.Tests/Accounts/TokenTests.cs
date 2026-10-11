@@ -14,7 +14,7 @@ namespace LoDb.Api.Tests.Accounts;
 /// changes or the account is banned.
 /// </summary>
 public sealed class TokenTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private const int AccessTokenSeconds = 5 * 60;
 

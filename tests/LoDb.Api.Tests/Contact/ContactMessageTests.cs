@@ -14,7 +14,7 @@ namespace LoDb.Api.Tests.Contact;
 /// filled honeypot or a foreign origin keeps nothing.
 /// </summary>
 public sealed class ContactMessageTests(PostgresContainerFixture postgres)
-    : IClassFixture<PostgresContainerFixture>, IAsyncLifetime
+    : IAsyncLifetime
 {
     private ContactApp? _app;
 
