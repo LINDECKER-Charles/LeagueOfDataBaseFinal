@@ -6,6 +6,8 @@ import { expect, test } from '../../support/test';
 // out. The pager's way out is specs/champions/champions.spec.ts's.
 const CHAMPION = '/en/champions/Annie';
 const CLIP = '#abilities video';
+// The clip is created once half of its stage is on screen.
+const STAGE = '#abilities lodb-ability-media';
 const LOG = 'lodbClips';
 const KEEP = 'lodbKeptClip';
 const DESKTOP = { width: 1280, height: 800 };
@@ -49,6 +51,7 @@ async function clipLog(page: Page): Promise<ClipEvent[]> {
 
 // Waits for the clip to play; skips when its media host cannot be reached from here.
 async function waitForPlayback(page: Page): Promise<void> {
+  await page.locator(STAGE).scrollIntoViewIfNeeded();
   const clip = page.locator(CLIP);
   await clip.scrollIntoViewIfNeeded();
   const playing = () => clip.evaluate((video: HTMLVideoElement) => !video.paused);
