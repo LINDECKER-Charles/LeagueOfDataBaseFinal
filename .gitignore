@@ -16,6 +16,9 @@ commande.md
 !/.env.*.example
 # Local checklist of the secrets to set (values included): never versioned.
 /SECRETS.md
+# What the deploy job writes on a host (secret files, the pushed env, backups): a split run in
+# a checkout must never reach a commit.
+/.deploy/
 
 # Compose env of the archived legacy stack, read by `docker compose --project-directory legacy`
 /legacy/.env
