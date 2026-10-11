@@ -57,9 +57,10 @@ internal sealed class SignOutEverywhereEndpoint(
             return AccountProblem.AuthenticationRequired();
         }
 
-        // Recorded first: the journal reads the account from the request.
-        await audit.SignedOutEverywhereAsync(cancellation);
         await RevokeAllAsync(user, cancellation);
+        // Recorded once the sessions are revoked, and before the cookie's sign-out: the
+        // journal reads the account from the request.
+        await audit.SignedOutEverywhereAsync(cancellation);
         if (!AccountSchemes.IsBearer(context.Request))
         {
             await signIn.SignOutAsync();
