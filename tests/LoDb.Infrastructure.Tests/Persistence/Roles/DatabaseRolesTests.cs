@@ -37,6 +37,12 @@ public sealed class DatabaseRolesTests(IsolatedPostgres isolated) : IClassFixtur
     private const string AppMembershipsSql =
         "SELECT roleid::regrole::text FROM pg_auth_members WHERE member = 'lodb_app'::regrole";
 
+    private const string AppVerifierSql =
+        "SELECT rolpassword FROM pg_authid WHERE rolname = 'lodb_app'";
+
+    // The verifier migrate writes, at PostgreSQL's default count.
+    private const string WrittenVerifierPrefix = "SCRAM-SHA-256$4096:";
+
     private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
 
     private PostgresContainerFixture Server => isolated.Server;
@@ -122,6 +128,28 @@ public sealed class DatabaseRolesTests(IsolatedPostgres isolated) : IClassFixtur
         var changes = await ApplyAsync(database, new AppRoleOptions { Password = NextPassword });
 
         Assert.False(changes.PasswordSet);
+    }
+
+    [Fact]
+    public async Task VerifierOfAnotherCostIsWrittenAgain()
+    {
+        await using var database = await Server.CreateDatabaseAsync(Cancellation);
+        var options = new AppRoleOptions { Password = Password };
+        await ApplyAsync(database, options);
+        await database.ExecuteAsync(
+            "SET scram_iterations = 4097;"
+                + $" ALTER ROLE lodb_app PASSWORD '{Password}';"
+                + " RESET scram_iterations",
+            Cancellation);
+
+        var changes = await ApplyAsync(database, options);
+
+        Assert.True(changes.PasswordSet);
+        Assert.StartsWith(
+            WrittenVerifierPrefix,
+            Assert.Single(await database.QueryAsync(AppVerifierSql, Cancellation)),
+            StringComparison.Ordinal);
+        Assert.Equal("15s", await ShowAsAppAsync(database, Password, "statement_timeout"));
     }
 
     [Fact]

@@ -40,8 +40,14 @@ internal static class ScramVerifier
 
     /// <summary>
     /// Whether <paramref name="verifier"/> is a SCRAM-SHA-256 verifier of
-    /// <paramref name="password"/>; false for none, an MD5 hash or a malformed value.
+    /// <paramref name="password"/> at the iteration count <see cref="Create"/> uses; false for
+    /// none, an MD5 hash, a malformed value or another count.
     /// </summary>
+    /// <remarks>
+    /// Another count is never derived: whoever wrote the verifier chose it, the API's role
+    /// included (a role may set its own password), and it would set the cost of this
+    /// comparison. Such a verifier is rewritten instead, at the cost of one statement.
+    /// </remarks>
     public static bool Matches(string password, string? verifier)
     {
         ArgumentNullException.ThrowIfNull(password);
@@ -96,7 +102,7 @@ internal static class ScramVerifier
                 NumberStyles.None,
                 CultureInfo.InvariantCulture,
                 out iterations)
-            && iterations > 0
+            && iterations == Iterations
             && TryDecode(cost[1], out salt);
     }
 
