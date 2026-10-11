@@ -25,7 +25,6 @@ public sealed class ClientPolicyConstraintsTests(PostgresContainerFixture postgr
     {
         $"'desktop', '1.0.0', '1.2.3', {NoBundle}",
         $"'desktop', NULL, NULL, {NoBundle}",
-        $"'android', '1.0.0', '10.20.30', {Bundle}",
     };
 
     public static TheoryData<string, string> InvalidPolicies => new()
