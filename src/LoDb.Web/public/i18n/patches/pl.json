@@ -1,0 +1,8 @@
+{
+  "title": "Historia patchy",
+  "description": "Wszystkie patche League of Legends wymienione przez Data Dragon, każdy z czempionami, przedmiotami, runami i zaklęciami przywoływacza w takiej postaci, jaką miały w tym patchu.",
+  "intro": "Wszystkie patche wymienione przez Data Dragon, od najnowszego. Każdy otwiera swoich czempionów, przedmioty, runy i zaklęcia przywoływacza w takiej postaci, jaką miały wtedy.",
+  "group": "Patche {{ major }}.x",
+  "latest": "Aktualny",
+  "empty": "Na razie nie ma żadnego patcha."
+}

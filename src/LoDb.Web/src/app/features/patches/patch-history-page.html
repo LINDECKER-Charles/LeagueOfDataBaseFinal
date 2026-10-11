@@ -1,0 +1,41 @@
+<lodb-backdrop />
+<div class="patches-page">
+  <header>
+    <h1 class="patches-page__title text-gold-grad">{{ 'patches.title' | transloco }}</h1>
+    <p class="patches-page__intro">{{ 'patches.intro' | transloco }}</p>
+  </header>
+
+  @for (group of groups(); track group.major) {
+    <section class="patches-group" [attr.aria-labelledby]="'patches-' + group.major">
+      <header class="codex-header">
+        <h2 [id]="'patches-' + group.major">
+          {{ 'patches.group' | transloco: { major: group.major } }}
+        </h2>
+        <span class="codex-header__meta">{{ group.rows.length }}</span>
+      </header>
+      <!-- Hundreds of rows: bare markup, styled from the table. Each link takes its version from
+           its row header, its programmatic context. -->
+      <table class="hx-table hx-table--flush patches-table">
+        <tbody>
+          @for (row of group.rows; track row.version) {
+            <tr>
+              <th scope="row">
+                {{ row.version }}
+                @if (row.isLatest) {
+                  <span class="hx-chip-hex">{{ 'patches.latest' | transloco }}</span>
+                }
+              </th>
+              <td>
+                @for (list of row.lists; track list.resource) {
+                  <a [routerLink]="list.url">{{ labels()[list.resource] }}</a>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </section>
+  } @empty {
+    <p class="patches-page__intro">{{ 'patches.empty' | transloco }}</p>
+  }
+</div>

@@ -1,0 +1,8 @@
+{
+  "title": "Lịch sử phiên bản",
+  "description": "Mọi phiên bản Liên Minh Huyền Thoại mà Data Dragon liệt kê, mỗi phiên bản kèm tướng, trang bị, ngọc bổ trợ và phép bổ trợ đúng như trong phiên bản đó.",
+  "intro": "Mọi phiên bản mà Data Dragon liệt kê, từ mới nhất. Mỗi phiên bản mở ra tướng, trang bị, ngọc bổ trợ và phép bổ trợ đúng như lúc đó.",
+  "group": "Phiên bản {{ major }}.x",
+  "latest": "Hiện tại",
+  "empty": "Hiện chưa có phiên bản nào được liệt kê."
+}

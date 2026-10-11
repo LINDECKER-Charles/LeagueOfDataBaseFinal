@@ -1,0 +1,8 @@
+{
+  "title": "Yama geçmişi",
+  "description": "Data Dragon’un listelediği tüm League of Legends yamaları; her biri o yamadaki şampiyonları, eşyaları, rünleri ve çağırıcı büyüleriyle.",
+  "intro": "Data Dragon’un listelediği tüm yamalar, en yeniden başlayarak. Her biri şampiyonlarını, eşyalarını, rünlerini ve çağırıcı büyülerini o zamanki halleriyle açar.",
+  "group": "{{ major }}.x yamaları",
+  "latest": "Güncel",
+  "empty": "Şu anda listelenen bir yama yok."
+}

@@ -194,7 +194,8 @@
       "item": "Item",
       "runes": "Runas",
       "summoner": "Invocador",
-      "sitemap": "Mapa do site"
+      "sitemap": "Mapa do site",
+      "patches": "Histórico de patches"
     },
     "links": {
       "title": "Links Úteis",

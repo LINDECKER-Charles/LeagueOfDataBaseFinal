@@ -77,6 +77,7 @@ const CASES: Case[] = [
   { url: '/en/trends', mode: RenderMode.Server, headers: PUBLIC },
   { url: '/en/u/faker', mode: RenderMode.Server, headers: PUBLIC },
   { url: '/en/developers', mode: RenderMode.Server, headers: PUBLIC },
+  { url: '/fr/patches', mode: RenderMode.Server, headers: PUBLIC },
   { url: '/en/donate', mode: RenderMode.Server, headers: PUBLIC },
   { url: '/en/15.14.1', mode: RenderMode.Server, headers: PUBLIC },
   { url: '/en/nowhere/at/all', mode: RenderMode.Server, headers: PUBLIC },
