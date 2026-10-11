@@ -26,7 +26,7 @@ public sealed class CatalogOptions
     private const int DefaultImageVerdictsMinutes = 10;
     private const int DefaultImageVerdictVersions = 32;
     private const int DefaultArtVariantsMinutes = 30;
-    private const int DefaultArtVariantsConcurrency = 2;
+    private const int DefaultArtVariantsConcurrency = 1;
 
     /// <summary>
     /// Catalogs kept in memory besides the pinned ones, one per (version, language), about
@@ -102,7 +102,9 @@ public sealed class CatalogOptions
 
     /// <summary>
     /// Arts fetched and transcoded at once by that job: each transcode takes a processor
-    /// for some tens of milliseconds, taken from the pages the API serves meanwhile.
+    /// for some tens of milliseconds, taken from the pages the API serves meanwhile. One by
+    /// default: on a host the API's CPU quota is 1.25 cores, and the job runs while the
+    /// renderer re-warms its pages after a deploy or a new patch.
     /// </summary>
     public int ArtVariantsConcurrency { get; set; } = DefaultArtVariantsConcurrency;
 }

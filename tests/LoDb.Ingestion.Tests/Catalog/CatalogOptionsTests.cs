@@ -50,12 +50,12 @@ public sealed class CatalogOptionsTests
     }
 
     [Fact]
-    public void DefaultsStoreTheArtVariantsTwoAtATimeHalfHourly()
+    public void DefaultsStoreTheArtVariantsOneAtATimeHalfHourly()
     {
         var options = Resolve(new());
 
         Assert.Equal(
-            (TimeSpan.FromMinutes(30), 2),
+            (TimeSpan.FromMinutes(30), 1),
             (options.ArtVariantsPeriod, options.ArtVariantsConcurrency));
     }
 
