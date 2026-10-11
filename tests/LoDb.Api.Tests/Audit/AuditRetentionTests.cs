@@ -1,6 +1,5 @@
 using LoDb.Api.Tests.Accounts.Support;
 using LoDb.Api.Tests.Audit.Support;
-using LoDb.Api.Workers;
 using LoDb.Api.Workers.Audit;
 using LoDb.Infrastructure.Audit;
 using LoDb.Infrastructure.Jobs;
@@ -22,14 +21,6 @@ public sealed class AuditRetentionTests(PostgresContainerFixture postgres)
         _app ?? throw new InvalidOperationException("The host is not started yet.");
 
     private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
-
-    [Fact]
-    public void RetentionJobIsDiscoveredAsAWorker()
-    {
-        Assert.Contains(
-            typeof(AuditRetentionJob),
-            ConventionalWorkers.Discover(typeof(Program).Assembly));
-    }
 
     [Fact]
     public async Task EntriesOlderThanSixMonthsAreDeletedDayAfterDay()

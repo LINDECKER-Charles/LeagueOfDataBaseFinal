@@ -1,19 +1,17 @@
 using LoDb.Domain.Languages;
 using LoDb.Infrastructure.Audit;
 using LoDb.Infrastructure.Outbox;
-using LoDb.Infrastructure.Persistence.Accounts;
 using LoDb.Infrastructure.Persistence.Audit;
 using LoDb.Infrastructure.Persistence.Outbox;
 using LoDb.Testing;
-using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace LoDb.Infrastructure.Tests.Persistence.Accounts;
 
 /// <summary>
-/// Every entity of lot 4 comes back as it was saved, every column filled, and enumerations
-/// are stored with the spelling the raw SQL and the legacy journal use.
+/// The outbox and audit entities of lot 4 come back as they were saved, every column filled,
+/// and enumerations are stored with the spelling the raw SQL and the legacy journal use.
+/// Identity's own entities are covered through the stores (<c>IdentityStoresTests</c>).
 /// </summary>
 public sealed class Lot4EntityRoundTripTests(PostgresContainerFixture postgres)
     : MigratedDatabase(postgres)
@@ -21,46 +19,6 @@ public sealed class Lot4EntityRoundTripTests(PostgresContainerFixture postgres)
     // UTC and whole microseconds: what timestamptz keeps.
     private static readonly DateTimeOffset At =
         new DateTimeOffset(2026, 9, 26, 8, 30, 15, TimeSpan.Zero).AddTicks(1_234_560);
-
-    [Fact]
-    public async Task RoleRoundTrips() =>
-        await AssertRoundTripsAsync(new Role
-        {
-            Name = Role.Admin,
-            NormalizedName = "ADMIN",
-            ConcurrencyStamp = "0b7d6c2a-1e4f-4a3b-8c9d-5e6f7a8b9c0d",
-        });
-
-    [Fact]
-    public async Task UserRoleRoundTrips()
-    {
-        var user = await SeedUserAsync();
-        var role = await SeedAsync(new Role { Name = Role.Admin, NormalizedName = "ADMIN" });
-
-        await AssertRoundTripsAsync(new IdentityUserRole<int> { UserId = user, RoleId = role.Id });
-    }
-
-    [Fact]
-    public async Task UserTokenRoundTrips()
-    {
-        var user = await SeedUserAsync();
-
-        await AssertRoundTripsAsync(new IdentityUserToken<int>
-        {
-            UserId = user,
-            LoginProvider = "[AspNetUserStore]",
-            Name = "AuthenticatorKey",
-            Value = "JBSWY3DPEHPK3PXP",
-        });
-    }
-
-    [Fact]
-    public async Task DataProtectionKeyRoundTrips() =>
-        await AssertRoundTripsAsync(new DataProtectionKey
-        {
-            FriendlyName = "key-3f2a9c1e",
-            Xml = """<key id="3f2a9c1e" version="1" />""",
-        });
 
     [Fact]
     public async Task EmailOutboxMessageRoundTrips()
@@ -110,15 +68,6 @@ public sealed class Lot4EntityRoundTripTests(PostgresContainerFixture postgres)
                 "SELECT concat_ws('|', actor_type, action, outcome, target_type) FROM audit_log",
                 Cancellation));
     }
-
-    private async Task<int> SeedUserAsync() =>
-        (await SeedAsync(new User
-        {
-            Email = "owner@example.test",
-            UserName = "owner",
-            Roles = [],
-            CreatedAt = At.AddTicks(-1_234_560),
-        })).Id;
 
     // In a context of its own, so that the entity read next comes from the database.
     private async Task<T> SeedAsync<T>(T entity)

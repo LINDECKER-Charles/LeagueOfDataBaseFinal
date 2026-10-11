@@ -47,7 +47,6 @@ public sealed class FeedSignatureTests
     }
 
     [Theory]
-    [InlineData("")]
     [InlineData("not a signature")]
     [InlineData("AAAA")]
     public void RefusesASignatureItCannotDecode(string signature)

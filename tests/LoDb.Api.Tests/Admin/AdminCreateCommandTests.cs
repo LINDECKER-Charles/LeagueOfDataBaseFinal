@@ -22,15 +22,6 @@ public sealed class AdminCreateCommandTests(PostgresContainerFixture postgres)
     private const string EnrollmentPath = "/api/admin/mfa/enrollment";
 
     [Fact]
-    public void ApiDeclaresTheCommand()
-    {
-        var catalog = CliCommandCatalog.Discover(typeof(Program).Assembly);
-
-        var command = Assert.Single(catalog.Commands, static c => c.Name == "admin create");
-        Assert.True(command.RequiresHost);
-    }
-
-    [Fact]
     public async Task TheFirstAdministratorIsCreatedThenEnrols()
     {
         var (exit, output) = await RunAsync("--email", "  First.Admin@Example.TEST ");
@@ -104,16 +95,11 @@ public sealed class AdminCreateCommandTests(PostgresContainerFixture postgres)
         Assert.Equal(["1"], await App.QueryAsync("SELECT count(*)::text FROM identity_user_roles"));
     }
 
-    // Arguments separated by one space; "-" for none.
-    [Theory]
-    [InlineData("-")]
-    [InlineData("--email")]
-    [InlineData("--email not-an-email")]
-    [InlineData("--email a@example.test --email b@example.test")]
-    [InlineData("--mail a@example.test")]
-    public async Task InvalidArgumentsCreateNothing(string line)
+    // The other invalid uses are AdminEmailArgumentsTests'; the command maps them alike.
+    [Fact]
+    public async Task InvalidArgumentsCreateNothing()
     {
-        var (exit, _) = await RunAsync(line == "-" ? [] : line.Split(' '));
+        var (exit, _) = await RunAsync("--email", "not-an-email");
 
         Assert.Equal(CliExitCodes.Usage, exit);
         Assert.Equal(["0"], await App.QueryAsync("SELECT count(*)::text FROM users"));

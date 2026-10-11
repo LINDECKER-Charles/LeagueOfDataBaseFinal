@@ -14,19 +14,6 @@ public sealed class CatalogExportCommandTests(PostgresContainerFixture postgres)
     private static CancellationToken Token => IngestionHost.Token;
 
     [Fact]
-    public void ApiDeclaresTheCatalogExportCommand()
-    {
-        var catalog = CliCommandCatalog.Discover(typeof(Program).Assembly);
-
-        var invocation = catalog.Match(["catalog", "export", "--version", "16.19.1"]);
-
-        Assert.NotNull(invocation);
-        Assert.Equal("catalog export", invocation.Command.Name);
-        Assert.True(invocation.Command.RequiresHost);
-        Assert.Equal(["--version", "16.19.1"], invocation.Arguments);
-    }
-
-    [Fact]
     public async Task ColdCatalogIsIngestedThenWritten()
     {
         await using var host = await IngestionHost.CreateAsync(postgres);

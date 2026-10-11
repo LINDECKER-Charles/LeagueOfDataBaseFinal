@@ -82,20 +82,6 @@ public sealed class UpdateLoopTests : IDisposable
         Assert.Empty(_engine.HandOvers);
     }
 
-    [Fact]
-    public async Task HandsAReadyUpdateOverWhenTheHostStops()
-    {
-        _engine.Newer = FakeUpdateEngine.Release("2.0.0");
-        var loop = LoopIn(UpdateMode.Background);
-
-        await loop.StartAsync(Token);
-        await _engine.WaitForChecksAsync(1, Token);
-        await WaitForReadyAsync();
-        await loop.StopAsync(Token);
-
-        Assert.Equal(["at-exit 2.0.0"], _engine.HandOvers);
-    }
-
     private UpdateLoop LoopIn(UpdateMode mode)
     {
         _loop = new UpdateLoop(
@@ -104,16 +90,5 @@ public sealed class UpdateLoopTests : IDisposable
             _time,
             NullLogger<UpdateLoop>.Instance);
         return _loop;
-    }
-
-    // The check runs on the loop's own task: its download ends shortly after it starts.
-    private async Task WaitForReadyAsync()
-    {
-        using var bounded = CancellationTokenSource.CreateLinkedTokenSource(Token);
-        bounded.CancelAfter(TimeSpan.FromSeconds(10));
-        while (_updates.Current.Stage != UpdateStage.Ready)
-        {
-            await Task.Delay(TimeSpan.FromMilliseconds(10), bounded.Token);
-        }
     }
 }

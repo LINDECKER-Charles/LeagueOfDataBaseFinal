@@ -9,24 +9,17 @@ namespace LoDb.Ingestion.Tests.Catalog;
 /// </summary>
 public sealed class ChampionHotlinksTests
 {
+    private const string ArtRoot = "https://ddragon.leagueoflegends.com/cdn/img/champion/";
     private const string VideoRoot = "https://d28xe8vt774jo5.cloudfront.net/champion-abilities/";
 
-    [Theory]
-    [InlineData("Fiddlesticks", ChampionArtKind.Splash, 0, "splash/FiddleSticks_0.jpg")]
-    [InlineData("Fiddlesticks", ChampionArtKind.Centered, 27, "centered/FiddleSticks_27.jpg")]
-    [InlineData("Ahri", ChampionArtKind.Loading, 86, "loading/Ahri_86.jpg")]
-    [InlineData("MonkeyKing", ChampionArtKind.Splash, 1, "splash/MonkeyKing_1.jpg")]
-    public void ArtIsLinkedUnderRiotsSpelling(
-        string championId,
-        ChampionArtKind kind,
-        int skinNumber,
-        string path)
+    // The spelling and the kinds are ChampionArt's (domain tests): one row proves the link
+    // goes through it.
+    [Fact]
+    public void ArtIsLinkedUnderRiotsSpelling()
     {
-        var url = ChampionHotlinks.Art(championId, kind, skinNumber);
+        var url = ChampionHotlinks.Art("Fiddlesticks", ChampionArtKind.Centered, 27);
 
-        Assert.Equal(
-            new Uri($"https://ddragon.leagueoflegends.com/cdn/img/champion/{path}"),
-            url);
+        Assert.Equal(new Uri($"{ArtRoot}centered/FiddleSticks_27.jpg"), url);
     }
 
     [Fact]

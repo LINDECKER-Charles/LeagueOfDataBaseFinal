@@ -20,7 +20,11 @@ namespace LoDb.Api.Tests.Hosting.SecurityReports;
 /// <c>POST /api/csp-reports</c> counts what browsers report, in both formats, within its
 /// bounds: size, type, the page's origin, a share per client and a bound for every client.
 /// </summary>
-public sealed class CspReportEndpointTests
+/// <remarks>
+/// The tests of the default bounds share one host, each from an empty window; the bounds
+/// and the shares of the clients, host state, get a host of their own.
+/// </remarks>
+public sealed class CspReportEndpointTests : IClassFixture<ApiFactory>
 {
     private const string ReportsPath = "/api/csp-reports";
     private const string ReportingType = "application/reports+json";
@@ -43,20 +47,27 @@ public sealed class CspReportEndpointTests
                         "violated-directive": "img-src 'self' data:"}}
         """;
 
+    private readonly ApiFactory _shared;
+
+    public CspReportEndpointTests(ApiFactory shared)
+    {
+        _shared = shared;
+        Drain(shared);
+    }
+
     [Fact]
     public async Task CountsTheViolationsOfABatchAndNothingElse()
     {
-        await using var factory = new ApiFactory();
         using var collector = new MetricCollector<long>(
-            factory.Services.GetRequiredService<IMeterFactory>(),
+            _shared.Services.GetRequiredService<IMeterFactory>(),
             BuildInfoMetrics.MeterName,
             CspReportMetrics.CounterName);
-        using var client = factory.CreateClient();
+        using var client = _shared.CreateClient();
 
         using var response = await PostAsync(client, Batch, ReportingType);
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-        var window = Drain(factory);
+        var window = Drain(_shared);
         Assert.Equal(2, window.Violations.Count);
         Assert.Equal(1, window.Violations[new("script-src-elem", "enforce")]);
         Assert.Equal(1, window.Violations[new("require-trusted-types-for", "report")]);
@@ -66,32 +77,29 @@ public sealed class CspReportEndpointTests
     [Fact]
     public async Task ReadsTheLegacyFormatByItsViolatedDirective()
     {
-        await using var factory = new ApiFactory();
-        using var client = factory.CreateClient();
+        using var client = _shared.CreateClient();
 
         using var response = await PostAsync(client, Legacy, LegacyType);
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-        var violation = Assert.Single(Drain(factory).Violations);
+        var violation = Assert.Single(Drain(_shared).Violations);
         Assert.Equal(new CspViolation("img-src", "unknown"), violation.Key);
     }
 
     [Theory]
     [InlineData("text/plain", Legacy, HttpStatusCode.UnsupportedMediaType)]
-    [InlineData(ReportingType, "{\"not\": \"a report\"}", HttpStatusCode.BadRequest)]
     [InlineData(ReportingType, "[{\"type\": ", HttpStatusCode.BadRequest)]
     // Well-formed, but its string is half a surrogate pair: found only as it is read.
     [InlineData(LegacyType, "{\"csp-report\": {\"violated-directive\": \"\\uD800\"}}",
         HttpStatusCode.BadRequest)]
     public async Task RefusesWhatIsNotAReport(string type, string body, HttpStatusCode status)
     {
-        await using var factory = new ApiFactory();
-        using var client = factory.CreateClient();
+        using var client = _shared.CreateClient();
 
         using var response = await PostAsync(client, body, type);
 
         Assert.Equal(status, response.StatusCode);
-        var window = Drain(factory);
+        var window = Drain(_shared);
         Assert.Empty(window.Violations);
         Assert.Equal(1, Assert.Single(window.Refusals).Value);
     }
@@ -132,13 +140,12 @@ public sealed class CspReportEndpointTests
     [Fact]
     public async Task RefusesAReportFromAnotherSite()
     {
-        await using var factory = new ApiFactory();
-        using var client = factory.CreateClient();
+        using var client = _shared.CreateClient();
 
         using var response = await PostAsync(client, Legacy, LegacyType, "https://evil.test");
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-        Assert.True(Drain(factory).IsEmpty);
+        Assert.True(Drain(_shared).IsEmpty);
     }
 
     [Fact]

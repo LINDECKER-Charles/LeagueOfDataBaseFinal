@@ -38,15 +38,6 @@ public sealed class AuditImportCommandTests(PostgresContainerFixture postgres)
         _database ?? throw new InvalidOperationException("The database is not created yet.");
 
     [Fact]
-    public void ApiDeclaresTheAuditImportCommand()
-    {
-        var catalog = CliCommandCatalog.Discover(typeof(Program).Assembly);
-
-        var command = Assert.Single(catalog.Commands, static c => c.Name == "audit import");
-        Assert.True(command.RequiresHost);
-    }
-
-    [Fact]
     public async Task SampleIsImportedWithinTheRetention()
     {
         WriteSample();

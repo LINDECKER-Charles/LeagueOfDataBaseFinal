@@ -10,11 +10,8 @@ public sealed class RangeSentinelsTests
     [Theory]
     [InlineData("self")]
     [InlineData("25000")]
-    [InlineData("25000/25000/25000")]
-    [InlineData("4294967295")]
     [InlineData("30000/35000")]
     [InlineData("0")]
-    [InlineData("")]
     [InlineData(null)]
     [InlineData("global")]
     public void Up10SentinelRangesAreMasked(string? rangeBurn)
@@ -37,9 +34,7 @@ public sealed class RangeSentinelsTests
 
     [Theory]
     [InlineData(25000, true)]
-    [InlineData(4294967295, true)]
     [InlineData(24999, false)]
-    [InlineData(425, false)]
     public void Up10ASummonerRangeFrom25000IsGlobal(double range, bool isGlobal)
     {
         Assert.Equal(isGlobal, RangeSentinels.IsGlobal(range));

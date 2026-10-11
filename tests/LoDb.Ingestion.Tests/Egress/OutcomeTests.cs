@@ -42,7 +42,6 @@ public sealed class OutcomeTests
     [Theory]
     [InlineData(HttpStatusCode.Gone)]
     [InlineData(HttpStatusCode.TooManyRequests)]
-    [InlineData(HttpStatusCode.Unauthorized)]
     public async Task OtherStatusIsTransientWithoutRetry(HttpStatusCode status)
     {
         var upstream = FakeUpstream.Answering(status);

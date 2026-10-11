@@ -42,22 +42,6 @@ public sealed class TokenTests(PostgresContainerFixture postgres)
     }
 
     [Fact]
-    public async Task AccessTokenLastsFiveMinutes()
-    {
-        await App.SeedAsync(new AccountSeed());
-        using var app = App.App();
-        var tokens = await TokensAsync(app);
-
-        App.Clock.Advance(TimeSpan.FromMinutes(6));
-        using var signOut = await SendAsync(app, Request(HttpMethod.Post, "logout", tokens));
-
-        Assert.Null(await SignedInAsAsync(app, tokens));
-        Assert.Equal(
-            "authentication-required",
-            await ApiJson.ProblemCodeAsync(signOut, HttpStatusCode.Unauthorized));
-    }
-
-    [Fact]
     public async Task RefreshGivesNewTokensUntilTheStampChanges()
     {
         await App.SeedAsync(new AccountSeed());

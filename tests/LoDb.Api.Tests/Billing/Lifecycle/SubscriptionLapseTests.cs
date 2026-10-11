@@ -23,14 +23,14 @@ public sealed class SubscriptionLapseTests(PostgresContainerFixture postgres)
 
     private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
 
-    [Theory]
-    [InlineData("past_due")]
-    [InlineData("unpaid")]
-    public async Task LapsedSubscriptionFallsBackToTheFreePlan(string status)
+    // "unpaid", the other lapse, falls back as well in OlderEventChangesNothing.
+    [Fact]
+    public async Task LapsedSubscriptionFallsBackToTheFreePlan()
     {
         var key = await SubscribedKeyAsync();
 
-        await DeliverAsync(StripePayloads.Later(StripePayloads.Updated("evt_lapse", status), 1));
+        await DeliverAsync(
+            StripePayloads.Later(StripePayloads.Updated("evt_lapse", "past_due"), 1));
 
         await AssertFreeAsync(key);
         Assert.Equal(

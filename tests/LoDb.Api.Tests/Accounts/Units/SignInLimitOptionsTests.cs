@@ -1,5 +1,7 @@
-using LoDb.Testing;
-using Microsoft.Extensions.Options;
+using LoDb.Api.Modules.Accounts.Security;
+using LoDb.Api.Modules.Accounts.Security.Limits;
+using LoDb.Api.Tests.Hosting.Support;
+using Microsoft.AspNetCore.Builder;
 
 namespace LoDb.Api.Tests.Accounts.Units;
 
@@ -15,38 +17,29 @@ public sealed class SignInLimitOptionsTests
 
     [Theory]
     [InlineData("SignInFailuresPerIdentifier", "5")]
-    [InlineData("SignInFailuresPerIdentifier", "0")]
     [InlineData("SignInPerWindow", "0")]
-    [InlineData("PasswordConfirmsPerWindow", "0")]
     [InlineData("AccountWindow", "00:00:01")]
-    public async Task BoundOutOfRangeStopsTheHost(string key, string value)
-    {
-        await using var factory = new ApiFactory
-        {
-            Settings = new Dictionary<string, string?> { [Section + key] = value },
-        };
-
-        Assert.Throws<OptionsValidationException>(() => factory.Services);
-    }
+    public void BoundOutOfRangeStopsTheHost(string key, string value) =>
+        StartupValidation.RefusalOf<SignInLimitOptions>(
+            Register,
+            new Dictionary<string, string?> { [Section + key] = value });
 
     // Attempts checked together under two permits may both fail past the bound.
     [Fact]
-    public async Task SecondHashingPermitNeedsOneFailureLess()
+    public void SecondHashingPermitNeedsOneFailureLess()
     {
-        await using var tooMany = new ApiFactory
-        {
-            Settings = new Dictionary<string, string?> { [HashingPermits] = "2" },
-        };
-        await using var fitting = new ApiFactory
-        {
-            Settings = new Dictionary<string, string?>
+        StartupValidation.RefusalOf<SignInLimitOptions>(
+            Register,
+            new Dictionary<string, string?> { [HashingPermits] = "2" });
+        StartupValidation.Run(
+            Register,
+            new Dictionary<string, string?>
             {
                 [HashingPermits] = "2",
                 [FailuresPerIdentifier] = "3",
-            },
-        };
-
-        Assert.Throws<OptionsValidationException>(() => tooMany.Services);
-        Assert.NotNull(fitting.Services);
+            });
     }
+
+    private static void Register(WebApplicationBuilder builder) =>
+        builder.Services.AddAccountsProtection(builder.Configuration);
 }

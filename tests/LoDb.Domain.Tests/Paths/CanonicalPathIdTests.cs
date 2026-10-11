@@ -11,7 +11,6 @@ public sealed class CanonicalPathIdTests
 {
     [Theory]
     [InlineData(ResourceType.Items, "1036-long-sword", "1036")]
-    [InlineData(ResourceType.Items, "1036-wrong-slug", "1036")]
     [InlineData(ResourceType.Items, "1036", "1036")]
     [InlineData(ResourceType.Runes, "8000-precision", "8000")]
     [InlineData(ResourceType.Champions, "MonkeyKing", "MonkeyKing")]

@@ -24,10 +24,11 @@ public sealed class ApiProxyTests : IAsyncLifetime
         await _api.DisposeAsync();
     }
 
+    // An unsafe method: the page's own origin passes the loopback guard, then is dropped.
     [Fact]
     public async Task ReplacesTheCredentialsAndTheOriginOfThePageByTheAppHeader()
     {
-        using var request = new HttpRequestMessage(HttpMethod.Get, FakeApi.EchoPath);
+        using var request = new HttpRequestMessage(HttpMethod.Post, FakeApi.EchoPath);
         request.Headers.Add("Cookie", "lod_theme=zaun");
         request.Headers.Add("Authorization", "Bearer forged-by-the-page");
         request.Headers.Add("Origin", _host.Host.Address.GetLeftPart(UriPartial.Authority));
@@ -66,21 +67,5 @@ public sealed class ApiProxyTests : IAsyncLifetime
         var received = await _host.EchoAsync();
 
         Assert.Equal($"Bearer {_api.LastAccessToken}", (string?)received["authorization"]);
-    }
-
-    [Fact]
-    public async Task RelaysUnsafeRequestsOfItsPageWithoutTheirOrigin()
-    {
-        using var request = new HttpRequestMessage(HttpMethod.Post, FakeApi.EchoPath);
-        request.Headers.Add("Origin", _host.Host.Address.GetLeftPart(UriPartial.Authority));
-
-        using var response = await _host.Client.SendAsync(
-            request,
-            TestContext.Current.CancellationToken);
-        var received = await response.Content.ReadFromJsonAsync<JsonObject>(
-            TestContext.Current.CancellationToken);
-
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Equal(string.Empty, (string?)received!["origin"]);
     }
 }

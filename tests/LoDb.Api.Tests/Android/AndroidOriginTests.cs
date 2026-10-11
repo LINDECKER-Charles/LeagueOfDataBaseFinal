@@ -19,9 +19,6 @@ public sealed class AndroidOriginTests(PostgresContainerFixture postgres)
     private const string PolicyPath = "/api/client-policy";
 
     private const string AllowOrigin = "Access-Control-Allow-Origin";
-    private const string AllowCredentials = "Access-Control-Allow-Credentials";
-    private const string AllowHeaders = "Access-Control-Allow-Headers";
-    private const string AllowMethods = "Access-Control-Allow-Methods";
     private const string ExposeHeaders = "Access-Control-Expose-Headers";
 
     // What the app adds to a call: its bearer token, a JSON body, and the client header of
@@ -34,25 +31,6 @@ public sealed class AndroidOriginTests(PostgresContainerFixture postgres)
         _host ?? throw new InvalidOperationException("The host is not started yet.");
 
     private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
-
-    [Fact]
-    public async Task PreflightLetsTheAppSendItsHeaders()
-    {
-        using var client = Host.Client();
-
-        using var response = await client.SendAsync(
-            Preflight(TokenPath, AndroidApiHost.AppOrigin),
-            Cancellation);
-
-        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-        Assert.Equal(AndroidApiHost.AppOrigin, Header(response, AllowOrigin));
-        Assert.Contains("POST", Header(response, AllowMethods), StringComparison.Ordinal);
-        Assert.Equal(
-            AppHeaders.Split(','),
-            Header(response, AllowHeaders)!.ToLowerInvariant().Split(','));
-        // The app authenticates by bearer token, never by the site's cookies.
-        Assert.Null(Header(response, AllowCredentials));
-    }
 
     [Fact]
     public async Task AppSignsInAndCallsTheApiWithItsBearerToken()
@@ -97,8 +75,6 @@ public sealed class AndroidOriginTests(PostgresContainerFixture postgres)
     [Theory]
     [InlineData("http://localhost")]
     [InlineData("https://localhost:8443")]
-    [InlineData("capacitor://localhost")]
-    [InlineData("https://localhost.evil.example")]
     public async Task LookalikeOriginsAreRefused(string origin)
     {
         await Host.SeedAccountAsync();

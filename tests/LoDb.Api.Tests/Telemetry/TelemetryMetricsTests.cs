@@ -18,23 +18,34 @@ public sealed partial class TelemetryMetricsTests
     private static readonly Uri MetricsPort = new("http://localhost:9464");
     private static readonly Uri ApiPort = new("http://localhost:8080");
 
-    [Theory]
-    [InlineData("Microsoft.AspNetCore.Identity")]
-    [InlineData("Microsoft.AspNetCore.Authentication")]
-    [InlineData("Microsoft.AspNetCore.Authorization")]
-    public async Task FrameworkSecurityMeterReachesTheScrape(string meterName)
+    private static readonly string[] FrameworkSecurityMeters =
+    [
+        "Microsoft.AspNetCore.Identity",
+        "Microsoft.AspNetCore.Authentication",
+        "Microsoft.AspNetCore.Authorization",
+    ];
+
+    [Fact]
+    public async Task FrameworkSecurityMetersReachTheScrape()
     {
         await using var factory = new ApiFactory();
         using var scraper = Client(factory, MetricsPort);
-        using var meter = new Meter(meterName);
-        meter.CreateCounter<long>(ProbeCounter).Add(1);
+        var meters = FrameworkSecurityMeters.Select(static name => new Meter(name)).ToList();
+        try
+        {
+            meters.ForEach(static meter => meter.CreateCounter<long>(ProbeCounter).Add(1));
 
-        var exposition = await ScrapeAsync(scraper);
+            var exposition = await ScrapeAsync(scraper);
 
-        Assert.Contains(
-            $"lodb_tests_meter_probe_total{{otel_scope_name=\"{meterName}\"",
-            exposition,
-            StringComparison.Ordinal);
+            Assert.All(FrameworkSecurityMeters, name => Assert.Contains(
+                $"lodb_tests_meter_probe_total{{otel_scope_name=\"{name}\"",
+                exposition,
+                StringComparison.Ordinal));
+        }
+        finally
+        {
+            meters.ForEach(static meter => meter.Dispose());
+        }
     }
 
     [Fact]

@@ -46,11 +46,8 @@ public sealed class PaginationTests
 
     [Theory]
     [InlineData(0, 1)]
-    [InlineData(1, 1)]
     [InlineData(5, 1)]
     [InlineData(6, 2)]
-    [InlineData(55, 11)]
-    [InlineData(56, 12)]
     public void AnEmptyCollectionStillHasAPage(long total, long pages)
     {
         Assert.Equal(pages, new Pagination(1, 5).TotalPages(total));

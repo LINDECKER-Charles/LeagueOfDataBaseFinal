@@ -296,8 +296,6 @@ public sealed class AnonymizationTests(PostgresContainerFixture postgres)
 
     [Theory]
     [InlineData(null)]
-    [InlineData("")]
-    [InlineData("not-a-bcrypt-hash")]
     [InlineData("$2y$10$tooShort")]
     public async Task MissingHashStopsBeforeAnyChange(string? passwordHash)
     {

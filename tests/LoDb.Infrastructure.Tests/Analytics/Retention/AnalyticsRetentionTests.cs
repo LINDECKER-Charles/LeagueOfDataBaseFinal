@@ -80,12 +80,11 @@ public sealed class AnalyticsRetentionTests(PostgresContainerFixture postgres)
         Assert.Null(views[1].Ip);
     }
 
-    // The job runs once a period at most: a host restarted before the next run is due waits
-    // a whole period from its start (37 and 47 hours here), a failed run one more (71).
+    // The job runs once a period at most: the next run comes a period later (26 hours here);
+    // a host restarted before it is due waits a whole period from its start, and a failed run
+    // one more (71 at the latest). The erasure window covers every delay in between.
     [Theory]
     [InlineData(26)]
-    [InlineData(37)]
-    [InlineData(47)]
     [InlineData(71)]
     public async Task DelayedRunLeavesNoViewBehind(int hoursLater)
     {

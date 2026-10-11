@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using LoDb.Api.Workers;
 using LoDb.Api.Workers.Ingestion;
 using LoDb.Infrastructure.Jobs;
 using LoDb.Testing;
@@ -9,8 +8,9 @@ using Microsoft.Extensions.DependencyInjection;
 namespace LoDb.Api.Tests.Ingestion;
 
 /// <summary>
-/// The patch watch runs once per period and queues the newest version, which the ingestion
-/// worker then ingests whole: the path of a new patch from Data Dragon to the API.
+/// The ingestion workers resolve from the zones; the patch watch runs once per period and
+/// queues the newest version, which the ingestion worker then ingests whole: the path of a
+/// new patch from Data Dragon to the API.
 /// </summary>
 public sealed class IngestionWorkersTests(PostgresContainerFixture postgres)
 {
@@ -22,36 +22,13 @@ public sealed class IngestionWorkersTests(PostgresContainerFixture postgres)
     private static CancellationToken Token => IngestionHost.Token;
 
     [Fact]
-    public void ConventionRegistersTheIngestionWorkers()
-    {
-        var workers = ConventionalWorkers.Discover(typeof(Program).Assembly);
-
-        Assert.Contains(typeof(PatchWatchJob), workers);
-        Assert.Contains(typeof(VersionIngestionWorker), workers);
-        Assert.Contains(typeof(OnDemandIngestionWorker), workers);
-    }
-
-    [Fact]
-    public async Task WorkersResolveFromTheZones()
-    {
-        await using var host = await IngestionHost.CreateAsync(postgres);
-        await using var services = host.BuildServices(DdragonFixtures.CreateReplay());
-
-        using var job = ActivatorUtilities.CreateInstance<PatchWatchJob>(services);
-        using var versions = ActivatorUtilities.CreateInstance<VersionIngestionWorker>(services);
-        using var onDemand = ActivatorUtilities.CreateInstance<OnDemandIngestionWorker>(services);
-
-        Assert.Equal("ingestion.patch-watch", job.Name);
-        Assert.Equal(TimeSpan.FromMinutes(10), job.Period);
-    }
-
-    [Fact]
     public async Task WatchedVersionIsIngestedByTheWorker()
     {
         await using var host = await IngestionHost.CreateAsync(postgres);
         await using var services = host.BuildServices(DdragonFixtures.CreateReplay());
         using var job = ActivatorUtilities.CreateInstance<PatchWatchJob>(services);
         using var worker = ActivatorUtilities.CreateInstance<VersionIngestionWorker>(services);
+        using var onDemand = ActivatorUtilities.CreateInstance<OnDemandIngestionWorker>(services);
 
         var first = await job.RunIfDueAsync(Token);
         var second = await job.RunIfDueAsync(Token);
@@ -59,6 +36,7 @@ public sealed class IngestionWorkersTests(PostgresContainerFixture postgres)
         var promoted = await WaitForPromotionAsync(host);
         await worker.StopAsync(Token);
 
+        Assert.Equal(("ingestion.patch-watch", TimeSpan.FromMinutes(10)), (job.Name, job.Period));
         Assert.Equal(JobRunOutcome.Succeeded, first);
         Assert.Equal(JobRunOutcome.NotDue, second);
         Assert.Equal(["16.19.1"], promoted);

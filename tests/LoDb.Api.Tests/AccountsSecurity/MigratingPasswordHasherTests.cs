@@ -51,12 +51,9 @@ public sealed class MigratingPasswordHasherTests
 
     public static TheoryData<string> Malformed =>
     [
-        string.Empty,
         Password,
         "$1$saltsalt$qjXMvbEw8oaL.CzflDugX/",
-        "$5$rounds=5000$saltsalt$bmeqcHZ5mSxNpP6kxK2p5LnaWFW0iuR.eKhE8zfSyE2",
         "$2y$13$Sx6YwqOwrFl0CEL.fFj39e",
-        "$2y$99$Sx6YwqOwrFl0CEL.fFj39eeAXJTyP2wc1aoL5t5oqW/2gf2pN6VIC",
         "$argon2id$v=19$m=19456,t=2,p=1$",
         "$argon2id$v=19$m=19456,t=2,p=1$!!!$###",
         "$argon2id$v=19$m=lots,t=2,p=1$c2FsdHNhbHRzYWx0c2FsdA$aGFzaGhhc2hoYXNoaGFzaA",

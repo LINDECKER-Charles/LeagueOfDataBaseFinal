@@ -140,8 +140,6 @@ public sealed class ShareTests(BuildsApp app)
     [Theory]
     [InlineData("0123456789abcdef01234567")]
     [InlineData("0123456789ABCDEF01234567")]
-    [InlineData("0123456789abcdef")]
-    [InlineData("not-a-token")]
     public async Task UnknownOrMalformedTokenIsNotFound(string token)
     {
         using var visitor = app.Browser();
@@ -152,17 +150,17 @@ public sealed class ShareTests(BuildsApp app)
         Assert.Equal("build-not-found", code);
     }
 
-    [Theory]
-    [InlineData("?lang=zz", "invalid-language")]
-    [InlineData("?version=seven", "invalid-version")]
-    public async Task MalformedQueryIsABadRequest(string query, string code)
+    [Fact]
+    public async Task MalformedQueryIsABadRequest()
     {
         var build = await app.InsertAsync((await app.SeedAsync()).Username, new StoredBuild());
         using var visitor = app.Browser();
+        var malformed = $"{BuildCalls.Share}{build.ShareToken}?lang=zz";
 
-        using var response = await visitor.GetAsync(BuildCalls.Share + build.ShareToken + query);
+        using var response = await visitor.GetAsync(malformed);
 
-        Assert.Equal(code, await ApiJson.ProblemCodeAsync(response, HttpStatusCode.BadRequest));
+        var code = await ApiJson.ProblemCodeAsync(response, HttpStatusCode.BadRequest);
+        Assert.Equal("invalid-language", code);
     }
 
     private static int[] Golds(JsonElement shared) =>

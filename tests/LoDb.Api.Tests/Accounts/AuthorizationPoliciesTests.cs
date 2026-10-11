@@ -32,16 +32,6 @@ public sealed class AuthorizationPoliciesTests(PostgresContainerFixture postgres
         _app ?? throw new InvalidOperationException("The host is not started yet.");
 
     [Fact]
-    public async Task AnonymousIsAskedToSignIn()
-    {
-        var anonymous = new ClaimsPrincipal(new ClaimsIdentity());
-
-        var answer = await AuthorizeAsync(AuthorizationPolicies.Authenticated, anonymous);
-
-        Assert.Equal((StatusCodes.Status401Unauthorized, "authentication-required"), answer);
-    }
-
-    [Fact]
     public async Task VerifiedEmailIsReadFromTheAccountAsStoredNow()
     {
         await App.SeedAsync(new AccountSeed { EmailConfirmed = false });

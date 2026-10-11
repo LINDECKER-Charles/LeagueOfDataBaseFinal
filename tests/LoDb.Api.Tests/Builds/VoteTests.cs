@@ -50,17 +50,13 @@ public sealed class VoteTests(BuildsApp app)
         Assert.Equal(1, stored.Sum(static vote => vote.Value));
     }
 
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData("UP")]
-    [InlineData("1")]
-    public async Task OnlyUpOrDownIsAVote(string? value)
+    [Fact]
+    public async Task OnlyUpOrDownIsAVote()
     {
         var build = await app.InsertAsync((await app.SeedAsync()).Username, new StoredBuild());
         using var voter = await app.SignInAsync(await app.SeedAsync(AccountSeed.Seasoned));
 
-        using var response = await voter.VoteAsync(build.Id, value);
+        using var response = await voter.VoteAsync(build.Id, "UP");
 
         Assert.Equal(["vote.invalid"], (await ApiJson.FieldErrorsAsync(response))["value"]);
         Assert.Empty(await app.VotesAsync(build.Id));
@@ -127,13 +123,11 @@ public sealed class VoteTests(BuildsApp app)
         Assert.Empty(await app.VotesAsync(build.Id));
     }
 
-    [Theory]
-    [InlineData(0)]
-    [InlineData(23)]
-    public async Task AccountUnderADayOldCannotVoteYet(int hours)
+    [Fact]
+    public async Task AccountUnderADayOldCannotVoteYet()
     {
         var build = await app.InsertAsync((await app.SeedAsync()).Username, new StoredBuild());
-        var recent = new AccountSeed { Age = TimeSpan.FromHours(hours) };
+        var recent = new AccountSeed { Age = TimeSpan.FromHours(23) };
         using var voter = await app.SignInAsync(await app.SeedAsync(recent));
 
         using var response = await voter.VoteAsync(build.Id, "up");

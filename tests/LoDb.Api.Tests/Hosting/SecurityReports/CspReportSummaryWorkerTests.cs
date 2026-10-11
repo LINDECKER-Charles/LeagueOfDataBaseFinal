@@ -37,12 +37,17 @@ public sealed class CspReportSummaryWorkerTests
         await worker.StopAsync(Token);
 
         var line = Assert.Single(logger.Collector.GetSnapshot());
-        Assert.Equal("web.csp.violated", line.Id.Name);
-        Assert.Equal(LogLevel.Warning, line.Level);
         Assert.Equal(
-            "51 policy violations reported in 60 s: script-src-elem/enforce=50,"
-                + " trusted-types/report=1; bodies refused: Oversized=1; shed: 1.",
-            line.Message);
+            ("web.csp.violated", LogLevel.Warning, "51", "1"),
+            (line.Id.Name, line.Level, line.GetStructuredStateValue("Violations"),
+                line.GetStructuredStateValue("Shed")));
+        var directives = line.GetStructuredStateValue("Directives");
+        Assert.Contains("script-src-elem/enforce=50", directives, StringComparison.Ordinal);
+        Assert.Contains("trusted-types/report=1", directives, StringComparison.Ordinal);
+        Assert.Contains(
+            "Oversized=1",
+            line.GetStructuredStateValue("Refusals"),
+            StringComparison.Ordinal);
     }
 
     [Fact]

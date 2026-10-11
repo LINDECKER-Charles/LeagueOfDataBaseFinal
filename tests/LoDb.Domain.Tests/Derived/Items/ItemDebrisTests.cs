@@ -63,27 +63,22 @@ public sealed class ItemDebrisTests
         Assert.False(ItemDebris.IsDebris(ItemSamples.Named("3901", name), "Fire at Will"));
     }
 
-    [Theory]
-    [InlineData("{{ Item_Name }}")]
-    [InlineData("@ItemName@")]
-    [InlineData("  ")]
-    [InlineData(null)]
-    public void Up10ANameMadeOfUnresolvedTokensIsDebris(string? rawName)
+    // Token stripping and trimming are DdragonText's (Text tests): every such name ends empty,
+    // the one branch read here.
+    [Fact]
+    public void Up10ANameMadeOfUnresolvedTokensIsDebris()
     {
-        var item = ItemSamples.Named("9999", ItemDebris.DisplayName(rawName));
+        var item = ItemSamples.Named("9999", ItemDebris.DisplayName("{{ Item_Name }}"));
 
         Assert.True(ItemDebris.IsDebris(item, item.Name));
     }
 
-    [Theory]
-    [InlineData("Long Sword", "Long Sword")]
-    [InlineData(" Long Sword ", "Long Sword")]
-    [InlineData("Doran's Blade", "Doran's Blade")]
-    public void APlainNameIsKept(string rawName, string expected)
+    [Fact]
+    public void APlainNameIsKept()
     {
-        var name = ItemDebris.DisplayName(rawName);
+        var name = ItemDebris.DisplayName("Long Sword");
 
-        Assert.Equal(expected, name);
+        Assert.Equal("Long Sword", name);
         Assert.False(ItemDebris.IsDebris(ItemSamples.Named("1036", name), name));
     }
 }

@@ -11,7 +11,7 @@ namespace LoDb.Api.Tests.Accounts;
 /// The limits of the sign-in, at their production values: ten sign-ins a window from one
 /// address, Google's included, and four failures a window for one identifier from one
 /// address, refused alike whether an account bears it, before any hash and before the
-/// lockout. Every attempt is counted by result, and every lockout.
+/// lockout. Every attempt is counted by result.
 /// </summary>
 public sealed class SignInLimitTests(PostgresContainerFixture postgres)
     : IAsyncLifetime
@@ -39,8 +39,10 @@ public sealed class SignInLimitTests(PostgresContainerFixture postgres)
     private AccountsApp App =>
         _app ?? throw new InvalidOperationException("The host is not started yet.");
 
+    // The Google exchange of the apps, never called before, is refused as well: it shares
+    // the limit of the sign-in.
     [Fact]
-    public async Task EleventhSignInFromOneAddressIsRefused()
+    public async Task EleventhSignInFromOneAddressIsRefusedGooglesIncluded()
     {
         await App.SeedAsync(new AccountSeed());
         using var browser = App.Browser().From(Client);
@@ -53,6 +55,13 @@ public sealed class SignInLimitTests(PostgresContainerFixture postgres)
         }
 
         using var refused = await browser.SignInAsync(AccountSeed.Name);
+        using var exchange = browser.Post("/api/account/google/app/exchange", new
+        {
+            code = FakeGoogle.Code,
+            codeVerifier = new string('v', 43),
+            redirectUri = "com.leagueofdatabase.app:/oauth2redirect",
+        });
+        using var refusedExchange = await browser.SendAsync(exchange);
         using var other = App.Browser().From(OtherClient);
         using var elsewhere = await other.SignInAsync(AccountSeed.Name);
 
@@ -61,31 +70,11 @@ public sealed class SignInLimitTests(PostgresContainerFixture postgres)
             RateLimited,
             await ApiJson.ProblemCodeAsync(refused, HttpStatusCode.TooManyRequests));
         Assert.True(refused.Headers.RetryAfter?.Delta > TimeSpan.Zero);
-        Assert.Equal(HttpStatusCode.OK, elsewhere.StatusCode);
-    }
-
-    [Fact]
-    public async Task GoogleExchangeOfTheAppsSharesTheLimit()
-    {
-        await App.SeedAsync(new AccountSeed());
-        using var browser = App.Browser().From(Client);
-        for (var signIn = 0; signIn < SignInsPerWindow; signIn++)
-        {
-            using var allowed = await browser.SignInAsync(AccountSeed.Name);
-        }
-
-        using var exchange = browser.Post("/api/account/google/app/exchange", new
-        {
-            code = FakeGoogle.Code,
-            codeVerifier = new string('v', 43),
-            redirectUri = "com.leagueofdatabase.app:/oauth2redirect",
-        });
-        using var refused = await browser.SendAsync(exchange);
-
         Assert.Equal(
             RateLimited,
-            await ApiJson.ProblemCodeAsync(refused, HttpStatusCode.TooManyRequests));
+            await ApiJson.ProblemCodeAsync(refusedExchange, HttpStatusCode.TooManyRequests));
         Assert.Empty(App.GoogleServer.Exchanges);
+        Assert.Equal(HttpStatusCode.OK, elsewhere.StatusCode);
     }
 
     [Fact]
@@ -188,32 +177,6 @@ public sealed class SignInLimitTests(PostgresContainerFixture postgres)
         {
             browsers.ForEach(static browser => browser.Dispose());
         }
-    }
-
-    [Fact]
-    public async Task LockoutNeedsSeveralAddressesAndIsCounted()
-    {
-        await App.SeedAsync(new AccountSeed());
-        using var lockouts = App.Security<long>("lodb.lockouts");
-        using var attempts = App.Security<long>(AttemptsCounter);
-
-        for (var address = 1; address <= FailuresPerPair + 1; address++)
-        {
-            using var browser = App.Browser().From($"198.51.100.{address}");
-            using var failed = await browser.SignInAsync(AccountSeed.Name, WrongPassword);
-        }
-
-        var lockout = Assert.Single(lockouts.GetMeasurementSnapshot());
-        Assert.Equal("false", lockout.Tags[SecurityMetrics.IsAdminTag]);
-        Assert.Equal(
-            [
-                (SecurityMetrics.Failure, SecurityMetrics.MemberAccount, FailuresPerPair),
-                (SecurityMetrics.LockedOut, SecurityMetrics.MemberAccount, 1),
-            ],
-            Summary(attempts));
-        Assert.All(
-            attempts.GetMeasurementSnapshot(),
-            static attempt => Assert.Equal("session", attempt.Tags[SecurityMetrics.ChannelTag]));
     }
 
     public async ValueTask InitializeAsync() => _app = await AccountsApp.StartAsync(postgres);

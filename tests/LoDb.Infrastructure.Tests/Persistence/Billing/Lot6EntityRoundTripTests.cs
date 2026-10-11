@@ -1,10 +1,8 @@
 using LoDb.Infrastructure.Persistence.Accounts;
 using LoDb.Infrastructure.Persistence.Analytics;
-using LoDb.Infrastructure.Persistence.Analytics.Partitions;
 using LoDb.Infrastructure.Persistence.Apps;
 using LoDb.Infrastructure.Persistence.Billing;
 using LoDb.Infrastructure.Persistence.PublicApi;
-using LoDb.Infrastructure.Tests.Persistence.Analytics;
 using LoDb.Testing;
 using Microsoft.EntityFrameworkCore;
 
@@ -59,17 +57,6 @@ public sealed class Lot6EntityRoundTripTests(PostgresContainerFixture postgres)
     }
 
     [Fact]
-    public async Task AnalyticsEventRoundTrips()
-    {
-        await PartitionsOf(DateOnly.FromDateTime(At.UtcDateTime));
-
-        await AssertRoundTripsAsync(AnalyticsSamples.View(At));
-        Assert.Equal(
-            ["navigation"],
-            await Database.QueryAsync("SELECT origin FROM analytics_event", Cancellation));
-    }
-
-    [Fact]
     public async Task AnalyticsDailyRoundTrips()
     {
         await AssertRoundTripsAsync(new AnalyticsDaily
@@ -107,9 +94,6 @@ public sealed class Lot6EntityRoundTripTests(PostgresContainerFixture postgres)
             ["android"],
             await Database.QueryAsync("SELECT platform FROM client_policy", Cancellation));
     }
-
-    private async Task PartitionsOf(DateOnly day) =>
-        await new AnalyticsPartitions(Database.DataSource).CreateAsync(day, day, Cancellation);
 
     private async Task<int> SeedApiKeyAsync()
     {

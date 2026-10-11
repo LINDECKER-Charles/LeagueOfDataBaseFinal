@@ -92,13 +92,12 @@ public sealed class DesktopBridgeTests : IDisposable
         Assert.Equal(new Uri("https://www.leagueoflegends.com/"), Assert.Single(_browser.Opened));
     }
 
-    [Theory]
-    [InlineData("javascript:alert(document.cookie)")]
-    [InlineData("file:///etc/hosts")]
-    [InlineData("http://127.0.0.1:4000/")]
-    public async Task OpensNothingElse(string url)
+    // The rules are ExternalUrl's (ExternalUrlTests): one refused address proves the bridge
+    // applies them.
+    [Fact]
+    public async Task OpensNothingElse()
     {
-        var reply = await SendAsync(Open(url));
+        var reply = await SendAsync(Open("javascript:alert(document.cookie)"));
 
         AssertFailure(reply, BridgeErrors.InvalidUrl);
         Assert.Empty(_browser.Opened);
@@ -149,8 +148,6 @@ public sealed class DesktopBridgeTests : IDisposable
 
     [Theory]
     [InlineData("../build.json", "application/json", JsonBase64, BridgeErrors.InvalidName)]
-    [InlineData("C:\\build.json", "application/json", JsonBase64, BridgeErrors.InvalidName)]
-    [InlineData(null, "application/json", JsonBase64, BridgeErrors.InvalidName)]
     [InlineData("build.json", "text/plain; charset=utf-8", JsonBase64, BridgeErrors.InvalidMime)]
     [InlineData("build.json", null, JsonBase64, BridgeErrors.InvalidMime)]
     [InlineData("build.json", "application/json", "not base64!", BridgeErrors.InvalidContent)]

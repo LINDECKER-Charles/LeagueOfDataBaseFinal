@@ -7,27 +7,27 @@ namespace LoDb.Api.Tests.Catalog.Metrics;
 [Collection(CatalogMetricsGroup.Name)]
 public sealed class CatalogMetricsTests(CatalogApiFixture api)
 {
-    public static TheoryData<string, string> Series => new()
-    {
-        { "lodb_catalog_cache_lookups_total{", "outcome=\"miss\"" },
-        { "lodb_catalog_cache_lookups_total{", "outcome=\"hit\"" },
-        { "lodb_catalog_load_duration_seconds_bucket{", "outcome=\"built\"" },
-        { "lodb_catalog_loads_in_flight", string.Empty },
-        { "lodb_catalog_cold_admissions_total{", "partition=\"internal\",result=\"admitted\"" },
-        { "lodb_ingestion_sync_waiting", string.Empty },
-    };
+    private static readonly (string Name, string Labels)[] Series =
+    [
+        ("lodb_catalog_cache_lookups_total{", "outcome=\"miss\""),
+        ("lodb_catalog_cache_lookups_total{", "outcome=\"hit\""),
+        ("lodb_catalog_load_duration_seconds_bucket{", "outcome=\"built\""),
+        ("lodb_catalog_loads_in_flight", string.Empty),
+        ("lodb_catalog_cold_admissions_total{", "partition=\"internal\",result=\"admitted\""),
+        ("lodb_ingestion_sync_waiting", string.Empty),
+    ];
 
-    [Theory]
-    [MemberData(nameof(Series))]
-    public async Task ColdCatalogIsMeasured(string series, string labels)
+    [Fact]
+    public async Task ColdCatalogIsMeasured()
     {
         using var cold = await api.GetAsync("/api/catalog/16.18.1/zh_CN/summoners");
         using var warm = await api.GetAsync("/api/catalog/16.18.1/zh_CN/summoners");
 
         var lines = (await api.ScrapeAsync()).Split('\n');
 
-        Assert.Contains(lines, line => line.StartsWith(series, StringComparison.Ordinal)
-            && line.Contains(labels, StringComparison.Ordinal));
+        Assert.All(Series, series => Assert.Contains(lines, line =>
+            line.StartsWith(series.Name, StringComparison.Ordinal)
+            && line.Contains(series.Labels, StringComparison.Ordinal)));
     }
 
     [Fact]

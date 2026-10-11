@@ -11,37 +11,20 @@ public sealed class StoragePathTests
     private const string ValidSha256 =
         "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad";
 
+    // One row per class the segment pattern refuses: empty, dot-led, separator, drive,
+    // control character, non-ASCII and over-long.
     public static TheoryData<string> InvalidSegments =>
     [
         "",
-        ".",
         "..",
         ".staging",
         "../14.1.1",
         "/etc",
         "en_US\n",
         @"a\b",
-        @"C:\data",
         "C:",
-        "~",
-        "en US",
-        "-rf",
         "é",
         new string('a', 101),
-    ];
-
-    public static TheoryData<string> InvalidTypes =>
-    [
-        "",
-        "/champion",
-        "champion/",
-        "a//b",
-        "../../../etc/passwd",
-        "championDetail/../champion",
-        "championDetail/..",
-        "./champion",
-        @"..\champion",
-        "/etc/passwd",
     ];
 
     [Theory]
@@ -49,8 +32,12 @@ public sealed class StoragePathTests
     public void AnInvalidVersionIsRejected(string version) =>
         Assert.Throws<ArgumentException>(() => new DatasetKey(version, "en_US", "champion"));
 
+    // The language goes through the version's segment check: these rows only prove that it
+    // is checked.
     [Theory]
-    [MemberData(nameof(InvalidSegments))]
+    [InlineData("")]
+    [InlineData("..")]
+    [InlineData("/etc")]
     public void AnInvalidLanguageIsRejected(string language) =>
         Assert.Throws<ArgumentException>(() => new DatasetKey("14.1.1", language, "champion"));
 
@@ -63,9 +50,15 @@ public sealed class StoragePathTests
         Assert.Throws<ArgumentException>(() => new DatasetKey("14.1.1", segment, "champion"));
     }
 
+    // Each segment of a type goes through the version's check: these rows cover what a
+    // multi-segment type adds.
     [Theory]
-    [MemberData(nameof(InvalidSegments))]
-    [MemberData(nameof(InvalidTypes))]
+    [InlineData("/champion")]
+    [InlineData("champion/")]
+    [InlineData("a//b")]
+    [InlineData("../../../etc/passwd")]
+    [InlineData("championDetail/../champion")]
+    [InlineData(@"..\champion")]
     public void AnInvalidTypeIsRejected(string type) =>
         Assert.Throws<ArgumentException>(() => new DatasetKey("14.1.1", "en_US", type));
 
