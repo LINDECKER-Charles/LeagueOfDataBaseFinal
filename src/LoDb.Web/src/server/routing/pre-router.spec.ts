@@ -199,6 +199,8 @@ describe('preRouteOf', () => {
     ['/fr/%31%35.13.1/champions/Ahri?x=1', '/fr/%31%35.13.1/champions/Ahri'],
     ['/fr/%63hampions?x=1', '/fr/%63hampions'],
     [`/en/champions?q=${'a'.repeat(199)}&page=2`, '/en/champions?page=2'],
+    ['/fr/patches?x=1', '/fr/patches'],
+    ['/fr/patches?version=15.14.1&lang=fr_FR', '/fr/patches'],
   ])('redirects %s to %s', (url, location) => {
     expect(route(url)).toEqual({ kind: 'redirect', location });
   });

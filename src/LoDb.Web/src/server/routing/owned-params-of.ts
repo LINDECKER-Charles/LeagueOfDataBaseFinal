@@ -34,13 +34,24 @@ const LIST_PARAMS_BY_RESOURCE: Readonly<Record<ResourceType, ReadonlySet<string>
   summoners: listParamsOf(SUMMONER_FACET_KEYS),
 };
 const DETAIL_PARAMS: ReadonlySet<string> = new Set(PAGE_PARAMS);
+// The history of the patches reads no query: one URL, one cached copy per locale.
+const PATCH_HISTORY_PAGE = 'patches';
+const NO_PARAMS: ReadonlySet<string> = new Set();
+
+function isPatchHistory(page: readonly string[]): boolean {
+  return page.length === 1 && page[0] === PATCH_HISTORY_PAGE;
+}
 
 /**
  * The query parameters a page of the catalogue reads, from its decoded segments below the
  * locale and the version: a list its search, paging and facets (ADR 0005), a detail none of
- * its own. Null for any other page, whose query the server leaves to it.
+ * its own, the history of the patches none at all. Null for any other page, whose query the
+ * server leaves to it.
  */
 export function ownedParamsOf(page: readonly string[]): ReadonlySet<string> | null {
+  if (isPatchHistory(page)) {
+    return NO_PARAMS;
+  }
   if (!isCatalogueRoute(page)) {
     return null;
   }
