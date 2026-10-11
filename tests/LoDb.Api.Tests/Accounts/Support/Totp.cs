@@ -20,13 +20,20 @@ public static class Totp
     private const int OffsetMask = 0x0F;
     private const int SignMask = 0x7FFF_FFFF;
 
-    /// <summary>The code of now, by the real clock, which Identity's check reads.</summary>
-    public static string Code(string key) => Code(key, TimeProvider.System.GetUtcNow());
+    /// <summary>
+    /// The code of now by <paramref name="clock"/>, the host's, which the check of the codes
+    /// reads.
+    /// </summary>
+    public static string Code(string key, TimeProvider clock)
+    {
+        ArgumentNullException.ThrowIfNull(clock);
+        return Code(key, clock.GetUtcNow());
+    }
 
     /// <summary>A code of the right form that the key does not give now.</summary>
-    public static string WrongCode(string key)
+    public static string WrongCode(string key, TimeProvider clock)
     {
-        var code = int.Parse(Code(key), CultureInfo.InvariantCulture);
+        var code = int.Parse(Code(key, clock), CultureInfo.InvariantCulture);
         return ((code + (Modulus / 2)) % Modulus).ToString(Format, CultureInfo.InvariantCulture);
     }
 

@@ -135,8 +135,10 @@ public sealed class SignInTests(PostgresContainerFixture postgres)
         using var passwordOnly = await browser.SignInAsync(AccountSeed.Name);
         using var wrongCode = await SignInWithAsync(
             browser,
-            twoFactorCode: Totp.WrongCode(secrets.Key));
-        using var rightCode = await SignInWithAsync(browser, twoFactorCode: Totp.Code(secrets.Key));
+            twoFactorCode: Totp.WrongCode(secrets.Key, App.Clock));
+        using var rightCode = await SignInWithAsync(
+            browser,
+            twoFactorCode: Totp.Code(secrets.Key, App.Clock));
 
         Assert.Equal(
             "two-factor-required",
