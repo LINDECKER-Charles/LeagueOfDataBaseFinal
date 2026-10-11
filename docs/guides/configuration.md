@@ -334,7 +334,7 @@ un tmpfs borné, compté dans sa limite mémoire.
 | `api`, `migrate` | `app` (image chiseled) | `ddragon` (`api`), tmpfs `/tmp` (64 Mio) | — |
 | `web-ssr` | `node` | `front-builds`, tmpfs `/tmp` (16 Mio) | — |
 | `nginx` | `nginx`, port 8080 | caches et fichiers temporaires (volumes), tmpfs `/tmp` (64 Mio : configuration rendue, pid) | — |
-| `postgres` | root, puis `postgres` | `pgdata`, tmpfs `/var/run/postgresql` (8 Mio) et `/tmp` (16 Mio) | `CHOWN`, `DAC_READ_SEARCH`, `FOWNER`, `SETGID`, `SETUID` (entrée de l'image) |
+| `postgres` | root, puis `postgres` | `pgdata`, tmpfs `/var/run/postgresql` (8 Mio) et `/tmp` (16 Mio) | `CHOWN`, `DAC_OVERRIDE`, `FOWNER`, `SETGID`, `SETUID` (entrée de l'image), toutes parmi celles que Docker accorde par défaut |
 
 Réseaux : `default` (nginx, SSR, API, `migrate`) porte le HTTP, sur `LODB_STACK_SUBNET`
 (§ 6.8) ; `data` (Postgres, API, `migrate`) est interne sur un hôte, sans route vers

@@ -257,10 +257,12 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   d'élévation par un binaire setuid (`no-new-privileges`). Un service n'écrit que dans ses
   volumes et ses tmpfs (`/tmp`, et `/var/run/postgresql` pour Postgres) : un nouveau chemin
   écrit va dans l'un ou l'autre, sinon `EROFS` au premier essai. Un `docker compose exec`
-  n'écrit pas ailleurs non plus. Postgres reprend `CHOWN`, `DAC_READ_SEARCH`, `FOWNER`,
+  n'écrit pas ailleurs non plus. Postgres reprend `CHOWN`, `DAC_OVERRIDE`, `FOWNER`,
   `SETGID` et `SETUID` (volume neuf comme existant) : son entrée tourne en root le temps de
   donner ses dossiers à `postgres` ; sans `FOWNER`, son `chmod` du dossier des données
-  échoue et écrit une ligne d'erreur à chaque démarrage. Un tmpfs compte dans la limite mémoire du
+  échoue et écrit une ligne d'erreur à chaque démarrage. Jamais `DAC_READ_SEARCH` à la place
+  de `DAC_OVERRIDE` : Docker la retire par défaut, et son profil seccomp ouvre alors
+  `open_by_handle_at` au conteneur. Un tmpfs compte dans la limite mémoire du
   conteneur.
 - **nginx sans privilège, sur le port 8080** (utilisateur `nginx` de l'image, maître compris) :
   sonde, smoke tests du déploiement, labels de l'edge (`{{upstreams 8080}}`), port publié en

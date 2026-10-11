@@ -25,8 +25,9 @@ const HOST_ADDITIONS = 'LODB_EDGE_CIDR=172.18.0.0/16\nLODB_STACK_SUBNET=10.231.1
   + `LODB_EDGE_SECRET=${EDGE_SECRET}\n`;
 // Every service of the stack, the one-shot migrate included.
 const SERVICES = [...RUNNING, 'migrate'];
-// What postgres's entrypoint needs, as root, before it becomes `postgres`.
-const POSTGRES_CAPABILITIES = ['CHOWN', 'DAC_READ_SEARCH', 'FOWNER', 'SETGID', 'SETUID'];
+// What postgres's entrypoint needs, as root, before it becomes `postgres`: none beyond
+// Docker's defaults (DAC_READ_SEARCH would also open open_by_handle_at, compose.yaml).
+const POSTGRES_CAPABILITIES = ['CHOWN', 'DAC_OVERRIDE', 'FOWNER', 'SETGID', 'SETUID'];
 const NGINX_UPSTREAM = '{{upstreams 8080}}';
 const NGINX_TEMP = '/var/cache/nginx/temp';
 // The staging share of the host: about three quarters of a core.

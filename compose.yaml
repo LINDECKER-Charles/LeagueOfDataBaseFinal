@@ -306,8 +306,10 @@ services:
     # by `postgres`, mode 700), sets its mode, gives it and the socket folder to `postgres`,
     # then becomes that user, which holds none of these. The server works without FOWNER, but
     # the entrypoint's chmod of the data folder then fails and writes an error line at each
-    # start.
-    cap_add: [CHOWN, DAC_READ_SEARCH, FOWNER, SETGID, SETUID]
+    # start. DAC_OVERRIDE, one of Docker's defaults, lets it walk that folder; never
+    # DAC_READ_SEARCH, which Docker withholds: its seccomp profile then also allows
+    # open_by_handle_at, a lookup of files by handle outside the container's view.
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID]
     # The server's socket and lock files, and the entrypoint's scratch files.
     tmpfs:
       - /var/run/postgresql:size=8m
