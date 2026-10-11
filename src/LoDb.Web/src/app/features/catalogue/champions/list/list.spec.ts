@@ -182,5 +182,18 @@ describe('lodb-champion-card', () => {
       'https://ddragon.leagueoflegends.com/cdn/img/champion/loading/Annie_0.jpg',
     );
     expect(art?.getAttribute('alt')).toBe('Annie');
+    expect(element.querySelector('source')).toBeNull();
+  });
+
+  it('offers the stored WebP portrait before the hotlinked one', async () => {
+    const element = await render(
+      cardOf({ loadingArtVariants: [{ url: '/cdn/blobs/annie.webp', width: 308 }] }),
+    );
+
+    const source = element.querySelector('source');
+    expect(source?.getAttribute('type')).toBe('image/webp');
+    expect(source?.getAttribute('srcset')).toBe('/cdn/blobs/annie.webp 308w');
+    expect(source?.getAttribute('sizes')).toContain('50vw');
+    expect(element.querySelector('img')?.getAttribute('src')).toContain('Annie_0.jpg');
   });
 });

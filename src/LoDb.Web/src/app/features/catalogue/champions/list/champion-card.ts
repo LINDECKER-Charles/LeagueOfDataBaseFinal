@@ -16,11 +16,13 @@ import { capitalize } from '../text/capitalize';
 // Data Dragon's loading-screen portraits are 308 by 560: the box is reserved before they land.
 const ART_WIDTH = 308;
 const ART_HEIGHT = 560;
+// A card's width in the portrait grid (catalogue-list.css): 5, 4, 3 then 2 columns.
+const ART_SIZES = '(width >= 80rem) 20vw, (width >= 64rem) 25vw, (width >= 40rem) 34vw, 50vw';
 
 /**
- * A champion in the list, the whole card a link: its loading-screen portrait, hotlinked from
- * Data Dragon, over a gold weave and its initials, then its name, title, roles, lore teaser
- * and a call to its page.
+ * A champion in the list, the whole card a link: its loading-screen portrait (the WebP the
+ * site stores for the latest patch, else hotlinked from Data Dragon) over a gold weave and
+ * its initials, then its name, title, roles, lore teaser and a call to its page.
  *
  * The legacy card meant to lay the patch's square icon over the portrait, but the icon box
  * was `relative` and `absolute` at once, `relative` won, and the icon fell below the art,
@@ -42,10 +44,13 @@ const ART_HEIGHT = 560;
         class="size-full"
         imgClass="object-cover object-top transition-transform duration-500 group-hover:scale-105 motion-reduce:transition-none"
         [src]="card().loadingArt"
+        [variants]="card().loadingArtVariants"
+        [sizes]="sizes"
         [alt]="card().name"
         [width]="artWidth"
         [height]="artHeight"
         [eager]="eager()"
+        [priority]="priority()"
       />
     </div>
     <div class="flex flex-1 flex-col p-4">
@@ -107,10 +112,13 @@ export class ChampionCard {
   readonly locale = input.required<string>();
   /** First row: its portrait loads at once. */
   readonly eager = input(false, { transform: booleanAttribute });
+  /** The first card: its portrait is the list's LCP candidate. */
+  readonly priority = input(false, { transform: booleanAttribute });
 
   protected readonly frame = `${FRAME_STYLES.interactive} group flex h-full flex-col overflow-hidden`;
   protected readonly artWidth = ART_WIDTH;
   protected readonly artHeight = ART_HEIGHT;
+  protected readonly sizes = ART_SIZES;
   protected readonly title = computed(() => capitalize(this.card().title, this.locale()));
   protected readonly initials = computed(() => initialsOf(this.card().name));
 }

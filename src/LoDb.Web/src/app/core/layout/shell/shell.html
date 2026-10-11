@@ -16,11 +16,14 @@
   <ng-content />
 </main>
 @if (!bare()) {
-  <lodb-footer>
-    <ng-container ngProjectAs="[lodbSlot=contact]">
-      <ng-content select="[lodbSlot=contact]" />
-    </ng-container>
-  </lodb-footer>
+  <!-- Rendered by the server whole; its code loads and runs a screen before it shows. -->
+  @defer (on immediate; hydrate on viewport({ rootMargin: '100% 0px' })) {
+    <lodb-footer>
+      <ng-container ngProjectAs="[lodbSlot=contact]">
+        <ng-content select="[lodbSlot=contact]" />
+      </ng-container>
+    </lodb-footer>
+  }
   <lodb-bottom-nav />
 }
 <lodb-toaster />

@@ -139,15 +139,65 @@ describe('lodb-champion-hero', () => {
 
   it('shows the centred art, and the full splash when it fails, until the next champion', async () => {
     const { fixture, element } = await render();
-    const splash = () => element.querySelector('section > img')?.getAttribute('src');
+    const splash = () => element.querySelector('section picture > img')?.getAttribute('src');
     expect(splash()).toBe('https://cdn.test/Annie_0.centered.jpg');
+    expect(element.querySelector('section picture > source')).toBeNull();
 
-    element.querySelector('section > img')?.dispatchEvent(new Event('error'));
+    element.querySelector('section picture > img')?.dispatchEvent(new Event('error'));
     await fixture.whenStable();
     expect(splash()).toBe('https://cdn.test/Annie_0.splash.jpg');
 
     fixture.componentInstance.details.set(detailsOf('Brand', RATINGS));
     await fixture.whenStable();
     expect(splash()).toBe('https://cdn.test/Brand_0.centered.jpg');
+  });
+
+  it('fetches the stored variants first, at high priority, at the drawn width', async () => {
+    const { fixture, element } = await render();
+    fixture.componentInstance.details.set({
+      ...detailsOf('Annie', RATINGS),
+      centeredArtVariants: [
+        { url: '/cdn/blobs/a.webp', width: 480 },
+        { url: '/cdn/blobs/b.webp', width: 960 },
+      ],
+    });
+    await fixture.whenStable();
+    const source = () => element.querySelector('section picture > source');
+    const img = () => element.querySelector('section picture > img');
+
+    expect(source()?.getAttribute('type')).toBe('image/webp');
+    expect(source()?.getAttribute('srcset')).toBe('/cdn/blobs/a.webp 480w, /cdn/blobs/b.webp 960w');
+    expect(source()?.getAttribute('sizes')).toContain('100vw');
+    expect(img()?.getAttribute('fetchpriority')).toBe('high');
+    expect(img()?.getAttribute('loading')).toBe('eager');
+
+    img()?.dispatchEvent(new Event('error'));
+    await fixture.whenStable();
+    expect(source()).toBeNull();
+    expect(img()?.getAttribute('src')).toBe('https://cdn.test/Annie_0.centered.jpg');
+
+    img()?.dispatchEvent(new Event('error'));
+    await fixture.whenStable();
+    expect(img()?.getAttribute('src')).toBe('https://cdn.test/Annie_0.splash.jpg');
+  });
+
+  it('steps down once for variants that failed before hydration, to the centred art', async () => {
+    // What hydration finds of an image that failed unheard: complete, without a width. The
+    // browser only reloads the image once the render is over, so the DOM still says so then.
+    vi.spyOn(HTMLImageElement.prototype, 'complete', 'get').mockReturnValue(true);
+    vi.spyOn(HTMLImageElement.prototype, 'naturalWidth', 'get').mockReturnValue(0);
+    const fixture = TestBed.createComponent(Host);
+    fixture.componentInstance.details.set({
+      ...detailsOf('Annie', RATINGS),
+      centeredArtVariants: [{ url: '/cdn/blobs/a.webp', width: 480 }],
+    });
+    await fixture.whenStable();
+    vi.restoreAllMocks();
+    const element = fixture.nativeElement as HTMLElement;
+
+    expect(element.querySelector('section picture > source')).toBeNull();
+    expect(element.querySelector('section picture > img')?.getAttribute('src')).toBe(
+      'https://cdn.test/Annie_0.centered.jpg',
+    );
   });
 });

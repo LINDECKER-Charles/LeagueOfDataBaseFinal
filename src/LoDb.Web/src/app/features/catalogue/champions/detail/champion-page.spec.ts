@@ -184,7 +184,8 @@ describe('ChampionPage', () => {
     expect(host.querySelectorAll('#skins lodb-skeleton')).toHaveLength(3);
     http.expectNone(SKINS);
 
-    const [gallery] = await harness.fixture.getDeferBlocks();
+    // In the template's order: the abilities, the skins, the stats, the pager.
+    const [, gallery] = await harness.fixture.getDeferBlocks();
     await gallery?.render(DeferBlockState.Complete);
     expect(host.querySelectorAll('#skins lodb-skeleton')).toHaveLength(3);
     http.expectOne(SKINS).flush(ANNIE_SKINS);

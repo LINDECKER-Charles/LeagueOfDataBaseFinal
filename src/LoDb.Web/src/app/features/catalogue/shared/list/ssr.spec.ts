@@ -5,7 +5,11 @@ import {
   mergeApplicationConfig,
   signal,
 } from '@angular/core';
-import { type BootstrapContext, bootstrapApplication } from '@angular/platform-browser';
+import {
+  type BootstrapContext,
+  bootstrapApplication,
+  provideClientHydration,
+} from '@angular/platform-browser';
 import { provideServerRendering, renderApplication } from '@angular/platform-server';
 import { RouterOutlet, provideRouter } from '@angular/router';
 import { provideTransloco } from '@jsverse/transloco';
@@ -105,7 +109,11 @@ async function renderOnServer(url: string, requests: ListRequest[]): Promise<str
   };
   Reflect.set(globalThis, 'ngServerMode', true);
   try {
-    const server = mergeApplicationConfig(config, { providers: [provideServerRendering()] });
+    // Hydration as app.config has it, in its server flavour (picked from the flag above): the
+    // server then renders the blocks the browser hydrates later, such as the rail, at every
+    // render, not only at the one that loads their code.
+    const providers = [provideServerRendering(), provideClientHydration()];
+    const server = mergeApplicationConfig(config, { providers });
     const bootstrap = (context: BootstrapContext) => bootstrapApplication(Root, server, context);
     return await keepingGlobals(() =>
       renderApplication(bootstrap, { document: DOCUMENT_HTML, url }),
@@ -124,6 +132,24 @@ describe('lodb-catalogue-list rendered on the server', () => {
     expect(cards).toEqual(['Dagger', 'Ward']);
     expect(html).toContain('href="/en/items" rel="prev"');
     expect(html).toContain('href="/en/items?page=3"');
+  });
+
+  it('renders the rail whole, its script waiting for the reader in the browser', async () => {
+    const html = await renderOnServer('/en/items', []);
+    const parsed = new DOMParser().parseFromString(html, 'text/html');
+    const rail = parsed.querySelector('aside.list__console lodb-filter-console');
+    expect(rail?.querySelector('input[type=search]')).not.toBeNull();
+    expect(rail?.querySelector('.console__foot')).not.toBeNull();
+  });
+
+  // What a search field holds beyond this default value is what the reader typed before the
+  // hydration (FilterSearch). A second render: the first one also loads the rail's code.
+  it('writes the query of the URL as the default value of both search fields', async () => {
+    await renderOnServer('/en/items', []);
+    const html = await renderOnServer('/en/items?q=dag', []);
+    const parsed = new DOMParser().parseFromString(html, 'text/html');
+    const fields = [...parsed.querySelectorAll<HTMLInputElement>('input[type=search]')];
+    expect(fields.map((field) => field.defaultValue)).toEqual(['dag', 'dag']);
   });
 
   it('keeps a card whose rich text holds a bare <li> inside its cell once parsed', async () => {

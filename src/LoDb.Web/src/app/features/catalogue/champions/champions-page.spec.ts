@@ -89,6 +89,14 @@ describe('ChampionsPage', () => {
     expect(cards[0]?.querySelectorAll('.hx-chip')).toHaveLength(2);
   });
 
+  it('loads the first row at once, the first portrait alone at high priority', async () => {
+    const { host } = await visit();
+    const portraits = [...host.querySelectorAll('lodb-champion-card img')];
+
+    expect(portraits.map((img) => img.getAttribute('loading'))).toEqual(['eager', 'eager']);
+    expect(portraits.map((img) => img.getAttribute('fetchpriority'))).toEqual(['high', null]);
+  });
+
   it('writes the head of the list, with the champions it opens on', async () => {
     const { apply } = await visit();
 

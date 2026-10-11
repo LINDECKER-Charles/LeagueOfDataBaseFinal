@@ -3,6 +3,7 @@ import { AUDIENCE_ROUTE_DATA } from '../../../core/analytics/audience/audience-r
 import { resolveCatalogueContext } from '../../../core/routing/catalogue/resolve-catalogue-context';
 import { resolveCatalogueEntry } from '../../../core/routing/catalogue/resolve-catalogue-entry';
 import { withLoadTiming } from '../shared/codex/timing/with-load-timing';
+import { PRELOADED_ROUTE } from '../shared/preloading/preloaded-route';
 
 const loadList = () => import('./champions-page').then((m) => m.ChampionsPage);
 const loadDetail = () => import('./detail/champion-page').then((m) => m.ChampionPage);
@@ -19,14 +20,14 @@ export const CHAMPIONS_ROUTES: Routes = [
   {
     path: '',
     runGuardsAndResolvers: 'paramsOrQueryParamsChange',
-    data: AUDIENCE_ROUTE_DATA.path,
+    data: { ...AUDIENCE_ROUTE_DATA.path, ...PRELOADED_ROUTE },
     resolve: { context: resolveCatalogueContext('champions') },
     loadComponent: loadList,
   },
   {
     path: ':id',
     runGuardsAndResolvers: 'paramsOrQueryParamsChange',
-    data: AUDIENCE_ROUTE_DATA.path,
+    data: { ...AUDIENCE_ROUTE_DATA.path, ...PRELOADED_ROUTE },
     resolve: { entry: withLoadTiming(resolveCatalogueEntry('champions')) },
     loadComponent: loadDetail,
   },

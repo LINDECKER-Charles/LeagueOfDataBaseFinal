@@ -1,4 +1,5 @@
 import type { RequestFacts } from './request-facts';
+import { isPreloadedNavigation } from './is-preloaded-navigation';
 import { routeRequest } from './route-request';
 import type { SwRoute } from './sw-route';
 
@@ -90,5 +91,17 @@ describe('routeRequest', () => {
     const elsewhere = { ...navigation('/en/'), url: 'https://example.com/en/' };
 
     expect(routeRequest(elsewhere, ORIGIN)).toBe('bypass');
+  });
+});
+
+describe('isPreloadedNavigation', () => {
+  it('takes a GET navigation for preloaded, the worker answering it whatever its route', () => {
+    expect(isPreloadedNavigation(navigation('/en/account/profile'))).toBe(true);
+    expect(isPreloadedNavigation(navigation('/admin'))).toBe(true);
+  });
+
+  it('leaves a posted form and a subresource to the browser', () => {
+    expect(isPreloadedNavigation(navigation('/api/donations', { method: 'POST' }))).toBe(false);
+    expect(isPreloadedNavigation(subresource(`${ORIGIN}/build/main.js`))).toBe(false);
   });
 });

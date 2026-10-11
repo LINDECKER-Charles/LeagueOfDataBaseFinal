@@ -10,7 +10,7 @@ function fakeVideo(overrides: Partial<HTMLVideoElement> = {}): HTMLVideoElement 
     duration: 10,
     currentTime: 0,
     muted: false,
-    play: vi.fn(),
+    play: vi.fn(() => Promise.resolve()),
     pause: vi.fn(),
     ...overrides,
   } as unknown as HTMLVideoElement;
@@ -117,10 +117,64 @@ describe('VideoPlayback', () => {
     playback.onPause();
     expect(playback.progress()).toBe(0.5);
 
-    playback.adopt(fakeVideo());
+    playback.onStageVisible(true);
+    const next = fakeVideo({ paused: true });
+    playback.adopt(next);
     expect(previous.pause).toHaveBeenCalledOnce();
     expect(playback.progress()).toBe(0);
     expect(playback.isPaused()).toBe(false);
+    expect(next.play).toHaveBeenCalledOnce();
+  });
+
+  it('starts a clip only once its stage is on screen', () => {
+    const video = fakeVideo({ paused: true });
+    const playback = playbackOf(video);
+    expect(video.play).not.toHaveBeenCalled();
+    expect(playback.isPaused()).toBe(true);
+
+    playback.onStageVisible(true);
+    expect(video.play).toHaveBeenCalledOnce();
+  });
+
+  it('pauses the clip off screen, and plays it again on return', () => {
+    const video = fakeVideo({ paused: true });
+    const playback = playbackOf(video);
+    playback.onStageVisible(true);
+    set(video, 'paused', false);
+
+    playback.onStageVisible(false);
+    expect(video.pause).toHaveBeenCalledOnce();
+
+    set(video, 'paused', true);
+    playback.onStageVisible(true);
+    expect(video.play).toHaveBeenCalledTimes(2);
+  });
+
+  it("never plays again against the reader's own pause, on screen or tab", () => {
+    const video = fakeVideo({ paused: true });
+    const playback = playbackOf(video);
+    playback.onStageVisible(true);
+    set(video, 'paused', false);
+
+    playback.toggle();
+    set(video, 'paused', true);
+    playback.onStageVisible(false);
+    playback.onStageVisible(true);
+    tabHides(true);
+    tabHides(false);
+
+    expect(video.play).toHaveBeenCalledOnce();
+  });
+
+  it('takes a play cut short by a pause as no error', async () => {
+    const aborted = new DOMException('The play() request was interrupted', 'AbortError');
+    const video = fakeVideo({ paused: true, play: vi.fn(() => Promise.reject(aborted)) });
+    const playback = playbackOf(video);
+
+    playback.onStageVisible(true);
+    await Promise.resolve();
+
+    expect(video.play).toHaveBeenCalledOnce();
   });
 
   it('starts muted, and applies the sticky mute choice to every new element', () => {
@@ -158,7 +212,7 @@ describe('VideoPlayback', () => {
 
   it('pauses a playing video when the tab hides, and resumes it on return', () => {
     const video = fakeVideo({ paused: false });
-    playbackOf(video);
+    playbackOf(video).onStageVisible(true);
 
     tabHides(true);
     expect(video.pause).toHaveBeenCalledOnce();

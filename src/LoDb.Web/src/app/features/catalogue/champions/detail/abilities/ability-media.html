@@ -4,11 +4,10 @@
       <video
         #video
         [poster]="clip.poster"
-        autoplay
         [muted]="playback.isMuted()"
         loop
         playsinline
-        preload="metadata"
+        preload="none"
         aria-hidden="true"
         (play)="playback.onPlay()"
         (pause)="playback.onPause()"
@@ -63,6 +62,7 @@
       class="hx-img poster"
       [src]="clip()?.poster"
       alt=""
+      loading="lazy"
       decoding="async"
       (error)="failed.emit()"
     />

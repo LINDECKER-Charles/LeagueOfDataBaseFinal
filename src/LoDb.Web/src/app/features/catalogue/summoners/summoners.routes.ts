@@ -3,6 +3,7 @@ import { AUDIENCE_ROUTE_DATA } from '../../../core/analytics/audience/audience-r
 import { resolveCatalogueContext } from '../../../core/routing/catalogue/resolve-catalogue-context';
 import { resolveCatalogueEntry } from '../../../core/routing/catalogue/resolve-catalogue-entry';
 import { withLoadTiming } from '../shared/codex/timing/with-load-timing';
+import { PRELOADED_ROUTE } from '../shared/preloading/preloaded-route';
 
 const loadPage = () => import('./summoners-page').then((m) => m.SummonersPage);
 
@@ -19,14 +20,14 @@ export const SUMMONERS_ROUTES: Routes = [
   {
     path: '',
     runGuardsAndResolvers: 'paramsOrQueryParamsChange',
-    data: AUDIENCE_ROUTE_DATA.path,
+    data: { ...AUDIENCE_ROUTE_DATA.path, ...PRELOADED_ROUTE },
     resolve: { context: resolveCatalogueContext('summoners') },
     loadComponent: loadPage,
   },
   {
     path: ':id',
     runGuardsAndResolvers: 'paramsOrQueryParamsChange',
-    data: AUDIENCE_ROUTE_DATA.path,
+    data: { ...AUDIENCE_ROUTE_DATA.path, ...PRELOADED_ROUTE },
     resolve: { entry: withLoadTiming(resolveCatalogueEntry('summoners')) },
     loadComponent: loadPage,
   },

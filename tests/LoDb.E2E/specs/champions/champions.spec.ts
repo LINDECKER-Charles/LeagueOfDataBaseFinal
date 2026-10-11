@@ -1,5 +1,6 @@
 import type { APIRequestContext, Page } from '@playwright/test';
 import { expectNoAccessibilityViolations } from '../../support/accessibility';
+import { saveData } from '../../support/network';
 import { expect, test } from '../../support/test';
 
 interface Meta {
@@ -24,6 +25,11 @@ const SERVER_TIMING = /(?:^|,\s*)catalogue;dur=\d+(?:\.\d+)?/;
 const KEEP = 'lodbLeftVideo';
 // Shorter than the chroma card, as a phone turned sideways.
 const LANDSCAPE_PHONE = { width: 740, height: 360 };
+// The ability stage starts below the fold of this screen, whatever the hero's height.
+const SHORT_SCREEN = { width: 1280, height: 560 };
+const STAGE = '#abilities lodb-ability-media';
+// Riot's CDN serves each clip as webm and mp4, its poster as jpg.
+const CLIP = /\/champion-abilities\/.+\.(?:webm|mp4)$/;
 // The chips of the legacy tab bar, never a catalogue key.
 const SECTION_LABELS = ['Abilities', 'Skins', 'Lore', 'Tips', 'Base Statistics'];
 
@@ -48,6 +54,10 @@ async function skinsOf(request: APIRequestContext): Promise<Skins> {
 
 function isSkinsRead(url: string): boolean {
   return new URL(url).pathname.endsWith(`/champions/${CHAMPION}/skins`);
+}
+
+function isClip(url: string): boolean {
+  return CLIP.test(new URL(url).pathname);
 }
 
 async function openDetail(page: Page): Promise<void> {
@@ -135,6 +145,7 @@ test.describe('champion page in the browser', { tag: '@readonly' }, () => {
     await openDetail(page);
     const video = page.locator('#abilities video');
 
+    await page.locator(STAGE).scrollIntoViewIfNeeded();
     await expect(video).toHaveCount(1);
     expect(await video.evaluate((element: HTMLVideoElement) => element.muted)).toBe(true);
     await video.evaluate((element, key) => Reflect.set(window, key, element), KEEP);
@@ -147,6 +158,66 @@ test.describe('champion page in the browser', { tag: '@readonly' }, () => {
       KEEP,
     );
     expect(paused).toBe(true);
+    expect(consoleErrors).toEqual([]);
+  });
+
+  test('loads no clip before half of its stage is on screen, then plays it', async ({
+    page,
+    consoleErrors,
+  }) => {
+    const clips: string[] = [];
+    page.on('request', (sent) => {
+      if (isClip(sent.url())) {
+        clips.push(sent.url());
+      }
+    });
+    await page.setViewportSize(SHORT_SCREEN);
+    await openDetail(page);
+
+    await expect(page.locator('#abilities img.poster')).toHaveCount(1);
+    expect(clips).toEqual([]);
+
+    await page.locator(STAGE).scrollIntoViewIfNeeded();
+    const video = page.locator('#abilities video');
+    await expect(video).toHaveCount(1);
+    expect(await video.getAttribute('preload')).toBe('none');
+    await expect.poll(() => clips.length).toBeGreaterThan(0);
+    expect(consoleErrors).toEqual([]);
+  });
+
+  test('keeps the poster, and loads no clip, for a reader saving data', async ({ page }) => {
+    const clips: string[] = [];
+    page.on('request', (sent) => {
+      if (isClip(sent.url())) {
+        clips.push(sent.url());
+      }
+    });
+    await page.addInitScript(saveData);
+    await openDetail(page);
+
+    await page.locator(STAGE).scrollIntoViewIfNeeded();
+    await page.waitForLoadState('networkidle');
+
+    await expect(page.locator('#abilities img.poster')).toHaveCount(1);
+    await expect(page.locator('#abilities video')).toHaveCount(0);
+    expect(clips).toEqual([]);
+  });
+
+  test('hydrates every section it scrolls through without a mismatch', async ({
+    page,
+    consoleErrors,
+  }) => {
+    await openDetail(page);
+
+    for (const id of ['abilities', 'stats', 'lore', 'tips']) {
+      await page.locator(`#${id}`).scrollIntoViewIfNeeded();
+    }
+    await page.locator('lodb-pager').scrollIntoViewIfNeeded();
+    await page.locator('lodb-footer').scrollIntoViewIfNeeded();
+    await page.locator('lodb-stat-board input[type=range]').fill('18');
+
+    await expect(page.locator('lodb-stat-board')).toContainText('18 / 18');
+    await page.waitForLoadState('networkidle');
     expect(consoleErrors).toEqual([]);
   });
 

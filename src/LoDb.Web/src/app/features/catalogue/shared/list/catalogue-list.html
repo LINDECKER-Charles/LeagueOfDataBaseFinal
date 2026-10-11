@@ -16,8 +16,12 @@
     </div>
   </div>
 
-  <aside class="list__console">
-    <lodb-filter-console [searchLabel]="searchLabel()" />
+  <!-- Hover includes the focus: a field filled without a click or a key still hydrates.
+       `when`: the `/` shortcut, or the server's copy of the rail gone out of date. -->
+  <aside #consoleRail class="list__console">
+    @defer (on immediate; hydrate on interaction; hydrate on hover; hydrate when isConsoleDue()) {
+      <lodb-filter-console #console [searchLabel]="searchLabel()" />
+    }
   </aside>
 
   <section class="list__results" [attr.aria-label]="label()">
