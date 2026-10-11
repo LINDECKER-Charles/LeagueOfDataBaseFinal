@@ -199,8 +199,10 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   voulu. Monter l'epoch quand le chrome, la CSP ou le contrat `/api` changent de façon
   visible, et après tout correctif de sécurité du front (procédure :
   [`configuration.md`](../guides/configuration.md)). Gardées à la **2ᵉ** demande
-  (`min_uses 2`) : `MISS`, `MISS`, puis `HIT` ; une spec qui attend un `HIT` les demande trois
-  fois. En local aussi, une page d'ancien patch survit à un rebuild : `down -v` ou monter
+  (`LODB_ARCHIVE_CACHE_MIN_USES`, `2`) : `MISS`, `MISS`, puis `HIT` ; une spec qui attend un
+  `HIT` les demande trois fois. En deçà, chaque URL distincte tient quand même une clé
+  jusqu'à son inactivité, même une réponse non gardée (`301`, `503`) : la zone des clés borne
+  les URL qu'un balayage parcourt avant d'évincer, pas le disque. En local aussi, une page d'ancien patch survit à un rebuild : `down -v` ou monter
   l'epoch. `archive-cache.conf` sert la copie périmée pendant le rafraîchissement
   (`updating`) ; `page-cache.conf` **jamais** (elle primerait sur le
   `stale-while-revalidate` du dernier patch). Les regex de location contenant `{` sont entre

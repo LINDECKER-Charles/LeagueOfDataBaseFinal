@@ -143,8 +143,13 @@ chunks.
   correctif de sécurité du front, avec le retrait du chunk vulnérable
   ([procédure](../../guides/configuration.md)). Compromis assumé : entre deux montées, le
   chrome d'une page d'ancien patch peut dater d'une semaine.
-- **Gardée à la 2ᵉ demande** (`proxy_cache_min_uses 2`) : un balayage de tous les patchs, qui
-  ne repasse pas, n'évince ni les anciens patchs consultés ni le dernier patch, rangé à part.
+- **Gardée à la 2ᵉ demande** (`LODB_ARCHIVE_CACHE_MIN_USES`, `2`) : un balayage de tous les
+  patchs, qui ne repasse pas, n'écrit pas ses rendus sur le disque et n'évince jamais le
+  dernier patch, rangé à part. Chaque URL distincte y tient pourtant une clé jusqu'à son
+  inactivité, quelle que soit la réponse (`301` d'une query nettoyée, `503` de délestage) :
+  c'est la zone des clés (`LODB_ARCHIVE_CACHE_KEYS_SIZE`, ≈ 8 000 clés par Mo) qui borne le
+  nombre d'URL qu'un balayage parcourt avant que les anciens patchs les moins récemment
+  demandés sortent du cache. À `1`, seules les réponses gardées tiennent une clé.
 - **Bundles conservés** : chaque build publie ses bundles hachés dans le volume
   `front-builds` tant qu'il est en service (date rafraîchie toutes les heures), servi sous
   `/build/` après ceux de l'image ; le déploiement retire ceux qu'aucun build n'a livrés

@@ -71,6 +71,7 @@ describe('nginx environment through Compose',
 
     test('reads the defaults of the image', () => {
       assert.equal(defaults.get('LODB_PAGES_RATE'), '20r/s');
+      assert.equal(defaults.get('LODB_ARCHIVE_CACHE_MIN_USES'), '2');
       assert.ok(defaults.size >= 16, `${defaults.size} defaults read`);
     });
 

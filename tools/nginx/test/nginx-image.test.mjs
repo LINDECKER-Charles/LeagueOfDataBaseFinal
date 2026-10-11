@@ -17,11 +17,13 @@ const BLOCKED_AGENT = 'Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTM
 // Rates per minute: no token comes back while the checks run, so each burst is exact. Any peer
 // may state the client address, so that a check of the caches speaks for a client of its own
 // (`forwardedFor`) and leaves the bursts of the others whole. The first parts of the page
-// caches' keys are named, to be found in the stored keys.
+// caches' keys are named, to be found in the stored keys; a past patch's page waits for a
+// third request rather than the image's second, to show where that count comes from.
 const LIMITS = {
   LODB_EDGE_CIDR: '0.0.0.0/0',
   LODB_REVISION: 'r1',
   LODB_ARCHIVE_EPOCH: 'e7',
+  LODB_ARCHIVE_CACHE_MIN_USES: '3',
   LODB_PAGES_RATE: '1r/m',
   LODB_PAGES_BURST: '3',
   LODB_API_READS_RATE: '1r/m',
@@ -150,19 +152,21 @@ describe('nginx image', { skip: IMAGE ? false : 'LODB_NGINX_IMAGE is not set' },
     }
   });
 
-  test("keeps a past patch's page from its second request, under a key without revision",
+  test("keeps a past patch's page from its third request here, under a key without revision",
     async () => {
       const client = { forwardedFor: '203.0.113.2' };
       const path = '/en/15.1.1/champions';
-      const first = await get(path, { ...client, encoding: 'gzip' });
-      const second = await get(path, { ...client, encoding: 'gzip' });
-      const third = await get(path, client);
+      const misses = [];
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        misses.push(await get(path, { ...client, encoding: 'gzip' }));
+      }
+      const kept = await get(path, client);
 
-      assert.deepEqual([first, second, third].map((answer) => answer.headers['x-cache-status']),
-        ['MISS', 'MISS', 'HIT']);
-      assert.equal(gunzipSync(second.body).toString(), 'archive\n');
-      assert.equal(third.body.toString(), 'archive\n');
-      assert.equal(third.headers.vary, 'Accept-Encoding');
+      assert.deepEqual([...misses, kept].map((answer) => answer.headers['x-cache-status']),
+        ['MISS', 'MISS', 'MISS', 'HIT']);
+      assert.equal(gunzipSync(misses[2].body).toString(), 'archive\n');
+      assert.equal(kept.body.toString(), 'archive\n');
+      assert.equal(kept.headers.vary, 'Accept-Encoding');
       assert.deepEqual(await keysOf('archive'), [`KEY: e7|http://localhost${path}`]);
       assert.ok((await keysOf('pages')).includes('KEY: r1|http://localhost/en/about'));
     });

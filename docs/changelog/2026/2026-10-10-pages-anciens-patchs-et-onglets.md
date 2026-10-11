@@ -24,10 +24,10 @@ recharge une fois, de lui-même, et vous arrivez directement sur la page demand�
 - nginx, pages d'une version épinglée dans le chemin (`^/{locale}/[0-9]`) : zone
   `lodb_archive` (6 Go, 7 j d'inactivité, clés 32 Mo), clé **sans révision de déploiement**,
   préfixée par `LODB_ARCHIVE_EPOCH`, montée à la main ; gardée à la deuxième demande
-  (`proxy_cache_min_uses 2`) ; copie périmée servie pendant son rafraîchissement
-  (`updating`). Même débit par adresse que les autres pages. `lodb_pages` (dernier patch,
-  clé avec révision) redescend à 24 h d'inactivité. Tailles réglables par `LODB_ARCHIVE_*`
-  et `LODB_PAGE_CACHE_*`.
+  (`proxy_cache_min_uses`, `LODB_ARCHIVE_CACHE_MIN_USES`) ; copie périmée servie pendant son
+  rafraîchissement (`updating`). Même débit par adresse que les autres pages. `lodb_pages`
+  (dernier patch, clé avec révision) redescend à 24 h d'inactivité. Tailles réglables par
+  `LODB_ARCHIVE_*` et `LODB_PAGE_CACHE_*`.
 - Navigateur : un import dynamique qui échoue (message de Chromium, Firefox ou WebKit,
   `isChunkLoadFailure`) recharge la page entière à l'adresse demandée, une seule fois
   (`ChunkReload`, adresse retenue en `sessionStorage`) ; un second échec à la même adresse

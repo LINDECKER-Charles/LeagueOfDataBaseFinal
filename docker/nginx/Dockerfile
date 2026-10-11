@@ -59,7 +59,8 @@ ENV APP_REVISION=${APP_REVISION} \
     LODB_ARCHIVE_EPOCH=1 \
     LODB_ARCHIVE_CACHE_SIZE=6g \
     LODB_ARCHIVE_CACHE_KEYS_SIZE=32m \
-    LODB_ARCHIVE_CACHE_INACTIVE=7d
+    LODB_ARCHIVE_CACHE_INACTIVE=7d \
+    LODB_ARCHIVE_CACHE_MIN_USES=2
 
 # /var/cache/nginx/{pages,archive,assets} hold the caches of sites/site.conf; created here so
 # that the volumes mounted on them (compose.yaml) start owned by the workers' user.
