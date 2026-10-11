@@ -123,6 +123,15 @@ describe('SsrMetrics', () => {
     expect(sampleOf(await scrape(), refusals)).toBe(2);
   });
 
+  it("counts the inline scripts the pages' policy left out, from zero", async () => {
+    const left = 'lodb_ssr_csp_unexpected_scripts_total';
+    expect(sampleOf(await scrape(), left)).toBe(0);
+
+    metrics.countUnexpectedScripts(3);
+
+    expect(sampleOf(await scrape(), left)).toBe(3);
+  });
+
   it("serves Node's own metrics, and no label outside the contract", async () => {
     counts.record('pinned', 'client_capacity');
     metrics.timeRender('pinned', responseOf(503, true));

@@ -33,6 +33,35 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
 
 - **`autoCsp` est incompatible avec le SSR** ; `withFetch` et `withIncrementalHydration`
   sont omis (défauts en v22).
+- **CSP : seuls les scripts inline du build sont hachés** (`src/server/security/csp`) : ceux des
+  gabarits `index.server.html` et `index.csr.html`, lus au démarrage (un gabarit absent arrête
+  le serveur), plus l'appel `window.__jsaction_bootstrap(…)` du rejeu d'événements quand il
+  suit **immédiatement** le contrat `ng-event-dispatch-contract`, sous sa forme exacte. Tout
+  autre script inline n'est pas exécuté par le navigateur et se compte
+  (`lodb_ssr_csp_unexpected_scripts_total`, ligne `ssr.csp.unexpected_scripts`). À chaque
+  montée d'Angular ou de `beasties`, la spec E2E `pwa/content-security-policy.spec.ts` revérifie
+  qu'aucune page ne viole sa politique : un rejeu refusé perd les clics d'avant l'hydratation,
+  un chargeur refusé laisse les feuilles différées en `media="print"`. Un script inline ajouté
+  à `src/index.html` est admis de lui-même ; un script ajouté au rendu ne l'est jamais.
+- **Trusted Types en Report-Only** (`Content-Security-Policy-Report-Only`) : politiques
+  `angular`, `angular#unsafe-bypass`, `lodb#worker` (enregistrement du service worker) et
+  `lodb#json-ld` (texte des données structurées que `HeadWriter` écrit : affecter le texte d'un
+  `<script>` est un puits, même `application/ld+json`) ; tout autre `innerHTML`, `eval`, texte
+  ou URL de script en chaîne est signalé, rien n'est bloqué. Un
+  nouveau puits (une bibliothèque, un `innerHTML` direct) fait échouer la spec E2E de la CSP :
+  passer par le sanitizer d'Angular ou déclarer la politique dans `trusted-types-policy.ts`.
+- **Rapports CSP** : `report-to` et `report-uri` visent `POST /api/csp-reports` (API, même
+  origine, sans `AllowAnonymous` : le garde vérifie l'`Origin`). Un rapport envoyé avec le
+  cookie de session sans jeton XSRF est refusé comme toute requête de ce genre : celui d'un
+  visiteur connecté dont le navigateur joint ses cookies (`report-uri`) est perdu, voulu.
+  WebKit (Safari, et tout navigateur sur iOS) poste chaque violation avec `Origin: null` et
+  les cookies de la page : le garde la refuse (403), aucun rapport de WebKit n'arrive tant que
+  ce choix tient. L'API lit pourtant son format (un rapport seul, sous `application/csp-report`).
+  Rien de la page ni du client n'est gardé ; une ligne `web.csp.violated` par minute. Sur la
+  pile locale (http), Chromium n'enregistre pas l'endpoint de `Reporting-Endpoints` (il le veut
+  en https) : ses rapports restent en file et n'arrivent jamais, voulu. L'E2E vérifie l'absence
+  de violation par l'événement `securitypolicyviolation`, qui précède tout rapport, et
+  l'endpoint par des envois directs ; la livraison réelle se vérifie sur le staging.
 - Issues de navigation **rendues en place** : 301, 302, 404 et 5xx s'affichent à l'URL
   demandée (`PageResponse`), jamais d'`UrlTree` de redirection côté serveur.
   `/{locale}/account`, `/{locale}/u` et `/b` ont une route 404 explicite (`bareNotFound`).
@@ -278,10 +307,16 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   l'ancienne stack (propriété de `www-data`) n'est ni réutilisé ni supprimé : le nommer
   `storage` rendrait le stockage de l'API non inscriptible.
 - nginx : sous-domaine reconnu par `server_name ~^api\.` ; CORP `same-origin` sauf
-  `/cdn/blobs/` en `cross-origin` (coquille Android) ; `access_log off` voulu (l'edge
-  journalise) ; tous les `.conf` de `sites/`, `server.d/` et `snippets/` passent par
-  `envsubst`, filtré sur `^LODB_` (défauts dans le `Dockerfile`, jamais une valeur vide, sauf
-  `LODB_EDGE_SECRET`). Rendus dans `/tmp/{sites,server.d,snippets}`, que
+  `/cdn/blobs/` en `cross-origin` (coquille Android) ; COOP `same-origin` et
+  `Permissions-Policy` (caméra, micro, position, paiement… refusés ; plein écran, lecture
+  automatique, partage et presse-papiers laissés) sur toute réponse : une fonction nouvelle du
+  navigateur se vérifie contre cette liste (`snippets/security-headers.conf`). Chaque requête
+  relayée part avec un `traceparent` neuf tiré de `$request_id` (`snippets/proxy-headers.conf`),
+  celui d'un client est **remplacé**, jamais continué, et `tracestate`/`baggage` retirés : le
+  SSR le relaie à l'API, dont l'échantillonnage ne lit que l'identifiant ; `access_log off`
+  voulu (l'edge journalise) ; tous les `.conf` de `sites/`, `server.d/` et `snippets/` passent
+  par `envsubst`, filtré sur `^LODB_` (défauts dans le `Dockerfile`, jamais une valeur vide,
+  sauf `LODB_EDGE_SECRET`). Rendus dans `/tmp/{sites,server.d,snippets}`, que
   `/etc/nginx/{sites,server.d,snippets}` désignent par un lien : les `include` gardent leurs
   chemins. Une variable `LODB_*` de nginx passe par `compose.yaml` avec son défaut
   (`${LODB_X:-défaut}`), **jamais** en clé sans valeur dans un calque comme les réglages de

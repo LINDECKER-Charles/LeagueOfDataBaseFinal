@@ -15,6 +15,7 @@ import { authInterceptor } from './core/auth/auth-interceptor';
 import { provideAuth } from './core/auth/provide-auth';
 import { clientHeaderInterceptor } from './core/http/interceptors/client-header-interceptor';
 import { serverApiTimeoutInterceptor } from './core/http/interceptors/server-api-timeout-interceptor';
+import { traceContextInterceptor } from './core/http/trace/trace-context-interceptor';
 import { provideI18n } from './core/i18n/provide-i18n';
 import { PLATFORM } from './core/platform/platform';
 import { providePlatform } from './core/platform/provide-platform';
@@ -67,6 +68,7 @@ export const appConfig: ApplicationConfig = {
         authInterceptor,
         updateInterceptor,
         serverApiTimeoutInterceptor,
+        traceContextInterceptor,
       ]),
     ),
     provideClientHydration(),

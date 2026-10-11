@@ -1,4 +1,5 @@
 using System.Text.Json;
+using LoDb.Desktop.Hosting.Policy;
 
 namespace LoDb.Desktop.Hosting;
 
@@ -20,11 +21,21 @@ internal sealed class ShellIndex(DesktopOptions options, InjectedBridge bridge)
 
     public bool IsAvailable => _template.Value is not null;
 
-    /// <summary>The page to serve, or null when the shell build is missing.</summary>
-    public string? Render() =>
-        _template.Value is { } template
-            ? Inject(template, MarkerScript(options.Version, bridge.Transport))
-            : null;
+    /// <summary>
+    /// The page to serve with its policy, or null when the shell build is missing. The marker
+    /// changes with each launch (bridge, port): its hash is computed here, with the page.
+    /// </summary>
+    public ShellPage? Render()
+    {
+        if (_template.Value is not { } template)
+        {
+            return null;
+        }
+
+        var marker = MarkerScript(options.Version, bridge.Transport);
+        var html = Inject(template, marker);
+        return new ShellPage(html, ShellPolicy.For(InlineScriptHashes.Of(html), options.ApiOrigin));
+    }
 
     /// <summary>
     /// The marker script. The version goes through the JSON encoder, which escapes

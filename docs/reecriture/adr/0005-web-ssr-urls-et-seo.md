@@ -6,7 +6,10 @@
   - le 2026-10-10, les pages des anciens patchs ont leur propre cache, dont la clé ne contient
     plus la révision de déploiement (voir § « Amendement du 2026-10-10 ») ;
   - le 2026-10-11, index des sitemaps borné, anciens patchs découverts par des liens (voir
-    § « Amendement du 2026-10-11 »).
+    § « Amendement du 2026-10-11 ») ;
+  - le 2026-10-11 encore, la CSP ne hache plus que les scripts inline du build, signale ses
+    violations et ajoute les Trusted Types en Report-Only (voir § « Amendement du 2026-10-11
+    — CSP »).
 
 ## Contexte
 
@@ -197,3 +200,20 @@ chunks.
   soumises et indexées par version) et le rapport Performances filtré sur les URL
   versionnées, avant le déploiement puis trois mois après ; la fenêtre se règle sur la
   demande observée.
+
+## Amendement du 2026-10-11 — CSP
+
+- **Scripts admis** : la politique d'une page ne hache plus tout script inline de son HTML
+  final, mais ceux que le build a écrits dans ses gabarits (`index.server.html`,
+  `index.csr.html` : thème, contrat d'événements d'Angular, chargeur des feuilles différées),
+  plus l'appel de rejeu d'événements, de forme fixe, placé juste après le contrat. Un script
+  inline qui atteindrait le HTML au rendu (contenu stocké, erreur de gabarit) n'a pas de
+  hash : le navigateur ne l'exécute pas, et le SSR le compte. Une politique dérivée du
+  document qu'elle protège admettait tout ce qu'il contenait.
+- **Rapports** : `report-to` (`Reporting-Endpoints`) et `report-uri` vers
+  `POST /api/csp-reports` ; l'API en garde des comptes par directive, jamais la page ni le
+  client.
+- **Trusted Types** en `Content-Security-Policy-Report-Only` : appliqués une fois les rapports
+  vides en production.
+- `'unsafe-eval'` est retiré depuis la précompilation des messages ICU (ADR 0006, amendement
+  du 2026-10-11) ; `style-src 'unsafe-inline'` reste imposé par Angular.

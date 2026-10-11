@@ -1,5 +1,6 @@
 using System.Net;
 using LoDb.Desktop.Hosting;
+using LoDb.Desktop.Hosting.Policy;
 using LoDb.Desktop.Tests.Support;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -9,6 +10,8 @@ public sealed class ShellEndpointsTests : IAsyncLifetime
 {
     private const string Marker =
         "<head><script>window.__LODB_DESKTOP__=Object.freeze({version:\"9.8.7\"});</script>";
+
+    private const string SecurityPolicy = "Content-Security-Policy";
 
     private readonly TestFolder _folder = new();
     private DesktopTestHost _host = null!;
@@ -58,6 +61,30 @@ public sealed class ShellEndpointsTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task AdmitsTheInlineScriptsOfTheIndexAndTheMarkerOnly()
+    {
+        _host.Services.GetRequiredService<InjectedBridge>().Use(FakeShell.Transport);
+        var marker = ShellIndex.MarkerScript("9.8.7", FakeShell.Transport);
+        var markerText = marker["<script>".Length..^"</script>".Length];
+
+        using var response = await GetAsync("/fr/champions/103-ahri");
+
+        var policy = Directives(response);
+        Assert.Equal(
+            $"'self' {InlineScriptHashes.OfScript(markerText)} "
+                + InlineScriptHashes.OfScript(TestShell.InlineScript),
+            policy["script-src"]);
+        Assert.Equal("'none'", policy["object-src"]);
+        Assert.Equal("'none'", policy["frame-ancestors"]);
+        Assert.Equal("'self'", policy["connect-src"]);
+        Assert.StartsWith(
+            "'self' data: http://127.0.0.1:1 https://",
+            policy["img-src"],
+            StringComparison.Ordinal);
+        Assert.DoesNotContain("unsafe", policy["script-src"], StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task ServesTheFilesOfTheShell()
     {
         using var response = await GetAsync("/main.js");
@@ -100,6 +127,12 @@ public sealed class ShellEndpointsTests : IAsyncLifetime
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
+
+    private static Dictionary<string, string> Directives(HttpResponseMessage response) =>
+        response.Headers.GetValues(SecurityPolicy).Single()
+            .Split("; ")
+            .Select(static directive => directive.Split(' ', 2))
+            .ToDictionary(static parts => parts[0], static parts => parts[1]);
 
     private Task<HttpResponseMessage> GetAsync(string path) =>
         _host.Client.GetAsync(

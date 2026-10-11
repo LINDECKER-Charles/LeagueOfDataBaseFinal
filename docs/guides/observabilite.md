@@ -119,6 +119,15 @@ container:lodb-prod-php-1
 (stack:lodb-prod OR stack:lodb-staging) _time:1d
   | stats by (stack, service) count() lignes | sort by (lignes desc)
 
+# Une requête de page de bout en bout : nginx démarre une trace W3C par requête qu'il relaie,
+# le SSR la passe à ses appels à l'API ; le trace_id de la ligne http.request.served du SSR
+# retrouve les lignes de l'API pour cette page
+stack:lodb-prod (service:web-ssr OR service:api) _time:1h "4bf92f3577b34da6a3ce929d0e0e4736"
+
+# Violations de la CSP signalées par les navigateurs (une ligne par minute), et scripts
+# inline que le SSR a laissés hors de la politique d'une page
+stack:lodb-prod _time:1d ("web.csp.violated" OR "ssr.csp.unexpected_scripts")
+
 # Les URL en erreur 5xx de la journée, par domaine (journal de l'edge)
 stack:edge service:caddy journal:acces classe:5xx schema:https _time:1d
   | stats by (domaine, chemin) count() requetes | sort by (requetes desc) | limit 20

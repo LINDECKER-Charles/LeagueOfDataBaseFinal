@@ -1,5 +1,3 @@
-import { createHash } from 'node:crypto';
-
 // A script element and its raw text: the HTML parser ends script data at the first `</script`,
 // and Angular escapes that sequence inside the state it serializes.
 const SCRIPT = /<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi;
@@ -10,6 +8,18 @@ const TYPE_ATTRIBUTE = /(?:^|\s)type\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i;
 const EXECUTABLE_TYPE =
   /^(?:module|(?:text|application)\/(?:x-)?(?:java|ecma)script|text\/javascript1\.[0-5]|text\/(?:jscript|livescript))$/i;
 
+/** An inline script a browser would run, where the document holds it. */
+export interface InlineScript {
+  /** The attributes of its opening tag, as written. */
+  readonly attributes: string;
+  /** Its text, byte for byte what a CSP hash covers. */
+  readonly text: string;
+  /** Offset of its opening `<script`. */
+  readonly start: number;
+  /** Offset right after its closing tag. */
+  readonly end: number;
+}
+
 function isExecutableInline(attributes: string): boolean {
   if (SOURCE_ATTRIBUTE.test(attributes)) {
     return false;
@@ -19,17 +29,14 @@ function isExecutableInline(attributes: string): boolean {
   return value === '' || EXECUTABLE_TYPE.test(value);
 }
 
-/**
- * CSP sources (`'sha256-…'`) of the inline scripts a page executes, in document order and
- * without repeats. Hashed on the server for each page, because Angular's `autoCsp` refuses
- * SSR builds, and some of these scripts are written at render time (event replay).
- */
-export function inlineScriptHashes(html: string): string[] {
-  const hashes = new Set<string>();
-  for (const [, attributes, text] of html.matchAll(SCRIPT)) {
+/** The inline scripts `html` executes, in document order. */
+export function inlineScripts(html: string): InlineScript[] {
+  const scripts: InlineScript[] = [];
+  for (const match of html.matchAll(SCRIPT)) {
+    const [element, attributes, text] = match;
     if (isExecutableInline(attributes)) {
-      hashes.add(`'sha256-${createHash('sha256').update(text, 'utf8').digest('base64')}'`);
+      scripts.push({ attributes, text, start: match.index, end: match.index + element.length });
     }
   }
-  return [...hashes];
+  return scripts;
 }
