@@ -12,14 +12,4 @@ test.describe('changelog', { tag: '@readonly' }, () => {
     await expect(releases.first()).toHaveAttribute('id', /^v\d+-\d+-\d+$/);
     expect(consoleErrors).toEqual([]);
   });
-
-  // Until the changelog page has a component spec of its own (lower-layer gap G5).
-  test('marks the French notes of a release read under another locale', async ({ page }) => {
-    await page.goto('/de/changelog');
-
-    await expect(page.locator('.timeline > li').first().locator('.release__body')).toHaveAttribute(
-      'lang',
-      'fr',
-    );
-  });
 });

@@ -73,7 +73,7 @@ est une régression à expliquer, comme un test rouge.
 |---|---|---|
 | .NET (`dotnet test LoDb.slnx`, 5 projets) | 3 min 36, pic 2,3 Go | job `dotnet` 5 min 50, build compris |
 | Vitest (2758 tests) | ~10 s d'exécution, pic 1,9 Go | job `front` 2 min |
-| E2E (66 tests, 2 workers) | 1 min 25 d'exécution, 3 min avec la reconstruction de la stack | job `e2e`, `check-urls` et image nginx compris |
+| E2E (65 tests, 2 workers) | 1 min 25 d'exécution, 3 min avec la reconstruction de la stack | job `e2e`, `check-urls` et image nginx compris |
 
 Plafonds de parallélisme, valables partout : 4 classes xUnit à la fois
 (`tests/LoDb.Api.Tests/xunit.runner.json`), 4 workers Vitest (`vitest-base.config.mts`),
