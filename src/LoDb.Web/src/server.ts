@@ -5,7 +5,7 @@ import {
   writeResponseToNodeResponse,
 } from '@angular/ssr/node';
 import express, { type RequestHandler } from 'express';
-import { join, relative } from 'node:path';
+import { join } from 'node:path';
 import type { SsrRequestContext } from './app/core/http/ssr-request-context';
 import { negotiateLocale } from './app/core/routing/locale/negotiate-locale';
 import { parseAcceptLanguage } from './app/core/routing/locale/parse-accept-language';
@@ -14,6 +14,9 @@ import { AdmissionSummary } from './server/admission/admission-summary';
 import { clientKeyOf } from './server/admission/client-key-of';
 import { RenderAdmission } from './server/admission/render-admission';
 import { RenderCounts } from './server/admission/render-counts';
+import { FrontBuildsPublication } from './server/assets/front-builds-publication';
+import { staticFolder } from './server/assets/static-folder';
+import { encodedDocument } from './server/compression/encoded-document';
 import { createLogger } from './server/create-logger';
 import { failureHandler } from './server/failure-handler';
 import { isHashedAsset } from './server/hashed-asset';
@@ -24,11 +27,9 @@ import { requestLogging } from './server/request-logging';
 import { preRouter } from './server/routing/pre-router';
 import { applyServerTimeouts } from './server/security/apply-server-timeouts';
 import { boundedRequests } from './server/security/bounded-requests';
-import { documentPolicy } from './server/security/document-policy';
 import { networkGate } from './server/security/network-gate';
 import { StackPeers } from './server/security/stack-peers';
 import { withDocumentPolicy } from './server/security/with-document-policy';
-import { staticCacheControl } from './server/static-cache-control';
 
 // The server reads no cookie and holds no secret: pages are the same for every visitor, so
 // the proxy may cache them, and a compromised renderer has nothing to leak. It is still an
@@ -84,29 +85,22 @@ const notFound: RequestHandler = (_request, response) => {
   response.status(404).type('text/plain').send('Not Found');
 };
 
-const staticFiles = express.static(browserDistFolder, {
-  index: false,
-  redirect: false,
-  cacheControl: false,
-  setHeaders: (response, filePath) => {
-    response.setHeader('Cache-Control', staticCacheControl(relative(browserDistFolder, filePath)));
-    // The offline page: a document of its own, with no script at all.
-    if (filePath.endsWith('.html')) {
-      response.setHeader('Content-Security-Policy', documentPolicy([]));
-    }
-  },
-});
-
-// /build/ is reserved for the hashed bundles (deployUrl of the `web` build, ADR 0005): no page
-// and no other file answers under it, so a stale or invented name is a plain 404.
-app.use('/build', (request, response, next) => {
+const staticFiles = staticFolder(browserDistFolder);
+const previousBuilds =
+  settings.frontBuildsFolder === null ? [] : [staticFolder(settings.frontBuildsFolder)];
+const hashedAssetsOnly: RequestHandler = (request, response, next) => {
   if (isHashedAsset(request.path.slice(1))) {
-    staticFiles(request, response, next);
-  } else {
     next();
+  } else {
+    notFound(request, response, next);
   }
-});
-app.use('/build', notFound);
+};
+
+// /build/ is reserved for the hashed bundles (deployUrl of the `web` build, ADR 0005): this
+// build's own, then those the previous builds left in the shared folder, for the tabs and the
+// cached pages that still name them. No page and no other file answers under it, so a stale
+// or invented name is a plain 404.
+app.use('/build', hashedAssetsOnly, staticFiles, ...previousBuilds, notFound);
 
 app.use(staticFiles);
 
@@ -117,6 +111,12 @@ app.use('/i18n', notFound);
 // What the URL alone decides (a 400, the static 404, a query cleaned by a redirect) costs no
 // render and takes no slot.
 app.use(preRouter(settings.queryLimits, () => metrics.countRedirect('query')));
+
+// The policy hashes the inline scripts of the page as rendered, before it is compressed.
+async function servedDocument(rendered: Response, request: express.Request): Promise<Response> {
+  const policed = await withDocumentPolicy(rendered);
+  return encodedDocument(policed, request.get('Accept-Encoding'), settings.htmlGzipLevel);
+}
 
 // Pages only: the files above never wait for a slot, the renders' own catalogues included.
 app.use((request, response, next) => {
@@ -134,7 +134,7 @@ app.use((request, response, next) => {
       }
       metrics.countRendered(rendered.status);
       // Under `ng serve`, the dev server adds scripts of its own that no hash would admit.
-      const sent = listening ? await withDocumentPolicy(rendered) : rendered;
+      const sent = listening ? await servedDocument(rendered, request) : rendered;
       await writeResponseToNodeResponse(sent, response);
     })
     .catch(next);
@@ -153,6 +153,10 @@ if (listening) {
   new AdmissionSummary(renderCounts, logger).start();
   // Never routed by nginx nor published: the host's collector reads it over its own network.
   serveMetrics(metrics.registry, settings.metricsPort, logger);
+  // In the background: this build's bundles are served from its own folder meanwhile.
+  if (settings.frontBuildsFolder !== null) {
+    new FrontBuildsPublication(browserDistFolder, settings.frontBuildsFolder, logger).start();
+  }
 }
 
 export const reqHandler = createNodeRequestHandler(app);

@@ -203,7 +203,8 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   vient de `snippets/server-guards.conf` : une location qui déclare son propre `error_page`
   doit répéter `error_page 429`. `/api/catalog` et `/api/meta` ne sont **jamais** mis en
   cache par nginx (un HIT contournerait le `426` des apps). Les caches `lodb_seo` et
-  `lodb_legacy` vivent dans le conteneur (vides à chaque image), `lodb_pages` sur un volume.
+  `lodb_legacy` vivent dans le conteneur (vides à chaque image), `lodb_pages`,
+  `lodb_archive` et `lodb_assets` (bundles de `/build/`, clé = `$uri` seul) sur des volumes.
   `/cdn/blobs/` ne sert que `{sha256}.{png,jpg,jpeg,webp,gif,webm,mp4}` : une nouvelle
   extension de blob s'ajoute à la regex. La garde des extensions de scripts
   (`snippets/server-guards.conf`) épargne les chemins de profil (`/u/`, `profiles/`) : un
@@ -218,10 +219,45 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   ne lit ses fichiers qu'au démarrage : le label `LODB_SECRETS_REVISION` de `api` est ce qui
   la fait recréer quand un secret change, ne pas le retirer. `POSTGRES_PASSWORD_FILE` ne
   sert qu'à la création d'une base (volume vide).
+- **HTML compressé une fois, par le SSR** (`src/server/compression`, gzip `6`) : les caches
+  de pages de nginx demandent `Accept-Encoding: gzip` à l'amont quel que soit le client,
+  gardent cette seule copie et la décompressent (`gunzip`) pour un client sans gzip. Le
+  `Vary` de l'amont est ignoré par le cache et masqué ; `Vary: Accept-Encoding` vient de
+  nginx (`gzip_vary`), une fois : ni `add_header Vary`, ni retrait de `proxy_hide_header`.
+  Le SSR compresse **après** le calcul de la CSP, qui hache le HTML rendu.
 - `gzip_types` de `docker/nginx/nginx.conf` doit lister `text/javascript` et
   `application/manifest+json` (sinon ~1,7 s perdues en 4G lente). Un budget Lighthouse ne
   se relâche jamais ; Lighthouse en local est pessimiste (cache de transfert du SSR rangé
   sans le port).
+- **Pages des anciens patchs** (`location ~ "^/{locale}/[0-9]"`, `snippets/archive-cache.conf`) :
+  clé **sans révision**, préfixée par `LODB_ARCHIVE_EPOCH`. Elles survivent aux déploiements
+  et gardent jusqu'à deux semaines le chrome, la CSP et les bundles du build qui les a
+  rendues (une semaine de `s-maxage`, puis une dernière copie périmée servie pendant son
+  rafraîchissement tant que la page n'a pas atteint ses 7 jours d'inactivité) : voulu. Monter l'epoch quand le chrome, la CSP ou le contrat `/api` changent de façon
+  visible, et après tout correctif de sécurité du front (procédure :
+  [`configuration.md`](../guides/configuration.md)). Gardées à la **2ᵉ** demande
+  (`LODB_ARCHIVE_CACHE_MIN_USES`, `2`) : `MISS`, `MISS`, puis `HIT` ; une spec qui attend un
+  `HIT` les demande trois fois. En deçà, chaque URL distincte tient quand même une clé
+  jusqu'à son inactivité, même une réponse non gardée (`301`, `503`) : la zone des clés borne
+  les URL qu'un balayage parcourt avant d'évincer, pas le disque. En local aussi, une page d'ancien patch survit à un rebuild : `down -v` ou monter
+  l'epoch. `archive-cache.conf` sert la copie périmée pendant le rafraîchissement
+  (`updating`) ; `page-cache.conf` **jamais** (elle primerait sur le
+  `stale-while-revalidate` du dernier patch). Les regex de location contenant `{` sont entre
+  guillemets, sinon nginx refuse sa configuration.
+- **Bundles des builds précédents** : `web-ssr` copie ses bundles hachés dans le volume
+  `front-builds` (`LODB_FRONT_BUILDS_DIR`) sans réécrire l'existant, au démarrage puis
+  **toutes les heures**, et rafraîchit leur date à chaque fois ; `/build/` sert ceux de
+  l'image, puis ceux du volume. Le job de déploiement supprime ce qu'aucun build en service
+  n'a livré depuis `LODB_FRONT_BUILDS_RETENTION_DAYS` (30 j) : jamais sous la durée de vie
+  d'une page en cache. La date d'un fichier est celle de la dernière heure où un build l'a
+  servi, pas celle du démarrage : sans le rafraîchissement horaire, un build resté en service
+  plus de 30 jours perdrait ses bundles au déploiement qui le remplace. Un chunk introuvable
+  recharge la page une fois (`ChunkReload`, drapeau en `sessionStorage`), puis affiche la
+  500 : un rechargement en boucle se cherche là. Le volume est écrit par le SSR et survit aux
+  déploiements : nginx sert `/build/` sous `default-src 'none'; sandbox` (un fichier ouvert
+  directement n'exécute rien ; la politique est ignorée pour un script ou un style qu'une
+  page charge), et après une compromission du SSR on vide `front-builds` et `assets-cache`
+  ([`configuration.md`](../guides/configuration.md)).
 - SSR : `LODB_TRUST_PROXY_HEADERS` obligatoire derrière nginx, `LODB_ALLOWED_HOSTS` liste
   les hôtes acceptés ; `public/` ne contient ni `media/` ni script racine nommé comme un
   bundle (cache `immutable`). Ses métriques sont sur un second serveur HTTP, port 9464

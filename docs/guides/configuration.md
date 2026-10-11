@@ -219,13 +219,43 @@ création d'une base, sur un volume vide.
 | `LODB_CURRENT_RENDERS_PER_CLIENT_PER_MINUTE`, `LODB_CURRENT_RENDER_PER_CLIENT_BURST` | ➖ | ➖ | ➖ | Part d'un client des pages du dernier patch : rendus par minute (`60`) et d'affilée (`20`), un cinquième et un tiers du couloir. Vérifiée avant le budget du couloir : un rendu refusé n'en dépense rien, le reste demeure aux autres visiteurs. Refus : `503` avec `Retry-After`, compté `current`/`client_rate` dans `ssr.admission.summary`. Sans effet pour un lecteur : un chargement complet rend une page, la navigation dans le site n'en rend aucune côté serveur, et une adresse partagée (NAT, CGNAT) reste loin d'un rendu par seconde. Un robot sur une seule adresse reçoit toujours les pages que nginx a en cache ; seules ses pages absentes du cache au-delà d'une par seconde reçoivent un `503`. Même règle de part que la ligne précédente. |
 | `LODB_RENDER_DEADLINE_SECONDS`, `LODB_RENDER_API_TIMEOUT_SECONDS` | ➖ | ➖ | ➖ | Attente de l'API par un rendu (`20`) et par appel (`10`, borné par le temps restant) ; au-delà, page `502`. |
 | `LODB_QUERY_MAX_PARAMS`, `LODB_QUERY_MAX_PARAM_LENGTH` | ➖ | ➖ | ➖ | Paramètres gardés par l'URL d'une liste ou d'une fiche (`16`, de `200` caractères au plus) ; les autres sont retirés par une `301`. |
-| `LODB_PAGES_RATE`, `LODB_PAGES_BURST`, `LODB_API_READS_*`, `LODB_LEGACY_*`, `LODB_SITEMAPS_*`, `LODB_READYZ_*`, `LODB_RATE_LIMITED_RETRY_AFTER`, `LODB_MAX_BODY_SIZE`, `LODB_WEBHOOK_MAX_BODY_SIZE`, `LODB_PAGE_CACHE_SIZE`, `LODB_PAGE_CACHE_KEYS_SIZE`, `LODB_PAGE_CACHE_INACTIVE` | ➖ | ➖ | ➖ | Bornes de nginx, par adresse : débit (`_RATE`) et rafale (`_BURST`) des pages (`20r/s`, `100`), des lectures publiques de l'API (`10r/s`, `40`), de l'ancien site (`2r/s`, `10`), de `/sitemaps/` (`1r/s`, `20`) et de `/readyz` (`1r/s`, `5`), au-delà `429` avec `Retry-After` (`10`) ; corps de requête (`128k`, `1m` pour `/webhooks/`) ; cache des pages (`2g`, clés `32m`, inactivité `7d`). Absents ou vides : ces défauts, ceux de `docker/nginx/Dockerfile`, que `compose.yaml` reprend (`tools/nginx` vérifie l'accord). |
+| `LODB_HTML_GZIP_LEVEL` | ➖ | ➖ | ➖ | Niveau gzip (`6`, de `1` à `9`) auquel le SSR compresse une page, une fois par rendu ; nginx garde la copie compressée. |
+| `LODB_PAGES_RATE`, `LODB_PAGES_BURST`, `LODB_API_READS_*`, `LODB_LEGACY_*`, `LODB_SITEMAPS_*`, `LODB_READYZ_*`, `LODB_RATE_LIMITED_RETRY_AFTER`, `LODB_MAX_BODY_SIZE`, `LODB_WEBHOOK_MAX_BODY_SIZE`, `LODB_PAGE_CACHE_SIZE`, `LODB_PAGE_CACHE_KEYS_SIZE`, `LODB_PAGE_CACHE_INACTIVE`, `LODB_ARCHIVE_CACHE_SIZE`, `LODB_ARCHIVE_CACHE_KEYS_SIZE`, `LODB_ARCHIVE_CACHE_INACTIVE`, `LODB_ASSETS_CACHE_SIZE`, `LODB_ASSETS_CACHE_KEYS_SIZE`, `LODB_ASSETS_CACHE_INACTIVE` | ➖ | ➖ | ➖ | Bornes de nginx, par adresse : débit (`_RATE`) et rafale (`_BURST`) des pages (`20r/s`, `100`), des lectures publiques de l'API (`10r/s`, `40`), de l'ancien site (`2r/s`, `10`), de `/sitemaps/` (`1r/s`, `20`) et de `/readyz` (`1r/s`, `5`), au-delà `429` avec `Retry-After` (`10`) ; corps de requête (`128k`, `1m` pour `/webhooks/`) ; cache des pages du dernier patch (`2g`, clés `32m`, inactivité `24h`), des anciens patchs (`6g`, clés `32m`, inactivité `7d`) et des bundles de `/build/` (`1g`, clés `8m`, inactivité `30d`), soit ≈ 9 Go de disque au plus. Absents ou vides : ces défauts, ceux de `docker/nginx/Dockerfile`, que `compose.yaml` reprend (`tools/nginx` vérifie l'accord). |
+| `LODB_ARCHIVE_EPOCH` | ➖ | ➖ | ➖ | Première partie de la clé du cache des anciens patchs (`1`), leur seule purge : voir « Monter l'epoch des anciens patchs » ci-dessous. |
+| `LODB_ARCHIVE_CACHE_MIN_USES` | ➖ | ➖ | ➖ | Demandes d'une page d'ancien patch avant que nginx la garde (`2`) : un rendu demandé une fois n'atteint pas le disque. En deçà, chaque URL distincte tient quand même une clé jusqu'à son inactivité, quelle que soit la réponse (`301`, `503` de délestage) : un balayage évince les pages les moins récemment demandées dès qu'il dépasse la zone des clés (`LODB_ARCHIVE_CACHE_KEYS_SIZE`, ≈ 8 000 clés par Mo). À `1`, seules les réponses gardées tiennent une clé. |
+| `LODB_FRONT_BUILDS_RETENTION_DAYS` | ➖ | ➖ | ➖ | Lu par le job de déploiement : un bundle du volume `front-builds` qu'aucun build n'a livré depuis ce nombre de jours (`30`) est supprimé. Jamais sous la durée de vie d'une page en cache (deux semaines pour un ancien patch : une semaine de `s-maxage`, puis une dernière copie périmée servie avant 7 jours d'inactivité) : un onglet ou une page gardée nommerait un bundle disparu. |
 | `LODB_ADMIN_LOGIN` | 🔁 `ADMIN_LOGIN` | idem | ➖ | Administrateur racine, tenu par le job à chaque déploiement (`api admin root`) : compte de ce nom, rôle admin, TOTP enrôlé depuis le lien d'invitation que `api admin mfa-invite --email …` affiche sur l'hôte (15 min ; `api admin mfa-reset` retire un TOTP perdu). Absent : aucun, seulement `api admin create`. |
 | `LODB_ADMIN_PASSWORD` 🔒 | 🔁 `ADMIN_PASSWORD` | idem | avec le précédent | Son mot de passe, 12 caractères au moins, sans apostrophe ni guillemet. Changé ici, il est réappliqué au déploiement suivant (sessions fermées). Reste dans le `.env` : le job le passe à la commande par son entrée. |
 | `LODB_ADMIN_EMAIL` | ➖ | ➖ | ➖ | Son e-mail, qui identifie le compte ; défaut `<login>@<LODB_CANONICAL_HOST>`. |
 | `LODB_PG_MAX_CONNECTIONS`, `LODB_PG_SLOW_STATEMENT`, `LODB_PG_IDLE_IN_TRANSACTION_TIMEOUT`, `LODB_PG_SHM_SIZE` | ➖ | ➖ | ➖ | Serveur Postgres (`compose.yaml`) : connexions (`60`, pour un pool de l'API à `32` plus `migrate`, la sauvegarde du déploiement, les verrous des tâches et `psql`), requêtes journalisées au-delà de `500ms` (sans leurs paramètres, jamais), session laissée inactive dans une transaction fermée après `60s`, `/dev/shm` de `256m`. `pg_stat_statements` est toujours chargé. |
 | `COMPOSE_FILE` | — | — | — | **Jamais dans `ENV_*`** : le job l'écrit dans le `.env` de l'hôte, avec les calques de l'environnement (§ 4.5), pour qu'une commande `docker compose` lancée à la main depuis le dossier les applique aussi. |
 | `LODB_STAGING_BASIC_AUTH_USER`, `LODB_STAGING_BASIC_AUTH_HASH` 🔒 | ➖ | **jamais** | ➖ | Identifiant demandé sur les pages du staging (§ 4.5). Les deux ou aucun ; en prod, le job refuse de déployer. |
+
+**Monter l'epoch des anciens patchs.** Les pages d'une version épinglée dans l'URL sont
+gardées par nginx à travers les déploiements, avec le chrome, la CSP et les bundles du build
+qui les a rendues. Monter `LODB_ARCHIVE_EPOCH` (`1` → `2`…) dans `ENV_STAGING` / `ENV_PROD`
+quand le chrome (en-tête, pied, puce de release), la CSP ou le contrat `/api` changent de
+façon visible, et **après tout correctif de sécurité du front** ; le déploiement suivant
+recrée nginx sur des clés neuves, les anciennes s'éteignent en 7 jours. Pour un correctif
+de sécurité, retirer aussi le chunk vulnérable, du volume des bundles et du cache de nginx,
+une fois le build corrigé en service (le build vulnérable le republierait dans l'heure) :
+
+```bash
+docker compose exec -T web-ssr rm -f /srv/front-builds/<chunk>.js
+docker compose exec -T nginx sh -c \
+  "grep -rlax 'KEY: /build/<chunk>.js' /var/cache/nginx/assets | xargs -r rm -f"
+```
+
+Le volume `front-builds` est le seul endroit où le serveur SSR écrit, et ce qu'il y écrit
+survit aux déploiements. Après un correctif du **serveur SSR lui-même** (exécution de code
+dans le conteneur `web-ssr`), monter l'epoch comme ci-dessus, puis, une fois le build corrigé
+en service, vider ce volume et le cache des bundles de nginx en entier : le build corrigé y
+republie les siens dans l'heure, et `/build/` sert ceux de son image entre-temps.
+
+```bash
+docker compose exec -T web-ssr find /srv/front-builds -mindepth 1 -delete
+docker compose exec -T nginx find /var/cache/nginx/assets -mindepth 1 -delete
+```
 
 Chaque environnement a son propre service `postgres` dans son projet, comme avant.
 `CONTACT_RECIPIENT` et `PUBLIC_API_BASE_URL` n'ont d'effet qu'en local : sur un
@@ -269,8 +299,8 @@ pool borné par `Maximum Pool Size=32;Timeout=5`, **sans mot de passe** : l'API 
 (`LODB_PUBLIC_API_ORIGIN`), `LoDb__DataProtection__CertificatePath`,
 `LoDb__Hosting__KnownProxyNetworks__0` (`LODB_STACK_SUBNET` seul), `LoDb__Storage__Root` (`/srv/storage`, volume
 `ddragon`, que nginx sert), et côté SSR `LODB_API_ORIGIN`, `LODB_TRUST_PROXY_HEADERS`,
-`LODB_STACK_NETWORKS` (`LODB_STACK_SUBNET` seul),
-`NODE_OPTIONS`. `ASPNETCORE_ENVIRONMENT` reste **absente** sur un hôte : `Development`
+`LODB_STACK_NETWORKS` (`LODB_STACK_SUBNET` seul), `LODB_FRONT_BUILDS_DIR` (`/srv/front-builds`,
+volume `front-builds`), `NODE_OPTIONS`. `ASPNETCORE_ENVIRONMENT` reste **absente** sur un hôte : `Development`
 exposerait OpenAPI et retirerait `Secure` des cookies.
 
 Ressources de chaque service, dans `compose.deploy.yaml` (la prod, et le staging sous son
@@ -393,6 +423,9 @@ Volumes du projet (`lodb-staging_…`, `lodb-prod_…`) :
 | `pgdata` | **repris** de l'ancienne stack | La base, mise à jour par `migrate` (une base Doctrine est d'abord marquée à `Baseline`). |
 | `ddragon` | nouveau, vide au premier déploiement | Blobs Data Dragon, remplis par l'ingestion. |
 | `pages-cache` | nouveau | Cache des pages de nginx. |
+| `archive-cache` | nouveau | Cache des pages des anciens patchs de nginx, clé sans révision : il survit aux déploiements (`LODB_ARCHIVE_EPOCH`). |
+| `assets-cache` | nouveau | Cache des bundles de `/build/` de nginx, clé = nom du fichier : un déploiement le trouve chaud. |
+| `front-builds` | nouveau | Bundles hachés des builds successifs : `web-ssr` y ajoute les siens au démarrage et rafraîchit leur date toutes les heures, `/build/` y trouve ceux des builds précédents ; le job supprime ceux qu'aucun build en service n'a livrés depuis 30 jours. |
 | `storage`, `app_state` | ancienne stack, **laissés intacts** | Non montés : ni réutilisés (`storage` appartient à `www-data`, l'API ne pourrait pas y écrire) ni supprimés (retour arrière, reprise des agrégats et de l'audit). Supprimés à la décommission, après export. |
 
 ## 6. Obtenir les valeurs

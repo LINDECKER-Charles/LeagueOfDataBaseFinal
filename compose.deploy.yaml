@@ -217,9 +217,10 @@ services:
       resources:
         limits:
           # Not the 2 x peak rule (19 MiB of processes): the shared memory of the cache keys
-          # (32 MiB for the pages) and of the rate zones is charged here, and so is the
-          # kernel's page cache of the cached pages and blobs it serves, which fills whatever
-          # the limit leaves. Too tight, every cache HIT reads the disk again.
+          # (32 MiB each for the latest and the past patches' pages, 8 MiB for the bundles)
+          # and of the rate zones is charged here, and so is the kernel's page cache of the
+          # cached pages and blobs it serves, which fills whatever the limit leaves. Too
+          # tight, every cache HIT reads the disk again.
           memory: 256m
           cpus: "0.25"
           pids: 256

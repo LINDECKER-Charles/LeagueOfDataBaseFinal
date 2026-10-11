@@ -1,4 +1,6 @@
+import { isAbsolute } from 'node:path';
 import { readRenderLimits } from './admission/read-render-limits';
+import { readGzipLevel } from './compression/read-gzip-level';
 import { readRenderTimeouts } from './rendering/read-render-timeouts';
 import { readQueryLimits } from './routing/read-query-limits';
 import type { ServerSettings } from './server-settings';
@@ -56,11 +58,22 @@ function originOf(value: string | undefined): string {
   return url.origin;
 }
 
+function folderOf(value: string | undefined): string | null {
+  if (value === undefined || value === '') {
+    return null;
+  }
+  if (!isAbsolute(value)) {
+    throw new Error(`LODB_FRONT_BUILDS_DIR must be an absolute path, got "${value}".`);
+  }
+  return value;
+}
+
 /**
  * Reads PORT, LODB_METRICS_PORT, LODB_ALLOWED_HOSTS, LODB_TRUST_PROXY_HEADERS and
- * LODB_STACK_NETWORKS (comma-separated lists), LODB_API_ORIGIN, the bounds of the render
- * admission, of a render's wait on the API and of a catalogue page's query. `listening` tells whether this process
- * serves HTTP itself, which is what makes its loopback origin usable by the renders.
+ * LODB_STACK_NETWORKS (comma-separated lists), LODB_API_ORIGIN, LODB_FRONT_BUILDS_DIR,
+ * LODB_HTML_GZIP_LEVEL, the bounds of the render admission, of a render's wait on the API and
+ * of a catalogue page's query. `listening` tells whether this process serves HTTP itself, which
+ * is what makes its loopback origin usable by the renders.
  */
 export function readServerSettings(env: Environment, listening: boolean): ServerSettings {
   const port = portOf(env, 'PORT', DEFAULT_PORT);
@@ -72,8 +85,10 @@ export function readServerSettings(env: Environment, listening: boolean): Server
     stackNetworks: listOf(env['LODB_STACK_NETWORKS']) ?? [],
     apiOrigin: originOf(env['LODB_API_ORIGIN']),
     selfOrigin: listening ? `http://${LOOPBACK_HOST}:${port}` : null,
+    frontBuildsFolder: folderOf(env['LODB_FRONT_BUILDS_DIR']),
     renderLimits: readRenderLimits(env),
     renderTimeouts: readRenderTimeouts(env),
     queryLimits: readQueryLimits(env),
+    htmlGzipLevel: readGzipLevel(env),
   };
 }

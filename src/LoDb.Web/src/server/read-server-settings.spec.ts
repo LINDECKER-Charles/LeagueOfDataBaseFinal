@@ -15,9 +15,11 @@ describe('readServerSettings', () => {
       stackNetworks: [],
       apiOrigin: 'http://lodb-api:8080',
       selfOrigin: 'http://127.0.0.1:4000',
+      frontBuildsFolder: null,
       renderLimits: DEFAULT_RENDER_LIMITS,
       renderTimeouts: DEFAULT_RENDER_TIMEOUTS,
       queryLimits: DEFAULT_QUERY_LIMITS,
+      htmlGzipLevel: 6,
     });
   });
 
@@ -30,9 +32,11 @@ describe('readServerSettings', () => {
         LODB_TRUST_PROXY_HEADERS: 'x-forwarded-proto,x-forwarded-host',
         LODB_STACK_NETWORKS: '10.231.2.0/24, fd12:3456::/64',
         LODB_API_ORIGIN: 'http://lodb-api.internal:8080/',
+        LODB_FRONT_BUILDS_DIR: '/srv/front-builds',
         LODB_PINNED_RENDERS_PER_MINUTE: '30',
         LODB_RENDER_DEADLINE_SECONDS: '25',
         LODB_QUERY_MAX_PARAMS: '8',
+        LODB_HTML_GZIP_LEVEL: '9',
       },
       true,
     );
@@ -45,9 +49,11 @@ describe('readServerSettings', () => {
       stackNetworks: ['10.231.2.0/24', 'fd12:3456::/64'],
       apiOrigin: 'http://lodb-api.internal:8080',
       selfOrigin: 'http://127.0.0.1:4100',
+      frontBuildsFolder: '/srv/front-builds',
       renderLimits: { ...DEFAULT_RENDER_LIMITS, pinnedPerMinute: 30 },
       renderTimeouts: { ...DEFAULT_RENDER_TIMEOUTS, deadlineMs: 25_000 },
       queryLimits: { ...DEFAULT_QUERY_LIMITS, maxParams: 8 },
+      htmlGzipLevel: 9,
     });
   });
 
@@ -84,4 +90,16 @@ describe('readServerSettings', () => {
       expect(() => readServerSettings({ LODB_API_ORIGIN: origin }, true)).toThrow();
     },
   );
+
+  it.each(['srv/front-builds', './front-builds'])('refuses LODB_FRONT_BUILDS_DIR=%s', (folder) => {
+    expect(() => readServerSettings({ LODB_FRONT_BUILDS_DIR: folder }, true)).toThrow(
+      /LODB_FRONT_BUILDS_DIR/,
+    );
+  });
+
+  it.each(['0', '10', '6.5', 'best'])('refuses LODB_HTML_GZIP_LEVEL=%s', (level) => {
+    expect(() => readServerSettings({ LODB_HTML_GZIP_LEVEL: level }, true)).toThrow(
+      /LODB_HTML_GZIP_LEVEL/,
+    );
+  });
 });
