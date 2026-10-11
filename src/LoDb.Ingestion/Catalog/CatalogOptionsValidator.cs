@@ -4,8 +4,9 @@ using Microsoft.Extensions.Options;
 namespace LoDb.Ingestion.Catalog;
 
 /// <summary>
-/// Refuses at startup a catalog that could hold nothing, versions cached for too long, an
-/// unreadable pinned language, or a cold gate that would admit nothing or never let go.
+/// Refuses at startup a catalog that could hold nothing, versions or image verdicts cached
+/// for too long, an unreadable pinned language, a cold gate that would admit nothing or never
+/// let go, or art variants stored too often or with no bound.
 /// </summary>
 internal sealed class CatalogOptionsValidator : IValidateOptions<CatalogOptions>
 {
@@ -13,16 +14,25 @@ internal sealed class CatalogOptionsValidator : IValidateOptions<CatalogOptions>
     private const int MaxPinnedBudgetMegabytes = 4096;
     private const int MaxColdLoadConcurrency = 64;
     private const int MaxPendingLoadsLimit = 1024;
+    private const int MaxImageVerdictVersions = 1024;
+    private const int MaxArtVariantsConcurrency = 16;
 
     private static readonly TimeSpan MinDuration = TimeSpan.FromMilliseconds(1);
     private static readonly TimeSpan MaxLifetime = TimeSpan.FromHours(1);
     private static readonly TimeSpan MaxInternalWait = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan MinArtVariantsPeriod = TimeSpan.FromMinutes(1);
+    private static readonly TimeSpan MaxArtVariantsPeriod = TimeSpan.FromDays(1);
 
     public ValidateOptionsResult Validate(string? name, CatalogOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
         List<string> failures =
-            [.. MemoryFailures(options), .. RateFailures(options), .. WaitFailures(options)];
+        [
+            .. MemoryFailures(options),
+            .. VerdictFailures(options),
+            .. RateFailures(options),
+            .. WaitFailures(options),
+        ];
         return failures.Count == 0
             ? ValidateOptionsResult.Success
             : ValidateOptionsResult.Fail(failures);
@@ -48,6 +58,31 @@ internal sealed class CatalogOptionsValidator : IValidateOptions<CatalogOptions>
         if (options.PinnedBudgetMegabytes is < 0 or > MaxPinnedBudgetMegabytes)
         {
             yield return "PinnedBudgetMegabytes must lie between 0 and 4096.";
+        }
+    }
+
+    private static IEnumerable<string> VerdictFailures(CatalogOptions options)
+    {
+        if (options.ImageVerdictsLifetime < MinDuration
+            || options.ImageVerdictsLifetime > MaxLifetime)
+        {
+            yield return "ImageVerdictsLifetime must lie between 1 ms and one hour.";
+        }
+
+        if (options.ImageVerdictVersions is < 1 or > MaxImageVerdictVersions)
+        {
+            yield return "ImageVerdictVersions must lie between 1 and 1024.";
+        }
+
+        if (options.ArtVariantsPeriod < MinArtVariantsPeriod
+            || options.ArtVariantsPeriod > MaxArtVariantsPeriod)
+        {
+            yield return "ArtVariantsPeriod must lie between one minute and one day.";
+        }
+
+        if (options.ArtVariantsConcurrency is < 1 or > MaxArtVariantsConcurrency)
+        {
+            yield return "ArtVariantsConcurrency must lie between 1 and 16.";
         }
     }
 

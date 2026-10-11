@@ -23,6 +23,7 @@ function cardOf(id: string, tags: string[]): ChampionCard {
     title: 'the Dark Child',
     image: { status: 'absent' },
     loadingArt: `https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${id}_0.jpg`,
+    loadingArtVariants: [],
     blurb: 'Dangerous, yet disarmingly precocious.',
     partype: 'Mana',
     resource: 'mana',

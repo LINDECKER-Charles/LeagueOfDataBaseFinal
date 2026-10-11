@@ -28,7 +28,12 @@
             <span class="codex-header__meta">{{ skinCount() }}</span>
           </div>
           @defer (on viewport) {
-            <lodb-skin-gallery [skins]="details().skins" [championName]="profile().name" />
+            <lodb-skin-shelf
+              [version]="context().version"
+              [language]="context().language"
+              [champion]="profile().id"
+              [championName]="profile().name"
+            />
           } @placeholder {
             <div class="flex gap-4 overflow-hidden" aria-hidden="true">
               @for (tile of [1, 2, 3]; track tile) {

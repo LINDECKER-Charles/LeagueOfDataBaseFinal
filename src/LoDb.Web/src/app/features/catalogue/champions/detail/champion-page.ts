@@ -16,8 +16,7 @@ import { AbilityShowcase } from './abilities/ability-showcase';
 import { CHAMPION_SECTIONS } from './champion-sections';
 import { ChampionHero } from './hero/champion-hero';
 import { DdragonHtmlPipe } from './rich-text/ddragon-html-pipe';
-import { alternateSkins } from './skins/alternate-skins';
-import { SkinGallery } from './skins/skin-gallery';
+import { SkinShelf } from './skins/skin-shelf';
 import { StatBoard } from './stats/stat-board';
 import { LoadTime } from '../../shared/codex/timing/load-time';
 
@@ -29,7 +28,7 @@ function hasText(tip: string): boolean {
 
 /**
  * A champion's page, rendered on the server from the entry its route resolved: the hero,
- * sticky section chips, the ability showcase, the skins (loaded once scrolled to), the lore,
+ * sticky section chips, the ability showcase, the skins (read once scrolled to), the lore,
  * the tips, the stat board, the same champion in the previous patches, then the pager through
  * the list and the load-time badge.
  */
@@ -46,7 +45,7 @@ function hasText(tip: string): boolean {
     Reveal,
     SectionNav,
     Skeleton,
-    SkinGallery,
+    SkinShelf,
     StatBoard,
     TranslocoPipe,
   ],
@@ -58,7 +57,7 @@ export class ChampionPage {
   protected readonly details = computed(() => this.entry().details);
   protected readonly context = computed(() => this.entry().context);
   protected readonly profile = computed(() => this.details().profile);
-  protected readonly skinCount = computed(() => alternateSkins(this.details().skins).length);
+  protected readonly skinCount = computed(() => this.details().alternateSkinCount);
   protected readonly lore = computed(() => this.details().lore || this.details().blurb);
   protected readonly allyTips = computed(() => this.details().allyTips.filter(hasText));
   protected readonly enemyTips = computed(() => this.details().enemyTips.filter(hasText));

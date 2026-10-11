@@ -7,6 +7,8 @@ export type { ListChampions$Params as ListChampions$Params } from './fn/catalog/
 export { listChampions as listChampions } from './fn/catalog/list-champions';
 export type { GetChampion$Params as GetChampion$Params } from './fn/catalog/get-champion';
 export { getChampion as getChampion } from './fn/catalog/get-champion';
+export type { GetChampionSkins$Params as GetChampionSkins$Params } from './fn/catalog/get-champion-skins';
+export { getChampionSkins as getChampionSkins } from './fn/catalog/get-champion-skins';
 export type { ListItems$Params as ListItems$Params } from './fn/catalog/list-items';
 export { listItems as listItems } from './fn/catalog/list-items';
 export type { GetItem$Params as GetItem$Params } from './fn/catalog/get-item';

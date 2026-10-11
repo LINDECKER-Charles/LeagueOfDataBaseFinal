@@ -1,7 +1,12 @@
 using System.Net;
 using System.Net.Http.Headers;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using LoDb.Domain.Versions;
+using LoDb.Infrastructure.Persistence.Ddragon;
+using LoDb.Ingestion.Images;
+using LoDb.Ingestion.Images.Art;
 using LoDb.Ingestion.Pipeline.Versions;
 using LoDb.Testing;
 using LoDb.Testing.Fixtures;
@@ -14,13 +19,14 @@ namespace LoDb.Api.Tests.Catalog;
 
 /// <summary>
 /// The API over the recorded Data Dragon and a database holding 16.19.1, ingested whole and
-/// promoted. The other recorded versions stay cold: a call ingests their datasets before it
-/// answers, and their images only when it resolves them synchronously, the background
-/// workers being off.
+/// promoted, with the art variants of Ahri alone. The other recorded versions stay cold: a
+/// call ingests their datasets before it answers, and their images only when it resolves
+/// them synchronously, the background workers being off.
 /// </summary>
 public sealed class CatalogApiFixture : IAsyncLifetime
 {
     private const string ProblemContentType = "application/problem+json";
+    private const string ClientHeader = "X-LoDb-Client";
 
     private readonly PostgresContainerFixture _postgres = new();
     private TestDatabase? _database;
@@ -59,6 +65,7 @@ public sealed class CatalogApiFixture : IAsyncLifetime
                     prometheus.ScrapeResponseCacheDurationMilliseconds = 0)));
         var ingestion = host.Services.GetRequiredService<IVersionIngestion>();
         await IngestAsync(ingestion, DdragonFixtures.Latest);
+        await RecordAhriArtAsync(host.Services.GetRequiredService<IDdragonAssetStore>());
         _client = host.CreateClient();
         _metricsClient = host.CreateClient(new WebApplicationFactoryClientOptions
         {
@@ -71,8 +78,14 @@ public sealed class CatalogApiFixture : IAsyncLifetime
         (_metricsClient ?? throw new InvalidOperationException("The fixture is not initialized."))
             .GetStringAsync(new Uri("/metrics", UriKind.Relative), Token);
 
-    /// <summary>A GET, optionally conditional on a tag the client holds.</summary>
-    public async Task<HttpResponseMessage> GetAsync(string path, string? ifNoneMatch = null)
+    /// <summary>
+    /// A GET, optionally conditional on a tag the client holds, or sent by an installed app
+    /// (<c>X-LoDb-Client: {platform}/{version}</c>).
+    /// </summary>
+    public async Task<HttpResponseMessage> GetAsync(
+        string path,
+        string? ifNoneMatch = null,
+        string? app = null)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, new Uri(path, UriKind.Relative));
         if (ifNoneMatch is not null)
@@ -80,13 +93,18 @@ public sealed class CatalogApiFixture : IAsyncLifetime
             request.Headers.IfNoneMatch.Add(EntityTagHeaderValue.Parse(ifNoneMatch));
         }
 
+        if (app is not null)
+        {
+            request.Headers.Add(ClientHeader, app);
+        }
+
         return await Client.SendAsync(request, Token);
     }
 
-    /// <summary>The body of a 200 answer.</summary>
-    public async Task<JsonElement> GetJsonAsync(string path)
+    /// <summary>The body of a 200 answer, to the web or to an installed app.</summary>
+    public async Task<JsonElement> GetJsonAsync(string path, string? app = null)
     {
-        using var response = await GetAsync(path);
+        using var response = await GetAsync(path, app: app);
         var body = await response.Content.ReadAsStringAsync(Token);
         Assert.True(response.StatusCode == HttpStatusCode.OK, $"{path}: {body}");
         return JsonDocument.Parse(body).RootElement.Clone();
@@ -124,4 +142,31 @@ public sealed class CatalogApiFixture : IAsyncLifetime
         var result = await ingestion.IngestAsync(version, IngestionRequest.Complete, Token);
         Assert.Equal(VersionIngestionOutcome.Completed, result.Outcome);
     }
+
+    // The rows the art job would write, before any read: the pages resolve what is stored.
+    private static Task<int> RecordAhriArtAsync(IDdragonAssetStore assets) =>
+        assets.RecordAsync(
+            [
+                .. AhriArt().Select(static variant => DdragonAssetEntry.Present(
+                    DdragonFixtures.Latest.Value,
+                    variant.ManifestType,
+                    variant.ManifestKey,
+                    Convert.ToHexStringLower(
+                        SHA256.HashData(Encoding.UTF8.GetBytes(variant.ManifestKey))),
+                    "webp")),
+            ],
+            force: false,
+            Token);
+
+    private static IReadOnlyList<DdragonImage> AhriArt() =>
+    [
+        .. ArtVariants.CenteredWidths.Select(static width => DdragonImage.ArtVariant(
+            DdragonImageKind.CenteredArt,
+            "img/champion/centered/Ahri_0.jpg",
+            width)),
+        DdragonImage.ArtVariant(
+            DdragonImageKind.LoadingArt,
+            "img/champion/loading/Ahri_0.jpg",
+            ArtVariants.LoadingWidth),
+    ];
 }
