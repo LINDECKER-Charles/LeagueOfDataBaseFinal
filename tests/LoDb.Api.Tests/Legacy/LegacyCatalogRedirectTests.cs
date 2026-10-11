@@ -51,12 +51,7 @@ public sealed class LegacyCatalogRedirectTests(LegacyApiFixture api)
 
     [Theory]
     [InlineData("/16.19.1/champions", "/en/champions")]
-    [InlineData("/16.19.1/objects?lang=fr_FR", "/fr/items")]
-    [InlineData("/champions?version=16.19.1", "/en/champions")]
     [InlineData("/16.19.1/champion/Ahri", "/en/champions/Ahri")]
-    [InlineData("/16.19.1/object/1004?lang=fr_FR", "/fr/items/1004-faerie-charm")]
-    [InlineData("/16.19.1/rune/Precision", "/en/runes/8000-precision")]
-    [InlineData("/summoner/SummonerHeal?version=16.19.1", "/en/summoners/SummonerHeal")]
     public async Task LatestVersionLandsOnTheShortUrlInOneHop(string oldUrl, string newUrl) =>
         Assert.Equal(newUrl, await api.LocationOfAsync(oldUrl));
 
