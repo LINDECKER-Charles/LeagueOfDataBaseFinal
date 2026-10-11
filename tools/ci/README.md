@@ -1,7 +1,8 @@
 # tools/ci
 
-Checks of the GitHub Actions workflows themselves, run by the `workflows` job of
-`.github/workflows/ci.yml` next to `actionlint`.
+Checks of the supply chain: the GitHub Actions workflows themselves, run by the `workflows`
+job of `.github/workflows/ci.yml` next to `actionlint`, and the base images of the
+Dockerfiles, run by its `supply-chain` job. Both jobs gate the merge into `test`.
 
 ## Actions pinned to a commit
 
@@ -34,6 +35,35 @@ GitHub enforces the same rule on its side once the repository setting *Require a
 pinned to a full-length commit SHA* (Settings → Actions → General) is on: a workflow that
 names an action by tag then fails to start. The check here reports it earlier, in the pull
 request, with the file and the line.
+
+## Base images pinned by digest
+
+```sh
+node tools/ci/check-pinned-images.mjs            # the repository's Dockerfiles
+node tools/ci/check-pinned-images.mjs --root DIR # another checkout
+```
+
+Every image a Dockerfile under `docker/` names — `FROM`, `COPY --from=<image>`,
+`RUN --mount=…,from=<image>` and the `# syntax=` frontend — must read
+`image:tag@sha256:<64 hex>`, the digest of the multi-architecture index. A tag can be moved by
+whoever publishes the image, a digest cannot: the CI builds and scans exactly what the pull
+request reviewed. The tag stays for the reader and for Dependabot. A stage of the same file
+(`FROM build`, `COPY --from=build`) and `scratch` are not images; an image named through a
+variable (`FROM node:${VERSION}`) fails, since neither the check nor Dependabot can follow it.
+
+**Bumping.** Dependabot (`.github/dependabot.yml`, `docker`, one grouped PR a week) bumps the
+tag and the digest of each `FROM` together, and proposes a new digest of the same tag when its
+publisher rebuilds it, which is how the OS security fixes arrive. Majors (.NET, Node, JDK) are
+bumped by hand with `global.json` and the CI. By hand, resolve the index digest of the tag and
+replace the line's digest:
+
+```sh
+docker buildx imagetools inspect node:24-slim --format '{{.Manifest.Digest}}'
+```
+
+The `# syntax=` line (`docker/dockerfile`) is not a `FROM`: check it by hand at the same time.
+The images that only the workflows run (Trivy, the SBOM generator in `_build.yml`, actionlint
+below) are pinned the same way, and bumped by hand.
 
 ## actionlint
 

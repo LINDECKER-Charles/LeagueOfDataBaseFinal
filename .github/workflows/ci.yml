@@ -4,9 +4,10 @@ name: CI/CD
 # archived under legacy/.github/workflows/ and no longer run; changes under legacy/ trigger
 # nothing. The checks run in parallel: build and tests .NET, front checks, API contract,
 # i18n report (informative), the workflows themselves (actions pinned to a commit,
-# actionlint, deploy tools) and E2E on the local stack. No sensitive value here: hosts,
-# paths and app secrets are repository secrets / live inside the per-host ENV_FILE. The
-# deploy jobs run in the GitHub environments `staging` and `production` (_deploy.yml).
+# actionlint, deploy tools), the supply chain (base images pinned by digest) and E2E on the
+# local stack. No sensitive value here: hosts, paths and app secrets are repository secrets /
+# live inside the per-host ENV_FILE. The deploy jobs run in the GitHub environments
+# `staging` and `production` (_deploy.yml).
 #
 # Two-stage promotion (build once, promote the same artifact):
 #   push dev  ─▶ checks ─▶ merge dev→test ─▶ _build (:sha + :staging) ─▶ _deploy STAGING
@@ -193,6 +194,26 @@ jobs:
           tar -xzf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP" actionlint
           "$RUNNER_TEMP/actionlint" -color
 
+  # What the images are made of (tools/ci): every base image pinned to its digest, so that the
+  # build and the scan of _build.yml see what the pull request reviewed.
+  supply-chain:
+    if: github.ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+
+      - name: Base images pinned by digest
+        run: node tools/ci/check-pinned-images.mjs
+
   e2e:
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -246,7 +267,7 @@ jobs:
 
   # ───────────────────────────────── dev path ────────────────────────────────
   merge-to-test:
-    needs: [dotnet, front, contract, workflows, e2e]
+    needs: [dotnet, front, contract, workflows, supply-chain, e2e]
     if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest
     permissions:
