@@ -17,6 +17,8 @@ const KEYS = [
   'LoDb__Accounts__Google__AppClients__0__ClientSecret',
   'LoDb__Accounts__Google__AppClients__1__ClientSecret',
   'LoDb__Analytics__VisitorKey',
+  'LoDb__Audience__Username',
+  'LoDb__Audience__Password',
 ];
 const IS_POSIX = process.platform !== 'win32';
 const workspaces = [];
@@ -80,7 +82,7 @@ describe('split-env.sh', () => {
     assert.deepEqual(readdirSync(place.secrets).sort(), [...KEYS].sort());
     assert.equal(secret(place, 'LODB_DB_PASSWORD'), 'database-secret');
     assert.equal(secret(place, 'LoDb__Billing__StripeSecretKey'), 'sk_live_example');
-    assert.match(run.stdout, /2 of 9 secrets set, revision 1\./);
+    assert.match(run.stdout, /2 of 11 secrets set, revision 1\./);
     assert.doesNotMatch(run.stdout + run.stderr, /database-secret|sk_live_example/);
   });
 

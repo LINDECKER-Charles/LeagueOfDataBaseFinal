@@ -37,6 +37,8 @@ readonly SECRET_KEYS=(
   LoDb__Accounts__Google__AppClients__0__ClientSecret
   LoDb__Accounts__Google__AppClients__1__ClientSecret
   LoDb__Analytics__VisitorKey
+  LoDb__Audience__Username
+  LoDb__Audience__Password
 )
 readonly REVISION_KEY=LODB_SECRETS_REVISION
 readonly KEY_PREFIX='^[[:space:]]*(export[[:space:]]+)?([A-Za-z_][A-Za-z0-9_.-]*)[[:space:]]*'

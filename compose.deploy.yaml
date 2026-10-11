@@ -113,6 +113,10 @@ services:
       - LoDb__Accounts__Google__AppClients__0__ClientSecret
       - LoDb__Accounts__Google__AppClients__1__ClientSecret
       - LoDb__Analytics__VisitorKey
+      # The read-only Umami account of the trends' pull (compose.umami.yaml): prod only, empty
+      # on staging, where the pull then stays dormant.
+      - LoDb__Audience__Username
+      - LoDb__Audience__Password
     labels:
       # Raised by the deploy job when a secret file changes. The API reads its files at
       # start-up only, and Compose recreates a service whose definition changed, not one
@@ -292,3 +296,7 @@ secrets:
     file: ./.deploy/secrets/LoDb__Accounts__Google__AppClients__1__ClientSecret
   LoDb__Analytics__VisitorKey:
     file: ./.deploy/secrets/LoDb__Analytics__VisitorKey
+  LoDb__Audience__Username:
+    file: ./.deploy/secrets/LoDb__Audience__Username
+  LoDb__Audience__Password:
+    file: ./.deploy/secrets/LoDb__Audience__Password
