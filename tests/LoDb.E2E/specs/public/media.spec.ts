@@ -96,6 +96,9 @@ test.describe('clips of the abilities', { tag: '@readonly' }, () => {
     for (let index = 0; index < count; index += 1) {
       await tabs.nth(index).click();
       await expect(tabs.nth(index)).toHaveAttribute('aria-selected', 'true');
+      // A tab at the bottom of the screen leaves the stage below it: the click scrolls the
+      // tab alone into view, and the clip waits for half of its stage.
+      await page.locator(STAGE).scrollIntoViewIfNeeded();
       await expect(page.locator(CLIP)).toHaveCount(1);
       const muted = await page.locator(CLIP).evaluate((video: HTMLVideoElement) => video.muted);
       expect(muted).toBe(true);

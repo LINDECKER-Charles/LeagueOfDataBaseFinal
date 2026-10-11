@@ -286,8 +286,10 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   fois sa scène à moitié à l'écran (`scrollIntoViewIfNeeded`) ; `support/network.ts`
   (`saveData`) simule un lecteur en économie de données. Chaque page part de
   `fastConnection` (`support/test.ts`) : sans lui, Chromium déduit `effectiveType` des
-  allers-retours qu'il mesure, et un runner chargé passe pour de la 3g (poster sans vidéo,
-  liste différée).
+  allers-retours qu'il mesure, qui varient d'une machine à l'autre (sous la 4g : poster sans
+  vidéo, liste différée). Un clic sur un onglet ne fait défiler que l'onglet : la scène du
+  clip peut rester sous l'écran, d'où un `scrollIntoViewIfNeeded` sur elle avant d'attendre
+  la vidéo.
 - `disclosure.spec.ts` échoue parfois en suite complète, jamais seul : relancer n'est pas
   une correction.
 - **Bornes du SSR relevées en dev** (`compose.override.yaml`, jamais
