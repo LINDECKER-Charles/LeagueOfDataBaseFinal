@@ -108,22 +108,22 @@ describe('injectCatalogueList', () => {
     expect(source.dataset()).toBe('whole');
   });
 
-  it.each<ListOutcome<string>>([
-    { kind: 'pending', retryAfterMs: 5000 },
-    { kind: 'failed' },
-  ])('reads the whole list at once when the first page went unanswered (%o)', async (miss) => {
-    Object.defineProperty(navigator, 'connection', {
-      configurable: true,
-      value: { saveData: true },
-    });
-    const unanswered: Answer = (request) => (request.page === undefined ? ready(request) : miss);
-    const { source, requests } = await sourceAt('/en/items', 'browser', unanswered);
-    TestBed.tick();
+  it.each<ListOutcome<string>>([{ kind: 'pending', retryAfterMs: 5000 }, { kind: 'failed' }])(
+    'reads the whole list at once when the first page went unanswered (%o)',
+    async (miss) => {
+      Object.defineProperty(navigator, 'connection', {
+        configurable: true,
+        value: { saveData: true },
+      });
+      const unanswered: Answer = (request) => (request.page === undefined ? ready(request) : miss);
+      const { source, requests } = await sourceAt('/en/items', 'browser', unanswered);
+      TestBed.tick();
 
-    expect(requests.at(-1)).toEqual({ version: '16.19.1', lang: 'en_US' });
-    expect(source.list()).toBe('whole');
-    expect(source.status()).toBe('ready');
-  });
+      expect(requests.at(-1)).toEqual({ version: '16.19.1', lang: 'en_US' });
+      expect(source.list()).toBe('whole');
+      expect(source.status()).toBe('ready');
+    },
+  );
 
   it('holds an answer already at hand before the first render, for hydration', async () => {
     TestBed.configureTestingModule({
