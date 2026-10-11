@@ -20,7 +20,7 @@ public sealed class OutboxEnqueueTests(PostgresContainerFixture postgres)
 {
     private OutboxHarness? _harness;
 
-    private OutboxHarness Harness => _harness ??= new OutboxHarness(Database.ConnectionString);
+    private OutboxHarness Harness => _harness ??= new OutboxHarness(Database.AppConnectionString);
 
     [Fact]
     public async Task MessageIsWrittenPendingAndDueAtOnce()

@@ -1,12 +1,19 @@
-using System.Globalization;
 using LoDb.Infrastructure.Locks;
 using Npgsql;
 
 namespace LoDb.Infrastructure.Persistence.Analytics.Partitions;
 
+/// <remarks>
+/// The API's role owns no table: a partition is created and dropped by the two functions
+/// <c>migrate</c> installs (<c>Persistence/Roles/schema-privileges.sql</c>), which run as the
+/// owner of <c>analytics_event</c> and derive the name and the bounds from the day alone.
+/// </remarks>
 internal sealed class AnalyticsPartitions(NpgsqlDataSource dataSource) : IAnalyticsPartitions
 {
     private const string Lock = "SELECT pg_advisory_xact_lock(@key)";
+    private const string Create = "SELECT public.lodb_create_analytics_partition(@day)";
+    private const string Drop = "SELECT public.lodb_drop_analytics_partition(@day)";
+    private const string DayParameter = "day";
 
     private const string List = $"""
         SELECT c.relname
@@ -36,7 +43,7 @@ internal sealed class AnalyticsPartitions(NpgsqlDataSource dataSource) : IAnalyt
         var missing = Days(first, last).Except(existing).ToList();
         foreach (var day in missing)
         {
-            await ExecuteAsync(connection, transaction, CreateSql(day), cancellationToken);
+            await ExecuteAsync(transaction, Create, day, cancellationToken);
         }
 
         await transaction.CommitAsync(cancellationToken);
@@ -55,8 +62,7 @@ internal sealed class AnalyticsPartitions(NpgsqlDataSource dataSource) : IAnalyt
             .ToList();
         foreach (var day in expired)
         {
-            var sql = $"DROP TABLE \"{AnalyticsPartitionNames.Of(day)}\"";
-            await ExecuteAsync(connection, transaction, sql, cancellationToken);
+            await ExecuteAsync(transaction, Drop, day, cancellationToken);
         }
 
         await transaction.CommitAsync(cancellationToken);
@@ -101,22 +107,14 @@ internal sealed class AnalyticsPartitions(NpgsqlDataSource dataSource) : IAnalyt
         }
     }
 
-    // DDL takes no parameters: the name and the bounds come from a date, never from input.
-    private static string CreateSql(DateOnly day) => string.Format(
-        CultureInfo.InvariantCulture,
-        "CREATE TABLE \"{0}\" PARTITION OF {1} FOR VALUES FROM ('{2:O}') TO ('{3:O}')",
-        AnalyticsPartitionNames.Of(day),
-        AnalyticsPartitionNames.Parent,
-        AnalyticsPartitionNames.StartOf(day).UtcDateTime,
-        AnalyticsPartitionNames.StartOf(day.AddDays(1)).UtcDateTime);
-
     private static async Task ExecuteAsync(
-        NpgsqlConnection connection,
         NpgsqlTransaction transaction,
         string sql,
+        DateOnly day,
         CancellationToken cancellationToken)
     {
-        await using var command = new NpgsqlCommand(sql, connection, transaction);
+        await using var command = new NpgsqlCommand(sql, transaction.Connection, transaction);
+        command.Parameters.AddWithValue(DayParameter, day);
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 }

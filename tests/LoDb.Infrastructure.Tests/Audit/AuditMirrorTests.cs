@@ -18,7 +18,7 @@ public sealed class AuditMirrorTests(PostgresContainerFixture postgres)
     [Fact]
     public async Task SuccessIsCopiedAtInformationUnderTheActionName()
     {
-        await using var harness = new AuditHarness(Database.ConnectionString);
+        await using var harness = new AuditHarness(Database.AppConnectionString);
         harness.Requests.HttpContext = AuditHarness.Request(AuditHarness.SignedIn(3, "alice"));
 
         await harness.Journal.RecordAsync(
@@ -46,7 +46,7 @@ public sealed class AuditMirrorTests(PostgresContainerFixture postgres)
     [Fact]
     public async Task CopyLeavesOutTheAddressTheLabelsAndTheIdentifier()
     {
-        await using var harness = new AuditHarness(Database.ConnectionString);
+        await using var harness = new AuditHarness(Database.AppConnectionString);
         harness.Requests.HttpContext = AuditHarness.Request(new());
 
         await harness.Journal.RecordAsync(
@@ -81,7 +81,7 @@ public sealed class AuditMirrorTests(PostgresContainerFixture postgres)
     [Fact]
     public async Task DeniedActionIsCopiedAtWarning()
     {
-        await using var harness = new AuditHarness(Database.ConnectionString);
+        await using var harness = new AuditHarness(Database.AppConnectionString);
 
         await harness.Journal.RecordAsync(
             new AuditEvent { Action = AuditAction.AdminUserDelete, Outcome = AuditOutcome.Denied },

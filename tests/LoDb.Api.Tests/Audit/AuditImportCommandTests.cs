@@ -132,7 +132,7 @@ public sealed class AuditImportCommandTests(PostgresContainerFixture postgres)
         CliRunner.RunAsync(
             [
                 "audit", "import",
-                $"--ConnectionStrings:LoDb={Database.ConnectionString}",
+                $"--ConnectionStrings:LoDb={Database.AppConnectionString}",
                 "--Logging:LogLevel:Default=Warning",
                 .. arguments,
             ],

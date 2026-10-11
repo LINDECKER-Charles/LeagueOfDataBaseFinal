@@ -28,7 +28,7 @@ internal sealed class IngestionHarness : IAsyncDisposable
         configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["ConnectionStrings:LoDb"] = database.ConnectionString,
+                ["ConnectionStrings:LoDb"] = database.AppConnectionString,
                 ["LoDb:Storage:Root"] = storageRoot,
                 // The production backoff starts at one second: only the attempts matter.
                 ["LoDb:Egress:RetryBaseDelay"] = "00:00:00.001",

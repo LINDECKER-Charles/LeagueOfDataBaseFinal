@@ -30,6 +30,7 @@ public sealed class AnalyticsOptions
     private const int DefaultClientDataEraseDays = 3;
     private const int DefaultMaxVisitorsPerDay = 200_000;
     private const int DefaultMaxRefererHostsPerDay = 200;
+    private const int DefaultJobStatementTimeoutMinutes = 5;
 
     /// <summary>
     /// Key of the visitor hash. The legacy stack's <c>APP_SECRET</c> keeps the visitors of
@@ -78,4 +79,12 @@ public sealed class AnalyticsOptions
 
     /// <summary>Days after today whose partition exists ahead of their first view.</summary>
     public int PartitionsAhead { get; set; } = DefaultPartitionsAhead;
+
+    /// <summary>
+    /// Longest statement of the daily jobs that read whole days of views (the rollup, the
+    /// erasure of client data), above the API's own statement timeout: their cost grows
+    /// with the traffic of the day.
+    /// </summary>
+    public TimeSpan JobStatementTimeout { get; set; } =
+        TimeSpan.FromMinutes(DefaultJobStatementTimeoutMinutes);
 }

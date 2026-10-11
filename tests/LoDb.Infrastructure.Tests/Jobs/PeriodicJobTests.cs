@@ -232,7 +232,7 @@ public sealed class PeriodicJobTests(PostgresContainerFixture postgres)
     // One API instance: its own lock connection, the shared database and clock.
     private TestJob NewJob(string name = JobName, TimeSpan? period = null)
     {
-        var instanceLock = new PostgresDistributedLock(Database.ConnectionString);
+        var instanceLock = new PostgresDistributedLock(Database.AppConnectionString);
         _locks.Add(instanceLock);
         return Track(new TestJob(Services(instanceLock), name, period ?? Period));
     }

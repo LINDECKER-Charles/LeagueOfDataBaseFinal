@@ -118,7 +118,7 @@ public sealed class AnalyticsImportCommandTests(PostgresContainerFixture postgre
         CliRunner.RunAsync(
             [
                 "analytics", "import",
-                $"--ConnectionStrings:LoDb={Database.ConnectionString}",
+                $"--ConnectionStrings:LoDb={Database.AppConnectionString}",
                 "--Logging:LogLevel:Default=Warning",
                 .. arguments,
             ],

@@ -32,7 +32,7 @@ public sealed class PageViewPumpTests(PostgresContainerFixture postgres)
     private ServiceProvider? _services;
 
     private ServiceProvider Services =>
-        _services ??= AnalyticsServices.Build(Database.ConnectionString, _time);
+        _services ??= AnalyticsServices.Build(Database.AppConnectionString, _time);
 
     [Fact]
     public async Task ArrivalAndTwoNavigationsAreThreeViews()
@@ -77,7 +77,7 @@ public sealed class PageViewPumpTests(PostgresContainerFixture postgres)
     public async Task QueueIsDrainedBatchAfterBatch()
     {
         _services = AnalyticsServices.Build(
-            Database.ConnectionString,
+            Database.AppConnectionString,
             _time,
             static options => options.BatchSize = 2);
         var queue = Services.GetRequiredService<PageViewQueue>();
@@ -134,7 +134,7 @@ public sealed class PageViewPumpTests(PostgresContainerFixture postgres)
     public void FullQueueRefusesTheNextView()
     {
         _services = AnalyticsServices.Build(
-            Database.ConnectionString,
+            Database.AppConnectionString,
             _time,
             static options => options.QueueCapacity = 1);
         using var dropped = Collect("lodb.analytics.views.dropped");

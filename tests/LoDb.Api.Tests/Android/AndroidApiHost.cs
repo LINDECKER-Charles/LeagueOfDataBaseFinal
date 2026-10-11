@@ -31,7 +31,7 @@ public sealed class AndroidApiHost : IAsyncDisposable
         _database = database;
         _factory = new ApiFactory
         {
-            PostgresConnectionString = database.ConnectionString,
+            PostgresConnectionString = database.AppConnectionString,
             Settings = new Dictionary<string, string?>
             {
                 [Accounts + "SecureCookies"] = bool.TrueString,

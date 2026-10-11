@@ -11,7 +11,7 @@ namespace LoDb.Infrastructure.Tests.Persistence;
 /// The Baseline migration reproduces the schema of the Doctrine migrations: same
 /// <c>pg_dump</c>, same catalog, same legacy history. The new stack only adds the EF history,
 /// the tables of its lots and the frozen columns of lot 4 on <c>users</c>; lot 6 and the
-/// payment states add tables only.
+/// payment states add tables only, and <c>migrate</c> the two partition functions.
 /// </summary>
 public sealed class BaselineSchemaTests(PostgresContainerFixture postgres)
 {
@@ -56,6 +56,14 @@ public sealed class BaselineSchemaTests(PostgresContainerFixture postgres)
             + " ON users USING btree (normalized_email)",
         "index users.ix_users_normalized_username CREATE INDEX ix_users_normalized_username"
             + " ON users USING btree (normalized_username)",
+    ];
+
+    // The API's only door to DDL, which migrate installs with the roles after the migrations
+    // (Persistence/Roles/schema-privileges.sql): two functions, on no table of Doctrine's.
+    private static readonly string[] PartitionFunctions =
+    [
+        "function lodb_create_analytics_partition(day date)",
+        "function lodb_drop_analytics_partition(day date)",
     ];
 
     // Catalog lines named after their table, as "column users.email ...".
@@ -144,7 +152,7 @@ public sealed class BaselineSchemaTests(PostgresContainerFixture postgres)
             differences,
             static line => Assert.StartsWith(AddedPrefix, line, StringComparison.Ordinal));
         Assert.Equal(
-            LegacyTableAdditions,
+            LegacyTableAdditions.Concat(PartitionFunctions).Order(StringComparer.Ordinal),
             differences
                 .Select(static line => line[AddedPrefix.Length..])
                 .Where(static line => !IsOnNewTable(line)));

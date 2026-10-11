@@ -35,7 +35,7 @@ internal sealed class IngestionHost : IAsyncDisposable
     /// <summary>The settings a container passes after the command words.</summary>
     public IReadOnlyList<string> Settings =>
     [
-        $"--ConnectionStrings:LoDb={Database.ConnectionString}",
+        $"--ConnectionStrings:LoDb={Database.AppConnectionString}",
         $"--LoDb:Storage:Root={StorageRoot}",
         // The production backoff starts at one second: only the attempts matter.
         "--LoDb:Egress:RetryBaseDelay=00:00:00.001",

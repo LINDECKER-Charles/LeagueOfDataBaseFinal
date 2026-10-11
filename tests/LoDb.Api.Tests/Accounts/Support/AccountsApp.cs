@@ -52,7 +52,7 @@ public sealed class AccountsApp : IAsyncDisposable
         _realOutbox = relay is not null;
         _factory = new ApiFactory
         {
-            PostgresConnectionString = database.ConnectionString,
+            PostgresConnectionString = database.AppConnectionString,
             Clock = Clock,
             Settings = Settings(withGoogle, relay),
         };

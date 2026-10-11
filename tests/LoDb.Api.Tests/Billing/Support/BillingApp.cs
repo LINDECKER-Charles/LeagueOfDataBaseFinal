@@ -50,7 +50,7 @@ public sealed class BillingApp : IAsyncDisposable
         Gateway.IsConfigured = configured;
         _factory = new ApiFactory
         {
-            PostgresConnectionString = database.ConnectionString,
+            PostgresConnectionString = database.AppConnectionString,
             Clock = Clock,
             Settings = new Dictionary<string, string?>
             {
