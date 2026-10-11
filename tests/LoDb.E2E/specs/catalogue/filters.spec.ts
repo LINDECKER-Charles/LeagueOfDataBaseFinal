@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test';
+import { saveData } from '../../support/network';
 import { expect, test } from '../../support/test';
 
 // Any of the four lists would do: items has the most entries, so it always pages.
@@ -118,5 +119,57 @@ test.describe('catalogue filters', { tag: '@readonly' }, () => {
     await expect(sheet.locator('.sheet__done')).toBeInViewport();
     await sheet.locator('.sheet__done').click();
     await expect(sheet).toBeHidden();
+  });
+});
+
+// The browser's read of the whole list: the first page comes with the server's HTML.
+function wholeReadsOf(page: Page): string[] {
+  const reads: string[] = [];
+  page.on('request', (sent) => {
+    const { pathname, searchParams } = new URL(sent.url());
+    if (/^\/api\/catalog\/[^/]+\/[^/]+\/items$/.test(pathname) && !searchParams.has('page')) {
+      reads.push(sent.url());
+    }
+  });
+  return reads;
+}
+
+test.describe('the whole list, read when it is needed', { tag: '@readonly' }, () => {
+  test('reads it once the page has loaded and gone idle', async ({ page, consoleErrors }) => {
+    const reads = wholeReadsOf(page);
+
+    await openList(page);
+
+    await expect.poll(() => reads.length).toBe(1);
+    expect(consoleErrors).toEqual([]);
+  });
+
+  test('waits for the reader to search when they save data, then filters it all', async ({
+    page,
+    consoleErrors,
+  }) => {
+    const reads = wholeReadsOf(page);
+    await page.addInitScript(saveData);
+    await openList(page);
+    const total = await page.locator(CARD).count();
+    expect(reads).toEqual([]);
+
+    await page.locator(RAIL_SEARCH).click();
+    await page.locator(RAIL_SEARCH).fill('boots');
+
+    await expect.poll(() => reads.length).toBe(1);
+    await expect.poll(() => page.locator(CARD).count()).toBeLessThan(total);
+    await expect.poll(() => queryOf(page).get('q')).toBe('boots');
+    expect(consoleErrors).toEqual([]);
+  });
+
+  test('reads it at once for a link the first page cannot draw', async ({ page }) => {
+    const reads = wholeReadsOf(page);
+    await page.addInitScript(saveData);
+
+    await openList(page, `${LIST}?q=boots`);
+
+    await expect.poll(() => reads.length).toBe(1);
+    await expect.poll(() => page.locator(CARD).count()).toBeGreaterThan(0);
   });
 });

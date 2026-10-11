@@ -96,10 +96,11 @@ describe('CatalogueFilter', () => {
       dataset,
       list: signal(WHOLE),
       status: signal('ready'),
+      loadWhole: vi.fn(),
     };
     const filter = TestBed.inject(CatalogueFilter);
     filter.connect({ source: () => source, adapter: () => ADAPTER, schema: () => SCHEMA });
-    return { filter, router, dataset };
+    return { filter, router, dataset, loadWhole: vi.mocked(source.loadWhole) };
   }
 
   it('starts from the URL it was opened with', async () => {
@@ -166,6 +167,27 @@ describe('CatalogueFilter', () => {
     const { filter, router } = await filterAt('/en/items?q=boots');
     await router.navigateByUrl('/en/items');
     expect(filter.state()).toEqual({ query: '', facets: {}, page: 1, size: 2 });
+  });
+
+  it('reads the whole list once the state asks what the first page cannot draw', async () => {
+    const { filter, loadWhole } = await filterAt('/en/items');
+    TestBed.tick();
+    expect(loadWhole).not.toHaveBeenCalled();
+
+    filter.setQuery('boots');
+    TestBed.tick();
+    expect(loadWhole).toHaveBeenCalled();
+  });
+
+  it('reads the whole list for a filtered URL, and when the reader will filter', async () => {
+    const filtered = await filterAt('/en/items?tag=Damage');
+    TestBed.tick();
+    expect(filtered.loadWhole).toHaveBeenCalled();
+    TestBed.resetTestingModule();
+
+    const { filter, loadWhole } = await filterAt('/en/items');
+    filter.anticipate();
+    expect(loadWhole).toHaveBeenCalledOnce();
   });
 
   it('links another page of the list in its current state', async () => {

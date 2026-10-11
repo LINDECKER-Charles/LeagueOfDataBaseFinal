@@ -1,4 +1,4 @@
-import { Injectable, computed, inject, signal, untracked } from '@angular/core';
+import { Injectable, computed, effect, inject, signal, untracked } from '@angular/core';
 import type { FacetDefinition } from '../facets/model/facet-definition';
 import type { FacetState } from '../facets/model/facet-state';
 import type { RangeSelection } from '../facets/model/range-selection';
@@ -97,6 +97,22 @@ export class CatalogueFilter {
       schema: this.schema(),
     }),
   );
+
+  constructor() {
+    // A state the first page cannot draw (a search, a facet, another page or size, from the
+    // reader or from the URL) needs the whole list now, not at the page's next idle moment.
+    effect(() => {
+      const first = this.source()?.firstPage() ?? null;
+      if (first !== null && this.view().isSkeleton) {
+        untracked(() => this.anticipate());
+      }
+    });
+  }
+
+  /** The reader is about to filter (search focused, facets opened): the whole list is read. */
+  anticipate(): void {
+    this.source()?.loadWhole();
+  }
 
   /** Called once by the list: from then on the state and the URL follow each other. */
   connect<C>(config: CatalogueFilterConfig<C>): void {

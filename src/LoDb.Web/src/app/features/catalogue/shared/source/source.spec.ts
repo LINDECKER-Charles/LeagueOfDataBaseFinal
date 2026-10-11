@@ -10,6 +10,8 @@ import { injectCatalogueList } from './inject-catalogue-list';
 
 const CONTEXT: PageContext = { locale: 'en', version: '16.19.1', pinned: false, language: 'en_US' };
 const TRANSIENT = 'public, max-age=0, s-maxage=60';
+// The pause after the load event where the browser has no requestIdleCallback (jsdom).
+const IDLE_FALLBACK_MS = 200;
 
 type Answer = (request: ListRequest) => ListOutcome<string>;
 
@@ -42,7 +44,10 @@ async function sourceAt(url: string, platform: 'browser' | 'server', answer: Ans
 }
 
 describe('injectCatalogueList', () => {
-  afterEach(() => vi.useRealTimers());
+  afterEach(() => {
+    vi.useRealTimers();
+    Reflect.deleteProperty(navigator, 'connection');
+  });
 
   it('renders on the server the page the URL names, and only that page', async () => {
     const { source, requests, init } = await sourceAt('/en/items?page=2&size=24', 'server');
@@ -60,15 +65,47 @@ describe('injectCatalogueList', () => {
     expect(new Headers(init.headers).get('Cache-Control')).toBe(TRANSIENT);
   });
 
-  it('fetches in the browser the first page, then the whole list for filtering', async () => {
-    const { source, requests } = await sourceAt('/en/items?q=boots', 'browser');
+  it('fetches in the browser the first page, then the whole list once idle', async () => {
+    vi.useFakeTimers();
+    const { source, requests } = await sourceAt('/en/items', 'browser');
+    expect(requests).toEqual([{ version: '16.19.1', lang: 'en_US', page: 1, size: 12 }]);
+    expect(source.dataset()).toBeNull();
+
+    await vi.advanceTimersByTimeAsync(IDLE_FALLBACK_MS);
+    TestBed.tick();
+    expect(requests.at(-1)).toEqual({ version: '16.19.1', lang: 'en_US' });
+    expect(source.firstPage()).toBe('page 1');
+    expect(source.dataset()).toBe('whole');
+    expect(source.list()).toBe('whole');
+  });
+
+  it('reads the whole list at once when the reader is about to filter', async () => {
+    const { source, requests } = await sourceAt('/en/items', 'browser');
+
+    source.loadWhole();
+    TestBed.tick();
+
     expect(requests).toEqual([
       { version: '16.19.1', lang: 'en_US', page: 1, size: 12 },
       { version: '16.19.1', lang: 'en_US' },
     ]);
-    expect(source.firstPage()).toBe('page 1');
+  });
+
+  it('leaves the whole list to the reader under Save-Data', async () => {
+    Object.defineProperty(navigator, 'connection', {
+      configurable: true,
+      value: { saveData: true },
+    });
+    vi.useFakeTimers();
+    const { source, requests } = await sourceAt('/en/items', 'browser');
+
+    await vi.advanceTimersByTimeAsync(60_000);
+    TestBed.tick();
+    expect(requests).toHaveLength(1);
+
+    source.loadWhole();
+    TestBed.tick();
     expect(source.dataset()).toBe('whole');
-    expect(source.list()).toBe('whole');
   });
 
   it('holds an answer already at hand before the first render, for hydration', async () => {
@@ -99,6 +136,8 @@ describe('injectCatalogueList', () => {
     const cold: Answer = (request) =>
       request.page === undefined ? { kind: 'pending', retryAfterMs: 5000 } : ready(request);
     const { source, requests } = await sourceAt('/en/items', 'browser', cold);
+    source.loadWhole();
+    TestBed.tick();
     expect(source.status()).toBe('pending');
     await vi.advanceTimersByTimeAsync(60_000);
     TestBed.tick();
@@ -107,7 +146,8 @@ describe('injectCatalogueList', () => {
   });
 
   it('refetches when the language changes, not on a mere query change', async () => {
-    const { requests, context } = await sourceAt('/en/items', 'browser');
+    const { requests, context, source } = await sourceAt('/en/items', 'browser');
+    source.loadWhole();
     await TestBed.inject(Router).navigateByUrl('/en/items?q=ward');
     TestBed.tick();
     expect(requests).toHaveLength(2);

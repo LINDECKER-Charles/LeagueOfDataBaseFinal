@@ -16,8 +16,10 @@
     </div>
   </div>
 
-  <aside class="list__console">
-    <lodb-filter-console [searchLabel]="searchLabel()" />
+  <aside #consoleRail class="list__console">
+    @defer (on immediate; hydrate on interaction; hydrate when isConsoleWanted()) {
+      <lodb-filter-console #console [searchLabel]="searchLabel()" />
+    }
   </aside>
 
   <section class="list__results" [attr.aria-label]="label()">

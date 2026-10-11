@@ -126,6 +126,14 @@ describe('lodb-catalogue-list rendered on the server', () => {
     expect(html).toContain('href="/en/items?page=3"');
   });
 
+  it('renders the rail whole, its script waiting for the reader in the browser', async () => {
+    const html = await renderOnServer('/en/items', []);
+    const parsed = new DOMParser().parseFromString(html, 'text/html');
+    const rail = parsed.querySelector('aside.list__console lodb-filter-console');
+    expect(rail?.querySelector('input[type=search]')).not.toBeNull();
+    expect(rail?.querySelector('.console__foot')).not.toBeNull();
+  });
+
   it('keeps a card whose rich text holds a bare <li> inside its cell once parsed', async () => {
     const html = await renderOnServer('/en/rich', []);
     // The browser parses the server's HTML as a whole document, as hydration then finds it.

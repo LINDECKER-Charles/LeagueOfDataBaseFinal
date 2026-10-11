@@ -14,6 +14,7 @@ import { CatalogueFilter } from '../state/catalogue-filter';
 /**
  * The live search of a list, drawn in the rail (with its `/` hint) and in the mobile bar.
  * Every keystroke filters; the list reaches the field through `focus()` for the shortcut.
+ * Focusing it reads the whole list, so it is there by the first keystroke.
  * The placeholder is the short "Search…" of every list, which fits the narrow rail; the
  * accessible name says what the list holds.
  */
@@ -33,6 +34,7 @@ import { CatalogueFilter } from '../state/catalogue-filter';
       [placeholder]="'common.search' | transloco"
       [attr.aria-label]="label()"
       [value]="filter.state().query"
+      (focus)="filter.anticipate()"
       (input)="filter.setQuery(field.value)"
       #field
     />
