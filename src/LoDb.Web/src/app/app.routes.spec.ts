@@ -163,6 +163,7 @@ const PRIVATE_PAGES: Page[] = [
   { url: '/en/account/register', page: AccountPage, heading: 'auth.register.title' },
   { url: '/en/account/verify-email', page: AccountPage, heading: 'nav.account' },
   { url: '/en/account/forgot-password', page: AccountPage, heading: 'auth.reset.request_title' },
+  { url: '/en/account/reset-password', page: AccountPage, heading: 'auth.reset.reset_title' },
   { url: '/en/account/reset-password/t0k3n', page: AccountPage, heading: 'auth.reset.reset_title' },
   { url: '/en/account/profile', page: AccountPage, heading: 'nav.profile' },
   { url: '/en/account/profile/preview', page: AccountPage, heading: 'profile.preview.badge' },

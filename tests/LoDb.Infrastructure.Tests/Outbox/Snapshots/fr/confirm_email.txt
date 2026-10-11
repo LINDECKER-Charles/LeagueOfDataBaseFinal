@@ -9,7 +9,7 @@ Bienvenue, Faker
 Confirmez votre adresse e-mail pour activer pleinement votre compte et débloquer la création de builds.
 
 Confirmer mon adresse :
-https://lodb.test/account/link?token=a&sig=b
+https://lodb.test/en/account/reset-password?user=7#token=Q2ZESjhB-x_y
 
 Ce lien expire dans 1 heure. Si vous n'êtes pas à l'origine de cette inscription, ignorez cet e-mail.
 

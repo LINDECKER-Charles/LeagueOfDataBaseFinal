@@ -72,6 +72,13 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
 - Variante store : `environment.payments` n'agit que là où le code le lit ; le paiement se
   retire par le routage et les liens. `cap sync` ne tourne que dans le conteneur
   (`tools/android/build-debug.sh`).
+- **Liens des e-mails de compte** : le jeton est dans le **fragment**
+  (`verify-email?user={id}#token=…`, `reset-password?user={id}#token=…`), que ni le serveur,
+  ni l'edge, ni un `Referer` ne voient. La page le lit au démarrage, côté navigateur, puis le
+  retire de l'URL (`forgetLinkToken`, navigation `replaceUrl`) : rechargée ensuite, la page
+  n'a plus de lien (celle du mot de passe renvoie vers une nouvelle demande), c'est voulu.
+  Les anciennes formes (`verify-email?token=`, `reset-password/{token}`) restent lues pour les
+  liens déjà envoyés (valides une heure) ; ne pas remettre le jeton dans le chemin ni la query.
 
 ## API, données et comptes
 

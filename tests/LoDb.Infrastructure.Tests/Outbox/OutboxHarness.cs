@@ -18,7 +18,10 @@ namespace LoDb.Infrastructure.Tests.Outbox;
 internal sealed class OutboxHarness : IAsyncDisposable
 {
     public const string Recipient = "player@example.com";
-    public const string ActionUrl = "https://lodb.test/account/link?token=a&sig=b";
+
+    // The shape of the account links: the token in the fragment, which no server receives.
+    public const string ActionUrl =
+        "https://lodb.test/en/account/reset-password?user=7#token=Q2ZESjhB-x_y";
 
     public static readonly DateTimeOffset Start = new(2026, 9, 26, 8, 0, 0, TimeSpan.Zero);
 
