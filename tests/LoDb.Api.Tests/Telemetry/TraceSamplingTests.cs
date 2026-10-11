@@ -14,14 +14,25 @@ namespace LoDb.Api.Tests.Telemetry;
 
 /// <summary>
 /// Without an exporter no span is recorded, a caller's sampled traceparent included, yet each
-/// request keeps a trace id that the log lines carry; with an exporter, spans are recorded.
+/// request keeps a trace id that the log lines carry; with an exporter, a share of the traces
+/// is recorded, chosen by their id whatever the caller's sampled flag.
 /// </summary>
 [Collection(TraceSamplingGroup.Name)]
 public sealed class TraceSamplingTests
 {
     private const string TraceParentHeader = "traceparent";
     private const string ParentTraceId = "4bf92f3577b34da6a3ce929d0e0e4736";
-    private const string SampledParent = $"00-{ParentTraceId}-00f067aa0ba902b7-01";
+    private const string ParentSpanId = "00f067aa0ba902b7";
+    private const string SampledFlags = "01";
+    private const string UnsampledFlags = "00";
+    private const string SampledParent = $"00-{ParentTraceId}-{ParentSpanId}-{SampledFlags}";
+    private const string OtlpEndpointKey = "OTEL_EXPORTER_OTLP_ENDPOINT";
+    private const string UnreachableCollector = "http://127.0.0.1:1";
+    private const string RatioKey = "LoDb:Telemetry:TraceSampleRatio";
+
+    // The ratio sampler reads the first 8 bytes of the id: these sit at the two ends of it.
+    private const string LowTraceId = "000000000000000a4bf92f3577b34da6";
+    private const string HighTraceId = "7ffffffffffffff04bf92f3577b34da6";
     private const string HostingCategory = "Microsoft.AspNetCore.Hosting.Diagnostics";
     private static readonly Uri Health = new("/healthz", UriKind.Relative);
 
@@ -53,32 +64,68 @@ public sealed class TraceSamplingTests
     }
 
     [Fact]
-    public async Task WithAnExporterSpansAreRecorded()
+    public async Task WithAnExporterTheTraceIdDecidesWhateverTheCallersFlag()
     {
         var probe = new ActivityProbe();
-        using var logs = new FormattingLoggerProvider(
-            new JsonLineConsoleFormatter(TimeProvider.System));
-        await using var factory = new ApiFactory
-        {
-            Settings = new Dictionary<string, string?>
-            {
-                ["OTEL_EXPORTER_OTLP_ENDPOINT"] = "http://127.0.0.1:1",
-            },
-        };
-        using var client = Probed(factory, probe, logs).CreateClient();
+        await using var factory = Exporting(ratio: null);
+        using var client = Probed(factory, probe, logs: null).CreateClient();
 
-        await GetAsync(client, traceParent: null);
+        await GetAsync(client, Parent(LowTraceId, sampled: false));
+        await GetAsync(client, Parent(HighTraceId, sampled: true));
+
+        (string TraceId, bool IsRecorded)[] expected = [(LowTraceId, true), (HighTraceId, false)];
+        Assert.Equal(expected, probe.Seen);
+    }
+
+    [Fact]
+    public async Task TheRatioIsASetting()
+    {
+        var probe = new ActivityProbe();
+        await using var factory = Exporting(ratio: "1");
+        using var client = Probed(factory, probe, logs: null).CreateClient();
+
+        await GetAsync(client, Parent(HighTraceId, sampled: false));
 
         Assert.True(Assert.Single(probe.Seen).IsRecorded);
     }
 
+    [Theory]
+    [InlineData("-0.1")]
+    [InlineData("1.5")]
+    public async Task ARatioOutsideZeroToOneStopsTheHostAtStart(string ratio)
+    {
+        await using var factory = Exporting(ratio);
+
+        var exception = Assert.ThrowsAny<Exception>(() => factory.Server);
+
+        Assert.Contains("TraceSampleRatio", exception.ToString(), StringComparison.Ordinal);
+    }
+
+    private static ApiFactory Exporting(string? ratio)
+    {
+        var settings = new Dictionary<string, string?> { [OtlpEndpointKey] = UnreachableCollector };
+        if (ratio is not null)
+        {
+            settings[RatioKey] = ratio;
+        }
+
+        return new ApiFactory { Settings = settings };
+    }
+
+    private static string Parent(string traceId, bool sampled) =>
+        $"00-{traceId}-{ParentSpanId}-{(sampled ? SampledFlags : UnsampledFlags)}";
+
     private static Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactory<Program> Probed(
         ApiFactory factory,
         ActivityProbe probe,
-        FormattingLoggerProvider logs) =>
+        FormattingLoggerProvider? logs) =>
         factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(services =>
         {
-            services.AddSingleton<ILoggerProvider>(logs);
+            if (logs is not null)
+            {
+                services.AddSingleton<ILoggerProvider>(logs);
+            }
+
             services.AddSingleton<IStartupFilter>(probe);
         }));
 

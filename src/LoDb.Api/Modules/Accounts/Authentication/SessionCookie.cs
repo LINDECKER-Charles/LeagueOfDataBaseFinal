@@ -40,6 +40,8 @@ internal static class SessionCookie
             static context => Answer(context, StatusCodes.Status403Forbidden);
         options.Events.OnSigningIn = static context => LimitBrowserSession(context);
         options.Events.OnSignedIn = static context => RenewXsrfToken(context);
+        options.Events.OnValidatePrincipal =
+            SessionAuthentication.Marking(options.Events.OnValidatePrincipal);
     }
 
     private static Task Answer(RedirectContext<CookieAuthenticationOptions> context, int status)

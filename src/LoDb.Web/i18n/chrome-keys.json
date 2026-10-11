@@ -1,0 +1,4 @@
+{
+  "about": ["index.title", "data.title", "faq.title"],
+  "api": ["nav.developers"]
+}

@@ -1,7 +1,7 @@
 import type { RequestHandler } from 'express';
 import type { Level, Logger } from 'pino';
 import { SHED_MARKER } from './admission/shed-marker';
-import { traceIdFromTraceparent } from './trace-id-from-traceparent';
+import { traceIdFromTraceparent } from '../app/core/http/trace/trace-id-from-traceparent';
 
 const FIRST_SERVER_ERROR = 500;
 const SERVICE_UNAVAILABLE = 503;

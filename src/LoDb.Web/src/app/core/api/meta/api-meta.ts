@@ -7,9 +7,10 @@ import { languageOf } from './language-of';
 import { versionMatcher } from './version-matcher';
 
 /**
- * `/api/meta`, requested once per application (once per request on the server) and shared:
- * the locale → language mapping and the version pattern come from it, never from a copy
- * written by hand. A failed request is not cached: the next subscriber asks again.
+ * `/api/meta`, requested once per application and shared: the locale → language mapping and
+ * the version pattern come from it, never from a copy written by hand. A failed request is
+ * not cached: the next subscriber asks again. On the server, each render asks once, and the
+ * process answers from its memo while it is fresh (`ApiResponseMemo`, `SsrHttpBackend`).
  */
 @Injectable({ providedIn: 'root' })
 export class ApiMeta {

@@ -79,17 +79,31 @@ class Host {
   readonly abilities = signal(KIT);
 }
 
+type StageListener = (entries: Partial<IntersectionObserverEntry>[]) => void;
+
 describe('lodb-ability-showcase', () => {
   let reducedMotion: boolean;
+  let stages: StageListener[];
   const direction = { value: 'ltr' as 'ltr' | 'rtl' };
 
   beforeEach(() => {
     reducedMotion = false;
+    stages = [];
     direction.value = 'ltr';
     Object.defineProperty(document.defaultView, 'matchMedia', {
       configurable: true,
       value: () => ({ matches: reducedMotion }),
     });
+    vi.stubGlobal(
+      'IntersectionObserver',
+      class {
+        constructor(listener: StageListener) {
+          stages.push(listener);
+        }
+        observe = vi.fn();
+        disconnect = vi.fn();
+      },
+    );
     // jsdom plays no media: the element methods are observed instead.
     vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => undefined);
     vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue(undefined);
@@ -110,14 +124,25 @@ describe('lodb-ability-showcase', () => {
     // The components go before the spies do: leaving pauses their video.
     TestBed.resetTestingModule();
     Reflect.deleteProperty(document.defaultView ?? {}, 'matchMedia');
+    Reflect.deleteProperty(navigator, 'connection');
+    vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
 
   const pauses = () => vi.mocked(HTMLMediaElement.prototype.pause);
+  const plays = () => vi.mocked(HTMLMediaElement.prototype.play);
 
-  async function render(): Promise<ComponentFixture<Host>> {
+  async function showStage(fixture: ComponentFixture<Host>, isOnScreen: boolean): Promise<void> {
+    const ratio = isOnScreen ? 1 : 0;
+    stages.forEach((notify) => notify([{ isIntersecting: isOnScreen, intersectionRatio: ratio }]));
+    await fixture.whenStable();
+  }
+
+  // The stage scrolled to, unless a test says otherwise.
+  async function render(isOnScreen = true): Promise<ComponentFixture<Host>> {
     const fixture = TestBed.createComponent(Host);
     await fixture.whenStable();
+    await showStage(fixture, isOnScreen);
     return fixture;
   }
 
@@ -194,14 +219,48 @@ describe('lodb-ability-showcase', () => {
     expect(selectedIndex(fixture)).toBe(1);
   });
 
-  it('plays the selected clip muted once rendered in the browser', async () => {
+  it('keeps the lazy poster, and no clip, until half of the stage is on screen', async () => {
+    const fixture = await render(false);
+
+    expect(stage(fixture).querySelector('video')).toBeNull();
+    expect(stage(fixture).querySelector('img.poster')?.getAttribute('loading')).toBe('lazy');
+    expect(plays()).not.toHaveBeenCalled();
+
+    await showStage(fixture, true);
+    expect(stage(fixture).querySelector('video')).not.toBeNull();
+  });
+
+  it('plays the selected clip muted once on screen, and loads nothing before', async () => {
     const fixture = await render();
     const video = stage(fixture).querySelector('video');
 
     expect(video?.muted).toBe(true);
-    expect(video?.autoplay).toBe(true);
+    expect(video?.autoplay).toBe(false);
+    expect(video?.getAttribute('preload')).toBe('none');
+    expect(plays()).toHaveBeenCalledTimes(1);
     expect(video?.querySelector('source')?.getAttribute('src')).toBe('https://cdn.test/p.webm');
     expect(stage(fixture).querySelector('.sound')?.getAttribute('aria-pressed')).toBe('false');
+  });
+
+  it('pauses the clip when the stage leaves the screen', async () => {
+    const fixture = await render();
+    pauses().mockClear();
+    vi.spyOn(HTMLMediaElement.prototype, 'paused', 'get').mockReturnValue(false);
+
+    await showStage(fixture, false);
+
+    expect(pauses()).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the poster under Save-Data, as on a slow connection', async () => {
+    Object.defineProperty(navigator, 'connection', {
+      configurable: true,
+      value: { saveData: true },
+    });
+    const fixture = await render();
+
+    expect(stage(fixture).querySelector('video')).toBeNull();
+    expect(stage(fixture).querySelector('img.poster')).not.toBeNull();
   });
 
   it('lets the reader turn the sound on, for the next clips too', async () => {

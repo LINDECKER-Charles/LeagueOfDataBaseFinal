@@ -51,15 +51,18 @@ describe('WebPlatform', () => {
     );
   });
 
-  it.each(['javascript:alert(1)', 'data:text/html,x', 'file:///etc/passwd', 'champions'])(
-    'refuses to open %s',
-    async (url) => {
-      const window = view();
+  it.each([
+    'http://www.leagueoflegends.com/',
+    'javascript:alert(1)',
+    'data:text/html,x',
+    'file:///etc/passwd',
+    'champions',
+  ])('refuses to open %s', async (url) => {
+    const window = view();
 
-      await expect(webPlatform(window).openExternal(url)).rejects.toThrow();
-      expect(window.open).not.toHaveBeenCalled();
-    },
-  );
+    await expect(webPlatform(window).openExternal(url)).rejects.toThrow();
+    expect(window.open).not.toHaveBeenCalled();
+  });
 
   it('shares through the native share sheet', async () => {
     const share = vi.fn(() => Promise.resolve());

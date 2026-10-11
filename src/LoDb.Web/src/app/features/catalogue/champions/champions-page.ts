@@ -1,5 +1,5 @@
 import { LowerCasePipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect } from '@angular/core';
 import type { UrlTree } from '@angular/router';
 import { TranslocoPipe, translateSignal } from '@jsverse/transloco';
 import type { ChampionCard as Card } from '../../../core/api/generated/models/champion-card';
@@ -10,6 +10,7 @@ import { ListHeading } from '../shared/codex/heading/list-heading';
 import { injectCatalogueLink } from '../shared/codex/links/inject-catalogue-link';
 import { CatalogueCardTemplate } from '../shared/list/catalogue-card-template';
 import { CatalogueList } from '../shared/list/catalogue-list';
+import { injectArtPreconnect } from '../shared/network/inject-art-preconnect';
 import { injectCatalogueList } from '../shared/source/inject-catalogue-list';
 import { ChampionCard } from './list/champion-card';
 import { CHAMPION_CARD_ADAPTER } from './list/champion-card-adapter';
@@ -18,7 +19,10 @@ import { FACET_LABEL_KEYS } from './list/facet-label-keys';
 import { applyChampionsHead } from './seo/apply-champions-head';
 import { championsListSeo } from './seo/champions-list-seo';
 
-/** Cards of the widest first row (five columns), whose portraits load at once. */
+/**
+ * Cards of the widest first row (five columns), whose portraits load at once; only the first
+ * one, the LCP candidate, at high priority.
+ */
 const EAGER_CARDS = 5;
 
 /**
@@ -62,6 +66,13 @@ export class ChampionsPage {
         locale: context.locale,
         build: (translate) => championsListSeo(context, list, translate),
       };
+    });
+    const preconnect = injectArtPreconnect();
+    effect(() => {
+      const first = this.list.firstPage()?.entries[0];
+      if (first !== undefined) {
+        preconnect(first.loadingArt, first.loadingArtVariants);
+      }
     });
   }
 

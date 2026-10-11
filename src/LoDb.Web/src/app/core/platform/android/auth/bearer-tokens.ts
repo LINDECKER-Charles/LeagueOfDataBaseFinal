@@ -14,8 +14,9 @@ const MS_PER_SECOND = 1000;
 // Renewed a little before the API would refuse it, so that a request never leaves with a
 // token that expires on the way.
 const EXPIRY_MARGIN_MS = 30_000;
-// What `/api/account/refresh` answers a refresh token it no longer honours (expired, or
-// revoked by a password reset or a ban). Anything else, offline included, keeps the tokens.
+// What `/api/account/refresh` answers a refresh token it no longer honours (expired, spent,
+// or revoked by a sign-out, a password reset or a ban). Anything else, offline included,
+// keeps the tokens.
 const REFUSED_STATUSES = [400, 401];
 
 interface AccessToken {
@@ -87,7 +88,10 @@ export class BearerTokens {
     }
   }
 
-  /** Forgets every token. The API cannot revoke them: the access token dies within minutes. */
+  /**
+   * Forgets every token. The sign-out revokes the refresh token's family first; the access
+   * token dies within minutes.
+   */
   async clear(): Promise<void> {
     await this.restore();
     this.generation++;

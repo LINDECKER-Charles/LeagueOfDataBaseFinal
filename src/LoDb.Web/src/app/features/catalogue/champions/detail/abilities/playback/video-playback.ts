@@ -5,6 +5,10 @@ import { signal } from '@angular/core';
  * on animation frames while the video plays only (`timeupdate` is too coarse for a smooth
  * bar), so an idle page schedules nothing.
  *
+ * The clip plays while its stage is on screen and the tab shown, unless the reader paused it:
+ * scrolled away or hidden, it pauses, and comes back playing. It starts only then, never on
+ * render (`preload="none"`, no `autoplay`), so a clip below the fold costs nothing.
+ *
  * Each clip comes in a fresh element: adopting it pauses the previous one, so its sound stops
  * at once, and applies the mute choice to the property, never the `muted` attribute alone,
  * which does not mute an element already created. The video starts muted, which keeps
@@ -19,7 +23,9 @@ export class VideoPlayback {
 
   private video: HTMLVideoElement | null = null;
   private frame = 0;
-  private resumeOnVisible = false;
+  private isOnScreen = false;
+  private isTabHidden = false;
+  private isHeldByReader = false;
 
   adopt(video: HTMLVideoElement | null): void {
     if (video === this.video) {
@@ -28,20 +34,26 @@ export class VideoPlayback {
     this.video?.pause();
     this.cancelFrame();
     this.video = video;
-    this.isPaused.set(false);
+    this.isHeldByReader = false;
+    this.isPaused.set(video !== null && !this.shouldPlay());
     this.progress.set(0);
     if (video !== null) {
       video.muted = this.isMuted();
+      if (this.shouldPlay()) {
+        play(video);
+      }
     }
   }
 
+  /** The reader's own play or pause, which scrolling and tab switches then respect. */
   toggle(): void {
     const video = this.video;
     if (video === null) {
       return;
     }
+    this.isHeldByReader = !video.paused;
     if (video.paused) {
-      void video.play();
+      play(video);
     } else {
       video.pause();
     }
@@ -68,30 +80,38 @@ export class VideoPlayback {
     this.sample();
   }
 
-  /**
-   * A hidden tab must not keep playing: pause on hide, and resume on return only what was
-   * playing, never overriding the reader's own pause.
-   */
+  /** At least half of the stage came on screen, or left it. */
+  onStageVisible(isOnScreen: boolean): void {
+    this.isOnScreen = isOnScreen;
+    this.sync();
+  }
+
+  /** A hidden tab must not keep playing. */
   onVisibilityChange(hidden: boolean): void {
-    const video = this.video;
-    if (video === null) {
-      return;
-    }
-    if (hidden) {
-      this.resumeOnVisible = !video.paused;
-      if (this.resumeOnVisible) {
-        video.pause();
-      }
-    } else if (this.resumeOnVisible) {
-      this.resumeOnVisible = false;
-      void video.play();
-    }
+    this.isTabHidden = hidden;
+    this.sync();
   }
 
   /** Leaving the page: a detached `<video>` can play on until collected. */
   dispose(): void {
     this.cancelFrame();
     this.video?.pause();
+  }
+
+  private shouldPlay(): boolean {
+    return this.isOnScreen && !this.isTabHidden && !this.isHeldByReader;
+  }
+
+  private sync(): void {
+    const video = this.video;
+    if (video === null) {
+      return;
+    }
+    if (this.shouldPlay() && video.paused) {
+      play(video);
+    } else if (!this.shouldPlay() && !video.paused) {
+      video.pause();
+    }
   }
 
   private sample(): void {
@@ -113,4 +133,10 @@ export class VideoPlayback {
       this.frame = 0;
     }
   }
+}
+
+// A play cut short by a pause (the stage scrolled away at once) or refused by the browser is
+// no error: the element's own events keep the controls true to what it does.
+function play(video: HTMLVideoElement): void {
+  void video.play().catch(() => undefined);
 }

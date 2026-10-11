@@ -3,7 +3,7 @@ import { compileIcu } from '../compile-icu.mjs';
 /**
  * Compares every locale of every scope with the reference locale, the runtime fallback:
  * keys it lacks (served in the reference language), keys the reference does not know
- * (never displayed), and messages MessageFormat rejects (a broken render).
+ * (never displayed), and messages the web build refuses to compile (a failed build).
  */
 export function measureCompleteness({ locales, scopes }, referenceLocale) {
   return [...scopes].map(([scope, catalogues]) => {
@@ -26,13 +26,13 @@ function compareLocale(locale, catalogue, reference) {
     fileMissing: catalogue === undefined,
     missing: [...reference.keys()].filter((key) => !messages.has(key)),
     extra: [...messages.keys()].filter((key) => !reference.has(key)),
-    invalid: [...messages].flatMap(([key, message]) => invalidMessage(key, message, locale)),
+    invalid: [...messages].flatMap(([key, message]) => invalidMessage(key, message)),
   };
 }
 
-function invalidMessage(key, message, locale) {
+function invalidMessage(key, message) {
   try {
-    compileIcu(String(message), locale);
+    compileIcu(String(message));
     return [];
   } catch (error) {
     return [{ key, error: error.message.split('\n')[0] }];

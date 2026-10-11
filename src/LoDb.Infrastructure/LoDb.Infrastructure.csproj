@@ -27,6 +27,7 @@
     <!-- Read at run time by `migrate` and `baseline mark-applied`, in the API image too. -->
     <EmbeddedResource Include="Persistence/Baseline/*.sql" LogicalName="%(Filename)%(Extension)" />
     <EmbeddedResource Include="Persistence/Baseline/*.txt" LogicalName="%(Filename)%(Extension)" />
+    <EmbeddedResource Include="Persistence/Roles/*.sql" LogicalName="%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>

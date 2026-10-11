@@ -198,6 +198,83 @@
         }
       }
     },
+    "/api/catalog/{version}/{lang}/champions/{id}/skins": {
+      "get": {
+        "tags": [
+          "Catalog"
+        ],
+        "summary": "A champion's skins and their chromas, every art hotlinked.",
+        "operationId": "getChampionSkins",
+        "parameters": [
+          {
+            "name": "version",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChampionSkins"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/catalog/{version}/{lang}/items": {
       "get": {
         "tags": [
@@ -1755,6 +1832,40 @@
         }
       }
     },
+    "/api/account/logout-everywhere": {
+      "post": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Closes every session of the account, this one included.",
+        "operationId": "signOutEverywhere",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/account/token": {
       "post": {
         "tags": [
@@ -1841,7 +1952,7 @@
         "tags": [
           "Account"
         ],
-        "summary": "Trades a refresh token for a new bearer token and refresh token.",
+        "summary": "Trades a refresh token, once, for a new bearer token and refresh token.",
         "operationId": "refreshAccountToken",
         "requestBody": {
           "content": {
@@ -7788,6 +7899,7 @@
           "canonicalPath",
           "image",
           "loadingArt",
+          "loadingArtVariants",
           "blurb",
           "tags",
           "resource",
@@ -7819,6 +7931,13 @@
             "type": "string",
             "description": "The base skin's loading-screen portrait, hotlinked from Data Dragon (UP 8): the art of\nthe list's card.",
             "format": "uri"
+          },
+          "loadingArtVariants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImageVariant"
+            },
+            "description": "The same portrait as WebP, from the site's blobs: candidates of a srcset; none until\nthe latest version's variants are stored, nor for an older version,\nthe hotlinked `loadingArt` standing in."
           },
           "blurb": {
             "type": "string",
@@ -7917,7 +8036,8 @@
           "enemyTips",
           "abilities",
           "art",
-          "skins",
+          "centeredArtVariants",
+          "alternateSkinCount",
           "neighbours"
         ],
         "type": "object",
@@ -7974,18 +8094,34 @@
             "description": "The base skin's art.",
             "$ref": "#/components/schemas/ChampionArt"
           },
-          "skins": {
+          "centeredArtVariants": {
             "type": "array",
             "items": {
+              "$ref": "#/components/schemas/ImageVariant"
+            },
+            "description": "The base skin's centered art as WebP, from the site's blobs: candidates of a srcset,\nthe narrowest first; none until the latest version's variants are stored, nor for an\nolder version, the hotlinked `art.centered` standing in."
+          },
+          "alternateSkinCount": {
+            "type": "integer",
+            "description": "The skins besides the base one, which the hero wears: those the gallery shows once it\nreads them from `…/skins`.",
+            "format": "int32"
+          },
+          "skins": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
               "$ref": "#/components/schemas/ChampionSkin"
-            }
+            },
+            "description": "Every skin, the base one first, for an installed app alone: its front may predate\n`…/skins` and read them here, the app's API only growing (ADR 0008). Left out for\nthe web; to remove once the client policy's minimum of each app reads `…/skins`."
           },
           "neighbours": {
             "description": "The champions before and after it in the list's order.",
             "$ref": "#/components/schemas/DetailNeighbours"
           }
         },
-        "description": "`GET /api/catalog/{version}/{lang}/champions/{id}`: the card, then the lore, the\nabilities and the skins, every image resolved and every art hotlinked, and the champions\non either side of it in the list."
+        "description": "`GET /api/catalog/{version}/{lang}/champions/{id}`: the card, then the lore, the\nabilities and the number of skins, every image resolved and every art hotlinked, and the\nchampions on either side of it in the list."
       },
       "ChampionFacets": {
         "required": [
@@ -8173,6 +8309,34 @@
           }
         },
         "description": "A skin of the champion, chroma entries left out, with its art and chromas."
+      },
+      "ChampionSkins": {
+        "required": [
+          "version",
+          "language",
+          "champion",
+          "skins"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "champion": {
+            "type": "string",
+            "description": "The champion's public id, such as MonkeyKing."
+          },
+          "skins": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChampionSkin"
+            }
+          }
+        },
+        "description": "`GET /api/catalog/{version}/{lang}/champions/{id}/skins`: the skins of a champion,\nthe base one first, each with its art and its chromas."
       },
       "ChampionStat": {
         "required": [
@@ -9162,6 +9326,25 @@
         ],
         "type": "string",
         "description": "What an image resolves to."
+      },
+      "ImageVariant": {
+        "required": [
+          "url",
+          "width"
+        ],
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "`/cdn/blobs/{sha256}.webp`."
+          },
+          "width": {
+            "type": "integer",
+            "description": "Its width in pixels, the `w` descriptor of the candidate.",
+            "format": "int32"
+          }
+        },
+        "description": "A WebP variant of an art, stored by the site: one candidate of a srcset."
       },
       "ImportPreview": {
         "required": [

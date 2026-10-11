@@ -69,10 +69,10 @@ describe('DesktopPlatform', () => {
     expect(opened?.payload).toEqual({ url: 'https://www.leagueoflegends.com/' });
   });
 
-  it.each(['javascript:alert(1)', 'file:///etc/passwd', 'nope'])(
-    'refuses to open anything but a web link (%s)',
+  it.each(['http://www.leagueoflegends.com/', 'javascript:alert(1)', 'file:///etc/passwd', 'nope'])(
+    'refuses to open anything but an https link (%s)',
     async (url) => {
-      await expect(start().openExternal(url)).rejects.toThrow(/http\(s\)/);
+      await expect(start().openExternal(url)).rejects.toThrow(/https/);
       expect(host.types()).not.toContain('openExternal');
     },
   );

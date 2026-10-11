@@ -60,7 +60,7 @@ public sealed class PasswordResetTests(PostgresContainerFixture postgres)
         var link = EmailLink.Of(mail);
         Assert.Equal(new Uri("https://localhost/en/account/reset-password"), link.Page);
         Assert.Equal(
-            $"https://localhost/en/account/reset-password/{link.Token}?user={link.UserId}",
+            $"https://localhost/en/account/reset-password?user={link.UserId}#token={link.Token}",
             mail.Model[EmailModelKeys.ActionUrl]);
         var errors = await ApiJson.FieldErrorsAsync(malformed);
         Assert.Equal(["email-invalid"], errors["email"]);

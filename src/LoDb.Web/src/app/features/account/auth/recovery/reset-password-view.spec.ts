@@ -1,5 +1,6 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { Location } from '@angular/common';
 import { Component, PLATFORM_ID } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
@@ -7,6 +8,7 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { provideTransloco } from '@jsverse/transloco';
 import { of } from 'rxjs';
 import { ToastService } from '../../../../core/layout/toast/toast-service';
+import { resetPasswordMatcher } from './reset-password-matcher';
 import { ResetPasswordView } from './reset-password-view';
 
 @Component({ template: '' })
@@ -16,6 +18,9 @@ const RESET_URL = '/api/account/reset-password';
 const CHECK_URL = '/api/account/reset-password/check';
 const STRONG = 'Correct-horse-42';
 const FORGOT = '/fr/account/forgot-password';
+const RESET = '/fr/account/reset-password';
+// The link of a reset e-mail, its token in the fragment.
+const LINK = `${RESET}?user=7#token=token`;
 
 // Without catalogues, every text renders as its key: the spec reads which message is shown.
 async function open(url: string) {
@@ -26,7 +31,10 @@ async function open(url: string) {
       provideHttpClient(),
       provideHttpClientTesting(),
       provideRouter([
-        { path: ':locale/account/reset-password/:token', component: ResetPasswordView },
+        {
+          path: ':locale/account',
+          children: [{ matcher: resetPasswordMatcher, component: ResetPasswordView }],
+        },
         { path: '**', component: Probe },
       ]),
       provideTransloco({
@@ -103,7 +111,7 @@ describe('ResetPasswordView', () => {
   });
 
   it('sends a damaged link back to a new request at once, as the legacy page did', async () => {
-    await open('/fr/account/reset-password/token?user=abc');
+    await open(`${RESET}?user=abc#token=token`);
     await new Promise((resolve) => setTimeout(resolve));
 
     expect(TestBed.inject(Router).url).toBe(FORGOT);
@@ -112,7 +120,7 @@ describe('ResetPasswordView', () => {
   });
 
   it('sends a link found expired on opening back to a new request, formless', async () => {
-    const { harness, host } = await open('/fr/account/reset-password/token?user=7');
+    const { harness, host } = await open(LINK);
     expect(host.querySelector('form')).toBeNull();
 
     await answerCheck(harness, EXPIRED);
@@ -122,19 +130,19 @@ describe('ResetPasswordView', () => {
   });
 
   it('shows the form once the link is found usable, or when the check fails', async () => {
-    const usable = await open('/fr/account/reset-password/token?user=7');
+    const usable = await open(LINK);
     await answerCheck(usable.harness, null);
     expect(usable.host.querySelector('form')).not.toBeNull();
 
     TestBed.resetTestingModule();
-    const unchecked = await open('/fr/account/reset-password/token?user=7');
+    const unchecked = await open(LINK);
     await answerCheck(unchecked.harness, LIMITED);
     expect(unchecked.host.querySelector('form')).not.toBeNull();
     expect(toasted()).toEqual([]);
   });
 
   it('sends a link found expired when sent back to a new request, with the same toast', async () => {
-    const { harness } = await open('/fr/account/reset-password/token?user=7');
+    const { harness } = await open(LINK);
     await answerCheck(harness, null);
 
     await submit(harness, STRONG);
@@ -145,5 +153,22 @@ describe('ResetPasswordView', () => {
 
     expect(TestBed.inject(Router).url).toBe(FORGOT);
     expect(toasted()).toEqual(['error:auth.flash.reset_error']);
+  });
+
+  it('takes the token out of the address once read, the form kept', async () => {
+    const { harness, host } = await open(LINK);
+    await answerCheck(harness, null);
+
+    expect(TestBed.inject(Router).url).toBe(RESET);
+    expect(TestBed.inject(Location).path(true)).toBe(RESET);
+    expect(host.querySelector('form')).not.toBeNull();
+  });
+
+  it('still reads a link sent before, its token in the path, then takes it out', async () => {
+    const { harness, host } = await open(`${RESET}/token?user=7`);
+    await answerCheck(harness, null);
+
+    expect(TestBed.inject(Location).path(true)).toBe(RESET);
+    expect(host.querySelector('form')).not.toBeNull();
   });
 });

@@ -32,7 +32,7 @@ public sealed class AdminMfaTests(PostgresContainerFixture postgres)
         var key = ApiJson.Text(setup, "sharedKey")!;
         using var confirm = await admin.PostAsync(
             ConfirmPath,
-            new { code = Totp.Code(key), invitation });
+            new { code = Totp.Code(key, App.Clock), invitation });
 
         var done = await ApiJson.ReadAsync(confirm, HttpStatusCode.OK);
         Assert.Equal(10, done.GetProperty("recoveryCodes").GetArrayLength());
@@ -106,7 +106,7 @@ public sealed class AdminMfaTests(PostgresContainerFixture postgres)
 
         using var wrong = await admin.PostAsync(
             ConfirmPath,
-            new { code = Totp.WrongCode(key), invitation });
+            new { code = Totp.WrongCode(key, App.Clock), invitation });
         using var blank = await admin.PostAsync(ConfirmPath, new { code = " ", invitation });
         using var malformed = await admin.PostAsync(
             ConfirmPath,
@@ -121,12 +121,31 @@ public sealed class AdminMfaTests(PostgresContainerFixture postgres)
     }
 
     [Fact]
+    public async Task ABearerHeaderDoesNotExemptTheSessionFromItsXsrfToken()
+    {
+        using var admin = await AdminCalls.OpenUnenrolledAsync(App);
+        var invitation = await AdminCalls.InvitationAsync(App, AdminCalls.NewAdminName);
+        using var request = admin.Post(EnrollmentPath, new { invitation });
+        request.Headers.Remove(BrowserClient.XsrfHeader);
+        request.Headers.Authorization = new("Bearer", "forged");
+
+        using var response = await admin.SendAsync(request);
+
+        Assert.Equal(
+            "xsrf-invalid",
+            await ApiJson.ProblemCodeAsync(response, HttpStatusCode.Forbidden));
+        Assert.Null(await App.UsersAsync(async users =>
+            await users.GetAuthenticatorKeyAsync(
+                (await users.FindByNameAsync(AdminCalls.NewAdminName))!)));
+    }
+
+    [Fact]
     public async Task ACodeWithSeparatorsIsAccepted()
     {
         using var admin = await AdminCalls.OpenUnenrolledAsync(App);
         var invitation = await AdminCalls.InvitationAsync(App, AdminCalls.NewAdminName);
         var key = ApiJson.Text(await StartAsync(admin, invitation), "sharedKey")!;
-        var code = Totp.Code(key);
+        var code = Totp.Code(key, App.Clock);
 
         using var confirm = await admin.PostAsync(
             ConfirmPath,
@@ -170,7 +189,7 @@ public sealed class AdminMfaTests(PostgresContainerFixture postgres)
             var key = ApiJson.Text(await StartAsync(admin, invitation), "sharedKey")!;
             using var confirm = await admin.PostAsync(
                 ConfirmPath,
-                new { code = Totp.Code(key), invitation });
+                new { code = Totp.Code(key, App.Clock), invitation });
             await ApiJson.ReadAsync(confirm, HttpStatusCode.OK);
         }
 

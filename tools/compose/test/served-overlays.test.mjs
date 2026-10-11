@@ -1,7 +1,9 @@
 // Checks what Compose makes of the served overlays, from the .env examples: the production
-// stack's CPU quotas, weights and process caps (compose.deploy.yaml), the smaller share of
-// the staging stack (compose.staging.yaml), and the optional login on the staging pages
-// (compose.staging-auth.yaml), whose bcrypt hash must reach the edge's label intact.
+// stack's CPU quotas, weights and process caps (compose.deploy.yaml), its runtime hardening
+// and networks, the edge's route to nginx, the hosts the API answers, the smaller share of
+// the staging stack (compose.staging.yaml), the optional login on the staging pages
+// (compose.staging-auth.yaml), whose bcrypt hash must reach the edge's label intact, and the
+// production's declaration to Umami (compose.umami.yaml).
 // Needs the Docker CLI only: `compose config` reads files, it starts nothing.
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
@@ -17,15 +19,29 @@ const ROOT = resolve(fileURLToPath(new URL('../../../', import.meta.url)));
 const SERVED = ['compose.yaml', 'compose.deploy.yaml'];
 const STAGING = [...SERVED, 'compose.staging.yaml'];
 const STAGING_AUTH = [...STAGING, 'compose.staging-auth.yaml'];
+const PROD_UMAMI = [...SERVED, 'compose.umami.yaml'];
+const DASHBOARD = 'stats.league-of-data-base.com';
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 const RUNNING = ['api', 'web-ssr', 'nginx', 'postgres'];
 // What the deploy job writes on a host, absent from the examples.
-const HOST_ADDITIONS = 'LODB_EDGE_CIDR=172.18.0.0/16\nLODB_STACK_SUBNET=10.231.1.0/24\n';
+const EDGE_SECRET = '5e'.repeat(32);
+const HOST_ADDITIONS = 'LODB_EDGE_CIDR=172.18.0.0/16\nLODB_STACK_SUBNET=10.231.1.0/24\n'
+  + `LODB_EDGE_SECRET=${EDGE_SECRET}\n`;
+// Every service of the stack, the one-shot migrate included.
+const SERVICES = [...RUNNING, 'migrate'];
+// What postgres's entrypoint needs, as root, before it becomes `postgres`: none beyond
+// Docker's defaults (DAC_READ_SEARCH would also open open_by_handle_at, compose.yaml).
+const POSTGRES_CAPABILITIES = ['CHOWN', 'DAC_OVERRIDE', 'FOWNER', 'SETGID', 'SETUID'];
+const NGINX_UPSTREAM = '{{upstreams 8080}}';
+const NGINX_TEMP = '/var/cache/nginx/temp';
 // The staging share of the host: about three quarters of a core.
 const STAGING_CORES = 0.75;
 const HASH = '$2a$14$jM2G4xK0ZDa8W6PF31H9BOKCv81PEwu/7g692HVRaN72tRoi1jH52';
 const AUTH_ENV = `LODB_STAGING_BASIC_AUTH_USER=tester\nLODB_STAGING_BASIC_AUTH_HASH='${HASH}'\n`;
 const OPEN_PATHS = '/api/* /v1/* /webhooks/* /healthz /build/* /cdn/blobs/* /u/*';
 const IS_CALLER_SETTING = /^(?:LODB_|LoDb__|COMPOSE_)|^(?:IMAGE_TAG|APP_REVISION)$/;
+// Called by these names inside the stack: the renderer, nginx's probes, the healthcheck.
+const INTERNAL_HOSTS = ['lodb-api', 'localhost', '127.0.0.1'];
 
 const hasCompose = await run('docker', ['compose', 'version']).then(() => true, () => false);
 
@@ -35,14 +51,17 @@ function isolatedEnvironment() {
     .filter(([key]) => !IS_CALLER_SETTING.test(key)));
 }
 
-async function servicesOf(envFiles, files) {
+async function configOf(envFiles, files) {
   const args = ['compose', '--project-directory', ROOT, '-p', 'lodb-overlays-check',
     ...envFiles.flatMap((file) => ['--env-file', file]),
     ...files.flatMap((file) => ['-f', join(ROOT, file)]), 'config', '--format', 'json'];
   const { stdout } = await run('docker', args,
     { env: isolatedEnvironment(), maxBuffer: 16 * 1024 * 1024 });
-  return JSON.parse(stdout).services;
+  return JSON.parse(stdout);
 }
+
+const servicesOf = async (envFiles, files) => (await configOf(envFiles, files)).services;
+const networksOf = (service) => Object.keys(service.networks ?? {}).sort();
 
 const limitsOf = (service) => service.deploy?.resources?.limits ?? {};
 const coresOf = (services) =>
@@ -51,6 +70,7 @@ const coresOf = (services) =>
 describe('served overlays through Compose',
   { skip: hasCompose ? false : 'docker compose is not available' }, () => {
     let folder;
+    let served;
     let prod;
     let staging;
 
@@ -59,8 +79,49 @@ describe('served overlays through Compose',
       await writeFile(join(folder, 'host.env'), HOST_ADDITIONS);
       await writeFile(join(folder, 'auth.env'), AUTH_ENV);
       const host = join(folder, 'host.env');
-      prod = await servicesOf([join(ROOT, '.env.prod.example'), host], SERVED);
+      served = await configOf([join(ROOT, '.env.prod.example'), host], SERVED);
+      prod = served.services;
       staging = await servicesOf([join(ROOT, '.env.staging.example'), host], STAGING);
+    });
+
+    test('runs every service read-only, without capabilities nor a way to gain one', () => {
+      for (const name of SERVICES) {
+        const service = prod[name];
+        assert.equal(service.read_only, true, `${name} is read-only`);
+        assert.deepEqual(service.cap_drop, ['ALL'], `${name} drops every capability`);
+        assert.deepEqual(service.security_opt, ['no-new-privileges:true'], name);
+        assert.ok(service.tmpfs?.some((mount) => mount.startsWith('/tmp:size=')), name);
+      }
+      assert.deepEqual(prod.postgres.cap_add, POSTGRES_CAPABILITIES);
+      for (const name of SERVICES.filter((service) => service !== 'postgres')) {
+        assert.equal(prod[name].cap_add, undefined, `${name} takes no capability back`);
+      }
+      // What a slow client has not read waits on a volume, never in nginx's tmpfs
+      // (docker/nginx/nginx.conf): nginx would not start without it.
+      const temp = prod.nginx.volumes.find((mount) => mount.target === NGINX_TEMP);
+      assert.equal(temp?.type, 'volume');
+    });
+
+    test('keeps Postgres on an internal network that nginx and the SSR are not on', () => {
+      assert.equal(served.networks.data.internal, true);
+      assert.deepEqual(networksOf(prod.postgres), ['data']);
+      assert.deepEqual(prod.postgres.networks.data.aliases, ['lodb-postgres']);
+      assert.deepEqual(networksOf(prod.api), ['data', 'default', 'observability']);
+      assert.deepEqual(networksOf(prod.migrate), ['data', 'default']);
+      assert.deepEqual(networksOf(prod.nginx), ['default', 'edge']);
+      assert.deepEqual(networksOf(prod['web-ssr']), ['default', 'observability']);
+      // The network nginx reaches the API from is the one the API trusts.
+      const [{ subnet }] = served.networks.default.ipam.config;
+      assert.equal(prod.api.environment.LoDb__Hosting__KnownProxyNetworks__0, subnet);
+    });
+
+    test('has the edge reach nginx on its port, with the header nginx requires', () => {
+      const labels = prod.nginx.labels;
+      for (const site of ['caddy_0', 'caddy_1']) {
+        assert.equal(labels[`${site}.reverse_proxy`], NGINX_UPSTREAM, site);
+        assert.equal(labels[`${site}.reverse_proxy.header_up`], `X-LoDb-Edge ${EDGE_SECRET}`);
+      }
+      assert.equal(prod.nginx.environment.LODB_EDGE_SECRET, EDGE_SECRET);
     });
 
     after(() => folder && rm(folder, { recursive: true, force: true }));
@@ -92,6 +153,28 @@ describe('served overlays through Compose',
       assert.equal(prod['web-ssr'].environment.LODB_RENDER_MAX_IN_FLIGHT, '');
     });
 
+    // The renderer's copy of /api/meta: its default in code, or the host's `.env` value.
+    test('hands the renderer the lifetime of its /api/meta copy from the host', async () => {
+      assert.equal(prod['web-ssr'].environment.LODB_API_META_TTL_SECONDS, '');
+      const meta = join(folder, 'meta.env');
+      await writeFile(meta, 'LODB_API_META_TTL_SECONDS=15\n');
+      const services = await servicesOf(
+        [join(ROOT, '.env.prod.example'), join(folder, 'host.env'), meta], SERVED);
+      assert.equal(services['web-ssr'].environment.LODB_API_META_TTL_SECONDS, '15');
+    });
+
+    test('lets the API answer its public hosts and its stack names only', () => {
+      const hostsOf = (setting) => setting.split(/[\s,;]/).map((host) => host.trim())
+        .filter((host) => host.length > 0);
+      for (const [name, services] of [['prod', prod], ['staging', staging]]) {
+        const hosts = hostsOf(services.api.environment.AllowedHosts);
+        const labels = services.nginx.labels;
+        const routed = hostsOf(`${labels.caddy_0},${labels.caddy_1}`);
+        assert.deepEqual(hosts, [...routed, ...INTERNAL_HOSTS], `${name} AllowedHosts`);
+        assert.ok(!hosts.includes('*'), `${name} filters the hosts`);
+      }
+    });
+
     test('asks for the staging login on the pages only, its hash intact', async () => {
       const services = await servicesOf([join(ROOT, '.env.staging.example'),
         join(folder, 'host.env'), join(folder, 'auth.env')], STAGING_AUTH);
@@ -101,6 +184,31 @@ describe('served overlays through Compose',
       // `compose config` writes each `$` of a value doubled, as Compose reads it back.
       assert.equal(labels['caddy_0.basic_auth.tester'], HASH.replaceAll('$', () => '$$'));
       assert.equal(labels['caddy_1.basic_auth'], undefined, 'the API subdomain stays open');
+    });
+
+    test('declares the production site to Umami, its dashboard and its pull', async () => {
+      const services = await servicesOf([join(ROOT, '.env.prod.example'),
+        join(folder, 'host.env')], PROD_UMAMI);
+      const labels = services.nginx.labels;
+      const website = labels['umami.website'];
+      assert.match(website, UUID);
+      assert.equal(labels['caddy_0.import'], 'umami');
+      assert.equal(labels['umami.domain'], 'league-of-data-base.com');
+      assert.equal(labels.caddy_2, DASHBOARD);
+      assert.equal(labels['caddy_2.import'], `umami-tableau ${website}`);
+      assert.equal(labels['caddy_1.import'], undefined, 'the API subdomain has no audience');
+      assert.equal(labels['caddy_0.reverse_proxy'], prod.nginx.labels['caddy_0.reverse_proxy']);
+      const api = services.api.environment;
+      assert.equal(api.LoDb__Audience__WebsiteId, website);
+      assert.equal(api.LoDb__Audience__Host, DASHBOARD);
+      // The overlay comes after compose.deploy.yaml: its resets of the private ranges hold.
+      assert.equal(api.LoDb__Hosting__KnownProxyNetworks__1, undefined);
+    });
+
+    test('leaves staging out of Umami', () => {
+      assert.equal(Object.keys(staging.nginx.labels).some((key) => key.startsWith('umami.')),
+        false);
+      assert.equal(staging.api.environment.LoDb__Audience__WebsiteId, undefined);
     });
 
     test('refuses the staging login without its two settings', async () => {

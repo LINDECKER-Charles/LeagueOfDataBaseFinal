@@ -35,7 +35,7 @@
             [image]="spell.image"
             [name]="spell.name"
             [size]="sealIconSize"
-            eager
+            priority
           />
         }
       </div>
@@ -99,12 +99,16 @@
 
     <lodb-previous-patches class="mt-14" [context]="context" [path]="details.canonicalPath" />
 
-    <lodb-pager
-      class="mt-14"
-      [previous]="pager().previous"
-      [next]="pager().next"
-      [hub]="pager().hub"
-    />
+    <!-- Once the page is idle: the pager measures itself once hydrated, out of sight, and
+         a click never lands while it hydrates (docs/architecture/pieges.md). -->
+    @defer (on immediate; hydrate on idle) {
+      <lodb-pager
+        class="mt-14"
+        [previous]="pager().previous"
+        [next]="pager().next"
+        [hub]="pager().hub"
+      />
+    }
   </article>
 </div>
 

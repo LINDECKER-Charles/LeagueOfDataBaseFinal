@@ -284,7 +284,7 @@ public sealed class OutboxDispatcherTests(PostgresContainerFixture postgres)
 
     private OutboxHarness NewHarness(Dictionary<string, string?>? settings = null)
     {
-        var harness = new OutboxHarness(Database.ConnectionString, settings, _transport);
+        var harness = new OutboxHarness(Database.AppConnectionString, settings, _transport);
         _harnesses.Add(harness);
         return harness;
     }

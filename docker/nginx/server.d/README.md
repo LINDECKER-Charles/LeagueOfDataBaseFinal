@@ -15,7 +15,9 @@ Reserved files (plan, §7.3):
 
 What goes inside a `location` belongs in `../snippets/` instead. The guards both server
 blocks share (refused agents, client timeouts, paths that exist nowhere, the 429 answer)
-live in `../snippets/server-guards.conf`, which the API subdomain includes too.
+live in `../snippets/server-guards.conf`, which the API subdomain includes too. Every server
+block, the redirect of `www.` and `.fr` included, starts with `../snippets/edge-guard.conf`:
+a request without the edge's header is refused there, before anything else.
 
 Files of the served environment, not of the image: the environment mounts a folder
 read-only on `/etc/nginx/android/` (a folder rather than each file, so that a replaced

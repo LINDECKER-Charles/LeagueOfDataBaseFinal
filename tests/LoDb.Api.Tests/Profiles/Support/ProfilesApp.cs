@@ -65,10 +65,11 @@ public sealed class ProfilesApp : IAsyncLifetime
         await _database.MigrateAsync(Token);
         _factory = new ApiFactory
         {
-            PostgresConnectionString = new NpgsqlConnectionStringBuilder(_database.ConnectionString)
-            {
-                MaxPoolSize = ServedPoolSize,
-            }.ConnectionString,
+            PostgresConnectionString =
+                new NpgsqlConnectionStringBuilder(_database.AppConnectionString)
+                {
+                    MaxPoolSize = ServedPoolSize,
+                }.ConnectionString,
             Settings = new Dictionary<string, string?>
             {
                 [Accounts + "SecureCookies"] = bool.TrueString,

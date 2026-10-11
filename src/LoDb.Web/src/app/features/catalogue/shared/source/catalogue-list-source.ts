@@ -5,8 +5,8 @@ import type { PageSlice } from './page-slice';
 /**
  * The list of a catalogue page as it arrives: first the page the URL names, rendered on the
  * server and readable by crawlers, then, in the browser, the whole list for instant
- * filtering. Built by injectCatalogueList; read by the page (heading, SEO, facets) and by
- * lodb-catalogue-list.
+ * filtering, once the reader shows they will filter or the page is idle. Built by
+ * injectCatalogueList; read by the page (heading, SEO, facets) and by lodb-catalogue-list.
  */
 export interface CatalogueListSource<L> {
   /** The page the server rendered, which the browser takes back from the transfer cache. */
@@ -20,4 +20,6 @@ export interface CatalogueListSource<L> {
   /** The most complete list known: the whole one, else the first page. */
   readonly list: Signal<L | null>;
   readonly status: Signal<ListStatus>;
+  /** The reader is about to filter, page or resize: the whole list is read now. */
+  loadWhole(): void;
 }

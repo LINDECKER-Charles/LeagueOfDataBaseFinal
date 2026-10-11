@@ -38,6 +38,10 @@ internal static partial class RegistrationRules
 
     public static bool IsUsername(string username) => UsernameSyntax().IsMatch(username);
 
+    /// <summary>Whether a stored-form e-mail breaks no rule of <see cref="CheckEmail"/>.</summary>
+    public static bool IsEmail(string email) =>
+        email.Length is > 0 and <= MaxEmailLength && EmailSyntax().IsMatch(email);
+
     /// <summary>Every rule <paramref name="request"/> breaks, taken names aside.</summary>
     public static FieldErrors Check(RegisterRequest request)
     {

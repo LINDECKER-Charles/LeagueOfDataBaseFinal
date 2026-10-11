@@ -99,12 +99,25 @@ describe('PageResponse', () => {
     expect(headersOf(init)['content-type']).toBe('text/html');
   });
 
+  it('asks the browser to connect early to the origins the page names, once each', () => {
+    const init: ResponseInit = { headers: new Headers({ Link: '</fonts/a.woff2>; rel=preload' }) };
+    const response = serverResponse(init);
+
+    response.preconnect('https://ddragon.leagueoflegends.com');
+    response.preconnect('https://ddragon.leagueoflegends.com');
+
+    expect(headersOf(init)['link']).toBe(
+      '</fonts/a.woff2>; rel=preload, <https://ddragon.leagueoflegends.com>; rel=preconnect',
+    );
+  });
+
   it('writes nothing without a server response, in the browser or while prerendering', () => {
     const response = TestBed.inject(PageResponse);
 
     expect(() => {
       response.answer({ kind: 'not-found' });
       response.cache('latest');
+      response.preconnect('https://ddragon.leagueoflegends.com');
     }).not.toThrow();
   });
 });

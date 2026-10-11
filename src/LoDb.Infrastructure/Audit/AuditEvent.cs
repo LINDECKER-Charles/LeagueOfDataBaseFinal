@@ -23,8 +23,9 @@ public sealed record AuditEvent
     /// object.
     /// </summary>
     /// <remarks>
-    /// <c>identifier</c>, the e-mail or username typed on a failed sign-in, is the only
-    /// personal data allowed here: the log mirror leaves it out.
+    /// <c>identifier_digest</c>, the keyed digest of the e-mail or username typed on a failed
+    /// sign-in, is the only personal data allowed here, never the text: the log mirror leaves
+    /// it out.
     /// </remarks>
     public IReadOnlyDictionary<string, object?> Meta { get; init; } = NoMeta;
 }

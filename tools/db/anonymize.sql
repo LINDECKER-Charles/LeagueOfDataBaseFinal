@@ -7,8 +7,8 @@
 --
 -- Guard: every column whose type can hold text is reviewed below, anonymized, emptied or
 -- kept on purpose. A column added later stops the script until its lot reviews it here.
--- The objects of lots 4 and 6 and the payment states exist once the new stack has migrated
--- the database: the script takes a dump with or without them.
+-- The objects of lots 4 and 6, the payment states and the audience pulled from Umami exist
+-- once the new stack has migrated the database: the script takes a dump with or without them.
 
 DO $guard$
 DECLARE
@@ -58,6 +58,8 @@ BEGIN
           'email_outbox.recipient', 'email_outbox.status', 'email_outbox.template',
           'identity_user_tokens.login_provider', 'identity_user_tokens.name',
           'identity_user_tokens.value',
+          -- Emptied below as well: the refresh token families of the apps.
+          'refresh_token_families.id',
           'messenger_messages.body', 'messenger_messages.headers',
           'messenger_messages.queue_name',
           'reset_password_request.hashed_token', 'reset_password_request.selector',
@@ -72,6 +74,7 @@ BEGIN
           'analytics_event.version',
           'api_credit_grants.source',
           'api_keys.plan',
+          'audience_entity_daily.entity',
           'audit_log.action', 'audit_log.actor_type', 'audit_log.outcome', 'audit_log.route',
           'audit_log.target_id', 'audit_log.target_type',
           'builds.champion_id', 'builds.game_mode', 'builds.game_version',
@@ -184,6 +187,16 @@ BEGIN
         meta = NULL;
 END
 $lot4$;
+
+-- The refresh token families of the apps, once the new stack has migrated the database: the
+-- sessions of the source go with the key ring that signs their tokens.
+DO $sessions$
+BEGIN
+    IF to_regclass('refresh_token_families') IS NOT NULL THEN
+        DELETE FROM refresh_token_families;
+    END IF;
+END
+$sessions$;
 
 -- Lot 6, once the new stack has migrated the database. Stripe identifiers become salted
 -- pseudonyms, like those of lot 1. The raw views keep their page and classification but lose

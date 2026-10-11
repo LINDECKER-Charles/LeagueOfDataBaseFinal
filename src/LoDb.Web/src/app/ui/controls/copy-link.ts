@@ -7,6 +7,7 @@ import {
   booleanAttribute,
   inject,
   input,
+  output,
   signal,
   viewChild,
   Injector,
@@ -19,14 +20,15 @@ const COPIED_RESET_MS = 2000;
 /**
  * Copies a link in one click. Without the Clipboard API, or when it refuses, a read-only
  * field holding the link opens, selected, for the reader to copy it. Its texts are the
- * caller's: a shared build and a filtered list do not word it the same.
+ * caller's: a shared build and a filtered list do not word it the same. `copied` tells the
+ * caller once the link is in the clipboard, never for the fallback field.
  */
 @Component({
   selector: 'lodb-copy-link',
   imports: [Button, Field],
   template: `
     <button type="button" lodbButton="ghost" aria-live="polite" (click)="copy()">
-      {{ copied() ? labels().copied : labels().copy }}
+      {{ isCopied() ? labels().copied : labels().copy }}
     </button>
     @if (fallback()) {
       <label class="w-full">
@@ -58,12 +60,14 @@ export class CopyLink {
   readonly labels = input.required<{ copy: string; copied: string; error: string }>();
   /** The button fills the width of its box, such as the foot of a panel. */
   readonly stretch = input(false, { transform: booleanAttribute });
+  /** The link reached the clipboard. */
+  readonly copied = output();
 
   private readonly injector = inject(Injector);
   private readonly field = viewChild<ElementRef<HTMLInputElement>>('field');
   private timer: ReturnType<typeof setTimeout> | undefined;
 
-  protected readonly copied = signal(false);
+  protected readonly isCopied = signal(false);
   protected readonly fallback = signal(false);
 
   constructor() {
@@ -78,9 +82,10 @@ export class CopyLink {
     }
     try {
       await clipboard.writeText(this.url());
-      this.copied.set(true);
+      this.isCopied.set(true);
+      this.copied.emit();
       clearTimeout(this.timer);
-      this.timer = setTimeout(() => this.copied.set(false), COPIED_RESET_MS);
+      this.timer = setTimeout(() => this.isCopied.set(false), COPIED_RESET_MS);
     } catch {
       this.openFallback();
     }

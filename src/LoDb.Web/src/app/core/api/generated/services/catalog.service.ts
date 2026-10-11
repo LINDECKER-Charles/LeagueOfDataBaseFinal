@@ -12,8 +12,11 @@ import { StrictHttpResponse } from '../strict-http-response';
 
 import { ChampionDetails } from '../models/champion-details';
 import { ChampionList } from '../models/champion-list';
+import { ChampionSkins } from '../models/champion-skins';
 import { getChampion } from '../fn/catalog/get-champion';
 import { GetChampion$Params } from '../fn/catalog/get-champion';
+import { getChampionSkins } from '../fn/catalog/get-champion-skins';
+import { GetChampionSkins$Params } from '../fn/catalog/get-champion-skins';
 import { getItem } from '../fn/catalog/get-item';
 import { GetItem$Params } from '../fn/catalog/get-item';
 import { getRuneTree } from '../fn/catalog/get-rune-tree';
@@ -114,6 +117,41 @@ export class CatalogService extends BaseService {
     const resp = this.getChampion$Response(params, context);
     return resp.pipe(
       map((r: StrictHttpResponse<ChampionDetails>): ChampionDetails => r.body)
+    );
+  }
+
+  /** Path part for operation `getChampionSkins()` */
+  static readonly GetChampionSkinsPath = '/api/catalog/{version}/{lang}/champions/{id}/skins';
+
+  /**
+   * A champion's skins and their chromas, every art hotlinked.
+   *
+   *
+   *
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `getChampionSkins()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  getChampionSkins$Response(params: GetChampionSkins$Params, context?: HttpContext): Observable<StrictHttpResponse<ChampionSkins>> {
+    const obs = getChampionSkins(this.http, this.rootUrl, params, context);
+    return obs;
+  }
+
+  /**
+   * A champion's skins and their chromas, every art hotlinked.
+   *
+   *
+   *
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `getChampionSkins$Response()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  getChampionSkins(params: GetChampionSkins$Params, context?: HttpContext): Observable<ChampionSkins> {
+    const resp = this.getChampionSkins$Response(params, context);
+    return resp.pipe(
+      map((r: StrictHttpResponse<ChampionSkins>): ChampionSkins => r.body)
     );
   }
 

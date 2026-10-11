@@ -1,6 +1,7 @@
 using LoDb.Infrastructure.Analytics.Aggregation;
 using LoDb.Infrastructure.Persistence.Analytics;
 using LoDb.Infrastructure.Persistence.Analytics.Partitions;
+using LoDb.Infrastructure.Persistence.Roles;
 using Microsoft.Extensions.Options;
 using Npgsql;
 
@@ -10,7 +11,11 @@ namespace LoDb.Infrastructure.Analytics.Rollup;
 /// Folds the views of one UTC day, read from its partition alone, in the order they came,
 /// into an aggregate bounded by <see cref="DailyLimits"/>.
 /// </summary>
-/// <remarks>Neither the address nor the user agent is read: no aggregate holds them.</remarks>
+/// <remarks>
+/// Neither the address nor the user agent is read: no aggregate holds them. The read lasts
+/// as long as the fold, and grows with the day's traffic: it gets
+/// <see cref="AnalyticsOptions.JobStatementTimeout"/>, not the API's statement timeout.
+/// </remarks>
 internal sealed class DayEvents(NpgsqlDataSource dataSource, IOptions<AnalyticsOptions> options)
 {
     private const string Sql = """
@@ -23,16 +28,27 @@ internal sealed class DayEvents(NpgsqlDataSource dataSource, IOptions<AnalyticsO
 
     public async Task<DailyAggregate> FoldAsync(DateOnly day, CancellationToken cancellationToken)
     {
-        var daily = new DailyAggregate(day, DailyLimits.Of(options.Value));
-        await using var command = dataSource.CreateCommand(Sql);
+        var settings = options.Value;
+        var daily = new DailyAggregate(day, DailyLimits.Of(settings));
+        await using var connection = await dataSource.OpenConnectionAsync(cancellationToken);
+        await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+        await using var command = new NpgsqlCommand(Sql, connection);
+        await StatementTimeouts.RaiseAsync(
+            transaction,
+            command,
+            settings.JobStatementTimeout,
+            cancellationToken);
         command.Parameters.AddWithValue("from", AnalyticsPartitionNames.StartOf(day));
         command.Parameters.AddWithValue("to", AnalyticsPartitionNames.StartOf(day.AddDays(1)));
-        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
-        while (await reader.ReadAsync(cancellationToken))
+        await using (var reader = await command.ExecuteReaderAsync(cancellationToken))
         {
-            DailyFold.Fold(daily, Read(reader));
+            while (await reader.ReadAsync(cancellationToken))
+            {
+                DailyFold.Fold(daily, Read(reader));
+            }
         }
 
+        await transaction.CommitAsync(cancellationToken);
         return daily;
     }
 

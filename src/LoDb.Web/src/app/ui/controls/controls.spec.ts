@@ -67,13 +67,18 @@ describe('control directives', () => {
   template: `<lodb-copy-link
     url="https://example.test/en/items?tag=Boots"
     [labels]="{ copy: 'Copy link', copied: 'Link copied', error: 'Copy the link below' }"
+    (copied)="copies = copies + 1"
   />`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-class CopyHost {}
+class CopyHost {
+  copies = 0;
+}
 
 describe('lodb-copy-link', () => {
   afterEach(() => vi.unstubAllGlobals());
+
+  let copies = 0;
 
   async function render() {
     const fixture = TestBed.createComponent(CopyHost);
@@ -82,6 +87,7 @@ describe('lodb-copy-link', () => {
     host.querySelector('button')?.click();
     await new Promise((resolve) => setTimeout(resolve));
     await fixture.whenStable();
+    copies = fixture.componentInstance.copies;
     return host;
   }
 
@@ -91,6 +97,7 @@ describe('lodb-copy-link', () => {
     const host = await render();
     expect(writeText).toHaveBeenCalledWith('https://example.test/en/items?tag=Boots');
     expect(host.querySelector('button')?.textContent?.trim()).toBe('Link copied');
+    expect(copies).toBe(1);
   });
 
   it('hands the link over in a field when the clipboard is out of reach', async () => {
@@ -99,5 +106,6 @@ describe('lodb-copy-link', () => {
     const field = host.querySelector<HTMLInputElement>('input[readonly]');
     expect(field?.value).toBe('https://example.test/en/items?tag=Boots');
     expect(field?.title).toBe('Copy the link below');
+    expect(copies).toBe(0);
   });
 });

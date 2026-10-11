@@ -21,6 +21,17 @@ x-logging: &default-logging
     max-size: "10m"
     max-file: "3"
 
+# Runtime hardening of every service, locally as on a host, so that the E2E suite runs the
+# stack as it is served: a process cannot gain privileges through a setuid binary, holds no
+# Linux capability (postgres takes back the few its entrypoint needs), and cannot change its
+# image's files. Each service writes only to its volumes and to the tmpfs it declares, held in
+# memory and bounded in size: a new path a service writes to goes to one or the other
+# (docs/architecture/pieges.md).
+x-hardening: &hardening
+  read_only: true
+  security_opt: [no-new-privileges:true]
+  cap_drop: [ALL]
+
 services:
   api:
     build: &api-build
@@ -36,8 +47,12 @@ services:
       # connection (and the connection attempt): past it, /api answers 503 with Retry-After.
       # Host=lodb-postgres, the project's alias: on a shared network (observability), the
       # short name `postgres` would also name other projects' databases.
-      ConnectionStrings__LoDb: &lodb-connection >-
-        Host=lodb-postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=${LODB_DB_USER:-lodb};Password=${LODB_DB_PASSWORD:-lodb};Gss Encryption Mode=Disable;Maximum Pool Size=32;Timeout=5;Application Name=lodb-api
+      # Username=lodb_app: the API's own role, which migrate keeps in place. It reads and
+      # writes rows, creates nothing, and its statements stop after 15 s
+      # (docs/guides/configuration.md). Locally its password is a fixed default; a served
+      # host draws its own (compose.deploy.yaml).
+      ConnectionStrings__LoDb: >-
+        Host=lodb-postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=lodb_app;Password=${LODB_APP_DB_PASSWORD:-lodb-app};Gss Encryption Mode=Disable;Maximum Pool Size=32;Timeout=5;Application Name=lodb-api
       # X-Forwarded-* are trusted from the private ranges: only nginx and web-ssr reach
       # this port on a served host (no host port, not on the edge network). The stack's
       # own subnet is picked by Docker, so it cannot be named more precisely here.
@@ -51,6 +66,10 @@ services:
       LoDb__PublicApi__Reference__BaseUrl: ${PUBLIC_API_BASE_URL:-https://api.league-of-data-base.com}
       # Empty: traces stay local (log correlation) until infra-vps exposes a collector.
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+    <<: *hardening
+    # The runtime's diagnostics sockets and any temporary file of the API or its libraries.
+    tmpfs: &dotnet-tmpfs
+      - /tmp:size=64m
     volumes:
       # DDragon storage: the API is its only writer; nginx serves blobs/ read-only.
       - ddragon:/srv/storage
@@ -60,6 +79,8 @@ services:
         # network and api on `observability`, where `api` names other projects' services:
         # Docker's DNS answers with theirs too. Containers only ever use the prefixed aliases.
         aliases: [lodb-api]
+      # Postgres's network (networks.data below).
+      data: {}
     depends_on:
       postgres:
         condition: service_healthy
@@ -83,12 +104,21 @@ services:
   # One-shot: the API's image brings the database to the latest migration (a database
   # created by Doctrine is marked at the baseline first), then exits. The API starts only
   # once it has succeeded: a schema it refuses stays untouched and keeps the API down.
-  # Every run after the first applies nothing.
+  # Every run after the first applies nothing. It connects as the server's superuser
+  # (POSTGRES_USER, the legacy stack's role), the only one allowed to change the schema, then
+  # keeps the API's role in place with the password it is given here.
   migrate:
     build: *api-build
     command: ["migrate"]
+    <<: *hardening
+    tmpfs: *dotnet-tmpfs
     environment:
-      ConnectionStrings__LoDb: *lodb-connection
+      ConnectionStrings__LoDb: >-
+        Host=lodb-postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=${LODB_DB_USER:-lodb};Password=${LODB_DB_PASSWORD:-lodb};Gss Encryption Mode=Disable;Timeout=5;Application Name=lodb-migrate
+      LoDb__Database__AppRole__Password: ${LODB_APP_DB_PASSWORD:-lodb-app}
+    # Postgres's network, and the stack's: a database still on the latter (a host whose
+    # Postgres predates `data`) stays reachable for the run that precedes `up`.
+    networks: [default, data]
     depends_on:
       postgres:
         condition: service_healthy
@@ -103,6 +133,10 @@ services:
         APP_REVISION: ${APP_REVISION:-dev}
     # Node ignores SIGTERM as PID 1: tini forwards it, so a stop takes no 10 s timeout.
     init: true
+    <<: *hardening
+    # Nothing writes there today; a library's temporary file would find it.
+    tmpfs:
+      - /tmp:size=16m
     environment:
       PORT: "4000"
       # The API's project alias, never the short name `api` (see api's aliases).
@@ -139,6 +173,8 @@ services:
       LODB_FRONT_BUILDS_DIR: /srv/front-builds
       # gzip level of a rendered page, compressed once per render: empty keeps the default.
       LODB_HTML_GZIP_LEVEL: ${LODB_HTML_GZIP_LEVEL:-}
+      # How long every render reuses the process's copy of /api/meta: empty keeps the default.
+      LODB_API_META_TTL_SECONDS: ${LODB_API_META_TTL_SECONDS:-}
       # Heap ceiling under the container's memory limit (512 MiB when served): V8 collects
       # harder before the kernel kills the renderer. The young generation adds 192 MiB, so the
       # whole heap stops at 448 MiB and leaves room for code and buffers.
@@ -175,9 +211,17 @@ services:
       dockerfile: docker/nginx/Dockerfile
       args:
         APP_REVISION: ${APP_REVISION:-dev}
+    <<: *hardening
+    # Its configuration rendered at start and its pid file. The caches and the temporary
+    # files (the request bodies and answers that outgrow its buffers) are volumes.
+    tmpfs:
+      - /tmp:size=64m
     environment:
       LODB_CANONICAL_HOST: ${LODB_CANONICAL_HOST:-localhost}
       LODB_EDGE_CIDR: ${LODB_EDGE_CIDR:-127.0.0.1/32}
+      # The value the edge sends in X-LoDb-Edge, which nginx then requires (sites/site.conf).
+      # Empty, the image's default and the local stack's: no header is required.
+      LODB_EDGE_SECRET: ${LODB_EDGE_SECRET:-}
       LODB_NOINDEX: ${LODB_NOINDEX:-0}
       # First part of the page cache's key: a new revision never serves a page of the previous
       # build, and needs no purge. A served host drops this key (compose.deploy.yaml)
@@ -203,8 +247,10 @@ services:
       LODB_PAGE_CACHE_SIZE: ${LODB_PAGE_CACHE_SIZE:-2g}
       LODB_PAGE_CACHE_KEYS_SIZE: ${LODB_PAGE_CACHE_KEYS_SIZE:-32m}
       LODB_PAGE_CACHE_INACTIVE: ${LODB_PAGE_CACHE_INACTIVE:-24h}
-      # Raised by hand only, the purge of the past patches' pages (docs/guides/configuration.md).
-      LODB_ARCHIVE_EPOCH: ${LODB_ARCHIVE_EPOCH:-1}
+      # Raised by hand only, the purge of the past patches' pages (docs/guides/configuration.md):
+      # 2 since the catalogues of the front are compiled at build, which the bundles of pages
+      # cached before cannot read.
+      LODB_ARCHIVE_EPOCH: ${LODB_ARCHIVE_EPOCH:-2}
       LODB_ARCHIVE_CACHE_SIZE: ${LODB_ARCHIVE_CACHE_SIZE:-6g}
       LODB_ARCHIVE_CACHE_KEYS_SIZE: ${LODB_ARCHIVE_CACHE_KEYS_SIZE:-32m}
       LODB_ARCHIVE_CACHE_INACTIVE: ${LODB_ARCHIVE_CACHE_INACTIVE:-7d}
@@ -222,6 +268,12 @@ services:
       - archive-cache:/var/cache/nginx/archive
       # The bundles of /build/, under their name alone: a deploy keeps them warm.
       - assets-cache:/var/cache/nginx/assets
+      # The crawler files and the former site's 301, keyed by revision as the latest patch's.
+      - seo-cache:/var/cache/nginx/seo
+      - legacy-cache:/var/cache/nginx/legacy
+      # What a slow client has not read yet, on disk as before the read-only root: in the
+      # tmpfs, a few slow readers of large answers would fill it (docker/nginx/nginx.conf).
+      - nginx-temp:/var/cache/nginx/temp
     depends_on:
       api:
         condition: service_healthy
@@ -230,14 +282,17 @@ services:
     restart: unless-stopped
     logging: *default-logging
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/healthz"]
+      # The site's /healthz, which the edge's header is not required for (sites/site.conf).
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/healthz"]
       interval: 15s
       timeout: 5s
       retries: 3
       start_period: 5s
 
   postgres:
-    image: postgres:17-alpine
+    # Pinned by digest like the images built here (docker/), its tag kept for the reader;
+    # Dependabot bumps both (.github/dependabot.yml, docker-compose).
+    image: postgres:17-alpine@sha256:b0f9560a2de083e2cc7382e75f808c7381a32852a7ec49117deedb300e552b24
     # The same server settings on every environment, each tunable from the host's .env:
     # - max_connections: the API's pool (32) plus migrate, the deploy backup, the jobs'
     #   lock sessions and psql, far from what the memory limit of a served host holds;
@@ -260,6 +315,19 @@ services:
       - idle_in_transaction_session_timeout=${LODB_PG_IDLE_IN_TRANSACTION_TIMEOUT:-60s}
     # Parallel queries share memory through /dev/shm, of which Docker gives 64 MiB.
     shm_size: ${LODB_PG_SHM_SIZE:-256m}
+    <<: *hardening
+    # The image's entrypoint starts as root at every start: it walks the data folder (owned
+    # by `postgres`, mode 700), sets its mode, gives it and the socket folder to `postgres`,
+    # then becomes that user, which holds none of these. The server works without FOWNER, but
+    # the entrypoint's chmod of the data folder then fails and writes an error line at each
+    # start. DAC_OVERRIDE, one of Docker's defaults, lets it walk that folder; never
+    # DAC_READ_SEARCH, which Docker withholds: its seccomp profile then also allows
+    # open_by_handle_at, a lookup of files by handle outside the container's view.
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER, SETGID, SETUID]
+    # The server's socket and lock files, and the entrypoint's scratch files.
+    tmpfs:
+      - /var/run/postgresql:size=8m
+      - /tmp:size=16m
     environment:
       POSTGRES_DB: ${LODB_DB_NAME:-lodb}
       POSTGRES_USER: ${LODB_DB_USER:-lodb}
@@ -267,7 +335,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     networks:
-      default:
+      data:
         # The name of the connection strings, unique once api joins a shared network.
         aliases: [lodb-postgres]
     restart: unless-stopped
@@ -290,5 +358,17 @@ volumes:
   pages-cache:
   archive-cache:
   assets-cache:
+  seo-cache:
+  legacy-cache:
+  # nginx's temporary files, each unlinked as it is opened: it holds only what is in use.
+  nginx-temp:
   # Hashed front bundles of the successive builds (web-ssr, src/server/assets).
   front-builds:
+
+networks:
+  # The stack's own network (`default`, implicit) carries the HTTP traffic: nginx, the SSR
+  # server and the API. Postgres sits on `data` alone, with the API and migrate: the two
+  # services that face the clients cannot reach the database. A served host makes `data`
+  # internal, without any route out (compose.deploy.yaml); here it keeps one, so that the
+  # dev overlay can publish Postgres's port.
+  data: {}

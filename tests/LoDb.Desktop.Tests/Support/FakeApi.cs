@@ -39,6 +39,12 @@ internal sealed class FakeApi : IAsyncDisposable
 
     public ConcurrentQueue<string> RefreshesReceived { get; } = new();
 
+    /// <summary>The <c>Authorization</c> header of every sign-out received.</summary>
+    public ConcurrentQueue<string> SignOutsReceived { get; } = new();
+
+    /// <summary>When set, every sign-out is answered 503.</summary>
+    public bool IsSignOutFailing { get; set; }
+
     /// <summary>When set, every refresh is answered 401 invalid-refresh-token.</summary>
     public bool IsRefreshRefused { get; set; }
 
@@ -76,6 +82,7 @@ internal sealed class FakeApi : IAsyncDisposable
     {
         application.MapPost("/api/account/token", (JsonObject body) => SignIn(body));
         application.MapPost("/api/account/refresh", (JsonObject body) => Refresh(body));
+        application.MapPost("/api/account/logout", (HttpContext context) => SignOut(context));
         application.MapPost(
             "/api/account/google/app/exchange",
             (JsonObject body) => Exchange(body));
@@ -95,6 +102,14 @@ internal sealed class FakeApi : IAsyncDisposable
         return !IsRefreshRefused && RefreshTokens.TryRemove(refreshToken, out _)
             ? Grant()
             : Problem(StatusCodes.Status401Unauthorized, "invalid-refresh-token");
+    }
+
+    private IResult SignOut(HttpContext context)
+    {
+        SignOutsReceived.Enqueue(context.Request.Headers.Authorization.ToString());
+        return IsSignOutFailing
+            ? Problem(StatusCodes.Status503ServiceUnavailable, "server-busy")
+            : Results.NoContent();
     }
 
     private IResult Exchange(JsonObject body)

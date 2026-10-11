@@ -20,6 +20,8 @@ namespace LoDb.Api.Hosting;
 /// Every policy, the fallback one of the endpoints that name none included, first checks
 /// that the request is not forged. An endpoint must therefore never be marked
 /// <c>AllowAnonymous</c>: that skips the whole of authorization, the forgery guard with it.
+/// The two analytics captures, which leave with the in-house analytics, are the last
+/// exceptions; a test keeps the list closed.
 /// </para>
 /// </remarks>
 internal static class AuthorizationPolicies

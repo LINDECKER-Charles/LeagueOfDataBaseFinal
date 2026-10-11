@@ -1,6 +1,8 @@
 using LoDb.Desktop.Hosting;
+using LoDb.Desktop.Tests.Updates.Signing;
 using LoDb.Desktop.Updates;
 using LoDb.Desktop.Updates.Engine;
+using LoDb.Desktop.Updates.Engine.Signing;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace LoDb.Desktop.Tests.Updates;
@@ -45,5 +47,6 @@ public sealed class VelopackEngineTests
             ShellDirectory = "shell",
             DataDirectory = "data",
         },
+        new SignedFeeds(new TestFeedKey().Verifier(), NullLogger<SignedFeeds>.Instance),
         NullLogger<VelopackEngine>.Instance);
 }

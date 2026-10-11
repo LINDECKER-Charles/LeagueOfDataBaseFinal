@@ -8,17 +8,18 @@ namespace LoDb.Infrastructure.Tests.Audit;
 
 /// <summary>
 /// Each recorded event has a copy in the logs, <c>audit.&lt;action&gt;</c>, built from an
-/// allow-list: no address, no label, no <c>meta.identifier</c>.
+/// allow-list: no address, no label, nothing of the identifier typed on a failed sign-in.
 /// </summary>
 public sealed class AuditMirrorTests(PostgresContainerFixture postgres)
     : MigratedDatabase(postgres)
 {
     private const string Identifier = "alice@example.test";
+    private const string IdentifierDigest = "5ab0c4d1e2f3a4b5c6d7e8f9a0b1c2d3";
 
     [Fact]
     public async Task SuccessIsCopiedAtInformationUnderTheActionName()
     {
-        await using var harness = new AuditHarness(Database.ConnectionString);
+        await using var harness = new AuditHarness(Database.AppConnectionString);
         harness.Requests.HttpContext = AuditHarness.Request(AuditHarness.SignedIn(3, "alice"));
 
         await harness.Journal.RecordAsync(
@@ -46,7 +47,7 @@ public sealed class AuditMirrorTests(PostgresContainerFixture postgres)
     [Fact]
     public async Task CopyLeavesOutTheAddressTheLabelsAndTheIdentifier()
     {
-        await using var harness = new AuditHarness(Database.ConnectionString);
+        await using var harness = new AuditHarness(Database.AppConnectionString);
         harness.Requests.HttpContext = AuditHarness.Request(new());
 
         await harness.Journal.RecordAsync(
@@ -59,6 +60,7 @@ public sealed class AuditMirrorTests(PostgresContainerFixture postgres)
                 Meta = new Dictionary<string, object?>
                 {
                     ["identifier"] = Identifier,
+                    ["identifier_digest"] = IdentifierDigest,
                     ["reason"] = "bad_credentials",
                 },
             },
@@ -81,7 +83,7 @@ public sealed class AuditMirrorTests(PostgresContainerFixture postgres)
     [Fact]
     public async Task DeniedActionIsCopiedAtWarning()
     {
-        await using var harness = new AuditHarness(Database.ConnectionString);
+        await using var harness = new AuditHarness(Database.AppConnectionString);
 
         await harness.Journal.RecordAsync(
             new AuditEvent { Action = AuditAction.AdminUserDelete, Outcome = AuditOutcome.Denied },

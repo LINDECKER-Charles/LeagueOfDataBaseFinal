@@ -2,12 +2,13 @@
 # Publication step of the release workflow (ADR 0008): uploads the release folder of every
 # RID that passed its gate to a GitHub pre-release, then promotes it (stable) or prunes the
 # old betas (beta). Nothing is uploaded unless every required RID is there; linux-x64 is
-# best effort.
+# best effort. Each folder holds its signed feed (tools/desktop-update-signing): its packages
+# must match it before the upload, and the feed the app downloads must be that one after.
 #
 # Usage: publish.sh --channel stable|beta --version V --sha SHA --repo OWNER/NAME
 #                   --artifacts DIR
 #   DIR holds one release folder per RID: DIR/desktop-releases-<rid>.
-# Environment: GH_TOKEN (gh and vpk), GITHUB_SERVER_URL.
+# Environment: GH_TOKEN (gh and vpk), GITHUB_SERVER_URL. Needs Node for the feed checks.
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
@@ -33,13 +34,54 @@ for required in channel version sha repo artifacts; do
 done
 lodb_velopack_channel win-x64 "$channel" >/dev/null
 tag="$(lodb_release_tag "$version")"
+signing="$(lodb_repo_root)/tools/desktop-update-signing"
 
 folder_of() { printf '%s/desktop-releases-%s\n' "$artifacts" "$1"; }
+
+feed_of() { printf 'releases.%s.json\n' "$(lodb_velopack_channel "$1" "$channel")"; }
+
+# verify_feed RID DIR [--packages]: the feed of DIR holds against the key compiled into the
+# app; with --packages, each package of DIR matches its size and SHA-256 in that feed.
+verify_feed() {
+  node "$signing/verify-feed.mjs" --releases "$2" \
+    --channel "$(lodb_velopack_channel "$1" "$channel")" "${@:3}"
+}
+
+# vpk upload writes a feed of its own, rebuilt from the packages: the signed one replaces it,
+# its signature next to it.
+upload_signed_feed() {
+  local folder feed
+  folder="$(folder_of "$1")"
+  feed="$(feed_of "$1")"
+  gh release upload "$tag" --repo "$repo" --clobber "$folder/$feed" "$folder/$feed.sig"
+}
+
+# Read back as the app reads it: the published feed is the signed one, and holds.
+check_published_feed() {
+  local feed downloaded
+  feed="$(feed_of "$1")"
+  downloaded="$(mktemp -d)"
+  gh release download "$tag" --repo "$repo" --dir "$downloaded" \
+    --pattern "$feed" --pattern "$feed.sig"
+  cmp -s "$downloaded/$feed" "$(folder_of "$1")/$feed" \
+    || lodb_fail "the published $feed of $tag is not the signed one"
+  verify_feed "$1" "$downloaded" || lodb_fail "the published $feed of $tag does not hold"
+  rm -rf "$downloaded"
+}
 
 check_required() {
   local rid
   for rid in $REQUIRED_RIDS; do
     [ -d "$(folder_of "$rid")" ] || lodb_fail "$rid has no release folder: nothing is published"
+  done
+}
+
+# Before anything is uploaded: the gate ran N-1, fetched from GitHub, next to these folders.
+check_folders() {
+  local rid
+  for rid in $LODB_RIDS; do
+    [ ! -d "$(folder_of "$rid")" ] || verify_feed "$rid" "$(folder_of "$rid")" --packages \
+      || lodb_fail "the release folder of $rid does not match its signed feed"
   done
 }
 
@@ -57,6 +99,8 @@ upload() {
       --channel "$(lodb_velopack_channel "$rid" "$channel")" --outputDir "$(folder_of "$rid")" \
       --tag "$tag" --releaseName "$LODB_PACK_TITLE desktop $version" \
       --targetCommitish "$sha" --pre --merge --publish
+    upload_signed_feed "$rid"
+    check_published_feed "$rid"
   done
 }
 
@@ -86,6 +130,7 @@ prune_betas() {
 }
 
 check_required
+check_folders
 upload
 case "$channel" in
   stable) promote ;;

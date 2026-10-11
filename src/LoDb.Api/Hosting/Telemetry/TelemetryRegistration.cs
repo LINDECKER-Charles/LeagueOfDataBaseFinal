@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -10,9 +11,9 @@ namespace LoDb.Api.Hosting.Telemetry;
 /// </summary>
 /// <remarks>
 /// Traces exist even without an exporter: the W3C trace id they carry correlates the logs.
-/// They are exported over OTLP only once the infrastructure sets the endpoint; until then no
-/// span is recorded. The metric names and their labels are a contract
-/// (docs/guides/metriques.md).
+/// They are exported over OTLP only once the infrastructure sets the endpoint, a share of
+/// them (<see cref="TelemetryOptions.TraceSampleRatio"/>); until then no span is recorded.
+/// The metric names and their labels are a contract (docs/guides/metriques.md).
 /// </remarks>
 internal static class TelemetryRegistration
 {
@@ -20,6 +21,9 @@ internal static class TelemetryRegistration
     public const string OtlpEndpointKey = "OTEL_EXPORTER_OTLP_ENDPOINT";
 
     private const string RequestDurationInstrument = "http.server.request.duration";
+
+    // Nothing reads a span until an exporter is set: without one, no trace is recorded.
+    private const double UnexportedRatio = 0;
 
     // "LoDb.*" takes every meter and activity source the modules and workers create. The
     // ASP.NET Core instrumentation leaves out the framework's meters of sign-ins, lockouts and
@@ -48,6 +52,10 @@ internal static class TelemetryRegistration
         IConfiguration configuration)
     {
         var exportTraces = !string.IsNullOrWhiteSpace(configuration[OtlpEndpointKey]);
+        services.AddOptions<TelemetryOptions>()
+            .BindConfiguration(TelemetryOptions.SectionName)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
         services.TryAddSingleton<BuildInfoMetrics>();
         services.AddOpenTelemetry()
             .ConfigureResource(static resource =>
@@ -75,22 +83,15 @@ internal static class TelemetryRegistration
         tracing
             .AddAspNetCoreInstrumentation()
             .AddHttpClientInstrumentation()
-            .AddSource(Sources);
+            .AddSource(Sources)
+            .SetSampler(services =>
+                TraceSampling.Of(exportTraces ? RatioOf(services) : UnexportedRatio));
         if (exportTraces)
         {
             tracing.AddOtlpExporter();
-            return;
         }
-
-        tracing.SetSampler(UnexportedTraces());
     }
 
-    // Nothing reads a span until an exporter is set: a ratio of 0 records none of the traces
-    // this host starts, nor those a caller marks sampled in its traceparent. A dropped activity
-    // still exists for propagation, so its trace id keeps correlating the logs.
-    private static ParentBasedSampler UnexportedTraces()
-    {
-        var never = new TraceIdRatioBasedSampler(0);
-        return new ParentBasedSampler(never, remoteParentSampled: never);
-    }
+    private static double RatioOf(IServiceProvider services) =>
+        services.GetRequiredService<IOptions<TelemetryOptions>>().Value.TraceSampleRatio;
 }

@@ -109,6 +109,24 @@ public sealed class ForgeryTests(PostgresContainerFixture postgres)
     }
 
     [Fact]
+    public async Task BearerHeaderThatAuthenticatesNothingExemptsNothing()
+    {
+        await App.SeedAsync(new AccountSeed());
+        using var browser = App.Browser();
+        using var request = browser.Post(LoginPath, Credentials());
+        request.Headers.Remove(BrowserClient.OriginHeader);
+        request.Headers.Add(BrowserClient.OriginHeader, "https://evil.example");
+        request.Headers.Authorization = new("Bearer", "forged");
+
+        using var response = await browser.SendAsync(request);
+
+        Assert.Equal(
+            "origin-mismatch",
+            await ApiJson.ProblemCodeAsync(response, HttpStatusCode.Forbidden));
+        Assert.Null(browser.Cookie(BrowserClient.SessionCookie));
+    }
+
+    [Fact]
     public async Task SafeCallsAreNeverRefused()
     {
         using var browser = App.Browser();

@@ -1,5 +1,5 @@
 import { appendInstallLinks } from './append-install-links';
-import { WORKER_SCRIPT_URL } from './worker-script-url';
+import { workerScriptSource } from './worker-script-source';
 
 /**
  * Makes the site installable and registers its worker once the page has loaded, so that the
@@ -15,7 +15,7 @@ export function registerWorker(view: Window): void {
   const register = (): void => {
     // updateViaCache 'none': a deploy reaches every visitor on their next navigation.
     container
-      .register(WORKER_SCRIPT_URL, { scope: '/', updateViaCache: 'none' })
+      .register(workerScriptSource(view), { scope: '/', updateViaCache: 'none' })
       .catch(() => undefined);
   };
   if (view.document.readyState === 'complete') {

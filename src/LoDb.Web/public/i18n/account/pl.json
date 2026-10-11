@@ -38,5 +38,11 @@
     "loading": "Wczytywanie profilu…",
     "load_error": "Nie udało się wczytać profilu.",
     "version_error": "Nie udało się zmienić wersji ulubionych."
+  },
+  "sessions": {
+    "title": "Sesje",
+    "help": "Wyloguj konto ze wszystkich przeglądarek i aplikacji, w których jest otwarte, łącznie z tą, na wypadek zgubionego lub współdzielonego urządzenia. Pozostałe urządzenia zostaną wylogowane w ciągu kilku minut.",
+    "sign_out_everywhere": "Wyloguj ze wszystkich urządzeń",
+    "signed_out": "Wylogowano ze wszystkich urządzeń."
   }
 }

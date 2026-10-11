@@ -29,7 +29,7 @@ public static class AdminBrowser
             {
                 identifier = AdminName,
                 password = AccountSeed.StrongPassword,
-                twoFactorCode = Totp.Code(secrets.Key),
+                twoFactorCode = Totp.Code(secrets.Key, app.Clock),
             });
         Assert.Equal(HttpStatusCode.OK, signIn.StatusCode);
         return browser;

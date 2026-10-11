@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using LoDb.Api.Modules.Audit.Http;
 using LoDb.Infrastructure.Audit;
 using LoDb.Infrastructure.Persistence.Audit;
@@ -21,9 +22,15 @@ namespace LoDb.Api.Modules.Audit.Import;
 /// for one. Its operator was an account-less <c>admin</c> whose id was a name: the id is kept
 /// only when it is an account's.
 /// </para>
+/// <para>
+/// A failed sign-in of the legacy journal named the identifier typed, in its target and its
+/// details: neither is kept, as the journal keeps no such text.
+/// </para>
 /// </remarks>
 internal static class LegacyAuditLine
 {
+    private const string TypedIdentifier = "identifier";
+
     /// <summary>The entry of <paramref name="line"/>, or null when it cannot be one.</summary>
     public static AuditLogEntry? Parse(string line)
     {
@@ -71,7 +78,9 @@ internal static class LegacyAuditLine
                 static code => AuditVocabulary.ParseTargetType(code),
                 null),
             TargetId = Clip(Text(row, "targetId"), AuditLogEntry.TargetIdMaxLength),
-            Target = Clip(Text(row, "target"), AuditLogEntry.TargetMaxLength),
+            Target = action == AuditAction.UserLoginFailed
+                ? null
+                : Clip(Text(row, "target"), AuditLogEntry.TargetMaxLength),
             Ip = Clip(Text(row, "ip"), AuditLogEntry.IpMaxLength),
             Route = Clip(Text(row, "route"), AuditLogEntry.RouteMaxLength),
             Meta = Meta(row),
@@ -109,13 +118,19 @@ internal static class LegacyAuditLine
     private static int? AccountId(string? text) =>
         int.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out var id) ? id : null;
 
-    // Only an object with fields: the legacy stack wrote null for no details.
-    private static string? Meta(JsonElement row) =>
-        row.TryGetProperty("meta", out var meta)
-        && meta.ValueKind == JsonValueKind.Object
-        && meta.EnumerateObject().Any()
-            ? meta.GetRawText()
-            : null;
+    // Only an object with fields: the legacy stack wrote null for no details. The identifier
+    // typed on a failed sign-in is left behind: the journal keeps no such text.
+    private static string? Meta(JsonElement row)
+    {
+        if (!row.TryGetProperty("meta", out var meta) || meta.ValueKind != JsonValueKind.Object)
+        {
+            return null;
+        }
+
+        var fields = JsonNode.Parse(meta.GetRawText())!.AsObject();
+        fields.Remove(TypedIdentifier);
+        return fields.Count == 0 ? null : fields.ToJsonString();
+    }
 
     private static string? Clip(string? value, int maxLength) =>
         value is { Length: var length } && length > maxLength ? value[..maxLength] : value;

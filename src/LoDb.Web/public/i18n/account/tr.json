@@ -38,5 +38,11 @@
     "loading": "Profiliniz yükleniyor…",
     "load_error": "Profiliniz yüklenemedi.",
     "version_error": "Favorilerinizin sürümü değiştirilemedi."
+  },
+  "sessions": {
+    "title": "Oturumlar",
+    "help": "Hesabınızın açık olduğu tüm tarayıcı ve uygulamalardan, bu da dahil olmak üzere çıkış yapın; kaybolan veya paylaşılan bir cihaz için. Diğer cihazlardaki oturumlar birkaç dakika içinde kapanır.",
+    "sign_out_everywhere": "Tüm cihazlardan çıkış yap",
+    "signed_out": "Tüm cihazlarınızdan çıkış yaptınız."
   }
 }

@@ -57,4 +57,17 @@ describe('answerFromCache', () => {
 
     expect(response.type).toBe('error');
   });
+
+  // An image opened in its own tab is a navigation: the browser preloaded it already.
+  it('answers a file opened as a page with its navigation preload, fetched once', async () => {
+    const preloaded = Promise.resolve(sameOriginResponse('preloaded'));
+    event = new FakeFetchEvent(new Request(BLOB_URL), preloaded);
+
+    const response = await answerFromCache(event, { cache: cache.asCache(), limit: 10 });
+    await event.settled();
+
+    expect(await response.text()).toBe('preloaded');
+    expect(fetchFile).not.toHaveBeenCalled();
+    expect(cache.entries.has(BLOB_URL)).toBe(true);
+  });
 });

@@ -53,8 +53,9 @@ function rendersInFlight(admission: InFlight): Gauge<'lane'> {
  * The renderer's metrics (docs/guides/metriques.md), in a registry of their own that the
  * metrics port serves (`serveMetrics`): the admission's decisions and renders in flight, read
  * from the admission at each scrape; the duration of the renders; the normalizing redirects;
- * the network gate's refusals; and Node's own (event loop lag, heap, garbage collection). No label carries a path, a
- * version, a language or an address.
+ * the network gate's refusals; the inline scripts the pages' policy left out; and Node's own
+ * (event loop lag, heap, garbage collection). No label carries a path, a version, a language
+ * or an address.
  */
 export class SsrMetrics {
   readonly registry = new Registry();
@@ -81,6 +82,12 @@ export class SsrMetrics {
     registers: [],
   });
 
+  private readonly unexpectedScripts = new Counter({
+    name: 'lodb_ssr_csp_unexpected_scripts_total',
+    help: 'Inline scripts of rendered pages that the build never wrote, left out of their policy.',
+    registers: [],
+  });
+
   constructor(counts: RenderCounts, admission: InFlight) {
     collectDefaultMetrics({ register: this.registry });
     REDIRECT_REASONS.forEach((reason) => this.redirects.inc({ reason }, 0));
@@ -89,6 +96,7 @@ export class SsrMetrics {
     this.registry.registerMetric(this.renderDuration);
     this.registry.registerMetric(this.redirects);
     this.registry.registerMetric(this.gateRefusals);
+    this.registry.registerMetric(this.unexpectedScripts);
   }
 
   /** Times a render of `lane` until its response ends, under the status class it got. */
@@ -100,6 +108,11 @@ export class SsrMetrics {
   /** Counts a connection the network gate turned away (`networkGate`). */
   countGateRefusal(): void {
     this.gateRefusals.inc();
+  }
+
+  /** Counts the inline scripts a rendered page held that its policy left out. */
+  countUnexpectedScripts(count: number): void {
+    this.unexpectedScripts.inc(count);
   }
 
   countRedirect(reason: NormalizedRedirectReason): void {

@@ -1,5 +1,6 @@
 using System.Globalization;
 using LoDb.Infrastructure.Persistence;
+using LoDb.Testing;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
@@ -37,8 +38,11 @@ public sealed class V1Database : IAsyncDisposable
 
     public string Name { get; }
 
-    /// <summary>The connection string the API is given.</summary>
+    /// <summary>The server's superuser on the copy.</summary>
     public string ConnectionString { get; }
+
+    /// <summary>The connection string the API is given: its own role on the copy.</summary>
+    public string AppConnectionString => TestRoles.AppConnectionString(ConnectionString);
 
     public NpgsqlDataSource DataSource { get; }
 

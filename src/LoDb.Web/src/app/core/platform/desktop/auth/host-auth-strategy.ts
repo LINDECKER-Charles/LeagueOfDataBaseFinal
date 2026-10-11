@@ -8,6 +8,7 @@ import { DOCUMENT, Injectable, inject } from '@angular/core';
 import { type Observable, map, switchMap } from 'rxjs';
 import { API_BASE_URL } from '../../../api/api-base-url';
 import { getAccountSession } from '../../../api/generated/fn/account/get-account-session';
+import { signOutEverywhere } from '../../../api/generated/fn/account/sign-out-everywhere';
 import type { AccountSession } from '../../../api/generated/models/account-session';
 import type { LoginRequest } from '../../../api/generated/models/login-request';
 import type { AuthStrategy } from '../../../auth/strategy/auth-strategy';
@@ -43,6 +44,11 @@ export class HostAuthStrategy implements AuthStrategy {
 
   signOut(): Observable<void> {
     return this.http.post(this.hostUrl(HostAuthRoutes.logout), null).pipe(map(() => undefined));
+  }
+
+  /** Through the host's proxy, then the host's own sign-out, which forgets the tokens. */
+  signOutEverywhere(): Observable<void> {
+    return signOutEverywhere(this.http, this.apiOrigin).pipe(switchMap(() => this.signOut()));
   }
 
   startGoogleSignIn(request: GoogleSignIn): Promise<void> {

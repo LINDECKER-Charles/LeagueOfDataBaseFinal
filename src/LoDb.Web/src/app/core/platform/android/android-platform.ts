@@ -2,6 +2,7 @@ import { DOCUMENT, Injectable, type Signal, inject, signal } from '@angular/core
 import { environment } from '../../../../environments/environment';
 import { AuthStrategies } from '../../auth/strategy/auth-strategies';
 import type { AuthStrategyKind } from '../auth-strategy-kind';
+import { isHttpsUrl } from '../is-https-url';
 import type { PlatformKind } from '../platform-kind';
 import type { PlatformService } from '../platform-service';
 import type { ShareOutcome } from '../share-outcome';
@@ -12,7 +13,6 @@ import { AndroidLifecycle } from './lifecycle/android-lifecycle';
 import { ANDROID_PLUGINS } from './native/android-plugins-token';
 import { GoogleReturnListener } from './oauth/google-return-listener';
 import { isShareDismissal } from './share/is-share-dismissal';
-import { isWebUrl } from './share/is-web-url';
 import { AndroidUpdates } from './updates/android-updates';
 
 /**
@@ -65,8 +65,8 @@ export class AndroidPlatform implements PlatformService {
   }
 
   async openExternal(url: string): Promise<void> {
-    if (!isWebUrl(url)) {
-      throw new Error('Only http(s) links can be opened outside the application.');
+    if (!isHttpsUrl(url)) {
+      throw new Error('Only https links can be opened outside the application.');
     }
     await this.plugins.browser.open({ url });
   }

@@ -1,7 +1,9 @@
 import type { Routes } from '@angular/router';
+import { AUDIENCE_ROUTE_DATA } from '../../../core/analytics/audience/audience-route-data';
 import { resolveCatalogueContext } from '../../../core/routing/catalogue/resolve-catalogue-context';
 import { resolveCatalogueEntry } from '../../../core/routing/catalogue/resolve-catalogue-entry';
 import { withLoadTiming } from '../shared/codex/timing/with-load-timing';
+import { PRELOADED_ROUTE } from '../shared/preloading/preloaded-route';
 
 const loadList = () => import('./champions-page').then((m) => m.ChampionsPage);
 const loadDetail = () => import('./detail/champion-page').then((m) => m.ChampionPage);
@@ -11,18 +13,21 @@ const loadDetail = () => import('./detail/champion-page').then((m) => m.Champion
  * version, and under a pinned `:version`. The resolvers of core/routing decide the canonical
  * URL, the status and the cache of the page; it reads what they resolved as `context` or
  * `entry`. They rerun on a query change, since `?lang=` and `?version=` change the page. The
- * detail's resolver is timed, for the `Server-Timing` header and the load-time badge.
+ * detail's resolver is timed, for the `Server-Timing` header and the load-time badge. Their
+ * ids are public: the audience receives their real path (`AUDIENCE_ROUTE_DATA`).
  */
 export const CHAMPIONS_ROUTES: Routes = [
   {
     path: '',
     runGuardsAndResolvers: 'paramsOrQueryParamsChange',
+    data: { ...AUDIENCE_ROUTE_DATA.path, ...PRELOADED_ROUTE },
     resolve: { context: resolveCatalogueContext('champions') },
     loadComponent: loadList,
   },
   {
     path: ':id',
     runGuardsAndResolvers: 'paramsOrQueryParamsChange',
+    data: { ...AUDIENCE_ROUTE_DATA.path, ...PRELOADED_ROUTE },
     resolve: { entry: withLoadTiming(resolveCatalogueEntry('champions')) },
     loadComponent: loadDetail,
   },

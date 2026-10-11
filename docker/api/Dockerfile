@@ -1,11 +1,15 @@
-# syntax=docker/dockerfile:1.7
+# syntax=docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e
 # Image lodb-api: the ASP.NET Core host and its sub-commands (healthcheck, then migrate…).
 # Build context = repository root; Dockerfile.dockerignore (next to this file) admits only
 # the solution-wide build settings and the four server projects.
+#
+# Every image this file names is pinned by digest, its tag kept for the reader: a moved tag
+# never changes what is built. Dependabot bumps both (tools/ci/README.md, base images).
 
 # The SDK runs on the build machine and cross-publishes for the target architecture: the
-# output is IL plus the target's native assets, so no emulation is needed.
-FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+# output is IL precompiled for the target (ReadyToRun) plus the target's native assets, so
+# no emulation is needed.
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0@sha256:e70cdb7f80b0348f5cb85f19a8f670fca061f033d57eed12fa003d58b0e06317 AS build
 ARG TARGETARCH
 WORKDIR /source
 
@@ -17,10 +21,23 @@ COPY src/LoDb.Domain/LoDb.Domain.csproj src/LoDb.Domain/
 COPY src/LoDb.Infrastructure/LoDb.Infrastructure.csproj src/LoDb.Infrastructure/
 COPY src/LoDb.Ingestion/LoDb.Ingestion.csproj src/LoDb.Ingestion/
 COPY src/LoDb.Api/LoDb.Api.csproj src/LoDb.Api/
-RUN dotnet restore src/LoDb.Api/LoDb.Api.csproj -a "$TARGETARCH"
+# ReadyToRun compiles the IL ahead for one runtime identifier, named explicitly from the
+# target architecture: the restore then fetches that runtime's packs and the crossgen2
+# compiler of the build machine, which emits code for the target (linux-x64 on the hosts)
+# without emulation, whatever the build platform. The RID is kept for the publish layer.
+RUN case "$TARGETARCH" in \
+        amd64) echo linux-x64 ;; \
+        arm64) echo linux-arm64 ;; \
+        *) echo "unsupported architecture: $TARGETARCH" >&2; exit 1 ;; \
+    esac > /tmp/lodb-rid \
+    && dotnet restore src/LoDb.Api/LoDb.Api.csproj -r "$(cat /tmp/lodb-rid)" \
+        -p:PublishReadyToRun=true
 
 COPY src/ src/
-RUN dotnet publish src/LoDb.Api/LoDb.Api.csproj -c Release -a "$TARGETARCH" --no-restore \
+# Precompiled code starts the API, and each `healthcheck` probe, without JIT-compiling the
+# whole application; tiered compilation still re-optimises the hot paths.
+RUN dotnet publish src/LoDb.Api/LoDb.Api.csproj -c Release -r "$(cat /tmp/lodb-rid)" \
+        --self-contained false --no-restore -p:PublishReadyToRun=true \
         -p:UseAppHost=false -o /out/app \
     # The storage mount point, created here because the runtime image has no shell. Docker
     # seeds an empty named volume from the image, ownership included: the API can then
@@ -29,7 +46,7 @@ RUN dotnet publish src/LoDb.Api/LoDb.Api.csproj -c Release -a "$TARGETARCH" --no
 
 # Chiseled: no shell, no package manager, non-root by default. "extra" adds ICU and tzdata,
 # which the 21 locales need (culture-aware formatting and collation).
-FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled-extra
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled-extra@sha256:00e0ad6a7ef8c0c1391b87f05c7ac757a15740455688f2bfcd146a3f4b987efd
 ARG APP_REVISION=unknown
 LABEL org.opencontainers.image.title="lodb-api" \
       org.opencontainers.image.source="https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal" \

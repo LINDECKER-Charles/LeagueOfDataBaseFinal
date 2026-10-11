@@ -20,5 +20,12 @@ public static class ManifestTypes
 
     public const string Summoner = "summoner";
 
+    /// <summary>
+    /// The WebP variants of champion art, a type of the new stack the legacy manifest never
+    /// had: one row per art and width (<see cref="DdragonImage.ManifestKey"/>).
+    /// </summary>
+    public const string ChampionArt = "championArt";
+
+    /// <summary>The types of the legacy manifest, art variants excluded.</summary>
     public static IReadOnlyList<string> All { get; } = [Champion, Item, Runes, Summoner];
 }

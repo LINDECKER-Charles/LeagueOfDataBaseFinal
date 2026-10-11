@@ -22,7 +22,10 @@ internal static class FrontPages
     /// <summary>Parameter of the e-mail links: the id of the account.</summary>
     public const string UserParameter = "user";
 
-    /// <summary>Parameter of the verification link: the token, in base64url.</summary>
+    /// <summary>
+    /// Parameter of the e-mail links' fragment: the token, in base64url. A fragment never
+    /// leaves the browser: no server, log or referrer sees the token.
+    /// </summary>
     public const string TokenParameter = "token";
 
     private const string Section = "account";
@@ -36,25 +39,26 @@ internal static class FrontPages
         QueryHelpers.AddQueryString(Path(locale, Login), ErrorParameter, error);
 
     /// <summary>
-    /// The page verifying an e-mail: <c>verify-email?user={id}&amp;token={token}</c>, the
-    /// token already in base64url.
+    /// The page verifying an e-mail: <c>verify-email?user={id}#token={token}</c>, the token
+    /// already in base64url.
     /// </summary>
     public static string VerifyEmailLink(UiLocale locale, int userId, string token) =>
-        QueryHelpers.AddQueryString(
-            Path(locale, VerifyEmail),
-            new Dictionary<string, string?>
-            {
-                [UserParameter] = userId.ToString(CultureInfo.InvariantCulture),
-                [TokenParameter] = token,
-            });
+        Link(Path(locale, VerifyEmail), userId, token);
 
     /// <summary>
-    /// The page setting a new password: <c>reset-password/{token}?user={id}</c>, the token
-    /// (already in base64url) in the path, as the front's route reads it.
+    /// The page setting a new password: <c>reset-password?user={id}#token={token}</c>, the
+    /// token already in base64url.
     /// </summary>
     public static string ResetPasswordLink(UiLocale locale, int userId, string token) =>
-        QueryHelpers.AddQueryString(
-            $"{Path(locale, ResetPassword)}/{Uri.EscapeDataString(token)}",
+        Link(Path(locale, ResetPassword), userId, token);
+
+    // The front reads the token from the fragment, then takes it out of the address bar.
+    private static string Link(string page, int userId, string token)
+    {
+        var withUser = QueryHelpers.AddQueryString(
+            page,
             UserParameter,
             userId.ToString(CultureInfo.InvariantCulture));
+        return $"{withUser}#{TokenParameter}={Uri.EscapeDataString(token)}";
+    }
 }

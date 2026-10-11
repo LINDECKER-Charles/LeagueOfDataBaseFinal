@@ -5,6 +5,7 @@ import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
 import { PLATFORM } from '../platform/platform';
 import { withHomeSlash } from '../routing/locale/with-home-slash';
+import { AudienceOptOut } from './audience/send/audience-opt-out';
 import { pageKeyOf } from './page-key-of';
 
 const VIEW_PATH = '/api/analytics/view';
@@ -23,7 +24,8 @@ function withoutFragment(url: string): string {
  * mirror.
  *
  * Web only: the desktop and Android shells serve their pages themselves, and the server
- * renders no navigation of its own. Without `sendBeacon`, nothing is sent.
+ * renders no navigation of its own. Without `sendBeacon`, nothing is sent, nor once the
+ * visitor opts out of the audience measure (`AudienceOptOut`).
  */
 @Injectable({ providedIn: 'root' })
 export class NavigationBeacon {
@@ -32,6 +34,7 @@ export class NavigationBeacon {
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
+  private readonly optOut = inject(AudienceOptOut);
   private counted: string | null = null;
 
   /** Listens to the router from now on; called once, at startup. */
@@ -51,7 +54,7 @@ export class NavigationBeacon {
     const page = pageKeyOf(url);
     const previous = this.counted;
     this.counted = page;
-    if (previous !== null && previous !== page) {
+    if (previous !== null && previous !== page && this.optOut.isMeasured()) {
       this.send(url);
     }
   }

@@ -42,7 +42,7 @@ public sealed class V1Run : IAsyncDisposable
             new DateTimeOffset(seedDay.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero) + Noon);
         _factory = new ApiFactory
         {
-            PostgresConnectionString = database.ConnectionString,
+            PostgresConnectionString = database.AppConnectionString,
             Clock = Clock,
             Settings = settings,
         };

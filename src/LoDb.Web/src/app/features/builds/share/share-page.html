@@ -20,7 +20,7 @@
           [height]="96"
           [initials]="initials()"
           imgClass="object-cover"
-          eager
+          priority
         />
       </div>
 
@@ -74,6 +74,7 @@
             copied: 'build.show.copied' | transloco,
             error: 'build.show.copy_error' | transloco,
           }"
+          (copied)="countShare()"
         />
       </div>
     </header>

@@ -23,6 +23,8 @@ const ME_URL = `${API}/api/account/me`;
 const TOKEN_URL = `${API}/api/account/token`;
 const REFRESH_URL = `${API}/api/account/refresh`;
 const BUILDS_URL = `${API}/api/builds`;
+const LOGOUT_URL = `${API}/api/account/logout`;
+const EVERYWHERE_URL = `${API}/api/account/logout-everywhere`;
 const STORED_KEY = 'lodb.refresh-token';
 
 function tokens(access: string, refresh: string): AccessTokenResponse {
@@ -161,14 +163,46 @@ describe('BearerAuthStrategy', () => {
     await expect(session).resolves.toEqual({ user: null });
   });
 
-  it('signs out by forgetting the tokens', async () => {
+  it('signs out at the API, which revokes the refresh token, then forgets the tokens', async () => {
     const strategy = start();
     await TestBed.inject(BearerTokens).adopt(tokens('access-1', 'refresh-1'), true);
 
-    await firstValueFrom(strategy.signOut(), { defaultValue: undefined });
+    const done = firstValueFrom(strategy.signOut(), { defaultValue: undefined });
+    const logout = await next(LOGOUT_URL);
+    expect(logout.request.headers.get('Authorization')).toBe('Bearer access-1');
+    logout.flush(null, { status: 204, statusText: 'No Content' });
+    await done;
 
     expect(native.stored.has(STORED_KEY)).toBe(false);
     await expect(firstValueFrom(strategy.readSession())).resolves.toEqual({ user: null });
+  });
+
+  it('forgets the tokens even when the API cannot be reached', async () => {
+    const strategy = start();
+    await TestBed.inject(BearerTokens).adopt(tokens('access-1', 'refresh-1'), true);
+
+    const done = firstValueFrom(strategy.signOut(), { defaultValue: undefined });
+    (await next(LOGOUT_URL)).error(new ProgressEvent('error'));
+    await done;
+
+    expect(native.stored.has(STORED_KEY)).toBe(false);
+  });
+
+  it('forgets the tokens once every session is closed, and keeps them on a refusal', async () => {
+    const strategy = start();
+    await TestBed.inject(BearerTokens).adopt(tokens('access-1', 'refresh-1'), true);
+
+    const refused = firstValueFrom(strategy.signOutEverywhere(), { defaultValue: undefined });
+    (await next(EVERYWHERE_URL)).flush(null, { status: 503, statusText: 'Unavailable' });
+    await expect(refused).rejects.toMatchObject({ status: 503 });
+    expect(native.stored.get(STORED_KEY)).toBe('refresh-1');
+
+    const done = firstValueFrom(strategy.signOutEverywhere(), { defaultValue: undefined });
+    const everywhere = await next(EVERYWHERE_URL);
+    expect(everywhere.request.headers.get('Authorization')).toBe('Bearer access-1');
+    everywhere.flush(null, { status: 204, statusText: 'No Content' });
+    await done;
+    expect(native.stored.has(STORED_KEY)).toBe(false);
   });
 
   it('lands on a return URL of the app only', () => {

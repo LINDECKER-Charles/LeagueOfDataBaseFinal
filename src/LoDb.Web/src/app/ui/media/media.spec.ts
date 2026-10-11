@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
+import type { ImageVariant } from '../../core/api/generated/models/image-variant';
 import { Image } from './image';
 import { imageStateOf } from './image-state-of';
 import { webpSource } from './webp-source';
@@ -38,11 +39,19 @@ describe('webpSource', () => {
     [width]="64"
     [height]="64"
     initials="AH"
+    [eager]="eager()"
+    [priority]="priority()"
+    [variants]="variants()"
+    [sizes]="sizes()"
   />`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 class ImageHost {
   readonly src = signal<string | null>('/cdn/Ahri.png');
+  readonly eager = signal(false);
+  readonly priority = signal(false);
+  readonly variants = signal<readonly ImageVariant[]>([]);
+  readonly sizes = signal<string | null>(null);
 }
 
 describe('Image', () => {
@@ -62,6 +71,40 @@ describe('Image', () => {
     expect(query(fixture, 'source')?.getAttribute('srcset')).toBe('/cdn/Ahri.webp');
     expect(query(fixture, 'img')?.getAttribute('width')).toBe('64');
     expect(query(fixture, 'img')?.getAttribute('loading')).toBe('lazy');
+    expect(query(fixture, 'img')?.hasAttribute('fetchpriority')).toBe(false);
+  });
+
+  it('loads an image above the fold at once, at high priority for the LCP candidate', async () => {
+    const fixture = await render();
+    const img = () => query(fixture, 'img');
+
+    fixture.componentInstance.eager.set(true);
+    await fixture.whenStable();
+    expect(img()?.getAttribute('loading')).toBe('eager');
+    expect(img()?.hasAttribute('fetchpriority')).toBe(false);
+
+    fixture.componentInstance.eager.set(false);
+    fixture.componentInstance.priority.set(true);
+    await fixture.whenStable();
+    expect(img()?.getAttribute('loading')).toBe('eager');
+    expect(img()?.getAttribute('fetchpriority')).toBe('high');
+  });
+
+  it('offers the stored variants of an art, the hotlinked source as fallback', async () => {
+    const fixture = await render();
+
+    fixture.componentInstance.src.set('https://ddragon.example/Ahri_0.jpg');
+    fixture.componentInstance.variants.set([
+      { url: '/cdn/blobs/a.webp', width: 480 },
+      { url: '/cdn/blobs/b.webp', width: 960 },
+    ]);
+    fixture.componentInstance.sizes.set('100vw');
+    await fixture.whenStable();
+
+    const source = query(fixture, 'source');
+    expect(source?.getAttribute('srcset')).toBe('/cdn/blobs/a.webp 480w, /cdn/blobs/b.webp 960w');
+    expect(source?.getAttribute('sizes')).toBe('100vw');
+    expect(query(fixture, 'img')?.getAttribute('src')).toBe('https://ddragon.example/Ahri_0.jpg');
   });
 
   it('stamps the state reported by the image events', async () => {

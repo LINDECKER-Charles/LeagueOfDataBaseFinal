@@ -10,11 +10,14 @@ namespace LoDb.Api.Tests.Catalog;
 public sealed class CatalogDetailTests(CatalogApiFixture api)
 {
     private const string Latest = "/api/catalog/16.19.1/en_US";
+    private const string ClientHeader = "X-LoDb-Client";
+    private const string AndroidApp = "android/1.0.0";
 
     [Fact]
-    public async Task ChampionDetailCarriesAbilitiesSkinsAndArt()
+    public async Task ChampionDetailCarriesAbilitiesArtAndItsSkinCount()
     {
         var ahri = await api.GetJsonAsync($"{Latest}/champions/Ahri");
+        var skins = await api.GetJsonAsync($"{Latest}/champions/Ahri/skins");
 
         Assert.Equal("champions/Ahri", ahri.Text("canonicalPath"));
         Assert.Equal("Ahri", ahri.GetProperty("profile").Text("name"));
@@ -26,7 +29,72 @@ public sealed class CatalogDetailTests(CatalogApiFixture api)
         Assert.Equal(
             "https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Ahri_0.jpg",
             ahri.GetProperty("art").Text("splash"));
-        Assert.NotEmpty(ahri.Items("skins"));
+        Assert.False(ahri.TryGetProperty("skins", out _));
+        Assert.Equal(
+            skins.Items("skins").Count(static skin => skin.GetProperty("number").GetInt32() != 0),
+            ahri.GetProperty("alternateSkinCount").GetInt32());
+    }
+
+    [Fact]
+    public async Task InstalledAppStillReadsTheSkinsInTheChampionPage()
+    {
+        using var web = await api.GetAsync($"{Latest}/champions/Ahri");
+        var page = await api.GetJsonAsync($"{Latest}/champions/Ahri");
+        var app = await api.GetJsonAsync($"{Latest}/champions/Ahri", AndroidApp);
+        var skins = await api.GetJsonAsync($"{Latest}/champions/Ahri/skins");
+
+        Assert.Contains(ClientHeader, web.Headers.Vary);
+        Assert.False(page.TryGetProperty("skins", out _));
+        Assert.Equal(
+            skins.GetProperty("skins").GetRawText(),
+            app.GetProperty("skins").GetRawText());
+        Assert.Equal(
+            page.GetProperty("alternateSkinCount").GetInt32(),
+            app.GetProperty("alternateSkinCount").GetInt32());
+    }
+
+    [Fact]
+    public async Task ChampionPagesCarryTheArtVariantsStoredAlone()
+    {
+        var ahri = await api.GetJsonAsync($"{Latest}/champions/Ahri");
+        var garen = await api.GetJsonAsync($"{Latest}/champions/Garen");
+        var card = (await api.GetJsonAsync($"{Latest}/champions")).Entry("entries", "Ahri");
+
+        var centered = ahri.Items("centeredArtVariants");
+        Assert.Equal(
+            [480, 960, 1280],
+            centered.Select(static variant => variant.GetProperty("width").GetInt32()));
+        Assert.All(centered, static variant =>
+            Assert.Matches(@"^/cdn/blobs/[0-9a-f]{64}\.webp$", variant.Text("url")));
+        Assert.Equal(3, centered.Select(static variant => variant.Text("url")).Distinct().Count());
+        var loading = Assert.Single(card.Items("loadingArtVariants"));
+        Assert.Equal(308, loading.GetProperty("width").GetInt32());
+        Assert.Equal(
+            loading.Text("url"),
+            Assert.Single(ahri.GetProperty("profile").Items("loadingArtVariants")).Text("url"));
+        Assert.Empty(garen.Items("centeredArtVariants"));
+        Assert.Empty(garen.GetProperty("profile").Items("loadingArtVariants"));
+    }
+
+    [Fact]
+    public async Task ChampionSkinsAreReadApartWithTheirArtAndChromas()
+    {
+        using var response = await api.GetAsync($"{Latest}/champions/Ahri/skins");
+        var skins = await api.GetJsonAsync($"{Latest}/champions/Ahri/skins");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(
+            "public, max-age=60, stale-while-revalidate=600",
+            CacheHeaderTests.CacheControlOf(response));
+        Assert.NotNull(response.Headers.ETag);
+        Assert.Equal(("16.19.1", "en_US", "Ahri"),
+            (skins.Text("version"), skins.Text("language"), skins.Text("champion")));
+        var all = skins.Items("skins");
+        Assert.Equal(("Ahri", 0), (all[0].Text("name"), all[0].GetProperty("number").GetInt32()));
+        Assert.Equal(
+            "https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Ahri_1.jpg",
+            all[1].GetProperty("art").Text("splash"));
+        Assert.Contains(all, static skin => skin.Items("chromas").Count > 0);
     }
 
     [Fact]
@@ -160,6 +228,7 @@ public sealed class CatalogDetailTests(CatalogApiFixture api)
 
     [Theory]
     [InlineData("champions/Nobody")]
+    [InlineData("champions/Nobody/skins")]
     [InlineData("items/999999")]
     [InlineData("items/2008")]
     [InlineData("items/not-a-number")]

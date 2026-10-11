@@ -1,6 +1,7 @@
 using LoDb.Infrastructure.Persistence.Accounts;
 using LoDb.Infrastructure.Persistence.Analytics;
 using LoDb.Infrastructure.Persistence.Apps;
+using LoDb.Infrastructure.Persistence.Audience;
 using LoDb.Infrastructure.Persistence.Audit;
 using LoDb.Infrastructure.Persistence.Billing;
 using LoDb.Infrastructure.Persistence.Billing.Payments;
@@ -27,6 +28,8 @@ public sealed class LoDbDbContext(DbContextOptions<LoDbDbContext> options)
     : DbContext(options), IDataProtectionKeyContext
 {
     public DbSet<User> Users => Set<User>();
+
+    public DbSet<RefreshTokenFamily> RefreshTokenFamilies => Set<RefreshTokenFamily>();
 
     public DbSet<Build> Builds => Set<Build>();
 
@@ -63,6 +66,8 @@ public sealed class LoDbDbContext(DbContextOptions<LoDbDbContext> options)
     public DbSet<AnalyticsEvent> AnalyticsEvents => Set<AnalyticsEvent>();
 
     public DbSet<AnalyticsDaily> AnalyticsDaily => Set<AnalyticsDaily>();
+
+    public DbSet<AudienceEntityDay> AudienceEntityDays => Set<AudienceEntityDay>();
 
     public DbSet<ClientPolicyEntry> ClientPolicies => Set<ClientPolicyEntry>();
 

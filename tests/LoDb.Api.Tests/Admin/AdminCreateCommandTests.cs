@@ -63,7 +63,7 @@ public sealed class AdminCreateCommandTests(PostgresContainerFixture postgres)
         var key = ApiJson.Text(await ApiJson.ReadAsync(start, HttpStatusCode.OK), "sharedKey")!;
         using var confirm = await browser.PostAsync(
             "/api/admin/mfa/confirm",
-            new { code = Totp.Code(key), invitation });
+            new { code = Totp.Code(key, App.Clock), invitation });
         await ApiJson.ReadAsync(confirm, HttpStatusCode.OK);
         await ReadAsync(browser, "/api/admin/users");
     }

@@ -60,6 +60,7 @@ function sourceOf(dataset: List | null, status: ListStatus = 'ready', first: Lis
     dataset: whole,
     list: signal(dataset ?? FIRST),
     status: state,
+    loadWhole: vi.fn(),
   };
   return { source, whole, state };
 }

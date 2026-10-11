@@ -35,6 +35,8 @@ import { signIn } from '../fn/account/sign-in';
 import { SignIn$Params } from '../fn/account/sign-in';
 import { signOut } from '../fn/account/sign-out';
 import { SignOut$Params } from '../fn/account/sign-out';
+import { signOutEverywhere } from '../fn/account/sign-out-everywhere';
+import { SignOutEverywhere$Params } from '../fn/account/sign-out-everywhere';
 import { startGoogleSignIn } from '../fn/account/start-google-sign-in';
 import { StartGoogleSignIn$Params } from '../fn/account/start-google-sign-in';
 import { verifyEmail } from '../fn/account/verify-email';
@@ -151,6 +153,41 @@ export class AccountService extends BaseService {
     );
   }
 
+  /** Path part for operation `signOutEverywhere()` */
+  static readonly SignOutEverywherePath = '/api/account/logout-everywhere';
+
+  /**
+   * Closes every session of the account, this one included.
+   *
+   *
+   *
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `signOutEverywhere()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  signOutEverywhere$Response(params?: SignOutEverywhere$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+    const obs = signOutEverywhere(this.http, this.rootUrl, params, context);
+    return obs;
+  }
+
+  /**
+   * Closes every session of the account, this one included.
+   *
+   *
+   *
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `signOutEverywhere$Response()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  signOutEverywhere(params?: SignOutEverywhere$Params, context?: HttpContext): Observable<void> {
+    const resp = this.signOutEverywhere$Response(params, context);
+    return resp.pipe(
+      map((r: StrictHttpResponse<void>): void => r.body)
+    );
+  }
+
   /** Path part for operation `createAccountToken()` */
   static readonly CreateAccountTokenPath = '/api/account/token';
 
@@ -190,7 +227,7 @@ export class AccountService extends BaseService {
   static readonly RefreshAccountTokenPath = '/api/account/refresh';
 
   /**
-   * Trades a refresh token for a new bearer token and refresh token.
+   * Trades a refresh token, once, for a new bearer token and refresh token.
    *
    *
    *
@@ -205,7 +242,7 @@ export class AccountService extends BaseService {
   }
 
   /**
-   * Trades a refresh token for a new bearer token and refresh token.
+   * Trades a refresh token, once, for a new bearer token and refresh token.
    *
    *
    *

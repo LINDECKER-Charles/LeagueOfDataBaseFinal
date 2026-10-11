@@ -5,10 +5,10 @@ namespace LoDb.Ingestion.Catalog.Images;
 /// <summary>The images of one resolution, by manifest key.</summary>
 public sealed class ImageResolution
 {
-    private readonly IReadOnlyDictionary<(string Type, string File), ResolvedImage> images;
+    private readonly IReadOnlyDictionary<(string Type, string Key), ResolvedImage> images;
 
     internal ImageResolution(
-        IReadOnlyDictionary<(string Type, string File), ResolvedImage> images,
+        IReadOnlyDictionary<(string Type, string Key), ResolvedImage> images,
         bool refused)
     {
         this.images = images;
@@ -34,9 +34,9 @@ public sealed class ImageResolution
         get
         {
             ArgumentNullException.ThrowIfNull(image);
-            return images.TryGetValue((image.ManifestType, image.File), out var resolved)
+            return images.TryGetValue((image.ManifestType, image.ManifestKey), out var resolved)
                 ? resolved
-                : throw new KeyNotFoundException($"{image.File} was not resolved.");
+                : throw new KeyNotFoundException($"{image.ManifestKey} was not resolved.");
         }
     }
 }

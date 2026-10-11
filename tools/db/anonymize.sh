@@ -13,8 +13,9 @@
 # LODB_ANON_PASSWORD (bcrypt); for a dump that goes to staging, pick a strong one and share
 # it like a secret, since it opens every account there. Row counts are printed before and
 # after: only the queues, the tokens and the key ring change (emptied): messenger_messages
-# and reset_password_request, then email_outbox, identity_user_tokens and
-# data_protection_keys once the new stack has migrated the database (lot 4).
+# and reset_password_request, then email_outbox, identity_user_tokens,
+# data_protection_keys and refresh_token_families once the new stack has migrated the
+# database (lot 4 and later).
 set -euo pipefail
 
 readonly IMAGE=postgres:17-alpine

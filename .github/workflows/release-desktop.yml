@@ -11,15 +11,17 @@ name: Release desktop
 #
 # shell (npm) -> per RID: build (dotnet publish, no secret) -> pack (vpk download of N-1
 # BEFORE vpk pack, so that vpk writes the delta N-1 -> N; signing: Authenticode through
-# Azure Artifact Signing, Developer ID + notarisation; no build) -> gate (no secret: N-1
-# installed, updated to N, and --smoke must show N) -> publish. Nothing is published unless
-# every required RID passed. The release is created as a pre-release and promoted once every
-# RID is uploaded (stable), or stays a pre-release (beta).
+# Azure Artifact Signing, Developer ID + notarisation; no build) -> sign (the feed of every
+# RID, Ed25519, Node only) -> gate (no secret: N-1 installed, updated to N from the signed
+# feed; --smoke must show N and the key it trusts, and N must ignore a tampered feed) ->
+# publish (the signed feeds replace vpk's, then are read back and verified). Nothing is
+# published unless every required RID passed. The release is created as a pre-release and
+# promoted once every RID is uploaded (stable), or stays a pre-release (beta).
 #
 # Environment desktop-release: the signing secrets and variables of the guide, given to
-# `pack` only, the one job that neither builds nor runs what the build produced. An
+# `pack` and `sign` only, the jobs that neither build nor run what the build produced. An
 # unsigned build is never published: the signing steps fail when their configuration is
-# missing.
+# missing, and the app reads no feed without its signature (Updates/Engine/Signing).
 on:
   workflow_call:
     inputs:
@@ -57,6 +59,7 @@ env:
   DOTNET_NOLOGO: 'true'
   DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
   E2E: tools/desktop-update-e2e
+  SIGNING: tools/desktop-update-signing
 
 jobs:
   prepare:
@@ -94,6 +97,15 @@ jobs:
         uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
         with:
           global-json-file: global.json
+
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+
+      # The scripts that `sign`, `gate` and `publish` run, tested before any of them runs.
+      - name: Test the feed signing tools
+        run: node --test "$SIGNING"/test/*.test.mjs
 
       - name: Resolve the version
         id: version
@@ -223,9 +235,10 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-  # The only job holding the signing material. It builds nothing, restores no cache, and
-  # runs nothing the build produced: vpk, the Velopack version of the app, signs the files
-  # of the publish folder as it packs them. The packages run in `gate`, without any secret.
+  # The only job holding the platform signing material. It builds nothing, restores no
+  # cache, and runs nothing the build produced: vpk, the Velopack version of the app, signs
+  # the files of the publish folder as it packs them. The packages run in `gate`, without
+  # any secret.
   pack:
     name: pack (${{ matrix.rid }})
     needs: [prepare, build]
@@ -366,11 +379,84 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-  # Installs N-1 and updates it to N, as a user would, in a job without any secret. Only a
-  # release folder that passed goes on to `publish`, as desktop-releases-<rid>.
+      # The feed alone goes to `sign`: it lists the size and SHA-256 of every package, which
+      # is what the signature covers.
+      - name: Upload the feed
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: desktop-feed-${{ matrix.rid }}
+          path: releases/releases.*.json
+          if-no-files-found: error
+          retention-days: 1
+
+  # The only job holding the feed signing key (tools/desktop-update-signing). It builds
+  # nothing, restores no cache and runs nothing the build produced: Node built-ins and the
+  # scripts of the commit (sparse checkout) sign the feeds as plain data, after checking
+  # that the key is the pair of one compiled into the app. No package comes in.
+  sign:
+    needs: [prepare, pack]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: desktop-release
+    env:
+      CHANNEL: ${{ inputs.channel }}
+      VERSION: ${{ needs.prepare.outputs.version }}
+    steps:
+      - name: Checkout the release scripts
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.sha }}
+          persist-credentials: false
+          # The key the app trusts is read from its source, UpdateFeeds.cs.
+          sparse-checkout: |
+            tools/desktop-update-e2e
+            tools/desktop-update-signing
+            tools/live-update
+            src/LoDb.Desktop/Updates/Engine
+
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+          # No cache in the job that holds the signing key.
+          package-manager-cache: false
+
+      - name: Download the feeds
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: desktop-feed-*
+          path: feeds
+
+      # A required RID whose pack failed has stopped the release already; linux-x64 may lack.
+      - name: Sign the feeds
+        env:
+          LODB_DESKTOP_UPDATE_PRIVATE_KEY: ${{ secrets.LODB_DESKTOP_UPDATE_PRIVATE_KEY }}
+        run: |
+          source "$E2E/lib.sh"
+          for rid in $LODB_RIDS; do
+            folder="feeds/desktop-feed-$rid"
+            if [ ! -d "$folder" ]; then
+              echo "::warning::No feed for $rid: its pack failed."
+              continue
+            fi
+            node "$SIGNING/sign-feed.mjs" --releases "$folder" \
+              --channel "$(lodb_velopack_channel "$rid" "$CHANNEL")" --version "$VERSION"
+          done
+
+      - name: Upload the signed feeds
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: desktop-signed-feeds
+          path: feeds/
+          if-no-files-found: error
+          retention-days: 7
+
+  # Installs N-1 and updates it to N from the signed feed, as a user would, in a job without
+  # any secret. Only a release folder that passed goes on to `publish`, as
+  # desktop-releases-<rid>.
   gate:
     name: gate (${{ matrix.rid }})
-    needs: [prepare, pack]
+    needs: [prepare, sign]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     continue-on-error: ${{ matrix.best-effort }}
@@ -396,13 +482,35 @@ jobs:
         with:
           ref: ${{ inputs.sha }}
           persist-credentials: false
-          sparse-checkout: tools/desktop-update-e2e
+          sparse-checkout: |
+            tools/desktop-update-e2e
+            tools/desktop-update-signing
+            src/LoDb.Desktop/Updates/Engine
+
+      # gate.sh checks the signed feed and its packages with Node.
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
 
       - name: Download the packages
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: desktop-packed-${{ matrix.rid }}
           path: .
+
+      - name: Download the signed feeds
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: desktop-signed-feeds
+          path: signed
+
+      # The feed of this release only, and its signature, in place of the one vpk wrote.
+      - name: Use the signed feed
+        run: |
+          source "$E2E/lib.sh"
+          feed="releases.$(lodb_velopack_channel "$RID" "$CHANNEL").json"
+          cp "signed/desktop-feed-$RID/$feed" "signed/desktop-feed-$RID/$feed.sig" releases/
 
       # libfuse2 runs the AppImage.
       - name: Linux packages
@@ -416,12 +524,15 @@ jobs:
           source "$E2E/lib.sh"
           previous="$(cat previous/version)"
           installable="$(lodb_installable "$RID" "$(lodb_velopack_channel "$RID" "$CHANNEL")")"
+          feed_key="$(node "$SIGNING/app-key.mjs")"
           if [ -n "$previous" ]; then
             "$E2E/gate.sh" --rid "$RID" --channel "$CHANNEL" --from "$previous" \
-              --to "$VERSION" --feed releases --work gate --artifact "previous/$installable"
+              --to "$VERSION" --feed releases --feed-key "$feed_key" --work gate \
+              --artifact "previous/$installable"
           else
             echo "::warning::No N-1 on this channel: the gate only starts $VERSION."
-            "$E2E/gate.sh" --rid "$RID" --channel "$CHANNEL" --to "$VERSION" --work gate \
+            "$E2E/gate.sh" --rid "$RID" --channel "$CHANNEL" --to "$VERSION" \
+              --feed releases --feed-key "$feed_key" --work gate \
               --artifact "releases/$installable"
           fi
 
@@ -470,14 +581,21 @@ jobs:
           VPK_VERSION: ${{ needs.prepare.outputs.vpk }}
         run: dotnet tool install --global vpk --version "$VPK_VERSION"
 
+      # publish.sh checks the signed feeds, before the upload and read back after it.
+      - name: Setup Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+
       - name: Download the release folders
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: desktop-releases-*
           path: artifacts
 
-      # Nothing is uploaded unless every required RID passed its gate; then pre-release,
-      # promotion (stable) or pruning of the old betas (beta).
+      # Nothing is uploaded unless every required RID passed its gate and its packages match
+      # its signed feed; then pre-release, signed feeds, promotion (stable) or pruning of the
+      # old betas (beta).
       - name: Publish
         run: |
           "$E2E/publish.sh" --channel "$CHANNEL" --version "$VERSION" --sha "$SHA" \

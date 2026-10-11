@@ -18,8 +18,8 @@ test.describe('headers of a page', { tag: '@readonly' }, () => {
     expect(response.status()).toBe(200);
     expect(policy).toContain("frame-ancestors 'none'");
     expect(policy).toContain("connect-src 'self'");
-    // 'unsafe-eval' serves the i18n message compiler (src/server/security/document-policy.ts).
-    expect(policy).toMatch(/script-src 'self'( 'unsafe-eval')?( 'sha256-[A-Za-z0-9+/]+=*')+;/);
+    // No 'unsafe-eval': the i18n messages are compiled at build time (src/LoDb.Web/i18n).
+    expect(policy).toMatch(/script-src 'self'( 'sha256-[A-Za-z0-9+/]+=*')+;/);
     expect(policy).not.toMatch(/script-src[^;]*'unsafe-inline'/);
     expect(inlineScripts?.length ?? 0).toBeGreaterThan(0);
   });
@@ -32,6 +32,9 @@ test.describe('headers of a page', { tag: '@readonly' }, () => {
     );
     expect(headers['x-content-type-options']).toBe('nosniff');
     expect(headers['x-frame-options']).toBe('DENY');
+    expect(headers['cross-origin-opener-policy']).toBe('same-origin');
+    expect(headers['permissions-policy']).toContain('camera=()');
+    expect(headers['permissions-policy']).not.toContain('fullscreen');
   });
 
   test('come from the shared cache on the second request', async ({ request }) => {
@@ -106,9 +109,7 @@ test.describe('headers of the front files', { tag: '@readonly' }, () => {
     const response = await request.get('/offline.html');
 
     expect(response.status()).toBe(200);
-    expect(response.headers()['content-security-policy']).toMatch(
-      /script-src 'self'( 'unsafe-eval')?;/,
-    );
+    expect(response.headers()['content-security-policy']).toMatch(/script-src 'self';/);
   });
 
   test('answer a dotfile with a plain 404, without rendering', async ({ request }) => {

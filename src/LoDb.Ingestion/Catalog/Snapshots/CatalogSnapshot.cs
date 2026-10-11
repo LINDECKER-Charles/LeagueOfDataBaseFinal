@@ -33,7 +33,9 @@ public sealed class CatalogSnapshot
     private readonly FrozenDictionary<string, string> englishItemNames;
     private readonly FrozenDictionary<string, string> englishTreeNames;
     private readonly FrozenDictionary<string, string> resourceTokens;
-    private readonly CatalogSearch search;
+
+    // Folded on the first search: every other read of the catalog does without it.
+    private readonly Lazy<CatalogSearch> search;
 
     /// <param name="version">The version.</param>
     /// <param name="language">The language.</param>
@@ -68,7 +70,7 @@ public sealed class CatalogSnapshot
             source.Runes.Entries,
             static tree => (KeyOf(tree.Id), tree.Name));
         resourceTokens = TokensOf(Champions.Entries, source.Champions);
-        search = new CatalogSearch(this);
+        search = new Lazy<CatalogSearch>(() => new CatalogSearch(this));
     }
 
     public PatchVersion Version { get; }
@@ -90,6 +92,9 @@ public sealed class CatalogSnapshot
     public CatalogResource<RuneTree> Runes { get; }
 
     public CatalogResource<SummonerSpell> Summoners { get; }
+
+    /// <summary>Whether a search folded the searchable entries yet.</summary>
+    internal bool IsSearchFolded => search.IsValueCreated;
 
     /// <summary>
     /// Whether the item belongs to the encyclopedia: not debris, its placeholder marker read
@@ -171,7 +176,7 @@ public sealed class CatalogSnapshot
         ArgumentNullException.ThrowIfNull(types);
         ArgumentOutOfRangeException.ThrowIfLessThan(limit, 1);
         IReadOnlySet<ResourceType> searched = types.Count == 0 ? AllTypes : types.ToHashSet();
-        return [.. search.Find(query, searched, limit).Select(candidate => new SearchHit
+        return [.. search.Value.Find(query, searched, limit).Select(candidate => new SearchHit
         {
             Type = candidate.Type,
             Id = candidate.Id,

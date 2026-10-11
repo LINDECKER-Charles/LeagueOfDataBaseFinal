@@ -6,6 +6,7 @@ using LoDb.Domain.Paths;
 using LoDb.Domain.Text;
 using LoDb.Ingestion.Catalog.Hotlinks;
 using LoDb.Ingestion.Catalog.Snapshots;
+using LoDb.Ingestion.Images.Art;
 
 namespace LoDb.Api.Modules.Catalog.Champions;
 
@@ -36,6 +37,13 @@ internal sealed record ChampionCard
     /// the list's card.
     /// </summary>
     public required Uri LoadingArt { get; init; }
+
+    /// <summary>
+    /// The same portrait as WebP, from the site's blobs: candidates of a srcset; none until
+    /// the latest version's variants are stored, nor for an older version,
+    /// the hotlinked <c>loadingArt</c> standing in.
+    /// </summary>
+    public required IReadOnlyList<ImageVariant> LoadingArtVariants { get; init; }
 
     /// <summary>The lore teaser, template tokens removed.</summary>
     public required string Blurb { get; init; }
@@ -73,6 +81,7 @@ internal sealed record ChampionCard
             CanonicalPath = catalog.PathOf(champion).Value,
             Image = images.Of(EntityImages.Portrait(champion)),
             LoadingArt = ChampionHotlinks.Art(summary.Id, ChampionArtKind.Loading, BaseSkin),
+            LoadingArtVariants = images.VariantsOf(ArtVariants.LoadingOf(champion)),
             Blurb = DdragonText.Clean(summary.Blurb),
             Tags = summary.Tags,
             Resource = catalog.ResourceTokenOf(champion),

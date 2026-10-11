@@ -72,6 +72,7 @@ describe('preRouter', () => {
       'Content-Type': 'html',
     });
     expect(answer.headers['Content-Security-Policy']).toContain("script-src 'self'");
+    expect(answer.headers['Reporting-Endpoints']).toBe('csp="/api/csp-reports"');
     expect(answer.body).toContain('404');
     expect(answer.body).not.toContain('<script');
   });

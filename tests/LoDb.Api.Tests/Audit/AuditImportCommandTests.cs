@@ -63,7 +63,9 @@ public sealed class AuditImportCommandTests(PostgresContainerFixture postgres)
         Assert.Equal(
             (AuditActorType.Anonymous, (int?)null, (string?)null, AuditOutcome.Failure),
             (failed.ActorType, failed.ActorId, failed.Actor, failed.Outcome));
-        Assert.Equal("legende@example.test", AccountsApp.Meta(failed, "identifier"));
+        Assert.Null(failed.Target);
+        Assert.Null(AccountsApp.Meta(failed, "identifier"));
+        Assert.Equal("invalid-credentials", AccountsApp.Meta(failed, "reason"));
         var ban = journal[1];
         Assert.Equal(
             (AuditActorType.Admin, (int?)null, "admin", AuditTargetType.User, "42"),
@@ -132,7 +134,7 @@ public sealed class AuditImportCommandTests(PostgresContainerFixture postgres)
         CliRunner.RunAsync(
             [
                 "audit", "import",
-                $"--ConnectionStrings:LoDb={Database.ConnectionString}",
+                $"--ConnectionStrings:LoDb={Database.AppConnectionString}",
                 "--Logging:LogLevel:Default=Warning",
                 .. arguments,
             ],
@@ -207,7 +209,7 @@ public sealed class AuditImportCommandTests(PostgresContainerFixture postgres)
             target = "legende@example.test",
             ip = "203.0.113.5",
             route = "app_login",
-            meta = new { identifier = "legende@example.test" },
+            meta = new { identifier = "legende@example.test", reason = "invalid-credentials" },
         });
 
     // The legacy operator: an account-less "admin" whose id is its name.

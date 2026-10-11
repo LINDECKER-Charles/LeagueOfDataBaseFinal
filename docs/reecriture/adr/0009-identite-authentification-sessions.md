@@ -68,7 +68,9 @@
   **OpenIddict** n'entre que si des clients OAuth tiers apparaissent : l'API publique
   reste sur des clés.
 - **Pas de session serveur.** La version et la locale sont dans l'URL, le thème et la
-  variante de langue dans des cookies. Plus aucun verrou ne sérialise les requêtes.
+  variante de langue dans des cookies. Plus aucun verrou ne sérialise les requêtes. Seule
+  exception, sans verrou : une ligne par connexion d'une app, la famille de ses jetons de
+  rafraîchissement (§ Sessions).
 - **Clés Data Protection persistées en Postgres**, chiffrées au repos par un certificat
   fourni en secret. Un déploiement ne déconnecte plus personne, et N instances partagent
   les mêmes clés.
@@ -115,6 +117,47 @@
 - E-mails de vérification et de réinitialisation : jetons Identity de 1 h, à usage
   unique via le security stamp. Envoi par l'**outbox** (ADR 0003), dans la **locale de
   l'utilisateur** passée explicitement (plus de traducteur lié à la requête).
+
+### Sessions
+
+- **Jeton de rafraîchissement à usage unique** : chaque échange rend le suivant, que l'app
+  garde à la place du précédent. Une connexion d'app ouvre une **famille**
+  (`refresh_token_families` : génération courante, expiration, révocation) ; le jeton ne
+  porte que sa famille et sa génération, rien n'est stocké du jeton lui-même. Un jeton déjà
+  échangé qui revient **révoque toute la famille** : le voleur et l'app la perdent ensemble.
+  Pendant `LoDb:Accounts:RefreshTokens:ReuseGrace` (30 s), le jeton qu'un échange vient de
+  remplacer s'échange encore pour la même génération : une réponse perdue ou deux échanges
+  simultanés ne déconnectent personne. Un jeton émis avant les familles en reçoit une à son
+  premier échange, nommée d'après lui, et ne sert lui aussi qu'une fois.
+- **Déconnexion d'une app** (`/logout` par jeton) : révoque la famille nommée par le jeton
+  d'accès ; les apps l'appellent avant d'oublier leurs jetons.
+- **« Se déconnecter de tous les appareils »** (`/logout-everywhere`) : nouveau security
+  stamp et révocation de toutes les familles du compte. La session de la requête se ferme
+  aussitôt, sur le web comme dans une app ; les autres cookies tombent à leur prochaine
+  revalidation (5 min au plus), les jetons de rafraîchissement à leur prochain échange, les
+  jetons d'accès déjà émis à leur expiration (5 min).
+- Changement ou réinitialisation du mot de passe, bannissement : le security stamp change,
+  aucun jeton de rafraîchissement ne s'échange plus.
+- Les familles dont tous les jetons ont expiré sont effacées chaque jour.
+
+### Second facteur et journal
+
+- **Clé TOTP scellée** par Data Protection (but dédié) avant d'atteindre la base ; **codes
+  de secours hachés** un à un en argon2id (dix caractères parmi 26 : un hachage rapide
+  tomberait en quelques heures), chacun utilisable une fois. Une tâche quotidienne protège
+  les secrets qu'une version antérieure a laissés en clair ; les lecteurs acceptent les deux
+  formes entre-temps, si bien qu'aucun administrateur ne perd son authentificateur.
+- **Code TOTP à usage unique** par compte (le pas du dernier code accepté est gardé), dérive
+  d'un pas de part et d'autre au lieu de deux.
+- Le journal ne garde de l'identifiant saisi lors d'une connexion refusée que sa nature
+  (e-mail ou nom) et un **HMAC** dont la clé est un secret de l'hôte
+  (`LoDb__Audit__IdentifierKey`) ; rien d'une saisie qui n'a la forme ni de l'un ni de
+  l'autre.
+- **Garde anti-CSRF selon le schéma réellement authentifié** : l'exemption du jeton bearer
+  ne vaut que si c'est lui qui authentifie la requête, jamais pour un cookie qu'une
+  politique authentifie à côté d'un en-tête `Authorization`.
+- **`AllowedHosts`** : l'API ne répond qu'aux hôtes publics de l'environnement, à son alias
+  dans la stack et à la boucle locale (`400` sinon), le port des métriques excepté.
 
 ### Google OAuth
 
@@ -165,3 +208,8 @@
 - **2026-10-11** : limites horaires par compte des actions coûteuses, vote réservé aux
   comptes vérifiés d'un jour, renvoi de vérification plafonné par compte et effacement des
   comptes non vérifiés après 7 jours (§ Protections).
+- **2026-10-11** : jetons de rafraîchissement à usage unique par familles révocables,
+  déconnexion d'une app révoquant sa famille, « se déconnecter de tous les appareils »
+  (§ Sessions, exception à « aucune session serveur ») ; clé TOTP scellée, codes de secours
+  hachés, codes TOTP à usage unique, identifiant du journal en HMAC, garde anti-CSRF selon
+  le schéma authentifié, `AllowedHosts` (§ Second facteur et journal).

@@ -11,7 +11,7 @@ import { readYamlCatalogues } from './read-yaml-catalogues.mjs';
  * Converts every YAML catalogue of `yamlDir` into Transloco JSON under `catalogueDir`, and
  * returns one summary per written file. Only the files it converts are overwritten: the
  * scopes the features add next to them are never touched. Every message is compiled first,
- * so a catalogue MessageFormat would reject at render time is never written.
+ * as the web build compiles it, so a catalogue that build would refuse is never written.
  */
 export function runConversion({ yamlDir, catalogueDir }) {
   return readYamlCatalogues(yamlDir).map(({ domain, locale, tree }) => {
@@ -32,7 +32,7 @@ export function runConversion({ yamlDir, catalogueDir }) {
 function assertCompiles(tree, locale, domain) {
   for (const [key, message] of flattenKeys(tree)) {
     try {
-      compileIcu(message, locale);
+      compileIcu(message);
     } catch (error) {
       throw new Error(`${domain}.${locale} ${key} is not valid ICU: ${error.message}`);
     }

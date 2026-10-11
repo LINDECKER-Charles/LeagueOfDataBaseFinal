@@ -26,8 +26,9 @@ const AHRI: ChampionDetails = {
   abilities: [],
   allyTips: [],
   enemyTips: [],
-  skins: [],
+  alternateSkinCount: 0,
   art: { centered: '', loading: '', splash: 'https://ddragon.example/Ahri_0.jpg' },
+  centeredArtVariants: [],
   blurb: 'Innately connected to the magic of the spirit realm, <i>Ahri</i> is a fox-like vastaya.',
   profile: {
     canonicalPath: 'champions/Ahri',
@@ -37,6 +38,7 @@ const AHRI: ChampionDetails = {
     title: 'the Nine-Tailed Fox',
     image: IMAGE,
     loadingArt: 'https://ddragon.leagueoflegends.com/cdn/img/champion/loading/Ahri_0.jpg',
+    loadingArtVariants: [],
     blurb: 'Innately connected to the magic of the spirit realm, Ahri is a fox-like vastaya.',
     partype: 'Mana',
     resource: 'mana',

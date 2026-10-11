@@ -11,6 +11,7 @@ import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { provideTransloco, type Translation } from '@jsverse/transloco';
 import { of } from 'rxjs';
+import { AudienceTracker } from '../../../core/analytics/audience-tracker';
 import { API_BASE_URL } from '../../../core/api/api-base-url';
 import type { SharedBuild } from '../../../core/api/generated/models/shared-build';
 import { AuthSession } from '../../../core/auth/session/auth-session';
@@ -147,6 +148,18 @@ describe('SharePage', () => {
 
     expect(textOf(host, '.vote-score')).toBe('+3');
     expect(textOf(host, 'lodb-copy-link')).toContain('Copier le lien');
+  });
+
+  it('counts the build as shared once its link is copied', async () => {
+    vi.stubGlobal('navigator', { clipboard: { writeText: vi.fn().mockResolvedValue(undefined) } });
+    const { host } = await visit(sharedBuildOf());
+    const track = vi.spyOn(TestBed.inject(AudienceTracker), 'track');
+
+    host.querySelector<HTMLButtonElement>('lodb-copy-link button')?.click();
+    await new Promise((resolve) => setTimeout(resolve));
+    vi.unstubAllGlobals();
+
+    expect(track).toHaveBeenCalledExactlyOnceWith('build-share');
   });
 
   it('shows no score on a private build', async () => {

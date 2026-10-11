@@ -4,99 +4,81 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { type Translation, TranslocoService } from '@jsverse/transloco';
 import { firstValueFrom } from 'rxjs';
-import EN from '../../../../public/i18n/en.json';
-import FR from '../../../../public/i18n/fr.json';
 import { provideI18n } from './provide-i18n';
 
-// Shaped like the converted catalogues (tools/i18n): `{{ }}` parameters.
+const RESULTS_FR = [
+  [
+    'plural',
+    'count',
+    0,
+    { 1: [['#', 'count', 0], ' résultat'], other: [['#', 'count', 0], ' résultats'] },
+  ],
+];
+const RESULTS_EN = [
+  [
+    'plural',
+    'count',
+    0,
+    { 1: [['#', 'count', 0], ' result'], other: [['#', 'count', 0], ' results'] },
+  ],
+];
+
+// Shaped like the built catalogues (npm run i18n:build): every locale completed with the `en`
+// messages it lacks, `{{ }}` parameters, ICU messages compiled.
 const CATALOGUES: Record<string, Translation> = {
-  'i18n/en.json': {
-    filter: { page: 'page {{ page }} / {{ count }}' },
-    only_in_en: 'Only in English',
-  },
-  'i18n/fr.json': { filter: { page: 'page {{ page }} sur {{ count }}' } },
-  'i18n/ja.json': { filter: { page: '{{ page }} / {{ count }} ページ' } },
-  'i18n/seo/en.json': { title: 'Champions', suffix: '(patch {{ version }})' },
-  'i18n/seo/fr.json': { title: 'Champions FR' },
-};
-// The shipped root catalogues, for the plurals, whose shape is what is under test. Japanese
-// has no count message of its own: its counts are the `en` ones.
-const SHIPPED: Record<string, Translation> = {
-  'i18n/en.json': EN,
-  'i18n/fr.json': FR,
-  'i18n/ja.json': {},
+  'i18n/fr.json': { filter: { page: 'page {{ page }} sur {{ count }}', results: RESULTS_FR } },
+  'i18n/ja.json': { filter: { page: '{{ page }} / {{ count }} ページ', results: RESULTS_EN } },
+  'i18n/seo/fr.json': { title: 'Champions FR', suffix: '(patch {{ version }})' },
 };
 
 describe('provideI18n', () => {
   let transloco: TranslocoService;
+  let requested: string[];
 
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [provideHttpClient(), provideHttpClientTesting(), provideI18n()],
     });
     transloco = TestBed.inject(TranslocoService);
-    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    requested = [];
   });
 
-  afterEach(() => vi.restoreAllMocks());
-
-  async function load(path: string, catalogues = CATALOGUES): Promise<void> {
+  async function load(path: string): Promise<void> {
     const loaded = firstValueFrom(transloco.load(path));
     const http = TestBed.inject(HttpTestingController);
     for (const request of http.match(() => true)) {
-      request.flush(catalogues[request.request.url]);
+      requested.push(request.request.url);
+      request.flush(CATALOGUES[request.request.url]);
     }
     await loaded;
     http.verify();
   }
 
-  const counts = (key: string) =>
-    [0, 1, 2].map((count) => transloco.translate(`filter.${key}`, { count }));
+  const counts = () => [0, 1, 2].map((count) => transloco.translate('filter.results', { count }));
 
-  it('falls back to en for a key the locale lacks, and only for that key', async () => {
-    await load('fr');
-    transloco.setActiveLang('fr');
-
-    expect(transloco.translate('filter.page', { page: 2, count: 5 })).toBe('page 2 sur 5');
-    expect(transloco.translate('only_in_en')).toBe('Only in English');
-  });
-
-  it('falls back to en key by key inside a scope too', async () => {
+  it('loads the catalogue of the locale alone, never en beside it', async () => {
     await load('fr');
     await load('seo/fr');
     transloco.setActiveLang('fr');
 
-    expect(transloco.translate('seo.title')).toBe('Champions FR');
+    expect(requested).toEqual(['i18n/fr.json', 'i18n/seo/fr.json']);
+    expect(transloco.translate('filter.page', { page: 2, count: 5 })).toBe('page 2 sur 5');
     expect(transloco.translate('seo.suffix', { version: '16.1' })).toBe('(patch 16.1)');
   });
 
   // The legacy lists took their singular for a count of exactly one, whatever the locale:
-  // French reads "0 résultats", and the `en` fallback of Japanese, which has no `one`
+  // French reads "0 résultats", and the `en` message of Japanese, which has no `one`
   // category, still reads "1 result".
   it.each([
-    [
-      'en',
-      ['0 results', '1 result', '2 results'],
-      ['Show 0 results', 'Show 1 result', 'Show 2 results'],
-    ],
-    [
-      'fr',
-      ['0 résultats', '1 résultat', '2 résultats'],
-      ['Voir 0 résultats', 'Voir 1 résultat', 'Voir 2 résultats'],
-    ],
-    [
-      'ja',
-      ['0 results', '1 result', '2 results'],
-      ['Show 0 results', 'Show 1 result', 'Show 2 results'],
-    ],
+    ['fr', ['0 résultats', '1 résultat', '2 résultats']],
+    ['ja', ['0 results', '1 result', '2 results']],
   ])(
-    'counts the list results in %s with the singular for one exactly',
-    async (locale, results, show) => {
-      await load(locale, SHIPPED);
+    'renders the compiled counts of %s with the singular for one exactly',
+    async (locale, results) => {
+      await load(locale);
       transloco.setActiveLang(locale);
 
-      expect(counts('results')).toEqual(results);
-      expect(counts('show_results')).toEqual(show);
+      expect(counts()).toEqual(results);
     },
   );
 

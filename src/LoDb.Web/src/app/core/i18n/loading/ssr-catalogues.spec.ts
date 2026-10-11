@@ -2,11 +2,14 @@ import { provideHttpClient } from '@angular/common/http';
 import {
   APP_ID,
   type ApplicationConfig,
+  type EnvironmentProviders,
   ChangeDetectionStrategy,
   Component,
   inject,
   mergeApplicationConfig,
   type Provider,
+  REQUEST,
+  REQUEST_CONTEXT,
   RESPONSE_INIT,
   type Type,
   ɵgetDocument as getDocument,
@@ -22,6 +25,9 @@ import { provideServerRendering, renderApplication } from '@angular/platform-ser
 import { provideRouter, RouterOutlet } from '@angular/router';
 import { type Translation, TranslocoPipe, provideTranslocoScope } from '@jsverse/transloco';
 import { firstValueFrom } from 'rxjs';
+import { ApiResponseMemo } from '../../http/api-response-memo';
+import { provideSsrHttp } from '../../http/provide-ssr-http';
+import type { SsrRequestContext } from '../../http/ssr-request-context';
 import { Shell } from '../../layout/shell/shell';
 import { CACHE_CONTROL } from '../../routing/response/cache-control';
 import { PageResponse } from '../../routing/response/page-response';
@@ -30,12 +36,21 @@ import { activateLocale } from '../activate-locale';
 import { provideI18n } from '../provide-i18n';
 import { TranslocoHttpLoader } from './transloco-http-loader';
 
+// The chrome's labels of other scopes, which the build lends to every root catalogue.
+const LENT_FR = {
+  about: {
+    index: { title: 'À propos' },
+    data: { title: 'Nos données' },
+    faq: { title: 'Foire aux questions' },
+  },
+  api: { nav: { developers: 'Développeurs' } },
+};
 // Served by the stubbed fetch, keyed by path: the render resolves the loader's relative URL.
+// Shaped as the build ships them: each locale completed with the `en` messages it lacks.
+// Italian has none, and fails to load (404).
 const CATALOGUES: Record<string, Translation> = {
   '/i18n/en.json': { base: { title: 'Hello', tagline: 'Only in English' } },
-  '/i18n/fr.json': { base: { title: 'Bonjour' } },
-  // Italian lacks the chrome's scopes, which then fail to load (404).
-  '/i18n/it.json': { base: { title: 'Ciao' } },
+  '/i18n/fr.json': { base: { title: 'Bonjour', tagline: 'Only in English' }, ...LENT_FR },
   '/i18n/about/en.json': {
     index: { title: 'About' },
     data: { title: 'Our data' },
@@ -51,6 +66,9 @@ const CATALOGUES: Record<string, Translation> = {
 };
 // Angular's default, which the render keeps and TestBed does not.
 const SERVER_APP_ID = 'ng';
+// A render with a public origin, as behind nginx: the page's own files share it.
+const PAGE_HOST = 'ssr.test';
+const PAGE_ORIGIN = `http://${PAGE_HOST}`;
 // A page that learns its locale late, like a shared build: the chrome's scope lands at once,
 // the route matches later, the root catalogue last.
 const MATCH_DELAY_MS = 20;
@@ -150,7 +168,7 @@ function browserConfig(): ApplicationConfig {
 // which requests the relative URL, would never find it.
 interface RenderOptions {
   readonly root?: Type<unknown>;
-  readonly providers?: Provider[];
+  readonly providers?: (Provider | EnvironmentProviders)[];
 }
 
 async function renderOnServer(url: string, options: RenderOptions = {}): Promise<string> {
@@ -162,7 +180,7 @@ async function renderOnServer(url: string, options: RenderOptions = {}): Promise
     const bootstrap = (context: BootstrapContext) =>
       bootstrapApplication(options.root ?? Root, serverConfig, context);
     return await keepingGlobals(() =>
-      renderApplication(bootstrap, { document: DOCUMENT_HTML, url }),
+      renderApplication(bootstrap, { document: DOCUMENT_HTML, url, allowedHosts: [PAGE_HOST] }),
     );
   } finally {
     // The browser app of the next test runs in this same process, unlike a real server.
@@ -172,6 +190,22 @@ async function renderOnServer(url: string, options: RenderOptions = {}): Promise
 
 function bodyOf(html: string): string {
   return /<body>([\s\S]*)<\/body>/.exec(html)?.[1] ?? '';
+}
+
+function fetchedPaths(fetch: ReturnType<typeof vi.fn>): string[] {
+  return fetch.mock.calls.map(([input]) => new URL(String(input), PAGE_ORIGIN).pathname);
+}
+
+// What src/server.ts hands a render: the build's files held in memory, the API's memo.
+function serverContext(): SsrRequestContext {
+  const files = new Map(
+    Object.entries(CATALOGUES).map(([path, catalogue]) => [path.slice(1), catalogue]),
+  );
+  return {
+    apiOrigin: 'http://api.test',
+    buildFiles: files,
+    apiResponses: new ApiResponseMemo(new Set(), 1, () => 0),
+  };
 }
 
 describe('i18n catalogues in SSR', () => {
@@ -193,24 +227,24 @@ describe('i18n catalogues in SSR', () => {
     vi.restoreAllMocks();
   });
 
-  it('renders the page already translated, with the en fallback for missing keys', async () => {
+  it('renders the page already translated, from the catalogue of its locale alone', async () => {
     const fetch = stubCatalogueFetch();
 
     const html = await renderOnServer('/fr/');
 
     expect(html).toContain('<html lang="fr">');
     expect(html).toMatch(/<h1>Bonjour<\/h1>\s*<p>Only in English<\/p>/);
-    const fetched = fetch.mock.calls.map(([input]) => new URL(String(input)).pathname);
-    expect(fetched.sort()).toEqual(['/i18n/en.json', '/i18n/fr.json']);
+    expect(fetchedPaths(fetch)).toEqual(['/i18n/fr.json']);
   });
 
-  it('renders the header and footer with the labels of their catalogue scopes', async () => {
-    stubCatalogueFetch();
+  it('renders the header and footer with the labels lent to the root catalogue', async () => {
+    const fetch = stubCatalogueFetch();
     // The stubbed root catalogues lack the chrome's own labels, which is not the point here.
     vi.spyOn(console, 'warn').mockImplementation(() => undefined);
 
     const body = bodyOf(await renderOnServer('/fr/chrome'));
 
+    expect(fetchedPaths(fetch)).toEqual(['/i18n/fr.json']);
     expect(body).toContain('Développeurs');
     expect(body).toContain('À propos');
     expect(body).toContain('Nos données');
@@ -276,5 +310,25 @@ describe('i18n catalogues in SSR', () => {
 
     expect(catalogue).toEqual(CATALOGUES['/i18n/fr.json']);
     expect(browserFetch).not.toHaveBeenCalled();
+  });
+
+  it('reads the catalogues from the files the server holds, and still embeds them', async () => {
+    const fetch = stubCatalogueFetch();
+
+    const body = bodyOf(
+      await renderOnServer(`${PAGE_ORIGIN}/fr/chrome`, {
+        providers: [
+          provideSsrHttp(),
+          { provide: REQUEST, useValue: new Request(`${PAGE_ORIGIN}/fr/chrome`) },
+          { provide: REQUEST_CONTEXT, useValue: serverContext() },
+        ],
+      }),
+    );
+
+    // The chrome still asks the API for its meta; nothing asks the page's own origin.
+    const fetchedOrigins = fetch.mock.calls.map(([input]) => new URL(String(input)).origin);
+    expect(fetchedOrigins).not.toContain(PAGE_ORIGIN);
+    expect(body).toContain('Développeurs');
+    expect(body).toMatch(/<script id="ng-state" type="application\/json">.*Foire aux questions/);
   });
 });
