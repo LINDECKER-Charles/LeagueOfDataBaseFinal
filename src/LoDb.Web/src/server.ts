@@ -14,7 +14,7 @@ import { AdmissionSummary } from './server/admission/admission-summary';
 import { clientKeyOf } from './server/admission/client-key-of';
 import { RenderAdmission } from './server/admission/render-admission';
 import { RenderCounts } from './server/admission/render-counts';
-import { publishFrontBuilds } from './server/assets/publish-front-builds';
+import { FrontBuildsPublication } from './server/assets/front-builds-publication';
 import { staticFolder } from './server/assets/static-folder';
 import { encodedDocument } from './server/compression/encoded-document';
 import { createLogger } from './server/create-logger';
@@ -141,10 +141,7 @@ if (listening) {
   new AdmissionSummary(renderCounts, logger).start();
   // In the background: this build's bundles are served from its own folder meanwhile.
   if (settings.frontBuildsFolder !== null) {
-    void publishFrontBuilds(browserDistFolder, settings.frontBuildsFolder, new Date()).then(
-      (published) => logger.info(published, 'ssr.builds.published'),
-      (error: unknown) => logger.error({ exception: error }, 'ssr.builds.failed'),
-    );
+    new FrontBuildsPublication(browserDistFolder, settings.frontBuildsFolder, logger).start();
   }
 }
 

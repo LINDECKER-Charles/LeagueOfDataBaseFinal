@@ -119,8 +119,9 @@ services:
       LODB_RENDER_API_TIMEOUT_SECONDS: ${LODB_RENDER_API_TIMEOUT_SECONDS:-}
       LODB_QUERY_MAX_PARAMS: ${LODB_QUERY_MAX_PARAMS:-}
       LODB_QUERY_MAX_PARAM_LENGTH: ${LODB_QUERY_MAX_PARAM_LENGTH:-}
-      # Each start publishes its hashed bundles there, and /build/ serves the previous builds'
-      # from there: a tab or a cached page that names one still loads it after a deploy.
+      # Its hashed bundles are published there at start, then dated again hourly; /build/
+      # serves the previous builds' from there: a tab or a cached page that names one still
+      # loads it after a deploy.
       LODB_FRONT_BUILDS_DIR: /srv/front-builds
       # gzip level of a rendered page, compressed once per render: empty keeps the default.
       LODB_HTML_GZIP_LEVEL: ${LODB_HTML_GZIP_LEVEL:-}

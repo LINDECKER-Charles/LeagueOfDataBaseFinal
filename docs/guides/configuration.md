@@ -175,7 +175,8 @@ qui les a rendues. Monter `LODB_ARCHIVE_EPOCH` (`1` → `2`…) dans `ENV_STAGIN
 quand le chrome (en-tête, pied, puce de release), la CSP ou le contrat `/api` changent de
 façon visible, et **après tout correctif de sécurité du front** ; le déploiement suivant
 recrée nginx sur des clés neuves, les anciennes s'éteignent en 7 jours. Pour un correctif
-de sécurité, retirer aussi le chunk vulnérable, du volume des bundles et du cache de nginx :
+de sécurité, retirer aussi le chunk vulnérable, du volume des bundles et du cache de nginx,
+une fois le build corrigé en service (le build vulnérable le republierait dans l'heure) :
 
 ```bash
 docker compose exec -T web-ssr rm -f /srv/front-builds/<chunk>.js
@@ -284,7 +285,7 @@ Volumes du projet (`lodb-staging_…`, `lodb-prod_…`) :
 | `pages-cache` | nouveau | Cache des pages de nginx. |
 | `archive-cache` | nouveau | Cache des pages des anciens patchs de nginx, clé sans révision : il survit aux déploiements (`LODB_ARCHIVE_EPOCH`). |
 | `assets-cache` | nouveau | Cache des bundles de `/build/` de nginx, clé = nom du fichier : un déploiement le trouve chaud. |
-| `front-builds` | nouveau | Bundles hachés des builds successifs : chaque démarrage de `web-ssr` y ajoute les siens, `/build/` y trouve ceux des builds précédents ; le job supprime ceux qu'aucun build n'a livrés depuis 30 jours. |
+| `front-builds` | nouveau | Bundles hachés des builds successifs : `web-ssr` y ajoute les siens au démarrage et rafraîchit leur date toutes les heures, `/build/` y trouve ceux des builds précédents ; le job supprime ceux qu'aucun build en service n'a livrés depuis 30 jours. |
 | `storage`, `app_state` | ancienne stack, **laissés intacts** | Non montés : ni réutilisés (`storage` appartient à `www-data`, l'API ne pourrait pas y écrire) ni supprimés (retour arrière, reprise des agrégats et de l'audit). Supprimés à la décommission, après export. |
 
 ## 6. Obtenir les valeurs

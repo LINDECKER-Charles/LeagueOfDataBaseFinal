@@ -146,8 +146,9 @@ chunks.
 - **Gardée à la 2ᵉ demande** (`proxy_cache_min_uses 2`) : un balayage de tous les patchs, qui
   ne repasse pas, n'évince ni les anciens patchs consultés ni le dernier patch, rangé à part.
 - **Bundles conservés** : chaque build publie ses bundles hachés dans le volume
-  `front-builds`, servi sous `/build/` après ceux de l'image ; le déploiement retire ceux
-  qu'aucun build n'a livrés depuis 30 jours, plus que la vie d'une page en cache. Un chunk
+  `front-builds` tant qu'il est en service (date rafraîchie toutes les heures), servi sous
+  `/build/` après ceux de l'image ; le déploiement retire ceux qu'aucun build n'a livrés
+  depuis 30 jours, plus que la vie d'une page en cache. Un chunk
   introuvable malgré tout recharge la page une fois. Node sert, nginx met en cache
   (ADR 0004 inchangée).
 - **HTML compressé une fois**, au rendu (gzip 6) : nginx demande gzip à l'amont, garde cette

@@ -205,13 +205,16 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   (`updating`) ; `page-cache.conf` **jamais** (elle primerait sur le
   `stale-while-revalidate` du dernier patch). Les regex de location contenant `{` sont entre
   guillemets, sinon nginx refuse sa configuration.
-- **Bundles des builds précédents** : chaque démarrage de `web-ssr` copie ses bundles hachés
-  dans le volume `front-builds` (`LODB_FRONT_BUILDS_DIR`) sans réécrire l'existant et
-  rafraîchit leur date ; `/build/` sert ceux de l'image, puis ceux du volume. Le job de
-  déploiement supprime ce qu'aucun build n'a livré depuis `LODB_FRONT_BUILDS_RETENTION_DAYS`
-  (30 j) : jamais sous la durée de vie d'une page en cache. Un chunk introuvable recharge
-  la page une fois (`ChunkReload`, drapeau en `sessionStorage`), puis affiche la 500 : un
-  rechargement en boucle se cherche là.
+- **Bundles des builds précédents** : `web-ssr` copie ses bundles hachés dans le volume
+  `front-builds` (`LODB_FRONT_BUILDS_DIR`) sans réécrire l'existant, au démarrage puis
+  **toutes les heures**, et rafraîchit leur date à chaque fois ; `/build/` sert ceux de
+  l'image, puis ceux du volume. Le job de déploiement supprime ce qu'aucun build en service
+  n'a livré depuis `LODB_FRONT_BUILDS_RETENTION_DAYS` (30 j) : jamais sous la durée de vie
+  d'une page en cache. La date d'un fichier est celle de la dernière heure où un build l'a
+  servi, pas celle du démarrage : sans le rafraîchissement horaire, un build resté en service
+  plus de 30 jours perdrait ses bundles au déploiement qui le remplace. Un chunk introuvable
+  recharge la page une fois (`ChunkReload`, drapeau en `sessionStorage`), puis affiche la
+  500 : un rechargement en boucle se cherche là.
 - SSR : `LODB_TRUST_PROXY_HEADERS` obligatoire derrière nginx, `LODB_ALLOWED_HOSTS` liste
   les hôtes acceptés ; `public/` ne contient ni `media/` ni script racine nommé comme un
   bundle (cache `immutable`).
