@@ -19,8 +19,14 @@ public sealed class NetworkGateTests : IAsyncDisposable
     private const string Metrics = "/metrics";
     private const string Localhost = "localhost";
 
+    // A visitor's address, as nginx forwards it.
+    private const string PublicClient = "203.0.113.9";
+
     // A container of a network shared with other projects, such as the scrape's.
     private static readonly IPAddress SharedNetworkPeer = IPAddress.Parse("172.20.0.3");
+
+    // nginx or the renderer, on the stack's own network.
+    private static readonly IPAddress StackPeer = IPAddress.Parse("10.231.1.7");
 
     private readonly ApiFactory _factory = new()
     {
@@ -71,6 +77,18 @@ public sealed class NetworkGateTests : IAsyncDisposable
             static request => request.Headers[ForwardedFor] = "10.231.1.7");
 
         Assert.Equal(StatusCodes.Status404NotFound, response.StatusCode);
+    }
+
+    // The gate judges the connection before the forwarded headers replace its address: judged
+    // after them, every visitor nginx forwards would be refused.
+    [Fact]
+    public async Task ProxiedVisitorFromTheStackReachesTheApi()
+    {
+        var response = await CallApiAsync(
+            StackPeer,
+            static request => request.Headers[ForwardedFor] = PublicClient);
+
+        Assert.Equal(StatusCodes.Status200OK, response.StatusCode);
     }
 
     [Fact]
