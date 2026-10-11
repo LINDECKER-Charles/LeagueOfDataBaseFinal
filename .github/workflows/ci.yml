@@ -181,6 +181,11 @@ jobs:
       - name: Test the deploy tools
         run: node --test tools/deploy/test/*.test.mjs
 
+      # The desktop release signs its update feed with these tools: release-desktop.yml runs
+      # them only when a release is cut, too late to learn they broke.
+      - name: Test the desktop update signing
+        run: node --test tools/desktop-update-signing/test/*.test.mjs
+
       - name: Actions pinned to a full commit SHA
         run: node tools/ci/check-pinned-actions.mjs
 
