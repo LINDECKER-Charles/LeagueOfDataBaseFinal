@@ -2,7 +2,10 @@ using System.Reflection;
 
 namespace LoDb.Desktop.Launch;
 
-/// <summary>What a build baked into the assembly: version, channel and Google client.</summary>
+/// <summary>
+/// What a build baked into the assembly: version, channel, Google client and, for the local
+/// update E2E only, the key its update feeds are signed with.
+/// </summary>
 internal sealed record DesktopBuild
 {
     /// <summary>Metadata key of the release channel, set by the project file.</summary>
@@ -10,6 +13,9 @@ internal sealed record DesktopBuild
 
     /// <summary>Metadata key of the "desktop app" Google client, set by the project file.</summary>
     public const string GoogleClientKey = "LoDbDesktopGoogleClientId";
+
+    /// <summary>Metadata key of the feed key of a local E2E build; empty in a release.</summary>
+    public const string FeedKeyMetadata = "LoDbDesktopFeedKey";
 
     private const char SourceRevisionSeparator = '+';
 
@@ -19,11 +25,15 @@ internal sealed record DesktopBuild
 
     public string? GoogleClientId { get; init; }
 
+    /// <summary>Null in a release, which trusts the keys compiled into the update code.</summary>
+    public string? FeedKey { get; init; }
+
     public static DesktopBuild Of(Assembly assembly) => new()
     {
         Version = ReadVersion(assembly),
         Channel = ReadMetadata(assembly, ChannelKey) ?? DesktopChannels.Stable,
         GoogleClientId = ReadMetadata(assembly, GoogleClientKey),
+        FeedKey = ReadMetadata(assembly, FeedKeyMetadata),
     };
 
     // The SDK appends "+{commit}" to the informational version; the front, the API and the

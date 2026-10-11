@@ -37,6 +37,7 @@ internal static class SmokeRun
             checks.CheckProxy(),
             await checks.CheckShellAsync(cancellationToken),
             checks.CheckUpdates(),
+            checks.CheckFeedKey(),
             await checks.ProbeApiAsync(launch.ShouldProbeApi, cancellationToken),
         ];
         foreach (var result in results)
