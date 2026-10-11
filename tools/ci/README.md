@@ -117,6 +117,29 @@ and change the version and the digest together in `_build.yml` (and above). For 
 the same digest on `ghcr.io/aquasecurity/trivy` and `aquasec/trivy`: both registries receive
 the same release.
 
+## Promotion to prod, by digest
+
+After a deploy of staging that passed its smoke tests, the `staging-validated` job of `ci.yml`
+points `:staging-validated` at the digests `_build.yml` produced. The push of `main` then runs
+`_promote.yml`:
+
+```sh
+IMAGE_PREFIX=ghcr.io/<owner>/lodb bash tools/ci/promote-images.sh   # TARGET_TAGS="prod latest"
+```
+
+From a full-history checkout of the promoted commit, `promote-images.sh` refuses unless:
+
+- for each image, `:staging` names the digest `:staging-validated` names (a build pushed
+  since, or a staging deploy that failed or still runs, stops it);
+- the three images carry one revision (their `org.opencontainers.image.revision` label);
+- that revision holds the code of the promoted commit on the paths `ci.yml` watches
+  (`stack-paths`, a test keeps both lists equal): otherwise prod would run code staging never
+  served. A difference outside them (documentation) does not count.
+
+It then tags `:prod` and `:latest` from the digests themselves (`tag-image.sh`). When it
+refuses, wait for staging to be green on the revision to promote, then merge `test` into
+`main` again.
+
 ## actionlint
 
 The `workflows` job downloads the actionlint release named in its `env`, and checks the

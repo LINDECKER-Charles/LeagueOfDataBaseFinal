@@ -1,18 +1,31 @@
 name: _promote
 
-# Reusable: promote already-validated images by retagging them on the registry
-# (source_tag -> target tags). Build once, promote the same artifact — no rebuild.
-# Single responsibility = "bless the staging images as prod".
+# Reusable: promote the images staging validated, by digest, to the production tags. Build once,
+# promote the same artifact: no rebuild. Single responsibility = "bless the staging images as
+# prod".
+#
+# tools/ci/promote-images.sh refuses unless, for each image, source_tag names the digest that
+# validated_tag names (ci.yml sets it once staging served the build and passed its smoke tests),
+# the three come from one revision, and that revision holds the code of the promoted commit on
+# every path the pipeline builds or deploys. A push of dev that lands between the merge into
+# main and this job, or a staging deploy that failed, stops the promotion instead of sending
+# prod something staging never served. The target tags are then created from the digests
+# themselves (tools/ci/tag-image.sh).
 on:
   workflow_call:
     inputs:
       source_tag:
-        description: Tag to promote from (the validated staging images).
+        description: Tag of the images staging serves.
         required: false
         type: string
         default: staging
+      validated_tag:
+        description: Tag of the digests staging validated (set by ci.yml after its smoke tests).
+        required: false
+        type: string
+        default: staging-validated
       target_tags:
-        description: Space-separated tags to create (all point at source_tag's digest).
+        description: Space-separated tags to create, all pointing at the validated digests.
         required: false
         type: string
         default: prod latest
@@ -24,9 +37,14 @@ permissions:
 jobs:
   promote:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - name: Compute image prefix (lowercase owner)
-        run: echo "IMG=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/lodb" >> "$GITHUB_ENV"
+      # The full history: the revision staging serves is compared with the promoted commit.
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
 
       - name: Login to GHCR
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
@@ -38,14 +56,12 @@ jobs:
       - name: Setup Buildx
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
-      - name: Retag ${{ inputs.source_tag }} → ${{ inputs.target_tags }} (no rebuild)
+      - name: Promote ${{ inputs.validated_tag }} → ${{ inputs.target_tags }} (no rebuild)
         env:
           SOURCE_TAG: ${{ inputs.source_tag }}
+          VALIDATED_TAG: ${{ inputs.validated_tag }}
           TARGET_TAGS: ${{ inputs.target_tags }}
         run: |
-          for svc in api web-ssr nginx; do
-            tags=""
-            for t in $TARGET_TAGS; do tags="$tags --tag ${IMG}/${svc}:${t}"; done
-            # shellcheck disable=SC2086 # one --tag flag per word
-            docker buildx imagetools create $tags "${IMG}/${svc}:${SOURCE_TAG}"
-          done
+          IMAGE_PREFIX="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/lodb" bash tools/ci/promote-images.sh \
+            | tee "$RUNNER_TEMP/promote.log"
+          { echo '```'; cat "$RUNNER_TEMP/promote.log"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"

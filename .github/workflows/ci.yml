@@ -9,9 +9,10 @@ name: CI/CD
 # live inside the per-host ENV_FILE. The deploy jobs run in the GitHub environments
 # `staging` and `production` (_deploy.yml).
 #
-# Two-stage promotion (build once, promote the same artifact):
-#   push dev  ─▶ checks ─▶ merge dev→test ─▶ _build (:sha + :staging) ─▶ _deploy STAGING
-#   push main ─▶ _promote (:staging → :prod) ─▶ _deploy PROD
+# Two-stage promotion (build once, promote the same artifact, by digest):
+#   push dev  ─▶ checks ─▶ merge dev→test ─▶ _build (:sha, scan, :staging) ─▶ _deploy STAGING
+#             ─▶ :staging-validated
+#   push main ─▶ _promote (:staging-validated → :prod) ─▶ _deploy PROD
 #
 # `test` never triggers this workflow. `main` is reached only by a manual test→main
 # merge — that human gate promotes to production (prod never rebuilds nor reruns checks).
@@ -319,6 +320,44 @@ jobs:
       ENV_FILE: ${{ secrets.ENV_STAGING }}
       DATA_PROTECTION_PFX: ${{ secrets.STAGING_DATA_PROTECTION_PFX }}
 
+  # Staging served these digests and passed its smoke tests: `:staging-validated` names them,
+  # the only images _promote.yml may promote. Runs of dev queue (concurrency above): nothing
+  # moves `:staging` between the deploy and this job.
+  staging-validated:
+    needs: [build, deploy-staging]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout the tools
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: tools/ci
+
+      - name: Setup Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Login to GHCR
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Tag the digests staging validated
+        env:
+          API_DIGEST: ${{ needs.build.outputs.api-digest }}
+          WEB_SSR_DIGEST: ${{ needs.build.outputs.web-ssr-digest }}
+          NGINX_DIGEST: ${{ needs.build.outputs.nginx-digest }}
+        run: |
+          prefix="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/lodb"
+          bash tools/ci/tag-image.sh "$prefix/api" "$API_DIGEST" staging-validated
+          bash tools/ci/tag-image.sh "$prefix/web-ssr" "$WEB_SSR_DIGEST" staging-validated
+          bash tools/ci/tag-image.sh "$prefix/nginx" "$NGINX_DIGEST" staging-validated
+
   # ──────────────────────────────── main path ────────────────────────────────
   promote:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -328,6 +367,7 @@ jobs:
     uses: ./.github/workflows/_promote.yml
     with:
       source_tag: staging
+      validated_tag: staging-validated
       target_tags: prod latest
 
   deploy-prod:
