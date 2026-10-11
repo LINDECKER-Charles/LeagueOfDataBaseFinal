@@ -68,6 +68,7 @@ Logs et requêtes LogsQL : [`observabilite.md`](observabilite.md) et [`logging.m
 |---|---|---|---|---|
 | `lodb_build_info` | jauge, toujours 1 | `revision`, `version` | oui | `LoDb.Api` |
 | `lodb_network_gate_refusals_total` | compteur | — | non | `LoDb.Api`, requêtes du port 8080 venues hors du réseau de la stack |
+| `lodb_csp_reports_total` | compteur | `directive` (nom de directive CSP connu, sinon `other`), `disposition` (`enforce`, `report` pour les Trusted Types en Report-Only, `unknown`) | non | `LoDb.Api`, violations de la CSP signalées par les navigateurs (`POST /api/csp-reports`) ; la ligne `web.csp.violated` les résume une fois par minute |
 | `lodb_db_unavailable_total` | compteur | — | non | `LoDb.Database` : serveur injoignable, délai de commande dépassé, session refusée (500 compté ; le pool plein donne un 503 non compté) |
 | `lodb_hashing_in_flight` | jauge | — | non : à la première requête qui sollicite les comptes | `LoDb.Security` |
 | `lodb_hashing_wait_seconds` | histogramme | — | non | `LoDb.Security`, attente d'un permis de hachage |

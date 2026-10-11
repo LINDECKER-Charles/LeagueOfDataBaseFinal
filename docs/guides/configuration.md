@@ -344,6 +344,7 @@ Pour en changer un sur un hôte, l'ajouter sous `services.api.environment` de
 | `LoDb:Egress` | `AllowedHosts` (`ddragon.leagueoflegends.com`, `raw.communitydragon.org`), `FetchConcurrency` (16), `AttemptTimeout` (15 s), `MaxRetryAttempts` (3), `RetryBaseDelay` (1 s), `MaxRedirects` (10), `MaxResponseBytes` (32 Mio) |
 | `LoDb:Ingestion` | `WatchPeriod` (10 min), `MaxAttempts` (5), `RetryDelay` (10 min), `LanguageConcurrency` (4), `RecordBatchSize` (64), `SyncConcurrency` (4), `QueueCapacity` (256), `CrawlerRequestsPerMinute` (30) |
 | `LoDb:Catalog` | `VersionsLifetime` (1 min) |
+| `LoDb:SecurityReports` | `MaxBodyBytes` (65536 : corps d'un envoi de rapports CSP, 413 au-delà, compté), `PerClientPerMinute` (30 envois par adresse et par minute, 429 au-delà), `PerMinute` (600 envois par minute, tous clients confondus, refusés avant d'être lus au-delà) |
 | `LoDb:Telemetry` | `TraceSampleRatio` (`0.05`, de `0` à `1` : part des traces enregistrées et exportées quand `OTEL_EXPORTER_OTLP_ENDPOINT` est posé, choisie par l'identifiant de trace, jamais par le drapeau `sampled` d'un `traceparent` reçu) |
 | `LoDb:PublicApi` | `KeyCacheLifetime` (1 min), `TrendsLifetime` (5 min), `MeteringInterval` (1 s) |
 

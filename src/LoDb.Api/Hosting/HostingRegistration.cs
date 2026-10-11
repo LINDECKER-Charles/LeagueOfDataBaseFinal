@@ -3,6 +3,7 @@ using LoDb.Api.Hosting.Health;
 using LoDb.Api.Hosting.Logging;
 using LoDb.Api.Hosting.OpenApi;
 using LoDb.Api.Hosting.Secrets;
+using LoDb.Api.Hosting.SecurityReports;
 using LoDb.Api.Hosting.Telemetry;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -42,6 +43,7 @@ internal static class HostingRegistration
             .AddLoDbForwardedHeaders()
             .AddLoDbCors()
             .AddLoDbRateLimiting(builder.Configuration)
+            .AddLoDbSecurityReports()
             .AddLoDbAuthorization(builder.Configuration)
             .AddProblemDetails()
             .AddLoDbErrorHandling()
@@ -72,6 +74,7 @@ internal static class HostingRegistration
     public static WebApplication MapLoDbHostingEndpoints(this WebApplication app)
     {
         app.MapLoDbHealthEndpoints();
+        app.MapLoDbSecurityReports();
         if (app.Environment.IsDevelopment())
         {
             app.MapOpenApi();
