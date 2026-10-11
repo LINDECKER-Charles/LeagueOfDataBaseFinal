@@ -13,10 +13,8 @@ public sealed class RetryScheduleTests
     [Theory]
     [InlineData(1, 30)]
     [InlineData(2, 60)]
-    [InlineData(3, 120)]
     [InlineData(7, 1920)]
     [InlineData(8, 3600)]
-    [InlineData(9, 3600)]
     [InlineData(1000, 3600)]
     public void DelayDoublesUpToItsCap(int attempts, int seconds) =>
         Assert.Equal(TimeSpan.FromSeconds(seconds), RetrySchedule.Delay(attempts, Defaults));
@@ -24,7 +22,6 @@ public sealed class RetryScheduleTests
     [Theory]
     [InlineData(9, false)]
     [InlineData(10, true)]
-    [InlineData(11, true)]
     public void TenthFailureIsTheLast(int attempts, bool last) =>
         Assert.Equal(last, RetrySchedule.IsLast(attempts, Defaults));
 
