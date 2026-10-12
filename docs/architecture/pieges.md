@@ -488,7 +488,9 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   emplacement `lodb-dev-e2`, jamais pendant un build Android. Derrière `| tee`, lire
   `$pipestatus[1]` (zsh) ou `${PIPESTATUS[0]}` (bash). Après elle, `lodb_rehearsal` ne doit
   plus exister dans le Postgres de l'ancienne stack.
-- **Parité** : `tools/parity/` collecte, `tests/LoDb.Parity` compare ; un écart nouveau
+- **Parité** : `tools/parity/` collecte, `tests/LoDb.Parity` compare ; ce projet est hors de
+  `LoDb.slnx` (ni la suite ni la CI ne le lancent), il se lance par
+  `dotnet test --project tests/LoDb.Parity/LoDb.Parity.csproj`. Un écart nouveau
   reçoit une règle argumentée de `ParityRules.cs`, jamais un filtre. Parité des builds et
   agrégats analytics : copies dans le Postgres de l'ancienne stack, jamais sa base `lodb`.
 - **Rapports générés** (`diff-seo.md`, `lighthouse.md`…) : écrits par leurs outils seuls ;
