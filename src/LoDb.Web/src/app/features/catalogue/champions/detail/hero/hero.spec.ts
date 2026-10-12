@@ -49,6 +49,7 @@ const EN = {
   champion: {
     detail: {
       partype: 'Resource: {{ partype }}',
+      splash_alt: '{{ name }} splash art',
       profile: { attack: 'Attack', defense: 'Defense', magic: 'Magic', difficulty: 'Difficulty' },
     },
   },
@@ -129,6 +130,9 @@ describe('lodb-champion-hero', () => {
     const { fixture, element } = await render();
     const splash = () => element.querySelector('section picture > img')?.getAttribute('src');
     expect(splash()).toBe('https://cdn.test/Annie_0.centered.jpg');
+    expect(element.querySelector('section picture > img')?.getAttribute('alt')).toBe(
+      'Annie splash art',
+    );
     expect(element.querySelector('section picture > source')).toBeNull();
 
     element.querySelector('section picture > img')?.dispatchEvent(new Event('error'));

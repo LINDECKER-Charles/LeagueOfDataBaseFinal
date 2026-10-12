@@ -129,6 +129,7 @@
       "abilities": "Schopnosti",
       "passive": "Pasivní schopnost",
       "skins": "Vzhledy",
+      "splash_alt": "Úvodní ilustrace: {{ name }}",
       "cooldown": "Doba obnovy",
       "cost": "Cena",
       "range": "Dosah",

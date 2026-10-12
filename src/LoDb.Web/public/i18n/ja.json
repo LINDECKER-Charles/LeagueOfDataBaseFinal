@@ -129,6 +129,7 @@
       "abilities": "スキル",
       "passive": "パッシブ",
       "skins": "スキン",
+      "splash_alt": "{{ name }}のスプラッシュアート",
       "cooldown": "クールダウン",
       "cost": "コスト",
       "range": "射程",

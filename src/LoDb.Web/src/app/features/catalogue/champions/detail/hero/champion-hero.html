@@ -7,7 +7,7 @@
       #splash
       class="hx-img absolute inset-0 size-full object-cover object-[50%_18%]"
       [src]="art()"
-      alt=""
+      [alt]="'champion.detail.splash_alt' | transloco: { name: profile().name }"
       [width]="artWidth"
       [height]="artHeight"
       loading="eager"
