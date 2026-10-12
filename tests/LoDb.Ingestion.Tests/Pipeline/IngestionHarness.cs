@@ -2,6 +2,7 @@ using LoDb.Infrastructure.Persistence.Ddragon;
 using LoDb.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LoDb.Ingestion.Tests.Pipeline;
 
@@ -55,10 +56,13 @@ internal sealed class IngestionHarness : IAsyncDisposable
         return new IngestionHarness(database, root, settings ?? new Dictionary<string, string?>());
     }
 
-    /// <summary>A new API instance over the same database, storage and clock.</summary>
-    public IngestionInstance StartInstance()
+    /// <summary>
+    /// A new API instance over the same database, storage and clock, with the services
+    /// <paramref name="configure"/> adds.
+    /// </summary>
+    public IngestionInstance StartInstance(Action<IServiceCollection>? configure = null)
     {
-        var instance = new IngestionInstance(configuration, Clock);
+        var instance = new IngestionInstance(configuration, Clock, configure);
         instances.Add(instance);
         return instance;
     }

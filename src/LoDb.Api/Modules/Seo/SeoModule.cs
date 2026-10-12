@@ -1,12 +1,15 @@
 using LoDb.Api.Modules.Seo.Files;
+using LoDb.Api.Modules.Seo.IndexNow;
 using LoDb.Api.Modules.Seo.Sitemaps;
+using LoDb.Ingestion.Pipeline.Versions;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 
 namespace LoDb.Api.Modules.Seo;
 
 /// <summary>
-/// SEO module: sitemaps, robots and llms files built from the catalog.
+/// SEO module: sitemaps, robots and llms files built from the catalog, and the IndexNow
+/// submission of the pages a promoted patch changed.
 /// </summary>
 /// <remarks>
 /// Program.cs calls both methods from the start, so the module's owner fills this file
@@ -29,7 +32,24 @@ internal static class SeoModule
         services.TryAddSingleton<CrawlerCatalog>();
         services.TryAddSingleton<SitemapPublisher>();
         services.TryAddSingleton<SeoFilesPublisher>();
+        AddIndexNow(services);
         return services;
+    }
+
+    // No redirect followed nor cookie kept: the submissions only go to the one endpoint.
+    private static void AddIndexNow(IServiceCollection services)
+    {
+        services.TryAddSingleton<IndexNowClient>();
+        services.TryAddEnumerable(ServiceDescriptor
+            .Singleton<IPromotionListener, IndexNowSubmitter>());
+        services.AddHttpClient(IndexNowClient.ClientName)
+            .ConfigureHttpClient(static client => client.Timeout = IndexNowClient.Timeout)
+            .ConfigurePrimaryHttpMessageHandler(static () => new SocketsHttpHandler
+            {
+                AllowAutoRedirect = false,
+                UseCookies = false,
+            })
+            .RemoveAllLoggers();
     }
 
     public static IEndpointRouteBuilder MapSeo(this IEndpointRouteBuilder endpoints)

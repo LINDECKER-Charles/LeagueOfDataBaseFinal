@@ -57,10 +57,20 @@ internal static class SitemapLocations
         CatalogSnapshot? catalog,
         DateTimeOffset? promotedAt)
     {
-        IEnumerable<string> entities = catalog is null ? [] : EntityPaths(catalog);
-        var changed = SitePages.PatchBound.Concat(entities)
-            .Select(path => new SitemapEntry(prefix + path, promotedAt));
+        var changed = PatchBound(prefix, catalog)
+            .Select(url => new SitemapEntry(url, promotedAt));
         return changed.Concat(SitePages.Editorial.Select(path => new SitemapEntry(prefix + path)));
+    }
+
+    /// <summary>
+    /// The short URLs below <paramref name="prefix"/> of the pages a patch changes: the
+    /// home, the four lists, the patch history, then every entity of
+    /// <paramref name="catalog"/>, when there is one.
+    /// </summary>
+    public static IEnumerable<string> PatchBound(string prefix, CatalogSnapshot? catalog)
+    {
+        IEnumerable<string> entities = catalog is null ? [] : EntityPaths(catalog);
+        return SitePages.PatchBound.Concat(entities).Select(path => prefix + path);
     }
 
     /// <summary>

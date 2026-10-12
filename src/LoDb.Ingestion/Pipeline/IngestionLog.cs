@@ -49,6 +49,12 @@ internal static partial class IngestionLog
         bool promoted);
 
     [LoggerMessage(
+        EventName = "ingest.listener.failed",
+        Level = LogLevel.Warning,
+        Message = "A listener of the promotion of {Version} failed; the version stays promoted.")]
+    public static partial void ListenerFailed(ILogger logger, string version, Exception exception);
+
+    [LoggerMessage(
         EventName = "ingest.version.incomplete",
         Level = LogLevel.Warning,
         Message = "Version {Version} left {Failed} images without a verdict; it will be retried.")]
