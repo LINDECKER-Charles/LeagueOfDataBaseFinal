@@ -1,23 +1,16 @@
-import type { APIRequestContext, BrowserContext, Page } from '@playwright/test';
+import type { BrowserContext, Page } from '@playwright/test';
+import { metaOf, olderVersion } from '../../support/catalog';
 import { hydrated } from '../../support/hydration';
 import { expect, test } from '../../support/test';
 
-interface Meta {
-  readonly latest: string | null;
-  readonly versions: readonly string[];
-}
-
+// Another patch or language is warmed behind the loader, which follows the real API ingesting
+// it, then visited through the router: the ingestion and the browser's navigation only meet on
+// the stack. The switcher's choices and the loader's states are Vitest's.
 const PREFERENCES_COOKIE = 'lod_prefs';
 // Every internal navigation sends its page-view beacon: telemetry, not a preference.
 const ANALYTICS_PATH = '/api/analytics/';
 // A cold patch: its datasets, then the images of a list, fetched from Data Dragon.
 const WARM_UP_TIMEOUT_MS = 60_000;
-
-async function olderVersion(request: APIRequestContext): Promise<string> {
-  const meta = (await (await request.get('/api/meta')).json()) as Meta;
-  expect(meta.latest, 'the stack must have ingested a version').not.toBeNull();
-  return meta.versions[meta.versions.indexOf(meta.latest ?? '') + 1] ?? '';
-}
 
 function switcher(page: Page) {
   return page.locator('lodb-context-switcher');
@@ -73,7 +66,7 @@ test.describe('context switcher', { tag: '@readonly' }, () => {
     // Three data sets warmed in one journey (the older patch, then fr, then en_GB): each may
     // be cold on a fresh stack.
     test.slow();
-    const older = await olderVersion(request);
+    const older = olderVersion(await metaOf(request));
     const posts: string[] = [];
     page.on('request', (sent) => {
       if (sent.method() === 'POST' && !new URL(sent.url()).pathname.startsWith(ANALYTICS_PATH)) {
