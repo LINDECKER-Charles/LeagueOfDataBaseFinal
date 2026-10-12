@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 using LoDb.Infrastructure.Outbox.Smtp;
 using MimeKit;
 
-namespace LoDb.Infrastructure.Tests.Outbox;
+namespace LoDb.Infrastructure.Tests.Outbox.Support;
 
 /// <summary>
 /// A relay that keeps what it is sent, and fails the next sends with the exceptions queued

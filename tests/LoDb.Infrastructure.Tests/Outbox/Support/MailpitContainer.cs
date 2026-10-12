@@ -3,7 +3,7 @@ using System.Text.Json;
 using DotNet.Testcontainers.Builders;
 using DotNet.Testcontainers.Containers;
 
-namespace LoDb.Infrastructure.Tests.Outbox;
+namespace LoDb.Infrastructure.Tests.Outbox.Support;
 
 /// <summary>
 /// The Mailpit of the development stack (<c>compose.override.yaml</c>), started for the

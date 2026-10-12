@@ -9,7 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Testing;
 using Microsoft.Extensions.Time.Testing;
 
-namespace LoDb.Infrastructure.Tests.Outbox;
+namespace LoDb.Infrastructure.Tests.Outbox.Support;
 
 /// <summary>
 /// The outbox zone as the API registers it, on the test's database, with a fixed clock, the
