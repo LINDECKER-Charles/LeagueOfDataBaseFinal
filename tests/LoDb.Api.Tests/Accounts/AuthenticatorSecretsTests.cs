@@ -2,7 +2,6 @@ using System.Net;
 using LoDb.Api.Modules.Accounts.Security.Authenticator;
 using LoDb.Api.Tests.Accounts.Support;
 using LoDb.Infrastructure.Persistence.Accounts;
-using LoDb.Testing;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,27 +13,30 @@ namespace LoDb.Api.Tests.Accounts;
 /// codes hashed and spent once, each code of the app accepted once, and the secrets an
 /// earlier version left in clear protected without locking anyone out.
 /// </summary>
-public sealed class AuthenticatorSecretsTests(PostgresContainerFixture postgres)
-    : IAsyncLifetime
+/// <remarks>
+/// The tests share a host, each with an account of its own; only one leaves its secrets in
+/// clear, so the upkeep finds that account alone to protect.
+/// </remarks>
+public sealed class AuthenticatorSecretsTests(SharedAccountsApp host)
+    : IClassFixture<SharedAccountsApp>
 {
     private const string ClearKey = "JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP";
     private const string ClearCodes = "BCDFG-HJKMN;PQRTV-WXY23;45678-9BCDF";
     private const string HashPrefix = "$argon2id$";
     private static readonly TimeSpan NextStep = TimeSpan.FromSeconds(30);
 
-    private AccountsApp? _app;
+    private readonly AccountSeed _account = host.Unique();
 
-    private AccountsApp App =>
-        _app ?? throw new InvalidOperationException("The host is not started yet.");
+    private AccountsApp App { get; } = host.App;
 
     private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
 
     [Fact]
     public async Task KeyAndRecoveryCodesAreNotStoredInClear()
     {
-        await App.SeedAsync(new AccountSeed());
+        await App.SeedAsync(_account);
 
-        var secrets = await App.EnableTwoFactorAsync(AccountSeed.Name);
+        var secrets = await App.EnableTwoFactorAsync(_account.Username);
 
         var key = await StoredAsync(IdentityTokenNames.AuthenticatorKey);
         var codes = await StoredAsync(IdentityTokenNames.RecoveryCodes);
@@ -54,8 +56,8 @@ public sealed class AuthenticatorSecretsTests(PostgresContainerFixture postgres)
     [Fact]
     public async Task ACodeOfTheAppIsAcceptedOnce()
     {
-        await App.SeedAsync(new AccountSeed());
-        var secrets = await App.EnableTwoFactorAsync(AccountSeed.Name);
+        await App.SeedAsync(_account);
+        var secrets = await App.EnableTwoFactorAsync(_account.Username);
         var code = Code(secrets.Key);
         using var first = App.Browser();
         using var second = App.Browser();
@@ -78,8 +80,8 @@ public sealed class AuthenticatorSecretsTests(PostgresContainerFixture postgres)
     [Fact]
     public async Task OfTwoChecksOfOneCodeReadAtOnceOnlyOneSucceeds()
     {
-        await App.SeedAsync(new AccountSeed());
-        var secrets = await App.EnableTwoFactorAsync(AccountSeed.Name);
+        await App.SeedAsync(_account);
+        var secrets = await App.EnableTwoFactorAsync(_account.Username);
         await using var earlier = App.Services.CreateAsyncScope();
         Assert.True(await VerifyAsync(await ReadAsync(earlier), Code(secrets.Key)));
         await using var first = App.Services.CreateAsyncScope();
@@ -96,8 +98,8 @@ public sealed class AuthenticatorSecretsTests(PostgresContainerFixture postgres)
     [Fact]
     public async Task ARecoveryCodeLeavesTheOthersHashed()
     {
-        await App.SeedAsync(new AccountSeed());
-        var secrets = await App.EnableTwoFactorAsync(AccountSeed.Name);
+        await App.SeedAsync(_account);
+        var secrets = await App.EnableTwoFactorAsync(_account.Username);
         using var browser = App.Browser();
 
         using var signIn = await SignInAsync(browser, recoveryCode: secrets.RecoveryCodes[3]);
@@ -111,7 +113,7 @@ public sealed class AuthenticatorSecretsTests(PostgresContainerFixture postgres)
     [Fact]
     public async Task SecretsLeftInClearAreProtectedOnceAndStillSignIn()
     {
-        var account = await App.SeedAsync(new AccountSeed());
+        var account = await App.SeedAsync(_account);
         await StoreInClearAsync(account.Id);
         using var before = App.Browser();
         using var beforeProtection = await SignInAsync(before, twoFactorCode: Code(ClearKey));
@@ -134,34 +136,23 @@ public sealed class AuthenticatorSecretsTests(PostgresContainerFixture postgres)
         await SignsInAfterwardsAsync();
     }
 
-    public async ValueTask InitializeAsync() =>
-        _app = await AccountsApp.StartAsync(postgres, withGoogle: false);
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_app is not null)
-        {
-            await _app.DisposeAsync();
-        }
-    }
-
-    private static Task<HttpResponseMessage> SignInAsync(
+    private Task<HttpResponseMessage> SignInAsync(
         BrowserClient browser,
         string? twoFactorCode = null,
         string? recoveryCode = null) =>
         browser.PostAsync("/api/account/login", new
         {
-            identifier = AccountSeed.Name,
+            identifier = _account.Username,
             password = AccountSeed.StrongPassword,
             twoFactorCode,
             recoveryCode,
         });
 
     // The account as a request reads it, the step of its last code included.
-    private static async Task<AccountCheck> ReadAsync(AsyncServiceScope scope)
+    private async Task<AccountCheck> ReadAsync(AsyncServiceScope scope)
     {
         var users = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
-        var account = await users.FindByNameAsync(AccountSeed.Name);
+        var account = await users.FindByNameAsync(_account.Username);
         await users.GetAuthenticationTokenAsync(
             account!,
             IdentityTokenNames.LoDbProvider,
@@ -207,11 +198,13 @@ public sealed class AuthenticatorSecretsTests(PostgresContainerFixture postgres)
             Cancellation);
     }
 
+    // The row of this test's account: the other accounts of the host hold their own.
     private async Task<string> StoredAsync(string name)
     {
         var rows = await App.QueryAsync(
-            "SELECT value FROM identity_user_tokens"
-            + $" WHERE login_provider = '[AspNetUserStore]' AND name = '{name}'");
+            "SELECT t.value FROM identity_user_tokens t JOIN users u ON u.id = t.user_id"
+            + $" WHERE u.username = '{_account.Username}'"
+            + $" AND t.login_provider = '[AspNetUserStore]' AND t.name = '{name}'");
         return Assert.Single(rows);
     }
 

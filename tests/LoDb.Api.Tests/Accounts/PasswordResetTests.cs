@@ -3,60 +3,54 @@ using System.Net;
 using LoDb.Api.Tests.Accounts.Support;
 using LoDb.Infrastructure.Audit;
 using LoDb.Infrastructure.Outbox;
-using LoDb.Testing;
 
 namespace LoDb.Api.Tests.Accounts;
 
 /// <summary>
-/// The forgotten password: the same answer whether an account uses the e-mail or not, one
-/// e-mail an hour per account and five requests an hour per address, a link its page checks
-/// without using it, and that sets the new password once, unlocks the account and closes its
-/// sessions.
+/// The forgotten password: the same answer whether an account uses the e-mail or not, a link
+/// its page checks without using it, and that sets the new password once and unlocks the
+/// account. Its limits and the sessions it closes are
+/// <see cref="OwnHost.PasswordResetLimitTests"/>'.
 /// </summary>
-public sealed class PasswordResetTests(PostgresContainerFixture postgres)
-    : IAsyncLifetime
+/// <remarks>
+/// The tests share a host: each asks from an address and for accounts of its own.
+/// </remarks>
+public sealed class PasswordResetTests(SharedAccountsApp host)
+    : IClassFixture<SharedAccountsApp>
 {
     private const string ForgotPath = "/api/account/forgot-password";
     private const string ResetPath = "/api/account/reset-password";
     private const string CheckPath = "/api/account/reset-password/check";
     private const string NewPassword = "N0uvelle-phrase!";
     private const string WrongPassword = "Wr0ng-passphrase!";
-    private const int RequestsPerHour = 5;
+    private const string Unknown = "nobody@example.test";
     private const int FailuresToLock = 5;
-    private const int ChecksPerHour = 30;
 
-    // One request each from as many addresses, far more than the e-mails one hour allows.
-    private const int StrangersAtOnce = 20;
+    private readonly AccountSeed _account = host.Unique();
+    private readonly AccountSeed _other = host.Unique();
+    private readonly string _address = host.NextAddress();
 
-    private AccountsApp? _app;
-
-    private AccountsApp App =>
-        _app ?? throw new InvalidOperationException("The host is not started yet.");
+    private AccountsApp App { get; } = host.App;
 
     [Fact]
     public async Task AnswerIsTheSameWhetherAnAccountUsesTheEmailOrNot()
     {
-        await App.SeedAsync(new AccountSeed());
-        await App.SeedAsync(new AccountSeed
-        {
-            Username = "Banni_1",
-            Email = "banni@example.test",
-            Banned = true,
-        });
-        using var browser = App.Browser();
+        await App.SeedAsync(_account);
+        await App.SeedAsync(_other with { Banned = true });
+        using var browser = Browser();
 
-        using var known = await ForgotAsync(browser, " Legende@Example.TEST ");
-        using var unknown = await ForgotAsync(browser, "nobody@example.test");
-        using var banned = await ForgotAsync(browser, "banni@example.test");
+        using var known = await ForgotAsync(browser, $" {_account.Email.ToUpperInvariant()} ");
+        using var unknown = await ForgotAsync(browser, Unknown);
+        using var banned = await ForgotAsync(browser, _other.Email);
         using var malformed = await ForgotAsync(browser, "legende");
 
         Assert.Equal(
             [HttpStatusCode.Accepted, HttpStatusCode.Accepted, HttpStatusCode.Accepted],
             [known.StatusCode, unknown.StatusCode, banned.StatusCode]);
-        var mail = Assert.Single(App.Outbox.Messages);
-        Assert.Equal(
-            (AccountSeed.Address, EmailTemplate.ResetPassword),
-            (mail.Recipient, mail.Template));
+        var mail = Assert.Single(App.Outbox.To(_account.Email));
+        Assert.Equal(EmailTemplate.ResetPassword, mail.Template);
+        Assert.Empty(App.Outbox.To(_other.Email));
+        Assert.Empty(App.Outbox.To(Unknown));
         var link = EmailLink.Of(mail);
         Assert.Equal(new Uri("https://localhost/en/account/reset-password"), link.Page);
         Assert.Equal(
@@ -67,59 +61,18 @@ public sealed class PasswordResetTests(PostgresContainerFixture postgres)
     }
 
     [Fact]
-    public async Task AccountGetsOneEmailAnHour()
-    {
-        await App.SeedAsync(new AccountSeed());
-        using var browser = App.Browser();
-
-        using var first = await ForgotAsync(browser, AccountSeed.Address);
-        App.Clock.Advance(TimeSpan.FromMinutes(59));
-        using var tooSoon = await ForgotAsync(browser, AccountSeed.Address);
-        var sentWithinTheHour = App.Outbox.Messages.Count;
-        App.Clock.Advance(TimeSpan.FromMinutes(1));
-        using var anHourLater = await ForgotAsync(browser, AccountSeed.Address);
-
-        Assert.Equal(HttpStatusCode.Accepted, tooSoon.StatusCode);
-        Assert.Equal(1, sentWithinTheHour);
-        Assert.Equal(2, App.Outbox.Sent(EmailTemplate.ResetPassword).Count);
-    }
-
-    [Fact]
-    public async Task RequestsSentTogetherStillGetTheAccountOneEmailAnHour()
-    {
-        await App.SeedAsync(new AccountSeed());
-        using var browser = App.Browser();
-        using var first = await ForgotAsync(browser, AccountSeed.Address);
-        App.Clock.Advance(TimeSpan.FromHours(1));
-        var strangers = Enumerable.Range(1, StrangersAtOnce)
-            .Select(index => App.Browser().From($"198.51.100.{index}"))
-            .ToList();
-
-        var together = await Task.WhenAll(
-            strangers.Select(static stranger => ForgotAsync(stranger, AccountSeed.Address)));
-        var statuses = together.Select(static response => response.StatusCode).ToList();
-        foreach (var disposable in together.Concat<IDisposable>(strangers))
-        {
-            disposable.Dispose();
-        }
-
-        Assert.All(statuses, static status => Assert.Equal(HttpStatusCode.Accepted, status));
-        Assert.Equal(2, App.Outbox.Sent(EmailTemplate.ResetPassword).Count);
-    }
-
-    [Fact]
     public async Task LinkSetsTheNewPasswordOnceAndUnlocksTheAccount()
     {
-        var account = await App.SeedAsync(new AccountSeed());
-        using var browser = App.Browser();
+        var account = await App.SeedAsync(_account);
+        using var browser = Browser();
         await LockAsync();
-        using var forgot = await ForgotAsync(browser, AccountSeed.Address);
-        var link = App.Outbox.LastLink(EmailTemplate.ResetPassword);
+        using var forgot = await ForgotAsync(browser, _account.Email);
+        var link = App.Outbox.LastLink(_account.Email, EmailTemplate.ResetPassword);
 
         using var reset = await ResetAsync(browser, link, NewPassword);
         using var reused = await ResetAsync(browser, link, "Tr0isieme-phrase!");
-        using var oldPassword = await browser.SignInAsync(AccountSeed.Name);
-        using var newPassword = await browser.SignInAsync(AccountSeed.Name, NewPassword);
+        using var oldPassword = await browser.SignInAsync(_account.Username);
+        using var newPassword = await browser.SignInAsync(_account.Username, NewPassword);
 
         Assert.Equal(HttpStatusCode.NoContent, reset.StatusCode);
         Assert.Equal(
@@ -128,38 +81,19 @@ public sealed class PasswordResetTests(PostgresContainerFixture postgres)
         Assert.Equal(HttpStatusCode.Unauthorized, oldPassword.StatusCode);
         Assert.Equal(HttpStatusCode.OK, newPassword.StatusCode);
         var entry = Assert.Single(
-            await App.AuditAsync(),
+            await App.AuditOfAsync(_account.Username),
             static entry => entry.Action == AuditAction.UserPasswordReset);
-        Assert.Equal(AccountSeed.Name, entry.Target);
+        Assert.Equal(_account.Username, entry.Target);
         Assert.Equal(account.Id.ToString(CultureInfo.InvariantCulture), entry.TargetId);
-    }
-
-    [Fact]
-    public async Task ResetClosesTheOpenSessions()
-    {
-        await App.SeedAsync(new AccountSeed());
-        using var session = App.Browser();
-        using var signIn = await session.SignInAsync(AccountSeed.Name, rememberMe: true);
-        using var browser = App.Browser();
-        using var forgot = await ForgotAsync(browser, AccountSeed.Address);
-
-        using var reset = await ResetAsync(
-            browser,
-            App.Outbox.LastLink(EmailTemplate.ResetPassword),
-            NewPassword);
-        App.Clock.Advance(TimeSpan.FromMinutes(6));
-
-        Assert.Equal(HttpStatusCode.NoContent, reset.StatusCode);
-        Assert.Null(await session.SignedInAsAsync());
     }
 
     [Fact]
     public async Task WeakPasswordIsRefusedAndTheLinkStaysUsable()
     {
-        await App.SeedAsync(new AccountSeed());
-        using var browser = App.Browser();
-        using var forgot = await ForgotAsync(browser, AccountSeed.Address);
-        var link = App.Outbox.LastLink(EmailTemplate.ResetPassword);
+        await App.SeedAsync(_account);
+        using var browser = Browser();
+        using var forgot = await ForgotAsync(browser, _account.Email);
+        var link = App.Outbox.LastLink(_account.Email, EmailTemplate.ResetPassword);
 
         using var weak = await ResetAsync(browser, link, "password");
         using var damaged = await ResetAsync(browser, link with { Token = "bm9wZQ" }, NewPassword);
@@ -174,30 +108,12 @@ public sealed class PasswordResetTests(PostgresContainerFixture postgres)
     }
 
     [Fact]
-    public async Task OneAddressAsksFiveTimesAnHour()
-    {
-        using var browser = App.Browser();
-        var statuses = new List<HttpStatusCode>();
-
-        for (var attempt = 0; attempt <= RequestsPerHour; attempt++)
-        {
-            using var response = await ForgotAsync(browser, "nobody@example.test");
-            statuses.Add(response.StatusCode);
-        }
-
-        Assert.Equal(
-            [.. Enumerable.Repeat(HttpStatusCode.Accepted, RequestsPerHour),
-                HttpStatusCode.TooManyRequests],
-            statuses);
-    }
-
-    [Fact]
     public async Task CheckTellsAUsableLinkWithoutUsingIt()
     {
-        await App.SeedAsync(new AccountSeed());
-        using var browser = App.Browser();
-        using var forgot = await ForgotAsync(browser, AccountSeed.Address);
-        var link = App.Outbox.LastLink(EmailTemplate.ResetPassword);
+        await App.SeedAsync(_account);
+        using var browser = Browser();
+        using var forgot = await ForgotAsync(browser, _account.Email);
+        var link = App.Outbox.LastLink(_account.Email, EmailTemplate.ResetPassword);
 
         using var opened = await CheckAsync(browser, link);
         using var reopened = await CheckAsync(browser, link);
@@ -215,15 +131,11 @@ public sealed class PasswordResetTests(PostgresContainerFixture postgres)
     [Fact]
     public async Task CheckRefusesADamagedLinkOrOneOfAnotherAccount()
     {
-        var other = await App.SeedAsync(new AccountSeed
-        {
-            Username = "Autre_1",
-            Email = "autre@example.test",
-        });
-        await App.SeedAsync(new AccountSeed());
-        using var browser = App.Browser();
-        using var forgot = await ForgotAsync(browser, AccountSeed.Address);
-        var link = App.Outbox.LastLink(EmailTemplate.ResetPassword);
+        var other = await App.SeedAsync(_other);
+        await App.SeedAsync(_account);
+        using var browser = Browser();
+        using var forgot = await ForgotAsync(browser, _account.Email);
+        var link = App.Outbox.LastLink(_account.Email, EmailTemplate.ResetPassword);
 
         using var damaged = await CheckAsync(browser, link with { Token = "bm9wZQ" });
         using var empty = await CheckAsync(browser, link with { Token = "" });
@@ -234,37 +146,6 @@ public sealed class PasswordResetTests(PostgresContainerFixture postgres)
             Assert.Equal(
                 "invalid-token",
                 await ApiJson.ProblemCodeAsync(refused, HttpStatusCode.BadRequest));
-        }
-    }
-
-    [Fact]
-    public async Task CheckHasItsOwnHourlyLimitApartFromTheRequests()
-    {
-        using var browser = App.Browser();
-        var damaged = new EmailLink(AccountsApp.BaseAddress, UserId: 1, Token: "bm9wZQ");
-        var statuses = new List<HttpStatusCode>();
-
-        for (var attempt = 0; attempt <= ChecksPerHour; attempt++)
-        {
-            using var response = await CheckAsync(browser, damaged);
-            statuses.Add(response.StatusCode);
-        }
-
-        using var request = await ForgotAsync(browser, "nobody@example.test");
-        Assert.Equal(
-            [.. Enumerable.Repeat(HttpStatusCode.BadRequest, ChecksPerHour),
-                HttpStatusCode.TooManyRequests],
-            statuses);
-        Assert.Equal(HttpStatusCode.Accepted, request.StatusCode);
-    }
-
-    public async ValueTask InitializeAsync() => _app = await AccountsApp.StartAsync(postgres);
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_app is not null)
-        {
-            await _app.DisposeAsync();
         }
     }
 
@@ -280,17 +161,20 @@ public sealed class PasswordResetTests(PostgresContainerFixture postgres)
     private static Task<HttpResponseMessage> CheckAsync(BrowserClient browser, EmailLink link) =>
         browser.PostAsync(CheckPath, new { userId = link.UserId, token = link.Token });
 
+    // The requests and checks are limited by address: this test's own.
+    private BrowserClient Browser() => App.Browser().From(_address);
+
     // From as many addresses: one address alone runs out of attempts before the lockout.
     private async Task LockAsync()
     {
         for (var failure = 0; failure < FailuresToLock; failure++)
         {
             using var stranger = App.Browser().From($"198.51.100.{failure + 1}");
-            using var attempt = await stranger.SignInAsync(AccountSeed.Name, WrongPassword);
+            using var attempt = await stranger.SignInAsync(_account.Username, WrongPassword);
         }
 
         using var browser = App.Browser();
-        using var locked = await browser.SignInAsync(AccountSeed.Name);
+        using var locked = await browser.SignInAsync(_account.Username);
         Assert.Equal(
             "account-locked",
             await ApiJson.ProblemCodeAsync(locked, HttpStatusCode.TooManyRequests));

@@ -1,6 +1,5 @@
 using System.Net;
 using LoDb.Api.Tests.Accounts.Support;
-using LoDb.Testing;
 
 namespace LoDb.Api.Tests.Accounts;
 
@@ -8,26 +7,25 @@ namespace LoDb.Api.Tests.Accounts;
 /// The forgery guard of every unsafe <c>/api</c> call: a foreign <c>Origin</c> is refused,
 /// and a call carried by the session cookie needs the XSRF token of that session.
 /// </summary>
-public sealed class ForgeryTests(PostgresContainerFixture postgres)
-    : IAsyncLifetime
+/// <remarks>The tests share a host, each with an account of its own.</remarks>
+public sealed class ForgeryTests(SharedAccountsApp host) : IClassFixture<SharedAccountsApp>
 {
     private const string LogoutPath = "/api/account/logout";
     private const string LoginPath = "/api/account/login";
+    private const string ForeignOrigin = "https://evil.example";
 
-    private AccountsApp? _app;
+    private readonly AccountSeed _account = host.Unique();
 
-    private AccountsApp App =>
-        _app ?? throw new InvalidOperationException("The host is not started yet.");
+    private AccountsApp App { get; } = host.App;
 
-    [Theory]
-    [InlineData("https://evil.example")]
-    public async Task ForeignOriginIsRefusedBeforeAnything(string origin)
+    [Fact]
+    public async Task ForeignOriginIsRefusedBeforeAnything()
     {
-        await App.SeedAsync(new AccountSeed());
+        await App.SeedAsync(_account);
         using var browser = App.Browser();
         using var request = browser.Post(LoginPath, Credentials());
         request.Headers.Remove(BrowserClient.OriginHeader);
-        request.Headers.Add(BrowserClient.OriginHeader, origin);
+        request.Headers.Add(BrowserClient.OriginHeader, ForeignOrigin);
 
         using var response = await browser.SendAsync(request);
 
@@ -35,13 +33,13 @@ public sealed class ForgeryTests(PostgresContainerFixture postgres)
             "origin-mismatch",
             await ApiJson.ProblemCodeAsync(response, HttpStatusCode.Forbidden));
         Assert.Null(browser.Cookie(BrowserClient.SessionCookie));
-        Assert.Empty(await App.AuditAsync());
+        Assert.Empty(await App.AuditOfAsync(_account.Username));
     }
 
     [Fact]
     public async Task CallWithoutOriginIsNoBrowsersForgery()
     {
-        await App.SeedAsync(new AccountSeed());
+        await App.SeedAsync(_account);
         using var browser = App.Browser();
         using var request = browser.Post(LoginPath, Credentials());
         request.Headers.Remove(BrowserClient.OriginHeader);
@@ -54,9 +52,9 @@ public sealed class ForgeryTests(PostgresContainerFixture postgres)
     [Fact]
     public async Task SessionCallWithoutXsrfTokenIsRefused()
     {
-        await App.SeedAsync(new AccountSeed());
+        await App.SeedAsync(_account);
         using var browser = App.Browser();
-        using var signIn = await browser.SignInAsync(AccountSeed.Name);
+        using var signIn = await browser.SignInAsync(_account.Username);
         using var request = browser.Post(LogoutPath);
         request.Headers.Remove(BrowserClient.XsrfHeader);
 
@@ -65,17 +63,17 @@ public sealed class ForgeryTests(PostgresContainerFixture postgres)
         Assert.Equal(
             "xsrf-invalid",
             await ApiJson.ProblemCodeAsync(response, HttpStatusCode.Forbidden));
-        Assert.Equal(AccountSeed.Name, await browser.SignedInAsAsync());
+        Assert.Equal(_account.Username, await browser.SignedInAsAsync());
     }
 
     [Fact]
     public async Task XsrfTokenOfTheAnonymousPageNoLongerCountsOnceSignedIn()
     {
-        await App.SeedAsync(new AccountSeed());
+        await App.SeedAsync(_account);
         using var browser = App.Browser();
         using var page = await browser.GetAsync(BrowserClient.SessionPath);
         var anonymousToken = browser.Cookie(BrowserClient.XsrfCookie);
-        using var signIn = await browser.SignInAsync(AccountSeed.Name);
+        using var signIn = await browser.SignInAsync(_account.Username);
         using var request = browser.Post(LogoutPath);
         request.Headers.Remove(BrowserClient.XsrfHeader);
         request.Headers.Add(BrowserClient.XsrfHeader, anonymousToken);
@@ -90,29 +88,29 @@ public sealed class ForgeryTests(PostgresContainerFixture postgres)
     [Fact]
     public async Task SessionCallFromAForeignOriginIsRefusedEvenWithItsToken()
     {
-        await App.SeedAsync(new AccountSeed());
+        await App.SeedAsync(_account);
         using var browser = App.Browser();
-        using var signIn = await browser.SignInAsync(AccountSeed.Name);
+        using var signIn = await browser.SignInAsync(_account.Username);
         using var request = browser.Post(LogoutPath);
         request.Headers.Remove(BrowserClient.OriginHeader);
-        request.Headers.Add(BrowserClient.OriginHeader, "https://evil.example");
+        request.Headers.Add(BrowserClient.OriginHeader, ForeignOrigin);
 
         using var response = await browser.SendAsync(request);
 
         Assert.Equal(
             "origin-mismatch",
             await ApiJson.ProblemCodeAsync(response, HttpStatusCode.Forbidden));
-        Assert.Equal(AccountSeed.Name, await browser.SignedInAsAsync());
+        Assert.Equal(_account.Username, await browser.SignedInAsAsync());
     }
 
     [Fact]
     public async Task BearerHeaderThatAuthenticatesNothingExemptsNothing()
     {
-        await App.SeedAsync(new AccountSeed());
+        await App.SeedAsync(_account);
         using var browser = App.Browser();
         using var request = browser.Post(LoginPath, Credentials());
         request.Headers.Remove(BrowserClient.OriginHeader);
-        request.Headers.Add(BrowserClient.OriginHeader, "https://evil.example");
+        request.Headers.Add(BrowserClient.OriginHeader, ForeignOrigin);
         request.Headers.Authorization = new("Bearer", "forged");
 
         using var response = await browser.SendAsync(request);
@@ -130,23 +128,13 @@ public sealed class ForgeryTests(PostgresContainerFixture postgres)
         using var request = new HttpRequestMessage(
             HttpMethod.Get,
             new Uri(BrowserClient.SessionPath, UriKind.Relative));
-        request.Headers.Add(BrowserClient.OriginHeader, "https://evil.example");
+        request.Headers.Add(BrowserClient.OriginHeader, ForeignOrigin);
 
         using var response = await browser.SendAsync(request);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
-    public async ValueTask InitializeAsync() => _app = await AccountsApp.StartAsync(postgres);
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_app is not null)
-        {
-            await _app.DisposeAsync();
-        }
-    }
-
-    private static object Credentials() =>
-        new { identifier = AccountSeed.Name, password = AccountSeed.StrongPassword };
+    private object Credentials() =>
+        new { identifier = _account.Username, password = AccountSeed.StrongPassword };
 }

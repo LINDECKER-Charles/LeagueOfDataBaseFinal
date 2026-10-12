@@ -2,42 +2,39 @@ using System.Globalization;
 using System.Net;
 using System.Text;
 using LoDb.Api.Tests.Accounts.Support;
-using LoDb.Domain.Languages;
 using LoDb.Infrastructure.Audit;
 using LoDb.Infrastructure.Outbox;
-using LoDb.Testing;
 using Microsoft.AspNetCore.WebUtilities;
 
 namespace LoDb.Api.Tests.Accounts;
 
 /// <summary>
 /// The verification link: it verifies the account and answers <c>alreadyVerified</c> when
-/// used again within its hour; the signed-in account asks for it again five times in all,
-/// then once a day.
+/// used again within its hour; the signed-in account asks for it again five times in all.
+/// The pace beyond is <see cref="OwnHost.VerificationResendLimitTests"/>'.
 /// </summary>
-public sealed class EmailVerificationTests(PostgresContainerFixture postgres)
-    : IAsyncLifetime
+/// <remarks>The tests share a host, each with accounts of its own.</remarks>
+public sealed class EmailVerificationTests(SharedAccountsApp host)
+    : IClassFixture<SharedAccountsApp>
 {
     private const string VerifyPath = "/api/account/verify-email";
     private const string ResendPath = "/api/account/verify-email/resend";
     private const int FreeResends = 5;
     private const int ResendsAtOnce = 12;
-    private static readonly TimeSpan ResendInterval = TimeSpan.FromDays(1);
-    private static readonly TimeSpan Minute = TimeSpan.FromMinutes(1);
 
-    private AccountsApp? _app;
+    private readonly AccountSeed _account = host.Unique(new AccountSeed { EmailConfirmed = false });
+    private readonly AccountSeed _other = host.Unique(new AccountSeed { EmailConfirmed = false });
 
-    private AccountsApp App =>
-        _app ?? throw new InvalidOperationException("The host is not started yet.");
+    private AccountsApp App { get; } = host.App;
 
     [Fact]
     public async Task LinkVerifiesTheAccountThenSaysItIsAlreadyVerified()
     {
-        var account = await App.SeedAsync(new AccountSeed { EmailConfirmed = false });
+        var account = await App.SeedAsync(_account);
         using var browser = App.Browser();
-        using var signIn = await browser.SignInAsync(AccountSeed.Name);
+        using var signIn = await browser.SignInAsync(_account.Username);
         using var resend = await browser.PostAsync(ResendPath, new { locale = "de" });
-        var link = App.Outbox.LastLink(EmailTemplate.ConfirmEmail);
+        var link = App.Outbox.LastLink(_account.Email, EmailTemplate.ConfirmEmail);
         using var reader = App.Browser();
 
         using var first = await VerifyAsync(reader, link.UserId, link.Token);
@@ -48,9 +45,9 @@ public sealed class EmailVerificationTests(PostgresContainerFixture postgres)
         Assert.Equal(account.Id, link.UserId);
         Assert.False(await AlreadyVerifiedAsync(first));
         Assert.True(await AlreadyVerifiedAsync(second));
-        Assert.True((await App.FindAsync(AccountSeed.Name)).EmailConfirmed);
+        Assert.True((await App.FindAsync(_account.Username)).EmailConfirmed);
         var verified = Assert.Single(
-            await App.AuditAsync(),
+            await App.AuditOfAsync(_account.Username),
             static entry => entry.Action == AuditAction.UserEmailVerified);
         Assert.Equal(account.Id.ToString(CultureInfo.InvariantCulture), verified.TargetId);
     }
@@ -58,13 +55,8 @@ public sealed class EmailVerificationTests(PostgresContainerFixture postgres)
     [Fact]
     public async Task DamagedOrForeignLinkIsRefused()
     {
-        var account = await App.SeedAsync(new AccountSeed { EmailConfirmed = false });
-        var other = await App.SeedAsync(new AccountSeed
-        {
-            Username = "Autre_1",
-            Email = "autre@example.test",
-            EmailConfirmed = false,
-        });
+        var account = await App.SeedAsync(_account);
+        var other = await App.SeedAsync(_other);
         var token = await App.UsersAsync(users =>
             users.GenerateEmailConfirmationTokenAsync(account));
         var encoded = Base64UrlTextEncoder.Encode(Encoding.UTF8.GetBytes(token));
@@ -72,7 +64,7 @@ public sealed class EmailVerificationTests(PostgresContainerFixture postgres)
 
         using var foreign = await VerifyAsync(browser, other.Id, encoded);
         using var damaged = await VerifyAsync(browser, account.Id, "%%not-base64%%");
-        using var unknown = await VerifyAsync(browser, account.Id + 100, encoded);
+        using var unknown = await VerifyAsync(browser, other.Id + 100, encoded);
         using var right = await VerifyAsync(browser, account.Id, encoded);
 
         foreach (var refused in new[] { foreign, damaged, unknown })
@@ -83,51 +75,15 @@ public sealed class EmailVerificationTests(PostgresContainerFixture postgres)
         }
 
         Assert.False(await AlreadyVerifiedAsync(right));
-        Assert.False((await App.FindAsync("Autre_1")).EmailConfirmed);
-    }
-
-    [Fact]
-    public async Task ResendIsLimitedToFiveInAllThenOneADay()
-    {
-        await App.SeedAsync(new AccountSeed { EmailConfirmed = false });
-        using var browser = App.Browser();
-        using var signIn = await browser.SignInAsync(AccountSeed.Name, rememberMe: true);
-        var statuses = new List<HttpStatusCode>();
-        for (var attempt = 0; attempt < FreeResends; attempt++)
-        {
-            using var sent = await browser.PostAsync(ResendPath);
-            statuses.Add(sent.StatusCode);
-            App.Clock.Advance(Minute);
-        }
-
-        // The fifth went a minute ago: the sixth waits a day after it.
-        using var sixth = await browser.PostAsync(ResendPath);
-        App.Clock.Advance(ResendInterval - (2 * Minute));
-        using var early = await browser.PostAsync(ResendPath);
-        App.Clock.Advance(Minute);
-        using var nextDay = await browser.PostAsync(ResendPath);
-        using var sameDay = await browser.PostAsync(ResendPath);
-
-        Assert.All(statuses, static status => Assert.Equal(HttpStatusCode.Accepted, status));
-        Assert.Equal(
-            "resend-throttled",
-            await ApiJson.ProblemCodeAsync(sixth, HttpStatusCode.TooManyRequests));
-        Assert.Equal(ResendInterval - Minute, sixth.Headers.RetryAfter?.Delta);
-        Assert.Equal(Minute, early.Headers.RetryAfter?.Delta);
-        Assert.Equal(HttpStatusCode.Accepted, nextDay.StatusCode);
-        Assert.Equal(ResendInterval, sameDay.Headers.RetryAfter?.Delta);
-        Assert.Equal(FreeResends + 1, App.Outbox.Sent(EmailTemplate.ConfirmEmail).Count);
-        Assert.All(
-            App.Outbox.Messages,
-            static message => Assert.Equal(UiLocale.En, message.Locale));
+        Assert.False((await App.FindAsync(_other.Username)).EmailConfirmed);
     }
 
     [Fact]
     public async Task ResendsAskedTogetherAreCountedOneByOne()
     {
-        await App.SeedAsync(new AccountSeed { EmailConfirmed = false });
+        await App.SeedAsync(_account);
         using var browser = App.Browser();
-        using var signIn = await browser.SignInAsync(AccountSeed.Name);
+        using var signIn = await browser.SignInAsync(_account.Username);
         using var first = await browser.PostAsync(ResendPath);
 
         var together = await Task.WhenAll(
@@ -145,16 +101,16 @@ public sealed class EmailVerificationTests(PostgresContainerFixture postgres)
         Assert.Equal(
             ResendsAtOnce - (FreeResends - 1),
             statuses.Count(static status => status == HttpStatusCode.TooManyRequests));
-        Assert.Equal(FreeResends, App.Outbox.Sent(EmailTemplate.ConfirmEmail).Count);
+        Assert.Equal(FreeResends, App.Outbox.To(_account.Email).Count);
     }
 
     [Fact]
     public async Task ResendNeedsASignedInAccountStillToVerify()
     {
-        await App.SeedAsync(new AccountSeed());
+        await App.SeedAsync(_account with { EmailConfirmed = true });
         using var anonymous = App.Browser();
         using var verified = App.Browser();
-        using var signIn = await verified.SignInAsync(AccountSeed.Name);
+        using var signIn = await verified.SignInAsync(_account.Username);
 
         using var withoutSession = await anonymous.PostAsync(ResendPath);
         using var alreadyVerified = await verified.PostAsync(ResendPath);
@@ -165,33 +121,23 @@ public sealed class EmailVerificationTests(PostgresContainerFixture postgres)
         Assert.Equal(
             "email-already-verified",
             await ApiJson.ProblemCodeAsync(alreadyVerified, HttpStatusCode.Conflict));
-        Assert.Empty(App.Outbox.Messages);
+        Assert.Empty(App.Outbox.To(_account.Email));
     }
 
     [Fact]
     public async Task BannedAccountAsksInVainBeforeItsSessionIsRevalidated()
     {
-        await App.SeedAsync(new AccountSeed { EmailConfirmed = false });
+        await App.SeedAsync(_account);
         using var browser = App.Browser();
-        using var signIn = await browser.SignInAsync(AccountSeed.Name);
-        await App.BanAsync(AccountSeed.Name);
+        using var signIn = await browser.SignInAsync(_account.Username);
+        await App.BanAsync(_account.Username);
 
         using var resend = await browser.PostAsync(ResendPath);
 
         Assert.Equal(
             "authentication-required",
             await ApiJson.ProblemCodeAsync(resend, HttpStatusCode.Unauthorized));
-        Assert.Empty(App.Outbox.Messages);
-    }
-
-    public async ValueTask InitializeAsync() => _app = await AccountsApp.StartAsync(postgres);
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_app is not null)
-        {
-            await _app.DisposeAsync();
-        }
+        Assert.Empty(App.Outbox.To(_account.Email));
     }
 
     private static Task<HttpResponseMessage> VerifyAsync(
