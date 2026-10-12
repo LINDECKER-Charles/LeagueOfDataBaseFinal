@@ -27,13 +27,52 @@ public static class AdminCalls
     /// An administrator without a second factor yet, signed in with their password: the
     /// state <c>admin create</c> leaves them in.
     /// </summary>
-    public static async Task<BrowserClient> OpenUnenrolledAsync(AccountsApp app)
+    public static Task<BrowserClient> OpenUnenrolledAsync(AccountsApp app) =>
+        OpenUnenrolledAsync(
+            app,
+            new AccountSeed { Username = NewAdminName, Email = NewAdminEmail });
+
+    /// <summary>
+    /// <paramref name="admin"/>, an administrator without a second factor yet, signed in with
+    /// their password.
+    /// </summary>
+    public static async Task<BrowserClient> OpenUnenrolledAsync(AccountsApp app, AccountSeed admin)
     {
         ArgumentNullException.ThrowIfNull(app);
-        await app.SeedAsync(new AccountSeed { Username = NewAdminName, Email = NewAdminEmail });
-        await GrantAsync(app, NewAdminName);
+        ArgumentNullException.ThrowIfNull(admin);
+        await app.SeedAsync(admin);
+        await GrantAsync(app, admin.Username);
+        return await SignedInAsync(app, admin.Username);
+    }
+
+    /// <summary>
+    /// <paramref name="admin"/>, an administrator whose session was opened with a second
+    /// factor, as the <c>Admin</c> policy asks.
+    /// </summary>
+    public static async Task<BrowserClient> OpenEnrolledAsync(AccountsApp app, AccountSeed admin)
+    {
+        ArgumentNullException.ThrowIfNull(app);
+        ArgumentNullException.ThrowIfNull(admin);
+        await app.SeedAsync(admin);
+        await GrantAsync(app, admin.Username);
+        var secrets = await app.EnableTwoFactorAsync(admin.Username);
         var browser = app.Browser();
-        using var signIn = await browser.SignInAsync(NewAdminName);
+        using var signIn = await browser.PostAsync("/api/account/login", new
+        {
+            identifier = admin.Username,
+            password = AccountSeed.StrongPassword,
+            twoFactorCode = Totp.Code(secrets.Key, app.Clock),
+        });
+        Assert.Equal(HttpStatusCode.OK, signIn.StatusCode);
+        return browser;
+    }
+
+    /// <summary>A browser signed in with the password of a seeded account.</summary>
+    public static async Task<BrowserClient> SignedInAsync(AccountsApp app, string username)
+    {
+        ArgumentNullException.ThrowIfNull(app);
+        var browser = app.Browser();
+        using var signIn = await browser.SignInAsync(username);
         Assert.Equal(HttpStatusCode.OK, signIn.StatusCode);
         return browser;
     }
@@ -56,6 +95,7 @@ public static class AdminCalls
         return (await app.FindAsync(username)).Id;
     }
 
+    // The role row, created by the first administrator of the host, then the account in it.
     private static async Task GrantAsync(AccountsApp app, string username)
     {
         await using var scope = app.Services.CreateAsyncScope();

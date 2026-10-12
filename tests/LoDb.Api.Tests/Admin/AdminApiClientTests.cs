@@ -1,52 +1,32 @@
 using System.Net;
 using LoDb.Api.Tests.Accounts.Support;
 using LoDb.Api.Tests.Admin.Support;
-using LoDb.Api.Tests.Audit.Support;
 using LoDb.Infrastructure.Audit;
 using LoDb.Infrastructure.Persistence.PublicApi;
-using LoDb.Testing;
 using Microsoft.EntityFrameworkCore;
 
 namespace LoDb.Api.Tests.Admin;
 
 /// <summary>
 /// <c>/api/admin/api-clients</c>: the keys of the public API, revoked or credited, each change
-/// effective on <c>/v1</c> from the next request.
+/// effective on <c>/v1</c> from the next request. The list and its counters are
+/// <see cref="OwnHost.AdminListsTests"/>'.
 /// </summary>
-public sealed class AdminApiClientTests(PostgresContainerFixture postgres)
-    : AdminTestBase(postgres)
+/// <remarks>The tests share a host, each with an administrator and an owner of its own.</remarks>
+public sealed class AdminApiClientTests(SharedAccountsApp host)
+    : AdminTestBase(host), IClassFixture<SharedAccountsApp>
 {
     private const string ClientsPath = "/api/admin/api-clients";
     private const string UsagePath = "/v1/usage";
 
-    [Fact]
-    public async Task TheListShowsEachKeyWithItsOwnerAndTheFleetCounters()
-    {
-        using var admin = await AdminBrowser.OpenAsync(App);
-        var owner = await App.SeedAsync(new AccountSeed());
-        var (id, secret) = await AdminSeed.ApiKeyAsync(App, owner.Id);
-
-        var page = await ReadAsync(admin, ClientsPath);
-
-        var key = Assert.Single(page.GetProperty("items").EnumerateArray());
-        Assert.Equal(
-            (id, secret[..12], "free", true, AccountSeed.Name),
-            (key.GetProperty("id").GetInt32(), ApiJson.Text(key, "keyPrefix"),
-                ApiJson.Text(key, "plan"), key.GetProperty("isActive").GetBoolean(),
-                ApiJson.Text(key.GetProperty("owner"), "username")));
-        var kpis = page.GetProperty("kpis");
-        Assert.Equal(1, kpis.GetProperty("active").GetInt32());
-        var plan = Assert.Single(kpis.GetProperty("byPlan").EnumerateArray());
-        Assert.Equal(
-            ("free", 1),
-            (ApiJson.Text(plan, "plan"), plan.GetProperty("keys").GetInt32()));
-    }
+    private readonly AccountSeed _admin = host.Unique();
+    private readonly AccountSeed _owner = host.Unique();
 
     [Fact]
     public async Task ARevokedKeyIsRefusedByTheNextRequest()
     {
-        using var admin = await AdminBrowser.OpenAsync(App);
-        var owner = await App.SeedAsync(new AccountSeed());
+        using var admin = await AdminCalls.OpenEnrolledAsync(App, _admin);
+        var owner = await App.SeedAsync(_owner);
         var (id, secret) = await AdminSeed.ApiKeyAsync(App, owner.Id);
         using var client = KeyClient(secret);
         using var before = await UsageAsync(client);
@@ -72,8 +52,8 @@ public sealed class AdminApiClientTests(PostgresContainerFixture postgres)
     [Fact]
     public async Task ACreditAddsRequestsDatedByAGrant()
     {
-        using var admin = await AdminBrowser.OpenAsync(App);
-        var owner = await App.SeedAsync(new AccountSeed());
+        using var admin = await AdminCalls.OpenEnrolledAsync(App, _admin);
+        var owner = await App.SeedAsync(_owner);
         var (id, secret) = await AdminSeed.ApiKeyAsync(App, owner.Id);
         using var client = KeyClient(secret);
         using var before = await UsageAsync(client);
@@ -91,7 +71,8 @@ public sealed class AdminApiClientTests(PostgresContainerFixture postgres)
         Assert.Equal(["10"], before.Headers.GetValues("X-RateLimit-Limit"));
         Assert.Equal(["60"], after.Headers.GetValues("X-RateLimit-Limit"));
         var grant = await AdminSeed.WithContextAsync(App, context =>
-            context.ApiCreditGrants.AsNoTracking().SingleAsync(Cancellation));
+            context.ApiCreditGrants.AsNoTracking()
+                .SingleAsync(grant => grant.ApiKeyId == id, Cancellation));
         Assert.Equal(
             (id, ApiCreditGrantSource.Admin, 5000L, (string?)null),
             (grant.ApiKeyId, grant.Source, grant.Requests, grant.StripeSessionId));
@@ -104,21 +85,21 @@ public sealed class AdminApiClientTests(PostgresContainerFixture postgres)
     [InlineData(1_000_001)]
     public async Task ACreditOutOfBoundsIsRefused(long requests)
     {
-        using var admin = await AdminBrowser.OpenAsync(App);
-        var owner = await App.SeedAsync(new AccountSeed());
+        using var admin = await AdminCalls.OpenEnrolledAsync(App, _admin);
+        var owner = await App.SeedAsync(_owner);
         var (id, _) = await AdminSeed.ApiKeyAsync(App, owner.Id);
 
         using var credit = await admin.PostAsync($"{ClientsPath}/{id}/credit", new { requests });
 
         Assert.Equal(["out-of-range"], (await ApiJson.FieldErrorsAsync(credit))["requests"]);
         Assert.False(await AdminSeed.WithContextAsync(App, context =>
-            context.ApiCreditGrants.AnyAsync(Cancellation)));
+            context.ApiCreditGrants.AnyAsync(grant => grant.ApiKeyId == id, Cancellation)));
     }
 
     [Fact]
     public async Task AnUnknownKeyIsNotFound()
     {
-        using var admin = await AdminBrowser.OpenAsync(App);
+        using var admin = await AdminCalls.OpenEnrolledAsync(App, _admin);
 
         using var revoke = await admin.PostAsync($"{ClientsPath}/999999/revoke");
         using var credit = await admin.PostAsync(
