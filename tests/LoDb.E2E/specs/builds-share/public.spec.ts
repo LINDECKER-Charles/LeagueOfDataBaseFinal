@@ -3,6 +3,10 @@ import { readHead } from '../../support/head';
 import { expect, test } from '../../support/worker-account';
 import { createBuild, voteSaved } from './builds';
 
+// A shared build as the server renders it for anyone, then a reader's vote kept by the API
+// across a reload: the server's page, the session cookies and the vote's round trip only meet
+// on the stack. The page's rendering is Vitest's, the votes' rules the API's.
+
 // The build is written in French: its page speaks it, unless `?lang=` names another language,
 // the one the visitor picked in the switcher (as the legacy session did).
 const LANGUAGE = 'fr_FR';

@@ -1,6 +1,9 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from '../../support/test';
 
+// The home as the built images serve it: rendered by the SSR server from the real API, then
+// hydrated without an error. The one check that nginx, the SSR server, the API and the bundles
+// work together; the home's content is Vitest's.
 const RESOURCES = ['champions', 'items', 'runes', 'summoners'];
 
 // The four portals of the hero, in the order of the header's codex.

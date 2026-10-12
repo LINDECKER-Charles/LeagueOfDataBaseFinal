@@ -1,6 +1,9 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from '../../support/worker-account';
 
+// The editor saves to the real API, then the public card is rendered by the server for anyone
+// and hidden again behind nginx's cache: the round trip from the owner's browser to a
+// stranger's page only exists on the stack. The editor and the card are Vitest's.
 const CHAMPION = 'Ahri';
 
 // Each change of the editor is saved on its own, a moment after it is made. The path is

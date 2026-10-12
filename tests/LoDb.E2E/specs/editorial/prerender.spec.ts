@@ -5,7 +5,9 @@ import { expect, test } from '../../support/test';
 const LOCALE = 'ar';
 const PATH = 'legal/cookies';
 
-// What the server answers before any script runs: the file the build prerendered.
+// What the server answers before any script runs: the file the build prerendered. What a page
+// renders to is editorial-prerender.spec.ts's; that the built image hands that file out, in
+// its locale, is only seen on the stack.
 test.describe('prerendered editorial pages', { tag: '@readonly' }, () => {
   test.use({ javaScriptEnabled: false });
 

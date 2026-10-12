@@ -1,6 +1,10 @@
 import type { Locator } from '@playwright/test';
 import { expect, test } from '../../support/test';
 
+// A jump to a section needs a real layout: where it lands under the sticky header, where the
+// focus goes, and the scroll Back restores, none of which jsdom lays out. The table of
+// contents itself is Vitest's.
+
 // The scroll margin of a prose section (6.5rem), a pixel short for rounding.
 const SCROLL_MARGIN = 103;
 

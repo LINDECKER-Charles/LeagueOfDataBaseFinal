@@ -1,6 +1,9 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from '../../support/test';
 
+// The footer, hydrated once the page is idle, opens the dialog, whose message the real API
+// takes into its outbox: only the stack runs the way from the click to the toast. The form's
+// rules are Vitest's and the API's.
 const HOME = '/en';
 const CTA = 'Contact us';
 const TITLE = 'A question, a bug, a project?';
