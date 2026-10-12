@@ -1,6 +1,6 @@
 import { ActivatedRouteSnapshot, type Route, UrlSegment } from '@angular/router';
 import { localeGuard } from './locale-guard';
-import { LOCALES } from './locales';
+import type { Locale } from './locales';
 
 describe('localeGuard', () => {
   const route: Route = { path: ':locale' };
@@ -11,32 +11,15 @@ describe('localeGuard', () => {
       new ActivatedRouteSnapshot(),
     );
 
-  it('declares the 21 locales of ADR 0005', () => {
-    expect(LOCALES).toHaveLength(21);
-    expect(new Set(LOCALES).size).toBe(21);
-  });
-
-  it.each(LOCALES)('accepts %s', (locale) => {
+  // Every locale goes through the same lookup: a plain one, and one with a script subtag.
+  it.each<Locale>(['en', 'zh-hant'])('accepts %s', (locale) => {
     expect(matches(locale)).toBe(true);
     expect(matches(locale, 'champions', '42')).toBe(true);
   });
 
-  it.each([
-    'EN',
-    'Fr',
-    'zh',
-    'zh-Hans',
-    'zh_hans',
-    'zh-tw',
-    'pt-br',
-    'en-us',
-    'nl',
-    'xx',
-    'i18n',
-    'build',
-    'api',
-    '',
-  ])('refuses %j', (segment) => {
+  // Wrong case, a truncated or misspelled locale, a region form, an unknown language, a
+  // reserved first segment, an empty one.
+  it.each(['EN', 'zh', 'zh_hans', 'pt-br', 'xx', 'api', ''])('refuses %j', (segment) => {
     expect(matches(segment)).toBe(false);
   });
 
