@@ -224,6 +224,18 @@ public sealed class CatalogDetailTests(CatalogApiFixture api)
     }
 
     [Theory]
+    [InlineData("wukong")]
+    [InlineData("MONKEYKING")]
+    [InlineData("Wu-Kong")]
+    public async Task ChampionTypedLooselyAnswersItsCanonicalPath(string segment)
+    {
+        var champion = await api.GetJsonAsync($"{Latest}/champions/{segment}");
+
+        Assert.Equal("champions/MonkeyKing", champion.Text("canonicalPath"));
+        Assert.Equal("Wukong", champion.GetProperty("profile").Text("name"));
+    }
+
+    [Theory]
     [InlineData("champions/Nobody")]
     [InlineData("champions/Nobody/skins")]
     [InlineData("items/999999")]
