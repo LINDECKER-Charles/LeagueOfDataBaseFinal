@@ -1,64 +1,30 @@
-import type { Page } from '@playwright/test';
 import { expect, test } from '../../support/test';
 
-// Stripe's hosted page, never reached: the API's answers are doubles, so no session is opened.
-const STRIPE_PAGE = 'https://checkout.stripe.com/c/pay/cs_test_e2e';
-const OPTIONS = {
-  available: true,
-  currency: 'eur',
-  presets: [300, 500, 1000, 2500],
-  minCents: 100,
-  maxCents: 50000,
-};
-
-// A service worker would answer the calls before the page's routes see them.
-test.use({ serviceWorkers: 'block' });
-
-interface Checkout {
-  /** The bodies the page posted to open a checkout, in order. */
-  readonly sent: unknown[];
-}
-
-// The API opens the form and a session; Stripe's page is a stub the browser lands on.
-async function doubleStripe(page: Page): Promise<Checkout> {
-  const sent: unknown[] = [];
-  await page.route('**/api/donations/options', (route) => route.fulfill({ json: OPTIONS }));
-  await page.route('**/api/donations/checkout', async (route) => {
-    sent.push(route.request().postDataJSON());
-    await route.fulfill({ json: { url: STRIPE_PAGE } });
-  });
-  await page.route('https://checkout.stripe.com/**', (route) =>
-    route.fulfill({
-      contentType: 'text/html',
-      body: '<!doctype html><html lang="en"><title>Stripe Checkout</title><h1>Pay</h1></html>',
-    }),
-  );
-  return { sent };
-}
-
-// From the home page, through the header: the page and its options load in the browser.
-async function openDonatePage(page: Page): Promise<void> {
-  await page.goto('/en');
-  await page.getByRole('banner').getByRole('link', { name: 'Donate' }).click();
-  await expect(page).toHaveURL(/\/en\/donate$/);
-  await expect(
-    page.getByRole('heading', { level: 1, name: 'Support League Of Data Base' }),
-  ).toBeVisible();
+// The way in to a donation on the real stack: the header's link, then the form as the API's
+// options open or close it, read by the page's resolver. The form itself, its amounts and the
+// way to Stripe, are donate-page.spec.ts's, the checkout the API's.
+interface DonationOptions {
+  readonly available: boolean;
 }
 
 test(
-  'sends a donor to Stripe with the tier they chose',
+  'leads from the header to the donation page, as the API opens or closes it',
   { tag: '@readonly' },
-  async ({ page, consoleErrors }) => {
-    const checkout = await doubleStripe(page);
-    await openDonatePage(page);
-    await expect(page.getByRole('radio', { name: /Gemstone/ })).toBeChecked();
+  async ({ page, request, consoleErrors }) => {
+    const answer = await request.get('/api/donations/options');
+    const options = (await answer.json()) as DonationOptions;
+    await page.goto('/en');
 
-    await page.getByRole('radio', { name: /Crest/ }).check();
-    await page.getByRole('button', { name: 'Donate with Stripe' }).click();
+    await page.getByRole('banner').getByRole('link', { name: 'Donate' }).click();
 
-    await expect(page).toHaveURL(STRIPE_PAGE);
-    expect(checkout.sent).toEqual([{ amountCents: 1000, locale: 'en' }]);
+    await expect(page).toHaveURL(/\/en\/donate$/);
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Support League Of Data Base' }),
+    ).toBeVisible();
+    // Disabled while the API has no Stripe account, as on a local stack.
+    await expect(page.getByRole('button', { name: 'Donate with Stripe' })).toBeEnabled({
+      enabled: options.available,
+    });
     expect(consoleErrors).toEqual([]);
   },
 );

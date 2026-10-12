@@ -1,5 +1,8 @@
 import { expect, test } from '../../support/test';
 
+// The page is rendered from the reference the real API publishes, where Vitest feeds it a
+// double: the smoke of the feature on the stack. The prices, the routes and the page without
+// a reference are developers-page.spec.ts's.
 const PAGE = '/en/developers';
 
 test(
@@ -13,13 +16,9 @@ test(
       page.getByRole('heading', { level: 1, name: 'The LeagueOfDataBase API' }),
     ).toBeVisible();
 
-    await test.step('prices the free plan, the packs and the plans from the API', async () => {
+    await test.step('prices the plans from the API, the free one first', async () => {
       const offers = page.getByTestId('developers-pricing').locator('tbody tr');
       await expect(offers.first()).toHaveAttribute('data-offer', 'free');
-      await expect(offers.first()).toContainText('500 req/month');
-      await expect(page.locator('[data-offer="small"]')).toContainText('Pack S');
-      await expect(page.locator('[data-offer="annual"]')).toContainText('/year');
-      await expect(page.getByTestId('developers-usage')).toContainText('"monthly_quota": 500');
     });
   },
 );
