@@ -97,8 +97,10 @@ La nouvelle stack prend la place de l'ancienne dans le même projet Compose
 2. Contrôle ce `.env` (lignes marquées ⚙️ dans [`configuration.md`](configuration.md)) :
    `COMPOSE_PROJECT_NAME` = `lodb-<env>`, `IMAGE_TAG` = `<env>`, `LODB_NOINDEX` (`1` sur
    `staging`, `0` en `prod`), mot de passe de la base présent ; en `prod`, relais SMTP et
-   clés Stripe présents (leurs fichiers non vides). Exige les réseaux `edge` et
-   `observability` (jamais créés), et s'arrête si un autre réseau Docker recouvre le
+   clés Stripe présents (leurs fichiers non vides) ; le mot de passe du rôle des sauvegardes
+   hors hôte, s'il est posé, au format d'`infra-vps`. Exige les réseaux `edge` et
+   `observability`, plus `sauvegardes` en `prod` (jamais créés, [`sauvegardes.md`](sauvegardes.md)),
+   et s'arrête si un autre réseau Docker recouvre le
    sous-réseau de la stack, fixé par cible (`LODB_STACK_SUBNET`, `10.231.1.0/24` en staging,
    `10.231.2.0/24` en prod). Contrôles passés seulement, sépare `ENV_*` en place
    (`.deploy/secrets/`, `.env` en mode 600), supprime `.deploy/incoming.env` et le dossier

@@ -77,6 +77,7 @@ BEGIN
           'audience_entity_daily.entity',
           'audit_log.action', 'audit_log.actor_type', 'audit_log.outcome', 'audit_log.route',
           'audit_log.target_id', 'audit_log.target_type',
+          'backup_run.base', 'backup_run.detail', 'backup_run.step',
           'builds.champion_id', 'builds.game_mode', 'builds.game_version',
           'builds.language', 'builds.runes', 'builds.share_token', 'builds.steps',
           'client_policy.bundle_checksum', 'client_policy.bundle_id',

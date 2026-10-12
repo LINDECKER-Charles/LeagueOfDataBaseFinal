@@ -278,6 +278,15 @@ jobs:
                 secret_set "$key" || fail "$key is required in prod."
               done
             fi
+            # The password of the off-host backups' role, optional until they are activated:
+            # infra-vps holds the same value (SAUVEGARDE_LODB_MOT_DE_PASSE) and accepts these
+            # characters only. One set but malformed stops the deploy here, its value never
+            # printed.
+            backup_key=LoDb__Database__BackupRole__Password
+            if secret_set "$backup_key"; then
+              [[ "$(cat "$secrets_dir/$backup_key")" =~ ^[A-Za-z0-9_-]{16,}$ ]] \
+                || fail "$backup_key: 16 or more letters, digits, '-' or '_'."
+            fi
             # The edge's secret: generated on this host once the checks pass (below), then kept.
             # One left malformed stops the deploy here, its value never printed.
             edge_secret_file=.deploy/secrets/LODB_EDGE_SECRET
@@ -321,7 +330,8 @@ jobs:
             # the host (compose.staging.yaml) and, when its .env asks for it, a login on its
             # pages (compose.staging-auth.yaml). Prod alone declares the site to the shared
             # Umami (compose.umami.yaml): an `import` the edge receives empty would make it
-            # refuse every site of the host. Joined from a list: no empty element.
+            # refuse every site of the host. Prod alone has its database backed up off the host
+            # (compose.sauvegarde.yaml). Joined from a list: no empty element.
             compose_files=(compose.yaml compose.deploy.yaml)
             auth_user="$(env_value LODB_STAGING_BASIC_AUTH_USER)"
             auth_hash="$(env_value LODB_STAGING_BASIC_AUTH_HASH)"
@@ -335,7 +345,7 @@ jobs:
               fail "LODB_STAGING_BASIC_AUTH_* are for staging: remove them from the $TARGET .env."
             fi
             if [ "$TARGET" = prod ]; then
-              compose_files+=(compose.umami.yaml)
+              compose_files+=(compose.umami.yaml compose.sauvegarde.yaml)
             fi
             COMPOSE_FILE="$(IFS=:; echo "${compose_files[*]}")"
             export COMPOSE_FILE
@@ -347,6 +357,12 @@ jobs:
               || fail "Docker network 'edge' is missing — deploy infra-vps before this project."
             docker network inspect observability >/dev/null 2>&1 \
               || fail "Docker network 'observability' is missing — deploy infra-vps first."
+            # The off-host backups' network (compose.sauvegarde.yaml), which infra-vps creates
+            # even while its backups are dormant: prod only.
+            if [ "$TARGET" = prod ]; then
+              docker network inspect sauvegardes >/dev/null 2>&1 \
+                || fail "Docker network 'sauvegardes' is missing — deploy infra-vps first."
+            fi
             # nginx trusts X-Forwarded-For from this subnet only. Docker picks it when infra-vps
             # creates the network, so it is read here rather than copied into ENV_FILE, and
             # kept in the .env so manual `docker compose` runs from this folder resolve it too.

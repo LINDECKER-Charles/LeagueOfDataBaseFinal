@@ -22,10 +22,12 @@ that restarts mounts the secret files as they are then):
 | `.env` (mode 600) | every other line, as it came, then `LODB_SECRETS_REVISION` |
 
 `compose.deploy.yaml` mounts each file in `/run/secrets` of the services that read it: the API
-finds its settings there by name (key-per-file, `LoDb__Billing__StripeSecretKey`…), Postgres
-its password through `POSTGRES_PASSWORD_FILE`. No secret is then in a container's environment,
-which `docker inspect` shows. `LODB_SECRETS_REVISION` goes up by one when a file changes; it
-labels the API, which Compose then recreates: the API reads its files at start-up only.
+finds its settings there by name (key-per-file, `LoDb__Billing__StripeSecretKey`…), `migrate`
+the passwords it sets on the roles (`LoDb__Database__BackupRole__Password`, mounted in
+`migrate` alone), Postgres its password through `POSTGRES_PASSWORD_FILE`. No secret is then in
+a container's environment, which `docker inspect` shows. `LODB_SECRETS_REVISION` goes up by
+one when a file changes; it labels the API, which Compose then recreates: the API reads its
+files at start-up only.
 
 A value is read as Compose reads a dotenv: unquoted (leading blanks dropped, then an inline
 comment from a space followed by `#`), single-quoted (literal) or double-quoted. The script
@@ -48,7 +50,12 @@ before `up` recreates the API.
 node --test tools/deploy/test/*.test.mjs
 ```
 
-`compose-secrets.test.mjs` renders the overlay with `docker compose config`, and
-`split-env-compose.test.mjs` checks the script's values against Compose's own reading of the
-same dotenv (both skipped without Docker). On a local stack, `stack-check/check-secret-files.sh` proves that Postgres, migrate and
-the API read their secrets from files that win over the environment (header of the script).
+`compose-secrets.test.mjs` renders the overlay with `docker compose config`,
+`compose-sauvegarde.test.mjs` the overlays each target deploys (prod's Postgres alone joins
+the host's `sauvegardes` network), and `split-env-compose.test.mjs` checks the script's values
+against Compose's own reading of the same dotenv (all three skipped without Docker).
+`deploy-checks.test.mjs` runs the remote script of `_deploy.yml`, up to the pull, in a folder
+shaped like a host's, `git` and `docker` stubbed. The scripts need bash 4.4 or later
+(`inherit_errexit`): macOS's own bash 3.2 fails them. On a local stack,
+`stack-check/check-secret-files.sh` proves that Postgres, migrate and the API read their
+secrets from files that win over the environment (header of the script).

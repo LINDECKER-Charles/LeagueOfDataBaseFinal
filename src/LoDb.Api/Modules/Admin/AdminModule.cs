@@ -1,5 +1,6 @@
 using LoDb.Api.Hosting;
 using LoDb.Api.Modules.Admin.ApiClients;
+using LoDb.Api.Modules.Admin.Backups;
 using LoDb.Api.Modules.Admin.Builds;
 using LoDb.Api.Modules.Admin.Contacts;
 using LoDb.Api.Modules.Admin.Donations;
@@ -9,13 +10,14 @@ using LoDb.Api.Modules.Admin.Monitoring;
 using LoDb.Api.Modules.Admin.Storage;
 using LoDb.Api.Modules.Admin.Users;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 
 namespace LoDb.Api.Modules.Admin;
 
 /// <summary>
 /// Admin module: the second-factor enrollment of the administrators, the moderation of
-/// accounts, builds, contact messages and API keys, the donations, the monitoring and the
-/// storage report.
+/// accounts, builds, contact messages and API keys, the donations, the monitoring, the
+/// storage report and the journal of the off-host backups.
 /// </summary>
 /// <remarks>
 /// Program.cs calls both methods from the start, so the module's owner fills this file
@@ -46,6 +48,12 @@ internal static class AdminModule
         services.TryAddScoped<ApiClientDirectory>();
         services.TryAddScoped<ApiClientDesk>();
         services.TryAddScoped<DonationLedger>();
+        services.TryAddScoped<BackupJournal>();
+        services.AddOptions<BackupOptions>()
+            .Bind(configuration.GetSection(BackupOptions.SectionName))
+            .ValidateOnStart();
+        services.TryAddEnumerable(ServiceDescriptor
+            .Singleton<IValidateOptions<BackupOptions>, BackupOptionsValidator>());
         return services.AddAdminReports();
     }
 
@@ -76,6 +84,7 @@ internal static class AdminModule
         DonationListEndpoint.Map(Admin(endpoints, "/donations", AdminRoutes.DonationsTag));
         MonitoringEndpoint.Map(Admin(endpoints, string.Empty, AdminRoutes.MonitoringTag));
         StorageEndpoint.Map(Admin(endpoints, string.Empty, AdminRoutes.StorageTag));
+        BackupEndpoint.Map(Admin(endpoints, string.Empty, AdminRoutes.BackupsTag));
         return endpoints;
     }
 

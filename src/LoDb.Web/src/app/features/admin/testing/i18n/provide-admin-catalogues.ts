@@ -14,6 +14,10 @@ const CATALOGUES: Readonly<Record<string, Translation>> = {
     },
     storage: { unavailable: ['Stockage indisponible : ', ['arg', 'error']] },
     monitoring: { counters: { unavailable: 'Compteurs indisponibles.' } },
+    backups: {
+      databases: { lodb: 'LoDb (production)', umami: 'Umami (audience)' },
+      statuses: { ok: 'à jour', late: 'en retard', failed: 'en échec' },
+    },
     contacts: {
       handle: 'Marquer traité',
       reopen: 'Rouvrir',
@@ -36,6 +40,10 @@ const CATALOGUES: Readonly<Record<string, Translation>> = {
     },
     storage: { unavailable: ['Storage unavailable: ', ['arg', 'error']] },
     monitoring: { counters: { unavailable: 'Counters unavailable.' } },
+    backups: {
+      databases: { lodb: 'LoDb (production)', umami: 'Umami (audience)' },
+      statuses: { ok: 'up to date', late: 'late', failed: 'failed' },
+    },
     contacts: {
       handle: 'Mark handled',
       reopen: 'Reopen',

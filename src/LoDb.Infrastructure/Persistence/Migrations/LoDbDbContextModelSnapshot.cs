@@ -639,6 +639,79 @@ namespace LoDb.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("LoDb.Infrastructure.Persistence.Backups.BackupRun", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("BytesAdded")
+                        .HasColumnType("bigint")
+                        .HasColumnName("bytes_added");
+
+                    b.Property<long?>("BytesRead")
+                        .HasColumnType("bigint")
+                        .HasColumnName("bytes_read");
+
+                    b.Property<string>("Database")
+                        .HasMaxLength(63)
+                        .HasColumnType("character varying(63)")
+                        .HasColumnName("base");
+
+                    b.Property<string>("Detail")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("detail");
+
+                    b.Property<DateTimeOffset>("FinishedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("finished_at");
+
+                    b.Property<DateTimeOffset>("RecordedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("recorded_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<long?>("RepositoryBytes")
+                        .HasColumnType("bigint")
+                        .HasColumnName("repository_bytes");
+
+                    b.Property<DateTimeOffset>("StartedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("started_at");
+
+                    b.Property<string>("Step")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("step");
+
+                    b.Property<bool>("Succeeded")
+                        .HasColumnType("boolean")
+                        .HasColumnName("succeeded");
+
+                    b.HasKey("Id")
+                        .HasName("pk_backup_run");
+
+                    b.HasIndex("StartedAt")
+                        .HasDatabaseName("ix_backup_run_started_at");
+
+                    b.ToTable("backup_run", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_backup_run_base", "(base IS NOT NULL) = (step IN ('backup', 'restore')) AND (base IS NULL OR base ~ '^[a-z0-9]+$')");
+
+                            t.HasCheckConstraint("ck_backup_run_bytes", "bytes_read >= 0 AND bytes_added >= 0 AND repository_bytes >= 0");
+
+                            t.HasCheckConstraint("ck_backup_run_period", "finished_at >= started_at");
+
+                            t.HasCheckConstraint("ck_backup_run_step", "step IN ('backup', 'retention', 'restore', 'check')");
+                        });
+                });
+
             modelBuilder.Entity("LoDb.Infrastructure.Persistence.Billing.Donation", b =>
                 {
                     b.Property<int>("Id")
