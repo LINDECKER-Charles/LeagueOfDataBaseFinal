@@ -4,8 +4,6 @@ import { Component } from '@angular/core';
 import { DeferBlockState, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { provideTransloco } from '@jsverse/transloco';
-import { of } from 'rxjs';
 import type { ChampionCard } from '../../../../core/api/generated/models/champion-card';
 import type { ChampionDetails } from '../../../../core/api/generated/models/champion-details';
 import type { ChampionSkins } from '../../../../core/api/generated/models/champion-skins';
@@ -14,6 +12,7 @@ import type { PageContext } from '../../../../core/context/page-context';
 import type { CatalogueEntry } from '../../../../core/routing/catalogue/catalogue-entry';
 import { Seo } from '../../../../core/seo/seo';
 import type { SeoPage } from '../../../../core/seo/seo-page';
+import { provideTestTransloco } from '../../../../core/testing/provide-test-transloco';
 import { provideMeta } from '../../shared/testing/provide-meta';
 import { ChampionPage } from './champion-page';
 
@@ -101,17 +100,7 @@ async function visit(details: ChampionDetails, url = '/en/champions/Annie') {
         { path: 'en/champions/:id', resolve: { entry: () => entry }, component: ChampionPage },
         { path: '**', component: Blank },
       ]),
-      provideTransloco({
-        config: {
-          availableLangs: ['en'],
-          defaultLang: 'en',
-          missingHandler: { logMissingKey: false },
-          prodMode: true,
-        },
-        loader: class {
-          getTranslation = (path: string) => of(path === 'en' ? EN : {});
-        },
-      }),
+      provideTestTransloco({ byPath: { en: EN } }),
       { provide: Seo, useValue: { apply } },
     ],
   });

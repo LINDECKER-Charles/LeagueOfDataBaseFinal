@@ -3,11 +3,9 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import type { EnvironmentProviders, Provider } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { type Routes, provideRouter } from '@angular/router';
-import { provideTransloco } from '@jsverse/transloco';
-import { of } from 'rxjs';
 import { API_BASE_URL } from '../../../core/api/api-base-url';
-import { LOCALES } from '../../../core/i18n/locales';
 import { CANONICAL_ORIGIN } from '../../../core/seo/canonical-origin';
+import { provideTestTransloco } from '../../../core/testing/provide-test-transloco';
 import { ADMIN_API } from './admin-api';
 
 /**
@@ -25,17 +23,7 @@ export function configureAdminTestBed(
       provideHttpClient(),
       provideHttpClientTesting(),
       provideRouter(routes),
-      provideTransloco({
-        config: {
-          availableLangs: [...LOCALES],
-          defaultLang: 'en',
-          missingHandler: { logMissingKey: false },
-          prodMode: true,
-        },
-        loader: class {
-          getTranslation = () => of({});
-        },
-      }),
+      provideTestTransloco(),
       ...providers,
     ],
   });

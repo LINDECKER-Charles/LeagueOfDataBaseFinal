@@ -1,7 +1,6 @@
 import { type Provider } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { provideTransloco } from '@jsverse/transloco';
 import { of } from 'rxjs';
 import { PAYMENTS_ENABLED } from '../../../../environments/payments-enabled';
 import type { AccountUser } from '../../api/generated/models/account-user';
@@ -11,6 +10,7 @@ import { accountUser } from '../../auth/testing/account-user';
 import { FakeAuthStrategy } from '../../auth/testing/fake-auth-strategy';
 import { PLATFORM } from '../../platform/platform';
 import type { PlatformKind } from '../../platform/platform-kind';
+import { provideTestTransloco } from '../../testing/provide-test-transloco';
 import { Footer } from './footer';
 
 interface Setup {
@@ -36,12 +36,7 @@ async function footer({ payments = true, platform }: Setup = {}): Promise<HTMLEl
   TestBed.configureTestingModule({
     providers: [
       provideRouter([]),
-      provideTransloco({
-        config: { defaultLang: 'en', missingHandler: { logMissingKey: false }, prodMode: true },
-        loader: class {
-          getTranslation = () => of({});
-        },
-      }),
+      provideTestTransloco(),
       { provide: PAYMENTS_ENABLED, useValue: payments },
       platformProviders(platform),
     ],

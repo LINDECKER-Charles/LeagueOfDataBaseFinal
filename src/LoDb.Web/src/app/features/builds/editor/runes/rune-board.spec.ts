@@ -1,8 +1,7 @@
 import { signal } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideTransloco } from '@jsverse/transloco';
-import { of } from 'rxjs';
 import type { RuneTreeOption } from '../../../../core/api/generated/models/rune-tree-option';
+import { provideTestTransloco } from '../../../../core/testing/provide-test-transloco';
 import { EditorCatalogs } from '../catalog/editor-catalogs';
 import { EDITOR_ENTRY } from '../form/editor-entry-token';
 import { editorEntryOf } from '../testing/editor-entry-of';
@@ -52,17 +51,7 @@ function mount(): ComponentFixture<RuneBoard> {
         provide: EditorCatalogs,
         useValue: { runes: { options: signal(TREES), status: signal('ready'), retry: vi.fn() } },
       },
-      provideTransloco({
-        config: {
-          availableLangs: ['en'],
-          defaultLang: 'en',
-          missingHandler: { logMissingKey: false },
-          prodMode: true,
-        },
-        loader: class {
-          getTranslation = () => of(LABELS);
-        },
-      }),
+      provideTestTransloco({ otherwise: LABELS }),
     ],
   });
   return TestBed.createComponent(RuneBoard);

@@ -2,10 +2,9 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { PLATFORM_ID } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideTransloco } from '@jsverse/transloco';
-import { of } from 'rxjs';
 import { API_BASE_URL } from '../../../core/api/api-base-url';
 import { ToastService } from '../../../core/layout/toast/toast-service';
+import { provideTestTransloco } from '../../../core/testing/provide-test-transloco';
 import { ContactDialog } from '../contact-dialog/contact-dialog';
 
 const API = 'https://api.example.com';
@@ -21,16 +20,7 @@ async function openForm() {
       { provide: API_BASE_URL, useValue: API },
       provideHttpClient(),
       provideHttpClientTesting(),
-      provideTransloco({
-        config: {
-          availableLangs: ['fr'],
-          defaultLang: 'fr',
-          missingHandler: { logMissingKey: false },
-        },
-        loader: class {
-          getTranslation = () => of({});
-        },
-      }),
+      provideTestTransloco({ lang: 'fr' }),
     ],
   });
   const fixture = TestBed.createComponent(ContactDialog);

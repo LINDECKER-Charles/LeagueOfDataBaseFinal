@@ -1,9 +1,8 @@
 import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideTransloco } from '@jsverse/transloco';
-import { of } from 'rxjs';
 import type { ChampionCard } from '../../../../../core/api/generated/models/champion-card';
 import type { ChampionStat } from '../../../../../core/api/generated/models/champion-stat';
+import { provideTestTransloco } from '../../../../../core/testing/provide-test-transloco';
 import { formatStat } from './format-stat';
 import { growthFactor } from './growth-factor';
 import { StatBoard } from './stat-board';
@@ -159,14 +158,7 @@ class Host {
 describe('lodb-stat-board', () => {
   function render() {
     TestBed.configureTestingModule({
-      providers: [
-        provideTransloco({
-          config: { defaultLang: 'en', missingHandler: { logMissingKey: false }, prodMode: true },
-          loader: class {
-            getTranslation = () => of({});
-          },
-        }),
-      ],
+      providers: [provideTestTransloco()],
     });
     const fixture = TestBed.createComponent(Host);
     fixture.detectChanges();

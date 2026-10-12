@@ -1,8 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { provideTransloco } from '@jsverse/transloco';
-import { of } from 'rxjs';
 import type { ChampionCard as Card } from '../../../../core/api/generated/models/champion-card';
+import { provideTestTransloco } from '../../../../core/testing/provide-test-transloco';
 import { ChampionCard } from './champion-card';
 import { CHAMPION_CARD_ADAPTER } from './champion-card-adapter';
 import { championFacets } from './champion-facets';
@@ -142,17 +141,7 @@ describe('lodb-champion-card', () => {
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
-        provideTransloco({
-          config: {
-            availableLangs: ['en'],
-            defaultLang: 'en',
-            missingHandler: { logMissingKey: false },
-            prodMode: true,
-          },
-          loader: class {
-            getTranslation = () => of({ common: { detail: 'See details' } });
-          },
-        }),
+        provideTestTransloco({ otherwise: { common: { detail: 'See details' } } }),
       ],
     });
     const fixture = TestBed.createComponent(ChampionCard);

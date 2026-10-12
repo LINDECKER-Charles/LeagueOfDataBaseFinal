@@ -1,13 +1,8 @@
 import { Component, PLATFORM_ID, type Type, signal } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
-import {
-  type Translation,
-  TranslocoPipe,
-  provideTransloco,
-  provideTranslocoScope,
-} from '@jsverse/transloco';
-import { of } from 'rxjs';
+import { type Translation, TranslocoPipe, provideTranslocoScope } from '@jsverse/transloco';
+import { provideTestTransloco } from '../../../../core/testing/provide-test-transloco';
 import type { CardValues } from '../facets/model/card-values';
 import type { CatalogueListSource } from '../source/catalogue-list-source';
 import type { ListStatus } from '../source/list-status';
@@ -139,17 +134,7 @@ describe('lodb-catalogue-list', () => {
       providers: [
         provideRouter([{ path: '**', children: [] }]),
         { provide: PLATFORM_ID, useValue: 'browser' },
-        provideTransloco({
-          config: {
-            availableLangs: ['en'],
-            defaultLang: 'en',
-            missingHandler: { logMissingKey: false },
-            prodMode: true,
-          },
-          loader: class {
-            getTranslation = (path: string) => of(SCOPED[path] ?? {});
-          },
-        }),
+        provideTestTransloco({ byPath: SCOPED }),
       ],
     });
     await TestBed.inject(Router).navigateByUrl(url);
