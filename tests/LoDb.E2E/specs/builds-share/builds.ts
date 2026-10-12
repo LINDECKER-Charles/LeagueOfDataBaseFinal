@@ -1,5 +1,6 @@
 import { expect, type Page, type Response } from '@playwright/test';
 import { metaOf } from '../../support/catalog';
+import { unsafeHeaders } from '../../support/session';
 
 /** What the suite asks of a build it creates; the rest is taken from the pickers. */
 export interface BuildOptions {
@@ -30,8 +31,8 @@ interface RuneTree {
   readonly slots: readonly (readonly { readonly id: number }[])[];
 }
 
-/** The runes and items the suite builds with, read from the pickers of the latest patch. */
-export interface BuildParts {
+// The runes and items the suite builds with, read from the pickers of the latest patch.
+interface BuildParts {
   readonly champion: Option;
   readonly items: readonly Option[];
   readonly runes: {
@@ -48,17 +49,6 @@ const PICKER_LANGUAGE = 'en_US';
 // Two items with a price: the purchase order shows them, and its total is not nil.
 const ITEMS = 2;
 
-/**
- * The headers of an unsafe request of the page's session: the site's origin and the XSRF
- * token the sign-in issued as a cookie.
- */
-export async function unsafeHeaders(page: Page): Promise<Record<string, string>> {
-  const origin = new URL(page.url()).origin;
-  const cookies = await page.context().cookies(origin);
-  const xsrf = cookies.find((cookie) => cookie.name === 'XSRF-TOKEN')?.value ?? '';
-  return { Origin: origin, 'X-XSRF-TOKEN': xsrf };
-}
-
 // The first entry of a list the stack must not leave empty.
 function firstOf<T>(list: readonly T[] | undefined, what: string): T {
   const [first] = list ?? [];
@@ -74,12 +64,10 @@ async function pick<T>(page: Page, path: string): Promise<T> {
   return (await response.json()) as T;
 }
 
-/**
- * A valid page of runes and purchase order for `mode`: the first champion, the first perk of
- * each slot of the first tree, the first of the next two rows of the second tree, and the
- * first items with a price.
- */
-export async function buildParts(page: Page, mode: BuildOptions['gameMode']): Promise<BuildParts> {
+// A valid page of runes and purchase order for `mode`: the first champion, the first perk of
+// each slot of the first tree, the first of the next two rows of the second tree, and the
+// first items with a price.
+async function buildParts(page: Page, mode: BuildOptions['gameMode']): Promise<BuildParts> {
   const { latest } = await metaOf(page.request);
   const scope = `version=${latest}&lang=${PICKER_LANGUAGE}`;
   const champions = await pick<{ options: Option[] }>(page, `/api/pickers/champions?${scope}`);

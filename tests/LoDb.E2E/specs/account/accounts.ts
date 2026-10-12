@@ -1,18 +1,11 @@
 import { randomBytes } from 'node:crypto';
-import { type APIRequest, expect, type Page } from '@playwright/test';
-
-/** An account the suite creates, unique to its run. */
-export interface TestAccount {
-  readonly email: string;
-  readonly username: string;
-  readonly password: string;
-}
+import { expect, type Page } from '@playwright/test';
+import type { TestAccount } from '../../support/session';
 
 // Meets every rule of the checklist, and is on no list of common passwords.
 const PASSWORD = 'Hextech-Forge-2046!';
 // The random part (four hexadecimal digits) keeps two runs, or two workers, from sharing a name.
 const RANDOM_BYTES = 2;
-const UNAUTHORIZED = 401;
 
 /** A new account; `purpose` (a few letters) says which spec made it, in the database too. */
 export function newAccount(purpose: string): TestAccount {
@@ -59,38 +52,4 @@ export async function deleteAccount(page: Page, account: TestAccount): Promise<v
   await page.getByRole('button', { name: 'Delete my account' }).click();
   await expect(page).toHaveURL(/\/en\/?$/);
   await expect(page.getByText('Your account has been deleted. Farewell, summoner.')).toBeVisible();
-}
-
-/**
- * Deletes the account through the API, whatever page a failed journey was left on: the
- * clean-up of a spec that creates an account. An account already deleted is left alone.
- */
-export async function discardAccount(
-  api: APIRequest,
-  baseURL: string | undefined,
-  account: TestAccount,
-): Promise<void> {
-  // The API refuses an unsafe request without the site's origin, and a session without its
-  // XSRF token, which the sign-in issues as a cookie.
-  const origin = new URL(baseURL ?? '').origin;
-  const session = await api.newContext({ baseURL, extraHTTPHeaders: { Origin: origin } });
-  try {
-    const login = await session.post('/api/account/login', {
-      data: { identifier: account.email, password: account.password, rememberMe: false },
-    });
-    // Refused credentials: the journey got as far as deleting the account itself.
-    if (login.status() === UNAUTHORIZED) {
-      return;
-    }
-    expect(login.ok(), `the clean-up signs ${account.username} in`).toBe(true);
-    const { cookies } = await session.storageState();
-    const xsrf = cookies.find((cookie) => cookie.name === 'XSRF-TOKEN')?.value ?? '';
-    const deleted = await session.post('/api/profile/delete', {
-      data: { password: account.password },
-      headers: { 'X-XSRF-TOKEN': xsrf },
-    });
-    expect(deleted.status(), `the clean-up deletes ${account.username}`).toBe(204);
-  } finally {
-    await session.dispose();
-  }
 }

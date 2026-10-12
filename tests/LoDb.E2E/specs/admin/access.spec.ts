@@ -1,33 +1,13 @@
 import type { Browser, Page } from '@playwright/test';
 import { createMember, signInMember } from '../../support/member-account';
-import { discardAccount } from '../account/accounts';
+import { discardAccount } from '../../support/session';
 import { signInAdmin } from './admin-account';
 import { anonymous, expect, NO_SESSION, openPanel, test } from './admin-test';
 
-// Every panel of the navigation, in its order: analytics, then management.
-const PANELS = [
-  "Vue d'ensemble",
-  'Trafic',
-  'Audience',
-  'Stockage',
-  'Utilisateurs',
-  'Builds',
-  'Dons',
-  'Messages',
-  'Clients API',
-  'Surveillance',
-  'Journal',
-];
-// The sections of the overview, each drawn from the API.
-const OVERVIEW_SECTIONS = [
-  'Fréquentation',
-  'Par ressource',
-  'Pages les plus consultées',
-  'Sources de trafic',
-  "Familles d'objets",
-  'Déduplication',
-  'Santé',
-];
+// Who reaches the admin: the guards, the authenticator's code and the panels' reports, against
+// the real API and its cookies, in a browser. Only the stack enrols a real authenticator and
+// opens a session with a second factor; the navigation and each panel are Vitest's.
+
 // The CLI creates the member, then the sign-in: more than a test's default 30 seconds may pass.
 const MEMBER_TIMEOUT_MS = 90_000;
 
@@ -105,24 +85,15 @@ test('signs the administrator in with the code of the authenticator, then out', 
   await expect(page).toHaveURL(/\/admin\/login\?returnUrl=%2Fadmin$/);
 });
 
-test('lists every panel in its navigation and opens on the overview', async ({
-  page,
-  consoleErrors,
-}) => {
+test('opens on the overview, then moves to another panel', async ({ page, consoleErrors }) => {
   await openPanel(page, '/admin', "Vue d'ensemble");
 
   const nav = page.getByRole('navigation', { name: "Navigation de l'administration" });
-  await expect(nav.getByRole('link')).toHaveText(PANELS);
   await expect(nav.getByRole('link', { name: "Vue d'ensemble" })).toHaveAttribute(
     'aria-current',
     'page',
   );
-  await test.step('shows the overview: the application, its traffic and its storage', async () => {
-    await expect(page).toHaveTitle("Vue d'ensemble · Admin · LODB");
-    await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
-    for (const heading of OVERVIEW_SECTIONS) {
-      await expect(page.getByRole('heading', { level: 2, name: heading })).toBeVisible();
-    }
+  await test.step('shows the reports the API gives the administrator', async () => {
     await expect(page.getByText('Comptes', { exact: true })).toBeVisible();
     await expect(page.getByRole('link', { name: /Services/ })).toHaveAttribute(
       'href',
