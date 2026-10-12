@@ -1,3 +1,4 @@
+using LoDb.Api.Modules.Seo.IndexNow;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LoDb.Api.Modules.Seo.Files;
@@ -20,6 +21,12 @@ internal static class SeoFileEndpoints
                 LlmsPath,
                 static ([FromServices] SeoFilesPublisher publisher, HttpRequest request) =>
                     publisher.LlmsAsync(request))
+            .ExcludeFromDescription();
+
+        endpoints.MapGet(
+                IndexNowKeyFile.RouteTemplate,
+                static ([FromServices] SeoFilesPublisher publisher, string key) =>
+                    publisher.IndexNowKey(key))
             .ExcludeFromDescription();
     }
 }

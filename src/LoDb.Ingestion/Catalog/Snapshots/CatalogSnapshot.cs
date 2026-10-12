@@ -30,6 +30,7 @@ public sealed class CatalogSnapshot
         Enum.GetValues<ResourceType>().ToFrozenSet();
 
     private readonly FrozenDictionary<int, RuneLocation> runes;
+    private readonly Lazy<FrozenDictionary<string, string>> championAliases;
     private readonly FrozenDictionary<string, string> englishItemNames;
     private readonly FrozenDictionary<string, string> englishTreeNames;
     private readonly FrozenDictionary<string, string> resourceTokens;
@@ -71,6 +72,7 @@ public sealed class CatalogSnapshot
             static tree => (KeyOf(tree.Id), tree.Name));
         resourceTokens = TokensOf(Champions.Entries, source.Champions);
         search = new Lazy<CatalogSearch>(() => new CatalogSearch(this));
+        championAliases = new(() => ChampionAliases.Of(Champions.Entries, source.Champions));
     }
 
     public PatchVersion Version { get; }
@@ -108,6 +110,24 @@ public sealed class CatalogSnapshot
 
     /// <summary>A rune of any path, by rune id.</summary>
     public RuneLocation? FindRune(int id) => runes.GetValueOrDefault(id);
+
+    /// <summary>
+    /// The champion a page segment names: by its id, else by its id or English name typed
+    /// loosely (<see cref="ChampionAliases"/>). Only the id is canonical: a page reached by
+    /// another form moves to the champion's path.
+    /// </summary>
+    public ChampionDetail? FindChampion(string segment)
+    {
+        ArgumentNullException.ThrowIfNull(segment);
+        if (Champions.Find(segment) is { } champion)
+        {
+            return champion;
+        }
+
+        return championAliases.Value.TryGetValue(ChampionAliases.Fold(segment), out var id)
+            ? Champions.Find(id)
+            : null;
+    }
 
     /// <summary>The same-named item of the other game, when this catalog carries it.</summary>
     public Item? TwinOf(Item item)

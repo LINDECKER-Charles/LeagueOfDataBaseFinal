@@ -27,6 +27,10 @@ internal sealed partial class CrawlerCatalog(
     public Task<PatchVersion?> GetLatestAsync(CancellationToken cancellationToken) =>
         reader.GetLatestAsync(cancellationToken);
 
+    /// <summary>When the latest version was promoted, the date of the pages it changed.</summary>
+    public Task<DateTimeOffset?> GetLatestPromotedAtAsync(CancellationToken cancellationToken) =>
+        reader.GetLatestPromotedAtAsync(cancellationToken);
+
     /// <summary>Every listed version and the latest one, or null when Data Dragon failed.</summary>
     public async Task<CatalogVersions?> GetVersionsAsync(CancellationToken cancellationToken)
     {

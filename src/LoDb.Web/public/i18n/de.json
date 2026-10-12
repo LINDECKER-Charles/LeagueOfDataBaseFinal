@@ -129,6 +129,7 @@
       "abilities": "Fähigkeiten",
       "passive": "Passiv",
       "skins": "Skins",
+      "splash_alt": "Splash-Art von {{ name }}",
       "cooldown": "Abklingzeit",
       "cost": "Kosten",
       "range": "Reichweite",

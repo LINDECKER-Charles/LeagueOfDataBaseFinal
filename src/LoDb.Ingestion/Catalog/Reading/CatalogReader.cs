@@ -35,6 +35,7 @@ internal sealed class CatalogReader(
         return new CatalogVersions
         {
             Latest = LatestOf(ready),
+            LatestPromotedAt = ready.PromotedAt,
             Listed = listed,
             Ready = [.. ready.Codes.Select(PatchVersion.Parse)],
         };
@@ -42,6 +43,10 @@ internal sealed class CatalogReader(
 
     public async Task<PatchVersion?> GetLatestAsync(CancellationToken cancellationToken) =>
         LatestOf(await ReadyAsync(cancellationToken).ConfigureAwait(false));
+
+    public async Task<DateTimeOffset?> GetLatestPromotedAtAsync(
+        CancellationToken cancellationToken) =>
+        (await ReadyAsync(cancellationToken).ConfigureAwait(false)).PromotedAt;
 
     public Task<IReadOnlyList<DdragonLanguage>> GetLanguagesAsync(
         CancellationToken cancellationToken) =>
@@ -210,8 +215,12 @@ internal sealed class CatalogReader(
             states,
             static async (source, token) =>
             {
-                var (ready, latest) = await source.ReadyAsync(token).ConfigureAwait(false);
-                return new ReadyVersions([.. ready.Select(static v => v.Value)], latest?.Value);
+                var (ready, latest, promotedAt) = await source.ReadyAsync(token)
+                    .ConfigureAwait(false);
+                return new ReadyVersions(
+                    [.. ready.Select(static v => v.Value)],
+                    latest?.Value,
+                    promotedAt);
             },
             readyEntry,
             cancellationToken: cancellationToken);

@@ -28,6 +28,14 @@ describe('catalogueListSeo', () => {
     expect(catalogueListSeo({ ...base, context: pinned })).toMatchObject({ version: '15.14.1' });
   });
 
+  it('is its own canonical past the first page, the first and an unpaged list bare', () => {
+    const listOf = (page: number | null) => catalogueListSeo({ ...base, page, context: CONTEXT });
+
+    expect(listOf(3)).toMatchObject({ path: 'champions?page=3' });
+    expect(listOf(1)).toMatchObject({ path: 'champions' });
+    expect(listOf(null)).toMatchObject({ path: 'champions' });
+  });
+
   it('lists the rendered entries, linked to their pages', () => {
     const page = catalogueListSeo({ ...base, context: CONTEXT });
     const nodes = 'jsonLd' in page && page.jsonLd ? page.jsonLd(URLS) : [];

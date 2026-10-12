@@ -56,17 +56,24 @@ public sealed class SitemapFileTests
     [Fact]
     public void IndexesEveryLocaleLatestFirstThenEachPastVersion()
     {
+        var promoted = new DateTimeOffset(2026, 10, 7, 0, 0, 0, TimeSpan.Zero);
         var versions = new CatalogVersions
         {
             Latest = PatchVersion.Parse("16.19.1"),
+            LatestPromotedAt = promoted,
             Listed = [PatchVersion.Parse("16.19.1"), PatchVersion.Parse("16.18.1")],
             Ready = [PatchVersion.Parse("16.19.1")],
         };
 
         var window = SeoOptions.DefaultSitemapVersionWindow;
-        var sitemaps = SitemapLocations.Index(Origin, versions, window).ToList();
+        var entries = SitemapLocations.Index(Origin, versions, window).ToList();
+        var sitemaps = entries.Select(static entry => entry.Location).ToList();
 
         Assert.Equal(2 * UiLocales.All.Count, sitemaps.Count);
+        Assert.All(entries.Take(UiLocales.All.Count), entry =>
+            Assert.Equal(promoted, entry.LastModified));
+        Assert.All(entries.Skip(UiLocales.All.Count), static entry =>
+            Assert.Null(entry.LastModified));
         Assert.Equal($"{Origin}/sitemaps/ar/latest.xml", sitemaps[0]);
         Assert.Equal($"{Origin}/sitemaps/ar/16.18.1.xml", sitemaps[UiLocales.All.Count]);
         Assert.DoesNotContain(
@@ -77,7 +84,9 @@ public sealed class SitemapFileTests
     [Fact]
     public void ListsTheStaticPagesBeforeAnyPromotion()
     {
-        var pages = SitemapLocations.Latest(Origin, UiLocale.Fr, null).ToList();
+        var prefix = SitePages.Prefix(Origin, UiLocale.Fr, null);
+        var entries = SitemapLocations.Latest(prefix, null, null).ToList();
+        var pages = entries.Select(static entry => entry.Location).ToList();
 
         Assert.Equal($"{Origin}/fr/", pages[0]);
         Assert.Contains($"{Origin}/fr/champions", pages);
@@ -86,5 +95,22 @@ public sealed class SitemapFileTests
         Assert.DoesNotContain(
             pages,
             static url => url.Contains("/account/", StringComparison.Ordinal));
+        Assert.All(entries, static entry => Assert.Null(entry.LastModified));
+    }
+
+    [Fact]
+    public void DatesThePagesOfThePatchByItsPromotionAndNeverTheEditorialOnes()
+    {
+        var promoted = new DateTimeOffset(2026, 10, 7, 0, 0, 0, TimeSpan.Zero);
+        var prefix = SitePages.Prefix(Origin, UiLocale.Fr, null);
+
+        var dates = SitemapLocations.Latest(prefix, null, promoted)
+            .ToDictionary(static entry => entry.Location, static entry => entry.LastModified);
+
+        Assert.Equal(promoted, dates[$"{Origin}/fr/"]);
+        Assert.Equal(promoted, dates[$"{Origin}/fr/champions"]);
+        Assert.Equal(promoted, dates[$"{Origin}/fr/patches"]);
+        Assert.Null(dates[$"{Origin}/fr/about"]);
+        Assert.Null(dates[$"{Origin}/fr/legal/cookies"]);
     }
 }

@@ -83,6 +83,9 @@ public sealed class MetaMemoTests
         public Task<PatchVersion?> GetLatestAsync(CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 
+        public Task<DateTimeOffset?> GetLatestPromotedAtAsync(
+            CancellationToken cancellationToken) => throw new NotSupportedException();
+
         public Task<CatalogLoad> GetAsync(
             PatchVersion version,
             DdragonLanguage language,

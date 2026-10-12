@@ -134,6 +134,10 @@ describe('lodb-summoner-detail', () => {
     const { heads } = await render();
 
     expect(heads.at(-1)?.title).toBe('summoner.detail.title {"name":"Flash (LoL Classic)"}');
-    expect(heads.at(-1)?.image).toBe('/preview/summoners.png');
+    expect(heads.at(-1)?.image).toEqual({
+      url: '/preview/summoners.png',
+      width: 1200,
+      height: 630,
+    });
   });
 });

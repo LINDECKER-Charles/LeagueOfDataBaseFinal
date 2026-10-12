@@ -129,6 +129,7 @@
       "abilities": "Abilità",
       "passive": "Passiva",
       "skins": "Skin",
+      "splash_alt": "Splash art di {{ name }}",
       "cooldown": "Tempo di recupero",
       "cost": "Costo",
       "range": "Gittata",

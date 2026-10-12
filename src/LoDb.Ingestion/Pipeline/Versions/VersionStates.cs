@@ -23,6 +23,13 @@ namespace LoDb.Ingestion.Pipeline.Versions;
 /// and no newer version is promoted, so two instances completing two versions at once still
 /// agree on the latest whatever the order of their writes.
 /// </para>
+/// <para>
+/// Only a version behind the latest one is abandoned once its attempts are spent: the long
+/// tail. A version ahead of it is the next patch, tried again every six hours at most for as
+/// long as it takes. A CommunityDragon outage at the release of 16.20.1 spent its five
+/// attempts in three hours, and its abandonment froze the site on the previous patch; one
+/// abandoned that way before this rule is due again.
+/// </para>
 /// </remarks>
 internal sealed class VersionStates(
     IDbContextFactory<LoDbDbContext> contexts,
@@ -77,18 +84,42 @@ internal sealed class VersionStates(
     }
 
     /// <summary>
-    /// Leaves the version to a later attempt, or marks it failed once its attempts are spent.
-    /// A ready version stays ready.
+    /// Leaves the version to a later attempt, or marks it failed once its attempts are spent,
+    /// unless it is ahead of the latest version. A ready version stays ready.
     /// </summary>
-    public Task DeferAsync(PatchVersion version, CancellationToken cancellationToken)
+    public async Task DeferAsync(PatchVersion version, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(version);
-        return UpdateAsync(version, DeferOne, cancellationToken);
+        var db = await contexts.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
+        await using (db.ConfigureAwait(false))
+        {
+            var rows = await db.DdragonVersions
+                .Where(entry => entry.Version == version.Value || entry.PromotedAt != null)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+            var row = rows.SingleOrDefault(entry => entry.Version == version.Value);
+            if (row is null || row.Status == DdragonVersionStatus.Ready)
+            {
+                return;
+            }
+
+            var now = timeProvider.GetUtcNow();
+            if (IsSpent(row, LatestOf(rows)))
+            {
+                Abandon(row, now);
+            }
+            else
+            {
+                Postpone(row, now);
+            }
+
+            await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
     }
 
     /// <summary>
     /// The versions due for an attempt, newest first. Gives up on those whose attempts are
-    /// spent.
+    /// spent, and takes back those abandoned ahead of the latest version.
     /// </summary>
     public async Task<IReadOnlyList<PatchVersion>> DueAsync(CancellationToken cancellationToken)
     {
@@ -96,21 +127,21 @@ internal sealed class VersionStates(
         await using (db.ConfigureAwait(false))
         {
             var rows = await db.DdragonVersions
-                .Where(static row => row.Status == DdragonVersionStatus.Discovered
-                    || row.Status == DdragonVersionStatus.Ingesting)
+                .Where(static row => row.Status != DdragonVersionStatus.Ready
+                    || row.PromotedAt != null)
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
+            var latest = LatestOf(rows);
             var now = timeProvider.GetUtcNow();
-            var free = rows.Where(row => row.NextAttemptAt is null || row.NextAttemptAt <= now)
-                .ToList();
-            var spent = free.Where(row => row.Attempts >= options.Value.MaxAttempts).ToList();
+            var due = rows.Where(row => IsDue(row, latest, now)).ToList();
+            var spent = due.Where(row => IsSpent(row, latest)).ToList();
             foreach (var row in spent)
             {
                 Abandon(row, now);
             }
 
             await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            return [.. free.Except(spent).Select(Parsed).OrderDescending()];
+            return [.. due.Except(spent).Select(Parsed).OrderDescending()];
         }
     }
 
@@ -131,10 +162,13 @@ internal sealed class VersionStates(
     }
 
     /// <summary>
-    /// The ready versions, newest first, and the latest one; a promoted version stays ready.
+    /// The ready versions, newest first, the latest one and when it was promoted; a promoted
+    /// version stays ready.
     /// </summary>
-    public async Task<(IReadOnlyList<PatchVersion> Ready, PatchVersion? Latest)> ReadyAsync(
-        CancellationToken cancellationToken)
+    public async Task<(
+        IReadOnlyList<PatchVersion> Ready,
+        PatchVersion? Latest,
+        DateTimeOffset? PromotedAt)> ReadyAsync(CancellationToken cancellationToken)
     {
         var db = await contexts.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
         await using (db.ConfigureAwait(false))
@@ -142,14 +176,17 @@ internal sealed class VersionStates(
             var rows = await db.DdragonVersions
                 .AsNoTracking()
                 .Where(static row => row.Status == DdragonVersionStatus.Ready)
-                .Select(static row => new { row.Version, Promoted = row.PromotedAt != null })
+                .Select(static row => new { row.Version, row.PromotedAt })
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
-            var latest = rows.Where(static row => row.Promoted)
-                .Select(static row => PatchVersion.Parse(row.Version))
-                .Max();
-            return ([.. rows.Select(static row => PatchVersion.Parse(row.Version))
-                .OrderDescending()], latest);
+            var latest = rows.Where(static row => row.PromotedAt is not null)
+                .MaxBy(static row => PatchVersion.Parse(row.Version));
+            var ready = rows.Select(static row => PatchVersion.Parse(row.Version))
+                .OrderDescending();
+            return (
+                [.. ready],
+                latest is null ? null : PatchVersion.Parse(latest.Version),
+                latest?.PromotedAt);
         }
     }
 
@@ -184,14 +221,30 @@ internal sealed class VersionStates(
         row.UpdatedAt = now;
     }
 
-    private void DeferOne(DdragonVersion row, DateTimeOffset now)
-    {
-        if (row.Attempts >= options.Value.MaxAttempts)
+    // Waiting for an attempt: unleased, or once its lease or its wait has run out. An
+    // abandoned version ahead of the latest one was abandoned before such versions were
+    // spared, and is taken back at once.
+    private static bool IsDue(DdragonVersion row, PatchVersion? latest, DateTimeOffset now) =>
+        row.Status switch
         {
-            Abandon(row, now);
-            return;
-        }
+            DdragonVersionStatus.Discovered or DdragonVersionStatus.Ingesting =>
+                row.NextAttemptAt is null || row.NextAttemptAt <= now,
+            DdragonVersionStatus.Failed => IsAhead(row, latest),
+            _ => false,
+        };
 
+    private bool IsSpent(DdragonVersion row, PatchVersion? latest) =>
+        row.Attempts >= options.Value.MaxAttempts && !IsAhead(row, latest);
+
+    // Newer than every promoted version, or nothing is promoted yet: the next patch.
+    private static bool IsAhead(DdragonVersion row, PatchVersion? latest) =>
+        Parsed(row) > latest;
+
+    private static PatchVersion? LatestOf(IEnumerable<DdragonVersion> rows) =>
+        rows.Where(static row => row.PromotedAt is not null).Select(Parsed).Max();
+
+    private void Postpone(DdragonVersion row, DateTimeOffset now)
+    {
         row.Status = DdragonVersionStatus.Discovered;
         row.NextAttemptAt = now + Backoff(row.Attempts);
         row.UpdatedAt = now;

@@ -129,6 +129,7 @@
       "abilities": "Yetenekler",
       "passive": "Pasif",
       "skins": "Kostümler",
+      "splash_alt": "{{ name }} görseli",
       "cooldown": "Bekleme Süresi",
       "cost": "Maliyet",
       "range": "Menzil",

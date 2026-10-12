@@ -8298,6 +8298,7 @@
           "art",
           "centeredArtVariants",
           "alternateSkinCount",
+          "alternateSkinNames",
           "neighbours"
         ],
         "type": "object",
@@ -8365,6 +8366,13 @@
             "type": "integer",
             "description": "The skins besides the base one, which the hero wears: those the gallery shows once it\nreads them from `…/skins`.",
             "format": "int32"
+          },
+          "alternateSkinNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The names of those skins, in the gallery's order: the server renders them while the\ngallery waits to be scrolled to, so that a crawler reads them without the gallery."
           },
           "skins": {
             "type": [

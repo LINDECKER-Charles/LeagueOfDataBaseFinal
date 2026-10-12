@@ -1,5 +1,6 @@
 import type { ItemDetails } from '../../../../core/api/generated/models/item-details';
 import { itemJsonLd } from '../../../../core/seo/json-ld/game/item-json-ld';
+import { previewImage } from '../../../../core/seo/images/preview-image';
 import type { SeoPage } from '../../../../core/seo/seo-page';
 import type { CatalogueEntry } from '../../../../core/routing/catalogue/catalogue-entry';
 import type { CatalogueTexts } from '../../shared/codex/head/catalogue-texts';
@@ -28,7 +29,7 @@ export function itemHeadOf(entry: CatalogueEntry<ItemDetails>, texts: CatalogueT
     locale: context.locale,
     path: details.canonicalPath,
     version: context.pinned ? context.version : null,
-    image: '/preview/items.png',
+    image: previewImage('items'),
     jsonLd: (urls) => [
       detailTrail(trail, urls),
       itemJsonLd({ ...details, profile: { ...card, name } }, urls),

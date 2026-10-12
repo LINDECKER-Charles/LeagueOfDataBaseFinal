@@ -129,6 +129,7 @@
       "abilities": "Umiejętności",
       "passive": "Bierna",
       "skins": "Skórki",
+      "splash_alt": "Grafika postaci: {{ name }}",
       "cooldown": "Czas odnowienia",
       "cost": "Koszt",
       "range": "Zasięg",

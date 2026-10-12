@@ -6,6 +6,8 @@ export interface CatalogueListPage {
   readonly description: string;
   /** The list's path below the locale and version, such as `champions`. */
   readonly path: string;
+  /** The page the server rendered, from 1; null or absent for the first or a list unpaged. */
+  readonly page?: number | null;
   readonly context: PageContext;
   /** The entries of the page the server rendered, in order. */
   readonly entries: readonly { readonly name: string; readonly canonicalPath: string }[];

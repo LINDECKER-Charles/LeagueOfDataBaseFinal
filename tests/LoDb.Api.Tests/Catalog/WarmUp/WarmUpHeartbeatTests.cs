@@ -94,6 +94,9 @@ public sealed class WarmUpHeartbeatTests
         public Task<PatchVersion?> GetLatestAsync(CancellationToken cancellationToken) =>
             throw new NotSupportedException();
 
+        public Task<DateTimeOffset?> GetLatestPromotedAtAsync(
+            CancellationToken cancellationToken) => throw new NotSupportedException();
+
         public Task<IReadOnlyList<DdragonLanguage>> GetLanguagesAsync(
             CancellationToken cancellationToken) => throw new NotSupportedException();
     }

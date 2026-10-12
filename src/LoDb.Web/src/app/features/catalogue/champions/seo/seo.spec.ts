@@ -52,6 +52,7 @@ const DETAILS: ChampionDetails = {
   blurb: 'Dangerous, yet disarmingly precocious.',
   abilities: [],
   alternateSkinCount: 0,
+  alternateSkinNames: [],
   allyTips: [],
   enemyTips: [],
   neighbours: { previous: null, next: null },
@@ -75,7 +76,12 @@ describe('championSeo', () => {
       title: 'seo.champion.detail.title {"name":"Annie"}',
       description: 'seo.champion.detail.description {"name":"Annie","version":"16.19.1"}',
       locale: 'en',
-      image: '/preview/champions.png',
+      image: {
+        url: 'splash.jpg',
+        width: 1215,
+        height: 717,
+        alt: 'champion.detail.splash_alt {"name":"Annie"}',
+      },
       path: 'champions/Annie',
       version: null,
     });
@@ -109,7 +115,7 @@ describe('championsListSeo', () => {
       title: 'seo.champion.list.title',
       description: 'seo.champion.list.description {"count":172,"version":"16.19.1"}',
       path: 'champions',
-      image: '/preview/champions.png',
+      image: { url: '/preview/champions.png', width: 1200, height: 630 },
     });
     expect(nodesOf(page)).toEqual([
       expect.objectContaining({ '@type': 'ItemList', numberOfItems: 2 }),

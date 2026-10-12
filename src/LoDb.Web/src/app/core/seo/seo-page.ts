@@ -1,4 +1,5 @@
 import type { Locale } from '../i18n/locales';
+import type { SeoImage } from './images/seo-image';
 import type { JsonLdNode } from './json-ld/core/json-ld-node';
 import type { SeoUrls } from './urls/seo-urls';
 
@@ -15,8 +16,11 @@ interface SeoPageBase {
   readonly titleFormat?: 'site' | 'account' | 'admin' | 'raw';
   /** The page's locale; the active one by default. */
   readonly locale?: Locale;
-  /** Open Graph image, root-relative or absolute; `/preview/home.png` by default. */
-  readonly image?: string | null;
+  /**
+   * Open Graph image: a URL, root-relative or absolute, or the image with its size and what
+   * it shows; the home's preview card by default.
+   */
+  readonly image?: string | SeoImage | null;
   /** `profile` on a public profile; `website` by default. */
   readonly ogType?: 'website' | 'profile';
 }

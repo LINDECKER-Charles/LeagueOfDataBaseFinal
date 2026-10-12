@@ -59,6 +59,8 @@ export class ChampionPage {
   protected readonly context = computed(() => this.entry().context);
   protected readonly profile = computed(() => this.details().profile);
   protected readonly skinCount = computed(() => this.details().alternateSkinCount);
+  // Rendered by the server while the gallery waits to be scrolled to: crawlers read them.
+  protected readonly skinNames = computed(() => this.details().alternateSkinNames);
   protected readonly lore = computed(() => this.details().lore || this.details().blurb);
   protected readonly allyTips = computed(() => this.details().allyTips.filter(hasText));
   protected readonly enemyTips = computed(() => this.details().enemyTips.filter(hasText));

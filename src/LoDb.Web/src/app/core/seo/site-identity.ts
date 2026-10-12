@@ -8,8 +8,6 @@ export const SITE_IDENTITY = {
   productionOrigin: 'https://league-of-data-base.com',
   /** Brand mark of the Organization node (the PWA icon, L3.11). */
   logoPath: '/favicon/icon-512.png',
-  /** Open Graph image of a page that has none of its own. */
-  defaultImagePath: '/preview/home.png',
   /** Profiles that publicly identify the publisher: they anchor the Organization node. */
   sameAs: [
     'https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal',

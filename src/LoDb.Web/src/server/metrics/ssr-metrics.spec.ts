@@ -103,6 +103,7 @@ describe('SsrMetrics', () => {
   it('counts the redirects to the URL a page is known by, per reason, from zero', async () => {
     const redirects = 'lodb_ssr_normalized_redirects_total';
     expect(sampleOf(await scrape(), redirects, { reason: 'query' })).toBe(0);
+    expect(sampleOf(await scrape(), redirects, { reason: 'slash' })).toBe(0);
     expect(sampleOf(await scrape(), redirects, { reason: 'canonical' })).toBe(0);
 
     metrics.countRedirect('query');

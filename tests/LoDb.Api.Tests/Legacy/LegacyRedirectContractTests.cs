@@ -30,6 +30,12 @@ public sealed class LegacyRedirectContractTests(LegacyApiFixture api)
         Assert.True(response.Headers.CacheControl?.Public);
     }
 
+    [Theory]
+    [InlineData("/champion/ahri", "/en/champions/Ahri")]
+    [InlineData("/champion/wukong", "/en/champions/MonkeyKing")]
+    public async Task ChampionTypedLooselyMovesToItsPage(string oldUrl, string page) =>
+        Assert.Equal(page, await api.LocationOfAsync(oldUrl));
+
     [Fact]
     public async Task HeadIsAnsweredLikeGet()
     {
@@ -50,7 +56,6 @@ public sealed class LegacyRedirectContractTests(LegacyApiFixture api)
 
     [Theory]
     [InlineData("/champion/NotAChampion", "unknown-entity")]
-    [InlineData("/champion/ahri", "unknown-entity")]
     [InlineData("/object/999999", "unknown-entity")]
     [InlineData("/rune/8100", "unknown-entity")]
     [InlineData("/summoner/Flash", "unknown-entity")]
