@@ -16,6 +16,7 @@ const PANELS = [
   'Messages',
   'Clients API',
   'Surveillance',
+  'Sauvegardes',
   'Journal',
 ];
 // The sections of the overview, each drawn from the API.

@@ -51,6 +51,10 @@ export const PANEL_ROUTES: Routes = [
       import('./management/monitoring/monitoring-panel').then((m) => m.MonitoringPanel),
   },
   {
+    path: 'backups',
+    loadComponent: () => import('./management/backups/backups-panel').then((m) => m.BackupsPanel),
+  },
+  {
     path: 'journal',
     loadComponent: () => import('./management/journal/journal-panel').then((m) => m.JournalPanel),
   },

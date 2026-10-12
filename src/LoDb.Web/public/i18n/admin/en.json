@@ -13,6 +13,7 @@
     "contacts": "Messages",
     "api_clients": "API clients",
     "monitoring": "Monitoring",
+    "backups": "Backups",
     "journal": "Journal",
     "sign_out": "Sign out"
   },
@@ -579,6 +580,75 @@
       "dead": "Given up: {count}."
     }
   },
+  "backups": {
+    "title": "Backups",
+    "lede": "The nightly off-host backups (restic → Scaleway): what each pass did, the monthly restore tests and what the repository costs.",
+    "empty": "No pass recorded: the off-host backups are not active yet, or their container (infra-vps) does not write its journal here yet.",
+    "repository": "repository",
+    "runs_empty": "No step in this period.",
+    "databases": {
+      "lodb": "LoDb (production)",
+      "umami": "Umami (audience)"
+    },
+    "statuses": {
+      "ok": "up to date",
+      "late": "late",
+      "failed": "failed"
+    },
+    "steps": {
+      "backup": "Backup",
+      "retention": "Retention",
+      "restore": "Restore",
+      "check": "Check"
+    },
+    "results": {
+      "ok": "succeeded",
+      "failed": "failed"
+    },
+    "kpi": {
+      "databases": "Databases up to date",
+      "databases_sub": "{count, plural, =0 {none late or failed} one {# late or failed} other {# late or failed}}",
+      "databases_none": "no database backed up",
+      "last_success": "Last success",
+      "last_success_sub": "across all databases",
+      "repository": "Repository size",
+      "repository_sub": "measured on {date}",
+      "repository_none": "not measured yet",
+      "cost": "Estimated cost / month",
+      "cost_sub": "{price} per GB and month, locked versions excluded"
+    },
+    "card": {
+      "last_success": "Succeeded: {date}",
+      "last_failure": "Failed: {date}",
+      "dump": "Dump {size}",
+      "restore": "restore verified on {date}",
+      "restore_never": "Restore never tested."
+    },
+    "nights": {
+      "title": "Night by night",
+      "chip": "{days, plural, one {# day} other {# days}}",
+      "night": "{day}: {outcome} ({steps, plural, =0 {no step} one {# step} other {# steps}})",
+      "outcomes": {
+        "ok": "all succeeded",
+        "recovered": "succeeded after a retry",
+        "failed": "at least one step failed",
+        "none": "no pass"
+      }
+    },
+    "columns": {
+      "started": "Started",
+      "step": "Step",
+      "database": "Database",
+      "result": "Result",
+      "duration": "Duration",
+      "volume": "Volume",
+      "detail": "Detail"
+    },
+    "volume": {
+      "backup": "{read} read · {added} added",
+      "repository": "repository {size}"
+    }
+  },
   "journal": {
     "title": "Audit journal",
     "lede": "Sensitive actions and security events. Times in UTC. Kept {months} months (CNIL recommendation).",
@@ -714,6 +784,8 @@
     "application": "Application",
     "volumes": "Volumes",
     "filter": "Filter",
-    "maintenance": "Maintenance"
+    "maintenance": "Maintenance",
+    "databases": "Backed-up databases",
+    "nights": "Nights"
   }
 }
