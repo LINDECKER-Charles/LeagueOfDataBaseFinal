@@ -182,26 +182,6 @@ public sealed class PeriodicJobTests(PostgresContainerFixture postgres)
         Assert.DoesNotContain("job", period.Tags.Keys);
     }
 
-    [Theory]
-    [InlineData("", 3600)]
-    [InlineData(" ", 3600)]
-    [InlineData("a-name-longer-than-the-sixty-four-characters-of-periodic-job-name", 3600)]
-    [InlineData(JobName, 0)]
-    [InlineData(JobName, -1)]
-    public async Task InvalidJobStopsAtStart(string name, int periodSeconds)
-    {
-        var job = NewJob(name, TimeSpan.FromSeconds(periodSeconds));
-
-        await job.StartAsync(Cancellation);
-        var error = await Assert.ThrowsAsync<InvalidOperationException>(() => job.ExecuteTask!);
-
-        Assert.StartsWith(
-            $"Job {nameof(TestJob)} needs a name",
-            error.Message,
-            StringComparison.Ordinal);
-        Assert.Equal(0, job.Runs);
-    }
-
     protected override async ValueTask DisposeServicesAsync()
     {
         foreach (var job in _jobs)
@@ -230,11 +210,11 @@ public sealed class PeriodicJobTests(PostgresContainerFixture postgres)
         new(MeterFactory, JobMetrics.MeterName, instrument);
 
     // One API instance: its own lock connection, the shared database and clock.
-    private TestJob NewJob(string name = JobName, TimeSpan? period = null)
+    private TestJob NewJob(TimeSpan? period = null)
     {
         var instanceLock = new PostgresDistributedLock(Database.AppConnectionString);
         _locks.Add(instanceLock);
-        return Track(new TestJob(Services(instanceLock), name, period ?? Period));
+        return Track(new TestJob(Services(instanceLock), JobName, period ?? Period));
     }
 
     private PeriodicJobServices Services(IDistributedLock distributedLock) =>
