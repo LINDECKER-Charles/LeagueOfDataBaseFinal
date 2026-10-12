@@ -12,11 +12,11 @@ public sealed class LegacyRedirectContractTests(LegacyApiFixture api)
 {
     private const string ProblemContentType = "application/problem+json";
 
+    // One old URL per kind of target: a page, a list, a detail. Every target starts with its
+    // locale (LegacyTargetTests), which no old route had.
     public static TheoryData<string> OldUrls =>
     [
-        "/home", "/champions", "/16.18.1/objects", "/16.19.1/champion/Ahri",
-        "/object/1004?lang=fr_FR", "/rune/Domination", "/summoner/SummonerFlash",
-        "/about/data", "/legal/terms", "/u/Faker", "/login", "/builds/42/edit",
+        "/home", "/16.18.1/objects", "/object/1004?lang=fr_FR",
     ];
 
     [Fact]
@@ -60,22 +60,10 @@ public sealed class LegacyRedirectContractTests(LegacyApiFixture api)
     public async Task UnknownNameOrVersionIsNotFound(string oldUrl, string code) =>
         await AssertProblemAsync(oldUrl, code);
 
+    // Which paths no old route had is LegacyPathParserTests': these rows prove the answer.
     [Theory]
     [InlineData("/")]
-    [InlineData("/Home")]
-    [InlineData("/champion")]
-    [InlineData("/champions/Ahri")]
-    [InlineData("/objects/1004")]
-    [InlineData("/16.19.1")]
-    [InlineData("/16.19.1/home")]
     [InlineData("/16.19.1/items")]
-    [InlineData("/about/team")]
-    [InlineData("/legal/imprint")]
-    [InlineData("/u/ab")]
-    [InlineData("/profile/password")]
-    [InlineData("/builds/abc/edit")]
-    [InlineData("/donate/success")]
-    [InlineData("/en/champions")]
     public async Task PathNoOldRouteHadIsNotFound(string oldUrl) =>
         await AssertProblemAsync(oldUrl, "unknown-legacy-url");
 
