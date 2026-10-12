@@ -1,27 +1,20 @@
-import type { CatalogMeta } from '../../api/generated/models/catalog-meta';
 import type { Locale } from '../../i18n/locales';
+import { catalogMetaOf } from '../../testing/catalog-meta-of';
 import type { Preferences } from '../preferences/preferences';
 import type { NavSelection } from './nav-selection';
 import { navSelectionOf } from './nav-selection-of';
 
 const LATEST = '16.19.1';
 const OLDER = '14.1.1';
-const META: CatalogMeta = {
+const META = catalogMetaOf({
   latest: LATEST,
   versions: [LATEST, '16.18.1', OLDER],
-  readyVersions: [LATEST],
-  versionPattern: String.raw`\d+(?:\.\d+)+`,
   languages: ['en_US', 'en_GB', 'fr_FR', 'ja_JP'],
-  languagePattern: '[a-z]{2}_[A-Z]{2}',
-  defaultLanguage: 'en_US',
   locales: [
     { locale: 'en', language: 'en_US' },
     { locale: 'fr', language: 'fr_FR' },
   ],
-  fallbackLocale: 'en',
-  gameModes: [{ mode: 'sr', map: 11 }],
-  defaultGameMode: 'sr',
-};
+});
 
 interface Case {
   readonly rule: string;
@@ -31,6 +24,7 @@ interface Case {
   readonly expected: NavSelection;
 }
 
+// Which source wins (path > query > remembered) is pageContextOf's, tested there.
 const CASES: Case[] = [
   {
     rule: 'follows the latest version in the own language',
@@ -67,12 +61,6 @@ const CASES: Case[] = [
     url: '/en/trends',
     remembered: { lang: 'en_GB', version: OLDER },
     expected: { shown: OLDER, version: OLDER, lang: 'en_GB' },
-  },
-  {
-    rule: 'lets the URL win over the remembered choice',
-    url: '/en/16.18.1/items?lang=en_US',
-    remembered: { lang: 'en_GB', version: OLDER },
-    expected: { shown: '16.18.1', version: '16.18.1', lang: null },
   },
   {
     rule: 'reads a page outside the locales in the locale it speaks',
