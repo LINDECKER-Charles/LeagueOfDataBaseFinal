@@ -4,6 +4,7 @@ using LoDb.Ingestion.Queue;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.Metrics.Testing;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Time.Testing;
 
 namespace LoDb.Ingestion.Tests.Queue;
 
@@ -22,6 +23,9 @@ public sealed class SyncSlotsTests : IDisposable
 
     private readonly TaskCompletionSource release =
         new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+    // The waits run on this clock: a test moves it past a wait instead of sleeping through it.
+    private readonly FakeTimeProvider time = new();
 
     private static CancellationToken Token => TestContext.Current.CancellationToken;
 
@@ -46,10 +50,11 @@ public sealed class SyncSlotsTests : IDisposable
     {
         using var slots = Create(maxWaiting: 4, ShortWait);
         var holding = slots.RunAsync(_ => release.Task, Token);
+        var waiting = slots.RunAsync(static _ => Task.CompletedTask, Token);
 
-        var refused = await Assert.ThrowsAsync<OnDemandRefusedException>(
-            () => slots.RunAsync(static _ => Task.CompletedTask, Token));
+        time.Advance(ShortWait);
 
+        var refused = await Assert.ThrowsAsync<OnDemandRefusedException>(() => waiting);
         Assert.Equal(SyncSlots.SlotWaitReason, refused.Reason);
         release.SetResult();
         await holding;
@@ -67,7 +72,7 @@ public sealed class SyncSlotsTests : IDisposable
         var holding = slots.RunAsync(_ => release.Task, Token);
 
         var queued = slots.RunQueuedAsync(static _ => Task.CompletedTask, Token);
-        await Task.Delay(ShortWait * 2, Token);
+        time.Advance(ShortWait * 2);
         waiting.RecordObservableInstruments();
 
         Assert.False(queued.IsCompleted);
@@ -86,6 +91,6 @@ public sealed class SyncSlotsTests : IDisposable
                 MaxWaitingIngestions = maxWaiting,
                 SlotWait = slotWait,
             }),
-            TimeProvider.System,
+            time,
             new IngestionMetrics(provider.GetRequiredService<IMeterFactory>()));
 }
