@@ -8,11 +8,12 @@ sizes, the paths nginx answers alone, the blobs and their policy, the page cache
 compressed copy for every client, the past patches' kept from their
 `LODB_ARCHIVE_CACHE_MIN_USES`-th request under a key without revision), the bundles' and
 their policy, the crawler files' and the former site's caches (under the revision), the blocked
-agent refused by its exact string, the crawler files routed to the API. The image runs as
-`compose.yaml` runs it (`--read-only`, `--cap-drop ALL`, `no-new-privileges`, a tmpfs on
-`/tmp`, a volume per cache and one for the temporary files, which a slow client's answer must
-reach rather than `/tmp`), on its port 8080, behind a stub of the API and of the SSR server
-(`lib/upstream-stub.conf`), on a Docker network of its own, removed afterwards.
+agent refused by its exact string, the AI crawlers let through, the crawler files routed to the
+API. The image runs as `compose.yaml` runs it (`--read-only`, `--cap-drop ALL`,
+`no-new-privileges`, a tmpfs on `/tmp`, a volume per cache and one for the temporary files,
+which a slow client's answer must reach rather than `/tmp`), on its port 8080, behind a stub of
+the API and of the SSR server (`lib/upstream-stub.conf`), on a Docker network of its own,
+removed afterwards.
 
 ```bash
 docker build -f docker/nginx/Dockerfile -t lodb-nginx:check .
@@ -41,6 +42,10 @@ the maintenance page with a `503`, never kept, while the API, the bundles, the p
 files and the former site's `301` keep their answers, the page's files and the deploy's state are
 served, a request without the edge's header is still refused, and the pages come back once the
 switch is gone.
+
+`nginx-noindex.test.mjs` boots a fourth stack as staging runs it (`LODB_NOINDEX=1`): the AI
+crawlers (`$lodb_ai_crawler`, `nginx.conf`) get a `403` on both hosts, while a search engine and
+a visitor get their answer, each with the `X-Robots-Tag` noindex.
 
 `maintenance-page.test.mjs` and `maintenance-sources.test.mjs` need neither Docker nor the image:
 the first runs the page's scripts (`docker/nginx/maintenance/assets`) in a stand-in for the
