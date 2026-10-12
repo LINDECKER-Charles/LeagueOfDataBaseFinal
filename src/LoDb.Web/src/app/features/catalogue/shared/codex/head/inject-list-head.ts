@@ -16,6 +16,7 @@ function seoOf(head: ListHead, texts: CatalogueTexts): SeoPage {
     title: texts.seo(`${head.texts}.list.title`),
     description,
     path: head.path,
+    page: head.page,
     context,
     entries: head.entries,
   });

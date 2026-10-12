@@ -8,6 +8,8 @@ export interface ListHead {
   readonly texts: 'item' | 'rune' | 'summoner';
   /** The list's path, which also names its preview image: `items`. */
   readonly path: Extract<PreviewSection, 'items' | 'runes' | 'summoners'>;
+  /** The page of the list the server rendered, from 1; null for a list without pages. */
+  readonly page: number | null;
   /** Entries of the whole list; null when it could not be read. */
   readonly count: number | null;
   /** The pages the list links to first, in order. */

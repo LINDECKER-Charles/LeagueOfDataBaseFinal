@@ -21,6 +21,7 @@ export function championsListSeo(
     title: translate('seo.champion.list.title'),
     description: description ?? '',
     path: 'champions',
+    page: list?.page ?? null,
     context,
     entries: list?.entries ?? [],
   });

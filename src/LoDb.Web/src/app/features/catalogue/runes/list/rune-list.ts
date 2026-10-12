@@ -74,7 +74,7 @@ export class RuneList {
       }
       const trees = this.list.firstPage()?.trees ?? null;
       const count = trees?.length ?? null;
-      return { context, texts: 'rune', path: 'runes', count, entries: trees ?? [] };
+      return { context, texts: 'rune', path: 'runes', page: null, count, entries: trees ?? [] };
     });
   }
 
