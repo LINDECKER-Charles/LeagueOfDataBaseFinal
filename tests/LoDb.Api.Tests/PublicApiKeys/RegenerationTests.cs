@@ -1,10 +1,10 @@
+using System.Globalization;
 using System.Net;
 using LoDb.Api.Tests.Accounts.Support;
 using LoDb.Api.Tests.PublicApiKeys.Support;
 using LoDb.Infrastructure.Audit;
 using LoDb.Infrastructure.Persistence.Accounts;
 using LoDb.Infrastructure.Persistence.PublicApi;
-using LoDb.Testing;
 using Microsoft.EntityFrameworkCore;
 
 namespace LoDb.Api.Tests.PublicApiKeys;
@@ -14,13 +14,10 @@ namespace LoDb.Api.Tests.PublicApiKeys;
 /// Stripe identifiers and the month's usage move to the new key, the old one is revoked, and
 /// <c>/v1</c> knows it from the next request.
 /// </summary>
-public sealed class RegenerationTests(PostgresContainerFixture postgres)
-    : IAsyncLifetime
+/// <remarks>The tests share a host, each with accounts of its own.</remarks>
+public sealed class RegenerationTests(SharedKeysApp host) : IClassFixture<SharedKeysApp>
 {
-    private KeysApp? _app;
-
-    private KeysApp App =>
-        _app ?? throw new InvalidOperationException("The host is not started yet.");
+    private KeysApp App { get; } = host.App;
 
     private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
 
@@ -67,16 +64,21 @@ public sealed class RegenerationTests(PostgresContainerFixture postgres)
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var current = (await App.KeysOfAsync(owner.Id))[^1];
+        int[] keys = [previous.Id, current.Id];
         await using var db = App.Database();
         Assert.Equal(
             [current.Id, current.Id],
-            await db.ApiUsage.Select(static usage => usage.ApiKeyId).ToListAsync(Cancellation));
+            await db.ApiUsage
+                .Where(usage => keys.Contains(usage.ApiKeyId))
+                .Select(static usage => usage.ApiKeyId)
+                .ToListAsync(Cancellation));
         Assert.Equal(
             current.Id,
-            (await db.ApiCreditGrants.SingleAsync(Cancellation)).ApiKeyId);
-        Assert.Equal([previous.Id, current.Id], App.KeyCache.Invalidated.Skip(1));
+            (await db.ApiCreditGrants
+                .SingleAsync(grant => keys.Contains(grant.ApiKeyId), Cancellation)).ApiKeyId);
+        Assert.Equal(keys, (await App.InvalidatedOfAsync(owner.Id)).Skip(1));
         var entry = Assert.Single(
-            await App.AuditAsync(),
+            await App.AuditOfAsync(owner.Id),
             static entry => entry.Action == AuditAction.ApiKeyRegenerate);
         Assert.Equal(current.KeyPrefix + "…", entry.Target);
     }
@@ -128,16 +130,6 @@ public sealed class RegenerationTests(PostgresContainerFixture postgres)
             await ApiJson.ProblemCodeAsync(response, HttpStatusCode.NotFound));
     }
 
-    public async ValueTask InitializeAsync() => _app = await KeysApp.StartAsync(postgres);
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_app is not null)
-        {
-            await _app.DisposeAsync();
-        }
-    }
-
     private static async Task<string> IssueAsync(BrowserClient browser)
     {
         using var response = await browser.PostAsync(KeysApp.PortalPath, new { name = "prod" });
@@ -168,8 +160,8 @@ public sealed class RegenerationTests(PostgresContainerFixture postgres)
         key.MonthlyQuota = 15_000;
         key.RateLimitPerMin = 120;
         key.CreditsBalance = 4_321;
-        key.StripeCustomerId = "cus_test_portal";
-        key.StripeSubscriptionId = "sub_test_portal";
+        key.StripeCustomerId = Stripe("cus_test_portal", key);
+        key.StripeSubscriptionId = Stripe("sub_test_portal", key);
         var today = DateOnly.FromDateTime(App.Clock.GetUtcNow().UtcDateTime);
         var month = new DateOnly(today.Year, today.Month, 1);
         db.ApiUsage.AddRange(
@@ -183,9 +175,13 @@ public sealed class RegenerationTests(PostgresContainerFixture postgres)
             Requests = 5_000,
             PurchasedAt = bought,
             ExpiresAt = bought.AddMonths(ApiCreditGrant.ValidityMonths),
-            StripeSessionId = "cs_test_portal",
+            StripeSessionId = Stripe("cs_test_portal", key),
         });
         await db.SaveChangesAsync(Cancellation);
         return key;
     }
+
+    // A Stripe identifier of this key alone: the other tests of the host hold their own.
+    private static string Stripe(string prefix, ApiKey key) =>
+        string.Create(CultureInfo.InvariantCulture, $"{prefix}_{key.Id}");
 }

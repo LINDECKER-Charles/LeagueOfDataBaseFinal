@@ -4,7 +4,6 @@ using System.Text.Json;
 using LoDb.Api.Tests.Accounts.Support;
 using LoDb.Api.Tests.PublicApiKeys.Support;
 using LoDb.Infrastructure.Persistence.PublicApi;
-using LoDb.Testing;
 using Microsoft.EntityFrameworkCore;
 
 namespace LoDb.Api.Tests.PublicApiKeys;
@@ -14,15 +13,12 @@ namespace LoDb.Api.Tests.PublicApiKeys;
 /// and the metered days of the last 30, newest first; and the reference of
 /// <c>/developers</c>, public.
 /// </summary>
-public sealed class OverviewTests(PostgresContainerFixture postgres)
-    : IAsyncLifetime
+/// <remarks>The tests share a host, each with accounts of its own.</remarks>
+public sealed class OverviewTests(SharedKeysApp host) : IClassFixture<SharedKeysApp>
 {
     private const string ReferencePath = "/api/public-api/reference";
 
-    private KeysApp? _app;
-
-    private KeysApp App =>
-        _app ?? throw new InvalidOperationException("The host is not started yet.");
+    private KeysApp App { get; } = host.App;
 
     private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
 
@@ -77,16 +73,6 @@ public sealed class OverviewTests(PostgresContainerFixture postgres)
         Assert.Equal(
             ["monthly", "monthly_plus", "annual", "annual_plus"],
             Codes(reference, "plans"));
-    }
-
-    public async ValueTask InitializeAsync() => _app = await KeysApp.StartAsync(postgres);
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_app is not null)
-        {
-            await _app.DisposeAsync();
-        }
     }
 
     private static IEnumerable<string?> Codes(JsonElement reference, string offers) =>
