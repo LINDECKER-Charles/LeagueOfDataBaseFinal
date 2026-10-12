@@ -59,6 +59,9 @@ bascule de l'environnement : son premier déploiement remplace ce fichier.
 4. SMTP, Stripe, Google : § 6.4 à 6.6.
 5. Fusion de `test` dans `main` : promotion de `:staging` en `:prod`, déploiement de `prod`.
 
+Les sauvegardes hors hôte de la base de prod s'activent ensuite, à part
+([`sauvegardes.md`](sauvegardes.md)) : sans elles, le déploiement reste vert.
+
 ## 3. GitHub
 
 ### 3.1 Environnements et packages
@@ -175,7 +178,8 @@ mis en fichiers :
 - `LoDb__Accounts__Google__ClientSecret`, `LoDb__Accounts__Google__AppClients__N__ClientSecret`
   (`N` = `0` ou `1`) ;
 - `LoDb__Analytics__VisitorKey`, `LoDb__Audit__IdentifierKey` ;
-- `LoDb__Audience__Username`, `LoDb__Audience__Password` (prod seulement, § 4.6).
+- `LoDb__Audience__Username`, `LoDb__Audience__Password` (prod seulement, § 4.6) ;
+- `LoDb__Database__BackupRole__Password` (prod seulement, monté dans `migrate` seul, § 4.7).
 
 Un secret ne vient **jamais** de `ENV_*` : `LODB_APP_DB_PASSWORD`, le mot de passe du rôle
 Postgres de l'API (`lodb_app`, § 4.3). Le premier déploiement le tire sur l'hôte
@@ -242,7 +246,7 @@ création d'une base, sur un volume vide.
 | `LODB_ADMIN_PASSWORD` 🔒 | 🔁 `ADMIN_PASSWORD` | idem | avec le précédent | Son mot de passe, 12 caractères au moins, sans apostrophe ni guillemet. Changé ici, il est réappliqué au déploiement suivant (sessions fermées). Reste dans le `.env` : le job le passe à la commande par son entrée. |
 | `LODB_ADMIN_EMAIL` | ➖ | ➖ | ➖ | Son e-mail, qui identifie le compte ; défaut `<login>@<LODB_CANONICAL_HOST>`. |
 | `LODB_PG_MAX_CONNECTIONS`, `LODB_PG_SLOW_STATEMENT`, `LODB_PG_IDLE_IN_TRANSACTION_TIMEOUT`, `LODB_PG_SHM_SIZE` | ➖ | ➖ | ➖ | Serveur Postgres (`compose.yaml`) : connexions (`60`, pour un pool de l'API à `32` plus `migrate`, la sauvegarde du déploiement, les verrous des tâches et `psql`), requêtes journalisées au-delà de `500ms` (sans leurs paramètres, jamais), session laissée inactive dans une transaction fermée après `60s`, `/dev/shm` de `256m`. `pg_stat_statements` est toujours chargé. |
-| `COMPOSE_FILE` | — | — | — | **Jamais dans `ENV_*`** : le job l'écrit dans le `.env` de l'hôte, avec les calques de l'environnement (§ 4.5, § 4.6), pour qu'une commande `docker compose` lancée à la main depuis le dossier les applique aussi. |
+| `COMPOSE_FILE` | — | — | — | **Jamais dans `ENV_*`** : le job l'écrit dans le `.env` de l'hôte, avec les calques de l'environnement (§ 4.5 à 4.7), pour qu'une commande `docker compose` lancée à la main depuis le dossier les applique aussi. |
 | `LODB_STAGING_BASIC_AUTH_USER`, `LODB_STAGING_BASIC_AUTH_HASH` 🔒 | ➖ | **jamais** | ➖ | Identifiant demandé sur les pages du staging (§ 4.5). Les deux ou aucun ; en prod, le job refuse de déployer. |
 
 **Monter l'epoch des anciens patchs.** Les pages d'une version épinglée dans l'URL sont
@@ -307,6 +311,7 @@ même nom.
 | `LoDb__Catalog__WarmUp__MaxStreams`, `MaxStreamsPerClient`, `StreamLifetime`, `PerClientPerHour` | ➖ | Loader de changement de patch : `8` flux ouverts, `2` par client, `120` s chacun, `20` démarrages par heure et par client (`429` au-delà). |
 | `LoDb__Ingestion__ColdDatasetsPerMinute`, `ColdImagesPerMinute`, `MaxWaitingIngestions`, `SlotWait` | ➖ | Ingestion à froid pour un visiteur : `6` couples (version, langue) et `1500` images par minute, `32` ingestions en attente d'un emplacement, `3` s d'attente au plus. Au-delà : catalogue « en attente », images en placeholders. |
 | `LoDb__Database__AppRole__StatementTimeout`, `ConnectionLimit` | ➖ | Transmis à `migrate` seulement, qui les pose sur le rôle de l'API (§ 4.3) : `00:00:15` (une requête plus longue est annulée par le serveur) et `50` sessions (`-1` : sans limite ; sous les 60 du serveur, moins les 3 réservées aux superutilisateurs). Pris en compte au déploiement suivant, par les nouvelles connexions. |
+| `LoDb__Database__BackupRole__Password` 🔒 ⚙️ | prod, à l'activation des sauvegardes | Mot de passe de `lodb_sauvegarde`, le rôle des sauvegardes hors hôte (§ 4.7) : la même valeur que `SAUVEGARDE_LODB_MOT_DE_PASSE` d'`infra-vps` (`openssl rand -hex 32`). Fichier monté dans `migrate` seul, qui le pose sur le rôle. Posé, le job exige 16 caractères au moins parmi lettres, chiffres, `-` et `_` (le format d'`infra-vps`). Absent : un rôle neuf n'a pas de mot de passe, personne ne s'y connecte ; un rôle existant garde le sien. |
 
 ### 4.3 Fixés par les fichiers compose (hors du `.env`)
 
@@ -326,7 +331,7 @@ exposerait OpenAPI et retirerait `Secure` des cookies.
 
 **Rôles Postgres.** `migrate` se connecte comme le superutilisateur de l'image (`LODB_DB_USER`,
 celui de l'ancienne stack, laissé intact jusqu'au *contract*) et, après les migrations, tient
-en place trois rôles (`Persistence/Roles/`), de façon idempotente : il ne réécrit que ce qui
+en place quatre rôles (`Persistence/Roles/`), de façon idempotente : il ne réécrit que ce qui
 diffère.
 
 | Rôle | Connexion | Droits |
@@ -334,6 +339,7 @@ diffère.
 | `lodb_owner` | jamais | Propriétaire des tables, vues et séquences du schéma `public`. |
 | `lodb_partitions` | jamais | Propriétaire d'`analytics_event`, de ses partitions quotidiennes et des deux fonctions `SECURITY DEFINER` qui les créent et les suppriment (`lodb_create_analytics_partition(date)`, `lodb_drop_analytics_partition(date)`). |
 | `lodb_app` (l'API) | oui, `CONNECTION LIMIT 50` | Lecture et écriture de lignes (`SELECT`, `INSERT`, `UPDATE`, `DELETE`), lecture seule des historiques de migration, séquences ; `EXECUTE` sur les deux fonctions, son seul DDL. Ni `TRUNCATE`, ni création (tables, index, schémas, tables temporaires, fonctions), ni appartenance à un autre rôle, ni rôle superutilisateur ; `statement_timeout` de 15 s. |
+| `lodb_sauvegarde` (sauvegardes hors hôte) | oui, `CONNECTION LIMIT 2`, par son mot de passe, posé en prod seulement (§ 4.7) | Membre de `pg_read_all_data` : lit toute la base, de quoi faire un `pg_dump`. Sa seule écriture : `INSERT` dans `backup_run`, le journal de ses passes. |
 
 Chaque passage rend les objets du schéma à leur propriétaire et refait les droits de
 `lodb_app` (un droit accordé à la main, sur une table, le schéma ou la base, comme une
@@ -380,7 +386,7 @@ un tmpfs borné, compté dans sa limite mémoire.
 Réseaux : `default` (nginx, SSR, API, `migrate`) porte le HTTP, sur `LODB_STACK_SUBNET`
 (§ 6.8) ; `data` (Postgres, API, `migrate`) est interne sur un hôte, sans route vers
 l'extérieur : nginx et le SSR ne joignent pas la base. nginx rejoint aussi `edge`, l'API et
-le SSR `observability`.
+le SSR `observability` ; en prod, Postgres rejoint `sauvegardes` (§ 4.7).
 
 <details>
 <summary>Réglages internes de l'API, avec leur défaut (non transmis par compose)</summary>
@@ -391,7 +397,7 @@ Pour en changer un sur un hôte, l'ajouter sous `services.api.environment` de
 | Section | Clés (défaut) |
 |---|---|
 | `LoDb:Hosting` | `HttpPort` (8080, attendu par nginx et le SSR), `MetricsPort` (9464, jamais publié), `MaxRequestBodySize` (131072 octets, soit 128 Kio ; au-delà, 413), `DatabaseBusyRetryAfter` (5 s, `Retry-After` du 503 quand le pool Postgres reste occupé), `SecretsDirectory` (`/run/secrets` : un fichier par réglage, nommé d'après sa clé avec `__`, lu au démarrage ; vide, il vaut un réglage absent ; il prime sur toute autre source) |
-| `LoDb:Database` | `Password` (aucun : sans lui, la chaîne de connexion reste telle quelle ; posé, il y remplace le mot de passe) ; pour `migrate` seulement, `AppRole:Password` (aucun : le mot de passe de `lodb_app` reste tel quel ; ASCII imprimable), `AppRole:StatementTimeout` (15 s), `AppRole:ConnectionLimit` (50, `-1` sans limite) |
+| `LoDb:Database` | `Password` (aucun : sans lui, la chaîne de connexion reste telle quelle ; posé, il y remplace le mot de passe) ; pour `migrate` seulement, `AppRole:Password` (aucun : le mot de passe de `lodb_app` reste tel quel ; ASCII imprimable), `AppRole:StatementTimeout` (15 s), `AppRole:ConnectionLimit` (50, `-1` sans limite), `BackupRole:Password` (aucun : le mot de passe de `lodb_sauvegarde` reste tel quel ; ASCII imprimable) |
 | `LoDb:Workers` | `Enabled` (`true` ; seul `false` coupe toutes les tâches de fond) |
 | `LoDb:Accounts` | `SecureCookies` (vrai hors Development) ; `VerificationResend:FreeResends` (5 renvois de l'e-mail de vérification par compte), puis un par `VerificationResend:Interval` (1 j) ; `UnverifiedPurge:After` (7 j : un compte encore non vérifié est effacé, sauf build, clé API, don, rôle, bannissement, soutien ou Google), `UnverifiedPurge:BatchSize` (500 comptes par passage horaire) ; `RefreshTokens:ReuseGrace` (30 s, de 0 à 5 min : le jeton de rafraîchissement qu'un échange vient de remplacer s'échange encore pour la même génération, contre une réponse perdue ou deux échanges simultanés ; au-delà, il révoque sa famille) |
 | `LoDb:RateLimiting` | par compte et par heure glissante, jamais par adresse : `CheckoutsPerHour` (10 checkouts de pack ou de plan), `ApiKeyIssuesPerHour` (5 clés créées ou régénérées), `BuildEditsPerHour` (60 builds créés ou remplacés), `VotesPerHour` (120 votes) ; au-delà, `429 rate-limited` |
@@ -500,6 +506,23 @@ le compte du tirage, rôle **Consultation** ; *Administrateur → Équipes → l
 rôle **Consultation** ; ses identifiants vont dans `ENV_PROD`. Le site garde le même UUID d'un
 hôte à l'autre : seul son historique dépend de la sauvegarde d'Umami (`infra-vps`).
 
+### 4.7 Calque de la prod : sauvegardes hors hôte
+
+La prod seule reçoit [`compose.sauvegarde.yaml`](../../compose.sauvegarde.yaml), ajouté par le
+job à `COMPOSE_FILE` après `compose.umami.yaml`. Postgres y rejoint le réseau `sauvegardes`
+d'`infra-vps` (son `docs/APPLICATIONS.md` § 7) sous l'alias `lodb-prod-postgres`, préfixé par
+sa pile : le staging partage l'hôte, et toutes les bases de l'hôte sont sur ce réseau.
+Interne, sans route vers l'extérieur, il est créé par `infra-vps` même quand ses sauvegardes
+dorment : le job vérifie qu'il existe, sans le créer, et s'arrête sinon avant toute
+modification. Aucun service de la stack n'appelle Postgres par cet alias : l'API et `migrate`
+gardent `lodb-postgres`, sur `data`.
+
+Chaque nuit, le conteneur de sauvegarde d'`infra-vps` s'y connecte comme `lodb_sauvegarde`
+(§ 4.3), avec le mot de passe de `LoDb__Database__BackupRole__Password` (§ 4.2), envoie un
+`pg_dump` de la base, chiffré, vers un stockage objet, et note chaque étape dans
+`backup_run`, que la page `/admin/backups` affiche. Activation, changement du mot de passe et
+retrait : [`sauvegardes.md`](sauvegardes.md).
+
 ## 5. Fichiers et volumes de l'hôte
 
 | Chemin, dans `$STAGING_PATH` ou `$PROD_PATH` | Écrit par | Rôle |
@@ -512,6 +535,7 @@ hôte à l'autre : seul son historique dépend de la sauvegarde d'Umami (`infra-
 | `.deploy/data-protection.pfx` | le job (`*_DATA_PROTECTION_PFX`) | Monté en secret dans `api`. Dossier en 700, fichier en 644 : l'utilisateur non root de l'API le lit. Absent, la stack ne démarre pas. |
 | `.deploy/backups/` | le job, à chaque déploiement | `<horodatage>.env` : le `.env` remplacé (sans secret depuis les fichiers secrets ; les copies plus anciennes en contiennent encore) ; `<horodatage>.dump` : la base avant `migrate` (`pg_dump -Fc`, relu par `pg_restore --list`). Les dix plus récents de chaque, dossier en 700. Ce que le retour arrière restaure ([runbook](../reecriture/bascule.md), § 8.2). |
 | `.deploy/android/` | l'exploitant, à chaque release Android | `latest.json` (asset `lodb-android-latest.json`) et `assetlinks.json` ([`release-android.md`](release-android.md)). Vide : les deux URL répondent 404. |
+| `.deploy/maintenance/` | le job, à chaque déploiement (`tools/deploy/maintenance.sh`) | `active.json` : l'interrupteur de la page de maintenance, posé juste avant que le job arrête un conteneur et retiré dès que la nouvelle stack répond à ses sondes ; tant qu'il est là, nginx répond à chaque page du site par la page de maintenance (503), avec le début du déploiement et la durée attendue. `last-duration` : la durée, en secondes, du dernier passage en maintenance, que le suivant annonce aux visiteurs (absente, la page affiche « 10 à 15 minutes »). Monté en lecture seule dans nginx (`/srv/maintenance`), dossier et fichiers lisibles par tous. Un déploiement qui échoue entre les deux laisse la page en place : la supprimer à la main (`rm .deploy/maintenance/active.json`) une fois la stack rétablie. |
 
 Volumes du projet (`lodb-staging_…`, `lodb-prod_…`) :
 

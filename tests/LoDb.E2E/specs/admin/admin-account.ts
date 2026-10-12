@@ -1,26 +1,14 @@
-import { randomBytes } from 'node:crypto';
 import { expect, type Page } from '@playwright/test';
-import { execInStack } from '../../support/stack';
+import type { CreatedAdmin } from '../../support/cli-account';
 import { nextStepAt, totpCode, totpStep } from './totp';
 
 /** An administrator the suite created with the CLI, and the key of its authenticator. */
-export interface AdminAccount {
-  readonly email: string;
-  readonly username: string;
-  readonly password: string;
-  /** The invitation `admin create` printed, which alone opens the enrolment. */
-  readonly invitation: string;
+export interface AdminAccount extends CreatedAdmin {
   /** The shared key of the authenticator, once enrolled. */
   sharedKey?: string;
   /** The last time step whose code was used: Identity may refuse a code used twice. */
   lastStep?: number;
 }
-
-// Four hexadecimal digits: two runs, or two workers, never share an address.
-const RANDOM_BYTES = 2;
-const CREATED = /^Created the administrator account (\S+) </m;
-const PASSWORD = /^Password, shown only now: (\S+)$/m;
-const INVITATION = /^Invitation to enrol an authenticator, valid \d+ minutes: (\S+)$/m;
 
 /** The French copy of the admin (public/i18n/admin/fr.json), which the specs follow. */
 const LOGIN = {
@@ -37,24 +25,6 @@ const ENROLL = {
   codes: 'Codes de récupération',
   open: "Ouvrir l'administration",
 } as const;
-
-/**
- * Creates an administrator through `admin create`, run in the API container of the stack:
- * the only way to the first administrator. `purpose` (a few letters) names the account.
- */
-export function createAdmin(purpose: string): AdminAccount {
-  const random = randomBytes(RANDOM_BYTES).toString('hex');
-  const email = `e2e_${purpose}_${Date.now().toString(36)}${random}@example.com`;
-  const command = ['dotnet', 'LoDb.Api.dll', 'admin', 'create', '--email', email];
-  const output = execInStack('api', command);
-  const username = CREATED.exec(output)?.[1];
-  const password = PASSWORD.exec(output)?.[1];
-  const invitation = INVITATION.exec(output)?.[1];
-  if (username === undefined || password === undefined || invitation === undefined) {
-    throw new Error(`admin create did not create ${email}:\n${output}`);
-  }
-  return { email, username, password, invitation };
-}
 
 /**
  * The code of the authenticator, never one already used: within the step of the last code,

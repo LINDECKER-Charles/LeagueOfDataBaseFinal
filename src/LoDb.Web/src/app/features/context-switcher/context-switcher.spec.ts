@@ -3,15 +3,14 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { Component, PLATFORM_ID } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
-import { provideTransloco } from '@jsverse/transloco';
-import { of } from 'rxjs';
 import { API_BASE_URL } from '../../core/api/api-base-url';
-import type { CatalogMeta } from '../../core/api/generated/models/catalog-meta';
 import { PreferencesStore } from '../../core/context/preferences/preferences-store';
 import { WarmUpLoader } from '../../core/context/warm-up/warm-up-loader';
 import type { WarmUpTarget } from '../../core/context/warm-up/warm-up-target';
 import { NavContext } from '../../core/layout/nav/nav-context';
 import { ToastService } from '../../core/layout/toast/toast-service';
+import { catalogMetaOf } from '../../core/testing/catalog-meta-of';
+import { provideTestTransloco } from '../../core/testing/provide-test-transloco';
 import { ContextSwitcher } from './context-switcher';
 
 @Component({ template: '' })
@@ -21,22 +20,15 @@ const ORIGIN = 'http://api.test';
 const META_URL = `${ORIGIN}/api/meta`;
 const LATEST = '16.19.1';
 const OLDER = '15.14.1';
-const META: CatalogMeta = {
+const META = catalogMetaOf({
   latest: LATEST,
   versions: [LATEST, OLDER],
-  readyVersions: [LATEST],
-  versionPattern: String.raw`\d+(?:\.\d+)+`,
   languages: ['en_US', 'en_GB', 'fr_FR'],
-  languagePattern: '[a-z]{2}_[A-Z]{2}',
-  defaultLanguage: 'en_US',
   locales: [
     { locale: 'en', language: 'en_US' },
     { locale: 'fr', language: 'fr_FR' },
   ],
-  fallbackLocale: 'en',
-  gameModes: [{ mode: 'sr', map: 11 }],
-  defaultGameMode: 'sr',
-};
+});
 const FORGET = 'lod_prefs=; path=/; max-age=0';
 // Lets every visit through at once: the loader's own spec covers the wait.
 const gate = vi.fn((_target: WarmUpTarget, visit: () => Promise<boolean>) => visit());
@@ -50,17 +42,7 @@ function configure(platform: 'browser' | 'server'): void {
       provideHttpClient(),
       provideHttpClientTesting(),
       provideRouter([{ path: ':locale', children: [{ path: '**', component: Probe }] }]),
-      provideTransloco({
-        config: {
-          availableLangs: ['en', 'fr'],
-          defaultLang: 'en',
-          missingHandler: { logMissingKey: false },
-          prodMode: true,
-        },
-        loader: class {
-          getTranslation = () => of({});
-        },
-      }),
+      provideTestTransloco(),
     ],
   });
 }

@@ -2,6 +2,9 @@ import type { Locator, Page } from '@playwright/test';
 import { metaOf, olderVersion } from '../../support/catalog';
 import { expect, test } from '../../support/test';
 
+// A link of the history the server renders opens a past patch in the browser, which the stack
+// ingests on demand: the router and that ingestion only meet here. The history's links, and
+// those of a detail's previous patches, are Vitest's.
 const PAGE = '/en/patches';
 
 // The links of a version's row, found by the version its header names.

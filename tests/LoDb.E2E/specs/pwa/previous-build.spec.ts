@@ -1,6 +1,10 @@
 import { execInStack } from '../../support/stack';
 import { expect, test } from '../../support/test';
 
+// A tab opened before a deployment still loads its bundles: only the stack has the volume the
+// SSR server publishes them to, nginx's /build/ in front of it and a browser's lazy import.
+// The publication itself is the SSR server's unit tests', the cache rules tools/nginx's.
+
 // The folder the successive builds of web-ssr share (compose.yaml, volume front-builds).
 const FRONT_BUILDS = '/srv/front-builds';
 const IMMUTABLE = 'public, max-age=31536000, immutable';

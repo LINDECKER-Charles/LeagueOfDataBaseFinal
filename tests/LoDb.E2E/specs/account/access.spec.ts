@@ -1,6 +1,8 @@
 import { expect, test } from '../../support/test';
 
-// No account is created here: what a visitor meets on the account pages.
+// No account is created here: what a visitor meets on the account pages. They render in the
+// browser alone, behind a guard that asks the real API for the session: only the stack shows
+// the visitor landing on the sign-in, the way back kept. The guard's rules are Vitest's.
 test.describe('account pages for a visitor', () => {
   test(
     'send the profile to the sign-in, which will bring the visitor back',

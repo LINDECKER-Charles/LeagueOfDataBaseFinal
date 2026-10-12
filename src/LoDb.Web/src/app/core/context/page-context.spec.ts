@@ -1,26 +1,20 @@
 import type { CatalogMeta } from '../api/generated/models/catalog-meta';
+import { catalogMetaOf } from '../testing/catalog-meta-of';
 import type { ContextSources } from './context-sources';
 import type { PageContext } from './page-context';
 import { pageContextOf } from './page-context-of';
 
 const LATEST = '16.19.1';
 const OLDER = '15.14.1';
-const META: CatalogMeta = {
+const META = catalogMetaOf({
   latest: LATEST,
   versions: [LATEST, '16.18.1', OLDER],
-  readyVersions: [LATEST],
-  versionPattern: String.raw`\d+(?:\.\d+)+`,
   languages: ['en_US', 'en_GB', 'fr_FR', 'ja_JP'],
-  languagePattern: '[a-z]{2}_[A-Z]{2}',
-  defaultLanguage: 'en_US',
   locales: [
     { locale: 'en', language: 'en_US' },
     { locale: 'fr', language: 'fr_FR' },
   ],
-  fallbackLocale: 'en',
-  gameModes: [{ mode: 'sr', map: 11 }],
-  defaultGameMode: 'sr',
-};
+});
 
 interface Case {
   readonly rule: string;

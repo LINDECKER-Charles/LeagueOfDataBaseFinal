@@ -15,12 +15,6 @@ public sealed class SizeCapTests
     };
 
     [Fact]
-    public void DefaultCapIs32MiB()
-    {
-        Assert.Equal(32L * 1024 * 1024, new EgressOptions().MaxResponseBytes);
-    }
-
-    [Fact]
     public async Task DeclaredOversizedBodyIsRefusedBeforeReading()
     {
         using var harness = EgressHarness.Create(

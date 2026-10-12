@@ -2,7 +2,6 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { PLATFORM_ID, type Provider } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideTransloco } from '@jsverse/transloco';
 import { of } from 'rxjs';
 import type { AccountUser } from '../../../core/api/generated/models/account-user';
 import { API_BASE_URL } from '../../../core/api/api-base-url';
@@ -12,6 +11,7 @@ import { accountUser } from '../../../core/auth/testing/account-user';
 import { FakeAuthStrategy } from '../../../core/auth/testing/fake-auth-strategy';
 import { ToastService } from '../../../core/layout/toast/toast-service';
 import { PLATFORM } from '../../../core/platform/platform';
+import { provideTestTransloco } from '../../../core/testing/provide-test-transloco';
 import { VerifyEmailBanner } from './verify-email-banner';
 
 const API = 'https://api.example.com';
@@ -31,16 +31,7 @@ async function open(user: AccountUser | null, detected = true) {
       detected ? DETECTED : [],
       provideHttpClient(),
       provideHttpClientTesting(),
-      provideTransloco({
-        config: {
-          availableLangs: ['fr'],
-          defaultLang: 'fr',
-          missingHandler: { logMissingKey: false },
-        },
-        loader: class {
-          getTranslation = () => of({});
-        },
-      }),
+      provideTestTransloco({ lang: 'fr' }),
     ],
   });
   await TestBed.inject(AuthSession).load();

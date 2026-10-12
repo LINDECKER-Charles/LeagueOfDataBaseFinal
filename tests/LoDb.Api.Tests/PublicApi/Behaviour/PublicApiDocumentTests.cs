@@ -10,7 +10,8 @@ namespace LoDb.Api.Tests.PublicApi.Behaviour;
 /// The <c>public-v1</c> document describes what a key holder may call: the four reads, the
 /// two ways of presenting a key, the rate limit headers and the parameters go-api reads.
 /// </summary>
-public sealed class PublicApiDocumentTests
+/// <remarks>No test changes the host's state: one host serves them all.</remarks>
+public sealed class PublicApiDocumentTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
     private const string LimitHeader = "X-RateLimit-Limit";
 
@@ -98,9 +99,8 @@ public sealed class PublicApiDocumentTests
         Assert.Equal(["7d", "30d"], Choices(trends, "range"));
     }
 
-    private static async Task<OpenApiDocument> DocumentAsync()
+    private async Task<OpenApiDocument> DocumentAsync()
     {
-        await using var factory = new ApiFactory();
         var provider = factory.Services.GetRequiredKeyedService<IOpenApiDocumentProvider>(
             OpenApiDocuments.PublicV1);
         return await provider.GetOpenApiDocumentAsync(TestContext.Current.CancellationToken);

@@ -26,12 +26,15 @@ const STOP_MARKER = '# ── Pull, then migrations';
 const EDGE_SUBNET = '172.18.0.0/16';
 const OBSERVABILITY_SUBNET = '172.19.0.0/16';
 // git and docker answer as on a host whose checkout, shared networks and Engine 25+ are in
-// place; OBSERVABILITY_SUBNET in the environment moves that network onto another subnet.
+// place; OBSERVABILITY_SUBNET in the environment moves that network onto another subnet, and
+// MISSING_NETWORK names a shared network the host lacks.
 const STUBS = [
   'git() { :; }',
   'docker() {',
   '  case "$*" in',
+  '    "network inspect ${MISSING_NETWORK:-}") return 1 ;;',
   '    "network inspect edge" | "network inspect observability") ;;',
+  '    "network inspect sauvegardes") ;;',
   `    "network inspect edge --format "*) echo ${EDGE_SUBNET} ;;`,
   '    "network inspect observability --format "*)',
   `      echo "\${OBSERVABILITY_SUBNET:-${OBSERVABILITY_SUBNET}}" ;;`,
@@ -42,6 +45,8 @@ const STUBS = [
   '  esac',
   '}',
 ].join('\n');
+// The overlays prod deploys, as the job joins them into COMPOSE_FILE.
+const PROD_FILES = 'compose.yaml:compose.deploy.yaml:compose.umami.yaml:compose.sauvegarde.yaml';
 const STAGING = {
   TARGET: 'staging',
   EXPECTED_PROJECT: 'lodb-staging',
@@ -58,6 +63,8 @@ const PROD = {
 };
 // The API's own database password: drawn on the host, never in the pushed dotenv.
 const APP_PASSWORD = 'LODB_APP_DB_PASSWORD';
+// The password of the off-host backups' role: optional, in infra-vps's format once set.
+const BACKUP_PASSWORD = 'LoDb__Database__BackupRole__Password';
 const HEX_PASSWORD = /^[0-9a-f]{64}$/;
 const workspaces = [];
 after(() => workspaces.forEach((dir) => rmSync(dir, { recursive: true, force: true })));
@@ -129,10 +136,7 @@ describe('_deploy.yml, the dotenv against the target', () => {
     assert.match(read(dir, '.env'), /^COMPOSE_PROJECT_NAME=lodb-prod$/m);
     assert.match(read(dir, '.env'), /^LODB_SECRETS_REVISION=1$/m);
     assert.match(read(dir, '.env'), new RegExp(`^LODB_EDGE_CIDR=${EDGE_SUBNET}$`, 'm'));
-    assert.match(
-      read(dir, '.env'),
-      /^COMPOSE_FILE=compose\.yaml:compose\.deploy\.yaml:compose\.umami\.yaml$/m,
-    );
+    assert.ok(read(dir, '.env').split('\n').includes(`COMPOSE_FILE=${PROD_FILES}`));
     assert.match(read(dir, '.env'), /^LODB_STACK_SUBNET=10\.231\.2\.0\/24$/m);
     assert.doesNotMatch(read(dir, '.env'), /database-secret/);
     assert.deepEqual(leftovers(dir), []);
@@ -155,10 +159,10 @@ describe('_deploy.yml, the dotenv against the target', () => {
     assert.equal(read(dir, '.env').includes(drawn), false);
   });
 
-  it('declares the site to Umami in prod only', () => {
+  it("declares the site to Umami and joins the backups' network in prod only", () => {
     const dir = host();
 
-    const run = deploy(dir, STAGING, dotenvFor(STAGING));
+    const run = deploy(dir, { ...STAGING, MISSING_NETWORK: 'sauvegardes' }, dotenvFor(STAGING));
 
     assert.equal(run.status, 0, run.stderr);
     assert.match(
@@ -180,6 +184,19 @@ describe('_deploy.yml, the dotenv against the target', () => {
     assert.deepEqual(leftovers(dir), []);
   });
 
+  it("leaves the .env and the secret files in place when prod lacks the backups' network", () => {
+    const dir = host();
+    assert.equal(deploy(dir, PROD, dotenvFor(PROD)).status, 0);
+    const before = snapshot(dir);
+
+    const run = deploy(dir, { ...PROD, MISSING_NETWORK: 'sauvegardes' }, dotenvFor(PROD));
+
+    assert.notEqual(run.status, 0);
+    assert.match(run.stderr, /'sauvegardes' is missing — deploy infra-vps first/);
+    assert.deepEqual(snapshot(dir), before);
+    assert.deepEqual(leftovers(dir), []);
+  });
+
   for (const [refusal, target, extra, other = target] of [
     ['the dotenv of another environment', PROD, ['LODB_DB_PASSWORD=other'], STAGING],
     ['prod without its webhook secret', PROD, ['LoDb__Billing__StripeWebhookSecret=']],
@@ -187,6 +204,8 @@ describe('_deploy.yml, the dotenv against the target', () => {
     ['a secret the split refuses', STAGING, ['LODB_DB_PASSWORD=pa$x']],
     ['a bundle retention shorter than a cached page', PROD, ['LODB_FRONT_BUILDS_RETENTION_DAYS=7']],
     ["a dotenv that sets the API's database password", STAGING, [`${APP_PASSWORD}=from-github`]],
+    ['a backup role password under 16 characters', PROD, [`${BACKUP_PASSWORD}=${'a'.repeat(15)}`]],
+    ['a backup role password infra-vps refuses', PROD, [`${BACKUP_PASSWORD}=pass.word.of.20.char`]],
   ]) {
     it(`leaves the .env and the secret files in place for ${refusal}`, () => {
       const dir = host();
@@ -248,5 +267,34 @@ describe("_deploy.yml, the edge's secret", () => {
     assert.doesNotMatch(run.stderr, /not-hexadecimal/);
     assert.deepEqual(snapshot(dir), before);
     assert.deepEqual(leftovers(dir), []);
+  });
+});
+
+describe("_deploy.yml, the password of the backups' role", () => {
+  const WELL_FORMED = 'ab'.repeat(32);
+  const secretOf = (dir) => read(dir, '.deploy', 'secrets', BACKUP_PASSWORD);
+
+  it('is optional, and reaches its file once set, unprinted', () => {
+    const dir = host();
+
+    const unset = deploy(dir, PROD, dotenvFor(PROD));
+    const empty = secretOf(dir);
+    const set = deploy(dir, PROD, dotenvFor(PROD, [`${BACKUP_PASSWORD}=${WELL_FORMED}`]));
+
+    assert.equal(unset.status, 0, unset.stderr);
+    assert.equal(set.status, 0, set.stderr);
+    assert.equal(empty, '');
+    assert.equal(secretOf(dir), WELL_FORMED);
+    assert.equal(`${set.stdout}${set.stderr}`.includes(WELL_FORMED), false);
+  });
+
+  it('refuses a malformed one, naming the key only', () => {
+    const dir = host();
+
+    const run = deploy(dir, PROD, dotenvFor(PROD, [`${BACKUP_PASSWORD}=pass.word.of.20.char`]));
+
+    assert.notEqual(run.status, 0);
+    assert.match(run.stderr, new RegExp(`${BACKUP_PASSWORD}: 16 or more letters`));
+    assert.doesNotMatch(`${run.stdout}${run.stderr}`, /pass\.word/);
   });
 });

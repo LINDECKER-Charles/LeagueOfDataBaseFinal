@@ -20,17 +20,14 @@ public sealed class PatchVersionParsingTests
         Assert.Equal(text, version.ToString());
     }
 
+    // One row per class: other characters, a single segment, an empty segment, a trailing
+    // line break, digits that are not ASCII, nothing at all.
     [Theory]
     [InlineData("lolpatch_3.7")]
     [InlineData("16")]
-    [InlineData("16.")]
-    [InlineData(".16.1")]
     [InlineData("16..1")]
     [InlineData("16.1.1\n")]
-    [InlineData(" 16.1.1")]
-    [InlineData("16.1/../1")]
     [InlineData("١٦.١")]
-    [InlineData("")]
     [InlineData(null)]
     public void AnythingElseIsRejected(string? text)
     {

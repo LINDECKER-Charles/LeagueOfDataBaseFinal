@@ -1,10 +1,10 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using LoDb.Api.Tests.Accounts.Support;
 using LoDb.Infrastructure.Audit;
-using LoDb.Testing;
 
 namespace LoDb.Api.Tests.Accounts;
 
@@ -13,18 +13,32 @@ namespace LoDb.Api.Tests.Accounts;
 /// sign-in with its PKCE verifier, redeemed with the client it names, and gets the tokens of
 /// the account, under the same linking rules as the web.
 /// </summary>
-public sealed class GoogleAppExchangeTests(PostgresContainerFixture postgres)
-    : IAsyncLifetime
+/// <remarks>
+/// The tests share a host: each signs in with a Google account, an e-mail and an account of
+/// its own, and Google starts each test anew.
+/// </remarks>
+public sealed class GoogleAppExchangeTests : IClassFixture<SharedAccountsApp>
 {
     private const string ExchangePath = "/api/account/google/app/exchange";
-    private const string Subject = "110248495921238986420";
     private const string Verifier = "dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk";
     private const string AndroidRedirect = "com.leagueofdatabase.app:/oauth2redirect";
 
-    private AccountsApp? _app;
+    private readonly AccountSeed _account;
+    private readonly string _subject;
+    private readonly string _gmail;
 
-    private AccountsApp App =>
-        _app ?? throw new InvalidOperationException("The host is not started yet.");
+    public GoogleAppExchangeTests(SharedAccountsApp host)
+    {
+        ArgumentNullException.ThrowIfNull(host);
+        App = host.App;
+        App.GoogleServer.Reset();
+        _account = host.Unique();
+        var number = host.NextNumber();
+        _subject = string.Create(CultureInfo.InvariantCulture, $"1102484959{number:D11}");
+        _gmail = string.Create(CultureInfo.InvariantCulture, $"joueur{number}@gmail.test");
+    }
+
+    private AccountsApp App { get; }
 
     private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
 
@@ -33,7 +47,7 @@ public sealed class GoogleAppExchangeTests(PostgresContainerFixture postgres)
     {
         App.GoogleServer.Account = new GoogleAccount
         {
-            Subject = Subject,
+            Subject = _subject,
             Email = "Joueur@gmail.test",
             GivenName = "Joueur",
         };
@@ -51,7 +65,7 @@ public sealed class GoogleAppExchangeTests(PostgresContainerFixture postgres)
             (exchange["client_id"], exchange["code_verifier"], exchange["redirect_uri"],
                 exchange["code"]));
         Assert.False(exchange.ContainsKey("client_secret"));
-        var login = Assert.Single(await App.AuditAsync());
+        var login = Assert.Single(await App.AuditOfAsync("Joueur"));
         Assert.Equal(
             (AuditAction.UserLogin, "google", "token"),
             (login.Action, AccountsApp.Meta(login, "method"), AccountsApp.Meta(login, "channel")));
@@ -62,7 +76,7 @@ public sealed class GoogleAppExchangeTests(PostgresContainerFixture postgres)
     [InlineData(null, AccountsApp.WebClientSecret)]
     public async Task CodeIsRedeemedWithTheSecretOfItsClient(string? clientId, string secret)
     {
-        App.GoogleServer.Account = new GoogleAccount { Subject = Subject, Email = "a@gmail.test" };
+        App.GoogleServer.Account = NewAccount();
         using var app = App.App();
 
         using var response = await ExchangeAsync(app, Exchange(clientId));
@@ -103,7 +117,7 @@ public sealed class GoogleAppExchangeTests(PostgresContainerFixture postgres)
         string verifier,
         string field)
     {
-        App.GoogleServer.Account = new GoogleAccount { Subject = Subject, Email = "a@gmail.test" };
+        App.GoogleServer.Account = NewAccount();
         using var app = App.App();
 
         using var response = await ExchangeAsync(app, new
@@ -123,7 +137,7 @@ public sealed class GoogleAppExchangeTests(PostgresContainerFixture postgres)
     [Fact]
     public async Task CodeGoogleRefusesGivesNoToken()
     {
-        App.GoogleServer.Account = new GoogleAccount { Subject = Subject, Email = "a@gmail.test" };
+        App.GoogleServer.Account = NewAccount();
         using var app = App.App();
 
         using var response = await ExchangeAsync(app, Exchange(code: "stolen"));
@@ -131,17 +145,19 @@ public sealed class GoogleAppExchangeTests(PostgresContainerFixture postgres)
         Assert.Equal(
             "google-exchange-failed",
             await ApiJson.ProblemCodeAsync(response, HttpStatusCode.BadRequest));
-        Assert.Equal(["0"], await App.QueryAsync("SELECT count(*) FROM users"));
+        Assert.Equal(
+            ["0"],
+            await App.QueryAsync($"SELECT count(*) FROM users WHERE email = '{_gmail}'"));
     }
 
     [Fact]
     public async Task UnverifiedEmailNeverTakesTheAccountThatUsesIt()
     {
-        await App.SeedAsync(new AccountSeed());
+        await App.SeedAsync(_account);
         App.GoogleServer.Account = new GoogleAccount
         {
-            Subject = Subject,
-            Email = AccountSeed.Address,
+            Subject = _subject,
+            Email = _account.Email,
             EmailVerified = false,
         };
         using var app = App.App();
@@ -151,17 +167,17 @@ public sealed class GoogleAppExchangeTests(PostgresContainerFixture postgres)
         Assert.Equal(
             "google-email-unverified",
             await ApiJson.ProblemCodeAsync(response, HttpStatusCode.Conflict));
-        Assert.Null((await App.FindAsync(AccountSeed.Name)).GoogleId);
+        Assert.Null((await App.FindAsync(_account.Username)).GoogleId);
     }
 
     [Fact]
     public async Task BannedAccountGetsNoToken()
     {
-        await App.SeedAsync(new AccountSeed { GoogleId = Subject, Banned = true });
+        await App.SeedAsync(_account with { GoogleId = _subject, Banned = true });
         App.GoogleServer.Account = new GoogleAccount
         {
-            Subject = Subject,
-            Email = AccountSeed.Address,
+            Subject = _subject,
+            Email = _account.Email,
         };
         using var app = App.App();
 
@@ -170,7 +186,7 @@ public sealed class GoogleAppExchangeTests(PostgresContainerFixture postgres)
         Assert.Equal(
             "account-banned",
             await ApiJson.ProblemCodeAsync(response, HttpStatusCode.Forbidden));
-        var refusal = Assert.Single(await App.AuditAsync());
+        var refusal = Assert.Single(await App.AuditOfAsync(_account.Username, _account.Email));
         Assert.Equal(AuditAction.UserLoginFailed, refusal.Action);
     }
 
@@ -185,16 +201,6 @@ public sealed class GoogleAppExchangeTests(PostgresContainerFixture postgres)
         Assert.Equal(
             "google-unavailable",
             await ApiJson.ProblemCodeAsync(response, HttpStatusCode.ServiceUnavailable));
-    }
-
-    public async ValueTask InitializeAsync() => _app = await AccountsApp.StartAsync(postgres);
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_app is not null)
-        {
-            await _app.DisposeAsync();
-        }
     }
 
     private static object Exchange(string? clientId = null, string code = FakeGoogle.Code) =>
@@ -215,4 +221,7 @@ public sealed class GoogleAppExchangeTests(PostgresContainerFixture postgres)
         var user = (await ApiJson.ReadAsync(response, HttpStatusCode.OK)).GetProperty("user");
         return user.ValueKind == JsonValueKind.Null ? null : ApiJson.Text(user, "username");
     }
+
+    // A Google account of this test only, its e-mail used by no account yet.
+    private GoogleAccount NewAccount() => new() { Subject = _subject, Email = _gmail };
 }

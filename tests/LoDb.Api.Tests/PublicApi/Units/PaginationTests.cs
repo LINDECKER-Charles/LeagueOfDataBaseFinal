@@ -9,13 +9,13 @@ namespace LoDb.Api.Tests.PublicApi.Units;
 /// </summary>
 public sealed class PaginationTests
 {
+    // Which value of the query is read, and how it is decoded, is GoQueryTests'. These rows:
+    // the defaults, plain numbers, leading zeros, a sign, then the bounds.
     [Theory]
     [InlineData("", 1, 20)]
-    [InlineData("?page=&per_page=", 1, 20)]
     [InlineData("?page=3&per_page=5", 3, 5)]
     [InlineData("?page=007&per_page=05", 7, 5)]
     [InlineData("?page=%2B2&per_page=%2B10", 2, 10)]
-    [InlineData("?page=2&page=x", 2, 20)]
     [InlineData("?per_page=50", 1, 50)]
     [InlineData("?per_page=51", 1, 50)]
     [InlineData("?per_page=9223372036854775807", 1, 50)]
@@ -26,19 +26,14 @@ public sealed class PaginationTests
         Assert.Equal(new Pagination(page, perPage), pagination);
     }
 
+    // Below one, for each parameter; not an integer; a space, which a bare + decodes to; and
+    // one past long.MaxValue.
     [Theory]
     [InlineData("?page=0")]
-    [InlineData("?page=-1")]
     [InlineData("?per_page=0")]
-    [InlineData("?page=abc")]
     [InlineData("?page=1.5")]
     [InlineData("?page=+2")]
-    [InlineData("?page=%202")]
-    [InlineData("?page=2%20")]
-    [InlineData("?page=1e3")]
-    [InlineData("?page=0x10")]
     [InlineData("?page=9223372036854775808")]
-    [InlineData("?page=x&page=2")]
     public void AnythingElseIsRefused(string query)
     {
         Assert.False(Pagination.TryRead(Query(query), out _));

@@ -37,6 +37,11 @@ public static class PersistenceRegistration
             .ValidateOnStart();
         services.TryAddEnumerable(ServiceDescriptor
             .Singleton<IValidateOptions<AppRoleOptions>, AppRoleOptionsValidator>());
+        services.AddOptions<BackupRoleOptions>()
+            .Bind(configuration.GetSection(BackupRoleOptions.SectionName))
+            .ValidateOnStart();
+        services.TryAddEnumerable(ServiceDescriptor
+            .Singleton<IValidateOptions<BackupRoleOptions>, BackupRoleOptionsValidator>());
         services.TryAddSingleton<DatabaseRoles>();
         services.TryAddScoped<DatabaseMigrator>();
         return services;

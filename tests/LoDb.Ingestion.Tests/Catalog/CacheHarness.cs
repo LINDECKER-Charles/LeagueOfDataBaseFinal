@@ -12,6 +12,7 @@ using LoDb.Ingestion.Normalization;
 using LoDb.Ingestion.Pipeline.Datasets;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Time.Testing;
 
 namespace LoDb.Ingestion.Tests.Catalog;
 
@@ -29,13 +30,19 @@ internal sealed class CacheHarness : IDisposable
         provider = new ServiceCollection().AddMetrics().BuildServiceProvider();
         Meters = provider.GetRequiredService<IMeterFactory>();
         var metrics = new CatalogMetrics(Meters);
-        gate = new ColdLoadGate(Options.Create(options), TimeProvider.System, metrics);
-        Cache = new CatalogCache(Options.Create(options), gate, metrics, TimeProvider.System);
+        gate = new ColdLoadGate(Options.Create(options), Time, metrics);
+        Cache = new CatalogCache(Options.Create(options), gate, metrics, Time);
     }
 
     public static PatchVersion Version { get; } = PatchVersion.Parse("16.19.1");
 
     public static CancellationToken Token => TestContext.Current.CancellationToken;
+
+    /// <summary>
+    /// The clock of the renderer's wait: it runs out only when a test moves the clock, never
+    /// because the machine was busy. The rate limiters keep the real clock.
+    /// </summary>
+    public FakeTimeProvider Time { get; } = new();
 
     public IMeterFactory Meters { get; }
 

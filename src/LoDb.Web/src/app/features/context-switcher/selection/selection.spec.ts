@@ -1,8 +1,8 @@
-import type { CatalogMeta } from '../../../core/api/generated/models/catalog-meta';
 import type { Preferences } from '../../../core/context/preferences/preferences';
 import type { ContextTarget } from '../../../core/context/switch/context-target';
 import { switchContext } from '../../../core/context/switch/switch-context';
 import type { Locale } from '../../../core/i18n/locales';
+import { catalogMetaOf } from '../../../core/testing/catalog-meta-of';
 import type { LanguageOption } from '../options/language-option';
 import { languageOptions } from '../options/language-options';
 import { currentChoice } from './current-choice';
@@ -12,24 +12,17 @@ import { targetOf } from './target-of';
 
 const LATEST = '16.19.1';
 const OLDER = '15.14.1';
-const META: CatalogMeta = {
+const META = catalogMetaOf({
   latest: LATEST,
   versions: [LATEST, '16.18.1', OLDER],
-  readyVersions: [LATEST],
-  versionPattern: String.raw`\d+(?:\.\d+)+`,
   languages: ['en_US', 'en_GB', 'fr_FR', 'zh_CN', 'zh_TW', 'zh_MY'],
-  languagePattern: '[a-z]{2}_[A-Z]{2}',
-  defaultLanguage: 'en_US',
   locales: [
     { locale: 'en', language: 'en_US' },
     { locale: 'fr', language: 'fr_FR' },
     { locale: 'zh-hans', language: 'zh_CN' },
     { locale: 'zh-hant', language: 'zh_TW' },
   ],
-  fallbackLocale: 'en',
-  gameModes: [{ mode: 'sr', map: 11 }],
-  defaultGameMode: 'sr',
-};
+});
 const OPTIONS = languageOptions(META);
 
 function option(key: string): LanguageOption {
@@ -69,13 +62,6 @@ describe('currentChoice', () => {
       locale: 'en',
       version: OLDER,
       language: 'en:en_GB',
-    },
-    {
-      rule: 'the path over the query',
-      url: `/en/${OLDER}/champions?version=16.18.1`,
-      locale: 'en',
-      version: OLDER,
-      language: 'en:en_US',
     },
     {
       rule: 'an unknown version as the latest',
@@ -120,17 +106,13 @@ describe('currentChoice', () => {
     expect(currentChoice(shown, META, OPTIONS)).toEqual({ version, language });
   });
 
-  // The legacy `page_selection`: the session's patch on `/about` as on the catalogue.
+  // The legacy `page_selection`: the session's patch on `/about` as on the catalogue. What a
+  // path or a query names wins over it: pageContextOf's rule (ADR 0005), tested there.
   it('shows the kept context where neither the path nor the query names one', () => {
     const remembered: Preferences = { version: OLDER, lang: 'en_GB' };
-    const on = (url: string) => currentChoice({ url, locale: 'en', remembered }, META, OPTIONS);
+    const shown = { url: '/en/about', locale: 'en' as const, remembered };
 
-    expect(on('/en/about')).toEqual({ version: OLDER, language: 'en:en_GB' });
-    expect(on('/en/16.18.1/champions')).toEqual({ version: '16.18.1', language: 'en:en_GB' });
-    expect(on(`/en/about?version=${LATEST}&lang=en_US`)).toEqual({
-      version: LATEST,
-      language: 'en:en_US',
-    });
+    expect(currentChoice(shown, META, OPTIONS)).toEqual({ version: OLDER, language: 'en:en_GB' });
   });
 
   it('shows nothing while no version is ingested', () => {
@@ -141,68 +123,13 @@ describe('currentChoice', () => {
   });
 });
 
-describe('the target path of a choice', () => {
-  interface Case {
-    readonly rule: string;
-    readonly from: string;
-    readonly version: string;
-    readonly language: string;
-    readonly to: string;
-  }
-  const cases: Case[] = [
-    {
-      rule: 'pins an older version in a catalogue path',
-      from: '/fr/champions',
-      version: OLDER,
-      language: 'fr:fr_FR',
-      to: `/fr/${OLDER}/champions`,
-    },
-    {
-      rule: 'returns to the short URL on the latest',
-      from: `/fr/${OLDER}/champions/Aatrox`,
-      version: LATEST,
-      language: 'fr:fr_FR',
-      to: '/fr/champions/Aatrox',
-    },
-    {
-      rule: 'moves to another locale on the same page',
-      from: '/fr/items/1036-long-sword',
-      version: LATEST,
-      language: 'en:en_US',
-      to: '/en/items/1036-long-sword',
-    },
-    {
-      rule: 'reads a variant through ?lang=',
-      from: '/en/runes',
-      version: LATEST,
-      language: 'en:en_GB',
-      to: '/en/runes?lang=en_GB',
-    },
-    {
-      rule: 'drops ?lang= back on the own language',
-      from: '/en/runes?lang=en_GB',
-      version: LATEST,
-      language: 'en:en_US',
-      to: '/en/runes',
-    },
-    {
-      rule: 'puts the version in the query of the home',
-      from: '/en/',
-      version: OLDER,
-      language: 'en:en_GB',
-      to: `/en/?lang=en_GB&version=${OLDER}`,
-    },
-    {
-      rule: 'keeps the filters of a list',
-      from: '/fr/items?page=2&tags=Boots',
-      version: OLDER,
-      language: 'fr:fr_FR',
-      to: `/fr/${OLDER}/items?page=2&tags=Boots`,
-    },
-  ];
+// How each target becomes a URL is switchContext's (core/context/switch): a choice only has
+// to hand it the locale, the variant and the version it names.
+describe('targetOf', () => {
+  it('asks for the locale, the variant and the version of the choice', () => {
+    const target = targetOf(OLDER, option('en:en_GB'));
 
-  it.each(cases)('$rule', ({ from, version, language, to }) => {
-    expect(switchContext(from, targetOf(version, option(language)), META)).toBe(to);
+    expect(switchContext('/fr/champions', target, META)).toBe(`/en/${OLDER}/champions?lang=en_GB`);
   });
 });
 

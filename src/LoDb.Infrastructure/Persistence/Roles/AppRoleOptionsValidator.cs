@@ -5,11 +5,6 @@ namespace LoDb.Infrastructure.Persistence.Roles;
 /// <summary>Refuses at startup a role setting PostgreSQL would refuse or misread.</summary>
 internal sealed class AppRoleOptionsValidator : IValidateOptions<AppRoleOptions>
 {
-    // Printable ASCII: the SCRAM verifier computed here then matches the client's proof,
-    // without the SASLprep normalization PostgreSQL applies to other characters.
-    private const char FirstPrintable = ' ';
-    private const char LastPrintable = '~';
-
     // statement_timeout is an integer of milliseconds on the server.
     private static readonly TimeSpan MinStatementTimeout = TimeSpan.FromMilliseconds(1);
     private static readonly TimeSpan MaxStatementTimeout =
@@ -31,7 +26,7 @@ internal sealed class AppRoleOptionsValidator : IValidateOptions<AppRoleOptions>
                 $"ConnectionLimit must be positive, or {AppRoleOptions.UnlimitedConnections}.");
         }
 
-        if (options.Password is { } password && !IsPrintableAscii(password))
+        if (options.Password is { } password && !RolePasswords.IsPrintableAscii(password))
         {
             failures.Add("Password must be printable ASCII.");
         }
@@ -40,7 +35,4 @@ internal sealed class AppRoleOptionsValidator : IValidateOptions<AppRoleOptions>
             ? ValidateOptionsResult.Success
             : ValidateOptionsResult.Fail(failures);
     }
-
-    private static bool IsPrintableAscii(string password) =>
-        password.All(static character => character is >= FirstPrintable and <= LastPrintable);
 }

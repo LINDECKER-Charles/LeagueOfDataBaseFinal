@@ -1,5 +1,4 @@
 using System.Net;
-using LoDb.Testing;
 using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace LoDb.Api.Tests.Telemetry;
@@ -8,9 +7,8 @@ namespace LoDb.Api.Tests.Telemetry;
 /// The Prometheus scrape is served on the metrics port only, and that port serves nothing
 /// else: nginx, which only reaches the API port, can never expose it.
 /// </summary>
-public sealed class MetricsEndpointTests
+public sealed class MetricsEndpointTests(RevisedApi api) : IClassFixture<RevisedApi>
 {
-    private const string Revision = "0123abcd";
     private static readonly Uri Metrics = new("/metrics", UriKind.Relative);
     private static readonly Uri MetricsPort = new("http://localhost:9464");
     private static readonly Uri ApiPort = new("http://localhost:8080");
@@ -18,8 +16,7 @@ public sealed class MetricsEndpointTests
     [Fact]
     public async Task MetricsPortServesTheBuildInfoGauge()
     {
-        await using var factory = CreateFactory();
-        using var client = CreateClient(factory, MetricsPort);
+        using var client = CreateClient(MetricsPort);
 
         using var response = await client.GetAsync(Metrics, TestContext.Current.CancellationToken);
 
@@ -28,7 +25,7 @@ public sealed class MetricsEndpointTests
         var buildInfo = body.Split('\n')
             .Where(static line => line.StartsWith("lodb_build_info{", StringComparison.Ordinal));
         Assert.Contains(buildInfo, static line =>
-            line.Contains($"revision=\"{Revision}\"", StringComparison.Ordinal)
+            line.Contains($"revision=\"{RevisedApi.Revision}\"", StringComparison.Ordinal)
             && line.Contains("version=\"", StringComparison.Ordinal)
             && line.EndsWith(" 1", StringComparison.Ordinal));
     }
@@ -36,8 +33,7 @@ public sealed class MetricsEndpointTests
     [Fact]
     public async Task ApiPortDoesNotServeMetrics()
     {
-        await using var factory = CreateFactory();
-        using var client = CreateClient(factory, ApiPort);
+        using var client = CreateClient(ApiPort);
 
         using var response = await client.GetAsync(Metrics, TestContext.Current.CancellationToken);
 
@@ -47,8 +43,7 @@ public sealed class MetricsEndpointTests
     [Fact]
     public async Task MetricsPortServesNothingButTheScrape()
     {
-        await using var factory = CreateFactory();
-        using var client = CreateClient(factory, MetricsPort);
+        using var client = CreateClient(MetricsPort);
 
         using var response = await client.GetAsync(
             new Uri("/healthz", UriKind.Relative),
@@ -57,11 +52,7 @@ public sealed class MetricsEndpointTests
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
-    private static ApiFactory CreateFactory() => new()
-    {
-        Settings = new Dictionary<string, string?> { ["APP_REVISION"] = Revision },
-    };
-
-    private static HttpClient CreateClient(ApiFactory factory, Uri baseAddress) =>
-        factory.CreateClient(new WebApplicationFactoryClientOptions { BaseAddress = baseAddress });
+    private HttpClient CreateClient(Uri baseAddress) =>
+        api.Factory.CreateClient(
+            new WebApplicationFactoryClientOptions { BaseAddress = baseAddress });
 }

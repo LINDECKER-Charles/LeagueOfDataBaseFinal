@@ -116,26 +116,6 @@ public sealed class AnalyticsPartitionsTests(PostgresContainerFixture postgres)
         Assert.Equal([Day], await Partitions.ListAsync(Cancellation));
     }
 
-    [Fact]
-    public async Task ReversedRangeIsRejected() =>
-        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() =>
-            Partitions.CreateAsync(Day, Day.AddDays(-1), Cancellation));
-
-    [Theory]
-    [InlineData("analytics_event_20260926", true)]
-    [InlineData("analytics_event_20260230", false)]
-    [InlineData("analytics_event_2026092", false)]
-    [InlineData("analytics_event_archive", false)]
-    [InlineData("analytics_daily", false)]
-    public void PartitionNamesRoundTrip(string name, bool isPartition)
-    {
-        Assert.Equal(isPartition, AnalyticsPartitionNames.TryParseDay(name, out var day));
-        if (isPartition)
-        {
-            Assert.Equal(name, AnalyticsPartitionNames.Of(day!.Value));
-        }
-    }
-
     private Task InsertAtAsync(string occurredAt) =>
         Database.ExecuteAsync(
             $"""

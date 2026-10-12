@@ -1,8 +1,7 @@
 import { Component, signal } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { provideTransloco } from '@jsverse/transloco';
-import { of } from 'rxjs';
+import { provideTestTransloco } from '../../../../core/testing/provide-test-transloco';
 import { ChampionPicker } from '../champion/champion-picker';
 import { EditorContext } from '../context/editor-context';
 import { RuneBoard } from '../runes/rune-board';
@@ -40,20 +39,7 @@ interface Mounted {
 async function mount(): Promise<Mounted> {
   const save = vi.fn(() => Promise.resolve());
   TestBed.configureTestingModule({
-    providers: [
-      provideRouter([]),
-      provideTransloco({
-        config: {
-          availableLangs: ['en'],
-          defaultLang: 'en',
-          missingHandler: { logMissingKey: false },
-          prodMode: true,
-        },
-        loader: class {
-          getTranslation = () => of({});
-        },
-      }),
-    ],
+    providers: [provideRouter([]), provideTestTransloco()],
   });
   // The editor provides its entry and its saver itself: the later providers take their place.
   TestBed.overrideComponent(BuildEditor, {

@@ -1,9 +1,8 @@
 import { Dialog } from '@angular/cdk/dialog';
 import { Component } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideTransloco } from '@jsverse/transloco';
-import { of } from 'rxjs';
 import type { ChampionChroma } from '../../../../../../core/api/generated/models/champion-chroma';
+import { provideTestTransloco } from '../../../../../../core/testing/provide-test-transloco';
 import { ChromaStrip } from './chroma-strip';
 import { chromaRamp } from './chroma-ramp';
 
@@ -55,19 +54,7 @@ class Host {
 describe('lodb-chroma-strip', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [
-        provideTransloco({
-          config: {
-            availableLangs: ['en'],
-            defaultLang: 'en',
-            missingHandler: { logMissingKey: false },
-            prodMode: true,
-          },
-          loader: class {
-            getTranslation = (path: string) => of(path.startsWith('champions/') ? CHAMPIONS : {});
-          },
-        }),
-      ],
+      providers: [provideTestTransloco({ byPath: { 'champions/en': CHAMPIONS } })],
     });
   });
 

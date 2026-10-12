@@ -1,9 +1,8 @@
 import { Directionality } from '@angular/cdk/bidi';
 import { Component, signal } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideTransloco } from '@jsverse/transloco';
-import { of } from 'rxjs';
 import type { ChampionAbility } from '../../../../../core/api/generated/models/champion-ability';
+import { provideTestTransloco } from '../../../../../core/testing/provide-test-transloco';
 import { abilityChipsOf } from './ability-chips-of';
 import { abilityKey } from './ability-key';
 import { AbilityShowcase } from './ability-showcase';
@@ -108,15 +107,7 @@ describe('lodb-ability-showcase', () => {
     vi.spyOn(HTMLMediaElement.prototype, 'pause').mockImplementation(() => undefined);
     vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue(undefined);
     TestBed.configureTestingModule({
-      providers: [
-        { provide: Directionality, useValue: direction },
-        provideTransloco({
-          config: { defaultLang: 'en', missingHandler: { logMissingKey: false }, prodMode: true },
-          loader: class {
-            getTranslation = () => of({});
-          },
-        }),
-      ],
+      providers: [{ provide: Directionality, useValue: direction }, provideTestTransloco()],
     });
   });
 

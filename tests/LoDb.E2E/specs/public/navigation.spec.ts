@@ -1,23 +1,15 @@
 import type { Page } from '@playwright/test';
+import { isSameDocument, markDocument } from '../../support/same-document';
 import { expect, test } from '../../support/test';
 
-// Heritage H2: navigation by the header through the router, on the four lists.
+// Heritage H2: navigation by the header through the router, on the four lists. Only a page the
+// server rendered, then hydrated in a real browser, shows its links leaving the document in
+// place; the header's links are Vitest's.
 const CODEX = ['champions', 'items', 'runes', 'summoners'];
 const DESKTOP = { width: 1280, height: 800 };
-const MARK = 'lodbSameDocument';
 
 function pathOf(page: Page): string {
   return new URL(page.url()).pathname;
-}
-
-// Marks the document: still marked later, the pages changed through the router.
-async function markDocument(page: Page): Promise<void> {
-  await page.waitForLoadState('networkidle');
-  await page.evaluate((mark) => Reflect.set(window, mark, true), MARK);
-}
-
-async function isSameDocument(page: Page): Promise<boolean> {
-  return page.evaluate((mark) => Reflect.get(window, mark) === true, MARK);
 }
 
 test.describe('navigation by the header', { tag: '@readonly' }, () => {

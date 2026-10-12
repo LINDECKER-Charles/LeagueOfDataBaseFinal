@@ -1,0 +1,92 @@
+<lodb-page-head
+  [eyebrow]="'admin.eyebrows.management' | adminText"
+  [title]="'admin.backups.title' | adminText"
+  [subtitle]="'admin.backups.lede' | adminText"
+>
+  <lodb-segment-bar
+    param="days"
+    label="admin.range.label"
+    [segments]="windows"
+    [current]="days()"
+  />
+</lodb-page-head>
+
+<lodb-panel-state [panel]="report" shape="cards" />
+@if (report.value(); as data) {
+  @if (data.databases.length === 0) {
+    <lodb-admin-band>{{ 'admin.backups.empty' | adminText }}</lodb-admin-band>
+  }
+
+  <div class="kpi-grid" [attr.aria-busy]="report.busy()">
+    <lodb-kpi
+      [accent]="upToDate() === data.databases.length && upToDate() > 0 ? 'good' : 'bad'"
+      [label]="'admin.backups.kpi.databases' | adminText"
+      [value]="upToDate() + ' / ' + data.databases.length"
+      [sub]="
+        data.databases.length === 0
+          ? ('admin.backups.kpi.databases_none' | adminText)
+          : ('admin.backups.kpi.databases_sub'
+            | adminText: { count: data.databases.length - upToDate() })
+      "
+    />
+    <lodb-kpi
+      accent="hex"
+      [label]="'admin.backups.kpi.last_success' | adminText"
+      [value]="lastSuccess() | stamp: 'minute'"
+      [sub]="'admin.backups.kpi.last_success_sub' | adminText"
+    />
+    @if (data.repository; as repository) {
+      <lodb-kpi
+        accent="blue"
+        [label]="'admin.backups.kpi.repository' | adminText"
+        [value]="repository.bytes | figure: 'bytes'"
+        [sub]="
+          'admin.backups.kpi.repository_sub' | adminText: { date: (repository.measuredAt | stamp) }
+        "
+      >
+        <lodb-sparkline [values]="sizes()" />
+      </lodb-kpi>
+      <lodb-kpi
+        accent="green"
+        [label]="'admin.backups.kpi.cost' | adminText"
+        [value]="cost(repository)"
+        [sub]="'admin.backups.kpi.cost_sub' | adminText: { price: price(repository) }"
+      />
+    } @else {
+      <lodb-kpi
+        accent="blue"
+        [label]="'admin.backups.kpi.repository' | adminText"
+        value="—"
+        [sub]="'admin.backups.kpi.repository_none' | adminText"
+      />
+      <lodb-kpi
+        accent="green"
+        [label]="'admin.backups.kpi.cost' | adminText"
+        value="—"
+        [sub]="'admin.backups.kpi.repository_none' | adminText"
+      />
+    }
+  </div>
+
+  @if (data.databases.length > 0) {
+    <lodb-admin-rule [label]="'admin.rules.databases' | adminText" />
+    <div class="admin-grid admin-grid--2">
+      @for (database of data.databases; track database.name) {
+        <lodb-backup-database-card [state]="database" [attr.data-database]="database.name" />
+      }
+    </div>
+  }
+
+  <lodb-admin-rule [label]="'admin.rules.nights' | adminText" />
+  <lodb-admin-card
+    [heading]="'admin.backups.nights.title' | adminText"
+    [chip]="'admin.backups.nights.chip' | adminText: { days: data.days }"
+  >
+    <lodb-backup-nights-strip [nights]="nights()" />
+  </lodb-admin-card>
+
+  <lodb-admin-rule [label]="'admin.rules.history' | adminText" />
+  <lodb-admin-card>
+    <lodb-backup-runs-table [runs]="data.runs" [attr.aria-busy]="report.busy()" />
+  </lodb-admin-card>
+}

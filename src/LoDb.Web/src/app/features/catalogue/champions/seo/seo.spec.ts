@@ -1,7 +1,5 @@
 import { ApplicationRef, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideTransloco } from '@jsverse/transloco';
-import { of } from 'rxjs';
 import type { ChampionCard } from '../../../../core/api/generated/models/champion-card';
 import type { ChampionDetails } from '../../../../core/api/generated/models/champion-details';
 import type { ChampionList } from '../../../../core/api/generated/models/champion-list';
@@ -9,6 +7,7 @@ import type { PageContext } from '../../../../core/context/page-context';
 import { Seo } from '../../../../core/seo/seo';
 import type { SeoPage } from '../../../../core/seo/seo-page';
 import type { SeoUrls } from '../../../../core/seo/urls/seo-urls';
+import { provideTestTransloco } from '../../../../core/testing/provide-test-transloco';
 import { applyChampionsHead } from './apply-champions-head';
 import { championSeo } from './champion-seo';
 import { championsListSeo } from './champions-list-seo';
@@ -136,17 +135,7 @@ describe('applyChampionsHead', () => {
     TestBed.configureTestingModule({
       providers: [
         { provide: Seo, useValue: { apply } },
-        provideTransloco({
-          config: {
-            availableLangs: ['en', 'fr'],
-            defaultLang: 'en',
-            missingHandler: { logMissingKey: false },
-            prodMode: true,
-          },
-          loader: class {
-            getTranslation = (path: string) => of(CATALOGUES[path] ?? {});
-          },
-        }),
+        provideTestTransloco({ byPath: CATALOGUES }),
       ],
     });
     TestBed.runInInjectionContext(() => applyChampionsHead(source));

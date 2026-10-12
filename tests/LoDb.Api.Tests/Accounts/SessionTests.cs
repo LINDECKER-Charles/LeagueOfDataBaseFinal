@@ -1,25 +1,21 @@
 using System.Net;
 using LoDb.Api.Tests.Accounts.Support;
 using LoDb.Infrastructure.Audit;
-using LoDb.Testing;
 using Microsoft.Net.Http.Headers;
 
 namespace LoDb.Api.Tests.Accounts;
 
 /// <summary>
-/// The session cookie: <c>__Host-</c>, HttpOnly, Secure and Lax, one day without "remember
-/// me" and thirty with it, closed by a sign-out, and by a ban at its next revalidation, the
-/// ban flag alone included.
+/// The session cookie: <c>__Host-</c>, HttpOnly, Secure and Lax, closed by a sign-out, which
+/// like the sign-out everywhere needs a session. What time does to it is
+/// <see cref="OwnHost.SessionLifetimeTests"/>'.
 /// </summary>
-public sealed class SessionTests(PostgresContainerFixture postgres)
-    : IAsyncLifetime
+/// <remarks>The tests share a host, each with an account of its own.</remarks>
+public sealed class SessionTests(SharedAccountsApp host) : IClassFixture<SharedAccountsApp>
 {
-    private static readonly TimeSpan PastRevalidation = TimeSpan.FromMinutes(6);
+    private readonly AccountSeed _account = host.Unique();
 
-    private AccountsApp? _app;
-
-    private AccountsApp App =>
-        _app ?? throw new InvalidOperationException("The host is not started yet.");
+    private AccountsApp App { get; } = host.App;
 
     [Fact]
     public async Task AnonymousSessionIsNotStoredAndGetsAReadableXsrfToken()
@@ -41,10 +37,10 @@ public sealed class SessionTests(PostgresContainerFixture postgres)
     [Fact]
     public async Task SessionCookieIsHostOnlyHttpOnlySecureAndLax()
     {
-        await App.SeedAsync(new AccountSeed());
+        await App.SeedAsync(_account);
         using var browser = App.Browser();
 
-        using var response = await browser.SignInAsync(AccountSeed.Name);
+        using var response = await browser.SignInAsync(_account.Username);
 
         var session = SetCookie(response, BrowserClient.SessionCookie);
         Assert.Equal(
@@ -55,36 +51,11 @@ public sealed class SessionTests(PostgresContainerFixture postgres)
     }
 
     [Fact]
-    public async Task RememberMeKeepsTheSessionThirtyDaysAndOtherwiseADay()
-    {
-        await App.SeedAsync(new AccountSeed());
-        using var remembered = App.Browser();
-        using var browsing = App.Browser();
-        var signedInAt = App.Clock.GetUtcNow();
-
-        using var rememberedSignIn = await remembered.SignInAsync(
-            AccountSeed.Name,
-            rememberMe: true);
-        using var browsingSignIn = await browsing.SignInAsync(AccountSeed.Name);
-        var expires = SetCookie(rememberedSignIn, BrowserClient.SessionCookie).Expires;
-        App.Clock.Advance(TimeSpan.FromHours(25));
-        var afterADay = (await remembered.SignedInAsAsync(), await browsing.SignedInAsAsync());
-        App.Clock.Advance(TimeSpan.FromDays(31));
-
-        Assert.InRange(
-            expires!.Value,
-            signedInAt.AddDays(30).AddMinutes(-1),
-            signedInAt.AddDays(30).AddMinutes(1));
-        Assert.Equal((AccountSeed.Name, (string?)null), afterADay);
-        Assert.Null(await remembered.SignedInAsAsync());
-    }
-
-    [Fact]
     public async Task SignOutClosesTheSessionAndIsAudited()
     {
-        var account = await App.SeedAsync(new AccountSeed());
+        var account = await App.SeedAsync(_account);
         using var browser = App.Browser();
-        using var signIn = await browser.SignInAsync(AccountSeed.Name);
+        using var signIn = await browser.SignInAsync(_account.Username);
         var signedInToken = browser.Cookie(BrowserClient.XsrfCookie);
 
         using var signOut = await browser.PostAsync("/api/account/logout");
@@ -93,101 +64,25 @@ public sealed class SessionTests(PostgresContainerFixture postgres)
         Assert.Null(browser.Cookie(BrowserClient.SessionCookie));
         Assert.NotEqual(signedInToken, browser.Cookie(BrowserClient.XsrfCookie));
         Assert.Null(await browser.SignedInAsAsync());
-        var entry = (await App.AuditAsync())[^1];
+        var entry = (await App.AuditOfAsync(_account.Username))[^1];
         Assert.Equal(
             (AuditAction.UserLogout, AuditActorType.User, (int?)account.Id),
             (entry.Action, entry.ActorType, entry.ActorId));
     }
 
-    [Fact]
-    public async Task SignOutNeedsASession()
+    // The XSRF token their policy asks for as well is ForgeryTests'.
+    [Theory]
+    [InlineData("/api/account/logout")]
+    [InlineData("/api/account/logout-everywhere")]
+    public async Task SignOutsNeedASession(string path)
     {
         using var browser = App.Browser();
 
-        using var response = await browser.PostAsync("/api/account/logout");
+        using var response = await browser.PostAsync(path);
 
         Assert.Equal(
             "authentication-required",
             await ApiJson.ProblemCodeAsync(response, HttpStatusCode.Unauthorized));
-    }
-
-    [Fact]
-    public async Task BanEndsAnOpenSessionThenItsCookieAtItsNextRevalidation()
-    {
-        await App.SeedAsync(new AccountSeed());
-        using var browser = App.Browser();
-        using var signIn = await browser.SignInAsync(AccountSeed.Name, rememberMe: true);
-
-        await App.BanAsync(AccountSeed.Name);
-        var rightAfterTheBan = await browser.SignedInAsAsync();
-        var cookieBeforeRevalidation = browser.Cookie(BrowserClient.SessionCookie);
-        App.Clock.Advance(PastRevalidation);
-        var afterRevalidation = await browser.SignedInAsAsync();
-
-        Assert.Null(rightAfterTheBan);
-        Assert.NotNull(cookieBeforeRevalidation);
-        Assert.Null(afterRevalidation);
-        Assert.Null(browser.Cookie(BrowserClient.SessionCookie));
-    }
-
-    // The ban alone, without the new stamp the admin also writes: the revalidation of the
-    // cookie and the refresh of the tokens read it all the same.
-    [Fact]
-    public async Task BanFlagAloneEndsTheCookieAtRevalidationAndTheRefreshTokens()
-    {
-        await App.SeedAsync(new AccountSeed());
-        using var browser = App.Browser();
-        using var signIn = await browser.SignInAsync(AccountSeed.Name, rememberMe: true);
-        using var app = App.App();
-        var tokens = await AppTokens.SignInAsync(app);
-        var stamp = (await App.FindAsync(AccountSeed.Name)).SecurityStamp;
-
-        await App.UsersAsync(async users =>
-        {
-            var user = await users.FindByNameAsync(AccountSeed.Name);
-            user!.IsBanned = true;
-            return await users.UpdateAsync(user);
-        });
-        App.Clock.Advance(PastRevalidation);
-        var afterRevalidation = await browser.SignedInAsAsync();
-        using var refresh = await AppTokens.RefreshAsync(app, tokens);
-
-        Assert.Equal(stamp, (await App.FindAsync(AccountSeed.Name)).SecurityStamp);
-        Assert.Null(afterRevalidation);
-        Assert.Null(browser.Cookie(BrowserClient.SessionCookie));
-        Assert.Equal(
-            "invalid-refresh-token",
-            await ApiJson.ProblemCodeAsync(refresh, HttpStatusCode.Unauthorized));
-    }
-
-    [Fact]
-    public async Task RevalidatedSessionKeepsItsSecondFactor()
-    {
-        await App.SeedAsync(new AccountSeed());
-        var secrets = await App.EnableTwoFactorAsync(AccountSeed.Name);
-        using var browser = App.Browser();
-        using var signIn = await browser.PostAsync("/api/account/login", new
-        {
-            identifier = AccountSeed.Name,
-            password = AccountSeed.StrongPassword,
-            twoFactorCode = Totp.Code(secrets.Key, App.Clock),
-        });
-        Assert.Equal(HttpStatusCode.OK, signIn.StatusCode);
-
-        App.Clock.Advance(PastRevalidation);
-        var user = await browser.SessionUserAsync();
-
-        Assert.True(user?.GetProperty("multiFactor").GetBoolean());
-    }
-
-    public async ValueTask InitializeAsync() => _app = await AccountsApp.StartAsync(postgres);
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_app is not null)
-        {
-            await _app.DisposeAsync();
-        }
     }
 
     private static SetCookieHeaderValue SetCookie(HttpResponseMessage response, string name)

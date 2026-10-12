@@ -7,8 +7,8 @@ namespace LoDb.Testing;
 
 /// <summary>
 /// The database roles of the tests, as <c>migrate</c> keeps them: a known password for the
-/// API's role, and no connection limit, since one test server holds the databases of
-/// parallel tests.
+/// API's role and for the backups', and no connection limit for the API's, since one test
+/// server holds the databases of parallel tests.
 /// </summary>
 /// <remarks>
 /// <see cref="PostgresContainerFixture"/> puts them in place when the server starts, with the
@@ -19,6 +19,9 @@ public static class TestRoles
 {
     /// <summary>Password of <see cref="DatabaseRoleNames.App"/> on a test server.</summary>
     public const string AppPassword = "lodb-app-test-password";
+
+    /// <summary>Password of <see cref="DatabaseRoleNames.Backup"/> on a test server.</summary>
+    public const string BackupPassword = "lodb-backup-test-password";
 
     /// <summary>The settings of every migration a test runs.</summary>
     public static AppRoleOptions Options => new()
@@ -32,7 +35,11 @@ public static class TestRoles
 
     /// <summary>The roles with other settings, for a test of the roles themselves.</summary>
     public static DatabaseRoles Create(AppRoleOptions options) =>
-        new(OptionsOf.Create(options), NullLogger<DatabaseRoles>.Instance);
+        Create(options, new BackupRoleOptions { Password = BackupPassword });
+
+    /// <summary>The roles with other settings for both roles that sign in.</summary>
+    public static DatabaseRoles Create(AppRoleOptions app, BackupRoleOptions backup) =>
+        new(OptionsOf.Create(app), OptionsOf.Create(backup), NullLogger<DatabaseRoles>.Instance);
 
     /// <summary>
     /// <paramref name="connectionString"/> signed in as the API's role, the way the API
@@ -43,5 +50,18 @@ public static class TestRoles
         {
             Username = DatabaseRoleNames.App,
             Password = AppPassword,
+        }.ConnectionString;
+
+    /// <summary>
+    /// <paramref name="connectionString"/> signed in as the backups' role, the way the backup
+    /// container of infra-vps connects: without a pool, as the role holds two sessions at
+    /// most, and an idle pooled one would count against the next test's database.
+    /// </summary>
+    public static string BackupConnectionString(string connectionString) =>
+        new NpgsqlConnectionStringBuilder(connectionString)
+        {
+            Username = DatabaseRoleNames.Backup,
+            Password = BackupPassword,
+            Pooling = false,
         }.ConnectionString;
 }

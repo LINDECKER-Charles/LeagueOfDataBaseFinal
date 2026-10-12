@@ -1,3 +1,4 @@
+using System.Globalization;
 using Npgsql;
 using Testcontainers.PostgreSql;
 using Xunit;
@@ -80,6 +81,29 @@ public sealed class PostgresContainerFixture : IAsyncLifetime
         var result = await _container.ExecAsync(command, cancellationToken);
         return result.ExitCode == 0
             ? SchemaDump.Normalize(result.Stdout)
+            : throw new InvalidOperationException($"pg_dump failed: {result.Stderr}");
+    }
+
+    /// <summary>
+    /// <c>pg_dump --format=custom</c> of a whole database as <paramref name="role"/>, the way
+    /// the host's backups dump it, through the server's own socket: the size of the dump.
+    /// </summary>
+    public async Task<long> DumpAsAsync(
+        string database,
+        string role,
+        CancellationToken cancellationToken)
+    {
+        var file = $"/tmp/{Guid.NewGuid():N}.dump";
+        string[] command =
+        [
+            "sh", "-c",
+            "pg_dump --username=\"$1\" --format=custom --compress=0 --file=\"$3\" \"$2\""
+                + " && wc -c < \"$3\" && rm -f \"$3\"",
+            "dump", role, database, file,
+        ];
+        var result = await _container.ExecAsync(command, cancellationToken);
+        return result.ExitCode == 0
+            ? long.Parse(result.Stdout.Trim(), CultureInfo.InvariantCulture)
             : throw new InvalidOperationException($"pg_dump failed: {result.Stderr}");
     }
 

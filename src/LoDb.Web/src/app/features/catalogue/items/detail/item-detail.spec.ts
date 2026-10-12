@@ -1,14 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { provideRouter } from '@angular/router';
-import { provideTransloco } from '@jsverse/transloco';
-import { of } from 'rxjs';
 import type { CatalogImage } from '../../../../core/api/generated/models/catalog-image';
 import type { ItemCard } from '../../../../core/api/generated/models/item-card';
 import type { ItemDetails } from '../../../../core/api/generated/models/item-details';
 import type { PageContext } from '../../../../core/context/page-context';
 import type { CatalogueEntry } from '../../../../core/routing/catalogue/catalogue-entry';
 import type { SeoPage } from '../../../../core/seo/seo-page';
+import { provideTestTransloco } from '../../../../core/testing/provide-test-transloco';
 import { CatalogueHead } from '../../shared/codex/head/catalogue-head';
 import type { CatalogueTexts } from '../../shared/codex/head/catalogue-texts';
 import { provideMeta } from '../../shared/testing/provide-meta';
@@ -90,17 +89,7 @@ async function render(entry = ENTRY) {
     providers: [
       provideMeta(),
       provideRouter([{ path: 'en/items/:id', component: ItemDetail, data: { entry } }]),
-      provideTransloco({
-        config: {
-          availableLangs: ['en'],
-          defaultLang: 'en',
-          missingHandler: { logMissingKey: false },
-          prodMode: true,
-        },
-        loader: class {
-          getTranslation = () => of({ item: { detail: { tier: 'Tier {{ depth }}' } } });
-        },
-      }),
+      provideTestTransloco({ otherwise: { item: { detail: { tier: 'Tier {{ depth }}' } } } }),
       { provide: CatalogueHead, useValue: { write } },
     ],
   });

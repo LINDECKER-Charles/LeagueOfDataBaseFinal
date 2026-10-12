@@ -2,6 +2,7 @@ using System.Text.Json;
 using LoDb.Domain.Languages;
 using LoDb.Infrastructure.Outbox;
 using LoDb.Infrastructure.Outbox.Rendering;
+using LoDb.Infrastructure.Tests.Outbox.Support;
 
 namespace LoDb.Infrastructure.Tests.Outbox;
 
@@ -10,27 +11,12 @@ namespace LoDb.Infrastructure.Tests.Outbox;
 /// the contact notification keeps its legacy subject and Reply-To; values are escaped in
 /// HTML only.
 /// </summary>
+/// <remarks>
+/// Every template in every translated locale is rendered whole by
+/// <see cref="EmailSnapshotTests"/>: a placeholder left unfilled shows in its snapshot.
+/// </remarks>
 public sealed class EmailRendererTests
 {
-    // The other locales get the English texts through EmailTexts.For: rendering them again
-    // would only repeat the English rows.
-    public static TheoryData<EmailTemplate, UiLocale> EveryTemplateAndTranslatedLocale
-    {
-        get
-        {
-            var data = new TheoryData<EmailTemplate, UiLocale>();
-            foreach (var template in Enum.GetValues<EmailTemplate>())
-            {
-                foreach (var locale in EmailTexts.Translated)
-                {
-                    data.Add(template, locale);
-                }
-            }
-
-            return data;
-        }
-    }
-
     [Fact]
     public void LocaleWithoutTextsFallsBackToEnglish()
     {
@@ -38,21 +24,6 @@ public sealed class EmailRendererTests
 
         Assert.Equal("Reset your password · LeagueOfDataBase", email.Subject);
         Assert.Contains("<html lang=\"en\"", email.Html, StringComparison.Ordinal);
-    }
-
-    [Theory]
-    [MemberData(nameof(EveryTemplateAndTranslatedLocale))]
-    public void EveryTemplateRendersInEveryTranslatedLocale(EmailTemplate template, UiLocale locale)
-    {
-        var model = template == EmailTemplate.ContactNotification
-            ? OutboxHarness.ContactModel()
-            : OutboxHarness.AccountModel();
-
-        var email = Render(template, locale, model);
-
-        Assert.DoesNotContain("{{", email.Html, StringComparison.Ordinal);
-        Assert.DoesNotContain("{{", email.Text, StringComparison.Ordinal);
-        Assert.DoesNotContain("%", email.Subject, StringComparison.Ordinal);
     }
 
     [Fact]

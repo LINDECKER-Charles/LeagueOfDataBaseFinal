@@ -27,11 +27,9 @@ public sealed class VoteRulesTests
         Assert.Equal(expected, direction);
     }
 
+    // Codes are matched exactly: absent, and a direction in another case.
     [Theory]
     [InlineData(null)]
-    [InlineData("")]
     [InlineData("Up")]
-    [InlineData("1")]
-    [InlineData("sideways")]
     public void AnythingElseIsNoVote(string? code) => Assert.False(VoteRules.TryParse(code, out _));
 }

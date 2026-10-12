@@ -1,5 +1,7 @@
+using System.Net;
 using LoDb.Domain.Languages;
 using LoDb.Domain.Versions;
+using LoDb.Ingestion.Ddragon;
 using LoDb.Ingestion.Normalization;
 using LoDb.Ingestion.Normalization.Serialization;
 using LoDb.Ingestion.Tests.Ddragon;
@@ -8,12 +10,19 @@ using LoDb.Testing.Fixtures;
 namespace LoDb.Ingestion.Tests.Normalization;
 
 /// <summary>
-/// Every dataset type of every recorded version, in every recorded language, reads into a
-/// complete document that survives storage.
+/// Every dataset type of every recorded version reads into a complete document that survives
+/// storage, in a language the version ships and in one it falls back from.
 /// </summary>
 public sealed class EveryDatasetTests
 {
-    private static readonly string[] Languages = ["en_US", "fr_FR", "ko_KR", "ar_AE", "zh_CN"];
+    // Every recorded version ships fr_FR. Other shipped languages (ko_KR, zh_CN) take the same
+    // path: only the version's shapes vary, so one shipped language per version suffices.
+    private const string ShippedLanguage = "fr_FR";
+
+    // Recorded as absent (403) except on the two full versions: there it falls back to en_US.
+    private const string FallbackLanguage = "ar_AE";
+
+    private const string ProbedDataset = "item";
 
     private static readonly PatchVersion FirstRunesVersion = PatchVersion.Parse("7.22.1");
 
@@ -24,9 +33,10 @@ public sealed class EveryDatasetTests
             var scopes = new TheoryData<string, string>();
             foreach (var version in DdragonFixtures.Versions)
             {
-                foreach (var language in Languages)
+                scopes.Add(version.Value, ShippedLanguage);
+                if (!IsShipped(version, FallbackLanguage))
                 {
-                    scopes.Add(version.Value, language);
+                    scopes.Add(version.Value, FallbackLanguage);
                 }
             }
 
@@ -57,6 +67,13 @@ public sealed class EveryDatasetTests
         await AssertRoundTripsAsync(DatasetTypes.Items, items);
         await AssertRoundTripsAsync(DatasetTypes.Summoners, summoners);
         await AssertRoundTripsAsync(DatasetTypes.Runes, runes);
+    }
+
+    private static bool IsShipped(PatchVersion version, string language)
+    {
+        var url = DdragonUrls.Dataset(version, DdragonLanguage.Parse(language), ProbedDataset);
+        return DdragonFixtures.Index.Responses.Any(response =>
+            response.Url == url.AbsoluteUri && response.Status == (int)HttpStatusCode.OK);
     }
 
     // Every recorded version ships these three in en_US at least, whatever the language.

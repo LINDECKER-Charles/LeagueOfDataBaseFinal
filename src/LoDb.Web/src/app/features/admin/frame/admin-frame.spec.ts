@@ -63,7 +63,7 @@ describe('AdminFrame', () => {
     const { harness } = await openAdminPage('/admin/users?q=ahri');
     const frame = harness.fixture.nativeElement as HTMLElement;
 
-    expect(frame.querySelectorAll('nav a')).toHaveLength(11);
+    expect(frame.querySelectorAll('nav a')).toHaveLength(12);
     expect(frame.querySelectorAll('nav .admin-nav-sep')).toHaveLength(1);
     expect(current(frame)).toEqual(['/admin/users']);
   });

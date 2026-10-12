@@ -1,8 +1,11 @@
 import { createMember, signInMember } from '../../support/member-account';
+import { discardAccount, type TestAccount } from '../../support/session';
 import { expect, test } from '../../support/test';
-import { discardAccount, type TestAccount } from '../account/accounts';
 import { PORTAL, portalToast, shownSecret, usageStatus } from './portal';
 
+// A key the portal issues, renews and revokes is checked against the public /v1 at once: only
+// the stack joins the account's pages, the API's key store and nginx's /v1 route. The portal's
+// states are Vitest's, the keys' rules the API's.
 const OK = 200;
 const FORBIDDEN = 403;
 

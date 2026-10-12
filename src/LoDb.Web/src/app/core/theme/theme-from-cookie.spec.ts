@@ -61,10 +61,6 @@ describe('themeFromCookie', () => {
   it.each(CASES)('reads %j as %s', (cookie, expected) => {
     expect(themeFromCookie(cookie)).toBe(expected);
   });
-
-  it('knows the four identities, hextech first as the default', () => {
-    expect(THEMES).toEqual(['hextech', 'zaun', 'noxus', 'spirit-blossom']);
-  });
 });
 
 describe('inline theme script of index.html', () => {

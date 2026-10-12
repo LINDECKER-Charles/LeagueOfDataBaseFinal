@@ -3,6 +3,7 @@ using System.Text.Json;
 using LoDb.Domain.Languages;
 using LoDb.Infrastructure.Outbox;
 using LoDb.Infrastructure.Outbox.Rendering;
+using LoDb.Infrastructure.Tests.Outbox.Support;
 
 namespace LoDb.Infrastructure.Tests.Outbox;
 

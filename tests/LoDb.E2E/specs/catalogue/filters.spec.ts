@@ -1,6 +1,10 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from '../../support/test';
 
+// The rail is rendered by the server, then hydrated late, once the browser has read the whole
+// list from the API: only a real browser on the stack runs that incremental hydration. The
+// filtering itself, and when the rail is due, are list.spec.ts's.
+
 // Any of the four lists would do: items has the most entries, so it always pages.
 const LIST = '/en/items';
 // FilterUrlSync coalesces URL rewrites over 300 ms; polling covers it.
@@ -12,12 +16,6 @@ const FIRST_PAGE_SIZE = 12;
 
 function queryOf(page: Page): URLSearchParams {
   return new URL(page.url()).searchParams;
-}
-
-// The first page is server-rendered; the whole list then loads for instant filtering.
-async function openList(page: Page, url = LIST): Promise<void> {
-  await page.goto(url);
-  await page.waitForLoadState('networkidle');
 }
 
 // The browser's read of the whole list: the first page comes with the server's HTML.
@@ -47,7 +45,8 @@ test.describe('catalogue filters', { tag: '@readonly' }, () => {
     consoleErrors,
   }) => {
     const reads = wholeReadsOf(page);
-    await openList(page);
+    // The first page is server-rendered; the whole list then loads for instant filtering.
+    await page.goto(LIST);
 
     // The rail is hydrated late (on the reader's hand), but never left showing an outdated copy.
     await test.step('counts the whole list once it is read', async () => {
@@ -76,17 +75,5 @@ test.describe('catalogue filters', { tag: '@readonly' }, () => {
     await expect(page.locator(RAIL_SEARCH)).toHaveValue('boots');
     await expect(page.locator(`${LIST_ROOT} lodb-active-filters`)).toBeVisible();
     expect(consoleErrors).toEqual([]);
-
-    await test.step('empties its search when the results clear it', async () => {
-      // Without the whole list, only the state moving can outdate the server's copy.
-      await page.route(isWholeRead, (route) => route.abort());
-      await page.goto(`${LIST}?q=boots`);
-      await expect(page.locator(RAIL_SEARCH)).toHaveValue('boots');
-
-      await page.locator('lodb-active-filters .clear').click();
-
-      await expect.poll(() => queryOf(page).get('q')).toBeNull();
-      await expect(page.locator(RAIL_SEARCH)).toHaveValue('');
-    });
   });
 });

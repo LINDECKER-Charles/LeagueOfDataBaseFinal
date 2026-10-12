@@ -1,11 +1,7 @@
 import { TestBed } from '@angular/core/testing';
-import {
-  TRANSLOCO_TRANSPILER,
-  type Translation,
-  TranslocoService,
-  provideTransloco,
-} from '@jsverse/transloco';
-import { firstValueFrom, of } from 'rxjs';
+import { TRANSLOCO_TRANSPILER, type Translation, TranslocoService } from '@jsverse/transloco';
+import { firstValueFrom } from 'rxjs';
+import { provideTestTransloco } from '../../testing/provide-test-transloco';
 import { PrecompiledTranspiler } from './precompiled-transpiler';
 
 // Built catalogues (npm run i18n:build): ICU messages come compiled, the rest as written.
@@ -68,17 +64,7 @@ describe('PrecompiledTranspiler', () => {
   beforeEach(async () => {
     TestBed.configureTestingModule({
       providers: [
-        provideTransloco({
-          config: {
-            availableLangs: ['en', 'fr'],
-            defaultLang: 'en',
-            missingHandler: { logMissingKey: false },
-            prodMode: true,
-          },
-          loader: class {
-            getTranslation = (lang: string) => of(CATALOGUES[lang]);
-          },
-        }),
+        provideTestTransloco({ byPath: CATALOGUES }),
         { provide: TRANSLOCO_TRANSPILER, useClass: PrecompiledTranspiler },
       ],
     });

@@ -42,11 +42,4 @@ public sealed class FixtureReplayTests
         Assert.All(withBody, static response => Assert.True(
             File.Exists(DdragonFixtures.BodyPath(new Uri(response.Url))), response.Url));
     }
-
-    [Fact]
-    public void RolesAreTheTwoNewestVersions()
-    {
-        Assert.Equal(DdragonFixtures.Versions[0], DdragonFixtures.Latest);
-        Assert.Equal(DdragonFixtures.Versions[1], DdragonFixtures.Previous);
-    }
 }

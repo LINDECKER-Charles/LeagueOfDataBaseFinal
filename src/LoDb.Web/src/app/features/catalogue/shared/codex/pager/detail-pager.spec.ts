@@ -1,10 +1,11 @@
 import { PLATFORM_ID } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router, type UrlTree, provideRouter } from '@angular/router';
-import { TranslocoService, provideTransloco } from '@jsverse/transloco';
-import { firstValueFrom, of } from 'rxjs';
+import { TranslocoService } from '@jsverse/transloco';
+import { firstValueFrom } from 'rxjs';
 import type { DetailNeighbour } from '../../../../../core/api/generated/models/detail-neighbour';
 import type { PageContext } from '../../../../../core/context/page-context';
+import { provideTestTransloco } from '../../../../../core/testing/provide-test-transloco';
 import { injectDetailPager } from './inject-detail-pager';
 
 const CONTEXT: PageContext = { locale: 'en', version: '16.19.1', pinned: false, language: 'en_US' };
@@ -28,17 +29,7 @@ async function pagerOn(url: string) {
     providers: [
       provideRouter([]),
       { provide: PLATFORM_ID, useValue: 'server' },
-      provideTransloco({
-        config: {
-          availableLangs: ['en'],
-          defaultLang: 'en',
-          missingHandler: { logMissingKey: false },
-          prodMode: true,
-        },
-        loader: class {
-          getTranslation = () => of(TEXTS);
-        },
-      }),
+      provideTestTransloco({ otherwise: TEXTS }),
     ],
   });
   const router = TestBed.inject(Router);

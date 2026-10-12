@@ -22,6 +22,7 @@ import { provideRouter, Router, withRouterConfig } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { API_BASE_URL } from '../../../core/api/api-base-url';
 import type { CatalogMeta } from '../../../core/api/generated/models/catalog-meta';
+import { catalogMetaOf } from '../../../core/testing/catalog-meta-of';
 import type { HomeData } from '../data/home-data';
 import type { HomeSection } from '../data/home-section';
 import { injectRefreshedSections } from './inject-refreshed-sections';
@@ -33,22 +34,15 @@ class Probe {}
 
 const LATEST = '16.19.1';
 const OLDER = '15.14.1';
-const META: CatalogMeta = {
+const META = catalogMetaOf({
   latest: LATEST,
   versions: [LATEST, OLDER],
-  readyVersions: [LATEST],
-  versionPattern: String.raw`\d+(?:\.\d+)+`,
   languages: ['en_US', 'en_GB', 'fr_FR'],
-  languagePattern: '[a-z]{2}_[A-Z]{2}',
-  defaultLanguage: 'en_US',
   locales: [
     { locale: 'en', language: 'en_US' },
     { locale: 'fr', language: 'fr_FR' },
   ],
-  fallbackLocale: 'en',
-  gameModes: [{ mode: 'sr', map: 11 }],
-  defaultGameMode: 'sr',
-};
+});
 const IMAGE = { status: 'ready', url: '/cdn/blobs/abc.png', webpUrl: '/cdn/blobs/abc.webp' };
 const LOADING_ART = 'https://ddragon.leagueoflegends.com/cdn/img/champion/loading/Aatrox_0.jpg';
 const CHAMPIONS = {

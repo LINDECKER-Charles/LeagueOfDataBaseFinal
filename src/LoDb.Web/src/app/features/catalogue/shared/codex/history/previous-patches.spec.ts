@@ -4,10 +4,8 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { provideTransloco } from '@jsverse/transloco';
-import { of } from 'rxjs';
 import type { PageContext } from '../../../../../core/context/page-context';
-import { LOCALES } from '../../../../../core/i18n/locales';
+import { provideTestTransloco } from '../../../../../core/testing/provide-test-transloco';
 import { ROOT_CATALOGUES } from '../../../../../core/testing/root-catalogues';
 import { provideMeta } from '../../testing/provide-meta';
 import { PreviousPatches } from './previous-patches';
@@ -49,17 +47,7 @@ async function render(version: string, url = '/en/champions/Annie'): Promise<HTM
       provideHttpClient(),
       provideHttpClientTesting(),
       provideRouter([{ path: '**', component: Host }]),
-      provideTransloco({
-        config: {
-          availableLangs: ['en'],
-          defaultLang: 'en',
-          missingHandler: { logMissingKey: false },
-          prodMode: true,
-        },
-        loader: class {
-          getTranslation = () => of(ROOT_CATALOGUES.en);
-        },
-      }),
+      provideTestTransloco({ otherwise: ROOT_CATALOGUES.en }),
     ],
   });
   const harness = await RouterTestingHarness.create(url);
@@ -116,13 +104,5 @@ describe('PreviousPatches', () => {
 describe('previousVersionsOf', () => {
   it('lists none for a version the list does not hold', () => {
     expect(previousVersionsOf(VERSIONS, '9.9.9', 6)).toEqual([]);
-  });
-});
-
-describe('title of the previous patches', () => {
-  it.each(LOCALES)('is translated in %s', (locale) => {
-    const detail = ROOT_CATALOGUES[locale]['detail'] as { history?: { title?: unknown } } | null;
-
-    expect(detail?.history?.title).toMatch(/\S/);
   });
 });

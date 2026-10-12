@@ -12,8 +12,9 @@ namespace LoDb.Api.Tests.Analytics;
 [Collection(AnalyticsApiGroup.Name)]
 public sealed class TrackedPageTests(AnalyticsApiFixture api)
 {
+    // One row per resource, under the names the legacy aggregates hold. The champion is
+    // counted by its key, MonkeyKing, never by its name, Wukong.
     [Theory]
-    [InlineData("/fr/champions/Ahri", "app_champion", "champion", "Ahri")]
     [InlineData("/fr/champions/MonkeyKing", "app_champion", "champion", "MonkeyKing")]
     [InlineData("/fr/items/1004-faerie-charm", "app_item", "item", "1004")]
     [InlineData("/fr/runes/8100-domination", "app_rune", "runesReforged", "Domination")]
@@ -33,24 +34,25 @@ public sealed class TrackedPageTests(AnalyticsApiFixture api)
         Assert.Equal(target, page.Path);
     }
 
+    // One row per page, under the names the legacy aggregates hold. The one path a page is
+    // counted under, whatever its slash, query or fragment, is PageAddressParserTests'.
     [Theory]
-    [InlineData("/fr/", "app_home", "home", "home", "/fr/")]
-    [InlineData("/fr/champions", "app_champions", "champion", "list", "/fr/champions")]
-    [InlineData("/ko/items/", "app_items", "item", "list", "/ko/items")]
-    [InlineData("/en/runes?lang=en_US", "app_runes", "runesReforged", "list", "/en/runes")]
-    [InlineData("/ar/summoners#top", "app_summoners", "summoner", "list", "/ar/summoners")]
+    [InlineData("/fr/", "app_home", "home", "home")]
+    [InlineData("/fr/champions", "app_champions", "champion", "list")]
+    [InlineData("/ko/items", "app_items", "item", "list")]
+    [InlineData("/en/runes", "app_runes", "runesReforged", "list")]
+    [InlineData("/ar/summoners", "app_summoners", "summoner", "list")]
     public async Task ListsAndHomeHaveNoEntity(
         string target,
         string route,
         string type,
-        string kind,
-        string path)
+        string kind)
     {
         var page = await ResolveAsync(target);
 
         Assert.NotNull(page);
         Assert.Equal(
-            (route, type, kind, path, (short)200),
+            (route, type, kind, target, (short)200),
             (page.Route, page.Type, page.Kind, page.Path, page.Status));
         Assert.Null(page.Entity);
     }
@@ -73,11 +75,11 @@ public sealed class TrackedPageTests(AnalyticsApiFixture api)
         Assert.Equal(((short)404, entity), (page.Status, page.Entity));
     }
 
+    // Without a language, then with one of another locale (an unknown one goes the same way):
+    // the page shows its locale's.
     [Theory]
     [InlineData("/fr/items", "fr_FR")]
-    [InlineData("/fr/items?lang=fr_FR", "fr_FR")]
     [InlineData("/fr/items?lang=ko_KR", "fr_FR")]
-    [InlineData("/fr/items?lang=xx_XX", "fr_FR")]
     public async Task LanguageIsTheOneThePageShows(string target, string lang)
     {
         var page = await ResolveAsync(target);

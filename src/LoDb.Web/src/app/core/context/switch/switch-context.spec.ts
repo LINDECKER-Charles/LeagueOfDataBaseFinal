@@ -1,16 +1,12 @@
-import type { CatalogMeta } from '../../api/generated/models/catalog-meta';
+import { catalogMetaOf } from '../../testing/catalog-meta-of';
 import type { ContextTarget } from './context-target';
 import { switchContext } from './switch-context';
 
 const LATEST = '16.14.1';
-const META: CatalogMeta = {
+const META = catalogMetaOf({
   latest: LATEST,
   versions: [LATEST, '15.14.1'],
-  readyVersions: [LATEST],
-  versionPattern: String.raw`\d+(?:\.\d+)+`,
   languages: ['en_US', 'en_GB', 'fr_FR', 'de_DE', 'zh_CN', 'zh_TW'],
-  languagePattern: '[a-z]{2}_[A-Z]{2}',
-  defaultLanguage: 'en_US',
   locales: [
     { locale: 'en', language: 'en_US' },
     { locale: 'fr', language: 'fr_FR' },
@@ -18,10 +14,7 @@ const META: CatalogMeta = {
     { locale: 'zh-hans', language: 'zh_CN' },
     { locale: 'zh-hant', language: 'zh_TW' },
   ],
-  fallbackLocale: 'en',
-  gameModes: [{ mode: 'sr', map: 11 }],
-  defaultGameMode: 'sr',
-};
+});
 
 interface Case {
   readonly rule: string;

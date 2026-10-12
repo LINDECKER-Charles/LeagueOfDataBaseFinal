@@ -98,7 +98,7 @@ public sealed class ColdLoadGateTests
     [Fact]
     public async Task InternalReadIsRefusedOnceItsWaitRunsOut()
     {
-        var options = new CatalogOptions { InternalColdLoadWait = TimeSpan.FromMilliseconds(50) };
+        var options = new CatalogOptions();
         using var harness = new CacheHarness(options);
         var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var blocking = Enumerable.Range(0, MaxLoads)
@@ -107,12 +107,14 @@ public sealed class ColdLoadGateTests
                 Blocked(Key(minor), ColdCaller.Internal, (release.Task, static () => { })),
                 Token))
             .ToList();
-
-        var late = await harness.Cache.GetOrLoadAsync(
+        var waiting = harness.Cache.GetOrLoadAsync(
             Key(InternalKey),
             Build(Key(InternalKey), ColdCaller.Internal),
             Token);
 
+        harness.Time.Advance(options.InternalColdLoadWait);
+
+        var late = await waiting;
         Assert.True(late.IsRefused);
         release.SetResult();
         Assert.All(await Task.WhenAll(blocking), static read => Assert.True(read.IsHeld));
@@ -122,9 +124,9 @@ public sealed class ColdLoadGateTests
     [Fact]
     public async Task RendererKeepsItsShareOfTheBurstAtLargeRates()
     {
-        // The burst times the renderer's rate exceeds what an int holds. The default wait
-        // stays: on the real clock, a wait of a millisecond ran out before a token already
-        // there was taken, whenever the machine was busy.
+        // The burst times the renderer's rate exceeds what an int holds. The wait runs on the
+        // harness's clock: it cannot run out before a token already there is taken, however
+        // busy the machine.
         var options = new CatalogOptions
         {
             ColdLoadConcurrency = 64,

@@ -12,23 +12,20 @@ public sealed class SaveFileNameTests
     [InlineData("console.log.txt")]
     public void AcceptsPlainNames(string name) => Assert.True(SaveFileName.IsValid(name));
 
+    // One row per check: absent; a leading dot (which also covers ".." and "../x"), a leading
+    // space, a trailing dot, a trailing space; a forbidden character (separators, drive colon
+    // and Windows' reserved ones are one set); a control character; a format character; a
+    // device name, whatever its case and extension, and with a space before its extension.
     [Theory]
     [InlineData(null)]
-    [InlineData("..")]
     [InlineData(".bashrc")]
-    [InlineData("../build.json")]
-    [InlineData("folder/build.json")]
-    [InlineData("folder\\build.json")]
-    [InlineData("C:build.json")]
-    [InlineData("build?.json")]
-    [InlineData("build.json ")]
     [InlineData(" build.json")]
     [InlineData("build.")]
+    [InlineData("build.json ")]
+    [InlineData("folder/build.json")]
     [InlineData("build\u0000.json")]
     [InlineData("invoice\u202Etxt.exe")]
-    [InlineData("CON")]
     [InlineData("nul.txt")]
-    [InlineData("Com1.json")]
     [InlineData("LPT9 .log")]
     public void RefusesPathsAndNamesASystemWouldMisread(string? name) =>
         Assert.False(SaveFileName.IsValid(name));

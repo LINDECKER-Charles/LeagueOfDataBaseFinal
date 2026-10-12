@@ -3,7 +3,6 @@ using System.Text.Json;
 using LoDb.Api.Hosting;
 using LoDb.Api.Tests.Accounts.Support;
 using LoDb.Infrastructure.Persistence.Accounts;
-using LoDb.Testing;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -20,28 +19,28 @@ namespace LoDb.Api.Tests.Accounts;
 /// principal of a real session: <c>Authenticated</c>, <c>VerifiedEmail</c> against the
 /// account as stored now, and <c>Admin</c>, which also needs a second factor.
 /// </summary>
-public sealed class AuthorizationPoliciesTests(PostgresContainerFixture postgres)
-    : IAsyncLifetime
+/// <remarks>The tests share a host, each with an account of its own.</remarks>
+public sealed class AuthorizationPoliciesTests(SharedAccountsApp host)
+    : IClassFixture<SharedAccountsApp>
 {
     private const string ApiPath = "/api/account/anything";
     private const int Allowed = StatusCodes.Status200OK;
 
-    private AccountsApp? _app;
+    private readonly AccountSeed _account = host.Unique();
 
-    private AccountsApp App =>
-        _app ?? throw new InvalidOperationException("The host is not started yet.");
+    private AccountsApp App { get; } = host.App;
 
     [Fact]
     public async Task VerifiedEmailIsReadFromTheAccountAsStoredNow()
     {
-        await App.SeedAsync(new AccountSeed { EmailConfirmed = false });
-        var session = await SessionAsync(AccountSeed.Name);
+        await App.SeedAsync(_account with { EmailConfirmed = false });
+        var session = await SessionAsync(_account.Username);
 
         var before = await AuthorizeAsync(AuthorizationPolicies.VerifiedEmail, session);
         var signedIn = await AuthorizeAsync(AuthorizationPolicies.Authenticated, session);
         await App.UsersAsync(async users =>
         {
-            var user = await users.FindByNameAsync(AccountSeed.Name);
+            var user = await users.FindByNameAsync(_account.Username);
             user!.EmailConfirmed = true;
             return await users.UpdateAsync(user);
         });
@@ -55,9 +54,9 @@ public sealed class AuthorizationPoliciesTests(PostgresContainerFixture postgres
     [Fact]
     public async Task BannedAccountIsRefusedBeforeItsSessionIsRevalidated()
     {
-        await App.SeedAsync(new AccountSeed());
-        var session = await SessionAsync(AccountSeed.Name);
-        await App.BanAsync(AccountSeed.Name);
+        await App.SeedAsync(_account);
+        var session = await SessionAsync(_account.Username);
+        await App.BanAsync(_account.Username);
 
         var answer = await AuthorizeAsync(AuthorizationPolicies.VerifiedEmail, session);
 
@@ -67,11 +66,11 @@ public sealed class AuthorizationPoliciesTests(PostgresContainerFixture postgres
     [Fact]
     public async Task AdministratorNeedsASessionOpenedWithASecondFactor()
     {
-        await App.SeedAsync(new AccountSeed());
-        await GrantAdminAsync(AccountSeed.Name);
-        var passwordOnly = await SessionAsync(AccountSeed.Name);
-        var secrets = await App.EnableTwoFactorAsync(AccountSeed.Name);
-        var withCode = await SessionAsync(AccountSeed.Name, Totp.Code(secrets.Key, App.Clock));
+        await App.SeedAsync(_account);
+        await GrantAdminAsync(_account.Username);
+        var passwordOnly = await SessionAsync(_account.Username);
+        var secrets = await App.EnableTwoFactorAsync(_account.Username);
+        var withCode = await SessionAsync(_account.Username, Totp.Code(secrets.Key, App.Clock));
 
         var refused = await AuthorizeAsync(AuthorizationPolicies.Admin, passwordOnly);
         var allowed = await AuthorizeAsync(AuthorizationPolicies.Admin, withCode);
@@ -83,38 +82,32 @@ public sealed class AuthorizationPoliciesTests(PostgresContainerFixture postgres
     [Fact]
     public async Task SecondFactorMakesNoAdministrator()
     {
-        await App.SeedAsync(new AccountSeed());
-        var secrets = await App.EnableTwoFactorAsync(AccountSeed.Name);
-        var withCode = await SessionAsync(AccountSeed.Name, Totp.Code(secrets.Key, App.Clock));
+        await App.SeedAsync(_account);
+        var secrets = await App.EnableTwoFactorAsync(_account.Username);
+        var withCode = await SessionAsync(_account.Username, Totp.Code(secrets.Key, App.Clock));
 
         var answer = await AuthorizeAsync(AuthorizationPolicies.Admin, withCode);
 
         Assert.Equal((StatusCodes.Status403Forbidden, "forbidden"), answer);
     }
 
-    public async ValueTask InitializeAsync() => _app = await AccountsApp.StartAsync(postgres);
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_app is not null)
-        {
-            await _app.DisposeAsync();
-        }
-    }
-
-    // As the admin lot will: the role row, then the account in it.
+    // As the admin lot will: the role row, created by the first test that needs it, then the
+    // account in it.
     private async Task GrantAdminAsync(string username)
     {
         await using var scope = App.Services.CreateAsyncScope();
         var roles = scope.ServiceProvider.GetRequiredService<RoleManager<Role>>();
         var users = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+        if (!await roles.RoleExistsAsync(Role.Admin))
+        {
+            Assert.True((await roles.CreateAsync(new Role { Name = Role.Admin })).Succeeded);
+        }
 
-        var created = await roles.CreateAsync(new Role { Name = Role.Admin });
         var granted = await users.AddToRoleAsync(
             (await users.FindByNameAsync(username))!,
             Role.Admin);
 
-        Assert.True(created.Succeeded && granted.Succeeded);
+        Assert.True(granted.Succeeded);
     }
 
     // The principal the session cookie of a browser sign-in carries.

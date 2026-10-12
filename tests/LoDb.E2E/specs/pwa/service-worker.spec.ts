@@ -1,6 +1,9 @@
 import type { Page } from '@playwright/test';
 import { expect, test } from '../../support/test';
 
+// A service worker, its caches and the offline answers only exist in a real browser, served
+// the worker's script by nginx; its rules are the worker's unit tests'.
+
 // Prerendered: available without catalogue data, so the suite runs on any stack.
 const VISITED = '/en/about';
 const NEVER_VISITED = '/en/faq';

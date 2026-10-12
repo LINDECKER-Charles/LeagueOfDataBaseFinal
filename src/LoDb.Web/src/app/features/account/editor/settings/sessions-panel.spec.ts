@@ -2,13 +2,13 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { PLATFORM_ID } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
-import { provideTransloco } from '@jsverse/transloco';
-import { of, throwError } from 'rxjs';
+import { throwError } from 'rxjs';
 import { AuthSession } from '../../../../core/auth/session/auth-session';
 import { AUTH_STRATEGY } from '../../../../core/auth/strategy/auth-strategy-token';
 import { accountUser } from '../../../../core/auth/testing/account-user';
 import { FakeAuthStrategy } from '../../../../core/auth/testing/fake-auth-strategy';
 import { ToastService } from '../../../../core/layout/toast/toast-service';
+import { provideTestTransloco } from '../../../../core/testing/provide-test-transloco';
 import { SessionsPanel } from './sessions-panel';
 
 // Without catalogues, every text renders as its key: the spec reads which one is shown.
@@ -19,16 +19,7 @@ async function open(strategy: FakeAuthStrategy) {
       { provide: PLATFORM_ID, useValue: 'browser' },
       { provide: AUTH_STRATEGY, useValue: strategy },
       provideRouter([]),
-      provideTransloco({
-        config: {
-          availableLangs: ['fr'],
-          defaultLang: 'fr',
-          missingHandler: { logMissingKey: false },
-        },
-        loader: class {
-          getTranslation = () => of({});
-        },
-      }),
+      provideTestTransloco({ lang: 'fr' }),
     ],
   });
   const session = TestBed.inject(AuthSession);

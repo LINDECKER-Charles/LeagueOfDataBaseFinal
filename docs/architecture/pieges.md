@@ -174,11 +174,12 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   l'API : un hôte de test se branche sur le second.
 - **Corps de requête** : 128 Kio au plus (`LoDb:Hosting:MaxRequestBodySize`), 413 au-delà.
   Le plus gros corps légitime, un build maximal dont chaque caractère est échappé, dépasse
-  64 Kio (`tests/LoDb.E2E/specs/builds/maximal-build.spec.ts`) : ne pas descendre à 64 Kio.
+  64 Kio (≈ 65 Kio : 2 080 caractères de nom et de description, dix étapes de 40 + 300, chacun
+  hors du plan de base pesant 12 octets en `\u` échappés) : ne pas descendre à 64 Kio.
   Un endpoint qui doit lire plus pose son propre `RequestSizeLimit` (webhook Stripe, 1 Mio).
-  Les tests xUnit de cette borne tournent sur un vrai Kestrel, en Production
-  (`Hosting/Support/KestrelApi.cs`) : le serveur en mémoire n'applique aucune limite, et
-  Development transforme un corps invalide en exception.
+  La borne se teste dans nginx (`tools/nginx/test`) et en xUnit, sur un vrai Kestrel, en
+  Production (`Hosting/Support/KestrelApi.cs`) : le serveur en mémoire n'applique aucune
+  limite, et Development transforme un corps invalide en exception.
 - `/api/pickers/*` exige `version` et `lang` (400 `invalid-version` sinon).
 - **Porte réseau de l'API** : le port 8080 ne répond qu'au réseau de la stack
   (`LoDb:Hosting:KnownProxyNetworks`, le seul `LODB_STACK_SUBNET` sur un hôte, les trois
@@ -476,6 +477,26 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   site est un littéral, dans le calque et dans `audience-site.ts` : `tools/umami/test`
   vérifie leur accord. Aucune adresse de compte ou d'admin ne part (`audience: 'none'`), les
   autres pages partent sous leur gabarit, sauf listes et fiches (`audience: 'path'`).
+- **Sauvegardes hors hôte, en prod seulement** (`compose.sauvegarde.yaml`, ajouté par le
+  job) : le réseau `sauvegardes` appartient à `infra-vps`, qui le crée même en sommeil ; le
+  job s'arrête s'il manque, **ne pas** le créer depuis LoDb. Le rôle `lodb_sauvegarde` lit
+  tout (`pg_read_all_data`) et n'écrit que dans `backup_run` : ce droit vient de
+  `schema-privileges.sql`, **jamais** d'un `GRANT` à la main, que le `migrate` suivant
+  reprend. Un secret vide ne retire pas le mot de passe du rôle
+  ([`sauvegardes.md`](../guides/sauvegardes.md), « Retirer »).
+- **Page de maintenance** (`server.d/maintenance.conf`, `docker/nginx/maintenance/`) : tant que
+  `.deploy/maintenance/active.json` existe sur l'hôte (monté en lecture seule sur
+  `/srv/maintenance`), nginx répond **503** à chaque page — `/`, une locale, `/b/`, `/admin` —
+  par la page de son image ; l'API, `/v1/`, les webhooks, les blobs, `/build/`, les fichiers
+  des robots et les 301 de l'ancien site gardent leur réponse, voulu. Le job le pose juste avant
+  d'arrêter un conteneur et le retire après les sondes (`tools/deploy/maintenance.sh`) ; un
+  échec entre les deux **laisse la page**, qu'on retire à la main une fois la stack rétablie.
+  Sans le dossier (pile locale, E2E), l'interrupteur n'existe pas. Le premier déploiement qui
+  apporte la page ne l'affiche pas (l'ancien nginx ne la connaît pas). Pendant la recréation de
+  nginx lui-même, quelques secondes, c'est l'edge qui répond. Ses textes vivent dans
+  `assets/messages.js` (21 locales), ses couleurs et ses faces recopient `src/styles`
+  (`tools/nginx/test/maintenance-sources.test.mjs` tient l'accord) : un jeton de thème changé
+  côté site se recopie là, sinon le test échoue.
 
 ## Transition (jusqu'à la décommission)
 
@@ -487,7 +508,9 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   emplacement `lodb-dev-e2`, jamais pendant un build Android. Derrière `| tee`, lire
   `$pipestatus[1]` (zsh) ou `${PIPESTATUS[0]}` (bash). Après elle, `lodb_rehearsal` ne doit
   plus exister dans le Postgres de l'ancienne stack.
-- **Parité** : `tools/parity/` collecte, `tests/LoDb.Parity` compare ; un écart nouveau
+- **Parité** : `tools/parity/` collecte, `tests/LoDb.Parity` compare ; ce projet est hors de
+  `LoDb.slnx` (ni la suite ni la CI ne le lancent), il se lance par
+  `dotnet test --project tests/LoDb.Parity/LoDb.Parity.csproj`. Un écart nouveau
   reçoit une règle argumentée de `ParityRules.cs`, jamais un filtre. Parité des builds et
   agrégats analytics : copies dans le Postgres de l'ancienne stack, jamais sa base `lodb`.
 - **Rapports générés** (`diff-seo.md`, `lighthouse.md`…) : écrits par leurs outils seuls ;

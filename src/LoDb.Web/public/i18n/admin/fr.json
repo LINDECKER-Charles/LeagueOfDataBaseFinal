@@ -13,6 +13,7 @@
     "contacts": "Messages",
     "api_clients": "Clients API",
     "monitoring": "Surveillance",
+    "backups": "Sauvegardes",
     "journal": "Journal",
     "sign_out": "Déconnexion"
   },
@@ -579,6 +580,75 @@
       "dead": "Abandonnés : {count}."
     }
   },
+  "backups": {
+    "title": "Sauvegardes",
+    "lede": "Les sauvegardes hors hôte de chaque nuit (restic → Scaleway) : ce que chaque passe a fait, les tests de restauration mensuels et ce que le dépôt coûte.",
+    "empty": "Aucune passe enregistrée : les sauvegardes hors hôte ne sont pas encore actives, ou leur conteneur (infra-vps) n'écrit pas encore son journal ici.",
+    "repository": "dépôt",
+    "runs_empty": "Aucune étape sur la période.",
+    "databases": {
+      "lodb": "LoDb (production)",
+      "umami": "Umami (audience)"
+    },
+    "statuses": {
+      "ok": "à jour",
+      "late": "en retard",
+      "failed": "en échec"
+    },
+    "steps": {
+      "backup": "Sauvegarde",
+      "retention": "Rétention",
+      "restore": "Restauration",
+      "check": "Vérification"
+    },
+    "results": {
+      "ok": "réussie",
+      "failed": "échec"
+    },
+    "kpi": {
+      "databases": "Bases à jour",
+      "databases_sub": "{count, plural, =0 {aucune en retard ni en échec} one {# en retard ou en échec} other {# en retard ou en échec}}",
+      "databases_none": "aucune base sauvegardée",
+      "last_success": "Dernière réussite",
+      "last_success_sub": "toutes bases confondues",
+      "repository": "Taille du dépôt",
+      "repository_sub": "mesurée le {date}",
+      "repository_none": "pas encore mesurée",
+      "cost": "Coût estimé / mois",
+      "cost_sub": "{price} par Go et par mois, hors versions verrouillées"
+    },
+    "card": {
+      "last_success": "Réussie : {date}",
+      "last_failure": "Échec : {date}",
+      "dump": "Dump {size}",
+      "restore": "restauration vérifiée le {date}",
+      "restore_never": "Restauration jamais testée."
+    },
+    "nights": {
+      "title": "Nuit par nuit",
+      "chip": "{days, plural, one {# jour} other {# jours}}",
+      "night": "{day} : {outcome} ({steps, plural, =0 {aucune étape} one {# étape} other {# étapes}})",
+      "outcomes": {
+        "ok": "tout a réussi",
+        "recovered": "réussi après nouvelle tentative",
+        "failed": "au moins une étape en échec",
+        "none": "aucune passe"
+      }
+    },
+    "columns": {
+      "started": "Début",
+      "step": "Étape",
+      "database": "Base",
+      "result": "Résultat",
+      "duration": "Durée",
+      "volume": "Volume",
+      "detail": "Détail"
+    },
+    "volume": {
+      "backup": "{read} lus · {added} ajoutés",
+      "repository": "dépôt {size}"
+    }
+  },
   "journal": {
     "title": "Journal d'audit",
     "lede": "Actions sensibles et événements de sécurité. Horodatage en UTC. Conservation {months} mois (recommandation CNIL).",
@@ -714,6 +784,8 @@
     "application": "Application",
     "volumes": "Volumes",
     "filter": "Filtrer",
-    "maintenance": "Maintenance"
+    "maintenance": "Maintenance",
+    "databases": "Bases sauvegardées",
+    "nights": "Nuits"
   }
 }

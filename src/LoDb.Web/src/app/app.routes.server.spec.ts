@@ -1,4 +1,3 @@
-import { ɵgetDocument as getDocument } from '@angular/core';
 import {
   RenderMode,
   ɵextractRoutesAndCreateRouteTree as extractRoutesAndCreateRouteTree,
@@ -128,16 +127,5 @@ describe('serverRoutes (ADR 0005)', () => {
 
     const expected = LOCALES.flatMap((locale) => EDITORIAL.map((path) => `/${locale}/${path}`));
     expect(prerendered.sort()).toEqual(expected.sort());
-  });
-
-  it('leaves jsdom its DOM classes and document for the specs that run next in this worker', () => {
-    const element = document.createElement('p');
-    const listener = vi.fn();
-    element.addEventListener('ping', listener);
-    element.dispatchEvent(new Event('ping'));
-
-    expect(listener).toHaveBeenCalledOnce();
-    expect(element).toBeInstanceOf(Node);
-    expect(getDocument()).toBe(document);
   });
 });

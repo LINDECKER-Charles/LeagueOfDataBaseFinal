@@ -5,7 +5,8 @@ import { useTheme, type Theme } from '../../support/theme';
 
 // axe (WCAG 2.1 AA) on a page of each template in the default identity, and on the two richest
 // in spirit-blossom, whose accents turn from gold to pale blue: contrast is checked against
-// each theme's own tokens. The other pages share these templates' primitives.
+// each theme's own tokens. The other pages share these templates' primitives. Contrast and
+// what is shown need the real styles and layout of a browser, which jsdom has not.
 const TEMPLATE_PATHS = [
   '',
   'champions',

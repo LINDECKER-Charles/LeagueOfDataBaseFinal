@@ -4,12 +4,11 @@ import { Component, PLATFORM_ID } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { provideTransloco } from '@jsverse/transloco';
-import { of } from 'rxjs';
 import { AUTH_STRATEGY } from '../../../../core/auth/strategy/auth-strategy-token';
 import { AuthSession } from '../../../../core/auth/session/auth-session';
 import { accountUser } from '../../../../core/auth/testing/account-user';
 import { FakeAuthStrategy } from '../../../../core/auth/testing/fake-auth-strategy';
+import { provideTestTransloco } from '../../../../core/testing/provide-test-transloco';
 import { RegisterView } from './register-view';
 
 @Component({ template: '' })
@@ -30,16 +29,7 @@ async function open() {
         { path: ':locale/account/register', component: RegisterView },
         { path: '**', component: Probe },
       ]),
-      provideTransloco({
-        config: {
-          availableLangs: ['fr'],
-          defaultLang: 'fr',
-          missingHandler: { logMissingKey: false },
-        },
-        loader: class {
-          getTranslation = () => of({});
-        },
-      }),
+      provideTestTransloco({ lang: 'fr' }),
     ],
   });
   const harness = await RouterTestingHarness.create('/fr/account/register');

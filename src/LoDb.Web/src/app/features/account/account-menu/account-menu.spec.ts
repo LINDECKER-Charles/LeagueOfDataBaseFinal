@@ -2,7 +2,6 @@ import { Component, PLATFORM_ID, type Provider } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { provideTransloco } from '@jsverse/transloco';
 import { of, throwError } from 'rxjs';
 import type { AccountUser } from '../../../core/api/generated/models/account-user';
 import { AuthSession } from '../../../core/auth/session/auth-session';
@@ -11,6 +10,7 @@ import { accountUser } from '../../../core/auth/testing/account-user';
 import { FakeAuthStrategy } from '../../../core/auth/testing/fake-auth-strategy';
 import { ToastService } from '../../../core/layout/toast/toast-service';
 import { PLATFORM } from '../../../core/platform/platform';
+import { provideTestTransloco } from '../../../core/testing/provide-test-transloco';
 import { AccountMenu } from './account-menu';
 
 @Component({ imports: [AccountMenu], template: '<lodb-account-menu />' })
@@ -29,16 +29,7 @@ async function open(user: AccountUser | null, strategy = new FakeAuthStrategy(),
       { provide: AUTH_STRATEGY, useValue: strategy },
       detected ? DETECTED : [],
       provideRouter([{ path: '**', component: Header }]),
-      provideTransloco({
-        config: {
-          availableLangs: ['fr'],
-          defaultLang: 'fr',
-          missingHandler: { logMissingKey: false },
-        },
-        loader: class {
-          getTranslation = () => of({});
-        },
-      }),
+      provideTestTransloco({ lang: 'fr' }),
     ],
   });
   await TestBed.inject(AuthSession).load();

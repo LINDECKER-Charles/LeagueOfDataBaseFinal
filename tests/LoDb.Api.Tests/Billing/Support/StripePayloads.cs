@@ -8,7 +8,14 @@ namespace LoDb.Api.Tests.Billing.Support;
 /// Stripe's events as its servers post them, with only the fields the site reads; a test
 /// alters a session before wrapping it in its event. Sessions charge the catalogue's price.
 /// </summary>
-public static class StripePayloads
+/// <remarks>
+/// Every identifier these payloads give, of an event, a session, a charge, the customer or
+/// the subscription, ends with the mark of the test: the tests that share a database never
+/// deliver the same event twice nor touch each other's subscription. A test names an
+/// identifier as it wrote it (<c>cs_test_pack</c>); <see cref="Id"/> gives it as delivered.
+/// </remarks>
+/// <param name="mark">What every identifier of the test ends with; none for a test alone.</param>
+public sealed class StripePayloads(string mark)
 {
     public const string CheckoutCompleted = "checkout.session.completed";
     public const string AsyncPaymentSucceeded = "checkout.session.async_payment_succeeded";
@@ -18,24 +25,18 @@ public static class StripePayloads
     public const string InvoicePaymentFailed = "invoice.payment_failed";
     public const string ChargeRefunded = "charge.refunded";
     public const string DisputeCreated = "charge.dispute.created";
-    public const string Customer = "cus_test_buyer";
-    public const string Subscription = "sub_test_plan";
 
     /// <summary>When every event of these tests was created, which dates the payments.</summary>
     public static readonly DateTimeOffset CreatedAt = new(2026, 3, 1, 12, 0, 0, TimeSpan.Zero);
 
-    /// <summary>An event wrapping <paramref name="data"/>, the object it is about.</summary>
-    public static JsonObject Event(string id, string type, JsonObject data) => new()
-    {
-        ["id"] = id,
-        ["object"] = "event",
-        ["api_version"] = "2025-01-27.acacia",
-        ["created"] = CreatedAt.ToUnixTimeSeconds(),
-        ["livemode"] = false,
-        ["pending_webhooks"] = 1,
-        ["type"] = type,
-        ["data"] = new JsonObject { ["object"] = data },
-    };
+    /// <summary>The customer of the test's subscriptions.</summary>
+    public string Customer => Id("cus_test_buyer");
+
+    /// <summary>The subscription of the test.</summary>
+    public string Subscription => Id("sub_test_plan");
+
+    /// <summary>The identifier <paramref name="id"/> as the test's payloads give it.</summary>
+    public string Id(string id) => id + mark;
 
     /// <summary><paramref name="stripeEvent"/>, created <paramref name="days"/> later.</summary>
     public static JsonObject Later(JsonObject stripeEvent, int days)
@@ -45,38 +46,65 @@ public static class StripePayloads
         return stripeEvent;
     }
 
+    /// <summary>An event wrapping <paramref name="data"/>, the object it is about.</summary>
+    public JsonObject Event(string id, string type, JsonObject data) => new()
+    {
+        ["id"] = Id(id),
+        ["object"] = "event",
+        ["api_version"] = "2025-01-27.acacia",
+        ["created"] = CreatedAt.ToUnixTimeSeconds(),
+        ["livemode"] = false,
+        ["pending_webhooks"] = 1,
+        ["type"] = type,
+        ["data"] = new JsonObject { ["object"] = data },
+    };
+
     /// <summary>The completion of <paramref name="session"/>.</summary>
-    public static JsonObject Completed(string id, JsonObject session) =>
+    public JsonObject Completed(string id, JsonObject session) =>
         Event(id, CheckoutCompleted, session);
 
-    /// <summary>The end of the subscription <paramref name="subscriptionId"/>.</summary>
-    public static JsonObject Cancelled(string id, string subscriptionId = Subscription) =>
-        Event(id, SubscriptionDeleted, SubscriptionObject(subscriptionId, "canceled"));
+    /// <summary>
+    /// The end of the subscription <paramref name="subscriptionId"/>, the test's by default.
+    /// </summary>
+    public JsonObject Cancelled(string id, string? subscriptionId = null) =>
+        Event(
+            id,
+            SubscriptionDeleted,
+            SubscriptionObject(subscriptionId ?? Subscription, "canceled"));
 
-    /// <summary>The subscription of these tests, now <paramref name="status"/>.</summary>
-    public static JsonObject Updated(string id, string status) =>
+    /// <summary>The subscription of the test, now <paramref name="status"/>.</summary>
+    public JsonObject Updated(string id, string status) =>
         Event(id, SubscriptionUpdated, SubscriptionObject(Subscription, status));
 
-    /// <summary>A renewal of <paramref name="subscriptionId"/> that could not be charged.</summary>
-    public static JsonObject InvoiceFailed(string id, string subscriptionId = Subscription) =>
+    /// <summary>
+    /// A renewal of <paramref name="subscriptionId"/>, the test's by default, that could not
+    /// be charged.
+    /// </summary>
+    public JsonObject InvoiceFailed(string id, string? subscriptionId = null) =>
         Event(id, InvoicePaymentFailed, new JsonObject
         {
-            ["id"] = "in_test_" + id,
+            ["id"] = "in_test_" + Id(id),
             ["object"] = "invoice",
             ["customer"] = Customer,
             ["status"] = "open",
             ["parent"] = new JsonObject
             {
                 ["type"] = "subscription_details",
-                ["subscription_details"] = new JsonObject { ["subscription"] = subscriptionId },
+                ["subscription_details"] = new JsonObject
+                {
+                    ["subscription"] = subscriptionId ?? Subscription,
+                },
             },
         });
 
-    /// <summary>The full refund of a payment of 10 euros, by its payment and customer.</summary>
-    public static JsonObject Refunded(string id, string? paymentIntent, string? customer = null) =>
+    /// <summary>
+    /// The full refund of a payment of 10 euros, by its payment and customer, both named as
+    /// delivered (<see cref="PaymentOf"/>, <see cref="Customer"/>).
+    /// </summary>
+    public JsonObject Refunded(string id, string? paymentIntent, string? customer = null) =>
         Event(id, ChargeRefunded, new JsonObject
         {
-            ["id"] = "ch_test_" + id,
+            ["id"] = "ch_test_" + Id(id),
             ["object"] = "charge",
             ["amount"] = 1_000,
             ["amount_refunded"] = 1_000,
@@ -86,27 +114,27 @@ public static class StripePayloads
             ["customer"] = customer,
         });
 
-    /// <summary>A dispute of the payment <paramref name="paymentIntent"/>.</summary>
-    public static JsonObject Disputed(string id, string paymentIntent) =>
+    /// <summary>A dispute of the payment <paramref name="paymentIntent"/>, as delivered.</summary>
+    public JsonObject Disputed(string id, string paymentIntent) =>
         Event(id, DisputeCreated, new JsonObject
         {
-            ["id"] = "dp_test_" + id,
+            ["id"] = "dp_test_" + Id(id),
             ["object"] = "dispute",
             ["amount"] = 1_000,
             ["currency"] = "eur",
-            ["charge"] = "ch_test_" + id,
+            ["charge"] = "ch_test_" + Id(id),
             ["payment_intent"] = paymentIntent,
             ["reason"] = "fraudulent",
             ["status"] = "needs_response",
         });
 
-    /// <summary>The payment a session in payment mode is paid by, in these tests.</summary>
-    public static string PaymentOf(string sessionId) => "pi_for_" + sessionId;
+    /// <summary>The payment of the session <paramref name="sessionId"/>, as delivered.</summary>
+    public string PaymentOf(string sessionId) => "pi_for_" + Id(sessionId);
 
     /// <summary>A paid session in payment mode, with <paramref name="metadata"/>.</summary>
-    public static JsonObject Session(string id, JsonObject metadata) => new()
+    public JsonObject Session(string id, JsonObject metadata) => new()
     {
-        ["id"] = id,
+        ["id"] = Id(id),
         ["object"] = "checkout.session",
         ["mode"] = "payment",
         ["payment_status"] = "paid",
@@ -118,7 +146,7 @@ public static class StripePayloads
     };
 
     /// <summary>A credit pack bought by <paramref name="buyerId"/>, at its price.</summary>
-    public static JsonObject Pack(string id, int buyerId, long requests)
+    public JsonObject Pack(string id, int buyerId, long requests)
     {
         var session = Session(id, new JsonObject
         {
@@ -135,7 +163,7 @@ public static class StripePayloads
     /// <summary>
     /// A subscription to <paramref name="plan"/> by <paramref name="buyerId"/>, at its price.
     /// </summary>
-    public static JsonObject Plan(string id, int buyerId, string plan)
+    public JsonObject Plan(string id, int buyerId, string plan)
     {
         var session = Session(id, new JsonObject
         {
@@ -153,7 +181,7 @@ public static class StripePayloads
     }
 
     /// <summary>A donation of <paramref name="amountCents"/>, signed in or not.</summary>
-    public static JsonObject Donation(string id, int amountCents, int? donorId = null)
+    public JsonObject Donation(string id, int amountCents, int? donorId = null)
     {
         var session = Session(id, new JsonObject
         {
@@ -165,7 +193,7 @@ public static class StripePayloads
         return session;
     }
 
-    private static JsonObject SubscriptionObject(string id, string status) => new()
+    private JsonObject SubscriptionObject(string id, string status) => new()
     {
         ["id"] = id,
         ["object"] = "subscription",

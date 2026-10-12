@@ -57,15 +57,6 @@ public sealed class PhpContainer : IAsyncLifetime
         ];
     }
 
-    /// <summary>The PHP version of the container.</summary>
-    public async Task<string> VersionAsync(CancellationToken cancellationToken)
-    {
-        var result = await _container.ExecAsync(
-            ["php", "-r", "echo PHP_VERSION;"],
-            cancellationToken);
-        return result.Stdout;
-    }
-
     public async ValueTask InitializeAsync() =>
         await _container.StartAsync(TestContext.Current.CancellationToken);
 

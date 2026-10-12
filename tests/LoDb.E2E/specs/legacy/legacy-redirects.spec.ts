@@ -1,23 +1,19 @@
 import type { APIRequestContext } from '@playwright/test';
-
+import { metaOf, olderVersion } from '../../support/catalog';
 import { expect, test } from '../../support/test';
 
 // The 301 table of docs/reecriture/plan-migration.md, through nginx: a former URL of each
 // routing class lands in one hop on its new form, with and without ?lang= and a version. The
 // targets are read from the API (latest version, canonical paths), never copied, so the suite
 // follows Data Dragon. Every alternative of nginx's legacy location is tools/nginx's, every
-// target the API tests'.
+// target the API tests': only the stack chains nginx, the API's lookup on real data and the
+// page each hop lands on.
 
 const MOVED_PERMANENTLY = 301;
 const OK = 200;
 const NOT_FOUND = 404;
 const REDIRECTION_FIRST = 300;
 const REDIRECTION_LAST = 399;
-
-interface Meta {
-  readonly latest: string | null;
-  readonly versions: readonly string[];
-}
 
 interface Detail {
   readonly canonicalPath: string;
@@ -50,15 +46,9 @@ async function readJson<T>(request: APIRequestContext, path: string): Promise<T>
 }
 
 async function readCatalog(request: APIRequestContext): Promise<Catalog> {
-  const meta = await readJson<Meta>(request, '/api/meta');
-  const latest = meta.latest;
-  if (latest === null) {
-    throw new Error('No version is promoted yet: the stack has not ingested any.');
-  }
-  const previous = meta.versions[meta.versions.indexOf(latest) + 1];
-  if (previous === undefined) {
-    throw new Error(`No version is listed before ${latest}.`);
-  }
+  const meta = await metaOf(request);
+  const { latest } = meta;
+  const previous = olderVersion(meta);
   const paths: Record<string, string> = {};
   for (const [old, detail] of Object.entries(DETAILS)) {
     const body = await readJson<Detail>(request, `/api/catalog/${latest}/en_US/${detail}`);

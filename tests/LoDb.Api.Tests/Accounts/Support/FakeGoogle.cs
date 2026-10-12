@@ -30,6 +30,17 @@ public sealed class FakeGoogle : HttpMessageHandler
     /// <summary>The form of each code exchange, oldest first.</summary>
     public IReadOnlyList<IReadOnlyDictionary<string, string>> Exchanges => [.. _exchanges];
 
+    /// <summary>
+    /// Back to no account, reachable, no exchange: the state a test of a class sharing the
+    /// host starts from.
+    /// </summary>
+    public void Reset()
+    {
+        Account = null;
+        Unreachable = false;
+        _exchanges.Clear();
+    }
+
     protected override async Task<HttpResponseMessage> SendAsync(
         HttpRequestMessage request,
         CancellationToken cancellationToken)

@@ -1,55 +1,45 @@
-import type { BrowserContext, Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
+import { createMember, signInMember } from '../../support/member-account';
+import { discardAccount } from '../../support/session';
 import { expect, test } from '../../support/test';
-import { type AdminAccount, createAdmin, enrollAdmin, signInAdmin } from '../admin/admin-account';
+import { signIn } from './accounts';
 
-// The French copy of the profile (public/i18n/account/fr.json), which the admin specs use too.
-const SIGN_OUT_EVERYWHERE = 'Se déconnecter de tous les appareils';
-const SIGNED_OUT = 'Vous êtes déconnecté de tous vos appareils.';
-const DELETED = 204;
+// Signing out of every device ends the sessions the API issued to a real browser as cookies:
+// only the stack shows the next request arriving anonymous. The panel is Vitest's, the
+// revocation the API's; a sign-in with a second factor is specs/admin/access.spec.ts's.
+const PROFILE = '/en/account/profile';
+const SIGNED_OUT = 'You are signed out of all your devices.';
+// The CLI creates the member, then the sign-in: more than a test's default 30 seconds may pass.
+const MEMBER_TIMEOUT_MS = 90_000;
 
 async function signedInAs(page: Page): Promise<string | null> {
   const response = await page.request.get('/api/account/me');
-  const session = (await response.json()) as {
-    user: { username: string } | null;
-  };
+  const session = (await response.json()) as { user: { username: string } | null };
   return session.user?.username ?? null;
 }
 
-// Erases the account with its own session and its password, as its profile would.
-async function discard(context: BrowserContext, page: Page, admin: AdminAccount): Promise<void> {
-  const cookies = await context.cookies();
-  const xsrf = cookies.find((cookie) => cookie.name === 'XSRF-TOKEN')?.value ?? '';
-  const deleted = await page.request.post('/api/profile/delete', {
-    data: { password: admin.password },
-    headers: { 'X-XSRF-TOKEN': xsrf },
-  });
-  expect(deleted.status(), `the clean-up deletes ${admin.username}`).toBe(DELETED);
-}
+test('signs out of every device, then back in', async ({ page, baseURL, playwright }) => {
+  test.setTimeout(MEMBER_TIMEOUT_MS);
+  // An account of its own: the worker's would lose the session its other journeys share.
+  const account = createMember('ses', { verified: true });
+  try {
+    await signInMember(page, baseURL, account);
+    expect(await signedInAs(page)).toBe(account.username);
 
-test.describe('sessions of an account', () => {
-  test('sign out of every device, after a sign-in with a second factor', async ({
-    page,
-    context,
-  }) => {
-    // The CLI, the enrolment, then a second sign-in may wait for the next step of the code.
-    test.slow();
-    const admin = createAdmin('ses');
-    await enrollAdmin(page, admin);
-    expect(await signedInAs(page)).toBe(admin.username);
+    await page.getByRole('button', { name: 'Sign out of all devices' }).click();
 
-    await page.goto('/fr/account/profile');
-    await page.getByRole('button', { name: SIGN_OUT_EVERYWHERE }).click();
-
-    await expect(page).toHaveURL(/\/fr\/account\/login$/);
+    await expect(page).toHaveURL(/\/en\/account\/login$/);
     await expect(page.getByText(SIGNED_OUT)).toBeVisible();
     expect(await signedInAs(page)).toBeNull();
-    await page.goto('/admin');
-    await expect(page).toHaveURL(/\/admin\/login\?returnUrl=%2Fadmin$/);
 
-    // A new sign-in works, with a code the enrolment has not spent.
-    await signInAdmin(page, admin);
-    await expect(page).toHaveURL(/\/admin$/);
-    expect(await signedInAs(page)).toBe(admin.username);
-    await discard(context, page, admin);
-  });
+    await test.step('signs back in, on a session of its own', async () => {
+      await page.goto(PROFILE);
+      await expect(page).toHaveURL(/\/en\/account\/login\?returnUrl=/);
+      await signIn(page, account.username, account.password);
+      await expect(page).toHaveURL(new RegExp(`${PROFILE}$`));
+      expect(await signedInAs(page)).toBe(account.username);
+    });
+  } finally {
+    await discardAccount(playwright.request, baseURL, account);
+  }
 });

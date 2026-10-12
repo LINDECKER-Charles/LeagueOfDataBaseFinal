@@ -11,7 +11,8 @@ namespace LoDb.Api.Tests.OpenApi;
 /// The <c>app</c> document types what the TypeScript client is generated from: numbers are
 /// numbers only, and every enum is a typed one, which the generator exports as an array.
 /// </summary>
-public sealed class AppDocumentTypesTests
+/// <remarks>No test changes the host's state: one host serves them all.</remarks>
+public sealed class AppDocumentTypesTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
     [Fact]
     public async Task NumbersAreNeverAlsoStrings()
@@ -37,9 +38,8 @@ public sealed class AppDocumentTypesTests
         Assert.All(enums, static node => Assert.NotNull(node["type"]));
     }
 
-    private static async Task<JsonNode> AppDocumentAsync()
+    private async Task<JsonNode> AppDocumentAsync()
     {
-        await using var factory = new ApiFactory();
         var provider = factory.Services.GetRequiredKeyedService<IOpenApiDocumentProvider>(
             OpenApiDocuments.App);
         var document = await provider.GetOpenApiDocumentAsync(

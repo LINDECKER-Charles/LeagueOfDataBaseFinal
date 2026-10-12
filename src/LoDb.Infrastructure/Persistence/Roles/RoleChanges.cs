@@ -6,7 +6,7 @@ namespace LoDb.Infrastructure.Persistence.Roles;
 /// Existing roles whose attributes, or the API's settings (its statement timeout alone), were
 /// set again.
 /// </param>
-/// <param name="PasswordSet">Whether the API's password changed.</param>
+/// <param name="PasswordSet">Whether the API's password or the backups' changed.</param>
 public sealed record RoleChanges(int Created, int Altered, bool PasswordSet)
 {
     /// <summary>Nothing changed: every role was already as configured.</summary>

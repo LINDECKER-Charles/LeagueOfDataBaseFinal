@@ -1,6 +1,10 @@
 import type { APIRequestContext } from '@playwright/test';
 import { expect, test } from '../../support/test';
 
+// A missing page is the SSR server's 404, its status kept through nginx, then hydrated and left
+// by its link: only the stack gives the status and the page together. The routes that answer
+// 404 are Vitest's.
+
 interface ErrorCopy {
   readonly error: { readonly '404': { readonly title: string } };
 }

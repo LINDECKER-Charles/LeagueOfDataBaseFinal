@@ -80,18 +80,13 @@ public sealed class BlobStoreTests : IDisposable
         Assert.False(await _storage.Blobs.ExistsAsync(other.Key, Token));
     }
 
-    [Theory]
-    [InlineData("")]
-    [InlineData(".")]
-    [InlineData("p/ng")]
-    [InlineData("../png")]
-    [InlineData("png ")]
-    [InlineData("p.ng")]
-    [InlineData("averylongext")]
-    public async Task AnInvalidExtensionIsRejected(string extension)
+    // The extension pattern itself is StoragePathTests': one row proves the store applies it
+    // before writing anything.
+    [Fact]
+    public async Task AnInvalidExtensionIsRejected()
     {
         await Assert.ThrowsAsync<ArgumentException>(
-            () => _storage.Blobs.StoreAsync(Abc, extension, Token));
+            () => _storage.Blobs.StoreAsync(Abc, "../png", Token));
 
         Assert.False(Directory.Exists(_storage.PathOf(StorageLayout.BlobsDirectory)));
     }

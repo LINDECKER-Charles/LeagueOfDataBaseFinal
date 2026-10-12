@@ -35,6 +35,19 @@ server's `404`.
 The CI's `e2e` job runs both against the image Compose built for the stack, next to
 `tools/routing/check-urls.sh`: the Playwright suite leaves these request-level checks to them.
 
+`nginx-maintenance.test.mjs` boots a third stack as a host runs it and turns the maintenance
+switch as the deploy job does (`/srv/maintenance/active.json`, a tmpfs there): every page answers
+the maintenance page with a `503`, never kept, while the API, the bundles, the probe, the crawler
+files and the former site's `301` keep their answers, the page's files and the deploy's state are
+served, a request without the edge's header is still refused, and the pages come back once the
+switch is gone.
+
+`maintenance-page.test.mjs` and `maintenance-sources.test.mjs` need neither Docker nor the image:
+the first runs the page's scripts (`docker/nginx/maintenance/assets`) in a stand-in for the
+browser (identity, locale, estimate on the host's clock, reload once the deploy is over), the
+second holds the page to the site: the 21 locales and their texts, each identity's tokens and
+faces against `src/LoDb.Web/src/styles`, the English a visitor without JavaScript reads.
+
 `compose-environment.test.mjs` needs the Docker CLI only (`docker compose config`): every
 `LODB_*` default of the image reaches nginx with the same value through `compose.yaml`, on a
 local stack and on a served host, and never as a key without a value, which would drop the

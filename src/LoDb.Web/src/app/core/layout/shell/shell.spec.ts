@@ -2,8 +2,7 @@ import { Location } from '@angular/common';
 import { ApplicationRef, ChangeDetectionStrategy, Component } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
-import { provideTransloco } from '@jsverse/transloco';
-import { of } from 'rxjs';
+import { provideTestTransloco } from '../../testing/provide-test-transloco';
 import { RELEASE_VERSION } from './release-version';
 import { Shell } from './shell';
 
@@ -33,12 +32,7 @@ describe('Shell', () => {
           { path: 'admin', data: { chrome: 'bare' }, children: [{ path: '**', children: [] }] },
           { path: '**', children: [] },
         ]),
-        provideTransloco({
-          config: { defaultLang: 'en', missingHandler: { logMissingKey: false }, prodMode: true },
-          loader: class {
-            getTranslation = () => of({});
-          },
-        }),
+        provideTestTransloco(),
         { provide: RELEASE_VERSION, useValue: version },
       ],
     });

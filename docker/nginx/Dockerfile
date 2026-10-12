@@ -1,13 +1,15 @@
 # syntax=docker/dockerfile:1.7@sha256:a57df69d0ea827fb7266491f2813635de6f17269be881f696fbfdf2d83dda33e
 # Image lodb-nginx: the stack's single HTTP entry point, behind the shared edge (Caddy).
-# Build context = repository root; Dockerfile.dockerignore admits docker/nginx/ only.
+# Build context = repository root; Dockerfile.dockerignore admits docker/nginx/ and the site's
+# fonts (src/LoDb.Web/public/fonts) only.
 #
 # Layout, fixed for the later lots (they add files here without touching this Dockerfile):
-#   nginx.conf  http block: upstreams, resolver, shared maps
-#   sites/      one file per server block; site.conf also holds the http-level bounds and
-#               cache zones that LODB_* variables tune
-#   server.d/   *.conf included INSIDE the site's server block (seo, legacy redirects…)
-#   snippets/   files included by a server block or a location (guards, headers, caches…)
+#   nginx.conf    http block: upstreams, resolver, shared maps
+#   sites/        one file per server block; site.conf also holds the http-level bounds and
+#                 cache zones that LODB_* variables tune
+#   server.d/     *.conf included INSIDE the site's server block (seo, legacy redirects…)
+#   snippets/     files included by a server block or a location (guards, headers, caches…)
+#   maintenance/  the page answered while a deploy replaces the stack (server.d/maintenance.conf)
 #
 # Every image this file names is pinned by digest, its tag kept for the reader: a moved tag
 # never changes what is built. Dependabot bumps both (tools/ci/README.md, base images).
@@ -91,6 +93,12 @@ COPY docker/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY docker/nginx/sites/     /etc/nginx/templates/sites/
 COPY docker/nginx/server.d/  /etc/nginx/templates/server.d/
 COPY docker/nginx/snippets/  /etc/nginx/templates/snippets/
+# The maintenance page and its files, with the site's own faces: nginx serves it while the SSR
+# server, which serves those faces otherwise, is being replaced. Not templates: envsubst never
+# reads them.
+COPY docker/nginx/maintenance/ /usr/share/nginx/maintenance/
+COPY src/LoDb.Web/public/fonts/ /usr/share/nginx/maintenance/assets/fonts/
+COPY src/LoDb.Web/public/favicon/favicon-96x96.png /usr/share/nginx/maintenance/assets/
 # The entrypoint strips the template suffix: each file keeps its .conf name once rendered.
 RUN find /etc/nginx/templates -type f -name '*.conf' \
       -exec sh -c 'for file; do mv "$file" "$file.template"; done' sh '{}' +

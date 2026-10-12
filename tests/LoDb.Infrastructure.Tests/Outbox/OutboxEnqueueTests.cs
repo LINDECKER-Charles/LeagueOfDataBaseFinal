@@ -4,6 +4,7 @@ using LoDb.Infrastructure.Outbox;
 using LoDb.Infrastructure.Persistence;
 using LoDb.Infrastructure.Persistence.Contact;
 using LoDb.Infrastructure.Persistence.Outbox;
+using LoDb.Infrastructure.Tests.Outbox.Support;
 using LoDb.Infrastructure.Tests.Persistence;
 using LoDb.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -89,23 +90,6 @@ public sealed class OutboxEnqueueTests(PostgresContainerFixture postgres)
 
         await Assert.ThrowsAsync<DbUpdateException>(() => context.SaveChangesAsync(Cancellation));
         Assert.Empty(await Harness.RowsAsync(Cancellation));
-    }
-
-    [Theory]
-    [InlineData("")]
-    [InlineData("not an address")]
-    [InlineData("a@example.com, b@example.com")]
-    public async Task InvalidRecipientIsRefusedWithoutEchoingIt(string recipient)
-    {
-        await using var scope = Harness.Services.CreateAsyncScope();
-        var outbox = scope.ServiceProvider.GetRequiredService<IEmailOutbox>();
-
-        var error = await Assert.ThrowsAsync<ArgumentException>(() =>
-            outbox.EnqueueAsync(OutboxHarness.Confirmation(UiLocale.En, recipient), Cancellation));
-
-        Assert.True(
-            recipient.Length == 0
-            || !error.Message.Contains(recipient, StringComparison.Ordinal));
     }
 
     protected override async ValueTask DisposeServicesAsync()

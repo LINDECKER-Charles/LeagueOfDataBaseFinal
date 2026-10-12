@@ -14,29 +14,17 @@ import {
   Router,
   withRouterConfig,
 } from '@angular/router';
-import { provideTransloco } from '@jsverse/transloco';
 import { of } from 'rxjs';
 import { routes } from '../app/app.routes';
 import { API_BASE_URL } from '../app/core/api/api-base-url';
-import type { CatalogMeta } from '../app/core/api/generated/models/catalog-meta';
+import { catalogMetaOf } from '../app/core/testing/catalog-meta-of';
+import { provideTestTransloco } from '../app/core/testing/provide-test-transloco';
 import { DonatePage } from '../app/features/donate/donate-page';
 import { ErrorPage } from '../app/features/errors/error-page';
 import { environment } from './environment';
 import { PAYMENTS_ENABLED } from './payments-enabled';
 
-const META: CatalogMeta = {
-  latest: '16.19.1',
-  versions: ['16.19.1'],
-  readyVersions: ['16.19.1'],
-  versionPattern: String.raw`\d+(?:\.\d+)+`,
-  languages: ['en_US'],
-  languagePattern: '[a-z]{2}_[A-Z]{2}',
-  defaultLanguage: 'en_US',
-  locales: [{ locale: 'en', language: 'en_US' }],
-  fallbackLocale: 'en',
-  gameModes: [{ mode: 'sr', map: 11 }],
-  defaultGameMode: 'sr',
-};
+const META = catalogMetaOf();
 
 // The API answers its meta, which the `:version` guard reads once `donate` falls through.
 const simulatedApi: HttpInterceptorFn = (request) =>
@@ -54,12 +42,7 @@ async function visitDonate(payments: boolean): Promise<Visit> {
       provideRouter(routes, withRouterConfig({ paramsInheritanceStrategy: 'always' })),
       provideLocationMocks(),
       provideHttpClient(withInterceptors([simulatedApi])),
-      provideTransloco({
-        config: { defaultLang: 'en', missingHandler: { logMissingKey: false }, prodMode: true },
-        loader: class {
-          getTranslation = () => of({});
-        },
-      }),
+      provideTestTransloco(),
       { provide: API_BASE_URL, useValue: '' },
       { provide: PLATFORM_ID, useValue: 'server' },
       { provide: RESPONSE_INIT, useValue: init },

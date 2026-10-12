@@ -6,8 +6,8 @@ import {
   type RouterStateSnapshot,
   provideRouter,
 } from '@angular/router';
-import { provideTransloco } from '@jsverse/transloco';
 import { of } from 'rxjs';
+import { provideTestTransloco } from '../../../../../core/testing/provide-test-transloco';
 import { LoadClock } from './load-clock';
 import { LoadTime } from './load-time';
 import { loadTimesOf } from './load-times-of';
@@ -99,14 +99,7 @@ describe('withLoadTiming', () => {
 describe('lodb-load-time', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [
-        provideTransloco({
-          config: { defaultLang: 'en', missingHandler: { logMissingKey: false }, prodMode: true },
-          loader: class {
-            getTranslation = () => of({});
-          },
-        }),
-      ],
+      providers: [provideTestTransloco()],
     });
   });
 

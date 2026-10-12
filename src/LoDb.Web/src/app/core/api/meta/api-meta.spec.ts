@@ -2,28 +2,20 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
+import { catalogMetaOf } from '../../testing/catalog-meta-of';
 import { API_BASE_URL } from '../api-base-url';
-import type { CatalogMeta } from '../generated/models/catalog-meta';
 import { ApiMeta } from './api-meta';
 
 const ORIGIN = 'http://api:8080';
-const META: CatalogMeta = {
-  latest: '16.19.1',
+const META = catalogMetaOf({
   versions: ['16.19.1', '16.18.1'],
-  readyVersions: ['16.19.1'],
-  versionPattern: String.raw`\d+(?:\.\d+)+`,
   languages: ['en_US', 'fr_FR', 'zh_CN'],
-  languagePattern: '[a-z]{2}_[A-Z]{2}',
-  defaultLanguage: 'en_US',
   locales: [
     { locale: 'en', language: 'en_US' },
     { locale: 'fr', language: 'fr_FR' },
     { locale: 'zh-hans', language: 'zh_CN' },
   ],
-  fallbackLocale: 'en',
-  gameModes: [{ mode: 'sr', map: 11 }],
-  defaultGameMode: 'sr',
-};
+});
 
 describe('ApiMeta', () => {
   let http: HttpTestingController;

@@ -3,6 +3,7 @@ using LoDb.Infrastructure.Persistence.Analytics;
 using LoDb.Infrastructure.Persistence.Apps;
 using LoDb.Infrastructure.Persistence.Audience;
 using LoDb.Infrastructure.Persistence.Audit;
+using LoDb.Infrastructure.Persistence.Backups;
 using LoDb.Infrastructure.Persistence.Billing;
 using LoDb.Infrastructure.Persistence.Billing.Payments;
 using LoDb.Infrastructure.Persistence.Builds;
@@ -70,6 +71,8 @@ public sealed class LoDbDbContext(DbContextOptions<LoDbDbContext> options)
     public DbSet<AudienceEntityDay> AudienceEntityDays => Set<AudienceEntityDay>();
 
     public DbSet<ClientPolicyEntry> ClientPolicies => Set<ClientPolicyEntry>();
+
+    public DbSet<BackupRun> BackupRuns => Set<BackupRun>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

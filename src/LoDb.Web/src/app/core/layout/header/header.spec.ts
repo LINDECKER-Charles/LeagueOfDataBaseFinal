@@ -1,8 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { provideTransloco } from '@jsverse/transloco';
-import { of } from 'rxjs';
 import { PAYMENTS_ENABLED } from '../../../../environments/payments-enabled';
+import { provideTestTransloco } from '../../testing/provide-test-transloco';
 import { Header } from './header';
 
 // Every link of the header, as the hrefs it renders.
@@ -10,12 +9,7 @@ async function hrefs(payments: boolean): Promise<(string | null)[]> {
   TestBed.configureTestingModule({
     providers: [
       provideRouter([]),
-      provideTransloco({
-        config: { defaultLang: 'en', missingHandler: { logMissingKey: false }, prodMode: true },
-        loader: class {
-          getTranslation = () => of({});
-        },
-      }),
+      provideTestTransloco(),
       { provide: PAYMENTS_ENABLED, useValue: payments },
     ],
   });

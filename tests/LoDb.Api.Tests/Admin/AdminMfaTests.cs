@@ -1,89 +1,29 @@
 using System.Net;
 using System.Text.Json;
-using LoDb.Api.Modules.Accounts.Security;
 using LoDb.Api.Tests.Accounts.Support;
 using LoDb.Api.Tests.Admin.Support;
-using LoDb.Api.Tests.Audit.Support;
-using LoDb.Testing;
 
 namespace LoDb.Api.Tests.Admin;
 
 /// <summary>
-/// <c>/api/admin/mfa</c>: an administrator without a second factor, holding the invitation
-/// the operator printed, draws a key, confirms it with a code, and the session then holds the
-/// second factor the admin asks for. Without the invitation, the password opens nothing.
+/// <c>/api/admin/mfa</c>: a wrong code counts toward the lockout, the session's XSRF token
+/// stays required, and an enrolled administrator keeps their authenticator. The enrollment
+/// itself, and the refusals counted, are <see cref="OwnHost.AdminEnrollmentTests"/>'.
 /// </summary>
-public sealed class AdminMfaTests(PostgresContainerFixture postgres)
-    : AdminTestBase(postgres)
+/// <remarks>The tests share a host, each with an administrator of its own.</remarks>
+public sealed class AdminMfaTests(SharedAccountsApp host)
+    : AdminTestBase(host), IClassFixture<SharedAccountsApp>
 {
     private const string EnrollmentPath = "/api/admin/mfa/enrollment";
     private const string ConfirmPath = "/api/admin/mfa/confirm";
-    private const string EventsCounter = "lodb.admin.security_events";
-    private const string InvitationField = "invitation";
 
-    [Fact]
-    public async Task EnrollmentOpensTheAdmin()
-    {
-        using var events = App.Security<long>(EventsCounter);
-        using var admin = await AdminCalls.OpenUnenrolledAsync(App);
-        var invitation = await AdminCalls.InvitationAsync(App, AdminCalls.NewAdminName);
-
-        var setup = await StartAsync(admin, invitation);
-        var key = ApiJson.Text(setup, "sharedKey")!;
-        var code = Totp.Code(key, App.Clock);
-        // As an authenticator app shows it, in two groups.
-        using var confirm = await admin.PostAsync(
-            ConfirmPath,
-            new { code = $"{code[..3]} {code[3..]}", invitation });
-
-        var done = await ApiJson.ReadAsync(confirm, HttpStatusCode.OK);
-        Assert.Equal(10, done.GetProperty("recoveryCodes").GetArrayLength());
-        var user = done.GetProperty("session").GetProperty("user");
-        Assert.True(user.GetProperty("multiFactor").GetBoolean());
-        Assert.True(user.GetProperty("twoFactorEnabled").GetBoolean());
-        Assert.StartsWith(
-            "otpauth://totp/LoDb:nouvelle.admin%40example.test?secret=" + key,
-            ApiJson.Text(setup, "authenticatorUri"),
-            StringComparison.Ordinal);
-        await ReadAsync(admin, "/api/admin/users");
-        Assert.True((await App.FindAsync(AdminCalls.NewAdminName)).TwoFactorEnabled);
-        var enrolled = Assert.Single(events.GetMeasurementSnapshot());
-        Assert.Equal(SecurityMetrics.MfaEnrolled, enrolled.Tags[SecurityMetrics.EventTag]);
-    }
-
-    [Fact]
-    public async Task ThePasswordAloneEnrolsNothing()
-    {
-        using var events = App.Security<long>(EventsCounter);
-        using var admin = await AdminCalls.OpenUnenrolledAsync(App);
-
-        using var missing = await admin.PostAsync(EnrollmentPath, new { });
-        using var forged = await admin.PostAsync(EnrollmentPath, new { invitation = "forged" });
-        using var confirm = await admin.PostAsync(ConfirmPath, new { code = "123456" });
-
-        Assert.Equal(["required"], (await ApiJson.FieldErrorsAsync(missing))[InvitationField]);
-        Assert.Equal(
-            ["invalid-invitation"],
-            (await ApiJson.FieldErrorsAsync(forged))[InvitationField]);
-        Assert.Equal(["required"], (await ApiJson.FieldErrorsAsync(confirm))[InvitationField]);
-        Assert.Null(await App.UsersAsync(async users =>
-            await users.GetAuthenticatorKeyAsync(
-                (await users.FindByNameAsync(AdminCalls.NewAdminName))!)));
-        Assert.Equal((0, false), await FailuresAsync());
-        var refusals = events.GetMeasurementSnapshot();
-        Assert.Equal(3, refusals.Count);
-        Assert.All(
-            refusals,
-            static refused => Assert.Equal(
-                SecurityMetrics.MfaInvitationRefused,
-                refused.Tags[SecurityMetrics.EventTag]));
-    }
+    private readonly AccountSeed _admin = host.Unique();
 
     [Fact]
     public async Task AWrongCodeCountsTowardTheLockout()
     {
-        using var admin = await AdminCalls.OpenUnenrolledAsync(App);
-        var invitation = await AdminCalls.InvitationAsync(App, AdminCalls.NewAdminName);
+        using var admin = await AdminCalls.OpenUnenrolledAsync(App, _admin);
+        var invitation = await AdminCalls.InvitationAsync(App, _admin.Username);
         var key = ApiJson.Text(await StartAsync(admin, invitation), "sharedKey")!;
 
         using var wrong = await admin.PostAsync(
@@ -97,7 +37,8 @@ public sealed class AdminMfaTests(PostgresContainerFixture postgres)
         Assert.Equal(["invalid-code"], (await ApiJson.FieldErrorsAsync(wrong))["code"]);
         Assert.Equal(["required"], (await ApiJson.FieldErrorsAsync(blank))["code"]);
         Assert.Equal(["malformed"], (await ApiJson.FieldErrorsAsync(malformed))["code"]);
-        Assert.Equal((1, false), await FailuresAsync());
+        var stored = await App.FindAsync(_admin.Username);
+        Assert.Equal((1, false), (stored.AccessFailedCount, stored.TwoFactorEnabled));
         using var panel = await admin.GetAsync("/api/admin/users");
         Assert.Equal(HttpStatusCode.Forbidden, panel.StatusCode);
     }
@@ -105,8 +46,8 @@ public sealed class AdminMfaTests(PostgresContainerFixture postgres)
     [Fact]
     public async Task ABearerHeaderDoesNotExemptTheSessionFromItsXsrfToken()
     {
-        using var admin = await AdminCalls.OpenUnenrolledAsync(App);
-        var invitation = await AdminCalls.InvitationAsync(App, AdminCalls.NewAdminName);
+        using var admin = await AdminCalls.OpenUnenrolledAsync(App, _admin);
+        var invitation = await AdminCalls.InvitationAsync(App, _admin.Username);
         using var request = admin.Post(EnrollmentPath, new { invitation });
         request.Headers.Remove(BrowserClient.XsrfHeader);
         request.Headers.Authorization = new("Bearer", "forged");
@@ -116,19 +57,15 @@ public sealed class AdminMfaTests(PostgresContainerFixture postgres)
         Assert.Equal(
             "xsrf-invalid",
             await ApiJson.ProblemCodeAsync(response, HttpStatusCode.Forbidden));
-        Assert.Null(await App.UsersAsync(async users =>
-            await users.GetAuthenticatorKeyAsync(
-                (await users.FindByNameAsync(AdminCalls.NewAdminName))!)));
+        Assert.Null(await AuthenticatorKeyAsync());
     }
 
     [Fact]
     public async Task AnEnrolledAdministratorKeepsTheirAuthenticator()
     {
-        using var admin = await AdminBrowser.OpenAsync(App);
-        var invitation = await AdminCalls.InvitationAsync(App, AdminBrowser.AdminName);
-        var before = await App.UsersAsync(async users =>
-            await users.GetAuthenticatorKeyAsync(
-                (await users.FindByNameAsync(AdminBrowser.AdminName))!));
+        using var admin = await AdminCalls.OpenEnrolledAsync(App, _admin);
+        var invitation = await AdminCalls.InvitationAsync(App, _admin.Username);
+        var before = await AuthenticatorKeyAsync();
 
         using var start = await admin.PostAsync(EnrollmentPath, new { invitation });
         using var confirm = await admin.PostAsync(
@@ -141,10 +78,7 @@ public sealed class AdminMfaTests(PostgresContainerFixture postgres)
         Assert.Equal(
             "mfa-already-enrolled",
             await ApiJson.ProblemCodeAsync(confirm, HttpStatusCode.Conflict));
-        var after = await App.UsersAsync(async users =>
-            await users.GetAuthenticatorKeyAsync(
-                (await users.FindByNameAsync(AdminBrowser.AdminName))!));
-        Assert.Equal(before, after);
+        Assert.Equal(before, await AuthenticatorKeyAsync());
     }
 
     private static async Task<JsonElement> StartAsync(BrowserClient admin, string invitation)
@@ -153,9 +87,8 @@ public sealed class AdminMfaTests(PostgresContainerFixture postgres)
         return await ApiJson.ReadAsync(response, HttpStatusCode.OK);
     }
 
-    private async Task<(int Failures, bool Enrolled)> FailuresAsync()
-    {
-        var stored = await App.FindAsync(AdminCalls.NewAdminName);
-        return (stored.AccessFailedCount, stored.TwoFactorEnabled);
-    }
+    private Task<string?> AuthenticatorKeyAsync() =>
+        App.UsersAsync(async users =>
+            await users.GetAuthenticatorKeyAsync(
+                (await users.FindByNameAsync(_admin.Username))!));
 }

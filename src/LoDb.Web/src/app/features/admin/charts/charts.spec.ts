@@ -33,6 +33,7 @@ function series(values: readonly number[], format?: ChartSeries['format']): Char
 describe('the SVG charts of the admin', () => {
   beforeEach(() => configureAdminTestBed());
 
+  // Under two values there is no shape to draw: sparklineShape's rule (scale/shapes.spec.ts).
   it('draws a sparkline as a line over its area, hidden from assistive technology', () => {
     const fixture = render(Sparkline, { values: [1, 4, 2], color: 'var(--color-gold)' });
 
@@ -40,10 +41,6 @@ describe('the SVG charts of the admin', () => {
     expect(svg?.getAttribute('aria-hidden')).toBe('true');
     expect(all(fixture, 'polyline')[0]?.getAttribute('stroke')).toBe('var(--color-gold)');
     expect(all(fixture, 'polygon')[0]?.getAttribute('fill')).toBe('var(--color-gold)');
-  });
-
-  it('draws no sparkline under two values', () => {
-    expect(all(render(Sparkline, { values: [3] }), 'svg')).toHaveLength(0);
   });
 
   it('rings each slice of a donut, titled with its share, its count in the legend', () => {
