@@ -8,7 +8,11 @@ namespace LoDb.Api.Tests.Health;
 /// Liveness never depends on anything; readiness fails as soon as the database or the
 /// storage root is out of reach.
 /// </summary>
-public sealed class HealthEndpointTests
+/// <remarks>
+/// The shared host has no database and a storage root: the test of a missing root builds its
+/// own.
+/// </remarks>
+public sealed class HealthEndpointTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
     private static readonly Uri Liveness = new("/healthz", UriKind.Relative);
     private static readonly Uri Readiness = new("/readyz", UriKind.Relative);
@@ -16,7 +20,6 @@ public sealed class HealthEndpointTests
     [Fact]
     public async Task LivenessAnswers200WithoutAnyDependency()
     {
-        await using var factory = new ApiFactory();
         using var client = factory.CreateClient();
 
         using var response = await client.GetAsync(
@@ -31,7 +34,6 @@ public sealed class HealthEndpointTests
     [Fact]
     public async Task ReadinessAnswers503WithoutDatabase()
     {
-        await using var factory = new ApiFactory();
         using var client = factory.CreateClient();
 
         using var response = await client.GetAsync(
@@ -49,11 +51,11 @@ public sealed class HealthEndpointTests
     public async Task ReadinessAnswers503WhenTheStorageRootIsMissing()
     {
         var missingRoot = Path.Combine(Path.GetTempPath(), $"lodb-missing-{Guid.NewGuid():N}");
-        await using var factory = new ApiFactory
+        await using var rootless = new ApiFactory
         {
             Settings = new Dictionary<string, string?> { ["LoDb:Storage:Root"] = missingRoot },
         };
-        using var client = factory.CreateClient();
+        using var client = rootless.CreateClient();
 
         using var response = await client.GetAsync(
             Readiness,
