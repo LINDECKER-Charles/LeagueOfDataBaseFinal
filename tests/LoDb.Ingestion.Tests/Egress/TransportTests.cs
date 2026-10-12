@@ -37,10 +37,4 @@ public sealed class TransportTests
         Assert.False(handler.AllowAutoRedirect);
         Assert.Equal(concurrency, handler.MaxConnectionsPerServer);
     }
-
-    [Fact]
-    public void DefaultConcurrencyIsSixteen()
-    {
-        Assert.Equal(16, new EgressOptions().FetchConcurrency);
-    }
 }

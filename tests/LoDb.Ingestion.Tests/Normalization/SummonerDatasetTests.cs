@@ -8,6 +8,10 @@ namespace LoDb.Ingestion.Tests.Normalization;
 /// <summary>
 /// Summoner spells: the JADE mode makes a Classic spell, linked to its namesake (UP 6).
 /// </summary>
+/// <remarks>
+/// Which modes make a Classic spell is SummonerSpellEdition's, tested in the Domain: the
+/// first test only proves the mapper applies it and links the twins.
+/// </remarks>
 public sealed class SummonerDatasetTests
 {
     [Fact]
@@ -22,19 +26,6 @@ public sealed class SummonerDatasetTests
         Assert.Equal(Edition.Classic, jade.Edition);
         Assert.Equal("SummonerFlash_Jade", flash.Counterpart?.Id);
         Assert.Equal("SummonerFlash", jade.Counterpart?.Id);
-    }
-
-    // KIWI_JADE is an ARAM variant, not LoL Classic.
-    [Fact]
-    public async Task OnlyTheJadeModeIsClassic()
-    {
-        var spells = await ReadAsync(DdragonFixtures.Latest.Value);
-
-        var snowball = Single(spells, "SummonerSnowball");
-
-        Assert.Contains("KIWI_JADE", snowball.Modes);
-        Assert.Equal(Edition.Modern, snowball.Edition);
-        Assert.Null(snowball.Counterpart);
     }
 
     // maxammo is written as a string ("-1"): read as a number, it means no charges.

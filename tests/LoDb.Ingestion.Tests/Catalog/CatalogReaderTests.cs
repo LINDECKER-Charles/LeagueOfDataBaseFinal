@@ -63,15 +63,18 @@ public sealed class CatalogReaderTests(PostgresContainerFixture postgres)
         Assert.Contains(French, await instance.Get<ICatalogReader>().GetLanguagesAsync(Token));
     }
 
+    // A crawler asking to wait is queued instead (ColdDemand.For): the reader follows the
+    // effective policy, not the one asked.
     [Fact]
-    public async Task QueuedReadIsPendingUntilTheWorkerIngests()
+    public async Task CrawlerReadIsPendingUntilTheWorkerIngests()
     {
         await using var harness = await IngestionHarness.CreateAsync(postgres);
         var instance = harness.StartInstance();
         var reader = instance.Get<ICatalogReader>();
         var backlog = instance.Get<IOnDemandBacklog>();
+        var crawler = ColdDemand.Synchronous.For(OnDemandOrigin.Crawler);
 
-        var pending = await reader.GetAsync(Latest, French, ColdDemand.Queued, Token);
+        var pending = await reader.GetAsync(Latest, French, crawler, Token);
         var queued = backlog.Count;
         var fetched = instance.RequestedPaths(IsDataset).Count;
         using var stop = CancellationTokenSource.CreateLinkedTokenSource(Token);
@@ -102,10 +105,11 @@ public sealed class CatalogReaderTests(PostgresContainerFixture postgres)
         Assert.Equal(0, instance.Get<IOnDemandBacklog>().Count);
     }
 
+    // One row per path of the reader, the ingestion's and the queue's. An unlisted version and
+    // an unlisted language are told apart by KnownReleases, row by row in
+    // OnDemandIngestionTests.
     [Theory]
     [InlineData("99.1.1", "en_US", ColdPolicy.Synchronous)]
-    [InlineData("99.1.1", "fr_FR", ColdPolicy.Queued)]
-    [InlineData("16.19.1", "de_DE", ColdPolicy.Synchronous)]
     [InlineData("16.19.1", "de_DE", ColdPolicy.Queued)]
     public async Task UnlistedCatalogIsUnknown(string version, string language, ColdPolicy policy)
     {
@@ -122,21 +126,6 @@ public sealed class CatalogReaderTests(PostgresContainerFixture postgres)
         Assert.Empty(instance.RequestedPaths(IsDataset));
         Assert.Empty(harness.FilesUnder("data"));
         Assert.Equal(0, instance.Get<IOnDemandBacklog>().Count);
-    }
-
-    [Fact]
-    public async Task CrawlerNeverWaitsForAnIngestion()
-    {
-        await using var harness = await IngestionHarness.CreateAsync(postgres);
-        var instance = harness.StartInstance();
-        var demand = ColdDemand.Synchronous.For(OnDemandOrigin.Crawler);
-
-        var load = await instance.Get<ICatalogReader>().GetAsync(Latest, English, demand, Token);
-
-        Assert.Equal(ColdPolicy.Queued, demand.Effective);
-        Assert.Equal(CatalogLoadStatus.Pending, load.Status);
-        Assert.Equal(1, instance.Get<IOnDemandBacklog>().Count);
-        Assert.Empty(instance.RequestedPaths(IsDataset));
     }
 
     [Fact]
