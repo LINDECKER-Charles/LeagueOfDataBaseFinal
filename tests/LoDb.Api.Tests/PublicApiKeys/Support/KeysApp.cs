@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net.Http.Headers;
 using LoDb.Api.Modules.PublicApi;
 using LoDb.Api.Modules.PublicApi.Access;
@@ -21,7 +22,11 @@ namespace LoDb.Api.Tests.PublicApiKeys.Support;
 /// The API over a database of its own, <c>/v1</c> and its key cache as they run, the cache
 /// spied on: a portal change shows on <c>/v1</c> only if the portal reports it.
 /// </summary>
-/// <remarks>One per test: the key cache and the rate limits live in the host.</remarks>
+/// <remarks>
+/// The tests of a class share one (<see cref="SharedKeysApp"/>), each with accounts of its
+/// own (<see cref="SeedUserAsync"/>), unless a test reaches a limit of the host: it then
+/// starts one of its own.
+/// </remarks>
 public sealed class KeysApp : IAsyncDisposable
 {
     public const string PortalPath = "/api/account/api-key";
@@ -29,24 +34,34 @@ public sealed class KeysApp : IAsyncDisposable
     public const string V1UsagePath = "/v1/usage";
     public const string SiteOrigin = "https://api.example.test/";
 
+    // The sign-ins of a whole class come from one address: the limit has tests of its own.
+    private const string SharedSignInLimit = "1000";
+
     private readonly TestDatabase _database;
     private readonly ApiFactory _factory;
     private readonly WebApplicationFactory<Program> _host;
     private SpyKeyCache? _cache;
+    private int _seeded;
 
-    private KeysApp(TestDatabase database)
+    private KeysApp(TestDatabase database, string? signInLimit)
     {
         _database = database;
+        var settings = new Dictionary<string, string?>
+        {
+            ["LoDb:Accounts:SecureCookies"] = bool.TrueString,
+            ["LoDb:Accounts:SiteOrigin"] = AccountsApp.SiteOrigin,
+            ["LoDb:PublicApi:SiteOrigin"] = SiteOrigin,
+        };
+        if (signInLimit is not null)
+        {
+            settings["LoDb:RateLimiting:SignInPerWindow"] = signInLimit;
+        }
+
         _factory = new ApiFactory
         {
             PostgresConnectionString = database.AppConnectionString,
             Clock = Clock,
-            Settings = new Dictionary<string, string?>
-            {
-                ["LoDb:Accounts:SecureCookies"] = bool.TrueString,
-                ["LoDb:Accounts:SiteOrigin"] = AccountsApp.SiteOrigin,
-                ["LoDb:PublicApi:SiteOrigin"] = SiteOrigin,
-            },
+            Settings = settings,
         };
         _host = _factory.WithWebHostBuilder(
             builder => builder.ConfigureTestServices(SpyOnKeyCache));
@@ -61,11 +76,22 @@ public sealed class KeysApp : IAsyncDisposable
 
     private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
 
+    /// <summary>A host for one test, its limits at their production values.</summary>
     public static async Task<KeysApp> StartAsync(PostgresContainerFixture postgres)
     {
         ArgumentNullException.ThrowIfNull(postgres);
         var database = await postgres.CreateMigratedDatabaseAsync(Cancellation);
-        return new KeysApp(database);
+        return new KeysApp(database, signInLimit: null);
+    }
+
+    /// <summary>
+    /// The host the tests of a class share, the limit of the sign-ins of one address lifted.
+    /// </summary>
+    public static async Task<KeysApp> StartSharedAsync(PostgresContainerFixture postgres)
+    {
+        ArgumentNullException.ThrowIfNull(postgres);
+        var database = await postgres.CreateMigratedDatabaseAsync(Cancellation);
+        return new KeysApp(database, SharedSignInLimit);
     }
 
     /// <summary>A browser on the site, as the portal calls the API.</summary>
@@ -92,15 +118,19 @@ public sealed class KeysApp : IAsyncDisposable
         return await client.SendAsync(request, Cancellation);
     }
 
-    /// <summary>Creates an account through Identity, as a registration would.</summary>
+    /// <summary>
+    /// Creates an account through Identity, as a registration would, named after
+    /// <paramref name="username"/> and a number no other account of the host bears.
+    /// </summary>
     public async Task<User> SeedUserAsync(string username, bool verified = true)
     {
+        var number = Interlocked.Increment(ref _seeded).ToString(CultureInfo.InvariantCulture);
         await using var scope = _host.Services.CreateAsyncScope();
         var users = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
         var user = new User
         {
-            UserName = username,
-            Email = username.ToLowerInvariant() + "@example.test",
+            UserName = $"{username}_{number}",
+            Email = $"{username.ToLowerInvariant()}{number}@example.test",
             EmailConfirmed = verified,
             Roles = [],
             CreatedAt = Clock.GetUtcNow(),
@@ -123,13 +153,23 @@ public sealed class KeysApp : IAsyncDisposable
             .ToListAsync(Cancellation);
     }
 
-    /// <summary>The journal, oldest entry first.</summary>
-    public async Task<List<AuditLogEntry>> AuditAsync()
+    /// <summary>The journal entries <paramref name="userId"/> made, oldest first.</summary>
+    public async Task<List<AuditLogEntry>> AuditOfAsync(int userId)
     {
         await using var db = Database();
         return await db.AuditLog.AsNoTracking()
+            .Where(entry => entry.ActorId == userId)
             .OrderBy(static entry => entry.Id)
             .ToListAsync(Cancellation);
+    }
+
+    /// <summary>
+    /// The ids of the keys of <paramref name="userId"/> the cache was told to forget, in order.
+    /// </summary>
+    public async Task<List<int>> InvalidatedOfAsync(int userId)
+    {
+        var keys = (await KeysOfAsync(userId)).Select(static key => key.Id).ToHashSet();
+        return [.. KeyCache.Invalidated.Where(keys.Contains)];
     }
 
     public async ValueTask DisposeAsync()

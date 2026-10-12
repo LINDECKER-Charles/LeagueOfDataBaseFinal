@@ -2,9 +2,11 @@ using LoDb.Domain.Languages;
 using LoDb.Infrastructure.Outbox;
 using LoDb.Infrastructure.Outbox.Delivery;
 using LoDb.Infrastructure.Persistence.Outbox;
+using LoDb.Infrastructure.Tests.Outbox.Support;
 using LoDb.Infrastructure.Tests.Persistence;
 using LoDb.Testing;
 using System.Diagnostics.Metrics;
+using System.Net.Sockets;
 using MailKit.Net.Smtp;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.Metrics.Testing;
@@ -75,13 +77,18 @@ public sealed class OutboxDispatcherTests(PostgresContainerFixture postgres)
     public async Task RecoveredRelaySendsTheRetriedMessage()
     {
         var harness = NewHarness();
-        _transport.Failures.Enqueue(new IOException("connection reset by relay"));
+        // What MailKit throws when the relay is down: the connection is refused.
+        _transport.Failures.Enqueue(new SocketException((int)SocketError.ConnectionRefused));
         await harness.EnqueueAsync(OutboxHarness.Confirmation(UiLocale.En), Cancellation);
 
         await harness.Dispatcher.DispatchAsync(Cancellation);
+        var refused = Assert.Single(await harness.RowsAsync(Cancellation));
         harness.Time.Advance(TimeSpan.FromSeconds(30));
         var retry = await harness.Dispatcher.DispatchAsync(Cancellation);
 
+        Assert.Equal(
+            (EmailOutboxStatus.Pending, "socket.ConnectionRefused"),
+            (refused.Status, refused.LastErrorCode));
         Assert.Equal(1, retry.Sent);
         var row = Assert.Single(await harness.RowsAsync(Cancellation));
         Assert.Equal(

@@ -22,6 +22,13 @@ public sealed class RecordingGateway : ICheckoutGateway
     /// <summary>The sessions asked for, in order.</summary>
     public IReadOnlyList<SessionCreateOptions> Sessions => [.. _sessions];
 
+    /// <summary>Back to no session asked for and Stripe up, as a test starts.</summary>
+    public void Reset()
+    {
+        _sessions.Clear();
+        Failing = false;
+    }
+
     public Task<Uri> CreateAsync(
         SessionCreateOptions options,
         CancellationToken cancellationToken)

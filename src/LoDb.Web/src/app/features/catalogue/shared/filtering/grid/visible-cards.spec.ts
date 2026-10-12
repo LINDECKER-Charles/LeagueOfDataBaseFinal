@@ -1,5 +1,4 @@
 import type { FacetState } from '../../facets/model/facet-state';
-import { normalizeSearchText } from '../../search/normalize-search-text';
 import { facetOf } from '../../testing/facet-of';
 import type { FilterableCard } from './filterable-card';
 import type { GridCriteria } from './grid-criteria';
@@ -36,20 +35,9 @@ const names = (cards: readonly FilterableCard<string>[]) => cards.map((entry) =>
 const tags = (...values: string[]): FacetState => ({ tag: { values, all: false } });
 
 describe('selectVisibleCards, matching', () => {
+  // The query goes through normalizeSearchText, whose spec folds the accents.
   it('matches the query case-insensitively and ignores padding', () => {
     expect(names(select({ query: '  AKA ' }).matching)).toEqual(['akali']);
-  });
-
-  it('folds accents so "feerique" finds "féérique"', () => {
-    const folded = card(normalizeSearchText('charme féérique'));
-    const result = selectVisibleCards([folded], {
-      query: 'feerique',
-      facets: {},
-      schema: SCHEMA,
-      page: 1,
-      pageSize: PAGE_SIZE_ALL,
-    });
-    expect(result.matching).toHaveLength(1);
   });
 
   it('ORs the chosen values and ANDs them with the query', () => {

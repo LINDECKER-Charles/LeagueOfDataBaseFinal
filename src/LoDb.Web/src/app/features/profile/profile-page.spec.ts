@@ -1,11 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { provideTransloco, type Translation } from '@jsverse/transloco';
-import { of } from 'rxjs';
+import type { Translation } from '@jsverse/transloco';
 import type { PublicProfile } from '../../core/api/generated/models/public-profile';
 import { CANONICAL_ORIGIN } from '../../core/seo/canonical-origin';
 import { Seo } from '../../core/seo/seo';
+import { provideTestTransloco } from '../../core/testing/provide-test-transloco';
 import { ProfilePage } from './profile-page';
 import { publicProfileOf } from './testing/public-profile-of';
 
@@ -38,17 +38,7 @@ async function visit(profile: PublicProfile) {
           component: ProfilePage,
         },
       ]),
-      provideTransloco({
-        config: {
-          availableLangs: ['en', 'fr'],
-          defaultLang: 'fr',
-          missingHandler: { logMissingKey: false },
-          prodMode: true,
-        },
-        loader: class {
-          getTranslation = (path: string) => of(CATALOGUES[path] ?? {});
-        },
-      }),
+      provideTestTransloco({ byPath: CATALOGUES, lang: 'fr' }),
     ],
   });
   const apply = vi.spyOn(TestBed.inject(Seo), 'apply');

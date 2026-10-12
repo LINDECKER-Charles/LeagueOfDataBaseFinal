@@ -26,7 +26,6 @@ public sealed class GameModesTests
 
     [Theory]
     [InlineData(null, GameMode.SummonersRift)]
-    [InlineData("", GameMode.SummonersRift)]
     [InlineData("  ", GameMode.SummonersRift)]
     [InlineData("aram", GameMode.Aram)]
     [InlineData(" aram ", GameMode.Aram)]

@@ -5,7 +5,8 @@ import { expect, test } from '../../support/test';
 
 // Heritage H6: the overflow probe of the former site, and the size of its fields, on a sample:
 // the home, a list, a detail and the form with the most fields, the locales whose words run
-// the longest, and an Arabic page, laid out right to left.
+// the longest, and an Arabic page, laid out right to left. Widths and font sizes need a real
+// layout engine, which jsdom has not.
 const SAMPLE_PATHS = ['', 'champions', 'champions/Annie', 'items', 'account/register'];
 const RTL_URL = pageUrl('ar', 'champions/Annie');
 const DESKTOP = { width: 1280, height: 800 };

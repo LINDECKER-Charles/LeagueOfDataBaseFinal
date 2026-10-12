@@ -46,6 +46,10 @@ dotnet test --project tests/LoDb.Api.Tests
   par Microsoft.Testing.Platform (réglé dans `global.json`, xUnit v3).
 - Testcontainers démarre ses propres conteneurs (`postgres:17-alpine`), sans variable
   d'environnement ; Docker doit tourner.
+- `tests/LoDb.Parity`, outil de bascule, est hors de la solution : ni `dotnet build` ni
+  `dotnet test LoDb.slnx` ne le touchent. À la demande :
+  `dotnet test --project tests/LoDb.Parity/LoDb.Parity.csproj`
+  ([`tools/parity/README.md`](../../tools/parity/README.md)).
 
 Front (workspace `src/LoDb.Web`) :
 

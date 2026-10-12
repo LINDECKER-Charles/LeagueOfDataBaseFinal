@@ -19,6 +19,10 @@ namespace LoDb.Infrastructure.Tests.Analytics.Capture;
 /// by batch in one copy, the missing partitions created on the way, and whatever fails
 /// dropped and counted without a trace of the visitor in the logs.
 /// </summary>
+/// <remarks>
+/// The drops that need no database, a full queue and an unreachable one, are
+/// <see cref="PageViewDropTests"/>.
+/// </remarks>
 public sealed class PageViewPumpTests(PostgresContainerFixture postgres)
     : MigratedDatabase(postgres)
 {
@@ -130,43 +134,6 @@ public sealed class PageViewPumpTests(PostgresContainerFixture postgres)
         AssertNoClientDataLogged();
     }
 
-    [Fact]
-    public void FullQueueRefusesTheNextView()
-    {
-        _services = AnalyticsServices.Build(
-            Database.AppConnectionString,
-            _time,
-            static options => options.QueueCapacity = 1);
-        using var dropped = Collect("lodb.analytics.views.dropped");
-        var capture = Services.GetRequiredService<IPageViewCapture>();
-
-        Assert.True(capture.TryCapture(View("/fr/items", AnalyticsCaptureOrigin.ServedPage)));
-        Assert.False(capture.TryCapture(View("/fr/runes", AnalyticsCaptureOrigin.ServedPage)));
-
-        var drop = Assert.Single(dropped.GetMeasurementSnapshot());
-        Assert.Equal(AnalyticsMetrics.QueueFull, drop.Tags[AnalyticsMetrics.ReasonTag]);
-    }
-
-    [Fact]
-    public async Task DatabaseOutageDropsTheBatchWithoutClientDataInTheLogs()
-    {
-        await using var outage = AnalyticsServices.Build(ApiFactory.UnreachablePostgres, _time);
-        using var dropped = new MetricCollector<long>(
-            outage.GetRequiredService<IMeterFactory>(),
-            AnalyticsMetrics.MeterName,
-            "lodb.analytics.views.dropped");
-        var capture = outage.GetRequiredService<IPageViewCapture>();
-        capture.TryCapture(View("/fr/items", AnalyticsCaptureOrigin.ServedPage));
-        capture.TryCapture(View("/fr/runes", AnalyticsCaptureOrigin.Navigation));
-
-        Assert.Equal(0, await Pump(outage).FlushAsync(Cancellation));
-
-        var drop = Assert.Single(dropped.GetMeasurementSnapshot());
-        Assert.Equal(2, drop.Value);
-        Assert.Equal(AnalyticsMetrics.WriteFailed, drop.Tags[AnalyticsMetrics.ReasonTag]);
-        AssertNoClientDataLogged(outage);
-    }
-
     protected override async ValueTask DisposeServicesAsync()
     {
         if (_services is not null)
@@ -196,9 +163,9 @@ public sealed class PageViewPumpTests(PostgresContainerFixture postgres)
             AnalyticsMetrics.MeterName,
             instrument);
 
-    private void AssertNoClientDataLogged(IServiceProvider? services = null)
+    private void AssertNoClientDataLogged()
     {
-        var logs = (services ?? Services).GetFakeLogCollector().GetSnapshot();
+        var logs = Services.GetFakeLogCollector().GetSnapshot();
         Assert.All(logs, static log =>
         {
             var text = log.Message + log.Exception;

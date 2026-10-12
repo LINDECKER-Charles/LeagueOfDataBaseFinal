@@ -1,6 +1,5 @@
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideTransloco } from '@jsverse/transloco';
-import { of } from 'rxjs';
+import { provideTestTransloco } from '../../../../core/testing/provide-test-transloco';
 import { EditorCatalogs } from '../catalog/editor-catalogs';
 import { EDITOR_ENTRY } from '../form/editor-entry-token';
 import { ArmoryOpener } from '../items/armory-opener';
@@ -28,17 +27,7 @@ async function mount(): Promise<{ fixture: ComponentFixture<StepEditor>; open: (
       },
       { provide: EditorAnnouncer, useValue: { say: vi.fn() } },
       { provide: EditorCatalogs, useValue: { resolveItem: () => undefined, ghostOf: () => null } },
-      provideTransloco({
-        config: {
-          availableLangs: ['en'],
-          defaultLang: 'en',
-          missingHandler: { logMissingKey: false },
-          prodMode: true,
-        },
-        loader: class {
-          getTranslation = () => of(LABELS);
-        },
-      }),
+      provideTestTransloco({ otherwise: LABELS }),
     ],
   });
   // The editor provides its own opener, which a later provider replaces; the dialog it opens

@@ -1,15 +1,11 @@
+import { discardAccount, type TestAccount } from '../../support/session';
 import { expect, test } from '../../support/test';
-import {
-  deleteAccount,
-  discardAccount,
-  newAccount,
-  register,
-  signIn,
-  signOut,
-  type TestAccount,
-} from './accounts';
+import { deleteAccount, newAccount, register, signIn, signOut } from './accounts';
 import { accountLinkIn, accountLinkMailedTo, lastMailTo } from './mailbox';
 
+// The account's whole life across the API, its outbox and a mailbox: the links the e-mails
+// carry, their token in the fragment, and the session cookies of a real browser exist only on
+// the stack. Each rule of the forms is Vitest's or the API's.
 const BANNER =
   'Confirm your email address to create builds and vote: an unconfirmed account is deleted after 7 days.';
 // Meets every rule of the checklist, like the first one, and differs from it.
@@ -85,6 +81,8 @@ test('registers, confirms the e-mail, resets the password and signs back in', as
     await deleteAccount(page, renewed);
     await page.goto('/en/account/login');
     await signIn(page, account.email, NEW_PASSWORD);
-    await expect(page.getByRole('alert')).toHaveText('Incorrect identifier or password.');
+    // The wording of the refusal is login-view.spec.ts's.
+    await expect(page.getByRole('alert')).toBeVisible();
+    await expect(page).toHaveURL(/\/en\/account\/login$/);
   });
 });

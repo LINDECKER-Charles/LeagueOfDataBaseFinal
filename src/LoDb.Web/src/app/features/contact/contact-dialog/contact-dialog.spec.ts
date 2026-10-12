@@ -1,8 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
-import { provideTransloco } from '@jsverse/transloco';
-import { of } from 'rxjs';
 import { API_BASE_URL } from '../../../core/api/api-base-url';
+import { provideTestTransloco } from '../../../core/testing/provide-test-transloco';
 import { ContactDialog } from './contact-dialog';
 
 async function render() {
@@ -10,16 +9,7 @@ async function render() {
     providers: [
       { provide: API_BASE_URL, useValue: 'https://api.example.com' },
       provideHttpClient(),
-      provideTransloco({
-        config: {
-          availableLangs: ['fr'],
-          defaultLang: 'fr',
-          missingHandler: { logMissingKey: false },
-        },
-        loader: class {
-          getTranslation = () => of({});
-        },
-      }),
+      provideTestTransloco({ lang: 'fr' }),
     ],
   });
   const fixture = TestBed.createComponent(ContactDialog);

@@ -2,11 +2,11 @@ import { HttpStatusCode } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, type ResolveFn } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { provideTransloco, type Translation } from '@jsverse/transloco';
-import { of } from 'rxjs';
+import type { Translation } from '@jsverse/transloco';
 import type { PageOutcome } from '../../core/routing/outcome/page-outcome';
 import { CANONICAL_ORIGIN } from '../../core/seo/canonical-origin';
 import { Seo } from '../../core/seo/seo';
+import { provideTestTransloco } from '../../core/testing/provide-test-transloco';
 import { ErrorPage } from './error-page';
 
 const SEO: Translation = {
@@ -38,17 +38,7 @@ async function visit(url: string, outcomes: Record<string, PageOutcome> = {}) {
           component: ErrorPage,
         },
       ]),
-      provideTransloco({
-        config: {
-          availableLangs: ['en', 'fr'],
-          defaultLang: 'en',
-          missingHandler: { logMissingKey: false },
-          prodMode: true,
-        },
-        loader: class {
-          getTranslation = (path: string) => of(path.startsWith('seo/') ? SEO : {});
-        },
-      }),
+      provideTestTransloco({ byPath: { 'seo/en': SEO, 'seo/fr': SEO } }),
     ],
   });
   const apply = vi.spyOn(TestBed.inject(Seo), 'apply');

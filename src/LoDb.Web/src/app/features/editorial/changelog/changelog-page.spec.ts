@@ -1,11 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { provideTransloco } from '@jsverse/transloco';
 import { of } from 'rxjs';
 import { activateLocale } from '../../../core/i18n/activate-locale';
-import { LOCALES } from '../../../core/i18n/locales';
 import { CANONICAL_ORIGIN } from '../../../core/seo/canonical-origin';
+import { provideTestTransloco } from '../../../core/testing/provide-test-transloco';
 import { EDITORIAL_ROUTES } from '../editorial.routes';
 import { ChangelogReader } from './changelog-reader';
 import type { ChangelogRelease } from './model/changelog-release';
@@ -38,17 +37,7 @@ async function visit(url: string): Promise<HTMLElement> {
       provideRouter([
         { path: ':locale', resolve: { locale: activateLocale }, children: EDITORIAL_ROUTES },
       ]),
-      provideTransloco({
-        config: {
-          availableLangs: [...LOCALES],
-          defaultLang: 'en',
-          missingHandler: { logMissingKey: false },
-          prodMode: true,
-        },
-        loader: class {
-          getTranslation = () => of({});
-        },
-      }),
+      provideTestTransloco(),
     ],
   });
   const harness = await RouterTestingHarness.create(url);

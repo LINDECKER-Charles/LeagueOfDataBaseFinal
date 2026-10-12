@@ -12,6 +12,9 @@ public sealed class RecordingKeyCache : IApiKeyCache
     /// <summary>The ids of the keys invalidated, in order.</summary>
     public IReadOnlyList<int> Invalidated => [.. _invalidated];
 
+    /// <summary>Back to nothing invalidated, as a test starts.</summary>
+    public void Reset() => _invalidated.Clear();
+
     public void Invalidate(ApiKey key)
     {
         ArgumentNullException.ThrowIfNull(key);

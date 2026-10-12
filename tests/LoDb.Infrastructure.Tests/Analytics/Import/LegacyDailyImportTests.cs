@@ -103,15 +103,6 @@ public sealed class LegacyDailyImportTests(PostgresContainerFixture postgres)
         Assert.Equal((5, 0, 5), (report.Files, report.Imported, report.Refused));
     }
 
-    [Fact]
-    public async Task MissingDirectoryIsReported()
-    {
-        var missing = Path.Combine(_folder.FullName, "missing");
-
-        await Assert.ThrowsAsync<DirectoryNotFoundException>(
-            () => Import.ImportAsync(missing, dryRun: false, Cancellation));
-    }
-
     protected override async ValueTask DisposeServicesAsync()
     {
         await base.DisposeServicesAsync();

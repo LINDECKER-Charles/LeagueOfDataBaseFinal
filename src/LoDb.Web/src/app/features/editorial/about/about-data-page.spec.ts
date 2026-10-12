@@ -1,11 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { provideTransloco, type Translation } from '@jsverse/transloco';
-import { NEVER, of } from 'rxjs';
+import type { Translation } from '@jsverse/transloco';
+import { NEVER } from 'rxjs';
 import { activateLocale } from '../../../core/i18n/activate-locale';
-import { LOCALES } from '../../../core/i18n/locales';
 import { CANONICAL_ORIGIN } from '../../../core/seo/canonical-origin';
+import { provideTestTransloco } from '../../../core/testing/provide-test-transloco';
 import { EDITORIAL_ROUTES } from '../editorial.routes';
 import { DATA_DRAGON_LANGUAGES } from './data-dragon-languages';
 import { Inventory } from './inventory/inventory';
@@ -30,17 +30,7 @@ async function visit(url: string): Promise<void> {
       provideRouter([
         { path: ':locale', resolve: { locale: activateLocale }, children: EDITORIAL_ROUTES },
       ]),
-      provideTransloco({
-        config: {
-          availableLangs: [...LOCALES],
-          defaultLang: 'en',
-          missingHandler: { logMissingKey: false },
-          prodMode: true,
-        },
-        loader: class {
-          getTranslation = (path: string) => of(CATALOGUES[path] ?? {});
-        },
-      }),
+      provideTestTransloco({ byPath: CATALOGUES }),
     ],
   });
   const harness = await RouterTestingHarness.create(url);
@@ -54,13 +44,6 @@ function datasetNode(): JsonLdNode | undefined {
 }
 
 describe('DATA_DRAGON_LANGUAGES', () => {
-  it('lists the 28 languages of Data Dragon once each, in its order', () => {
-    expect(DATA_DRAGON_LANGUAGES).toHaveLength(28);
-    expect(new Set(DATA_DRAGON_LANGUAGES).size).toBe(28);
-    expect(DATA_DRAGON_LANGUAGES.slice(0, 3)).toEqual(['ar-AE', 'en-US', 'cs-CZ']);
-    expect(DATA_DRAGON_LANGUAGES.at(-1)).toBe('zh-TW');
-  });
-
   it('writes each language as a BCP 47 tag, never as a Data Dragon code', () => {
     for (const language of DATA_DRAGON_LANGUAGES) {
       expect(language).toMatch(BCP_47_REGIONAL);

@@ -1,11 +1,10 @@
 import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
-import { provideTransloco } from '@jsverse/transloco';
-import { of } from 'rxjs';
 import type { CounterpartLink } from '../../../../../core/api/generated/models/counterpart-link';
 import type { Edition } from '../../../../../core/api/generated/models/edition';
 import type { PageContext } from '../../../../../core/context/page-context';
+import { provideTestTransloco } from '../../../../../core/testing/provide-test-transloco';
 import { EditionCounterpart } from './edition-counterpart';
 
 const CONTEXT: PageContext = { locale: 'en', version: '16.19.1', pinned: false, language: 'en_GB' };
@@ -35,15 +34,7 @@ class Host {
 describe('lodb-edition-counterpart', () => {
   async function render(change?: (host: Host) => void) {
     TestBed.configureTestingModule({
-      providers: [
-        provideRouter([{ path: '**', component: Blank }]),
-        provideTransloco({
-          config: { defaultLang: 'en', missingHandler: { logMissingKey: false }, prodMode: true },
-          loader: class {
-            getTranslation = () => of({});
-          },
-        }),
-      ],
+      providers: [provideRouter([{ path: '**', component: Blank }]), provideTestTransloco()],
     });
     await TestBed.inject(Router).navigateByUrl('/en/items/771004-faerie-charm?lang=en_GB');
     const fixture = TestBed.createComponent(Host);

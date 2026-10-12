@@ -4,6 +4,7 @@ import { expect, test } from '../../support/test';
 // One page per way of rendering one: by the server on request, prerendered at build time, and
 // in the browser alone (the account's pages). The guard at each upgrade of Angular and
 // beasties (docs/architecture/pieges.md); the policy itself is the SSR server's unit tests'.
+// Only a real browser enforces it on the built bundles and reports what it refused.
 const PAGES = ['/fr/champions/Annie', '/en/about', '/en/account/login'];
 
 test.describe('the content security policy of the pages', { tag: '@readonly' }, () => {

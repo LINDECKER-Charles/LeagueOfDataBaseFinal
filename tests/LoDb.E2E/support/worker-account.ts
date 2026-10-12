@@ -1,6 +1,6 @@
 import type { Browser, BrowserContext, Page } from '@playwright/test';
-import { discardAccount, type TestAccount } from '../specs/account/accounts';
 import { createMember, signInMember } from './member-account';
+import { discardAccount, type TestAccount, unsafeHeaders } from './session';
 import { expect, test as base } from './test';
 
 export { expect } from './test';
@@ -44,18 +44,9 @@ async function signedInSession(
   }
 }
 
-// The headers of an unsafe request of the page's session: the site's origin and the XSRF
-// token the sign-in issued as a cookie.
-async function unsafeHeaders(page: Page, baseURL: string | undefined) {
-  const origin = new URL(baseURL ?? '').origin;
-  const cookies = await page.context().cookies(origin);
-  const xsrf = cookies.find((cookie) => cookie.name === 'XSRF-TOKEN')?.value ?? '';
-  return { Origin: origin, 'X-XSRF-TOKEN': xsrf };
-}
-
 // Brings the account back to how the worker created it, whatever the test left behind.
-async function resetAccount(page: Page, baseURL: string | undefined): Promise<void> {
-  const headers = await unsafeHeaders(page, baseURL);
+async function resetAccount(page: Page): Promise<void> {
+  const headers = await unsafeHeaders(page);
   const builds = await page.request.get('/api/builds');
   expect(builds.ok(), 'the reset lists the builds').toBe(true);
   for (const { id } of (await builds.json()) as { id: number }[]) {
@@ -102,7 +93,7 @@ export const test = base.extend<MemberFixtures, WorkerFixtures>({
       await expect(page).toHaveURL(new RegExp(`${PROFILE}$`));
       await use(page);
     } finally {
-      await resetAccount(page, baseURL);
+      await resetAccount(page);
       await context.close();
     }
   },

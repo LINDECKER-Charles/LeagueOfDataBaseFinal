@@ -26,4 +26,15 @@ public sealed class RecordingOutbox : IEmailOutbox
 
     /// <summary>The link of the last e-mail queued with <paramref name="template"/>.</summary>
     public EmailLink LastLink(EmailTemplate template) => EmailLink.Of(Sent(template)[^1]);
+
+    /// <summary>The e-mails queued for <paramref name="recipient"/>, oldest first.</summary>
+    public IReadOnlyList<EmailMessage> To(string recipient) =>
+        [.. _messages.Where(message => message.Recipient == recipient)];
+
+    /// <summary>
+    /// The link of the last e-mail queued for <paramref name="recipient"/> with
+    /// <paramref name="template"/>.
+    /// </summary>
+    public EmailLink LastLink(string recipient, EmailTemplate template) =>
+        EmailLink.Of(To(recipient).Last(message => message.Template == template));
 }

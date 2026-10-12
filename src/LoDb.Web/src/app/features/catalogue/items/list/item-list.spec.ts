@@ -1,11 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { provideTransloco } from '@jsverse/transloco';
 import { of } from 'rxjs';
 import type { ItemCard } from '../../../../core/api/generated/models/item-card';
 import type { PageContext } from '../../../../core/context/page-context';
 import type { SeoPage } from '../../../../core/seo/seo-page';
+import { provideTestTransloco } from '../../../../core/testing/provide-test-transloco';
 import { CatalogueLists } from '../../shared/data/catalogue-lists';
 import { CatalogueHead } from '../../shared/codex/head/catalogue-head';
 import type { CatalogueTexts } from '../../shared/codex/head/catalogue-texts';
@@ -51,12 +51,7 @@ async function render() {
   TestBed.configureTestingModule({
     providers: [
       provideRouter([{ path: 'en/items', component: ItemList, data: { context: CONTEXT } }]),
-      provideTransloco({
-        config: { defaultLang: 'en', missingHandler: { logMissingKey: false }, prodMode: true },
-        loader: class {
-          getTranslation = () => of({});
-        },
-      }),
+      provideTestTransloco(),
       { provide: CatalogueHead, useValue: { write } },
       {
         provide: CatalogueLists,

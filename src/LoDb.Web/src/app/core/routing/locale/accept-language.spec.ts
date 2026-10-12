@@ -36,27 +36,18 @@ describe('parseAcceptLanguage', () => {
 });
 
 describe('negotiateLocale', () => {
+  // One line per branch: a region set aside, a later tag, no tag the site speaks, the case of
+  // a tag; Chinese by its region, then by its script whatever the region. An empty or `*`
+  // header reads no tag at all, as a missing one (parseAcceptLanguage above).
   it.each([
     ['fr-FR,fr;q=0.9,en;q=0.8', 'fr'],
-    ['pt-BR,pt;q=0.9', 'pt'],
-    ['en-GB', 'en'],
-    ['es-MX,es;q=0.9', 'es'],
     ['nl-NL,nl;q=0.9,de;q=0.8', 'de'],
     ['nl,sv', 'en'],
+    ['EL', 'el'],
     ['zh-CN,zh;q=0.9', 'zh-hans'],
-    ['zh', 'zh-hans'],
-    ['zh-SG', 'zh-hans'],
     ['zh-TW', 'zh-hant'],
-    ['zh-HK,en;q=0.5', 'zh-hant'],
-    ['zh-MO', 'zh-hant'],
-    ['zh-Hant', 'zh-hant'],
     ['zh-Hant-CN', 'zh-hant'],
     ['zh-Hans-TW', 'zh-hans'],
-    ['ar-SA', 'ar'],
-    ['id-ID', 'id'],
-    ['EL', 'el'],
-    ['*', 'en'],
-    ['', 'en'],
     [null, 'en'],
   ])('sends %j to /%s/', (header, expected) => {
     expect(localeFor(header)).toBe(expected);

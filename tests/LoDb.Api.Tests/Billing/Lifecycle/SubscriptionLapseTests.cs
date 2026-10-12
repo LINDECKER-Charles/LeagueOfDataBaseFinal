@@ -3,7 +3,6 @@ using System.Text.Json.Nodes;
 using LoDb.Api.Tests.Billing.Support;
 using LoDb.Infrastructure.Persistence.Billing.Payments;
 using LoDb.Infrastructure.Persistence.PublicApi;
-using LoDb.Testing;
 using Microsoft.EntityFrameworkCore;
 
 namespace LoDb.Api.Tests.Billing.Lifecycle;
@@ -13,13 +12,22 @@ namespace LoDb.Api.Tests.Billing.Lifecycle;
 /// due or unpaid, or once a renewal cannot be charged; its plan back once it is active again;
 /// an event older than the last one applied changes nothing; an ended subscription stays gone.
 /// </summary>
-public sealed class SubscriptionLapseTests(PostgresContainerFixture postgres)
-    : IAsyncLifetime
+/// <remarks>
+/// The tests share a host, each with an account and a subscription of its own.
+/// </remarks>
+public sealed class SubscriptionLapseTests : IClassFixture<SharedBillingApp>
 {
-    private BillingApp? _app;
+    private readonly StripePayloads _stripe;
 
-    private BillingApp App =>
-        _app ?? throw new InvalidOperationException("The host is not started yet.");
+    public SubscriptionLapseTests(SharedBillingApp host)
+    {
+        ArgumentNullException.ThrowIfNull(host);
+        App = host.App;
+        App.ResetDoubles();
+        _stripe = host.Payloads();
+    }
+
+    private BillingApp App { get; }
 
     private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
 
@@ -30,7 +38,7 @@ public sealed class SubscriptionLapseTests(PostgresContainerFixture postgres)
         var key = await SubscribedKeyAsync();
 
         await DeliverAsync(
-            StripePayloads.Later(StripePayloads.Updated("evt_lapse", "past_due"), 1));
+            StripePayloads.Later(_stripe.Updated("evt_lapse", "past_due"), 1));
 
         await AssertFreeAsync(key);
         Assert.Equal(
@@ -43,7 +51,7 @@ public sealed class SubscriptionLapseTests(PostgresContainerFixture postgres)
     {
         var key = await SubscribedKeyAsync();
 
-        await DeliverAsync(StripePayloads.Later(StripePayloads.InvoiceFailed("evt_invoice"), 1));
+        await DeliverAsync(StripePayloads.Later(_stripe.InvoiceFailed("evt_invoice"), 1));
 
         await AssertFreeAsync(key);
     }
@@ -54,10 +62,10 @@ public sealed class SubscriptionLapseTests(PostgresContainerFixture postgres)
     public async Task FailedRenewalOfAnOlderApiVersionFallsBackToTheFreePlan()
     {
         var key = await SubscribedKeyAsync();
-        var failed = StripePayloads.Later(StripePayloads.InvoiceFailed("evt_invoice"), 1);
+        var failed = StripePayloads.Later(_stripe.InvoiceFailed("evt_invoice"), 1);
         var invoice = failed["data"]!["object"]!.AsObject();
         invoice.Remove("parent");
-        invoice["subscription"] = StripePayloads.Subscription;
+        invoice["subscription"] = _stripe.Subscription;
 
         await DeliverAsync(failed);
 
@@ -69,9 +77,9 @@ public sealed class SubscriptionLapseTests(PostgresContainerFixture postgres)
     {
         var key = await SubscribedKeyAsync();
 
-        await DeliverAsync(StripePayloads.Later(StripePayloads.InvoiceFailed("evt_invoice"), 1));
+        await DeliverAsync(StripePayloads.Later(_stripe.InvoiceFailed("evt_invoice"), 1));
         await DeliverAsync(StripePayloads.Later(
-            StripePayloads.Updated("evt_recovered", "active"),
+            _stripe.Updated("evt_recovered", "active"),
             2));
 
         await AssertAnnualAsync(key);
@@ -86,8 +94,8 @@ public sealed class SubscriptionLapseTests(PostgresContainerFixture postgres)
     {
         var key = await SubscribedKeyAsync();
 
-        await DeliverAsync(StripePayloads.Later(StripePayloads.Updated("evt_lapse", "unpaid"), 2));
-        await DeliverAsync(StripePayloads.Later(StripePayloads.Updated("evt_old", "active"), 1));
+        await DeliverAsync(StripePayloads.Later(_stripe.Updated("evt_lapse", "unpaid"), 2));
+        await DeliverAsync(StripePayloads.Later(_stripe.Updated("evt_old", "active"), 1));
 
         await AssertFreeAsync(key);
     }
@@ -96,21 +104,21 @@ public sealed class SubscriptionLapseTests(PostgresContainerFixture postgres)
     public async Task SubscriptionSoldBeforeTheLedgerIsFollowedToo()
     {
         var owner = await App.SeedUserAsync("Ancien");
-        var key = await App.SeedKeyAsync(owner, static key =>
+        var key = await App.SeedKeyAsync(owner, key =>
         {
             key.Plan = "annual";
             key.MonthlyQuota = 20_000;
             key.RateLimitPerMin = 300;
             key.CreditsBalance = 3_000;
-            key.StripeCustomerId = StripePayloads.Customer;
-            key.StripeSubscriptionId = StripePayloads.Subscription;
+            key.StripeCustomerId = _stripe.Customer;
+            key.StripeSubscriptionId = _stripe.Subscription;
         });
 
-        await DeliverAsync(StripePayloads.Updated("evt_lapse", "past_due"));
+        await DeliverAsync(_stripe.Updated("evt_lapse", "past_due"));
 
         var lapsed = await App.KeyAsync(key.Id);
         Assert.Equal(("free", 500, 60), (lapsed.Plan, lapsed.MonthlyQuota, lapsed.RateLimitPerMin));
-        await DeliverAsync(StripePayloads.Later(StripePayloads.Updated("evt_paid", "active"), 1));
+        await DeliverAsync(StripePayloads.Later(_stripe.Updated("evt_paid", "active"), 1));
         await AssertAnnualAsync(key);
     }
 
@@ -119,8 +127,8 @@ public sealed class SubscriptionLapseTests(PostgresContainerFixture postgres)
     {
         var key = await SubscribedKeyAsync();
 
-        await DeliverAsync(StripePayloads.Later(StripePayloads.Cancelled("evt_end"), 1));
-        await DeliverAsync(StripePayloads.Later(StripePayloads.Updated("evt_late", "active"), 2));
+        await DeliverAsync(StripePayloads.Later(_stripe.Cancelled("evt_end"), 1));
+        await DeliverAsync(StripePayloads.Later(_stripe.Updated("evt_late", "active"), 2));
 
         var ended = await App.KeyAsync(key.Id);
         Assert.Equal(("free", (string?)null), (ended.Plan, ended.StripeSubscriptionId));
@@ -132,19 +140,9 @@ public sealed class SubscriptionLapseTests(PostgresContainerFixture postgres)
     {
         var key = await SubscribedKeyAsync();
 
-        await DeliverAsync(StripePayloads.Later(StripePayloads.Updated("evt", "incomplete"), 1));
+        await DeliverAsync(StripePayloads.Later(_stripe.Updated("evt", "incomplete"), 1));
 
         await AssertAnnualAsync(key);
-    }
-
-    public async ValueTask InitializeAsync() => _app = await BillingApp.StartAsync(postgres);
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_app is not null)
-        {
-            await _app.DisposeAsync();
-        }
     }
 
     // Subscribed through a paid checkout, as the site sells it.
@@ -152,9 +150,9 @@ public sealed class SubscriptionLapseTests(PostgresContainerFixture postgres)
     {
         var buyer = await App.SeedUserAsync("Abonne");
         var key = await App.SeedKeyAsync(buyer);
-        await DeliverAsync(StripePayloads.Completed(
+        await DeliverAsync(_stripe.Completed(
             "evt_subscribed",
-            StripePayloads.Plan("cs_test_plan", buyer.Id, "annual")));
+            _stripe.Plan("cs_test_plan", buyer.Id, "annual")));
         await AssertAnnualAsync(key);
         return key;
     }
@@ -163,7 +161,7 @@ public sealed class SubscriptionLapseTests(PostgresContainerFixture postgres)
     {
         var subscribed = await App.KeyAsync(key.Id);
         Assert.Equal(
-            ("annual", 20_000, 300, StripePayloads.Subscription),
+            ("annual", 20_000, 300, _stripe.Subscription),
             (subscribed.Plan, subscribed.MonthlyQuota, subscribed.RateLimitPerMin,
                 subscribed.StripeSubscriptionId));
     }
@@ -173,7 +171,7 @@ public sealed class SubscriptionLapseTests(PostgresContainerFixture postgres)
     {
         var lapsed = await App.KeyAsync(key.Id);
         Assert.Equal(
-            ("free", 500, 10, StripePayloads.Subscription),
+            ("free", 500, 10, _stripe.Subscription),
             (lapsed.Plan, lapsed.MonthlyQuota, lapsed.RateLimitPerMin,
                 lapsed.StripeSubscriptionId));
     }
@@ -186,7 +184,9 @@ public sealed class SubscriptionLapseTests(PostgresContainerFixture postgres)
 
     private async Task<StripeSubscription> SubscriptionAsync()
     {
+        var subscription = _stripe.Subscription;
         await using var db = App.Database();
-        return await db.StripeSubscriptions.AsNoTracking().SingleAsync(Cancellation);
+        return await db.StripeSubscriptions.AsNoTracking()
+            .SingleAsync(row => row.Id == subscription, Cancellation);
     }
 }

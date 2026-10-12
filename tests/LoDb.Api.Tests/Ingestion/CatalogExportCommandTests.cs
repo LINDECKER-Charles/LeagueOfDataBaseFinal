@@ -99,13 +99,16 @@ public sealed class CatalogExportCommandTests(PostgresContainerFixture postgres)
         Assert.True(Directory.Exists(output));
     }
 
+    // Refused while the arguments are read: the command needs no database to say so.
     [Fact]
     public async Task InvalidArgumentsAreAUsageError()
     {
-        await using var host = await IngestionHost.CreateAsync(postgres);
         var replay = DdragonFixtures.CreateReplay();
 
-        var exitCode = await RunAsync(host, replay, "--version", "16.19.1");
+        var exitCode = await CliRunner.RunAsync(
+            ["catalog", "export", "--version", "16.19.1"],
+            typeof(Program).Assembly,
+            (services, configuration) => IngestionHost.AddZones(services, configuration, replay));
 
         Assert.Equal(CliExitCodes.Usage, exitCode);
         Assert.Empty(replay.Requests);

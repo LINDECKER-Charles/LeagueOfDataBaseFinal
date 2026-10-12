@@ -7,15 +7,14 @@ import {
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { provideTransloco, type Translation } from '@jsverse/transloco';
-import { of } from 'rxjs';
+import type { Translation } from '@jsverse/transloco';
 import { API_BASE_URL } from '../../core/api/api-base-url';
 import type { DonationOptions } from '../../core/api/generated/models/donation-options';
 import { activateLocale } from '../../core/i18n/activate-locale';
-import { LOCALES } from '../../core/i18n/locales';
 import { ToastService } from '../../core/layout/toast/toast-service';
 import { CANONICAL_ORIGIN } from '../../core/seo/canonical-origin';
 import { Seo } from '../../core/seo/seo';
+import { provideTestTransloco } from '../../core/testing/provide-test-transloco';
 import { StripeRedirect } from './checkout/stripe-redirect';
 import { DONATE_ROUTES } from './donate.routes';
 
@@ -56,17 +55,7 @@ async function visit(answer: Answer) {
           children: [{ path: 'donate', children: DONATE_ROUTES }],
         },
       ]),
-      provideTransloco({
-        config: {
-          availableLangs: [...LOCALES],
-          defaultLang: 'en',
-          missingHandler: { logMissingKey: false },
-          prodMode: true,
-        },
-        loader: class {
-          getTranslation = (path: string) => of(CATALOGUES[path] ?? {});
-        },
-      }),
+      provideTestTransloco({ byPath: CATALOGUES }),
     ],
   });
   const http = TestBed.inject(HttpTestingController);

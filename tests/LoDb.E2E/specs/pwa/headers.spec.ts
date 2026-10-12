@@ -1,6 +1,9 @@
 import { randomBytes } from 'node:crypto';
 import { expect, test } from '../../support/test';
 
+// nginx's shared cache in front of the real SSR server: tools/nginx tests the configuration
+// behind stubs, never what the server's own answers (its headers, its cookies) make of it.
+
 // The random part of a fresh key: twelve hexadecimal digits.
 const FRESH_BYTES = 6;
 // A list reads its search, so the pre-router keeps it: any other query would be a 301.
@@ -31,14 +34,6 @@ test.describe('page cache', { tag: '@readonly' }, () => {
 
         expect(headers['set-cookie'], publicPath).toBeUndefined();
       }
-    });
-
-    await test.step('never caches the redirect of /, which varies by language', async () => {
-      const response = await request.get('/', { maxRedirects: 0 });
-
-      expect(response.status()).toBe(302);
-      expect(response.headers()['vary']).toContain('Accept-Language');
-      expect(response.headers()['x-cache-status']).toBeUndefined();
     });
 
     await test.step('never caches a private page', async () => {

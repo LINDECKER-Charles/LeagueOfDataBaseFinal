@@ -12,14 +12,14 @@ namespace LoDb.Api.Tests.OpenApi;
 /// Both documents are generated on demand from the running host, and each one only takes the
 /// endpoints of its own path prefix.
 /// </summary>
-public sealed class OpenApiDocumentTests
+/// <remarks>No test changes the host's state: one host serves them all.</remarks>
+public sealed class OpenApiDocumentTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
     [Theory]
     [InlineData(OpenApiDocuments.App)]
     [InlineData(OpenApiDocuments.PublicV1)]
     public async Task DocumentIsGeneratedOnDemand(string documentName)
     {
-        await using var factory = new ApiFactory();
         var provider = factory.Services.GetRequiredKeyedService<IOpenApiDocumentProvider>(
             documentName);
 
@@ -39,7 +39,6 @@ public sealed class OpenApiDocumentTests
         string environment,
         HttpStatusCode expected)
     {
-        await using var factory = new ApiFactory();
         using var client = factory
             .WithWebHostBuilder(builder => builder.UseEnvironment(environment))
             .CreateClient();

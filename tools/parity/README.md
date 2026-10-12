@@ -4,6 +4,10 @@ Collecte, sur les deux stacks, ce que compare `tests/LoDb.Parity` : la projectio
 de chaque (version, langue) et les manifestes d'images. Node seul, sans dépendance.
 Rapport : [`docs/reecriture/rapports/parite-lot-1.md`](../../docs/reecriture/rapports/parite-lot-1.md).
 
+`tests/LoDb.Parity` est un outil de bascule, hors de `LoDb.slnx` : ni `dotnet test LoDb.slnx`
+ni la CI ne le compilent ou ne le lancent. Il se lance à la demande par son projet, comme
+ci-dessous.
+
 ```bash
 # 1. Stocker l'échantillon sur les deux stacks (écrivains : un seul à la fois par stack)
 node tools/parity/collect.mjs --steps=warm,details --run=tools/parity/.runs/lot1

@@ -1,6 +1,8 @@
 import { expect, test } from '../../support/test';
 
-// `/` has no page: the SSR server sends the browser to the locale it prefers (ADR 0005).
+// `/` has no page: the SSR server sends the browser to the locale it prefers (ADR 0005). A real
+// browser's languages, through nginx, to the home then hydrated: the negotiation itself is
+// Vitest's, the cache rules of `/` tools/nginx's.
 test.describe('entry, in a French browser', { tag: '@readonly' }, () => {
   test.use({ locale: 'fr-FR' });
 

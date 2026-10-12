@@ -1,33 +1,28 @@
 import type { APIRequestContext, Page } from '@playwright/test';
+import { type DetailNeighbours, expectServedDetail, metaOf } from '../../support/catalog';
 import { expect, test } from '../../support/test';
 
-interface Meta {
-  readonly latest: string | null;
-}
+// The richest detail page as the server sends it before any script, then hydrated block by
+// block as a reader scrolls, its clip played and paused: only a real browser on the stack has
+// all three. Each section, and the content of the other entities' pages, are Vitest's.
 
 interface Details {
   readonly canonicalPath: string;
   readonly profile: { readonly name: string };
   readonly alternateSkinCount: number;
+  readonly neighbours: DetailNeighbours;
 }
 
 // A champion with a full kit, clips, lore, tips and skins in every patch since 2012.
 const CHAMPION = 'Annie';
 const LIST = '/en/champions';
 const DETAIL = `${LIST}/${CHAMPION}`;
-const SERVER_TIMING = /(?:^|,\s*)catalogue;dur=\d+(?:\.\d+)?/;
 const KEEP = 'lodbLeftVideo';
 const STAGE = '#abilities lodb-ability-media';
 const LOAD_TIME = 'lodb-load-time .perf';
 
-async function latestOf(request: APIRequestContext): Promise<string> {
-  const meta = (await (await request.get('/api/meta')).json()) as Meta;
-  expect(meta.latest, 'the stack must have ingested a version').not.toBeNull();
-  return meta.latest ?? '';
-}
-
 async function detailsOf(request: APIRequestContext): Promise<Details> {
-  const latest = await latestOf(request);
+  const { latest } = await metaOf(request);
   const response = await request.get(`/api/catalog/${latest}/en_US/champions/${CHAMPION}`);
   return (await response.json()) as Details;
 }
@@ -57,12 +52,10 @@ test.describe('champion pages as crawlers read them', { tag: '@readonly' }, () =
     const response = await page.goto(DETAIL);
 
     expect(response?.status()).toBe(200);
-    expect(response?.headers()['server-timing']).toMatch(SERVER_TIMING);
     // The pager comes with the page's payload: its neighbours are in the server's HTML; the
     // skins do not, only their count, the gallery reading them once scrolled to.
-    const html = (await response?.text()) ?? '';
-    expect(html).toMatch(/<a [^>]*rel="next"[^>]*href="\/en\/champions\/\w/);
-    expect(html).not.toContain('"chromas":');
+    await expectServedDetail(page, response, details.neighbours);
+    expect((await response?.text()) ?? '').not.toContain('"chromas":');
     await expect(page.locator('#skins .codex-header__meta')).toHaveText(
       String(details.alternateSkinCount),
     );

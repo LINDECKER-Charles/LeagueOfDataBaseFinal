@@ -8,12 +8,12 @@ namespace LoDb.Api.Tests.Hosting;
 /// Under <c>/api</c> an error without a body becomes a ProblemDetails; the other surfaces keep
 /// their own format.
 /// </summary>
-public sealed class ProblemDetailsTests
+/// <remarks>No test changes the host's state: one host serves them all.</remarks>
+public sealed class ProblemDetailsTests(ApiFactory factory) : IClassFixture<ApiFactory>
 {
     [Fact]
     public async Task UnknownAppRouteAnswersAProblemDetails()
     {
-        await using var factory = new ApiFactory();
         using var client = factory.CreateClient();
 
         using var response = await client.GetAsync(
@@ -29,7 +29,6 @@ public sealed class ProblemDetailsTests
     [Fact]
     public async Task UnknownRouteOutsideTheAppApiKeepsAnEmptyBody()
     {
-        await using var factory = new ApiFactory();
         using var client = factory.CreateClient();
 
         using var response = await client.GetAsync(

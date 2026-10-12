@@ -174,11 +174,12 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   l'API : un hôte de test se branche sur le second.
 - **Corps de requête** : 128 Kio au plus (`LoDb:Hosting:MaxRequestBodySize`), 413 au-delà.
   Le plus gros corps légitime, un build maximal dont chaque caractère est échappé, dépasse
-  64 Kio (`tests/LoDb.E2E/specs/builds/maximal-build.spec.ts`) : ne pas descendre à 64 Kio.
+  64 Kio (≈ 65 Kio : 2 080 caractères de nom et de description, dix étapes de 40 + 300, chacun
+  hors du plan de base pesant 12 octets en `\u` échappés) : ne pas descendre à 64 Kio.
   Un endpoint qui doit lire plus pose son propre `RequestSizeLimit` (webhook Stripe, 1 Mio).
-  Les tests xUnit de cette borne tournent sur un vrai Kestrel, en Production
-  (`Hosting/Support/KestrelApi.cs`) : le serveur en mémoire n'applique aucune limite, et
-  Development transforme un corps invalide en exception.
+  La borne se teste dans nginx (`tools/nginx/test`) et en xUnit, sur un vrai Kestrel, en
+  Production (`Hosting/Support/KestrelApi.cs`) : le serveur en mémoire n'applique aucune
+  limite, et Development transforme un corps invalide en exception.
 - `/api/pickers/*` exige `version` et `lang` (400 `invalid-version` sinon).
 - **Porte réseau de l'API** : le port 8080 ne répond qu'au réseau de la stack
   (`LoDb:Hosting:KnownProxyNetworks`, le seul `LODB_STACK_SUBNET` sur un hôte, les trois
@@ -487,7 +488,9 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   emplacement `lodb-dev-e2`, jamais pendant un build Android. Derrière `| tee`, lire
   `$pipestatus[1]` (zsh) ou `${PIPESTATUS[0]}` (bash). Après elle, `lodb_rehearsal` ne doit
   plus exister dans le Postgres de l'ancienne stack.
-- **Parité** : `tools/parity/` collecte, `tests/LoDb.Parity` compare ; un écart nouveau
+- **Parité** : `tools/parity/` collecte, `tests/LoDb.Parity` compare ; ce projet est hors de
+  `LoDb.slnx` (ni la suite ni la CI ne le lancent), il se lance par
+  `dotnet test --project tests/LoDb.Parity/LoDb.Parity.csproj`. Un écart nouveau
   reçoit une règle argumentée de `ParityRules.cs`, jamais un filtre. Parité des builds et
   agrégats analytics : copies dans le Postgres de l'ancienne stack, jamais sa base `lodb`.
 - **Rapports générés** (`diff-seo.md`, `lighthouse.md`…) : écrits par leurs outils seuls ;

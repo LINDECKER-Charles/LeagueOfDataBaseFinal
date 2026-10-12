@@ -3,23 +3,11 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { type CanMatchFn, type Route, UrlSegment } from '@angular/router';
 import { API_BASE_URL } from '../../api/api-base-url';
-import type { CatalogMeta } from '../../api/generated/models/catalog-meta';
+import { catalogMetaOf } from '../../testing/catalog-meta-of';
 import { cacheClassOf } from './cache-class-of';
 import { canMatchVersion } from './can-match-version';
 
-const META: CatalogMeta = {
-  latest: '16.19.1',
-  versions: ['16.20.1', '16.19.1', '16.18.1', '15.14.1'],
-  readyVersions: ['16.19.1'],
-  versionPattern: String.raw`\d+(?:\.\d+)+`,
-  languages: ['en_US'],
-  languagePattern: '[a-z]{2}_[A-Z]{2}',
-  defaultLanguage: 'en_US',
-  locales: [{ locale: 'en', language: 'en_US' }],
-  fallbackLocale: 'en',
-  gameModes: [{ mode: 'sr', map: 11 }],
-  defaultGameMode: 'sr',
-};
+const META = catalogMetaOf({ versions: ['16.20.1', '16.19.1', '16.18.1', '15.14.1'] });
 
 describe('cacheClassOf', () => {
   it.each([

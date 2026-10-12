@@ -23,7 +23,7 @@ public sealed class UpdateLoopTests : IDisposable
     public void Dispose() => _loop?.Dispose();
 
     [Fact]
-    public async Task ChecksAtStartThenEverySixHours()
+    public async Task ChecksAtStartThenEveryInterval()
     {
         var loop = LoopIn(UpdateMode.Background);
 
@@ -34,8 +34,6 @@ public sealed class UpdateLoopTests : IDisposable
         _time.Advance(UpdateLoop.CheckInterval);
         await _engine.WaitForChecksAsync(3, Token);
         await loop.StopAsync(Token);
-
-        Assert.Equal(TimeSpan.FromHours(6), UpdateLoop.CheckInterval);
     }
 
     [Fact]

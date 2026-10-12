@@ -1,8 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
-import { provideTransloco } from '@jsverse/transloco';
-import { of } from 'rxjs';
+import { provideTestTransloco } from '../../core/testing/provide-test-transloco';
 import { activeSection } from './active-section';
 import { FragmentLink } from './fragment-link';
 import { Pager } from './pager';
@@ -95,15 +94,7 @@ describe('navigation primitives', () => {
       },
     );
     TestBed.configureTestingModule({
-      providers: [
-        provideRouter([]),
-        provideTransloco({
-          config: { defaultLang: 'en', missingHandler: { logMissingKey: false }, prodMode: true },
-          loader: class {
-            getTranslation = () => of({});
-          },
-        }),
-      ],
+      providers: [provideRouter([]), provideTestTransloco()],
     });
   });
 

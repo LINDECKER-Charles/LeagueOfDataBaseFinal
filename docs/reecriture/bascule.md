@@ -614,7 +614,7 @@ décommission supprime ce dossier.
 | Quoi | Où |
 |---|---|
 | Ancienne stack archivée | `legacy/` : `app/`, `go/`, `docker/{nginx,php}/`, `compose*.yaml`, `.env*.example`, `.dockerignore`, `.github/workflows/` (`ci.yml`, `_*.yml`), `tailwind.config.js`, `tools/screenshots/`, `screenshot/`, `README.md`, `docs/guides/` |
-| Outils de la transition | `tools/cutover/`, `tools/schema/`, `tools/contract/`, `tools/parity/` et `tools/builds-parity/` (comparaisons avec l'ancienne stack), `Persistence/Baseline/doctrine-catalog.txt` et `tests/fixtures/schema/` quand `Baseline` ne se compare plus à Doctrine |
+| Outils de la transition | `tools/cutover/`, `tools/schema/`, `tools/contract/`, `tools/parity/`, `tests/LoDb.Parity/` (hors de `LoDb.slnx`) et `tools/builds-parity/` (comparaisons avec l'ancienne stack), `Persistence/Baseline/doctrine-catalog.txt` et `tests/fixtures/schema/` quand `Baseline` ne se compare plus à Doctrine |
 | Images | `ghcr.io/<owner>/lodb/app`, `lodb/go-fetcher`, `lodb/go-api` ; les tags `<sha>` de l'ancienne stack sur `lodb/nginx` |
 | Sur l'hôte | volumes `storage` et `app_state` de `lodb-prod` et `lodb-staging` **après export**, `legacy/.env` des deux checkouts, tags locaux `nginx:legacy-prod` et `nginx:legacy-staging`, sauvegardes `legacy.env` ; secret `ENV_TEST` (plus lu). **Garder** `STAGING_*`, `PROD_*`, `ENV_STAGING` et `ENV_PROD`, que la nouvelle stack utilise |
 

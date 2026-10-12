@@ -159,31 +159,27 @@ describe('preRouteOf', () => {
     expect(route(url)).toEqual({ kind: 'not-found' });
   });
 
+  // A home, a list without a query, an encoded locale, a page outside the locales, a page
+  // outside the catalogue, an unknown locale left to the app, a path below a detail: the last
+  // four keep a query the server does not read.
   it.each([
     '/fr/',
     '/zh-hant/champions',
     '/%66r/champions',
-    '/b/Zx81',
     '/admin/users?range=7d',
     '/en/trends?mode=aram&page=2',
-    '/en/account/verify-email?token=t0k3n',
-    '/en/u/faker?tab=builds',
-    '/en/about?x=1',
     '/xx/champions?x=1',
     '/en/champions/103-ahri/skins?x=1',
   ])('lets %s render as it is', (url) => {
     expect(route(url)).toEqual({ kind: 'render' });
   });
 
+  // The context of a list, its search, paging and facets, the context of a pinned detail, an
+  // encoded name. Each list's own facets are ownedParamsOf's, against their schemas, below.
   it.each([
     '/en/champions?version=15.14.1&lang=en_GB',
     '/en/items?q=boots&page=2&size=all&tag=Boots,Armor&tag_all=1&price=0-3000',
-    '/en/items?move_speed=0-100&move_speed_pct=0-10&attack_speed_pct=0-50&purchasable=1',
-    '/en/champions?role=Mage&resource=Mana&range=ranged&difficulty=1-3&hp=0-700&as=0.6-0.7',
-    '/en/runes?path=8100&slot=keystone',
-    '/en/summoners?mode=CLASSIC&edition=modern&level=1&cooldown=0-300',
     '/fr/15.13.1/items/3031-infinity-edge?lang=fr_FR',
-    '/en/items/3031-infinity-edge?version=15.14.1',
     '/en/items?la%6Eg=en_GB',
   ])('keeps the parameters %s reads', (url) => {
     expect(route(url)).toEqual({ kind: 'render' });

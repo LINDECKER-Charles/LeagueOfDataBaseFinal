@@ -1,15 +1,17 @@
 using LoDb.Domain.Catalog.Items;
 using LoDb.Domain.Derived.Items;
-using LoDb.Domain.Editions;
 using LoDb.Ingestion.Tests.Ddragon;
 using LoDb.Testing.Fixtures;
 
 namespace LoDb.Ingestion.Tests.Normalization;
 
 /// <summary>
-/// Items: debris kept for recipes but flagged, marked-up names reduced (UP 10), Classic twins
-/// linked (UP 6).
+/// Items: debris kept for recipes but flagged, marked-up names reduced (UP 10).
 /// </summary>
+/// <remarks>
+/// The Classic twins (UP 6) are linked by <c>EditionTwins</c>, tested in the Domain; the
+/// catalog export shows that the mapper links them (<c>CatalogExportTests</c>).
+/// </remarks>
 public sealed class ItemDatasetTests
 {
     [Fact]
@@ -25,42 +27,14 @@ public sealed class ItemDatasetTests
             debris.Order(StringComparer.Ordinal));
     }
 
-    [Theory]
-    [InlineData("en_US", "Fire at Will")]
-    [InlineData("fr_FR", "Feu à volonté")]
-    public async Task MarkedUpNamesAreReducedToTheName(string language, string name)
-    {
-        var items = await ReadAsync(language);
-
-        Assert.Equal(name, Single(items, "3901").Name);
-    }
-
+    // The reduction itself is ItemDebris' (Domain): this proves the mapper applies it.
     [Fact]
-    public async Task ClassicTwinsAreLinkedBothWays()
+    public async Task MarkedUpNamesAreReducedToTheName()
     {
-        var items = await ReadAsync("en_US");
+        var items = await ReadAsync("fr_FR");
 
-        var modern = Single(items, "1004");
-        var classic = Single(items, "771004");
-
-        Assert.Equal(Edition.Classic, classic.Edition);
-        Assert.Equal(Twin("771004", Edition.Classic), modern.Counterpart);
-        Assert.Equal(Twin("1004", Edition.Modern), classic.Counterpart);
+        Assert.Equal("Feu à volonté", Single(items, "3901").Name);
     }
-
-    // 773001 strips to 3001, which is another item today: the names differ, so no twin.
-    [Fact]
-    public async Task ReusedIdIsNoTwin()
-    {
-        var items = await ReadAsync("en_US");
-
-        Assert.Null(Single(items, "3001").Counterpart);
-        Assert.Null(Single(items, "773001").Counterpart);
-        Assert.Equal(Edition.Classic, Single(items, "773001").Edition);
-    }
-
-    private static EditionTwin Twin(string id, Edition edition) =>
-        new() { Id = id, Name = "Faerie Charm", Edition = edition };
 
     private static Item Single(IEnumerable<Item> items, string id) =>
         Assert.Single(items, item => item.Id == id);

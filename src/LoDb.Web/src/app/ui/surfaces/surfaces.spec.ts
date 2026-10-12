@@ -3,8 +3,7 @@ import { provideLocationMocks } from '@angular/common/testing';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { provideTransloco } from '@jsverse/transloco';
-import { of } from 'rxjs';
+import { provideTestTransloco } from '../../core/testing/provide-test-transloco';
 import { Card } from './card';
 import { EmptyState } from './empty-state';
 import { Frame } from './frame';
@@ -80,17 +79,7 @@ describe('EmptyState', () => {
       providers: [
         provideRouter([]),
         provideLocationMocks(),
-        provideTransloco({
-          config: {
-            availableLangs: ['en'],
-            defaultLang: 'en',
-            missingHandler: { logMissingKey: false },
-            prodMode: true,
-          },
-          loader: class {
-            getTranslation = () => of(NO_RESULT);
-          },
-        }),
+        provideTestTransloco({ otherwise: NO_RESULT }),
       ],
     });
   });

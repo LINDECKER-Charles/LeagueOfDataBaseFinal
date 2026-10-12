@@ -27,12 +27,7 @@ function itemsOf(editing: StepEditing, index = 0): readonly string[] {
 }
 
 describe('StepEditing', () => {
-  it('opens a build without steps on one blank step', () => {
-    const { editing } = setUp();
-
-    expect(editing.order().steps).toEqual([{ label: '', note: null, items: [] }]);
-  });
-
+  // A build without steps opening on one blank step is PurchaseOrder's rule, tested there.
   it('opens the steps of the build, notes included', () => {
     const { editing } = setUp([{ label: 'Start', note: 'early', items: ['1055'] }]);
 
