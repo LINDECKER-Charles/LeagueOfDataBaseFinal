@@ -5,9 +5,10 @@ using Npgsql;
 namespace LoDb.Infrastructure.Persistence.Roles;
 
 /// <summary>
-/// Least privilege for the API: <c>migrate</c>, which connects as the server's superuser,
-/// keeps the roles of <see cref="DatabaseRoleNames"/> in place after the migrations, then
-/// hands the schema's objects to their owners and grants the API its rows.
+/// Least privilege for the API and the backups: <c>migrate</c>, which connects as the
+/// server's superuser, keeps the roles of <see cref="DatabaseRoleNames"/> in place after the
+/// migrations, then hands the schema's objects to their owners, grants the API its rows and
+/// the backups their reads and their journal.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -22,9 +23,12 @@ namespace LoDb.Infrastructure.Persistence.Roles;
 /// </para>
 /// </remarks>
 public sealed partial class DatabaseRoles(
-    IOptions<AppRoleOptions> options,
+    IOptions<AppRoleOptions> app,
+    IOptions<BackupRoleOptions> backup,
     ILogger<DatabaseRoles> logger)
 {
+    private RoleSettings Settings => new(app.Value, backup.Value);
+
     /// <summary>The roles, then the privileges of the schema, in one transaction.</summary>
     /// <exception cref="InvalidOperationException">The session is not a superuser's.</exception>
     public async Task<RoleChanges> ApplyAsync(
@@ -33,10 +37,7 @@ public sealed partial class DatabaseRoles(
     {
         ArgumentNullException.ThrowIfNull(connection);
         await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
-        var changes = await ClusterRoles.EnsureAsync(
-            transaction,
-            options.Value,
-            cancellationToken);
+        var changes = await ClusterRoles.EnsureAsync(transaction, Settings, cancellationToken);
         await SchemaPrivileges.ApplyAsync(transaction, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         LogApplied(logger, changes.Created, changes.Altered, changes.PasswordSet);
@@ -54,10 +55,7 @@ public sealed partial class DatabaseRoles(
     {
         ArgumentNullException.ThrowIfNull(connection);
         await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
-        var changes = await ClusterRoles.EnsureAsync(
-            transaction,
-            options.Value,
-            cancellationToken);
+        var changes = await ClusterRoles.EnsureAsync(transaction, Settings, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
         return changes;
     }

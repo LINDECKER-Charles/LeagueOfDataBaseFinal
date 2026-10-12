@@ -1,11 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { provideTransloco } from '@jsverse/transloco';
 import { of } from 'rxjs';
 import type { SummonerCard } from '../../../../core/api/generated/models/summoner-card';
 import type { PageContext } from '../../../../core/context/page-context';
 import type { SeoPage } from '../../../../core/seo/seo-page';
+import { provideTestTransloco } from '../../../../core/testing/provide-test-transloco';
 import { CatalogueHead } from '../../shared/codex/head/catalogue-head';
 import type { CatalogueTexts } from '../../shared/codex/head/catalogue-texts';
 import { CatalogueLists } from '../../shared/data/catalogue-lists';
@@ -83,17 +83,7 @@ describe('lodb-summoner-list', () => {
         provideRouter([
           { path: 'en/summoners', component: SummonerList, data: { context: CONTEXT } },
         ]),
-        provideTransloco({
-          config: {
-            availableLangs: ['en'],
-            defaultLang: 'en',
-            missingHandler: { logMissingKey: false },
-            prodMode: true,
-          },
-          loader: class {
-            getTranslation = () => of({ edition: { classic: 'LoL Classic' } });
-          },
-        }),
+        provideTestTransloco({ otherwise: { edition: { classic: 'LoL Classic' } } }),
         { provide: CatalogueHead, useValue: { write } },
         {
           provide: CatalogueLists,

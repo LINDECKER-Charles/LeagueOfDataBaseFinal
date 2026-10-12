@@ -10,12 +10,13 @@ import { provideLocationMocks } from '@angular/common/testing';
 import { Component, PLATFORM_ID, RESPONSE_INIT } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router, type Routes } from '@angular/router';
-import { provideTransloco, TranslocoService } from '@jsverse/transloco';
+import { TranslocoService } from '@jsverse/transloco';
 import { of, throwError } from 'rxjs';
 import { API_BASE_URL } from '../../../../core/api/api-base-url';
 import type { SharedBuild } from '../../../../core/api/generated/models/shared-build';
 import { isOutcomeNavigation } from '../../../../core/routing/outcome/is-outcome-navigation';
 import { resolveOutcome } from '../../../../core/routing/outcome/resolve-outcome';
+import { provideTestTransloco } from '../../../../core/testing/provide-test-transloco';
 import { sharedBuildOf } from '../testing/shared-build-of';
 import { resolveSharedBuild } from './resolve-shared-build';
 
@@ -68,12 +69,7 @@ async function visit(url: string, build = sharedBuildOf(), failure: HttpStatusCo
       provideRouter(ROUTES),
       provideLocationMocks(),
       provideHttpClient(withInterceptors([simulatedApi(build, failure, requested)])),
-      provideTransloco({
-        config: { availableLangs: ['en', 'fr', 'zh-hant'], defaultLang: 'en', prodMode: true },
-        loader: class {
-          getTranslation = () => of({});
-        },
-      }),
+      provideTestTransloco(),
       { provide: API_BASE_URL, useValue: '' },
       { provide: PLATFORM_ID, useValue: 'server' },
       { provide: RESPONSE_INIT, useValue: init },

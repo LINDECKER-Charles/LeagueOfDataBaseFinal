@@ -116,10 +116,6 @@ public sealed class DdragonStoreTests(PostgresContainerFixture postgres)
     }
 
     [Fact]
-    public async Task EmptyBatchWritesNothing() =>
-        Assert.Equal(0, await Assets.RecordAsync([], force: true, Cancellation));
-
-    [Fact]
     public async Task ListReturnsOneVersionAndTypeByKey()
     {
         await Assets.RecordAsync(

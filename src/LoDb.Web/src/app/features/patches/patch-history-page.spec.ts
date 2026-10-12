@@ -3,15 +3,15 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { provideTransloco, type Translation } from '@jsverse/transloco';
+import type { Translation } from '@jsverse/transloco';
 import { of } from 'rxjs';
 import type { CatalogMeta } from '../../core/api/generated/models/catalog-meta';
 import { ApiMeta } from '../../core/api/meta/api-meta';
 import { activateLocale } from '../../core/i18n/activate-locale';
-import { LOCALES } from '../../core/i18n/locales';
 import { CANONICAL_ORIGIN } from '../../core/seo/canonical-origin';
 import { Seo } from '../../core/seo/seo';
 import { PATCHES_CATALOGUES } from '../../core/testing/patches-catalogues';
+import { provideTestTransloco } from '../../core/testing/provide-test-transloco';
 import { ROOT_CATALOGUES } from '../../core/testing/root-catalogues';
 import { PATCHES_ROUTES } from './patches.routes';
 import { versionGroupsOf } from './rows/version-groups-of';
@@ -44,17 +44,7 @@ async function visit(meta: Partial<CatalogMeta>) {
           children: [{ path: 'patches', children: PATCHES_ROUTES }],
         },
       ]),
-      provideTransloco({
-        config: {
-          availableLangs: [...LOCALES],
-          defaultLang: 'en',
-          missingHandler: { logMissingKey: false },
-          prodMode: true,
-        },
-        loader: class {
-          getTranslation = (path: string) => of(CATALOGUES[path] ?? {});
-        },
-      }),
+      provideTestTransloco({ byPath: CATALOGUES }),
     ],
   });
   const apply = vi.spyOn(TestBed.inject(Seo), 'apply');
@@ -65,15 +55,6 @@ async function visit(meta: Partial<CatalogMeta>) {
 
 function hrefsOf(row: Element | null | undefined): (string | null)[] {
   return Array.from(row?.querySelectorAll('a') ?? [], (link) => link.getAttribute('href'));
-}
-
-// A dotted path into a catalogue: `footer.navigation.patches`.
-function valueAt(catalogue: Translation, key: string): unknown {
-  return key.split('.').reduce<unknown>((node, part) => {
-    return typeof node === 'object' && node !== null
-      ? (node as Record<string, unknown>)[part]
-      : undefined;
-  }, catalogue);
 }
 
 describe('PatchHistoryPage', () => {
@@ -163,20 +144,5 @@ describe('versionGroupsOf', () => {
       { major: '16', versions: ['16.2.1', '16.1.1'] },
       { major: '15', versions: ['15.1.1'] },
     ]);
-  });
-});
-
-describe('texts of the patch history', () => {
-  const keys = Object.keys(PATCHES_CATALOGUES.en);
-
-  it.each(LOCALES)('are all translated in %s', (locale) => {
-    const catalogue = PATCHES_CATALOGUES[locale];
-
-    expect(Object.keys(catalogue)).toEqual(keys);
-    for (const key of keys) {
-      expect(String(catalogue[key]).trim(), `${locale}: ${key}`).not.toBe('');
-    }
-    expect(catalogue['group']).toContain('{{ major }}');
-    expect(valueAt(ROOT_CATALOGUES[locale], 'footer.navigation.patches')).toMatch(/\S/);
   });
 });

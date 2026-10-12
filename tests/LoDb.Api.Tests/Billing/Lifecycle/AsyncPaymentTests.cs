@@ -2,7 +2,6 @@ using System.Net;
 using System.Text.Json.Nodes;
 using LoDb.Api.Tests.Billing.Support;
 using LoDb.Infrastructure.Persistence.Billing.Payments;
-using LoDb.Testing;
 using Microsoft.EntityFrameworkCore;
 
 namespace LoDb.Api.Tests.Billing.Lifecycle;
@@ -12,16 +11,25 @@ namespace LoDb.Api.Tests.Billing.Lifecycle;
 /// comes in (<c>checkout.session.async_payment_succeeded</c>), once whatever event repeats it,
 /// and never when it fails (<c>checkout.session.async_payment_failed</c>).
 /// </summary>
-public sealed class AsyncPaymentTests(PostgresContainerFixture postgres)
-    : IAsyncLifetime
+/// <remarks>
+/// The tests share a host, each with accounts and Stripe identifiers of its own.
+/// </remarks>
+public sealed class AsyncPaymentTests : IClassFixture<SharedBillingApp>
 {
     private const string SessionId = "cs_test_sepa";
     private const long Requests = 10_000;
 
-    private BillingApp? _app;
+    private readonly StripePayloads _stripe;
 
-    private BillingApp App =>
-        _app ?? throw new InvalidOperationException("The host is not started yet.");
+    public AsyncPaymentTests(SharedBillingApp host)
+    {
+        ArgumentNullException.ThrowIfNull(host);
+        App = host.App;
+        App.ResetDoubles();
+        _stripe = host.Payloads();
+    }
+
+    private BillingApp App { get; }
 
     private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
 
@@ -30,16 +38,16 @@ public sealed class AsyncPaymentTests(PostgresContainerFixture postgres)
     {
         var buyer = await App.SeedUserAsync("Acheteur");
         var key = await App.SeedKeyAsync(buyer);
-        var session = StripePayloads.Pack(SessionId, buyer.Id, Requests);
+        var session = _stripe.Pack(SessionId, buyer.Id, Requests);
         var succeeded = StripePayloads.Later(
-            StripePayloads.Event("evt_paid", StripePayloads.AsyncPaymentSucceeded, Paid(session)),
+            _stripe.Event("evt_paid", StripePayloads.AsyncPaymentSucceeded, Paid(session)),
             days: 3);
 
-        await DeliverAsync(StripePayloads.Completed("evt_completed", Unpaid(session)));
+        await DeliverAsync(_stripe.Completed("evt_completed", Unpaid(session)));
         Assert.Equal(0, (await App.KeyAsync(key.Id)).CreditsBalance);
         await DeliverAsync(succeeded);
         await DeliverAsync(succeeded);
-        await DeliverAsync(StripePayloads.Event(
+        await DeliverAsync(_stripe.Event(
             "evt_paid_again",
             StripePayloads.AsyncPaymentSucceeded,
             Paid(session)));
@@ -55,16 +63,21 @@ public sealed class AsyncPaymentTests(PostgresContainerFixture postgres)
     public async Task SucceededPaymentMakesTheDonorASupporter()
     {
         var donor = await App.SeedUserAsync("Donatrice");
-        var session = StripePayloads.Donation(SessionId, 2_500, donor.Id);
+        var session = _stripe.Donation(SessionId, 2_500, donor.Id);
 
-        await DeliverAsync(StripePayloads.Completed("evt_completed", Unpaid(session)));
-        await DeliverAsync(StripePayloads.Event(
+        await DeliverAsync(_stripe.Completed("evt_completed", Unpaid(session)));
+        await DeliverAsync(_stripe.Event(
             "evt_paid",
             StripePayloads.AsyncPaymentSucceeded,
             Paid(session)));
 
+        var delivered = _stripe.Id(SessionId);
         await using var db = App.Database();
-        Assert.Equal(2_500, (await db.Donations.SingleAsync(Cancellation)).AmountCents);
+        Assert.Equal(
+            2_500,
+            (await db.Donations.SingleAsync(
+                donation => donation.StripeSessionId == delivered,
+                Cancellation)).AmountCents);
         Assert.True((await db.Users.SingleAsync(user => user.Id == donor.Id, Cancellation))
             .IsSupporter);
     }
@@ -74,10 +87,10 @@ public sealed class AsyncPaymentTests(PostgresContainerFixture postgres)
     {
         var buyer = await App.SeedUserAsync("Acheteur");
         var key = await App.SeedKeyAsync(buyer);
-        var session = Unpaid(StripePayloads.Pack(SessionId, buyer.Id, Requests));
+        var session = Unpaid(_stripe.Pack(SessionId, buyer.Id, Requests));
 
-        await DeliverAsync(StripePayloads.Completed("evt_completed", session));
-        await DeliverAsync(StripePayloads.Event(
+        await DeliverAsync(_stripe.Completed("evt_completed", session));
+        await DeliverAsync(_stripe.Event(
             "evt_failed",
             StripePayloads.AsyncPaymentFailed,
             session.DeepClone().AsObject()));
@@ -93,13 +106,13 @@ public sealed class AsyncPaymentTests(PostgresContainerFixture postgres)
     {
         var buyer = await App.SeedUserAsync("Acheteur");
         var key = await App.SeedKeyAsync(buyer);
-        var session = StripePayloads.Pack(SessionId, buyer.Id, Requests);
+        var session = _stripe.Pack(SessionId, buyer.Id, Requests);
 
-        await DeliverAsync(StripePayloads.Event(
+        await DeliverAsync(_stripe.Event(
             "evt_paid",
             StripePayloads.AsyncPaymentSucceeded,
             Paid(session)));
-        await DeliverAsync(StripePayloads.Completed("evt_completed", Unpaid(session)));
+        await DeliverAsync(_stripe.Completed("evt_completed", Unpaid(session)));
 
         Assert.Equal(Requests, (await App.KeyAsync(key.Id)).CreditsBalance);
         Assert.Single(await App.GrantsOfAsync(key.Id));
@@ -115,14 +128,14 @@ public sealed class AsyncPaymentTests(PostgresContainerFixture postgres)
     {
         var buyer = await App.SeedUserAsync("Acheteur");
         var key = await App.SeedKeyAsync(buyer);
-        var session = StripePayloads.Pack(SessionId, buyer.Id, Requests);
-        var payment = StripePayloads.PaymentOf(SessionId);
+        var session = _stripe.Pack(SessionId, buyer.Id, Requests);
+        var payment = _stripe.PaymentOf(SessionId);
 
-        await DeliverAsync(StripePayloads.Completed("evt_completed", Unpaid(session)));
+        await DeliverAsync(_stripe.Completed("evt_completed", Unpaid(session)));
         await DeliverAsync(cause == "refund"
-            ? StripePayloads.Refunded("evt_taken_back", payment)
-            : StripePayloads.Disputed("evt_taken_back", payment));
-        await DeliverAsync(StripePayloads.Event(
+            ? _stripe.Refunded("evt_taken_back", payment)
+            : _stripe.Disputed("evt_taken_back", payment));
+        await DeliverAsync(_stripe.Event(
             "evt_paid",
             StripePayloads.AsyncPaymentSucceeded,
             Paid(session)));
@@ -131,16 +144,6 @@ public sealed class AsyncPaymentTests(PostgresContainerFixture postgres)
         Assert.Empty(await App.GrantsOfAsync(key.Id));
         Assert.Empty(App.KeyCache.Invalidated);
         Assert.Equal(StripeCheckoutStatus.Revoked, (await CheckoutAsync()).Status);
-    }
-
-    public async ValueTask InitializeAsync() => _app = await BillingApp.StartAsync(postgres);
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_app is not null)
-        {
-            await _app.DisposeAsync();
-        }
     }
 
     private static JsonObject Unpaid(JsonObject session)
@@ -160,8 +163,9 @@ public sealed class AsyncPaymentTests(PostgresContainerFixture postgres)
 
     private async Task<StripeCheckout> CheckoutAsync()
     {
+        var delivered = _stripe.Id(SessionId);
         await using var db = App.Database();
         return await db.StripeCheckouts.AsNoTracking()
-            .SingleAsync(checkout => checkout.Id == SessionId, Cancellation);
+            .SingleAsync(checkout => checkout.Id == delivered, Cancellation);
     }
 }

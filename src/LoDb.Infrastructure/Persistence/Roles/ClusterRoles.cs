@@ -5,7 +5,7 @@ namespace LoDb.Infrastructure.Persistence.Roles;
 
 /// <summary>
 /// The roles of <see cref="DatabaseRoleNames"/> on the server: created when missing, their
-/// attributes, the API's statement timeout and password set when they differ.
+/// attributes, the API's statement timeout and the passwords set when they differ.
 /// </summary>
 /// <remarks>
 /// Roles belong to the server, not to a database. They are read first and only what differs
@@ -50,13 +50,18 @@ internal static class ClusterRoles
         """;
 
     private static readonly string[] Names =
-        [DatabaseRoleNames.Owner, DatabaseRoleNames.Partitions, DatabaseRoleNames.App];
+    [
+        DatabaseRoleNames.Owner,
+        DatabaseRoleNames.Partitions,
+        DatabaseRoleNames.App,
+        DatabaseRoleNames.Backup,
+    ];
 
-    /// <summary>Puts the roles as <paramref name="options"/> describes them.</summary>
+    /// <summary>Puts the roles as <paramref name="settings"/> describes them.</summary>
     /// <exception cref="InvalidOperationException">The session is not a superuser's.</exception>
     public static async Task<RoleChanges> EnsureAsync(
         NpgsqlTransaction transaction,
-        AppRoleOptions options,
+        RoleSettings settings,
         CancellationToken cancellationToken)
     {
         if (!await IsSuperuserAsync(transaction, cancellationToken))
@@ -65,7 +70,7 @@ internal static class ClusterRoles
                 "The database roles are kept by migrate, which must connect as a superuser.");
         }
 
-        var run = new Run(transaction, options, await ReadAsync(transaction, cancellationToken));
+        var run = new Run(transaction, settings, await ReadAsync(transaction, cancellationToken));
         var (created, altered) = await EnsureAttributesAsync(run, cancellationToken);
         if (await EnsureSettingsAsync(run, cancellationToken)
             && run.States.ContainsKey(DatabaseRoleNames.App))
@@ -73,15 +78,16 @@ internal static class ClusterRoles
             altered.Add(DatabaseRoleNames.App);
         }
 
-        var passwordSet = await EnsurePasswordAsync(run, cancellationToken);
+        var passwordSet = await EnsurePasswordsAsync(run, cancellationToken);
         return new RoleChanges(created, altered.Count, passwordSet);
     }
 
-    private static RoleSpec[] Specs(AppRoleOptions options) =>
+    private static RoleSpec[] Specs(RoleSettings settings) =>
     [
         new(DatabaseRoleNames.Owner, CanLogin: false, AppRoleOptions.UnlimitedConnections),
         new(DatabaseRoleNames.Partitions, CanLogin: false, AppRoleOptions.UnlimitedConnections),
-        new(DatabaseRoleNames.App, CanLogin: true, options.ConnectionLimit),
+        new(DatabaseRoleNames.App, CanLogin: true, settings.App.ConnectionLimit),
+        new(DatabaseRoleNames.Backup, CanLogin: true, BackupRoleOptions.ConnectionLimit),
     ];
 
     // The roles created, and the names of the existing ones whose attributes changed.
@@ -91,7 +97,7 @@ internal static class ClusterRoles
     {
         var created = 0;
         var altered = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var spec in Specs(run.Options))
+        foreach (var spec in Specs(run.Settings))
         {
             var state = run.States.GetValueOrDefault(spec.Name);
             if (state is null)
@@ -118,7 +124,7 @@ internal static class ClusterRoles
     {
         var value = string.Create(
             CultureInfo.InvariantCulture,
-            $"{(long)run.Options.StatementTimeout.TotalMilliseconds}{Milliseconds}");
+            $"{(long)run.Settings.App.StatementTimeout.TotalMilliseconds}{Milliseconds}");
         var state = run.States.GetValueOrDefault(DatabaseRoleNames.App);
         var isRoleWideKept = state?.Settings is [var only] && only == $"{StatementTimeout}={value}";
         var statements = (state?.DatabasesWithSettings ?? [])
@@ -138,20 +144,42 @@ internal static class ClusterRoles
         return statements.Count > 0;
     }
 
-    // The verifier holds base64, digits, '$' and ':' only: it needs no escaping in a literal.
-    private static async Task<bool> EnsurePasswordAsync(
+    // Both passwords, each written only when it is set and differs: not short-circuited.
+    private static async Task<bool> EnsurePasswordsAsync(
         Run run,
         CancellationToken cancellationToken)
     {
-        var password = run.Options.Password;
-        var stored = run.States.GetValueOrDefault(DatabaseRoleNames.App)?.Password;
+        var app = run.Settings.App.Password;
+        var backup = run.Settings.Backup.Password;
+        var isAppSet = await EnsurePasswordAsync(
+            run,
+            DatabaseRoleNames.App,
+            app,
+            cancellationToken);
+        var isBackupSet = await EnsurePasswordAsync(
+            run,
+            DatabaseRoleNames.Backup,
+            backup,
+            cancellationToken);
+        return isAppSet || isBackupSet;
+    }
+
+    // The verifier holds base64, digits, '$' and ':' only: it needs no escaping in a literal.
+    // The role is one of the constant names of DatabaseRoleNames, never configured text.
+    private static async Task<bool> EnsurePasswordAsync(
+        Run run,
+        string role,
+        string? password,
+        CancellationToken cancellationToken)
+    {
+        var stored = run.States.GetValueOrDefault(role)?.Password;
         if (string.IsNullOrEmpty(password) || ScramVerifier.Matches(password, stored))
         {
             return false;
         }
 
         var verifier = ScramVerifier.Create(password);
-        var sql = $"ALTER ROLE {DatabaseRoleNames.App} PASSWORD '{verifier}'";
+        var sql = $"ALTER ROLE {role} PASSWORD '{verifier}'";
         await ExecuteAsync(run, sql, cancellationToken);
         return true;
     }
@@ -207,7 +235,7 @@ internal static class ClusterRoles
 
     private sealed record Run(
         NpgsqlTransaction Transaction,
-        AppRoleOptions Options,
+        RoleSettings Settings,
         IReadOnlyDictionary<string, RoleState> States);
 
     private sealed record RoleState(

@@ -26,10 +26,12 @@ public sealed class SummonerSpellEditionTests
         Assert.Equal(Edition.Classic, spell.Edition);
     }
 
+    // KIWI_JADE, as Data Dragon ships it for the snowball, is an ARAM variant: only the exact
+    // JADE mode is LoL Classic.
     [Fact]
     public void ACurrentGameSpellIsModern()
     {
-        var spell = SummonerSpellSamples.Named("SummonerFlash", "Flash", "CLASSIC", "ARAM");
+        var spell = SummonerSpellSamples.Named("SummonerSnowball", "Mark", "ARAM", "KIWI_JADE");
 
         Assert.Equal(Edition.Modern, spell.Edition);
     }

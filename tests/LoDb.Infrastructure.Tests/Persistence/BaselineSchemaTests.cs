@@ -45,6 +45,9 @@ public sealed class BaselineSchemaTests(PostgresContainerFixture postgres)
     /// <summary>Tables of the audience pulled from Umami; like lot 4's, not in NewTables.</summary>
     internal static readonly string[] AudienceTables = ["audience_entity_daily"];
 
+    /// <summary>Tables of the journal of the backups; like lot 4's, not in NewTables.</summary>
+    internal static readonly string[] BackupTables = ["backup_run"];
+
     // Everything a migration adds to a Doctrine table, frozen: Identity's columns on users
     // (nullable, with a default or generated, so that the legacy stack keeps inserting rows)
     // and the indexes of the generated ones. The catalog shows a generated column as a default.
@@ -170,7 +173,8 @@ public sealed class BaselineSchemaTests(PostgresContainerFixture postgres)
             .Concat(Lot6Tables)
             .Concat(PaymentTables)
             .Concat(SessionTables)
-            .Concat(AudienceTables);
+            .Concat(AudienceTables)
+            .Concat(BackupTables);
 
     // The table itself, its columns, constraints, indexes and triggers, and the sequences of
     // its identity columns, which PostgreSQL names after it.

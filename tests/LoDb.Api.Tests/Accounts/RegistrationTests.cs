@@ -4,36 +4,42 @@ using LoDb.Api.Tests.Accounts.Support;
 using LoDb.Domain.Languages;
 using LoDb.Infrastructure.Audit;
 using LoDb.Infrastructure.Outbox;
-using LoDb.Testing;
 
 namespace LoDb.Api.Tests.Accounts;
 
 /// <summary>
 /// <c>POST /api/account/register</c>: the account is created, signed in and sent its
 /// verification e-mail; every broken rule is reported at once, a taken e-mail or name
-/// whatever its case, and one address registers five accounts an hour at most.
+/// whatever its case. The limit by address is <see cref="OwnHost.RegistrationLimitTests"/>'.
 /// </summary>
-public sealed class RegistrationTests(PostgresContainerFixture postgres)
-    : IAsyncLifetime
+/// <remarks>
+/// The tests share a host: each registers from an address and under a name of its own.
+/// </remarks>
+public sealed class RegistrationTests(SharedAccountsApp host) : IClassFixture<SharedAccountsApp>
 {
     private const string RegisterPath = "/api/account/register";
-    private const string ForwardedFor = "X-Forwarded-For";
-    private const int RegistrationsPerHour = 5;
 
-    private AccountsApp? _app;
+    private readonly AccountSeed _account = host.Unique();
 
-    private AccountsApp App =>
-        _app ?? throw new InvalidOperationException("The host is not started yet.");
+    // The account a test registers: named as no other test of the host.
+    private readonly AccountSeed _newcomer = host.Unique();
+    private readonly string _address = host.NextAddress();
+
+    private AccountsApp App { get; } = host.App;
+
+    private string Username => _newcomer.Username;
+
+    private string Email => _newcomer.Email;
 
     [Fact]
     public async Task RegistrationSignsInAndQueuesTheVerificationEmail()
     {
-        using var browser = App.Browser();
+        using var browser = Browser();
 
         using var response = await browser.PostAsync(RegisterPath, new
         {
-            email = " Nouveau@Example.TEST ",
-            username = "Nouveau_7",
+            email = $" {Email.ToUpperInvariant()} ",
+            username = Username,
             password = AccountSeed.StrongPassword,
             acceptTerms = true,
             locale = "fr",
@@ -41,42 +47,40 @@ public sealed class RegistrationTests(PostgresContainerFixture postgres)
 
         var user = (await ApiJson.ReadAsync(response, HttpStatusCode.Created)).GetProperty("user");
         Assert.Equal("/api/account/me", response.Headers.Location?.OriginalString);
-        Assert.Equal("nouveau@example.test", ApiJson.Text(user, "email"));
+        Assert.Equal(Email, ApiJson.Text(user, "email"));
         Assert.False(user.GetProperty("emailVerified").GetBoolean());
-        Assert.Equal("Nouveau_7", await browser.SignedInAsAsync());
-        var mail = Assert.Single(App.Outbox.Messages);
-        Assert.Equal(
-            ("nouveau@example.test", EmailTemplate.ConfirmEmail, UiLocale.Fr),
-            (mail.Recipient, mail.Template, mail.Locale));
+        Assert.Equal(Username, await browser.SignedInAsAsync());
+        var mail = Assert.Single(App.Outbox.To(Email));
+        Assert.Equal((EmailTemplate.ConfirmEmail, UiLocale.Fr), (mail.Template, mail.Locale));
         var link = EmailLink.Of(mail);
         Assert.Equal(new Uri("https://localhost/fr/account/verify-email"), link.Page);
         Assert.Equal(user.GetProperty("id").GetInt32(), link.UserId);
         Assert.Equal("60", mail.Model[EmailModelKeys.ExpiresInMinutes]);
-        Assert.Equal("Nouveau_7", mail.Model[EmailModelKeys.UserName]);
+        Assert.Equal(Username, mail.Model[EmailModelKeys.UserName]);
     }
 
     [Fact]
     public async Task RegistrationIsAuditedOnTheNewAccount()
     {
-        using var browser = App.Browser();
+        using var browser = Browser();
 
-        using var response = await browser.PostAsync(RegisterPath, Registration());
+        using var response = await browser.PostAsync(RegisterPath, Registration(Email, Username));
 
         var id = (await ApiJson.ReadAsync(response, HttpStatusCode.Created))
             .GetProperty("user").GetProperty("id").GetInt32();
-        var entry = Assert.Single(await App.AuditAsync());
+        var entry = Assert.Single(await App.AuditOfAsync(Username));
         Assert.Equal(
             (AuditAction.UserRegister, AuditActorType.User, (int?)id),
             (entry.Action, entry.ActorType, entry.ActorId));
         Assert.Equal(
-            (id.ToString(CultureInfo.InvariantCulture), "Nouveau_7"),
+            (id.ToString(CultureInfo.InvariantCulture), Username),
             (entry.TargetId, entry.Target));
     }
 
     [Fact]
     public async Task EveryBrokenRuleIsReportedAtOnce()
     {
-        using var browser = App.Browser();
+        using var browser = Browser();
 
         using var response = await browser.PostAsync(RegisterPath, new
         {
@@ -91,81 +95,37 @@ public sealed class RegistrationTests(PostgresContainerFixture postgres)
         Assert.Equal(["username-invalid"], errors["username"]);
         Assert.Contains("auth.password.rule_length", errors["password"]);
         Assert.Equal(["terms-required"], errors["acceptTerms"]);
-        Assert.Empty(App.Outbox.Messages);
+        Assert.Empty(App.Outbox.To("nouveau@localhost"));
         Assert.Null(browser.Cookie(BrowserClient.SessionCookie));
     }
 
     [Fact]
     public async Task TakenEmailAndUsernameAreRefusedWhateverTheirCase()
     {
-        await App.SeedAsync(new AccountSeed());
-        using var browser = App.Browser();
+        await App.SeedAsync(_account);
+        using var browser = Browser();
 
         using var response = await browser.PostAsync(RegisterPath, Registration(
-            email: "LEGENDE@example.test",
-            username: "legende_42"));
+            email: _account.Email.ToUpperInvariant(),
+            username: _account.Username.ToLowerInvariant()));
 
         var errors = await ApiJson.FieldErrorsAsync(response);
         Assert.Equal(["email-taken"], errors["email"]);
         Assert.Equal(["username-taken"], errors["username"]);
         Assert.Equal(
             ["1"],
-            await App.QueryAsync("SELECT count(*) FROM users"));
+            await App.QueryAsync(
+                $"SELECT count(*) FROM users WHERE lower(email) = '{_account.Email}'"));
     }
 
-    [Fact]
-    public async Task OneAddressRegistersFiveAccountsAnHour()
+    private static object Registration(string email, string username) => new
     {
-        using var browser = App.Browser();
-        var statuses = new List<HttpStatusCode>();
+        email,
+        username,
+        password = AccountSeed.StrongPassword,
+        acceptTerms = true,
+    };
 
-        for (var attempt = 0; attempt <= RegistrationsPerHour; attempt++)
-        {
-            using var response = await RegisterFromAsync(browser, "203.0.113.7");
-            statuses.Add(response.StatusCode);
-        }
-
-        using var limited = await RegisterFromAsync(browser, "203.0.113.7");
-        using var other = await RegisterFromAsync(browser, "203.0.113.8");
-
-        Assert.Equal(
-            [.. Enumerable.Repeat(HttpStatusCode.BadRequest, RegistrationsPerHour),
-                HttpStatusCode.TooManyRequests],
-            statuses);
-        Assert.True(limited.Headers.RetryAfter?.Delta > TimeSpan.Zero);
-        Assert.Equal(
-            "rate-limited",
-            await ApiJson.ProblemCodeAsync(limited, HttpStatusCode.TooManyRequests));
-        Assert.Equal(HttpStatusCode.BadRequest, other.StatusCode);
-    }
-
-    public async ValueTask InitializeAsync() => _app = await AccountsApp.StartAsync(postgres);
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_app is not null)
-        {
-            await _app.DisposeAsync();
-        }
-    }
-
-    private static object Registration(
-        string email = "nouveau@example.test",
-        string username = "Nouveau_7") => new
-        {
-            email,
-            username,
-            password = AccountSeed.StrongPassword,
-            acceptTerms = true,
-        };
-
-    // Refused by its rules, which does not spare the limit: each attempt counts.
-    private static async Task<HttpResponseMessage> RegisterFromAsync(
-        BrowserClient browser,
-        string address)
-    {
-        using var request = browser.Post(RegisterPath, Registration(email: "not-an-email"));
-        request.Headers.Add(ForwardedFor, address);
-        return await browser.SendAsync(request);
-    }
+    // Registrations are limited by address: this test's own.
+    private BrowserClient Browser() => App.Browser().From(_address);
 }

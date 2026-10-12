@@ -97,8 +97,10 @@ La nouvelle stack prend la place de l'ancienne dans le même projet Compose
 2. Contrôle ce `.env` (lignes marquées ⚙️ dans [`configuration.md`](configuration.md)) :
    `COMPOSE_PROJECT_NAME` = `lodb-<env>`, `IMAGE_TAG` = `<env>`, `LODB_NOINDEX` (`1` sur
    `staging`, `0` en `prod`), mot de passe de la base présent ; en `prod`, relais SMTP et
-   clés Stripe présents (leurs fichiers non vides). Exige les réseaux `edge` et
-   `observability` (jamais créés), et s'arrête si un autre réseau Docker recouvre le
+   clés Stripe présents (leurs fichiers non vides) ; le mot de passe du rôle des sauvegardes
+   hors hôte, s'il est posé, au format d'`infra-vps`. Exige les réseaux `edge` et
+   `observability`, plus `sauvegardes` en `prod` (jamais créés, [`sauvegardes.md`](sauvegardes.md)),
+   et s'arrête si un autre réseau Docker recouvre le
    sous-réseau de la stack, fixé par cible (`LODB_STACK_SUBNET`, `10.231.1.0/24` en staging,
    `10.231.2.0/24` en prod). Contrôles passés seulement, sépare `ENV_*` en place
    (`.deploy/secrets/`, `.env` en mode 600), supprime `.deploy/incoming.env` et le dossier
@@ -110,18 +112,26 @@ La nouvelle stack prend la place de l'ancienne dans le même projet Compose
 3. `docker compose pull` (5 tentatives), sauvegarde de la base en service (`.deploy/backups/`), l'hôte connecté à GHCR avec le `GITHUB_TOKEN` du
    run le temps du seul `pull` (transmis par l'entrée de `ssh`, jamais en ligne de
    commande). Si le réseau de la stack existe sur un autre sous-réseau, `docker compose
-   down` (sans `-v`) le libère une fois (environ une minute de coupure). Puis
+   down` (sans `-v`) le libère une fois (environ une minute de coupure, page de maintenance
+   affichée, voir l'étape 4). Puis
    `docker compose run --rm migrate` : la base du
    volume `pgdata` passe à la dernière migration (une base Doctrine est d'abord marquée à
    `Baseline`). Un échec arrête le job ; les conteneurs en place continuent de servir, sauf
    juste après ce changement de réseau : la stack reste alors arrêtée jusqu'au déploiement
    suivant.
-4. `docker compose up -d --no-build --remove-orphans --wait` : les conteneurs de la nouvelle
+4. Page de maintenance (`tools/deploy/maintenance.sh start`, `.deploy/maintenance/`) : de ce
+   point aux sondes de la nouvelle stack, chaque page du site répond 503 par la page de
+   maintenance, dans la langue et l'identité du visiteur, avec le temps restant estimé sur la
+   durée du déploiement précédent, mesurée et gardée sur l'hôte. Puis
+   `docker compose up -d --no-build --remove-orphans --wait` : les conteneurs de la nouvelle
    stack remplacent ceux de l'ancienne, dont `php`, `go-fetcher`, `go-api` et `mailer` sont
-   retirés comme orphelins. `pgdata` est gardé ; les blobs vont dans le volume `ddragon` ;
-   `storage` et `app_state` restent intacts. Si le `.env` définit `LODB_ADMIN_LOGIN`,
-   `api admin root` tient l'administrateur racine (mot de passe passé par l'entrée de la
-   commande, sortie hors du journal public).
+   retirés comme orphelins. Les sondes passées, la page de maintenance est retirée et la durée
+   du passage gardée pour le déploiement suivant ; un échec avant ce point la laisse en place
+   (`::error` « Maintenance page left on », à retirer à la main une fois la stack rétablie,
+   [`configuration.md`](configuration.md), § 5). `pgdata` est gardé ; les blobs vont dans le
+   volume `ddragon` ; `storage` et `app_state` restent intacts. Si le `.env` définit
+   `LODB_ADMIN_LOGIN`, `api admin root` tient l'administrateur racine (mot de passe passé par
+   l'entrée de la commande, sortie hors du journal public).
 5. Smoke test dans la stack (`/healthz` par nginx, `/readyz` de l'API, `/en/`, sous-domaine
    `api.`, `403` sans l'en-tête de l'edge, `X-Robots-Tag`), annonce la révision servie
    (`::notice` « Deployed revision »), puis contrôle le TLS public (avec relance de l'edge)

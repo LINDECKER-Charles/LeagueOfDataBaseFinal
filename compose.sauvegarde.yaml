@@ -1,0 +1,24 @@
+# Production only: the host's off-host backups reach the database (infra-vps, its
+# docs/APPLICATIONS.md § 7 and sauvegardes/README.md). The deploy job adds this file to
+# COMPOSE_FILE for prod alone, as a list element after compose.umami.yaml, once it has
+# checked that the network exists: infra-vps creates it, internal, even while its backups
+# are dormant. Staging has no off-host backup and never joins it.
+#
+# Postgres joins the shared network `sauvegardes` under an alias prefixed by its stack:
+# staging and prod share the host, and every database of the host sits on that network, under
+# the short name `postgres` too. The backup container signs in there as lodb_sauvegarde, a
+# read-only role that migrate keeps with the password of LoDb__Database__BackupRole__Password
+# (compose.deploy.yaml); unset, the role has none and cannot sign in. Nothing of the stack
+# calls Postgres by this alias: the API and migrate keep lodb-postgres, on `data`.
+services:
+  postgres:
+    networks:
+      sauvegardes:
+        aliases: [lodb-prod-postgres]
+
+networks:
+  # Created once per host by infra-vps, `--internal`: no route leaves it. The deploy job only
+  # asserts that it exists.
+  sauvegardes:
+    external: true
+    name: sauvegardes

@@ -9,7 +9,7 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { provideTransloco, type Translation } from '@jsverse/transloco';
+import type { Translation } from '@jsverse/transloco';
 import { of } from 'rxjs';
 import { AudienceTracker } from '../../../core/analytics/audience-tracker';
 import { API_BASE_URL } from '../../../core/api/api-base-url';
@@ -18,6 +18,7 @@ import { AuthSession } from '../../../core/auth/session/auth-session';
 import type { SessionStatus } from '../../../core/auth/session/session-status';
 import { CANONICAL_ORIGIN } from '../../../core/seo/canonical-origin';
 import { Seo } from '../../../core/seo/seo';
+import { provideTestTransloco } from '../../../core/testing/provide-test-transloco';
 import { SharePage } from './share-page';
 import { sharedBuildOf } from './testing/shared-build-of';
 
@@ -64,17 +65,7 @@ async function visit(build: SharedBuild, status: SessionStatus = 'unknown', fres
           component: SharePage,
         },
       ]),
-      provideTransloco({
-        config: {
-          availableLangs: ['en', 'fr'],
-          defaultLang: 'fr',
-          missingHandler: { logMissingKey: false },
-          prodMode: true,
-        },
-        loader: class {
-          getTranslation = (path: string) => of(CATALOGUES[path] ?? {});
-        },
-      }),
+      provideTestTransloco({ byPath: CATALOGUES, lang: 'fr' }),
     ],
   });
   const apply = vi.spyOn(TestBed.inject(Seo), 'apply');

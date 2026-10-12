@@ -1,6 +1,6 @@
 import { expect, type Page } from '@playwright/test';
-import type { TestAccount } from '../specs/account/accounts';
-import { createAdmin } from '../specs/admin/admin-account';
+import { createAdmin } from './cli-account';
+import type { TestAccount } from './session';
 import { execInStack } from './stack';
 
 interface MemberOptions {

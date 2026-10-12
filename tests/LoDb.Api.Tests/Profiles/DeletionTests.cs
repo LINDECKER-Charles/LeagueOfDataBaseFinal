@@ -38,42 +38,28 @@ public sealed class DeletionTests(ProfilesApp app)
         Assert.Equal(id.ToString(CultureInfo.InvariantCulture), line.TargetId);
     }
 
-    [Theory]
-    [InlineData("fr", " supprimer mon compte ")]
-    [InlineData(null, "DELETE MY ACCOUNT")]
-    public async Task GoogleAccountTypesThePhraseOfItsLocale(string? locale, string phrase)
+    // How a typed phrase matches is DeletionRulesTests': here the page's locale picks the
+    // phrase, English without one, and a Google account's password is no confirmation.
+    [Fact]
+    public async Task GoogleAccountTypesThePhraseOfItsLocale()
     {
         var account = await app.SeedAsync(new AccountSeed { GoogleId = GoogleId() });
         using var browser = await app.SignInAsync(account);
         var profile = await browser.GetJsonAsync(ProfileCalls.Own);
 
-        using var erased = await browser.PostAsync(
-            ProfileCalls.Delete,
-            new { confirmation = phrase, locale });
-
-        Assert.Equal("phrase", ApiJson.Text(profile, "deletionConfirmation"));
-        Assert.Equal(HttpStatusCode.NoContent, erased.StatusCode);
-        Assert.Null(await app.FindAsync(account.Username));
-    }
-
-    [Fact]
-    public async Task GoogleAccountWithThePhraseOfAnotherLocaleStays()
-    {
-        var account = await app.SeedAsync(new AccountSeed { GoogleId = GoogleId() });
-        using var browser = await app.SignInAsync(account);
-
         using var refused = await browser.PostAsync(
             ProfileCalls.Delete,
-            new
-            {
-                confirmation = "DELETE MY ACCOUNT",
-                locale = "fr",
-                password = AccountSeed.StrongPassword,
-            });
-
+            new { confirmation = "SUPPRIMER MON COMPTE", password = AccountSeed.StrongPassword });
         var errors = await ApiJson.FieldErrorsAsync(refused);
-        Assert.Equal(["confirmation-incorrect"], errors["confirmation"]);
         Assert.NotNull(await app.FindAsync(account.Username));
+        using var erased = await browser.PostAsync(
+            ProfileCalls.Delete,
+            new { confirmation = " supprimer mon compte ", locale = "fr" });
+
+        Assert.Equal("phrase", ApiJson.Text(profile, "deletionConfirmation"));
+        Assert.Equal(["confirmation-incorrect"], errors["confirmation"]);
+        Assert.Equal(HttpStatusCode.NoContent, erased.StatusCode);
+        Assert.Null(await app.FindAsync(account.Username));
     }
 
     [Fact]

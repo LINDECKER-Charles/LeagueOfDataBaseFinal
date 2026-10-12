@@ -37,7 +37,8 @@ public sealed class StripeUnconfiguredTests(PostgresContainerFixture postgres)
     public async Task WebhookWithoutSecretAsksStripeToComeBack()
     {
         await using var unconfigured = await BillingApp.StartAsync(postgres, configured: false);
-        var payload = StripePayloads.Event("evt_early", "invoice.paid", new JsonObject
+        var stripe = new StripePayloads(string.Empty);
+        var payload = stripe.Event("evt_early", "invoice.paid", new JsonObject
         {
             ["id"] = "in_test_1",
             ["object"] = "invoice",

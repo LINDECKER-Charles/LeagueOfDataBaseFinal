@@ -11,6 +11,9 @@ namespace LoDb.Api.Tests.Cli;
 /// Program.cs registers and validates them all when it is built, so a registration that
 /// only the web host can satisfy fails every command.
 /// </summary>
+/// <remarks>
+/// <see cref="HostedCommandsTests"/> fails when a command with a host is missing here.
+/// </remarks>
 [Collection(DevelopmentHostGroup.Name)]
 public sealed class DevelopmentCommandHostTests(PostgresContainerFixture postgres)
     : IAsyncLifetime
@@ -87,10 +90,9 @@ public sealed class DevelopmentCommandHostTests(PostgresContainerFixture postgre
         Assert.Equal(CliExitCodes.Success, await RunAsync(command.Split(' ')));
     }
 
-    // An unknown option stops these before any work, once their host is built.
+    // An unknown option stops these before any work, once their host is built. The MFA
+    // commands' hosts are built by AdminMfaCommandsRun.
     [Theory]
-    [InlineData("admin mfa-invite")]
-    [InlineData("admin mfa-reset")]
     [InlineData("admin root")]
     [InlineData("audit import")]
     [InlineData("catalog export")]
@@ -98,25 +100,6 @@ public sealed class DevelopmentCommandHostTests(PostgresContainerFixture postgre
     public async Task CommandWithOptionsBuildsItsHost(string command)
     {
         Assert.Equal(CliExitCodes.Usage, await RunAsync(command.Split(' '), "--unknown"));
-    }
-
-    [Fact]
-    public void EveryCommandWithAHostIsCovered()
-    {
-        var covered = new[]
-        {
-            "admin create", "admin mfa-invite", "admin mfa-reset", "admin root",
-            "analytics import", "audit import",
-            "baseline mark-applied", "catalog export", "client-policy publish", "ingest",
-            "migrate",
-        };
-
-        var hosted = CliCommandCatalog.Discover(typeof(Program).Assembly).Commands
-            .Where(static command => command.RequiresHost)
-            .Select(static command => command.Name)
-            .Order(StringComparer.Ordinal);
-
-        Assert.Equal(covered, hosted);
     }
 
     public async ValueTask InitializeAsync()

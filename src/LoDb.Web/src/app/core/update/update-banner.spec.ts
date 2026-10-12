@@ -1,9 +1,8 @@
 import { type WritableSignal, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideTransloco } from '@jsverse/transloco';
-import { of } from 'rxjs';
 import { PLATFORM } from '../platform/platform';
 import type { UpdateState } from '../platform/update-state';
+import { provideTestTransloco } from '../testing/provide-test-transloco';
 import { ClientUpdate } from './client-update';
 import { UpdateBanner } from './update-banner';
 
@@ -16,12 +15,7 @@ async function open(platform: FakePlatform | null) {
   TestBed.configureTestingModule({
     providers: [
       platform === null ? [] : { provide: PLATFORM, useValue: platform },
-      provideTransloco({
-        config: { defaultLang: 'en', missingHandler: { logMissingKey: false } },
-        loader: class {
-          getTranslation = () => of({});
-        },
-      }),
+      provideTestTransloco(),
     ],
   });
   const fixture = TestBed.createComponent(UpdateBanner);

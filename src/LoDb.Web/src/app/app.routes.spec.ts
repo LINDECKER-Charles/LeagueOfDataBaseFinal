@@ -16,13 +16,13 @@ import {
   withNavigationErrorHandler,
   withRouterConfig,
 } from '@angular/router';
-import { provideTransloco } from '@jsverse/transloco';
 import { of } from 'rxjs';
 import { routes } from './app.routes';
 import { audiencePageOf } from './core/analytics/audience/normalize/audience-page-of';
 import { API_BASE_URL } from './core/api/api-base-url';
-import type { CatalogMeta } from './core/api/generated/models/catalog-meta';
 import { handleNavigationError } from './core/routing/failure/handle-navigation-error';
+import { catalogMetaOf } from './core/testing/catalog-meta-of';
+import { provideTestTransloco } from './core/testing/provide-test-transloco';
 import { AccountPage } from './features/account/account-page';
 import { AdminPage } from './features/admin/admin-page';
 import { ApiPortalPage } from './features/api-portal/api-portal-page';
@@ -47,24 +47,17 @@ import { ProfilePage } from './features/profile/profile-page';
 
 const LATEST = '16.19.1';
 const OLDER = '15.14.1';
-const META: CatalogMeta = {
+const META = catalogMetaOf({
   latest: LATEST,
   versions: [LATEST, OLDER],
-  readyVersions: [LATEST],
-  versionPattern: String.raw`\d+(?:\.\d+)+`,
   languages: ['en_US', 'fr_FR', 'de_DE', 'ar_AE'],
-  languagePattern: '[a-z]{2}_[A-Z]{2}',
-  defaultLanguage: 'en_US',
   locales: [
     { locale: 'en', language: 'en_US' },
     { locale: 'fr', language: 'fr_FR' },
     { locale: 'de', language: 'de_DE' },
     { locale: 'ar', language: 'ar_AE' },
   ],
-  fallbackLocale: 'en',
-  gameModes: [{ mode: 'sr', map: 11 }],
-  defaultGameMode: 'sr',
-};
+});
 const DETAILS = /^\/api\/catalog\/[^/]+\/[^/]+\/(?<path>[^/]+\/[^/]+)$/;
 
 // The simulated API: its meta, and any detail at the path it was asked for.
@@ -100,12 +93,7 @@ async function visit(url: string, acceptLanguage = 'en'): Promise<Visit> {
       ),
       provideLocationMocks(),
       provideHttpClient(withInterceptors([simulatedApi(requested)])),
-      provideTransloco({
-        config: { defaultLang: 'en', missingHandler: { logMissingKey: false }, prodMode: true },
-        loader: class {
-          getTranslation = () => of({});
-        },
-      }),
+      provideTestTransloco(),
       { provide: API_BASE_URL, useValue: '' },
       { provide: PLATFORM_ID, useValue: 'server' },
       { provide: RESPONSE_INIT, useValue: init },
@@ -199,12 +187,11 @@ describe('routes (ADR 0005)', () => {
     },
   );
 
-  it.each(EDITORIAL_PAGES)(
-    'renders $url without asking the API, so it prerenders without one',
-    async ({ url }) => {
-      expect((await visit(url)).requested).toEqual([]);
-    },
-  );
+  // The editorial mount comes before `:version`, whose guard asks the API. The pages share
+  // that mount; what each one renders is editorial-prerender.spec.ts's to check.
+  it('routes an editorial page without asking the API, so it prerenders without one', async () => {
+    expect((await visit('/fr/about/data')).requested).toEqual([]);
+  });
 
   it.each([
     ['/en/champions', '/en/champions'],

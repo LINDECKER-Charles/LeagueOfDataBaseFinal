@@ -9,8 +9,10 @@ namespace LoDb.Api.Tests.Accounts;
 /// <summary>
 /// <c>/api/account/logout-everywhere</c>: the session of the request closes at once, every
 /// other session cookie at its next revalidation, and no refresh token of the account is
-/// traded any more, whether the call comes from the web or from an app.
+/// traded any more, whether the call comes from the web or from an app. That it needs a
+/// session is <see cref="SessionTests"/>'.
 /// </summary>
+/// <remarks>A host per test: each advances its clock or reads a meter.</remarks>
 public sealed class SignOutEverywhereTests(PostgresContainerFixture postgres)
     : IAsyncLifetime
 {
@@ -109,28 +111,6 @@ public sealed class SignOutEverywhereTests(PostgresContainerFixture postgres)
             await FamiliesAsync());
         var counted = Assert.Single(revoked.GetMeasurementSnapshot());
         Assert.Equal("sign_out_everywhere", counted.Tags["reason"]);
-    }
-
-    [Fact]
-    public async Task ItNeedsASessionAndItsXsrfToken()
-    {
-        await App.SeedAsync(new AccountSeed());
-        using var anonymous = App.Browser();
-        using var forged = App.Browser();
-        using var signIn = await forged.SignInAsync(AccountSeed.Name);
-        using var request = forged.Post(Path);
-        request.Headers.Remove(BrowserClient.XsrfHeader);
-
-        using var withoutSession = await anonymous.PostAsync(Path);
-        using var withoutToken = await forged.SendAsync(request);
-
-        Assert.Equal(
-            "authentication-required",
-            await ApiJson.ProblemCodeAsync(withoutSession, HttpStatusCode.Unauthorized));
-        Assert.Equal(
-            "xsrf-invalid",
-            await ApiJson.ProblemCodeAsync(withoutToken, HttpStatusCode.Forbidden));
-        Assert.Equal(AccountSeed.Name, await forged.SignedInAsAsync());
     }
 
     public async ValueTask InitializeAsync() =>

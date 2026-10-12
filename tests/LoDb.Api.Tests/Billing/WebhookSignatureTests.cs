@@ -3,7 +3,6 @@ using System.Text.Json.Nodes;
 using LoDb.Api.Tests.Accounts.Support;
 using LoDb.Api.Tests.Billing.Support;
 using LoDb.Infrastructure.Persistence.Billing;
-using LoDb.Testing;
 using Microsoft.EntityFrameworkCore;
 
 namespace LoDb.Api.Tests.Billing;
@@ -13,15 +12,21 @@ namespace LoDb.Api.Tests.Billing;
 /// less than five minutes ago, is read; a type the site does not handle is recorded as
 /// ignored and acknowledged.
 /// </summary>
-public sealed class WebhookSignatureTests(PostgresContainerFixture postgres)
-    : IAsyncLifetime
+/// <remarks>The tests share a host, each with Stripe identifiers of its own.</remarks>
+public sealed class WebhookSignatureTests : IClassFixture<SharedBillingApp>
 {
     private const string OtherSecret = "whsec_another_placeholder";
 
-    private BillingApp? _app;
+    private readonly StripePayloads _stripe;
 
-    private BillingApp App =>
-        _app ?? throw new InvalidOperationException("The host is not started yet.");
+    public WebhookSignatureTests(SharedBillingApp host)
+    {
+        ArgumentNullException.ThrowIfNull(host);
+        App = host.App;
+        _stripe = host.Payloads();
+    }
+
+    private BillingApp App { get; }
 
     private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
 
@@ -54,7 +59,7 @@ public sealed class WebhookSignatureTests(PostgresContainerFixture postgres)
         Assert.Equal(
             "invalid-signature",
             await ApiJson.ProblemCodeAsync(response, HttpStatusCode.BadRequest));
-        Assert.Empty(await EventsAsync());
+        Assert.Empty(await EventsAsync("evt_forged", "evt_other"));
     }
 
     [Fact]
@@ -75,38 +80,32 @@ public sealed class WebhookSignatureTests(PostgresContainerFixture postgres)
 
         var receipt = await ApiJson.ReadAsync(response, HttpStatusCode.OK);
         Assert.True(receipt.GetProperty("received").GetBoolean());
-        var recorded = Assert.Single(await EventsAsync());
+        var recorded = Assert.Single(await EventsAsync("evt_invoice"));
         Assert.Equal(
-            ("evt_invoice", "invoice.paid", StripeEventStatus.Ignored),
+            (_stripe.Id("evt_invoice"), "invoice.paid", StripeEventStatus.Ignored),
             (recorded.Id, recorded.Type, recorded.Status));
         Assert.Equal(StripePayloads.CreatedAt, recorded.CreatedAt);
         // PostgreSQL keeps microseconds.
         Assert.Equal(App.Clock.GetUtcNow(), recorded.ProcessedAt, TimeSpan.FromMilliseconds(1));
     }
 
-    public async ValueTask InitializeAsync() => _app = await BillingApp.StartAsync(postgres);
+    private static string Sign(string payload, DateTimeOffset at) =>
+        WebhookSigner.Sign(payload, at, BillingApp.WebhookSecret);
 
-    public async ValueTask DisposeAsync()
-    {
-        if (_app is not null)
-        {
-            await _app.DisposeAsync();
-        }
-    }
-
-    private static JsonObject UnhandledEvent(string id) =>
-        StripePayloads.Event(id, "invoice.paid", new JsonObject
+    private JsonObject UnhandledEvent(string id) =>
+        _stripe.Event(id, "invoice.paid", new JsonObject
         {
             ["id"] = "in_test_1",
             ["object"] = "invoice",
         });
 
-    private static string Sign(string payload, DateTimeOffset at) =>
-        WebhookSigner.Sign(payload, at, BillingApp.WebhookSecret);
-
-    private async Task<List<StripeEvent>> EventsAsync()
+    // The events the test names, as delivered.
+    private async Task<List<StripeEvent>> EventsAsync(params string[] ids)
     {
+        var delivered = ids.Select(_stripe.Id).ToList();
         await using var db = App.Database();
-        return await db.StripeEvents.AsNoTracking().ToListAsync(Cancellation);
+        return await db.StripeEvents.AsNoTracking()
+            .Where(stripeEvent => delivered.Contains(stripeEvent.Id))
+            .ToListAsync(Cancellation);
     }
 }

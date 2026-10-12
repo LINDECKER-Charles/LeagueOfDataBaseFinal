@@ -4,26 +4,29 @@ using System.Text.Json;
 using LoDb.Api.Tests.Accounts.Support;
 using LoDb.Api.Tests.Billing.Support;
 using LoDb.Infrastructure.Persistence.Accounts;
-using LoDb.Testing;
 
 namespace LoDb.Api.Tests.Billing;
 
 /// <summary>
 /// The purchases of the API portal: the offers are public; a pack or a plan is bought by a
-/// signed-in account onto its active key, a plan only once, ten checkouts an hour at most.
+/// signed-in account onto its active key, a plan only once. How many an hour is
+/// <see cref="OwnHost.PurchaseCheckoutLimitTests"/>'.
 /// </summary>
-public sealed class PurchaseCheckoutTests(PostgresContainerFixture postgres)
-    : IAsyncLifetime
+/// <remarks>The tests share a host, each with accounts of its own.</remarks>
+public sealed class PurchaseCheckoutTests : IClassFixture<SharedBillingApp>
 {
     private const string OffersPath = "/api/billing/offers";
     private const string PackPath = "/api/billing/checkout/pack";
     private const string PlanPath = "/api/billing/checkout/plan";
-    private const int CheckoutsPerHour = 10;
 
-    private BillingApp? _app;
+    public PurchaseCheckoutTests(SharedBillingApp host)
+    {
+        ArgumentNullException.ThrowIfNull(host);
+        App = host.App;
+        App.ResetDoubles();
+    }
 
-    private BillingApp App =>
-        _app ?? throw new InvalidOperationException("The host is not started yet.");
+    private BillingApp App { get; }
 
     [Fact]
     public async Task OffersArePublic()
@@ -138,47 +141,6 @@ public sealed class PurchaseCheckoutTests(PostgresContainerFixture postgres)
         });
 
         Assert.Equal(["invalid"], (await ApiJson.FieldErrorsAsync(response))[field]);
-    }
-
-    [Fact]
-    public async Task CheckoutsOfOneAccountAreLimitedToTenAnHour()
-    {
-        var buyer = await App.SeedUserAsync("Pressant");
-        await App.SeedKeyAsync(buyer);
-        var other = await App.SeedUserAsync("Patient");
-        await App.SeedKeyAsync(other);
-        using var browser = await SignedInAsync(buyer);
-        using var otherBrowser = await SignedInAsync(other);
-        var offer = new { pack = "small", plan = "annual" };
-        var statuses = new List<HttpStatusCode>();
-
-        // Packs and plans share the limit.
-        for (var attempt = 0; attempt < CheckoutsPerHour; attempt++)
-        {
-            var path = attempt % 2 == 0 ? PackPath : PlanPath;
-            using var opened = await browser.PostAsync(path, offer);
-            statuses.Add(opened.StatusCode);
-        }
-
-        using var refused = await browser.PostAsync(PackPath, new { pack = "small" });
-        using var otherAccount = await otherBrowser.PostAsync(PackPath, new { pack = "small" });
-
-        Assert.All(statuses, static status => Assert.Equal(HttpStatusCode.OK, status));
-        Assert.Equal(
-            "rate-limited",
-            await ApiJson.ProblemCodeAsync(refused, HttpStatusCode.TooManyRequests));
-        Assert.Equal(HttpStatusCode.OK, otherAccount.StatusCode);
-        Assert.Equal(CheckoutsPerHour + 1, App.Gateway.Sessions.Count);
-    }
-
-    public async ValueTask InitializeAsync() => _app = await BillingApp.StartAsync(postgres);
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_app is not null)
-        {
-            await _app.DisposeAsync();
-        }
     }
 
     private static string Text(int number) => number.ToString(CultureInfo.InvariantCulture);

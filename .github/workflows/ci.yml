@@ -102,6 +102,13 @@ jobs:
       - name: Unit tests
         run: npm run test
 
+      # The translation report (tools/i18n), which compiles each message with this app's ICU
+      # compiler: run here, where its packages are installed. The tests of the conversion of
+      # the legacy catalogues are left out: they go with legacy/.
+      - name: Test the translation report
+        working-directory: .
+        run: node --test tools/i18n/test/report/*.test.mjs
+
       - name: Build web (SSR)
         run: npm run build:web
 
@@ -194,6 +201,32 @@ jobs:
       # The website id of the production's declaration to Umami, against the front's copy.
       - name: Test the audience declaration
         run: node --test tools/umami/test/*.test.mjs
+
+      # What Compose makes of the served overlays (the production's hardening, the staging's
+      # share and login), and the deploy job's own check of the staging login (_deploy.yml),
+      # which only a deployment would run otherwise. `compose config` reads, it starts nothing.
+      - name: Test the served overlays
+        run: node --test tools/compose/test/*.test.mjs
+
+      # The constraints ADR 0007 puts on the Android project, read from the committed files,
+      # and the site's links the app handles.
+      - name: Test the Android project
+        run: node --test tools/android/test/*.test.mjs
+
+      # The Android release signs its live updates and its packages with these tools:
+      # release-android.yml runs them only when a release is cut, too late to learn they broke.
+      - name: Test the Android release tools
+        run: node --test tools/live-update/test/*.test.mjs tools/android-release/test/*.test.mjs
+
+      # The load bench's overlay must undo every bound the dev overlay lifts for the E2E suite
+      # (docs/architecture/pieges.md), or the bench measures a stack without them; its plan and
+      # report are checked without running it.
+      - name: Test the load bench
+        run: node --test tools/load/test/*.test.mjs
+
+      # The reading of `git status` that api:check (job contract) decides the drift by.
+      - name: Test the contract check
+        run: node --test tools/api/test/*.test.mjs
 
       - name: Actions pinned to a full commit SHA
         run: node tools/ci/check-pinned-actions.mjs

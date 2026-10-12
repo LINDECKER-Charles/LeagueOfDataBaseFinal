@@ -1,9 +1,8 @@
 import { Component, signal } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideTransloco } from '@jsverse/transloco';
-import { of } from 'rxjs';
 import type { ChampionDetails } from '../../../../../core/api/generated/models/champion-details';
 import type { PageContext } from '../../../../../core/context/page-context';
+import { provideTestTransloco } from '../../../../../core/testing/provide-test-transloco';
 import { ChampionHero } from './champion-hero';
 import { ratingGaugesOf } from './rating-gauges-of';
 
@@ -84,19 +83,7 @@ class Host {
 describe('lodb-champion-hero', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [
-        provideTransloco({
-          config: {
-            availableLangs: ['en'],
-            defaultLang: 'en',
-            missingHandler: { logMissingKey: false },
-            prodMode: true,
-          },
-          loader: class {
-            getTranslation = () => of(EN);
-          },
-        }),
-      ],
+      providers: [provideTestTransloco({ otherwise: EN })],
     });
   });
 

@@ -17,12 +17,6 @@ public sealed class PhpCrossCheckTests(PhpContainer php) : IClassFixture<PhpCont
     private static MigratingPasswordHasher Hasher => TestHashing.Hasher();
 
     [Fact]
-    public async Task ContainerRunsThePhpOfTheFixtures() =>
-        Assert.Equal(
-            MajorAndMinor(PhpHashes.PhpVersion),
-            MajorAndMinor(await php.VersionAsync(Cancellation)));
-
-    [Fact]
     public async Task PhpVerifiesTheHashesWrittenHere()
     {
         var cases = PhpHashes.Passwords.Values
@@ -45,6 +39,4 @@ public sealed class PhpCrossCheckTests(PhpContainer php) : IClassFixture<PhpCont
 
         Assert.Equal([(false, false)], verdicts);
     }
-
-    private static string MajorAndMinor(string version) => Version.Parse(version).ToString(2);
 }

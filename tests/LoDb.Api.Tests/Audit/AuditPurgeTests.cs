@@ -12,6 +12,10 @@ namespace LoDb.Api.Tests.Audit;
 /// <c>POST /api/admin/audit/purge</c>: an operator deletes the days before a date, what the
 /// retention would delete, or everything, and the purge itself is recorded after it.
 /// </summary>
+/// <remarks>
+/// A purge without the session's XSRF token is refused by the guard the admin policy carries
+/// like every other, ForgeryTests'.
+/// </remarks>
 public sealed class AuditPurgeTests(PostgresContainerFixture postgres)
     : IAsyncLifetime
 {
@@ -118,21 +122,6 @@ public sealed class AuditPurgeTests(PostgresContainerFixture postgres)
         Assert.Equal(["invalid-scope"], (await ApiJson.FieldErrorsAsync(unknown))["scope"]);
         Assert.Equal(["required"], (await ApiJson.FieldErrorsAsync(noDay))["before"]);
         Assert.Equal(recorded, (await JournalRows.AllAsync(App.Services)).Count);
-    }
-
-    [Fact]
-    public async Task PurgeWithoutTheXsrfTokenIsRefused()
-    {
-        using var admin = await AdminBrowser.OpenAsync(App);
-        using var request = admin.Post(PurgePath, new { scope = "all" });
-        request.Headers.Remove(BrowserClient.XsrfHeader);
-
-        using var response = await admin.SendAsync(request);
-
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-        Assert.DoesNotContain(
-            await JournalRows.AllAsync(App.Services),
-            static entry => entry.Action == AuditAction.AdminLogsPurge);
     }
 
     public async ValueTask InitializeAsync() => _app = await AccountsApp.StartAsync(postgres);

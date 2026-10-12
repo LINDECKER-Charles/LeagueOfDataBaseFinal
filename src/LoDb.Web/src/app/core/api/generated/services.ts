@@ -24,4 +24,5 @@ export { AdminApiClientsService } from './services/admin-api-clients.service';
 export { AdminDonationsService } from './services/admin-donations.service';
 export { AdminMonitoringService } from './services/admin-monitoring.service';
 export { AdminStorageService } from './services/admin-storage.service';
+export { AdminBackupsService } from './services/admin-backups.service';
 export { AdminClientPolicyService } from './services/admin-client-policy.service';

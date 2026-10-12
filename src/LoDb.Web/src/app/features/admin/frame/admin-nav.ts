@@ -35,6 +35,7 @@ export const ADMIN_NAV: readonly NavSection[] = [
       { key: 'contacts', path: '/admin/contacts', current: /^\/admin\/contacts\/?$/ },
       { key: 'api_clients', path: '/admin/api-clients', current: /^\/admin\/api-clients\/?$/ },
       { key: 'monitoring', path: '/admin/monitoring', current: /^\/admin\/monitoring\/?$/ },
+      { key: 'backups', path: '/admin/backups', current: /^\/admin\/backups\/?$/ },
       // The activity of an account is a view of the journal, as the legacy bar had it.
       {
         key: 'journal',

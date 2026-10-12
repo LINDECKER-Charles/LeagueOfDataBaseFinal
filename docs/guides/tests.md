@@ -32,11 +32,15 @@ sans signal : il ralentit la CI et casse deux fois pour la même raison.
 - un *smoke* par fonctionnalité.
 
 Une variation (chaque langue, chaque entité, chaque message d'erreur) appartient à Vitest ou à
-l'API. Une nouvelle spec E2E dit en commentaire pourquoi aucune couche plus basse ne suffit.
+l'API. Chaque spec E2E dit en tête, en commentaire, pourquoi aucune couche plus basse ne suffit.
 Les vérifications de requête (en-têtes, caches, anciennes URL, grammaire d'URL de l'ADR 0005)
 vivent dans `tools/nginx/test` et `tools/routing/check-urls.sh`, que le job `e2e` de la CI lance
 avant Playwright. Le sous-ensemble `@readonly` sert aussi de *smoke* du staging et de la prod
 (`tools/cutover/readonly-e2e.sh`) : un test fusionné garde ce tag.
+
+Les suites `node --test` des outils tournent toutes en CI (job `workflows`, job `front` pour
+le rapport de traduction, job `e2e` pour nginx), sauf celles des outils de la bascule, qui
+partent avec `legacy/`. Une suite d'outil qu'aucun workflow ne lance peut casser sans bruit.
 
 ### Paramétrage
 
@@ -61,19 +65,25 @@ Dix lignes qui passent par la même branche ne prouvent rien de plus qu'une.
 - **Base injoignable** : `ApiFactory.UnreachablePostgres` vise un socket Unix inexistant, qui
   échoue tout de suite (une connexion TCP refusée met deux secondes sous Windows).
 - Un hôte par test seulement quand son état compte (limites de débit en mémoire, horloge
-  simulée) ; sinon un hôte par classe ou par collection, chaque test créant ses propres
-  données.
+  simulée, compteurs lus) ; sinon un hôte par classe ou par collection, chaque test créant ses
+  propres données (noms uniques, assertions sur ses seules lignes). Les modules dont l'hôte
+  porte des doublures le partagent par `SharedApp<TApp>` (`Accounts/Support`) ; leurs cas à
+  hôte propre vivent dans `<Module>/OwnHost/`.
+- **`LoDb.Parity`** est un outil de la bascule, hors de `LoDb.slnx` : ni `dotnet test
+  LoDb.slnx` ni la CI ne le lancent ([`pieges.md`](../architecture/pieges.md)).
 
 ## Budgets
 
-Mesurés le 2026-10-11 sur le poste de référence (24 threads, SSD) et sur la CI. Un écart net
-est une régression à expliquer, comme un test rouge.
+Local : mesuré le 2026-10-12 sur le poste de référence (24 threads, SSD), alors chargé par un
+autre travail ; la suite .NET précédente y prenait 3 min 38 et 5,1 Go dans les mêmes
+conditions. CI : mesuré le 2026-10-11. Un écart net est une régression à expliquer, comme un
+test rouge.
 
 | Suite | Local | CI |
 |---|---|---|
-| .NET (`dotnet test LoDb.slnx`, 5 projets, 3169 cas) | 2 min 55, pic 2,2 Go | job `dotnet` 5 min 50, build compris |
-| Vitest (2758 tests) | ~10 s d'exécution, pic 1,9 Go | job `front` 2 min |
-| E2E (65 tests, 2 workers) | 1 min 25 d'exécution, 3 min avec la reconstruction de la stack | job `e2e`, `check-urls` et image nginx compris |
+| .NET (`dotnet test LoDb.slnx`, 5 projets, 2911 cas) | 2 min 15 à 3 min, pic 3,8 Go (somme des processus) | job `dotnet` 5 min 50, build compris |
+| Vitest (2624 tests) | ~5 s d'exécution, pic 1,9 Go | job `front` 2 min |
+| E2E (59 tests, 2 workers) | 45 s d'exécution, plus la reconstruction de la stack | job `e2e`, `check-urls` et image nginx compris |
 
 Plafonds de parallélisme, valables partout : 4 classes xUnit à la fois
 (`tests/LoDb.Api.Tests/xunit.runner.json`), 4 workers Vitest (`vitest-base.config.mts`),

@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { provideTransloco, type Translation } from '@jsverse/transloco';
-import { of } from 'rxjs';
+import type { Translation } from '@jsverse/transloco';
 import { AudienceOptOut } from '../../../core/analytics/audience/send/audience-opt-out';
 import { activateLocale } from '../../../core/i18n/activate-locale';
 import { LOCALES } from '../../../core/i18n/locales';
 import { CANONICAL_ORIGIN } from '../../../core/seo/canonical-origin';
 import { Seo } from '../../../core/seo/seo';
+import { provideTestTransloco } from '../../../core/testing/provide-test-transloco';
 import { EDITORIAL_ROUTES } from '../editorial.routes';
 import { LEGAL_CONTENTS } from './legal-contents';
 import { legalLanguageOf } from './legal-language-of';
@@ -28,17 +28,7 @@ async function visit(url: string) {
       provideRouter([
         { path: ':locale', resolve: { locale: activateLocale }, children: EDITORIAL_ROUTES },
       ]),
-      provideTransloco({
-        config: {
-          availableLangs: [...LOCALES],
-          defaultLang: 'en',
-          missingHandler: { logMissingKey: false },
-          prodMode: true,
-        },
-        loader: class {
-          getTranslation = (path: string) => of(CATALOGUES[path] ?? {});
-        },
-      }),
+      provideTestTransloco({ byPath: CATALOGUES }),
     ],
   });
   const apply = vi.spyOn(TestBed.inject(Seo), 'apply');

@@ -9,7 +9,7 @@ import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { TRANSLOCO_TRANSPILER, provideTransloco, type Translation } from '@jsverse/transloco';
+import { TRANSLOCO_TRANSPILER, type Translation } from '@jsverse/transloco';
 import { of } from 'rxjs';
 import { API_BASE_URL } from '../../../core/api/api-base-url';
 import type { TrendsPage as TrendsPageModel } from '../../../core/api/generated/models/trends-page';
@@ -18,6 +18,7 @@ import type { SessionStatus } from '../../../core/auth/session/session-status';
 import { PrecompiledTranspiler } from '../../../core/i18n/messages/precompiled-transpiler';
 import { CANONICAL_ORIGIN } from '../../../core/seo/canonical-origin';
 import { Seo } from '../../../core/seo/seo';
+import { provideTestTransloco } from '../../../core/testing/provide-test-transloco';
 import type { TrendsView } from './loading/trends-view';
 import { trendsPageOf } from './testing/trends-page-of';
 import { TrendsPage } from './trends-page';
@@ -87,17 +88,7 @@ async function visit(page: TrendsPageModel, status: SessionStatus = 'unknown', u
           component: TrendsPage,
         },
       ]),
-      provideTransloco({
-        config: {
-          availableLangs: ['en', 'fr'],
-          defaultLang: 'fr',
-          missingHandler: { logMissingKey: false },
-          prodMode: true,
-        },
-        loader: class {
-          getTranslation = (path: string) => of(CATALOGUES[path] ?? {});
-        },
-      }),
+      provideTestTransloco({ byPath: CATALOGUES, lang: 'fr' }),
       { provide: TRANSLOCO_TRANSPILER, useClass: PrecompiledTranspiler },
     ],
   });

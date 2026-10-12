@@ -3,13 +3,12 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { Component, signal } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { provideTransloco } from '@jsverse/transloco';
-import { of } from 'rxjs';
 import type { VoteState } from '../../../../core/api/generated/models/vote-state';
 import { API_BASE_URL } from '../../../../core/api/api-base-url';
 import { AuthSession } from '../../../../core/auth/session/auth-session';
 import type { SessionStatus } from '../../../../core/auth/session/session-status';
 import { ToastService } from '../../../../core/layout/toast/toast-service';
+import { provideTestTransloco } from '../../../../core/testing/provide-test-transloco';
 import { VoteScore } from './vote-score';
 
 const VOTE_URL = '/api/builds/7/vote';
@@ -43,12 +42,7 @@ function mount(vote: VoteState, status: SessionStatus = 'authenticated') {
       provideHttpClientTesting(),
       { provide: API_BASE_URL, useValue: '' },
       { provide: AuthSession, useValue: { status: signal(status) } },
-      provideTransloco({
-        config: { availableLangs: ['en'], defaultLang: 'en', prodMode: true },
-        loader: class {
-          getTranslation = () => of(LABELS);
-        },
-      }),
+      provideTestTransloco({ otherwise: LABELS }),
     ],
   });
   const fixture = TestBed.createComponent(Host);

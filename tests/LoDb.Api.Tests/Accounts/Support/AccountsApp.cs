@@ -27,8 +27,10 @@ namespace LoDb.Api.Tests.Accounts.Support;
 /// <see cref="FakeGoogle"/>, and the clock only moves when a test advances it.
 /// </summary>
 /// <remarks>
-/// One per test: the rate limits live in the host, the lockouts and throttles in the
-/// database. Identity's lockout and e-mail tokens read the real clock, not this one.
+/// One per test when its state is what the test reads: a rate limit reached, the clock
+/// advanced, a meter. Otherwise the tests of a class share one
+/// (<see cref="SharedAccountsApp"/>). Identity's lockout and e-mail tokens read the real
+/// clock, not this one.
 /// </remarks>
 public sealed class AccountsApp : IAsyncDisposable
 {
@@ -45,21 +47,30 @@ public sealed class AccountsApp : IAsyncDisposable
     private const string Accounts = "LoDb:Accounts:";
     private const string Google = Accounts + "Google:";
     private const string Mail = "LoDb:Mail:";
+    private const string SignInLimit = "LoDb:RateLimiting:SignInPerWindow";
+    private const string IdentifierDigestKey = "identifier_digest";
+
+    // The sign-ins of a whole class come from one address: the limit has tests of its own,
+    // at its production value, on hosts of their own.
+    private const string SharedSignInLimit = "1000";
 
     private readonly TestDatabase _database;
     private readonly ApiFactory _factory;
     private readonly WebApplicationFactory<Program> _host;
     private readonly bool _realOutbox;
 
-    private AccountsApp(TestDatabase database, bool withGoogle, SmtpSink? relay)
+    private AccountsApp(
+        TestDatabase database,
+        Dictionary<string, string?> settings,
+        bool realOutbox)
     {
         _database = database;
-        _realOutbox = relay is not null;
+        _realOutbox = realOutbox;
         _factory = new ApiFactory
         {
             PostgresConnectionString = database.AppConnectionString,
             Clock = Clock,
-            Settings = Settings(withGoogle, relay),
+            Settings = settings,
         };
         _host = _factory.WithWebHostBuilder(
             builder => builder.ConfigureTestServices(AddDoubles));
@@ -94,7 +105,20 @@ public sealed class AccountsApp : IAsyncDisposable
         SmtpSink? relay = null)
     {
         var database = await postgres.CreateMigratedDatabaseAsync(Cancellation);
-        return new AccountsApp(database, withGoogle, relay);
+        return new AccountsApp(database, Settings(withGoogle, relay), relay is not null);
+    }
+
+    /// <summary>
+    /// The host the tests of a class share, Google configured, the limit of the sign-ins of
+    /// one address lifted.
+    /// </summary>
+    public static async Task<AccountsApp> StartSharedAsync(PostgresContainerFixture postgres)
+    {
+        ArgumentNullException.ThrowIfNull(postgres);
+        var database = await postgres.CreateMigratedDatabaseAsync(Cancellation);
+        var settings = Settings(withGoogle: true, relay: null);
+        settings[SignInLimit] = SharedSignInLimit;
+        return new AccountsApp(database, settings, realOutbox: false);
     }
 
     /// <summary>A browser on the site: it keeps its cookies and follows no redirect.</summary>
@@ -189,6 +213,20 @@ public sealed class AccountsApp : IAsyncDisposable
         return await context.AuditLog.AsNoTracking()
             .OrderBy(static entry => entry.Id)
             .ToListAsync(Cancellation);
+    }
+
+    /// <summary>
+    /// The journal entries about <paramref name="identities"/>, oldest first: those whose
+    /// actor or target one of them names, and the failed sign-ins typed with one of them.
+    /// </summary>
+    public async Task<IReadOnlyList<AuditLogEntry>> AuditOfAsync(params string[] identities)
+    {
+        var named = identities.ToHashSet(StringComparer.Ordinal);
+        var digests = identities.Select(IdentifierDigest).ToHashSet(StringComparer.Ordinal);
+        return [.. (await AuditAsync()).Where(entry =>
+            named.Contains(entry.Actor ?? string.Empty)
+            || named.Contains(entry.Target ?? string.Empty)
+            || digests.Contains(Meta(entry, IdentifierDigestKey) ?? string.Empty))];
     }
 
     /// <summary>A field of the <c>meta</c> of a journal entry, or null.</summary>

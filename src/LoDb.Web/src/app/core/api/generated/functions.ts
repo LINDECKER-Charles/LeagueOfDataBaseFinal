@@ -175,5 +175,7 @@ export type { ReadAdminMonitoring$Params as ReadAdminMonitoring$Params } from '.
 export { readAdminMonitoring as readAdminMonitoring } from './fn/admin-monitoring/read-admin-monitoring';
 export type { ReadAdminStorage$Params as ReadAdminStorage$Params } from './fn/admin-storage/read-admin-storage';
 export { readAdminStorage as readAdminStorage } from './fn/admin-storage/read-admin-storage';
+export type { ReadAdminBackups$Params as ReadAdminBackups$Params } from './fn/admin-backups/read-admin-backups';
+export { readAdminBackups as readAdminBackups } from './fn/admin-backups/read-admin-backups';
 export type { PublishClientPolicy$Params as PublishClientPolicy$Params } from './fn/admin-client-policy/publish-client-policy';
 export { publishClientPolicy as publishClientPolicy } from './fn/admin-client-policy/publish-client-policy';

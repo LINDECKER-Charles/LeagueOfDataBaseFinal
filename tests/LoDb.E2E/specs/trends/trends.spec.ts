@@ -3,6 +3,10 @@ import { nodesOfType, readHead } from '../../support/head';
 import { expect, test } from '../../support/worker-account';
 import { createBuild } from '../builds-share/builds';
 
+// A build saved through the real API, then ranked on the page the server renders from the
+// trends' filters: the API's ranking and the server's page only meet on the stack. The filters
+// and the rows are Vitest's, the ranking's rules the API's.
+
 // A public build of the worker's account, created through the API, found through the filters.
 test('ranks a public build under its filters', async ({
   page,

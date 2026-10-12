@@ -1,8 +1,6 @@
 using System.Net;
 using LoDb.Api.Tests.Accounts.Support;
 using LoDb.Api.Tests.Admin.Support;
-using LoDb.Api.Tests.Audit.Support;
-using LoDb.Testing;
 
 namespace LoDb.Api.Tests.Admin;
 
@@ -10,8 +8,9 @@ namespace LoDb.Api.Tests.Admin;
 /// Who opens the admin API: an administrator whose session holds the second factor, and no
 /// one else; one without a second factor only reaches the enrollment.
 /// </summary>
-public sealed class AdminAccessTests(PostgresContainerFixture postgres)
-    : AdminTestBase(postgres)
+/// <remarks>The tests share a host, each with an administrator and a member of its own.</remarks>
+public sealed class AdminAccessTests(SharedAccountsApp host)
+    : AdminTestBase(host), IClassFixture<SharedAccountsApp>
 {
     private static readonly string[] Panels =
     [
@@ -22,7 +21,11 @@ public sealed class AdminAccessTests(PostgresContainerFixture postgres)
         "/api/admin/donations",
         "/api/admin/monitoring",
         "/api/admin/storage",
+        "/api/admin/backups",
     ];
+
+    private readonly AccountSeed _admin = host.Unique();
+    private readonly AccountSeed _member = host.Unique();
 
     [Fact]
     public async Task AnonymousVisitorsMustSignIn()
@@ -41,7 +44,8 @@ public sealed class AdminAccessTests(PostgresContainerFixture postgres)
     [Fact]
     public async Task MembersAreForbidden()
     {
-        using var member = await AdminBrowser.OpenMemberAsync(App);
+        await App.SeedAsync(_member);
+        using var member = await AdminCalls.SignedInAsync(App, _member.Username);
 
         foreach (var panel in Panels)
         {
@@ -60,7 +64,7 @@ public sealed class AdminAccessTests(PostgresContainerFixture postgres)
     [Fact]
     public async Task AdministratorsWithoutSecondFactorMustEnrolFirst()
     {
-        using var admin = await AdminCalls.OpenUnenrolledAsync(App);
+        using var admin = await AdminCalls.OpenUnenrolledAsync(App, _admin);
 
         foreach (var panel in Panels)
         {
@@ -74,7 +78,7 @@ public sealed class AdminAccessTests(PostgresContainerFixture postgres)
     [Fact]
     public async Task PanelsOpenToAnAdministratorWithSecondFactorAndAreNeverCached()
     {
-        using var admin = await AdminBrowser.OpenAsync(App);
+        using var admin = await AdminCalls.OpenEnrolledAsync(App, _admin);
 
         foreach (var panel in Panels)
         {
@@ -87,14 +91,14 @@ public sealed class AdminAccessTests(PostgresContainerFixture postgres)
     [Fact]
     public async Task ActionsNeedTheAntiForgeryToken()
     {
-        using var admin = await AdminBrowser.OpenAsync(App);
-        var member = await App.SeedAsync(new AccountSeed());
+        using var admin = await AdminCalls.OpenEnrolledAsync(App, _admin);
+        var member = await App.SeedAsync(_member);
         using var forged = admin.Post($"/api/admin/users/{member.Id}/ban");
         forged.Headers.Remove(BrowserClient.XsrfHeader);
 
         using var response = await admin.SendAsync(forged);
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-        Assert.False((await App.FindAsync(AccountSeed.Name)).IsBanned);
+        Assert.False((await App.FindAsync(_member.Username)).IsBanned);
     }
 }

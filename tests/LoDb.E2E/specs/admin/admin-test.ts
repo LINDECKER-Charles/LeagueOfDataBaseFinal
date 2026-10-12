@@ -1,6 +1,8 @@
 import type { APIRequest, BrowserContext, Page } from '@playwright/test';
+import { createAdmin } from '../../support/cli-account';
+import { eraseAccount } from '../../support/session';
 import { expect, test as base } from '../../support/test';
-import { type AdminAccount, createAdmin, enrollAdmin } from './admin-account';
+import { type AdminAccount, enrollAdmin } from './admin-account';
 
 export { expect } from '../../support/test';
 
@@ -23,7 +25,6 @@ interface AdminWorkerFixtures {
 
 // The CLI, then a sign-in and an enrolment, may wait for the next step of the authenticator.
 const SESSION_TIMEOUT_MS = 180_000;
-const DELETED = 204;
 
 /**
  * The state of a context without any session. Within a test or a hook, every new browser or
@@ -46,7 +47,7 @@ export const test = base.extend<AdminFixtures, AdminWorkerFixtures>({
   adminSession: [
     async ({ browser, playwright }, use, workerInfo) => {
       const baseURL = workerInfo.project.use.baseURL;
-      const account = createAdmin('adm');
+      const account: AdminAccount = createAdmin('adm');
       const context = await browser.newContext({ baseURL, storageState: NO_SESSION });
       await enrollAdmin(await context.newPage(), account);
       const state = await context.storageState();
@@ -60,8 +61,8 @@ export const test = base.extend<AdminFixtures, AdminWorkerFixtures>({
   admin: async ({ adminSession }, use) => use(adminSession.account),
 });
 
-// Deletes the administrator with its own session, as its profile would: its password
-// confirms the erasure.
+// Deletes the administrator with its own session: a sign-in by password alone would stop at
+// the second factor.
 async function discardAdmin(
   api: APIRequest,
   baseURL: string | undefined,
@@ -74,12 +75,7 @@ async function discardAdmin(
     extraHTTPHeaders: { Origin: origin },
   });
   try {
-    const xsrf = session.state.cookies.find((cookie) => cookie.name === 'XSRF-TOKEN')?.value;
-    const deleted = await context.post('/api/profile/delete', {
-      data: { password: session.account.password },
-      headers: { 'X-XSRF-TOKEN': xsrf ?? '' },
-    });
-    expect(deleted.status(), `the clean-up deletes ${session.account.username}`).toBe(DELETED);
+    await eraseAccount(context, session.account);
   } finally {
     await context.dispose();
   }

@@ -155,22 +155,8 @@ describe('HomePage', () => {
     expect(document.title).toBe('League Of Data Base — encyclopédie');
   });
 
-  it('is indexable, canonical at the root of its locale, with 21 alternates and x-default', async () => {
-    document.documentElement.lang = 'fr';
-
-    await visit('/fr');
-    const hreflangs = headElements('link[rel="alternate"]').map((link) =>
-      link.getAttribute('hreflang'),
-    );
-
-    expect(headElements('link[rel="canonical"]')).toHaveLength(1);
-    expect(hrefOf('link[rel="canonical"]')).toBe(`${ORIGIN}/fr/`);
-    expect(headElements('meta[name="robots"]')[0]?.getAttribute('content')).toBe('index, follow');
-    expect(new Set(hreflangs).size).toBe(22);
-    expect(hreflangs.at(-1)).toBe('x-default');
-    expect(hrefOf('link[rel="alternate"][hreflang="x-default"]')).toBe(`${ORIGIN}/`);
-  });
-
+  // What a head written for `path: ''` holds (canonical, robots, alternates) is Seo's and
+  // alternatesOf's to test; the page only has to ask for it, as above.
   it('keeps its canonical free of the query that picks its context', async () => {
     document.documentElement.lang = 'en';
 

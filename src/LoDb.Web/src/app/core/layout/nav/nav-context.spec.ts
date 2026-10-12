@@ -14,24 +14,13 @@ import type { CatalogMeta } from '../../api/generated/models/catalog-meta';
 import { ApiMeta } from '../../api/meta/api-meta';
 import type { NavSelection } from '../../context/nav/nav-selection';
 import { PreferencesStore } from '../../context/preferences/preferences-store';
+import { catalogMetaOf } from '../../testing/catalog-meta-of';
 import { NavContext } from './nav-context';
 
 @Component({ template: '', changeDetection: ChangeDetectionStrategy.OnPush })
 class Page {}
 
-const META: CatalogMeta = {
-  latest: '16.19.1',
-  versions: ['16.19.1', '14.1.1'],
-  readyVersions: ['16.19.1'],
-  versionPattern: String.raw`\d+(?:\.\d+)+`,
-  languages: ['en_US', 'en_GB'],
-  languagePattern: '[a-z]{2}_[A-Z]{2}',
-  defaultLanguage: 'en_US',
-  locales: [{ locale: 'en', language: 'en_US' }],
-  fallbackLocale: 'en',
-  gameModes: [{ mode: 'sr', map: 11 }],
-  defaultGameMode: 'sr',
-};
+const META = catalogMetaOf({ versions: ['16.19.1', '14.1.1'], languages: ['en_US', 'en_GB'] });
 const PINNED: NavSelection = { shown: '14.1.1', version: '14.1.1', lang: null };
 const RENDERED = makeStateKey<NavSelection | null>('lodb.nav.selection');
 

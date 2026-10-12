@@ -6,7 +6,6 @@ using LoDb.Api.Tests.Billing.Support;
 using LoDb.Infrastructure.Audit;
 using LoDb.Infrastructure.Persistence.Billing;
 using LoDb.Infrastructure.Persistence.PublicApi;
-using LoDb.Testing;
 using Microsoft.EntityFrameworkCore;
 
 namespace LoDb.Api.Tests.Billing;
@@ -17,13 +16,25 @@ namespace LoDb.Api.Tests.Billing;
 /// signed-in donor a supporter; a session without kind is a donation, as the legacy stack
 /// read it, and a kind the site does not sell is acknowledged and left alone.
 /// </summary>
-public sealed class CheckoutCompletedTests(PostgresContainerFixture postgres)
-    : IAsyncLifetime
+/// <remarks>
+/// The tests share a host, each with accounts and Stripe identifiers of its own.
+/// </remarks>
+public sealed class CheckoutCompletedTests : IClassFixture<SharedBillingApp>
 {
-    private BillingApp? _app;
+    // An account no test seeds: the database of the class never numbers one this far.
+    private const int UnknownUser = 424_242;
 
-    private BillingApp App =>
-        _app ?? throw new InvalidOperationException("The host is not started yet.");
+    private readonly StripePayloads _stripe;
+
+    public CheckoutCompletedTests(SharedBillingApp host)
+    {
+        ArgumentNullException.ThrowIfNull(host);
+        App = host.App;
+        App.ResetDoubles();
+        _stripe = host.Payloads();
+    }
+
+    private BillingApp App { get; }
 
     private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
 
@@ -33,7 +44,7 @@ public sealed class CheckoutCompletedTests(PostgresContainerFixture postgres)
         var buyer = await App.SeedUserAsync("Acheteur");
         var key = await App.SeedKeyAsync(buyer, static key => key.CreditsBalance = 100);
 
-        await DeliverAsync(StripePayloads.Pack("cs_test_pack", buyer.Id, 10_000));
+        await DeliverAsync(_stripe.Pack("cs_test_pack", buyer.Id, 10_000));
 
         var credited = await App.KeyAsync(key.Id);
         Assert.Equal(
@@ -41,7 +52,7 @@ public sealed class CheckoutCompletedTests(PostgresContainerFixture postgres)
             (credited.CreditsBalance, credited.RateLimitPerMin, credited.Plan));
         var grant = Assert.Single(await App.GrantsOfAsync(key.Id));
         Assert.Equal(
-            (ApiCreditGrantSource.Purchase, 10_000L, "cs_test_pack"),
+            (ApiCreditGrantSource.Purchase, 10_000L, _stripe.Id("cs_test_pack")),
             (grant.Source, grant.Requests, grant.StripeSessionId));
         Assert.Equal(StripePayloads.CreatedAt, grant.PurchasedAt);
         Assert.Equal(StripePayloads.CreatedAt.AddMonths(12), grant.ExpiresAt);
@@ -55,7 +66,7 @@ public sealed class CheckoutCompletedTests(PostgresContainerFixture postgres)
         var buyer = await App.SeedUserAsync("Abonne");
         var key = await App.SeedKeyAsync(buyer, static key => key.RateLimitPerMin = 300);
 
-        await DeliverAsync(StripePayloads.Pack("cs_test_pack", buyer.Id, 5_000));
+        await DeliverAsync(_stripe.Pack("cs_test_pack", buyer.Id, 5_000));
 
         Assert.Equal(300, (await App.KeyAsync(key.Id)).RateLimitPerMin);
     }
@@ -66,7 +77,7 @@ public sealed class CheckoutCompletedTests(PostgresContainerFixture postgres)
         var buyer = await App.SeedUserAsync("SansCle");
         await App.SeedKeyAsync(buyer, static key => key.IsActive = false);
 
-        await DeliverAsync(StripePayloads.Pack("cs_test_pack", buyer.Id, 20_000));
+        await DeliverAsync(_stripe.Pack("cs_test_pack", buyer.Id, 20_000));
 
         var issued = (await App.KeysOfAsync(buyer.Id))[^1];
         Assert.True(issued.IsActive);
@@ -75,7 +86,7 @@ public sealed class CheckoutCompletedTests(PostgresContainerFixture postgres)
         Assert.StartsWith("lodb_", issued.KeyPrefix, StringComparison.Ordinal);
         Assert.Equal(12, issued.KeyPrefix.Length);
         Assert.Matches("^[0-9a-f]{64}$", issued.KeyHash);
-        var entry = Assert.Single(await App.AuditAsync());
+        var entry = Assert.Single(await App.AuditOfAsync(buyer.Id));
         Assert.Equal(
             (AuditAction.ApiKeyCreate, AuditActorType.User, (int?)buyer.Id),
             (entry.Action, entry.ActorType, entry.ActorId));
@@ -86,11 +97,14 @@ public sealed class CheckoutCompletedTests(PostgresContainerFixture postgres)
     [Fact]
     public async Task PackOfAnUnknownBuyerIsAcknowledgedAndCreditsNobody()
     {
-        await DeliverAsync(StripePayloads.Pack("cs_test_pack", 424_242, 5_000));
+        await DeliverAsync(_stripe.Pack("cs_test_pack", UnknownUser, 5_000));
 
+        var delivered = _stripe.Id("evt_completed");
         await using var db = App.Database();
-        Assert.Empty(await db.ApiKeys.ToListAsync(Cancellation));
+        Assert.Empty(await db.ApiKeys.Where(key => key.UserId == UnknownUser)
+            .ToListAsync(Cancellation));
         Assert.Equal(StripeEventStatus.Processed, (await db.StripeEvents.SingleAsync(
+            stripeEvent => stripeEvent.Id == delivered,
             Cancellation)).Status);
     }
 
@@ -102,11 +116,11 @@ public sealed class CheckoutCompletedTests(PostgresContainerFixture postgres)
         var buyer = await App.SeedUserAsync("Abonne");
         var key = await App.SeedKeyAsync(buyer);
 
-        await DeliverAsync(StripePayloads.Plan("cs_test_plan", buyer.Id, plan));
+        await DeliverAsync(_stripe.Plan("cs_test_plan", buyer.Id, plan));
 
         var subscribed = await App.KeyAsync(key.Id);
         Assert.Equal(
-            (plan, quota, rate, StripePayloads.Customer, StripePayloads.Subscription),
+            (plan, quota, rate, _stripe.Customer, _stripe.Subscription),
             (subscribed.Plan, subscribed.MonthlyQuota, subscribed.RateLimitPerMin,
                 subscribed.StripeCustomerId, subscribed.StripeSubscriptionId));
         Assert.Empty(await App.GrantsOfAsync(key.Id));
@@ -119,7 +133,7 @@ public sealed class CheckoutCompletedTests(PostgresContainerFixture postgres)
         var buyer = await App.SeedUserAsync("Abonne");
         var key = await App.SeedKeyAsync(buyer);
 
-        await DeliverAsync(StripePayloads.Plan("cs_test_plan", buyer.Id, "lifetime"));
+        await DeliverAsync(_stripe.Plan("cs_test_plan", buyer.Id, "lifetime"));
 
         var untouched = await App.KeyAsync(key.Id);
         Assert.Equal(("free", 500), (untouched.Plan, untouched.MonthlyQuota));
@@ -131,11 +145,11 @@ public sealed class CheckoutCompletedTests(PostgresContainerFixture postgres)
     {
         var donor = await App.SeedUserAsync("Donatrice");
 
-        await DeliverAsync(StripePayloads.Donation("cs_test_don", 1_500, donor.Id));
+        await DeliverAsync(_stripe.Donation("cs_test_don", 1_500, donor.Id));
 
-        var donation = Assert.Single(await DonationsAsync());
+        var donation = Assert.Single(await DonationsAsync("cs_test_don"));
         Assert.Equal(
-            ("cs_test_don", 1_500, "eur", (int?)donor.Id),
+            (_stripe.Id("cs_test_don"), 1_500, "eur", (int?)donor.Id),
             (donation.StripeSessionId, donation.AmountCents, donation.Currency, donation.UserId));
         Assert.Equal(StripePayloads.CreatedAt, donation.CreatedAt);
         await using var db = App.Database();
@@ -145,40 +159,40 @@ public sealed class CheckoutCompletedTests(PostgresContainerFixture postgres)
 
     [Theory]
     [InlineData(null)]
-    [InlineData(424_242)]
+    [InlineData(UnknownUser)]
     public async Task DonationWithoutAKnownDonorIsAnonymous(int? donorId)
     {
-        await DeliverAsync(StripePayloads.Donation("cs_test_don", 300, donorId));
+        await DeliverAsync(_stripe.Donation("cs_test_don", 300, donorId));
 
-        Assert.Null(Assert.Single(await DonationsAsync()).UserId);
+        Assert.Null(Assert.Single(await DonationsAsync("cs_test_don")).UserId);
     }
 
     [Fact]
     public async Task SessionWithoutKindIsADonation()
     {
-        var session = StripePayloads.Session("cs_test_old", new JsonObject());
+        var session = _stripe.Session("cs_test_old", new JsonObject());
 
         await DeliverAsync(session);
 
-        Assert.Equal(500, Assert.Single(await DonationsAsync()).AmountCents);
+        Assert.Equal(500, Assert.Single(await DonationsAsync("cs_test_old")).AmountCents);
     }
 
     [Fact]
     public async Task DonationPaidUnderTwoEventsIsRecordedOnce()
     {
-        var session = StripePayloads.Donation("cs_test_don", 1_000);
+        var session = _stripe.Donation("cs_test_don", 1_000);
 
         await DeliverAsync(session, "evt_1");
         await DeliverAsync(session.DeepClone().AsObject(), "evt_2");
 
-        Assert.Single(await DonationsAsync());
+        Assert.Single(await DonationsAsync("cs_test_don"));
     }
 
     [Fact]
     public async Task UnknownKindIsAcknowledgedAndLeftAlone()
     {
         var buyer = await App.SeedUserAsync("Acheteur");
-        var session = StripePayloads.Session("cs_test_gift", new JsonObject
+        var session = _stripe.Session("cs_test_gift", new JsonObject
         {
             ["user_id"] = Text(buyer.Id),
             ["kind"] = "gift_card",
@@ -186,31 +200,25 @@ public sealed class CheckoutCompletedTests(PostgresContainerFixture postgres)
 
         await DeliverAsync(session);
 
-        Assert.Empty(await DonationsAsync());
+        Assert.Empty(await DonationsAsync("cs_test_gift"));
         Assert.Empty(await App.KeysOfAsync(buyer.Id));
-    }
-
-    public async ValueTask InitializeAsync() => _app = await BillingApp.StartAsync(postgres);
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_app is not null)
-        {
-            await _app.DisposeAsync();
-        }
     }
 
     private static string Text(int number) => number.ToString(CultureInfo.InvariantCulture);
 
     private async Task DeliverAsync(JsonObject session, string eventId = "evt_completed")
     {
-        using var response = await App.DeliverAsync(StripePayloads.Completed(eventId, session));
+        using var response = await App.DeliverAsync(_stripe.Completed(eventId, session));
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
-    private async Task<List<Donation>> DonationsAsync()
+    // The donations of the session the test names, as delivered.
+    private async Task<List<Donation>> DonationsAsync(string sessionId)
     {
+        var delivered = _stripe.Id(sessionId);
         await using var db = App.Database();
-        return await db.Donations.AsNoTracking().ToListAsync(Cancellation);
+        return await db.Donations.AsNoTracking()
+            .Where(donation => donation.StripeSessionId == delivered)
+            .ToListAsync(Cancellation);
     }
 }

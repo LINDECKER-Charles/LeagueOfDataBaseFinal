@@ -1,9 +1,8 @@
 import { DIALOG_DATA } from '@angular/cdk/dialog';
 import { type WritableSignal, signal } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideTransloco } from '@jsverse/transloco';
-import { of } from 'rxjs';
 import type { WarmUpProgress } from '../../../api/generated/models/warm-up-progress';
+import { provideTestTransloco } from '../../../testing/provide-test-transloco';
 import { preparingFrame } from '../preparing-frame';
 import { LoaderDialog } from './loader-dialog';
 
@@ -40,17 +39,7 @@ async function render(): Promise<Rendered> {
   TestBed.configureTestingModule({
     providers: [
       { provide: DIALOG_DATA, useValue: frame.asReadonly() },
-      provideTransloco({
-        config: {
-          availableLangs: ['en'],
-          defaultLang: 'en',
-          missingHandler: { logMissingKey: false },
-          prodMode: true,
-        },
-        loader: class {
-          getTranslation = () => of(EN);
-        },
-      }),
+      provideTestTransloco({ otherwise: EN }),
     ],
   });
   const fixture = TestBed.createComponent(LoaderDialog);

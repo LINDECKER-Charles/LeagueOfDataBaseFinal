@@ -12,9 +12,9 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router, type Routes, withRouterConfig } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { API_BASE_URL } from '../../../../core/api/api-base-url';
-import type { CatalogMeta } from '../../../../core/api/generated/models/catalog-meta';
 import { isOutcomeNavigation } from '../../../../core/routing/outcome/is-outcome-navigation';
 import { resolveOutcome } from '../../../../core/routing/outcome/resolve-outcome';
+import { catalogMetaOf } from '../../../../core/testing/catalog-meta-of';
 import { trendsPageOf } from '../testing/trends-page-of';
 import { resolveTrends } from './resolve-trends';
 
@@ -23,25 +23,19 @@ class Probe {}
 
 const LATEST = '16.19.1';
 const OLDER = '15.14.1';
-const META: CatalogMeta = {
+const META = catalogMetaOf({
   latest: LATEST,
   versions: [LATEST, OLDER],
-  readyVersions: [LATEST],
-  versionPattern: String.raw`\d+(?:\.\d+)+`,
   languages: ['en_US', 'en_GB', 'fr_FR'],
-  languagePattern: '[a-z]{2}_[A-Z]{2}',
-  defaultLanguage: 'en_US',
   locales: [
     { locale: 'en', language: 'en_US' },
     { locale: 'fr', language: 'fr_FR' },
   ],
-  fallbackLocale: 'en',
   gameModes: [
     { mode: 'sr', map: 11 },
     { mode: 'aram', map: 12 },
   ],
-  defaultGameMode: 'sr',
-};
+});
 const TRANSIENT = 'public, max-age=0, s-maxage=60';
 const PAGE = trendsPageOf();
 

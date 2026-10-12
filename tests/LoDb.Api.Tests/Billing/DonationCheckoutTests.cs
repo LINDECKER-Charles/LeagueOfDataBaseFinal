@@ -2,31 +2,38 @@ using System.Globalization;
 using System.Net;
 using LoDb.Api.Tests.Accounts.Support;
 using LoDb.Api.Tests.Billing.Support;
-using LoDb.Testing;
 
 namespace LoDb.Api.Tests.Billing;
 
 /// <summary>
 /// The donation page's calls: its options, then the checkout it opens for an amount between
-/// 1 and 500 euros, naming a signed-in donor, behind the forgery guard and ten an hour.
+/// 1 and 500 euros, naming a signed-in donor, behind the forgery guard. How many an hour is
+/// <see cref="OwnHost.DonationCheckoutLimitTests"/>'.
 /// </summary>
-public sealed class DonationCheckoutTests(PostgresContainerFixture postgres)
-    : IAsyncLifetime
+/// <remarks>
+/// The tests share a host: each opens its checkouts from an address of its own.
+/// </remarks>
+public sealed class DonationCheckoutTests : IClassFixture<SharedBillingApp>
 {
     private const string OptionsPath = "/api/donations/options";
     private const string CheckoutPath = "/api/donations/checkout";
-    private const string ForwardedFor = "X-Forwarded-For";
-    private const int CheckoutsPerHour = 10;
 
-    private BillingApp? _app;
+    private readonly string _address;
 
-    private BillingApp App =>
-        _app ?? throw new InvalidOperationException("The host is not started yet.");
+    public DonationCheckoutTests(SharedBillingApp host)
+    {
+        ArgumentNullException.ThrowIfNull(host);
+        App = host.App;
+        App.ResetDoubles();
+        _address = host.NextAddress();
+    }
+
+    private BillingApp App { get; }
 
     [Fact]
     public async Task OptionsDescribeTheForm()
     {
-        using var browser = App.Browser();
+        using var browser = Browser();
 
         using var response = await browser.GetAsync(OptionsPath);
 
@@ -43,7 +50,7 @@ public sealed class DonationCheckoutTests(PostgresContainerFixture postgres)
     [Fact]
     public async Task VisitorIsSentToStripe()
     {
-        using var browser = App.Browser();
+        using var browser = Browser();
 
         using var response = await browser.PostAsync(
             CheckoutPath,
@@ -69,7 +76,7 @@ public sealed class DonationCheckoutTests(PostgresContainerFixture postgres)
     public async Task SignedInDonorIsNamed()
     {
         var donor = await App.SeedUserAsync("Donatrice");
-        using var browser = App.Browser();
+        using var browser = Browser();
         using var signedIn = await browser.SignInAsync(donor.UserName!);
         Assert.Equal(HttpStatusCode.OK, signedIn.StatusCode);
 
@@ -87,7 +94,7 @@ public sealed class DonationCheckoutTests(PostgresContainerFixture postgres)
     [InlineData(50_001L)]
     public async Task AmountOutOfBoundsIsRefused(long? amountCents)
     {
-        using var browser = App.Browser();
+        using var browser = Browser();
 
         using var response = await browser.PostAsync(CheckoutPath, new { amountCents });
 
@@ -100,7 +107,7 @@ public sealed class DonationCheckoutTests(PostgresContainerFixture postgres)
     public async Task StripeDownAnswers502()
     {
         App.Gateway.Failing = true;
-        using var browser = App.Browser();
+        using var browser = Browser();
 
         using var response = await browser.PostAsync(CheckoutPath, new { amountCents = 500 });
 
@@ -112,7 +119,7 @@ public sealed class DonationCheckoutTests(PostgresContainerFixture postgres)
     [Fact]
     public async Task CheckoutFromAnotherSiteIsRefused()
     {
-        using var browser = App.Browser();
+        using var browser = Browser();
         using var request = browser.Post(CheckoutPath, new { amountCents = 500 });
         request.Headers.Remove(BrowserClient.OriginHeader);
         request.Headers.Add(BrowserClient.OriginHeader, "https://evil.example");
@@ -125,43 +132,6 @@ public sealed class DonationCheckoutTests(PostgresContainerFixture postgres)
         Assert.Empty(App.Gateway.Sessions);
     }
 
-    [Fact]
-    public async Task OneAddressOpensTenCheckoutsAnHour()
-    {
-        using var browser = App.Browser();
-        var statuses = new List<HttpStatusCode>();
-
-        for (var attempt = 0; attempt <= CheckoutsPerHour; attempt++)
-        {
-            using var response = await OpenFromAsync(browser, "203.0.113.7");
-            statuses.Add(response.StatusCode);
-        }
-
-        using var other = await OpenFromAsync(browser, "203.0.113.8");
-
-        Assert.Equal(
-            [.. Enumerable.Repeat(HttpStatusCode.OK, CheckoutsPerHour),
-                HttpStatusCode.TooManyRequests],
-            statuses);
-        Assert.Equal(HttpStatusCode.OK, other.StatusCode);
-    }
-
-    public async ValueTask InitializeAsync() => _app = await BillingApp.StartAsync(postgres);
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_app is not null)
-        {
-            await _app.DisposeAsync();
-        }
-    }
-
-    private static async Task<HttpResponseMessage> OpenFromAsync(
-        BrowserClient browser,
-        string address)
-    {
-        using var request = browser.Post(CheckoutPath, new { amountCents = 500 });
-        request.Headers.Add(ForwardedFor, address);
-        return await browser.SendAsync(request);
-    }
+    // The checkouts are limited by address: this test's own.
+    private BrowserClient Browser() => App.Browser().From(_address);
 }

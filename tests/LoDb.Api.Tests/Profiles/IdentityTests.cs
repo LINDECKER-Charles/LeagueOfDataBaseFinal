@@ -60,20 +60,20 @@ public sealed class IdentityTests(ProfilesApp app)
         Assert.Null((await app.FindAsync(account.Username))!.RiotTagline);
     }
 
-    [Theory]
-    [InlineData("", "required")]
-    [InlineData("a", "username-invalid")]
-    public async Task UsernameOutsideTheRulesIsRefused(string username, string code)
+    // Every rule of the username is IdentityRulesTests': one refusal proves the endpoint
+    // applies them.
+    [Fact]
+    public async Task UsernameOutsideTheRulesIsRefused()
     {
         var account = await app.SeedAsync();
         using var browser = await app.SignInAsync(account);
 
         using var refused = await browser.PutAsync(
             ProfileCalls.Identity,
-            new { username, riotTagline = (string?)null });
+            new { username = "a", riotTagline = (string?)null });
 
         var errors = await ApiJson.FieldErrorsAsync(refused);
-        Assert.Equal([code], errors["username"]);
+        Assert.Equal(["username-invalid"], errors["username"]);
         Assert.NotNull(await app.FindAsync(account.Username));
     }
 

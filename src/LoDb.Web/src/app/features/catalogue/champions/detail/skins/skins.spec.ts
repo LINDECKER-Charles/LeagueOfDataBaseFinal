@@ -3,10 +3,9 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Component, signal } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideTransloco } from '@jsverse/transloco';
-import { of } from 'rxjs';
 import type { ChampionSkin } from '../../../../../core/api/generated/models/champion-skin';
 import type { ChampionSkins } from '../../../../../core/api/generated/models/champion-skins';
+import { provideTestTransloco } from '../../../../../core/testing/provide-test-transloco';
 import { alternateSkins } from './alternate-skins';
 import { SkinGallery } from './skin-gallery';
 import { SkinShelf } from './skin-shelf';
@@ -74,17 +73,7 @@ describe('viewerIndexAfter', () => {
 });
 
 function translations() {
-  return provideTransloco({
-    config: {
-      availableLangs: ['en'],
-      defaultLang: 'en',
-      missingHandler: { logMissingKey: false },
-      prodMode: true,
-    },
-    loader: class {
-      getTranslation = (path: string) => of(path.startsWith('champions/') ? CHAMPIONS : {});
-    },
-  });
+  return provideTestTransloco({ byPath: { 'champions/en': CHAMPIONS } });
 }
 
 @Component({

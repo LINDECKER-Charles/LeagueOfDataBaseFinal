@@ -21,12 +21,13 @@ public sealed class DatabaseMigratorTests(PostgresContainerFixture postgres)
     private const string IdentifierScrub = "20261011073626_AuditIdentifierScrub";
     private const string RefreshFamilies = "20261011075322_RefreshTokenFamilies";
     private const string AudienceEntityDaily = "20261011092929_AudienceEntityDaily";
+    private const string BackupRuns = "20261012081618_BackupRuns";
     private const string EfHistory = "__EFMigrationsHistory";
 
     private static readonly string[] AllMigrations =
         [
             DoctrineBaseline.MigrationId, Lot1, Lot4, Lot6, PaymentStates, QueryStatistics,
-            IdentifierScrub, RefreshFamilies, AudienceEntityDaily,
+            IdentifierScrub, RefreshFamilies, AudienceEntityDaily, BackupRuns,
         ];
 
     private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
@@ -86,7 +87,7 @@ public sealed class DatabaseMigratorTests(PostgresContainerFixture postgres)
         Assert.Equal(
             [
                 Lot1, Lot4, Lot6, PaymentStates, QueryStatistics, IdentifierScrub,
-                RefreshFamilies, AudienceEntityDaily,
+                RefreshFamilies, AudienceEntityDaily, BackupRuns,
             ],
             report.Applied);
         Assert.Equal(AllMigrations, await database.AppliedMigrationsAsync(Cancellation));

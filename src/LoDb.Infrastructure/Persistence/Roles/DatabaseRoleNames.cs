@@ -17,4 +17,11 @@ public static class DatabaseRoleNames
 
     /// <summary>The API's role: reads and writes rows, runs the two partition functions.</summary>
     public const string App = "lodb_app";
+
+    /// <summary>
+    /// The off-host backups of the host (infra-vps): reads every row to dump them, and
+    /// appends the journal of its passes to <c>backup_run</c>. Its name is the one infra-vps
+    /// documents for LoDb.
+    /// </summary>
+    public const string Backup = "lodb_sauvegarde";
 }

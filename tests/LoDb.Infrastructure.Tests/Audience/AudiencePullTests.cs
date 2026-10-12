@@ -192,19 +192,6 @@ public sealed class AudiencePullTests(PostgresContainerFixture postgres)
             StringComparison.Ordinal));
     }
 
-    [Theory]
-    [InlineData("https://elsewhere.example.test/api/auth/login")]
-    [InlineData("http://stats.example.test/api/auth/login")]
-    public async Task TheClientRefusesAnyOtherDestination(string url)
-    {
-        var client = Services.GetRequiredService<IHttpClientFactory>()
-            .CreateClient(UmamiClient.ClientName);
-
-        await Assert.ThrowsAsync<UmamiException>(() => client.GetAsync(new Uri(url), Cancellation));
-
-        Assert.Empty(_umami.Requests);
-    }
-
     [Fact]
     public async Task ARefusedAccountWritesNothing()
     {

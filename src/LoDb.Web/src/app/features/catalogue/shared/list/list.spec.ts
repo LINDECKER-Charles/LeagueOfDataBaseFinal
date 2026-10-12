@@ -1,13 +1,9 @@
 import { Component, PLATFORM_ID, type Type, signal } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { Router, provideRouter } from '@angular/router';
-import {
-  type Translation,
-  TranslocoPipe,
-  provideTransloco,
-  provideTranslocoScope,
-} from '@jsverse/transloco';
-import { of } from 'rxjs';
+import { type Translation, TranslocoPipe, provideTranslocoScope } from '@jsverse/transloco';
+import { provideTestTransloco } from '../../../../core/testing/provide-test-transloco';
 import type { CardValues } from '../facets/model/card-values';
 import type { CatalogueListSource } from '../source/catalogue-list-source';
 import type { ListStatus } from '../source/list-status';
@@ -139,17 +135,7 @@ describe('lodb-catalogue-list', () => {
       providers: [
         provideRouter([{ path: '**', children: [] }]),
         { provide: PLATFORM_ID, useValue: 'browser' },
-        provideTransloco({
-          config: {
-            availableLangs: ['en'],
-            defaultLang: 'en',
-            missingHandler: { logMissingKey: false },
-            prodMode: true,
-          },
-          loader: class {
-            getTranslation = (path: string) => of(SCOPED[path] ?? {});
-          },
-        }),
+        provideTestTransloco({ byPath: SCOPED }),
       ],
     });
     await TestBed.inject(Router).navigateByUrl(url);
@@ -297,6 +283,21 @@ describe('lodb-catalogue-list', () => {
     const fixture = await render('/en/7.20.1/runes', sourceOf(empty, 'ready', empty).source);
     expect(all(fixture, '[role=list]')).toHaveLength(0);
     expect(all(fixture, 'lodb-empty-state a')[0]?.getAttribute('href')).toBe('/en');
+  });
+
+  // The rail's code waits in the browser (`hydrate when isConsoleDue()`), which no test bed
+  // hydrates: the condition is read on the list. Before the whole list, only the state moving
+  // outside the rail can leave the server's copy of it out of date.
+  it('wants the rail hydrated once the state moves without it', async () => {
+    const fixture = await render('/en/items?q=boots', sourceOf(null).source);
+    const list = fixture.debugElement.query(By.directive(CatalogueList))
+      .componentInstance as unknown as { isConsoleDue: () => boolean };
+    expect(list.isConsoleDue()).toBe(false);
+
+    all(fixture, 'lodb-active-filters .clear')[0].click();
+    await fixture.whenStable();
+
+    expect(list.isConsoleDue()).toBe(true);
   });
 
   it('opens the facets in a bottom sheet on narrow screens', async () => {

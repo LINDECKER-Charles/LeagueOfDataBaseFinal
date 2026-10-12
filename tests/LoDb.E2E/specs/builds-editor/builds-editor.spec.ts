@@ -13,6 +13,9 @@ import {
   stepsOf,
 } from './forge';
 
+// The forge as a hand uses it: the CDK's drag and drop needs a real layout and pointer, the
+// dialogs run under the site's policy, and the import reads a stored older patch from the real
+// API. The forge's rules and states are Vitest's and the API's.
 const LIST = '/en/account/builds';
 const SHARED = /\/b\/[\w-]+$/;
 const EDITING = /\/en\/account\/builds\/\d+\/edit$/;

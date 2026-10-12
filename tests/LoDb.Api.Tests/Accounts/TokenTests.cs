@@ -4,93 +4,56 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using LoDb.Api.Tests.Accounts.Support;
 using LoDb.Infrastructure.Audit;
-using LoDb.Testing;
 
 namespace LoDb.Api.Tests.Accounts;
 
 /// <summary>
 /// The tokens of the apps: <c>/token</c> answers a bearer token of five minutes and a
-/// refresh token of thirty days, which <c>/refresh</c> exchanges until the account's stamp
-/// changes or the account is banned.
+/// refresh token, which <c>/refresh</c> refuses once the account is banned. How long the
+/// refresh token lasts is <see cref="OwnHost.RefreshTokenExpiryTests"/>'.
 /// </summary>
-public sealed class TokenTests(PostgresContainerFixture postgres)
-    : IAsyncLifetime
+/// <remarks>The tests share a host, each with accounts of its own.</remarks>
+public sealed class TokenTests(SharedAccountsApp host) : IClassFixture<SharedAccountsApp>
 {
     private const int AccessTokenSeconds = 5 * 60;
 
-    private AccountsApp? _app;
+    private readonly AccountSeed _account = host.Unique();
+    private readonly AccountSeed _banned = host.Unique(new AccountSeed { Banned = true });
 
-    private AccountsApp App =>
-        _app ?? throw new InvalidOperationException("The host is not started yet.");
+    private AccountsApp App { get; } = host.App;
 
     private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
 
     [Fact]
     public async Task PasswordGivesABearerAndARefreshToken()
     {
-        await App.SeedAsync(new AccountSeed());
+        await App.SeedAsync(_account);
         using var app = App.App();
 
-        using var response = await PostAsync(app, "token", Credentials());
+        using var response = await PostAsync(app, "token", Credentials(_account.Username));
 
         var tokens = await ApiJson.ReadAsync(response, HttpStatusCode.OK);
         Assert.Equal("Bearer", ApiJson.Text(tokens, "tokenType"));
         Assert.Equal(AccessTokenSeconds, tokens.GetProperty("expiresIn").GetInt32());
         Assert.False(string.IsNullOrEmpty(ApiJson.Text(tokens, "refreshToken")));
         Assert.False(response.Headers.Contains("Set-Cookie"));
-        Assert.Equal(AccountSeed.Name, await SignedInAsAsync(app, tokens));
-    }
-
-    [Fact]
-    public async Task RefreshGivesNewTokensUntilTheStampChanges()
-    {
-        await App.SeedAsync(new AccountSeed());
-        using var app = App.App();
-        var tokens = await TokensAsync(app);
-
-        App.Clock.Advance(TimeSpan.FromMinutes(10));
-        using var refreshed = await RefreshAsync(app, tokens);
-        var renewed = await ApiJson.ReadAsync(refreshed, HttpStatusCode.OK);
-        await App.RenewStampAsync(AccountSeed.Name);
-        using var revoked = await RefreshAsync(app, renewed);
-
-        Assert.Equal(AccountSeed.Name, await SignedInAsAsync(app, renewed));
-        Assert.Equal(
-            "invalid-refresh-token",
-            await ApiJson.ProblemCodeAsync(revoked, HttpStatusCode.Unauthorized));
-    }
-
-    [Fact]
-    public async Task RefreshTokenLastsThirtyDays()
-    {
-        await App.SeedAsync(new AccountSeed());
-        using var app = App.App();
-        var tokens = await TokensAsync(app);
-
-        App.Clock.Advance(TimeSpan.FromDays(31));
-        using var expired = await RefreshAsync(app, tokens);
-
-        Assert.Equal(
-            "invalid-refresh-token",
-            await ApiJson.ProblemCodeAsync(expired, HttpStatusCode.Unauthorized));
+        Assert.Equal(_account.Username, await SignedInAsAsync(app, tokens));
     }
 
     [Fact]
     public async Task BannedAccountGetsNoTokenAndCannotRefresh()
     {
-        await App.SeedAsync(new AccountSeed());
-        await App.SeedAsync(new AccountSeed
-        {
-            Username = "Banni_1",
-            Email = "banni@example.test",
-            Banned = true,
-        });
+        await App.SeedAsync(_account);
+        await App.SeedAsync(_banned);
         using var app = App.App();
-        var tokens = await TokensAsync(app);
+        var tokens = await AppTokens.SignInAsync(app, _account.Username);
 
-        using var banned = await PostAsync(app, "token", Credentials("Banni_1"));
-        await App.BanAsync(AccountSeed.Name);
-        using var refresh = await RefreshAsync(app, tokens);
+        using var banned = await PostAsync(app, "token", Credentials(_banned.Username));
+        await App.BanAsync(_account.Username);
+        using var refresh = await PostAsync(
+            app,
+            "refresh",
+            new { refreshToken = ApiJson.Text(tokens, "refreshToken") });
 
         Assert.Equal(
             "account-banned",
@@ -118,14 +81,14 @@ public sealed class TokenTests(PostgresContainerFixture postgres)
     [Fact]
     public async Task TwoFactorAccountGetsItsTokensWithItsCode()
     {
-        await App.SeedAsync(new AccountSeed());
-        var secrets = await App.EnableTwoFactorAsync(AccountSeed.Name);
+        await App.SeedAsync(_account);
+        var secrets = await App.EnableTwoFactorAsync(_account.Username);
         using var app = App.App();
 
-        using var passwordOnly = await PostAsync(app, "token", Credentials());
+        using var passwordOnly = await PostAsync(app, "token", Credentials(_account.Username));
         using var withCode = await PostAsync(app, "token", new
         {
-            identifier = AccountSeed.Name,
+            identifier = _account.Username,
             password = AccountSeed.StrongPassword,
             twoFactorCode = Totp.Code(secrets.Key, App.Clock),
         });
@@ -142,16 +105,16 @@ public sealed class TokenTests(PostgresContainerFixture postgres)
     [Fact]
     public async Task BearerCallsNeedNeitherXsrfTokenNorOriginAndAreAudited()
     {
-        var account = await App.SeedAsync(new AccountSeed());
+        var account = await App.SeedAsync(_account);
         using var app = App.App();
-        var tokens = await TokensAsync(app);
+        var tokens = await AppTokens.SignInAsync(app, _account.Username);
         var request = Request(HttpMethod.Post, "logout", tokens);
         request.Headers.Add(BrowserClient.OriginHeader, "https://evil.example");
 
         using var signOut = await SendAsync(app, request);
 
         Assert.Equal(HttpStatusCode.NoContent, signOut.StatusCode);
-        var trail = await App.AuditAsync();
+        var trail = await App.AuditOfAsync(_account.Username);
         Assert.Equal(
             [AuditAction.UserLogin, AuditAction.UserLogout],
             trail.Select(static entry => entry.Action));
@@ -159,32 +122,13 @@ public sealed class TokenTests(PostgresContainerFixture postgres)
         Assert.Equal("token", AccountsApp.Meta(trail[0], "channel"));
     }
 
-    public async ValueTask InitializeAsync() => _app = await AccountsApp.StartAsync(postgres);
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_app is not null)
-        {
-            await _app.DisposeAsync();
-        }
-    }
-
-    private static object Credentials(string identifier = AccountSeed.Name) =>
+    private static object Credentials(string identifier) =>
         new { identifier, password = AccountSeed.StrongPassword };
 
     private static Task<HttpResponseMessage> PostAsync(HttpClient app, string path, object body) =>
         app.PostAsJsonAsync(Path(path), body, Cancellation);
 
     private static Uri Path(string path) => new($"/api/account/{path}", UriKind.Relative);
-
-    private static async Task<JsonElement> TokensAsync(HttpClient app)
-    {
-        using var response = await PostAsync(app, "token", Credentials());
-        return await ApiJson.ReadAsync(response, HttpStatusCode.OK);
-    }
-
-    private static Task<HttpResponseMessage> RefreshAsync(HttpClient app, JsonElement tokens) =>
-        PostAsync(app, "refresh", new { refreshToken = ApiJson.Text(tokens, "refreshToken") });
 
     // A call as an app makes it: the access token, no cookie, no Origin.
     private static HttpRequestMessage Request(HttpMethod method, string path, JsonElement tokens)

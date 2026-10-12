@@ -3,7 +3,6 @@ using System.Text.Json;
 using LoDb.Api.Tests.Accounts.Support;
 using LoDb.Api.Tests.PublicApiKeys.Support;
 using LoDb.Infrastructure.Audit;
-using LoDb.Testing;
 
 namespace LoDb.Api.Tests.PublicApiKeys;
 
@@ -11,13 +10,10 @@ namespace LoDb.Api.Tests.PublicApiKeys;
 /// A revoked key is refused by <c>/v1</c> from the next request, where the legacy stack
 /// waited up to a minute of go-api's cache; the account may then issue another.
 /// </summary>
-public sealed class RevocationTests(PostgresContainerFixture postgres)
-    : IAsyncLifetime
+/// <remarks>The tests share a host, each with accounts of its own.</remarks>
+public sealed class RevocationTests(SharedKeysApp host) : IClassFixture<SharedKeysApp>
 {
-    private KeysApp? _app;
-
-    private KeysApp App =>
-        _app ?? throw new InvalidOperationException("The host is not started yet.");
+    private KeysApp App { get; } = host.App;
 
     [Fact]
     public async Task ARevokedKeyIsRefusedOnV1AtOnce()
@@ -59,7 +55,7 @@ public sealed class RevocationTests(PostgresContainerFixture postgres)
         Assert.NotNull(keys[0].RevokedAt);
         Assert.Equal(again[..12], keys[1].KeyPrefix);
         var entry = Assert.Single(
-            await App.AuditAsync(),
+            await App.AuditOfAsync(owner.Id),
             static entry => entry.Action == AuditAction.ApiKeyRevoke);
         Assert.Equal(keys[0].KeyPrefix + "…", entry.Target);
     }
@@ -74,16 +70,6 @@ public sealed class RevocationTests(PostgresContainerFixture postgres)
         Assert.Equal(
             "api-key-missing",
             await ApiJson.ProblemCodeAsync(response, HttpStatusCode.NotFound));
-    }
-
-    public async ValueTask InitializeAsync() => _app = await KeysApp.StartAsync(postgres);
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_app is not null)
-        {
-            await _app.DisposeAsync();
-        }
     }
 
     // A DELETE as the front sends it: the page's origin and its XSRF token.

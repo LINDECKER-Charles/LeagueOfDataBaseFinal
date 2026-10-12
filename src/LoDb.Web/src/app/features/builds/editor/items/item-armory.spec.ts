@@ -1,8 +1,7 @@
 import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { signal } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideTransloco } from '@jsverse/transloco';
-import { of } from 'rxjs';
+import { provideTestTransloco } from '../../../../core/testing/provide-test-transloco';
 import { PurchaseOrder } from '../steps/order/purchase-order';
 import type { ArmoryData } from './armory-data';
 import { ITEM_CATEGORIES } from './item-categories';
@@ -30,17 +29,7 @@ async function mount(): Promise<{ fixture: ComponentFixture<ItemArmory>; close: 
     providers: [
       { provide: DialogRef, useValue: { close } },
       { provide: DIALOG_DATA, useValue: data },
-      provideTransloco({
-        config: {
-          availableLangs: ['en'],
-          defaultLang: 'en',
-          missingHandler: { logMissingKey: false },
-          prodMode: true,
-        },
-        loader: class {
-          getTranslation = () => of(LABELS);
-        },
-      }),
+      provideTestTransloco({ otherwise: LABELS }),
     ],
   });
   const fixture = TestBed.createComponent(ItemArmory);

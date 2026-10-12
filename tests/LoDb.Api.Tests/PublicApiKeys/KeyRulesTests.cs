@@ -5,23 +5,18 @@ using System.Text.Json;
 using LoDb.Api.Tests.Accounts.Support;
 using LoDb.Api.Tests.PublicApiKeys.Support;
 using LoDb.Infrastructure.Audit;
-using LoDb.Testing;
 
 namespace LoDb.Api.Tests.PublicApiKeys;
 
 /// <summary>
-/// The key of an account: one active at most, issued to a verified e-mail five times an hour
-/// at most, its secret shown by the answer that issues it and never again.
+/// The key of an account: one active at most, issued to a verified e-mail, its secret shown
+/// by the answer that issues it and never again. How many an hour is
+/// <see cref="OwnHost.KeyIssueLimitTests"/>'.
 /// </summary>
-public sealed class KeyRulesTests(PostgresContainerFixture postgres)
-    : IAsyncLifetime
+/// <remarks>The tests share a host, each with accounts of its own.</remarks>
+public sealed class KeyRulesTests(SharedKeysApp host) : IClassFixture<SharedKeysApp>
 {
-    private const int IssuesPerHour = 5;
-
-    private KeysApp? _app;
-
-    private KeysApp App =>
-        _app ?? throw new InvalidOperationException("The host is not started yet.");
+    private KeysApp App { get; } = host.App;
 
     [Fact]
     public async Task VisitorMustSignIn()
@@ -69,9 +64,9 @@ public sealed class KeyRulesTests(PostgresContainerFixture postgres)
         var overview = JsonDocument.Parse(body).RootElement.GetProperty("key");
         Assert.Equal(secret[..12], ApiJson.Text(overview, "prefix"));
         Assert.Equal("no-store", created.Headers.CacheControl?.ToString());
-        Assert.Equal([key.Id], App.KeyCache.Invalidated);
+        Assert.Equal([key.Id], await App.InvalidatedOfAsync(owner.Id));
         var entry = Assert.Single(
-            await App.AuditAsync(),
+            await App.AuditOfAsync(owner.Id),
             static entry => entry.Action == AuditAction.ApiKeyCreate);
         Assert.Equal((AuditActorType.User, (int?)owner.Id), (entry.ActorType, entry.ActorId));
         Assert.Equal(
@@ -139,44 +134,6 @@ public sealed class KeyRulesTests(PostgresContainerFixture postgres)
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         Assert.Empty(await App.KeysOfAsync(owner.Id));
-    }
-
-    [Fact]
-    public async Task KeysIssuedToOneAccountAreLimitedToFiveAnHour()
-    {
-        var owner = await App.SeedUserAsync("Pressee");
-        using var browser = await App.SignedInAsync(owner);
-        using var other = await App.SignedInAsync(await App.SeedUserAsync("Posee"));
-        var statuses = new List<HttpStatusCode>();
-
-        // Creations and regenerations share the limit.
-        using var created = await browser.PostAsync(KeysApp.PortalPath, new { name = "app" });
-        statuses.Add(created.StatusCode);
-        for (var attempt = 1; attempt < IssuesPerHour; attempt++)
-        {
-            using var regenerated = await browser.PostAsync(KeysApp.RegeneratePath);
-            statuses.Add(regenerated.StatusCode);
-        }
-
-        using var refused = await browser.PostAsync(KeysApp.RegeneratePath);
-        using var otherAccount = await other.PostAsync(KeysApp.PortalPath, new { name = "app" });
-
-        Assert.All(statuses, static status => Assert.Equal(HttpStatusCode.OK, status));
-        Assert.Equal(
-            "rate-limited",
-            await ApiJson.ProblemCodeAsync(refused, HttpStatusCode.TooManyRequests));
-        Assert.Equal(HttpStatusCode.OK, otherAccount.StatusCode);
-        Assert.Equal(IssuesPerHour, (await App.KeysOfAsync(owner.Id)).Count);
-    }
-
-    public async ValueTask InitializeAsync() => _app = await KeysApp.StartAsync(postgres);
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_app is not null)
-        {
-            await _app.DisposeAsync();
-        }
     }
 
     private static string Fingerprint(string secret) =>

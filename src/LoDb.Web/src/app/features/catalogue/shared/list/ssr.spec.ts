@@ -12,11 +12,11 @@ import {
 } from '@angular/platform-browser';
 import { provideServerRendering, renderApplication } from '@angular/platform-server';
 import { RouterOutlet, provideRouter } from '@angular/router';
-import { provideTransloco } from '@jsverse/transloco';
 import { of } from 'rxjs';
 import type { ItemCard } from '../../../../core/api/generated/models/item-card';
 import type { PageContext } from '../../../../core/context/page-context';
 import { keepingGlobals } from '../../../../core/testing/keeping-globals';
+import { provideTestTransloco } from '../../../../core/testing/provide-test-transloco';
 import { CatalogueLists } from '../data/catalogue-lists';
 import type { ListRequest } from '../data/list-request';
 import { injectCatalogueList } from '../source/inject-catalogue-list';
@@ -98,12 +98,7 @@ async function renderOnServer(url: string, requests: ListRequest[]): Promise<str
         { path: 'en/items', component: ItemsProbe },
         { path: 'en/rich', component: RichProbe },
       ]),
-      provideTransloco({
-        config: { defaultLang: 'en', missingHandler: { logMissingKey: false }, prodMode: true },
-        loader: class {
-          getTranslation = () => of({});
-        },
-      }),
+      provideTestTransloco(),
       { provide: CatalogueLists, useValue: { fetch } },
     ],
   };

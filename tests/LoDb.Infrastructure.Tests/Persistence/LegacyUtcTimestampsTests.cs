@@ -1,44 +1,20 @@
-using LoDb.Infrastructure.Persistence;
 using LoDb.Infrastructure.Persistence.Accounts;
 using LoDb.Testing;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace LoDb.Infrastructure.Tests.Persistence;
 
 /// <summary>
-/// The UTC converter applies to the legacy <c>timestamp without time zone</c> columns of its
-/// list, and to no other column.
+/// A legacy <c>timestamp without time zone</c> column holds the UTC wall clock, written and
+/// read back as UTC.
 /// </summary>
+/// <remarks>
+/// Which columns the converter applies to is read from the model alone, in
+/// <see cref="PersistenceRegistrationTests"/>.
+/// </remarks>
 public sealed class LegacyUtcTimestampsTests(PostgresContainerFixture postgres)
     : MigratedDatabase(postgres)
 {
-    [Fact]
-    public void ConverterAppliesToItsListOnly()
-    {
-        var columns = TimestampColumns();
-
-        var converted = columns
-            .Where(static column => column.Property.GetValueConverter() is not null)
-            .Select(static column => (column.Table, column.Column))
-            .Order();
-        Assert.Equal(LegacyUtcTimestamps.Columns.Order(), converted);
-        Assert.All(
-            columns.Where(static column => column.Property.GetValueConverter() is not null),
-            static column =>
-            {
-                Assert.Same(LegacyUtcTimestamps.Converter, column.Property.GetValueConverter());
-                Assert.Equal(LegacyUtcTimestamps.ColumnType, column.Property.GetColumnType());
-            });
-        Assert.All(
-            columns.Where(static column => column.Property.GetValueConverter() is null),
-            static column => Assert.EndsWith(
-                " with time zone",
-                column.Property.GetColumnType(),
-                StringComparison.Ordinal));
-    }
-
     [Fact]
     public async Task OffsetValueIsStoredAsTheUtcWallClockTruncatedToTheSecond()
     {
@@ -91,23 +67,4 @@ public sealed class LegacyUtcTimestampsTests(PostgresContainerFixture postgres)
         Roles = [],
         CreatedAt = createdAt,
     };
-
-    // Every DateTimeOffset of the model, nullable or not, with its table and column.
-    private static List<(string Table, string Column, IReadOnlyProperty Property)>
-        TimestampColumns()
-    {
-        using var context = new LoDbDesignTimeFactory().CreateDbContext([]);
-        var model = context.GetService<IDesignTimeModel>().Model;
-        return
-        [
-            .. from entity in model.GetEntityTypes()
-               from property in entity.GetProperties()
-               let type = Nullable.GetUnderlyingType(property.ClrType) ?? property.ClrType
-               where type == typeof(DateTimeOffset)
-               select (
-                   entity.GetTableName()!,
-                   property.GetColumnName(),
-                   (IReadOnlyProperty)property),
-        ];
-    }
 }

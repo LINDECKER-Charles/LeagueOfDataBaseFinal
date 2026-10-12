@@ -5,11 +5,11 @@ import { Component, PLATFORM_ID } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { provideTransloco } from '@jsverse/transloco';
 import { of } from 'rxjs';
 import { API_BASE_URL } from '../../../../core/api/api-base-url';
 import { AUTH_STRATEGY } from '../../../../core/auth/strategy/auth-strategy-token';
 import { FakeAuthStrategy } from '../../../../core/auth/testing/fake-auth-strategy';
+import { provideTestTransloco } from '../../../../core/testing/provide-test-transloco';
 import { VerifyEmailView } from './verify-email-view';
 
 @Component({ template: '' })
@@ -35,16 +35,7 @@ async function open(url: string) {
         { path: ':locale/account/verify-email', component: VerifyEmailView },
         { path: '**', component: Probe },
       ]),
-      provideTransloco({
-        config: {
-          availableLangs: ['fr'],
-          defaultLang: 'fr',
-          missingHandler: { logMissingKey: false },
-        },
-        loader: class {
-          getTranslation = () => of({});
-        },
-      }),
+      provideTestTransloco({ lang: 'fr' }),
     ],
   });
   const harness = await RouterTestingHarness.create(url);

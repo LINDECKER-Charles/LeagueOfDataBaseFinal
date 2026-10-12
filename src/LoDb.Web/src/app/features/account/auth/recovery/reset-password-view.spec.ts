@@ -5,9 +5,8 @@ import { Component, PLATFORM_ID } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { provideTransloco } from '@jsverse/transloco';
-import { of } from 'rxjs';
 import { ToastService } from '../../../../core/layout/toast/toast-service';
+import { provideTestTransloco } from '../../../../core/testing/provide-test-transloco';
 import { resetPasswordMatcher } from './reset-password-matcher';
 import { ResetPasswordView } from './reset-password-view';
 
@@ -37,16 +36,7 @@ async function open(url: string) {
         },
         { path: '**', component: Probe },
       ]),
-      provideTransloco({
-        config: {
-          availableLangs: ['fr'],
-          defaultLang: 'fr',
-          missingHandler: { logMissingKey: false },
-        },
-        loader: class {
-          getTranslation = () => of({});
-        },
-      }),
+      provideTestTransloco({ lang: 'fr' }),
     ],
   });
   const harness = await RouterTestingHarness.create(url);

@@ -278,6 +278,15 @@ jobs:
                 secret_set "$key" || fail "$key is required in prod."
               done
             fi
+            # The password of the off-host backups' role, optional until they are activated:
+            # infra-vps holds the same value (SAUVEGARDE_LODB_MOT_DE_PASSE) and accepts these
+            # characters only. One set but malformed stops the deploy here, its value never
+            # printed.
+            backup_key=LoDb__Database__BackupRole__Password
+            if secret_set "$backup_key"; then
+              [[ "$(cat "$secrets_dir/$backup_key")" =~ ^[A-Za-z0-9_-]{16,}$ ]] \
+                || fail "$backup_key: 16 or more letters, digits, '-' or '_'."
+            fi
             # The edge's secret: generated on this host once the checks pass (below), then kept.
             # One left malformed stops the deploy here, its value never printed.
             edge_secret_file=.deploy/secrets/LODB_EDGE_SECRET
@@ -321,7 +330,8 @@ jobs:
             # the host (compose.staging.yaml) and, when its .env asks for it, a login on its
             # pages (compose.staging-auth.yaml). Prod alone declares the site to the shared
             # Umami (compose.umami.yaml): an `import` the edge receives empty would make it
-            # refuse every site of the host. Joined from a list: no empty element.
+            # refuse every site of the host. Prod alone has its database backed up off the host
+            # (compose.sauvegarde.yaml). Joined from a list: no empty element.
             compose_files=(compose.yaml compose.deploy.yaml)
             auth_user="$(env_value LODB_STAGING_BASIC_AUTH_USER)"
             auth_hash="$(env_value LODB_STAGING_BASIC_AUTH_HASH)"
@@ -335,7 +345,7 @@ jobs:
               fail "LODB_STAGING_BASIC_AUTH_* are for staging: remove them from the $TARGET .env."
             fi
             if [ "$TARGET" = prod ]; then
-              compose_files+=(compose.umami.yaml)
+              compose_files+=(compose.umami.yaml compose.sauvegarde.yaml)
             fi
             COMPOSE_FILE="$(IFS=:; echo "${compose_files[*]}")"
             export COMPOSE_FILE
@@ -347,6 +357,12 @@ jobs:
               || fail "Docker network 'edge' is missing — deploy infra-vps before this project."
             docker network inspect observability >/dev/null 2>&1 \
               || fail "Docker network 'observability' is missing — deploy infra-vps first."
+            # The off-host backups' network (compose.sauvegarde.yaml), which infra-vps creates
+            # even while its backups are dormant: prod only.
+            if [ "$TARGET" = prod ]; then
+              docker network inspect sauvegardes >/dev/null 2>&1 \
+                || fail "Docker network 'sauvegardes' is missing — deploy infra-vps first."
+            fi
             # nginx trusts X-Forwarded-For from this subnet only. Docker picks it when infra-vps
             # creates the network, so it is read here rather than copied into ENV_FILE, and
             # kept in the .env so manual `docker compose` runs from this folder resolve it too.
@@ -453,6 +469,28 @@ jobs:
               ls -1t .deploy/backups/*.dump | tail -n +11 | xargs -r rm --
             fi
 
+            # ── Maintenance page while the containers are replaced ────────────────────
+            # From the first step that stops a container to the new stack's probes, every page
+            # answers the maintenance page (docker/nginx/server.d/maintenance.conf), with the
+            # time the previous window took, measured here and kept on this host. A step that
+            # fails in between leaves it on: the stack may not serve, and the job's error says
+            # how to turn it off once it does.
+            maintenance_dir=.deploy/maintenance
+            maintenance() {
+              bash tools/deploy/maintenance.sh "$1" "$maintenance_dir"
+            }
+            maintenance_left_on() {
+              echo "::error title=Maintenance page left on::the stack may not serve; once it" \
+                "does, remove $DEPLOY_PATH/$maintenance_dir/active.json."
+            }
+            in_maintenance=""
+            maintenance_on() {
+              [ -z "$in_maintenance" ] || return 0
+              maintenance start
+              in_maintenance=1
+              trap maintenance_left_on EXIT
+            }
+
             # A stack network created on another subnet (Docker's choice, before the subnet was
             # fixed) is recreated once: about a minute without service, volumes kept (never -v).
             # Before migrate: `compose run` would try to recreate the network under the running
@@ -461,6 +499,7 @@ jobs:
             if [ -n "$current_subnet" ] && [ "$current_subnet" != "$STACK_SUBNET" ]; then
               echo "::notice title=Stack network recreated::$stack_network moves from" \
                 "$current_subnet to $STACK_SUBNET; the stack restarts."
+              maintenance_on
               docker compose down --remove-orphans
             fi
 
@@ -472,9 +511,14 @@ jobs:
 
             # --wait: the job fails if a probe does not turn healthy. --remove-orphans
             # retires the containers of the legacy stack (php, go-fetcher, go-api, mailer).
+            maintenance_on
             docker compose up -d --no-build --remove-orphans --wait --wait-timeout 180
             [ "$(subnets_of "$stack_network")" = "$STACK_SUBNET" ] \
               || fail "$stack_network is not on $STACK_SUBNET, the subnet the API trusts."
+            # The new stack is healthy: the pages are its own again, before the smoke tests
+            # below ask for them.
+            maintenance end
+            trap - EXIT
 
             # ── Front bundles of the previous builds ───────────────────────────────────
             # web-ssr publishes its hashed bundles into the front-builds volume at start, and

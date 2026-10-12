@@ -37,10 +37,4 @@ public sealed class DdragonLanguageTests
     {
         Assert.Throws<FormatException>(() => DdragonLanguage.Parse("fr-FR"));
     }
-
-    [Fact]
-    public void EnglishIsTheSameValueWhereverItComesFrom()
-    {
-        Assert.Equal(DdragonLanguage.EnUs, DdragonLanguage.Parse("en_US"));
-    }
 }

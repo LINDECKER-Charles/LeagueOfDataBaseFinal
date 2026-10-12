@@ -4,7 +4,6 @@ import { PLATFORM_ID } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { provideTransloco } from '@jsverse/transloco';
 import { of } from 'rxjs';
 import { API_BASE_URL } from '../../core/api/api-base-url';
 import type { AccountUser } from '../../core/api/generated/models/account-user';
@@ -14,11 +13,11 @@ import { AUTH_STRATEGY } from '../../core/auth/strategy/auth-strategy-token';
 import { accountUser } from '../../core/auth/testing/account-user';
 import { FakeAuthStrategy } from '../../core/auth/testing/fake-auth-strategy';
 import { activateLocale } from '../../core/i18n/activate-locale';
-import { LOCALES } from '../../core/i18n/locales';
 import type { ToastKind } from '../../core/layout/toast/toast-kind';
 import { ToastService } from '../../core/layout/toast/toast-service';
 import { CANONICAL_ORIGIN } from '../../core/seo/canonical-origin';
 import { Seo } from '../../core/seo/seo';
+import { provideTestTransloco } from '../../core/testing/provide-test-transloco';
 import { API_PORTAL_ROUTES } from './api-portal.routes';
 import { PORTAL_PAYMENTS } from './shared/portal-payments';
 import { PortalStripeRedirect } from './state/stripe-redirect';
@@ -88,17 +87,7 @@ function portalProviders(user: AccountUser, payments: boolean, go: (target: stri
         children: [{ path: 'account/api', children: API_PORTAL_ROUTES }],
       },
     ]),
-    provideTransloco({
-      config: {
-        availableLangs: [...LOCALES],
-        defaultLang: 'en',
-        missingHandler: { logMissingKey: false },
-        prodMode: true,
-      },
-      loader: class {
-        getTranslation = () => of({});
-      },
-    }),
+    provideTestTransloco(),
   ];
 }
 

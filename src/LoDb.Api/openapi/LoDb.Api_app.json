@@ -5688,6 +5688,57 @@
         }
       }
     },
+    "/api/admin/backups": {
+      "get": {
+        "tags": [
+          "AdminBackups"
+        ],
+        "summary": "The history of the off-host backups and their estimated cost.",
+        "operationId": "readAdminBackups",
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BackupReport"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/client-policy/{platform}": {
       "put": {
         "tags": [
@@ -7401,6 +7452,215 @@
         ],
         "type": "string",
         "description": "What a profile's backdrop shows, so a page does not draw the champion twice."
+      },
+      "BackupDatabaseState": {
+        "required": [
+          "name",
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The database as infra-vps names it: lodb, umami."
+          },
+          "status": {
+            "type": "string",
+            "description": "ok, late (no success for 26 hours) or failed (the last attempt)."
+          },
+          "lastSuccessAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "End of the last backup that succeeded.",
+            "format": "date-time"
+          },
+          "lastFailureAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "End of the last backup that failed.",
+            "format": "date-time"
+          },
+          "lastBytesRead": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "Size of the dump of the last backup that succeeded.",
+            "format": "int64"
+          },
+          "restoreStatus": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "ok, late (no success for 35 days) or failed; null while no restore was ever tested."
+          },
+          "lastRestoreAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "End of the last restore test that succeeded.",
+            "format": "date-time"
+          }
+        },
+        "description": "The backups of one database, whatever the window: their state, and its restore tests'."
+      },
+      "BackupReport": {
+        "required": [
+          "generatedAt",
+          "days",
+          "databases",
+          "runs"
+        ],
+        "type": "object",
+        "properties": {
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "days": {
+            "type": "integer",
+            "description": "The days the steps cover, back from the time of the report.",
+            "format": "int32"
+          },
+          "databases": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BackupDatabaseState"
+            },
+            "description": "Every database the journal names, by name; empty before the first pass."
+          },
+          "repository": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "The repository as its last retention measured it; null before any.",
+                "$ref": "#/components/schemas/BackupRepositoryState"
+              }
+            ]
+          },
+          "runs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BackupRunRow"
+            },
+            "description": "The steps of the window, newest first, the latest 1000 at most."
+          }
+        },
+        "description": "The off-host backups of the host as their journal tells them: the state of each database,\nthe repository and what it is estimated to cost, then the steps of a window of days."
+      },
+      "BackupRepositoryState": {
+        "required": [
+          "bytes",
+          "measuredAt",
+          "pricePerGbMonth",
+          "currency",
+          "monthlyCost"
+        ],
+        "type": "object",
+        "properties": {
+          "bytes": {
+            "type": "integer",
+            "description": "Bytes stored, compressed and deduplicated, every snapshot included.",
+            "format": "int64"
+          },
+          "measuredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "pricePerGbMonth": {
+            "type": "number",
+            "description": "Price of one GB (10^9 bytes) stored for a month.",
+            "format": "double"
+          },
+          "currency": {
+            "type": "string",
+            "description": "ISO 4217 code of the prices."
+          },
+          "monthlyCost": {
+            "type": "number",
+            "description": "The bytes in GB times the price, to four decimals.",
+            "format": "double"
+          }
+        },
+        "description": "The restic repository as its last retention measured it, and what storing it is estimated\nto cost each month at the configured price."
+      },
+      "BackupRunRow": {
+        "required": [
+          "id",
+          "step",
+          "startedAt",
+          "finishedAt",
+          "succeeded"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "database": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The database of a backup or a restore test; null for the repository."
+          },
+          "step": {
+            "type": "string",
+            "description": "backup, retention, restore or check."
+          },
+          "startedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "finishedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "succeeded": {
+            "type": "boolean"
+          },
+          "bytesRead": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "A backup: the size of the dump.",
+            "format": "int64"
+          },
+          "bytesAdded": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "A backup: what it added to the repository, compressed.",
+            "format": "int64"
+          },
+          "repositoryBytes": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "A retention: the size of the repository once pruned.",
+            "format": "int64"
+          },
+          "detail": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Why the step failed, or what a restore test restored."
+          }
+        },
+        "description": "A step of a pass of the backups, as the container reported it."
       },
       "BanRequest": {
         "type": "object",
@@ -13124,6 +13384,9 @@
     },
     {
       "name": "AdminStorage"
+    },
+    {
+      "name": "AdminBackups"
     },
     {
       "name": "AdminClientPolicy"
