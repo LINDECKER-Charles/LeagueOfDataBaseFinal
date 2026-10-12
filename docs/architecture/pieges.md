@@ -476,6 +476,13 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   site est un littéral, dans le calque et dans `audience-site.ts` : `tools/umami/test`
   vérifie leur accord. Aucune adresse de compte ou d'admin ne part (`audience: 'none'`), les
   autres pages partent sous leur gabarit, sauf listes et fiches (`audience: 'path'`).
+- **Sauvegardes hors hôte, en prod seulement** (`compose.sauvegarde.yaml`, ajouté par le
+  job) : le réseau `sauvegardes` appartient à `infra-vps`, qui le crée même en sommeil ; le
+  job s'arrête s'il manque, **ne pas** le créer depuis LoDb. Le rôle `lodb_sauvegarde` lit
+  tout (`pg_read_all_data`) et n'écrit que dans `backup_run` : ce droit vient de
+  `schema-privileges.sql`, **jamais** d'un `GRANT` à la main, que le `migrate` suivant
+  reprend. Un secret vide ne retire pas le mot de passe du rôle
+  ([`sauvegardes.md`](../guides/sauvegardes.md), « Retirer »).
 
 ## Transition (jusqu'à la décommission)
 

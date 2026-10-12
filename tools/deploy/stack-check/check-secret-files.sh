@@ -4,6 +4,7 @@
 # its files, and the environment holds wrong values the files must override. Checks:
 #   - Postgres is created with the password of its file, which migrate uses; the API signs
 #     in as its own role, with the password split-env.sh drew and migrate set on it;
+#   - the off-host backups' role signs in, over the network, with the password of its file;
 #   - the Stripe webhook accepts an event signed with the secret of the file only;
 #   - Mailpit, which accepts no other login, receives the mail the API sends with the
 #     password of the file;
@@ -25,6 +26,8 @@ readonly WEBHOOK_SECRET=whsec_secret_from_the_file
 readonly WRONG_WEBHOOK_SECRET=whsec_wrong_secret_from_the_environment
 readonly STRIPE_KEY=sk_test_secret_from_the_file
 readonly VISITOR_KEY=visitor-key-from-the-file
+readonly BACKUP_PASSWORD=backup-password-from-the-file
+readonly BACKUP_ROLE=lodb_sauvegarde
 readonly OVERLAY=tools/deploy/stack-check/compose.secret-files.yaml
 readonly MAIL_WAIT_ATTEMPTS=45
 readonly MAIL_WAIT_SECONDS=2
@@ -61,6 +64,7 @@ LoDb__Mail__Password=$MAIL_PASSWORD
 LoDb__Billing__StripeSecretKey=$STRIPE_KEY
 LoDb__Billing__StripeWebhookSecret="$WEBHOOK_SECRET"
 LoDb__Analytics__VisitorKey=$VISITOR_KEY
+LoDb__Database__BackupRole__Password=$BACKUP_PASSWORD
 EOF
 }
 
@@ -103,9 +107,9 @@ relay_takes_the_file_password() {
 no_secret_in_any_environment() {
   local service environment index
   local -a names=(LODB_DB_PASSWORD Mail__Password StripeWebhookSecret StripeSecretKey VisitorKey
-    LODB_APP_DB_PASSWORD)
+    LODB_APP_DB_PASSWORD BackupRole__Password)
   local -a secrets=("$DB_PASSWORD" "$MAIL_PASSWORD" "$WEBHOOK_SECRET" "$STRIPE_KEY" "$VISITOR_KEY"
-    "$(cat "$secrets_dir/LODB_APP_DB_PASSWORD")")
+    "$(cat "$secrets_dir/LODB_APP_DB_PASSWORD")" "$BACKUP_PASSWORD")
   for service in api migrate postgres; do
     environment="$(compose ps -aq "$service" | xargs docker inspect \
       --format '{{range .Config.Env}}{{println .}}{{end}}')"
@@ -131,6 +135,14 @@ api_signs_in_as_its_role() {
          OR has_schema_privilege('lodb_app', 'public', 'CREATE')")" = f ]
 }
 
+# Through the network alias, never the loopback, which the image's pg_hba.conf trusts without
+# a password. The environment of migrate held a wrong one: only the file's signs in.
+backup_role_signs_in_with_its_file() {
+  [ "$(compose exec -T -e PGPASSWORD="$BACKUP_PASSWORD" postgres \
+    psql -h lodb-postgres -U "$BACKUP_ROLE" -d lodb -At -c 'SELECT current_user')" \
+    = "$BACKUP_ROLE" ]
+}
+
 api_names_its_secret_files() {
   local line
   line="$(compose logs --no-color api | grep -F 'hosting.secret_files.loaded' | tail -n 1)"
@@ -153,6 +165,8 @@ check "postgres, migrate and the API use the database passwords of the files" \
   curl -fsS -o /dev/null "$api/readyz"
 check "the API signs in as its own role, which can change no table" \
   api_signs_in_as_its_role
+check "the backups' role signs in with the password of its file" \
+  backup_role_signs_in_with_its_file
 check "the Stripe webhook takes the secret of the file over the environment's" \
   webhook_takes_the_file_secret
 check "the mail relay takes the password of the file over the environment's" \

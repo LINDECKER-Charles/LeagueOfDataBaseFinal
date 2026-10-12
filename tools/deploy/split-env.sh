@@ -46,6 +46,7 @@ readonly SECRET_KEYS=(
   LoDb__Audit__IdentifierKey
   LoDb__Audience__Username
   LoDb__Audience__Password
+  LoDb__Database__BackupRole__Password
 )
 # The password of the API's own database role (lodb_app).
 readonly GENERATED_KEYS=(

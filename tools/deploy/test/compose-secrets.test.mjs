@@ -15,6 +15,8 @@ const DATABASE_PASSWORD = 'LODB_DB_PASSWORD';
 const APP_DATABASE_PASSWORD = 'LODB_APP_DB_PASSWORD';
 const DATABASE_PASSWORD_SETTING = 'LoDb__Database__Password';
 const APP_ROLE_PASSWORD_SETTING = 'LoDb__Database__AppRole__Password';
+// The off-host backups' role: migrate sets its password, the API never reads it.
+const BACKUP_ROLE_PASSWORD = 'LoDb__Database__BackupRole__Password';
 const APP_ROLE = 'Username=lodb_app;';
 const POSTGRES_PASSWORD_FILE = '/run/secrets/postgres-password';
 const REVISION_LABEL = 'league-of-data-base.secrets-revision';
@@ -102,17 +104,21 @@ for (const template of TEMPLATES) {
         const api = rendered.config.services.api;
         const targets = new Map(api.secrets.map((secret) => [secret.source, targetName(secret)]));
 
-        for (const key of keys.filter((name) => name !== DATABASE_PASSWORD)) {
+        const notTheApis = [DATABASE_PASSWORD, BACKUP_ROLE_PASSWORD];
+        for (const key of keys.filter((name) => !notTheApis.includes(name))) {
           assert.equal(targets.get(key), key);
           assert.equal(key in api.environment, false, key);
         }
-        assert.equal(targets.has(DATABASE_PASSWORD), false);
+        for (const key of notTheApis) {
+          assert.equal(targets.has(key), false, key);
+          assert.equal(key in api.environment, false, key);
+        }
         assert.equal(targets.get(APP_DATABASE_PASSWORD), DATABASE_PASSWORD_SETTING);
         assert.ok(api.environment.ConnectionStrings__LoDb.includes(APP_ROLE));
         assert.match(api.labels[REVISION_LABEL], /^\d+$/);
       });
 
-      it('gives migrate the superuser and API passwords, postgres its own, as files only', () => {
+      it('gives migrate the passwords of the roles, postgres its own, as files only', () => {
         const { migrate, postgres, api } = rendered.config.services;
 
         assert.deepEqual(
@@ -120,9 +126,12 @@ for (const template of TEMPLATES) {
           [
             [DATABASE_PASSWORD, DATABASE_PASSWORD_SETTING],
             [APP_DATABASE_PASSWORD, APP_ROLE_PASSWORD_SETTING],
+            [BACKUP_ROLE_PASSWORD, BACKUP_ROLE_PASSWORD],
           ],
         );
-        assert.equal(APP_ROLE_PASSWORD_SETTING in migrate.environment, false);
+        for (const setting of [APP_ROLE_PASSWORD_SETTING, BACKUP_ROLE_PASSWORD]) {
+          assert.equal(setting in migrate.environment, false, setting);
+        }
         assert.equal(migrate.environment.ConnectionStrings__LoDb.includes(APP_ROLE), false);
         for (const service of [api, migrate]) {
           assert.doesNotMatch(service.environment.ConnectionStrings__LoDb, /password/i);

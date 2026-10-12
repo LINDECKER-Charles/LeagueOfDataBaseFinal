@@ -4,7 +4,8 @@
 #   COMPOSE_FILE=compose.yaml:compose.deploy.yaml docker compose up -d
 #
 # The staging host adds compose.staging.yaml, and compose.staging-auth.yaml when its .env
-# asks for it; the deploy job writes the resulting COMPOSE_FILE to the host's .env.
+# asks for it; prod adds compose.umami.yaml and compose.sauvegarde.yaml. The deploy job writes
+# the resulting COMPOSE_FILE to the host's .env.
 #
 # Driven by .github/workflows/_deploy.yml. The host's .env (secret ENV_STAGING or ENV_PROD,
 # templates .env.staging.example and .env.prod.example) sets the project, the images and the
@@ -158,7 +159,8 @@ services:
           pids: 512
 
   # Ephemeral: `docker compose run --rm migrate` before `up -d` (_deploy.yml). The superuser's
-  # password signs it in; the API's is the one it sets on lodb_app, both from their files.
+  # password signs it in; the API's is the one it sets on lodb_app, the backups' the one it sets
+  # on lodb_sauvegarde, all from their files.
   migrate:
     image: ${REGISTRY:?REGISTRY is required (ghcr.io/<owner>/lodb)}/api:${IMAGE_TAG:?IMAGE_TAG is required}
     build: !reset null
@@ -172,6 +174,10 @@ services:
       - *database-password
       - source: LODB_APP_DB_PASSWORD
         target: LoDb__Database__AppRole__Password
+      # The read-only role of the host's off-host backups (compose.sauvegarde.yaml), the same
+      # value as infra-vps's SAUVEGARDE_LODB_MOT_DE_PASSE: prod only, empty on staging, where
+      # the role then has no password and nobody signs in as it. Never the API's.
+      - LoDb__Database__BackupRole__Password
     deploy:
       resources:
         limits:
@@ -341,3 +347,5 @@ secrets:
     file: ./.deploy/secrets/LoDb__Audience__Username
   LoDb__Audience__Password:
     file: ./.deploy/secrets/LoDb__Audience__Password
+  LoDb__Database__BackupRole__Password:
+    file: ./.deploy/secrets/LoDb__Database__BackupRole__Password
