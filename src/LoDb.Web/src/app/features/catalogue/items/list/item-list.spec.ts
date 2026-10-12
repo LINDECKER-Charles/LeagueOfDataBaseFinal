@@ -103,6 +103,6 @@ describe('lodb-item-list', () => {
     const { heads } = await render();
 
     expect(heads.at(-1)?.description).toBe('item.list.description {"count":2,"version":"16.19.1"}');
-    expect(heads.at(-1)?.image).toBe('/preview/items.png');
+    expect(heads.at(-1)?.image).toEqual({ url: '/preview/items.png', width: 1200, height: 630 });
   });
 });

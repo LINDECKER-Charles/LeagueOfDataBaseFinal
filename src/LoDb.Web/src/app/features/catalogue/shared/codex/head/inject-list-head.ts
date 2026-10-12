@@ -1,4 +1,5 @@
 import { effect, inject, untracked } from '@angular/core';
+import { previewImage } from '../../../../../core/seo/images/preview-image';
 import type { SeoPage } from '../../../../../core/seo/seo-page';
 import { catalogueListSeo } from '../../seo/catalogue-list-seo';
 import { CatalogueHead } from './catalogue-head';
@@ -18,7 +19,7 @@ function seoOf(head: ListHead, texts: CatalogueTexts): SeoPage {
     context,
     entries: head.entries,
   });
-  return { ...page, image: `/preview/${head.path}.png` };
+  return { ...page, image: previewImage(head.path) };
 }
 
 /**

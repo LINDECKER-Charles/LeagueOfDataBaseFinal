@@ -91,7 +91,10 @@ describe('ChampionsPage', () => {
     const { apply } = await visit();
 
     expect(apply).toHaveBeenCalledWith(
-      expect.objectContaining({ path: 'champions', image: '/preview/champions.png' }),
+      expect.objectContaining({
+        path: 'champions',
+        image: { url: '/preview/champions.png', width: 1200, height: 630 },
+      }),
     );
   });
 });
