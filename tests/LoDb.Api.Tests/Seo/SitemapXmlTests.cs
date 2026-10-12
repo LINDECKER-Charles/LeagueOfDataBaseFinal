@@ -6,7 +6,7 @@ namespace LoDb.Api.Tests.Seo;
 
 /// <summary>
 /// The sitemap documents: UTF-8 without a byte order mark, in the sitemaps.org namespace,
-/// a <c>loc</c> per URL and never a <c>lastmod</c>.
+/// a <c>loc</c> per URL and a <c>lastmod</c> only for a dated entry, in UTC.
 /// </summary>
 public sealed class SitemapXmlTests
 {
@@ -18,10 +18,13 @@ public sealed class SitemapXmlTests
         "https://league-of-data-base.com/en/items/1004-faerie-charm?a=1&b=2",
     ];
 
+    private static readonly SitemapEntry[] Entries =
+        [.. Urls.Select(static url => new SitemapEntry(url))];
+
     [Fact]
     public void WritesAnIndexOfSitemaps()
     {
-        var document = Parse(SitemapXml.Index(Urls));
+        var document = Parse(SitemapXml.Index(Entries));
 
         Assert.Equal(Sitemaps + "sitemapindex", document.Root!.Name);
         Assert.All(document.Root.Elements(), static entry =>
@@ -32,7 +35,7 @@ public sealed class SitemapXmlTests
     [Fact]
     public void WritesASetOfUrls()
     {
-        var document = Parse(SitemapXml.UrlSet(Urls));
+        var document = Parse(SitemapXml.UrlSet(Entries));
 
         Assert.Equal(Sitemaps + "urlset", document.Root!.Name);
         Assert.All(document.Root.Elements(), static entry =>
@@ -46,7 +49,7 @@ public sealed class SitemapXmlTests
     [Fact]
     public void EscapesTheUrlsAndStartsWithTheDeclaration()
     {
-        var body = SitemapXml.UrlSet(Urls);
+        var body = SitemapXml.UrlSet(Entries);
         var text = Encoding.UTF8.GetString(body);
 
         Assert.NotEqual(0xEF, body[0]);
@@ -56,6 +59,23 @@ public sealed class SitemapXmlTests
             StringComparison.Ordinal);
         Assert.Contains("?a=1&amp;b=2", text, StringComparison.Ordinal);
         Assert.DoesNotContain("lastmod", text, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void DatesOnlyTheEntriesThatCarryADateInUtc()
+    {
+        var promoted = new DateTimeOffset(2026, 10, 7, 1, 30, 5, TimeSpan.FromHours(2));
+        SitemapEntry[] entries = [new(Urls[0], promoted), new(Urls[1])];
+
+        var document = Parse(SitemapXml.UrlSet(entries));
+
+        var dates = document.Root!.Elements()
+            .Select(static url => url.Element(Sitemaps + "lastmod")?.Value)
+            .ToList();
+        Assert.Equal(["2026-10-06T23:30:05Z", null], dates);
+        Assert.Equal(
+            [Sitemaps + "loc", Sitemaps + "lastmod"],
+            document.Root.Elements().First().Elements().Select(static child => child.Name));
     }
 
     [Fact]

@@ -129,6 +129,7 @@
       "abilities": "技能",
       "passive": "被动",
       "skins": "皮肤",
+      "splash_alt": "{{ name }}的原画",
       "cooldown": "冷却时间",
       "cost": "消耗",
       "range": "射程",

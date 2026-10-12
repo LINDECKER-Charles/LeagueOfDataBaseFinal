@@ -24,6 +24,7 @@ internal sealed class VersionIngestion(
     StoredDatasets stored,
     ImageIngestion images,
     IngestionMetrics metrics,
+    IEnumerable<IPromotionListener> listeners,
     TimeProvider timeProvider,
     ILogger<VersionIngestion> logger) : IVersionIngestion
 {
@@ -165,7 +166,28 @@ internal sealed class VersionIngestion(
             progress.Written,
             progress.Report?.Stored ?? 0,
             promoted);
+        if (promoted)
+        {
+            await NotifyAsync(run.Version, cancellationToken).ConfigureAwait(false);
+        }
+
         return Result(progress, VersionIngestionOutcome.Completed, promoted);
+    }
+
+    // The version is promoted whatever a listener does: a failure is logged, never thrown.
+    private async Task NotifyAsync(PatchVersion version, CancellationToken cancellationToken)
+    {
+        foreach (var listener in listeners)
+        {
+            try
+            {
+                await listener.OnPromotedAsync(version, cancellationToken).ConfigureAwait(false);
+            }
+            catch (Exception exception) when (!IsStopping(exception, cancellationToken))
+            {
+                IngestionLog.ListenerFailed(logger, version.Value, exception);
+            }
+        }
     }
 
     private async Task<VersionIngestionResult> DeferAsync(

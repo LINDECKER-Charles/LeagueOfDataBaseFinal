@@ -2,9 +2,7 @@ using LoDb.Api.Modules.Catalog.Champions.Details;
 using LoDb.Api.Modules.Catalog.Http;
 using LoDb.Api.Modules.Catalog.Reading;
 using LoDb.Api.Modules.ClientPolicy.Versions;
-using LoDb.Domain.Catalog;
 using LoDb.Domain.Catalog.Champions;
-using LoDb.Domain.Paths;
 using LoDb.Ingestion.Catalog;
 using LoDb.Ingestion.Images;
 using LoDb.Ingestion.Images.Art;
@@ -109,8 +107,8 @@ internal static class ChampionEndpoints
     private static bool IsApp(HttpContext context) =>
         ClientHeader.Read(context.Request) is not null;
 
+    // The id, or the champion's id or name typed loosely ("wukong"): the page's canonical path
+    // then differs from the segment, and the renderer moves it there with a 301.
     private static ChampionDetail? Find(CatalogContext context, string segment) =>
-        CanonicalPath.IdOf(ResourceType.Champions, segment) is { } id
-            ? context.Catalog.Champions.Find(id)
-            : null;
+        context.Catalog.FindChampion(segment);
 }

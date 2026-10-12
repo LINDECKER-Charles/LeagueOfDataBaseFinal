@@ -129,6 +129,7 @@
       "abilities": "Képességek",
       "passive": "Passzív",
       "skins": "Kinézetek",
+      "splash_alt": "{{ name }} illusztrációja",
       "cooldown": "Újratöltődés",
       "cost": "Költség",
       "range": "Hatótávolság",

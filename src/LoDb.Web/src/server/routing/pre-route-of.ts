@@ -21,6 +21,7 @@ const UNSAFE_IN_SEGMENT = /[/\0]/;
 // the current lane. No page has such a segment.
 const DOT_SEGMENTS: ReadonlySet<string> = new Set(['.', '..']);
 const ROUTER_SYNTAX = /[\\();]/;
+const TRAILING_SLASHES = /\/+$/;
 
 function splitTarget(url: string): { path: string; search: string } {
   const question = url.indexOf(QUERY_START);
@@ -60,13 +61,25 @@ function cleanedSearchOf(path: string, search: string, limits: QueryLimits): str
   return QueryString.parse(search).retain(isKept, limits.maxParams).toString();
 }
 
+// A page of a locale has one path: the home ends with its slash (`/fr/`), no other page does.
+// The router reads `/fr` and `/fr/champions/` as `/fr/` and `/fr/champions`: without this, each
+// page would answer at two addresses, and the proxy keep two copies of it.
+function canonicalPathOf(path: string, first: string): string {
+  if (!LOCALE_SHAPE.test(first)) {
+    return path;
+  }
+  const trimmed = path.replace(TRAILING_SLASHES, '');
+  return trimmed === `/${first}` ? `${trimmed}/` : trimmed;
+}
+
 /**
  * What the server answers a root-relative URL with before any render (ADR 0005), from its
  * shape alone: a 400 for a segment no decoding makes a path segment of (`%2F`, `%00`, a
  * malformed escape); the static 404 for a first segment outside the grammar; a 400 for a
  * segment of the grammar the renderer would read as another path (`..`, `\`, `(`, `;`); a
- * redirect to the same list or detail without the query parameters the page does not read,
- * so that a page has one URL and an invented parameter costs no render; else the render.
+ * redirect to the page's one path (the home's slash, no trailing slash elsewhere) and, for a
+ * list or a detail, without the query parameters the page does not read, so that a page has
+ * one URL and an invented parameter costs no render; else the render.
  */
 export function preRouteOf(url: string, limits: QueryLimits): PreRoute {
   const { path, search } = splitTarget(url);
@@ -74,14 +87,19 @@ export function preRouteOf(url: string, limits: QueryLimits): PreRoute {
   if (segments === null) {
     return { kind: 'bad-request' };
   }
-  if (!isInGrammar(segments[0])) {
+  const [first] = segments;
+  if (first === undefined || !isInGrammar(first)) {
     return { kind: 'not-found' };
   }
   if (!segments.every(isReadAsWritten)) {
     return { kind: 'bad-request' };
   }
-  const cleaned = cleanedSearchOf(path, search, limits);
-  return cleaned === null || cleaned === search
+  const canonical = canonicalPathOf(path, first);
+  const cleaned = cleanedSearchOf(canonical, search, limits) ?? search;
+  if (canonical !== path) {
+    return { kind: 'redirect', location: `${canonical}${cleaned}`, reason: 'slash' };
+  }
+  return cleaned === search
     ? { kind: 'render' }
-    : { kind: 'redirect', location: `${path}${cleaned}` };
+    : { kind: 'redirect', location: `${path}${cleaned}`, reason: 'query' };
 }

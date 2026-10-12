@@ -97,6 +97,7 @@ services:
       LoDb__Contact__Recipient:
       LoDb__Contact__NotificationLocale:
       LoDb__Seo__SitemapVersionWindow:
+      LoDb__Seo__IndexNowKey:
       # Bounds of the catalogs in memory and of the cold work (ADR 0003, amendment of
       # 2026-10-10); configuration.md gives their defaults.
       LoDb__Catalog__MaxEntries:
@@ -225,7 +226,8 @@ services:
       # the edge's labels hold it anyway.
       LODB_EDGE_SECRET: ${LODB_EDGE_SECRET:?LODB_EDGE_SECRET is required (set by the deploy job)}
       # 1 on staging: "X-Robots-Tag: noindex, nofollow" on the responses of the stack's edge
-      # (snippets/security-headers.conf). The deploy job checks it per environment.
+      # (snippets/security-headers.conf), and a 403 for the AI crawlers (nginx.conf). The
+      # deploy job checks it per environment.
       LODB_NOINDEX: ${LODB_NOINDEX:-0}
       # First part of the page cache's key. IMAGE_TAG (staging, prod) is the same for every
       # revision: without the key compose.yaml sets, the image's own default applies

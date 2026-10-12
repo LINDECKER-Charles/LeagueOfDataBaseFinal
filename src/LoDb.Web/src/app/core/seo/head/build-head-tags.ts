@@ -1,3 +1,5 @@
+import { previewImage } from '../images/preview-image';
+import type { SeoImage } from '../images/seo-image';
 import { siteGraph } from '../json-ld/site/site-graph';
 import type { SeoPage } from '../seo-page';
 import { SITE_IDENTITY } from '../site-identity';
@@ -53,7 +55,7 @@ function pageMetas(input: HeadInput, title: string, urls: SeoUrls | null): Metas
   const { page, origin, locale } = input;
   const description = page.description ?? input.texts.siteDescription;
   const home = seoUrlsOf({ origin, locale, version: null, path: '' });
-  const image = home.absolute(page.image ?? SITE_IDENTITY.defaultImagePath);
+  const image = imageOf(page.image);
   return [
     { attribute: 'name', key: 'description', content: description },
     { attribute: 'property', key: 'og:title', content: title },
@@ -61,10 +63,34 @@ function pageMetas(input: HeadInput, title: string, urls: SeoUrls | null): Metas
     ...(urls === null ? [] : [ogUrl(urls)]),
     { attribute: 'property', key: 'og:type', content: page.ogType ?? 'website' },
     { attribute: 'property', key: 'og:locale', content: ogLocaleOf(locale) },
-    { attribute: 'property', key: 'og:image', content: image },
     { attribute: 'name', key: 'twitter:title', content: title },
     { attribute: 'name', key: 'twitter:description', content: description },
-    { attribute: 'name', key: 'twitter:image', content: image },
+    ...imageMetas({ ...image, url: home.absolute(image.url), alt: image.alt ?? title }),
+  ];
+}
+
+function imageOf(image: SeoPage['image']): SeoImage {
+  if (image === undefined || image === null) {
+    return previewImage('home');
+  }
+  return typeof image === 'string' ? { url: image } : image;
+}
+
+// The image, absolute, with its size when known and what it shows.
+function imageMetas(image: SeoImage & { readonly alt: string }): Metas {
+  const size: Metas =
+    image.width === undefined || image.height === undefined
+      ? []
+      : [
+          { attribute: 'property', key: 'og:image:width', content: String(image.width) },
+          { attribute: 'property', key: 'og:image:height', content: String(image.height) },
+        ];
+  return [
+    { attribute: 'property', key: 'og:image', content: image.url },
+    ...size,
+    { attribute: 'property', key: 'og:image:alt', content: image.alt },
+    { attribute: 'name', key: 'twitter:image', content: image.url },
+    { attribute: 'name', key: 'twitter:image:alt', content: image.alt },
   ];
 }
 

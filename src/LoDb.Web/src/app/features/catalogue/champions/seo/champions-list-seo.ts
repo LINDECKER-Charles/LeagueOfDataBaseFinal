@@ -1,8 +1,8 @@
 import type { ChampionList } from '../../../../core/api/generated/models/champion-list';
 import type { PageContext } from '../../../../core/context/page-context';
+import { previewImage } from '../../../../core/seo/images/preview-image';
 import type { SeoPage } from '../../../../core/seo/seo-page';
 import { catalogueListSeo } from '../../shared/seo/catalogue-list-seo';
-import { CHAMPIONS_PREVIEW } from './champions-preview';
 import type { Translate } from './translate';
 
 /**
@@ -21,8 +21,9 @@ export function championsListSeo(
     title: translate('seo.champion.list.title'),
     description: description ?? '',
     path: 'champions',
+    page: list?.page ?? null,
     context,
     entries: list?.entries ?? [],
   });
-  return { ...page, description, image: CHAMPIONS_PREVIEW };
+  return { ...page, description, image: previewImage('champions') };
 }

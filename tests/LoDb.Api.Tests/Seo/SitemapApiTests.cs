@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using LoDb.Api.Tests.Catalog;
 using LoDb.Domain.Languages;
@@ -77,6 +78,22 @@ public sealed class SitemapApiTests(SeoApiFixture api)
             pages.Where(IsEntity).Select(static url => url[$"{Origin}/fr/".Length..])
                 .Order(StringComparer.Ordinal));
         Assert.Equal(pages.Count, pages.Distinct(StringComparer.Ordinal).Count());
+    }
+
+    [Fact]
+    public async Task LatestDatesThePagesOfThePatchByItsPromotion()
+    {
+        using var response = await api.GetAsync("/sitemaps/fr/latest.xml");
+        var document = SitemapXmlTests.Parse(await BodyAsync(response));
+
+        var dates = document.Root!.Elements().ToDictionary(
+            static url => url.Element(SitemapXmlTests.Sitemaps + "loc")!.Value,
+            static url => url.Element(SitemapXmlTests.Sitemaps + "lastmod")?.Value);
+        var promoted = dates[$"{Origin}/fr/items/1004-faerie-charm"];
+        Assert.NotNull(promoted);
+        Assert.True(DateTimeOffset.TryParse(promoted, CultureInfo.InvariantCulture, out _));
+        Assert.Equal(promoted, dates[$"{Origin}/fr/"]);
+        Assert.Null(dates[$"{Origin}/fr/about"]);
     }
 
     [Theory]

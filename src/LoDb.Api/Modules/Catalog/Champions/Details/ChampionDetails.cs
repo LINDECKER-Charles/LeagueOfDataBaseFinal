@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using LoDb.Api.Modules.Catalog.Reading;
 using LoDb.Api.Modules.Catalog.Shared;
 using LoDb.Domain.Catalog.Champions;
+using LoDb.Domain.Derived.Champions;
 using LoDb.Domain.Text;
 using LoDb.Ingestion.Catalog.Snapshots;
 using LoDb.Ingestion.Images.Art;
@@ -61,6 +62,12 @@ internal sealed record ChampionDetails
     public required int AlternateSkinCount { get; init; }
 
     /// <summary>
+    /// The names of those skins, in the gallery's order: the server renders them while the
+    /// gallery waits to be scrolled to, so that a crawler reads them without the gallery.
+    /// </summary>
+    public required IReadOnlyList<string> AlternateSkinNames { get; init; }
+
+    /// <summary>
     /// Every skin, the base one first, for an installed app alone: its front may predate
     /// <c>…/skins</c> and read them here, the app's API only growing (ADR 0008). Left out for
     /// the web; to remove once the client policy's minimum of each app reads <c>…/skins</c>.
@@ -94,9 +101,17 @@ internal sealed record ChampionDetails
             Art = ChampionArt.Of(profile.Id, BaseSkin),
             CenteredArtVariants = images.VariantsOf(ArtVariants.CenteredOf(champion)),
             AlternateSkinCount = champion.Skins.Count(static skin => skin.Number != BaseSkin),
+            AlternateSkinNames = AlternateSkinNamesOf(champion),
             Neighbours = ChampionList.NeighboursOf(champion, catalog),
         };
     }
+
+    private static string[] AlternateSkinNamesOf(ChampionDetail champion) =>
+        [
+            .. champion.Skins
+                .Where(static skin => skin.Number != BaseSkin)
+                .Select(skin => SkinName.Display(skin, champion.Summary.Name)),
+        ];
 
     /// <summary>The same page with every skin, for an app whose front reads them here.</summary>
     public ChampionDetails WithSkins(ChampionDetail champion, CatalogSnapshot catalog) =>

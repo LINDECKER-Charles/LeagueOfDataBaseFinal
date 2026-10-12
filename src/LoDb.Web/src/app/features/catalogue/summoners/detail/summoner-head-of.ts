@@ -1,6 +1,7 @@
 import type { SummonerDetails } from '../../../../core/api/generated/models/summoner-details';
 import { summonerSpellJsonLd } from '../../../../core/seo/json-ld/game/summoner-spell-json-ld';
 import type { CatalogueEntry } from '../../../../core/routing/catalogue/catalogue-entry';
+import { previewImage } from '../../../../core/seo/images/preview-image';
 import type { SeoPage } from '../../../../core/seo/seo-page';
 import type { CatalogueTexts } from '../../shared/codex/head/catalogue-texts';
 import { detailTrail } from '../../shared/codex/head/detail-trail';
@@ -31,7 +32,7 @@ export function summonerHeadOf(
     locale: context.locale,
     path: details.canonicalPath,
     version: context.pinned ? context.version : null,
-    image: '/preview/summoners.png',
+    image: previewImage('summoners'),
     jsonLd: (urls) => [
       detailTrail(trail, urls),
       summonerSpellJsonLd({ ...details, profile: { ...card, name } }, urls),

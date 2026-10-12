@@ -129,6 +129,7 @@
       "abilities": "Habilidades",
       "passive": "Pasiva",
       "skins": "Aspectos",
+      "splash_alt": "Ilustración de {{ name }}",
       "cooldown": "Tiempo de reutilización",
       "cost": "Coste",
       "range": "Alcance",

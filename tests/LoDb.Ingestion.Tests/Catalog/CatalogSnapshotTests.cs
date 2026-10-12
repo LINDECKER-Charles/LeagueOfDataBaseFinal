@@ -32,6 +32,21 @@ public sealed class CatalogSnapshotTests
         Assert.Equal(CatalogFixtures.English, catalog.Items.ContentLanguage);
     }
 
+    [Theory]
+    [InlineData("MonkeyKing", "MonkeyKing")]
+    [InlineData("monkeyking", "MonkeyKing")]
+    [InlineData("wukong", "MonkeyKing")]
+    [InlineData("WU KONG", "MonkeyKing")]
+    [InlineData("fiddle-sticks", "Fiddlesticks")]
+    [InlineData("nobody", null)]
+    [InlineData("", null)]
+    public async Task ChampionIsFoundByItsIdOrEnglishNameTypedLoosely(string segment, string? id)
+    {
+        var french = await CatalogFixtures.LatestAsync(French);
+
+        Assert.Equal(id, french.FindChampion(segment)?.Summary.Id);
+    }
+
     [Fact]
     public async Task ListedItemsLeaveTheDebrisOut()
     {

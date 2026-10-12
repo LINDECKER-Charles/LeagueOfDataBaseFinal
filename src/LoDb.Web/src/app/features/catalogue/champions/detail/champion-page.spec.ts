@@ -56,6 +56,7 @@ function detailsOf(overrides: Partial<ChampionDetails> = {}): ChampionDetails {
       { slot: 'q', name: 'Disintegrate', description: 'Burns.', image: { status: 'absent' } },
     ],
     alternateSkinCount: 1,
+    alternateSkinNames: ['Goth Annie'],
     allyTips: ['Stun with the passive.', ' '],
     enemyTips: [],
     neighbours: { previous: neighbourOf('Ahri'), next: neighbourOf('Brand') },
@@ -166,11 +167,12 @@ describe('ChampionPage', () => {
     expect(host.querySelector('#lore')?.textContent).toContain('disarmingly precocious');
   });
 
-  it('reads the skins once their section is scrolled to, then shows the gallery', async () => {
+  it('names the skins until their section is scrolled to, then shows the gallery', async () => {
     const { harness, host } = await visit(detailsOf());
     const http = TestBed.inject(HttpTestingController);
     expect(host.querySelector('#skins .codex-header__meta')?.textContent?.trim()).toBe('1');
-    expect(host.querySelectorAll('#skins lodb-skeleton')).toHaveLength(3);
+    expect(host.querySelectorAll('#skins lodb-skeleton')).toHaveLength(1);
+    expect(host.querySelector('#skins li')?.textContent?.trim()).toBe('Goth Annie');
     http.expectNone(SKINS);
 
     // In the template's order: the abilities, the skins, the stats, the pager.

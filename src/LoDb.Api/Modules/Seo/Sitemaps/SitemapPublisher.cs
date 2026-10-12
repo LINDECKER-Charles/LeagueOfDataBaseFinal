@@ -70,7 +70,8 @@ internal sealed class SitemapPublisher(
         }
 
         var latest = await catalog.GetLatestAsync(cancellationToken);
-        var scope = new SitemapScope(origins.Of(request), uiLocale, latest);
+        var promotedAt = await catalog.GetLatestPromotedAtAsync(cancellationToken);
+        var scope = new SitemapScope(origins.Of(request), uiLocale, latest, promotedAt);
         if (sitemap.Version is not { } version)
         {
             return await LatestAsync(scope, cancellationToken);
@@ -95,7 +96,8 @@ internal sealed class SitemapPublisher(
             }
         }
 
-        var pages = SitemapLocations.Latest(scope.Origin, scope.Locale, load?.Catalog);
+        var prefix = SitePages.Prefix(scope.Origin, scope.Locale, null);
+        var pages = SitemapLocations.Latest(prefix, load?.Catalog, scope.PromotedAt);
         return SeoAnswer.File(SitemapXml.UrlSet(pages), SitemapXml.ContentType, SeoCaching.Hour);
     }
 
@@ -121,5 +123,9 @@ internal sealed class SitemapPublisher(
         return SeoAnswer.File(SitemapXml.UrlSet(pages), SitemapXml.ContentType, cache);
     }
 
-    private sealed record SitemapScope(string Origin, UiLocale Locale, PatchVersion? Latest);
+    private sealed record SitemapScope(
+        string Origin,
+        UiLocale Locale,
+        PatchVersion? Latest,
+        DateTimeOffset? PromotedAt);
 }

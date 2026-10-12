@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Net;
 using System.Text.Json;
+using LoDb.Api.Modules.Seo.IndexNow;
 using LoDb.Domain.Languages;
 using LoDb.Domain.Versions;
 using LoDb.Ingestion.Catalog;
@@ -20,12 +21,20 @@ namespace LoDb.Api.Tests.Seo;
 /// read once as a visitor would (its images wait for the workers, which are off).
 /// Crawler reads only queue the other versions, and the workers are off: their sitemaps stay
 /// pending whatever the order of the tests. The sitemap index announces
-/// <see cref="SitemapVersionWindow"/> past versions, 16.18.1 only: 8.7.1 lies outside.
+/// <see cref="SitemapVersionWindow"/> past versions, 16.18.1 only: 8.7.1 lies outside. The
+/// canonical origin is the test client's, and the promotion of 16.19.1 submitted its pages to
+/// <see cref="IndexNow"/> under <see cref="IndexNowKey"/>.
 /// </summary>
 public sealed class SeoApiFixture(PostgresContainerFixture postgres) : IAsyncLifetime
 {
     /// <summary>The past versions the index announces, few enough for the fixtures.</summary>
     public const int SitemapVersionWindow = 1;
+
+    /// <summary>The origin of the test client, set as the canonical one.</summary>
+    public const string Origin = "http://localhost";
+
+    /// <summary>The IndexNow key the site publishes.</summary>
+    public const string IndexNowKey = "5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e";
 
     /// <summary>A past version outside the window, its en_US datasets stored.</summary>
     public static readonly PatchVersion Archived = PatchVersion.Parse("8.7.1");
@@ -35,6 +44,9 @@ public sealed class SeoApiFixture(PostgresContainerFixture postgres) : IAsyncLif
     private HttpClient? _client;
 
     public static CancellationToken Token => TestContext.Current.CancellationToken;
+
+    /// <summary>What the IndexNow endpoint received.</summary>
+    public FakeIndexNow IndexNow { get; } = new();
 
     private HttpClient Client =>
         _client ?? throw new InvalidOperationException("The fixture is not initialized.");
@@ -51,11 +63,18 @@ public sealed class SeoApiFixture(PostgresContainerFixture postgres) : IAsyncLif
                 ["LoDb:Egress:RetryBaseDelay"] = "00:00:00.001",
                 ["LoDb:Seo:SitemapVersionWindow"] =
                     SitemapVersionWindow.ToString(CultureInfo.InvariantCulture),
+                ["LoDb:Seo:CanonicalOrigin"] = Origin,
+                ["LoDb:Seo:IndexNowKey"] = IndexNowKey,
             },
         };
         var replay = DdragonFixtures.CreateReplay();
         var host = _factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(
-            services => services.AddDdragonFixtureReplay(replay)));
+            services =>
+            {
+                services.AddDdragonFixtureReplay(replay);
+                services.AddHttpClient(IndexNowClient.ClientName)
+                    .ConfigurePrimaryHttpMessageHandler(() => IndexNow);
+            }));
         await IngestAsync(host.Services);
 
         // The redirects are what the tests check: never follow them.

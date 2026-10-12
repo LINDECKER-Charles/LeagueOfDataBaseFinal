@@ -21,10 +21,14 @@ const HEALTHZ_LOOKALIKES = ['/HEALTHZ', '/%48ealthz', '/healthz%0A', '/healthz/'
 // W3C traceparent of version 00, nothing appended: version, trace id, parent id, flags.
 const TRACEPARENT = /^00-([0-9a-f]{32})-([0-9a-f]{16})-00$/;
 const CLIENT_TRACEPARENT = '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01';
-// What the stub's API answers for the sitemap index and llms.txt (lib/upstream-stub.conf).
+// What the stub's API answers for the sitemap index, llms.txt and an IndexNow key file
+// (lib/upstream-stub.conf).
 const CRAWLER_FILE = 'crawler file\n';
 const BLOCKED_AGENT = 'Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTML, like Gecko) '
   + 'Chrome/139.0.0.0 Safari/537.36';
+// Refused on a stack that is never indexed only (nginx-noindex.test.mjs).
+const AI_CRAWLER = 'meta-externalagent/1.1 '
+  + '(+https://developers.facebook.com/docs/sharing/webmasters/crawler)';
 // A client inside the container asks for the stub's large answer, then stops reading for a
 // while (its output goes to a `sleep`). Meanwhile, the script prints the temporary files that
 // nginx's processes hold open: nginx unlinks them as it opens them, so only /proc names them.
@@ -254,6 +258,12 @@ describe('nginx image', { skip: IMAGE ? false : 'LODB_NGINX_IMAGE is not set' },
     assert.equal((await get('/v1/champions', { agent: nextBuild })).status, 200);
   });
 
+  test('lets the AI crawlers through where pages are indexed', async () => {
+    const answer = await get('/v1/champions', { agent: AI_CRAWLER });
+    assert.equal(answer.status, 200);
+    assert.equal(answer.headers['x-robots-tag'], undefined);
+  });
+
   test('exposes /readyz on the API host at its own rate', async () => {
     const statuses = await statusesFrom('/readyz', 3, { host: API_HOST });
     assert.deepEqual(statuses, [200, 200, 429]);
@@ -359,7 +369,7 @@ describe('nginx image', { skip: IMAGE ? false : 'LODB_NGINX_IMAGE is not set' },
     // On a volume, under the revision: a deploy starts them over, as the pages.
     assert.ok((await keysOf('seo')).includes('KEY: r1|http://localhost/robots.txt'));
     // The API's too, never the SSR server's, which knows none of them.
-    for (const path of ['/sitemap.xml', '/llms.txt']) {
+    for (const path of ['/sitemap.xml', '/llms.txt', '/5e5e5e5e5e5e5e5e.txt']) {
       const first = await get(path);
       assert.equal(first.body.toString(), CRAWLER_FILE, path);
       assert.equal(first.headers['x-cache-status'], 'MISS', path);

@@ -4,6 +4,7 @@ import { provideTranslocoScope, TranslocoPipe } from '@jsverse/transloco';
 import { PageDirection } from '../../../core/layout/direction/page-direction';
 import { localePath } from '../../../core/layout/shell/locale-path';
 import { injectRouteData } from '../../../core/routing/inject-route-data';
+import { previewImage } from '../../../core/seo/images/preview-image';
 import { breadcrumbList } from '../../../core/seo/json-ld/site/breadcrumb-list';
 import { dataset } from '../../../core/seo/json-ld/site/dataset';
 import { applyEditorialHead } from '../shared/apply-editorial-head';
@@ -53,7 +54,7 @@ export class AboutDataPage {
         title: translate('seo.about.data.title'),
         description,
         path: 'about/data',
-        image: '/preview/items.png',
+        image: previewImage('items'),
         jsonLd: (urls) => [
           breadcrumbList([
             { name: translate('header.navigation.home'), url: urls.page('') },

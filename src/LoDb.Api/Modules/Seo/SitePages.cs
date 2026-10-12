@@ -25,15 +25,17 @@ internal static class SitePages
     public const string PatchHistory = "patches";
 
     /// <summary>
-    /// Pages that exist once per locale, never per version, in the order the primary
-    /// sitemap lists them: the home, the four lists, the patch history, then the editorial
-    /// pages.
+    /// Pages that exist once per locale, never per version, and change with every promoted
+    /// patch: the home, the four lists and the patch history.
     /// </summary>
-    public static IReadOnlyList<string> Unversioned { get; } =
+    public static IReadOnlyList<string> PatchBound => [Home, .. Lists, PatchHistory];
+
+    /// <summary>
+    /// Pages that exist once per locale, never per version, and no patch changes: the
+    /// editorial pages, in the order the primary sitemap lists them.
+    /// </summary>
+    public static IReadOnlyList<string> Editorial { get; } =
     [
-        Home,
-        .. Lists,
-        PatchHistory,
         "about",
         "about/data",
         "faq",

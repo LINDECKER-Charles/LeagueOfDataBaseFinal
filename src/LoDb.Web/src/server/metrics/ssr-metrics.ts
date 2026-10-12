@@ -7,7 +7,7 @@ import type { NormalizedRedirectReason } from './normalized-redirect-reason';
 import { statusClassOf } from './status-class-of';
 
 const LANES: readonly RenderLane[] = ['pinned', 'current'];
-const REDIRECT_REASONS: readonly NormalizedRedirectReason[] = ['query', 'canonical'];
+const REDIRECT_REASONS: readonly NormalizedRedirectReason[] = ['query', 'slash', 'canonical'];
 // From a render on a catalog the API holds (about 0.1 s) to the render deadline (20 s), with
 // the bounds the alerts read: 1.5 s (a miss of the latest patch) and 3 s (a slow site).
 const RENDER_SECONDS_BUCKETS = [0.1, 0.25, 0.5, 1, 1.5, 3, 5, 10, 20];

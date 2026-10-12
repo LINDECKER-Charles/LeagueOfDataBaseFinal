@@ -129,6 +129,7 @@
       "abilities": "Kemampuan",
       "passive": "Pasif",
       "skins": "Skin",
+      "splash_alt": "Splash art {{ name }}",
       "cooldown": "Waktu Jeda",
       "cost": "Biaya",
       "range": "Jangkauan",

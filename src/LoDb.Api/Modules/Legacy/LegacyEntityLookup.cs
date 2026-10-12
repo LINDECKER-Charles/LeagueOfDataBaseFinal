@@ -10,7 +10,8 @@ namespace LoDb.Api.Modules.Legacy;
 /// <remarks>
 /// The old name was the Data Dragon key, matched exactly: the map key for champions, items
 /// and summoner spells, the <c>key</c> of a rune path ("Domination"), whose new id is
-/// numeric.
+/// numeric. A champion is also found by its name or id typed loosely ("wukong"), as on the
+/// new pages: old links typed by hand point there too.
 /// </remarks>
 internal static class LegacyEntityLookup
 {
@@ -21,7 +22,7 @@ internal static class LegacyEntityLookup
         ArgumentNullException.ThrowIfNull(name);
         return resource switch
         {
-            ResourceType.Champions => catalog.Champions.Find(name) is { } champion
+            ResourceType.Champions => catalog.FindChampion(name) is { } champion
                 ? catalog.PathOf(champion)
                 : null,
             ResourceType.Items => catalog.Items.Find(name) is { } item
