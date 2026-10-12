@@ -22,6 +22,7 @@ public sealed class AdminAccessTests(PostgresContainerFixture postgres)
         "/api/admin/donations",
         "/api/admin/monitoring",
         "/api/admin/storage",
+        "/api/admin/backups",
     ];
 
     [Fact]
