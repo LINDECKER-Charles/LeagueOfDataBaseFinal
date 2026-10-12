@@ -1,16 +1,12 @@
-import type { CatalogMeta } from '../../../core/api/generated/models/catalog-meta';
+import { catalogMetaOf } from '../../../core/testing/catalog-meta-of';
 import { languageOptions } from './language-options';
 import { versionOptions } from './version-options';
 
 const LATEST = '16.19.1';
-const META: CatalogMeta = {
+const META = catalogMetaOf({
   latest: LATEST,
   versions: [LATEST, '16.18.1', '15.14.1', '3.7.1'],
-  readyVersions: [LATEST],
-  versionPattern: String.raw`\d+(?:\.\d+)+`,
   languages: ['en_US', 'en_GB', 'fr_FR', 'zh_CN', 'zh_TW', 'zh_MY', 'es_ES', 'es_MX', 'nl_NL'],
-  languagePattern: '[a-z]{2}_[A-Z]{2}',
-  defaultLanguage: 'en_US',
   locales: [
     { locale: 'en', language: 'en_US' },
     { locale: 'fr', language: 'fr_FR' },
@@ -18,10 +14,7 @@ const META: CatalogMeta = {
     { locale: 'zh-hant', language: 'zh_TW' },
     { locale: 'es', language: 'es_ES' },
   ],
-  fallbackLocale: 'en',
-  gameModes: [{ mode: 'sr', map: 11 }],
-  defaultGameMode: 'sr',
-};
+});
 
 describe('versionOptions', () => {
   it('offers every listed version, newest first, the long tail included', () => {
