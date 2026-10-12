@@ -1,0 +1,340 @@
+/*
+ * Layout of the maintenance page, painted from tokens.css: one panel on the canvas, set like the
+ * site's frames (styles/primitives/frames.css), each identity with its own signature (Piltover's
+ * bevel, Zaun's iron radius, Noxus's hoist bar, Spirit Blossom's arch; styles/theme/<name>/).
+ * Logical properties throughout: an Arabic page mirrors as the site does.
+ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+  -webkit-text-size-adjust: 100%;
+  background: var(--color-void);
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding-block: max(2rem, env(safe-area-inset-top)) max(2rem, env(safe-area-inset-bottom));
+  padding-inline: 1rem;
+  background:
+    radial-gradient(
+      60rem 32rem at 50% -12%,
+      color-mix(in srgb, var(--color-hex-deep) 18%, transparent),
+      transparent 62%
+    ),
+    radial-gradient(
+      40rem 26rem at 50% 115%,
+      color-mix(in srgb, var(--color-gold) 9%, transparent),
+      transparent 70%
+    ),
+    var(--color-void);
+  color: var(--color-text);
+  font-family: var(--font-spiegel);
+  font-size: 1rem;
+  line-height: 1.6;
+  text-align: center;
+}
+
+.frame {
+  inline-size: min(100%, 34rem);
+}
+
+.panel {
+  padding-block: 2.5rem 2rem;
+  padding-inline: clamp(1.25rem, 5vw, 2.5rem);
+  border: 1px solid color-mix(in srgb, var(--color-gold) 42%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-panel-raised) 94%, transparent),
+    color-mix(in srgb, var(--color-void) 94%, transparent)
+  );
+  clip-path: var(--hx-bevel);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-gold-bright) 6%, transparent),
+    0 12px 44px -14px color-mix(in srgb, var(--color-hextech-black) 85%, transparent);
+}
+
+.crest {
+  inline-size: 4.5rem;
+  block-size: 4.5rem;
+  color: var(--color-gold);
+  filter: drop-shadow(0 0 18px var(--hx-glow-accent));
+}
+
+.eyebrow {
+  margin: 1.25rem 0 0;
+  font-family: var(--font-beaufort);
+  font-size: 0.78rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--color-gold-light);
+}
+
+.heading {
+  margin: 0.4rem 0 0.9rem;
+  text-wrap: balance;
+  font-family: var(--font-beaufort);
+  font-size: clamp(1.6rem, 1.15rem + 2vw, 2.25rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-gold);
+  background: linear-gradient(
+    180deg,
+    var(--color-gold-pale) 8%,
+    var(--color-gold) 60%,
+    var(--color-gold-rich) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.lead {
+  margin: 0 auto;
+  max-inline-size: 28rem;
+  color: var(--color-text-muted);
+}
+
+.lead,
+.note {
+  text-wrap: pretty;
+}
+
+/* Japanese breaks between phrases rather than inside a word, where the browser can tell them. */
+:lang(ja) .lead,
+:lang(ja) .note,
+:lang(ja) .estimate__value {
+  word-break: auto-phrase;
+}
+
+.estimate {
+  margin-block: 1.75rem 1.25rem;
+  padding: 1.1rem 1.25rem 1.3rem;
+  border: 1px solid color-mix(in srgb, var(--color-gold) 24%, transparent);
+  background: color-mix(in srgb, var(--color-hextech-black) 55%, transparent);
+  clip-path: var(--hx-bevel-btn);
+}
+
+.estimate__label {
+  margin: 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-text-dim);
+}
+
+.estimate__value {
+  margin: 0.2rem 0 0.9rem;
+  font-family: var(--font-beaufort);
+  font-size: 1.55rem;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--color-text);
+  text-wrap: balance;
+}
+
+/* A sentence, once the estimate has passed: smaller than a duration. */
+.estimate__value[data-estimate-kind='overdue'] {
+  font-size: 1.15rem;
+}
+
+/* Something is happening, without claiming a progress the page cannot measure. */
+.estimate__track {
+  position: relative;
+  block-size: 3px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--color-gold) 16%, transparent);
+}
+
+.estimate__run {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  inline-size: 38%;
+  background: linear-gradient(90deg, transparent, var(--color-hex), var(--color-gold), transparent);
+  animation: run 2.6s var(--ease-hextech) infinite;
+}
+
+[dir='rtl'] .estimate__run {
+  animation-name: run-rtl;
+}
+
+@keyframes run {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(265%);
+  }
+}
+
+@keyframes run-rtl {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(-265%);
+  }
+}
+
+.note {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-text-dim);
+}
+
+.retry {
+  display: inline-block;
+  margin-block-start: 1.5rem;
+  padding: 0.8rem 1.6rem;
+  border: 1px solid color-mix(in srgb, var(--color-gold) 70%, transparent);
+  background: color-mix(in srgb, var(--color-gold) 14%, transparent);
+  color: var(--color-text);
+  font-family: var(--font-beaufort);
+  font-size: 0.875rem;
+  letter-spacing: 0.15em;
+  text-decoration: none;
+  text-transform: uppercase;
+  clip-path: var(--hx-bevel-btn);
+  transition: background-color 0.3s var(--ease-hextech);
+}
+
+.retry:hover,
+.retry:focus-visible {
+  background: color-mix(in srgb, var(--color-gold) 26%, transparent);
+}
+
+/* Inside the button: its clip would cut an outline drawn around it. */
+.retry:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--color-hex);
+}
+
+/* ---- Zaun: an iron line swept at two corners, chem-green glass ---------------- */
+[data-theme='zaun'] .panel {
+  border-radius: var(--hx-iron-radius);
+  border-color: color-mix(in srgb, var(--color-gold-deep) 62%, transparent);
+  background:
+    linear-gradient(
+      152deg,
+      color-mix(in srgb, var(--color-gold-bright) 6%, transparent) 0%,
+      transparent 36%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-panel-2) 94%, transparent),
+      color-mix(in srgb, var(--color-void) 97%, transparent)
+    );
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-gold) 20%, transparent),
+    0 14px 40px -18px var(--color-shadow);
+}
+
+[data-theme='zaun'] .estimate,
+[data-theme='zaun'] .retry {
+  border-radius: var(--hx-iron-radius-btn);
+}
+
+[data-theme='zaun'] .heading {
+  font-weight: 600;
+  letter-spacing: 0.005em;
+}
+
+[data-theme='zaun'] .eyebrow,
+[data-theme='zaun'] .estimate__label {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  letter-spacing: 0.18em;
+}
+
+/* ---- Noxus: square steel, hung from a crimson hoist bar ---------------------- */
+[data-theme='noxus'] .panel {
+  border-block-color: color-mix(in srgb, var(--color-blue-steel) 70%, transparent);
+  border-inline-end-color: color-mix(in srgb, var(--color-blue-steel) 70%, transparent);
+  border-inline-start: 3px solid var(--color-hex-deep);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-panel-2) 96%, transparent),
+    color-mix(in srgb, var(--color-panel) 98%, transparent)
+  );
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-gold) 14%, transparent),
+    0 10px 30px -16px var(--color-shadow);
+}
+
+[data-theme='noxus'] .estimate {
+  border-inline-start: 2px solid color-mix(in srgb, var(--color-hex-deep) 80%, transparent);
+}
+
+[data-theme='noxus'] .heading {
+  font-weight: 800;
+  letter-spacing: -0.015em;
+}
+
+[data-theme='noxus'] .eyebrow,
+[data-theme='noxus'] .retry {
+  font-weight: 800;
+  letter-spacing: 0.1em;
+}
+
+/* ---- Spirit Blossom: no frame, a sheet arched like a votive tablet ------------ */
+[data-theme='spirit-blossom'] .panel {
+  border-radius: var(--sb-arch);
+  border-color: transparent;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-gold) 7%, transparent) 0%,
+      transparent 22%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-panel) 96%, transparent),
+      color-mix(in srgb, var(--color-panel) 99%, transparent)
+    );
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--color-gold) 26%, transparent),
+    0 12px 34px -20px var(--color-shadow);
+}
+
+[data-theme='spirit-blossom'] .estimate,
+[data-theme='spirit-blossom'] .retry {
+  border-radius: var(--sb-arch-btn);
+}
+
+[data-theme='spirit-blossom'] .heading {
+  font-weight: 400;
+  letter-spacing: 0.09em;
+}
+
+[data-theme='spirit-blossom'] .eyebrow {
+  font-weight: 400;
+  letter-spacing: 0.32em;
+}
+
+[data-theme='spirit-blossom'] .retry {
+  font-weight: 600;
+  letter-spacing: 0.2em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .estimate__run {
+    inline-size: 100%;
+    opacity: 0.45;
+    animation: none;
+  }
+
+  .retry {
+    transition: none;
+  }
+}

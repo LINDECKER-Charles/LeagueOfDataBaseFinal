@@ -233,6 +233,10 @@ services:
       # Host folder of the Android files, latest.json and assetlinks.json
       # (server.d/android-latest.conf, assetlinks.conf): empty, both URLs answer 404.
       - ${LODB_ANDROID_DIR:-./.deploy/android}:/etc/nginx/android:ro
+      # The maintenance switch the deploy job turns while it replaces the containers
+      # (tools/deploy/maintenance.sh, server.d/maintenance.conf). A folder, so that the file
+      # written or removed there reaches the running nginx, the one being replaced included.
+      - ./.deploy/maintenance:/srv/maintenance:ro
     networks:
       - default
       - edge

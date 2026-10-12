@@ -12,6 +12,7 @@ Reserved files (plan, §7.3):
 | `seo.conf` | L3.4 (sitemaps, robots.txt, llms.txt routed to the API, cached) |
 | `legacy-redirects.conf` | L3.12 (301 of the old URLs, cached) |
 | `analytics.conf` | L7.1 (internal target of the page-view mirror) |
+| `maintenance.conf` | maintenance page of the deploys (the page itself: `../maintenance/`) |
 
 What goes inside a `location` belongs in `../snippets/` instead. The guards both server
 blocks share (refused agents, client timeouts, paths that exist nowhere, the 429 answer)
@@ -21,7 +22,10 @@ a request without the edge's header is refused there, before anything else.
 
 Files of the served environment, not of the image: the environment mounts a folder
 read-only on `/etc/nginx/android/` (a folder rather than each file, so that a replaced
-file reaches nginx). Without them, their URL answers 404.
+file reaches nginx). Without them, their URL answers 404. The same goes for
+`/srv/maintenance/`, the deploy job's maintenance switch (`active.json`,
+`tools/deploy/maintenance.sh`): while the file is there, every page answers the maintenance
+page, and `/maintenance/status.json` serves it to that page; without it, a 404.
 
 | File in `/etc/nginx/android/` | Served on | Conf | Source |
 |---|---|---|---|

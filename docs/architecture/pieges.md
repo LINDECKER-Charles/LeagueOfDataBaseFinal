@@ -476,6 +476,19 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   site est un littéral, dans le calque et dans `audience-site.ts` : `tools/umami/test`
   vérifie leur accord. Aucune adresse de compte ou d'admin ne part (`audience: 'none'`), les
   autres pages partent sous leur gabarit, sauf listes et fiches (`audience: 'path'`).
+- **Page de maintenance** (`server.d/maintenance.conf`, `docker/nginx/maintenance/`) : tant que
+  `.deploy/maintenance/active.json` existe sur l'hôte (monté en lecture seule sur
+  `/srv/maintenance`), nginx répond **503** à chaque page — `/`, une locale, `/b/`, `/admin` —
+  par la page de son image ; l'API, `/v1/`, les webhooks, les blobs, `/build/`, les fichiers
+  des robots et les 301 de l'ancien site gardent leur réponse, voulu. Le job le pose juste avant
+  d'arrêter un conteneur et le retire après les sondes (`tools/deploy/maintenance.sh`) ; un
+  échec entre les deux **laisse la page**, qu'on retire à la main une fois la stack rétablie.
+  Sans le dossier (pile locale, E2E), l'interrupteur n'existe pas. Le premier déploiement qui
+  apporte la page ne l'affiche pas (l'ancien nginx ne la connaît pas). Pendant la recréation de
+  nginx lui-même, quelques secondes, c'est l'edge qui répond. Ses textes vivent dans
+  `assets/messages.js` (21 locales), ses couleurs et ses faces recopient `src/styles`
+  (`tools/nginx/test/maintenance-sources.test.mjs` tient l'accord) : un jeton de thème changé
+  côté site se recopie là, sinon le test échoue.
 
 ## Transition (jusqu'à la décommission)
 

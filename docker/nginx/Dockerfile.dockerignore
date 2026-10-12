@@ -1,5 +1,8 @@
 # Build context of docker/nginx/Dockerfile (repository root): deny everything, then
-# admit the nginx configuration. BuildKit prefers this file to the root .dockerignore.
+# admit the nginx configuration, and the fonts and icon of the maintenance page
+# (docker/nginx/maintenance). BuildKit prefers this file to the root .dockerignore.
 *
 
 !docker/nginx/
+!src/LoDb.Web/public/fonts/
+!src/LoDb.Web/public/favicon/favicon-96x96.png
