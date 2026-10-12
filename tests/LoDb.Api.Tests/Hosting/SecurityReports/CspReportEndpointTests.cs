@@ -86,12 +86,11 @@ public sealed class CspReportEndpointTests : IClassFixture<ApiFactory>
         Assert.Equal(new CspViolation("img-src", "unknown"), violation.Key);
     }
 
+    // A type that is no report's, then a body that is none: what the parser finds no report
+    // in is CspReportFormatsTests', row by row.
     [Theory]
     [InlineData("text/plain", Legacy, HttpStatusCode.UnsupportedMediaType)]
     [InlineData(ReportingType, "[{\"type\": ", HttpStatusCode.BadRequest)]
-    // Well-formed, but its string is half a surrogate pair: found only as it is read.
-    [InlineData(LegacyType, "{\"csp-report\": {\"violated-directive\": \"\\uD800\"}}",
-        HttpStatusCode.BadRequest)]
     public async Task RefusesWhatIsNotAReport(string type, string body, HttpStatusCode status)
     {
         using var client = _shared.CreateClient();
