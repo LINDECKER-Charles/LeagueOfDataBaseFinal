@@ -23,40 +23,20 @@ public sealed class PickerEndpointTests(CatalogApiFixture api)
             Assert.Equal("present", option.GetProperty("image").Text("status")));
     }
 
+    // Which items a build may carry is ItemPlayability's (Domain): the exact list proves the
+    // picker applies it, the arena one that it applies it to the mode asked.
     [Fact]
-    public async Task ItemsOfSummonersRiftLeaveTheUnbuyableOut()
-    {
-        var picker = await api.GetJsonAsync($"/api/pickers/items?{Scope}&mode=sr");
-
-        Assert.Equal("sr", picker.Text("mode"));
-        var ids = picker.Pluck("options", "id");
-        Assert.Equal(
-            ["1001", "1004", "1042", "2003", "3006", "3078"],
-            ids.Order(StringComparer.Ordinal));
-        Assert.Equal(300, picker.Entry("options", "1001").GetProperty("gold").GetInt32());
-    }
-
-    [Fact]
-    public async Task ItemsNeverOfferClassicHiddenOrBoundOnes()
-    {
-        var picker = await api.GetJsonAsync($"/api/pickers/items?{Scope}&mode=arena");
-
-        Assert.Equal("arena", picker.Text("mode"));
-        var ids = picker.Pluck("options", "id");
-        Assert.DoesNotContain("771004", ids);
-        Assert.DoesNotContain("773001", ids);
-        Assert.DoesNotContain("3599", ids);
-        Assert.DoesNotContain("7050", ids);
-        Assert.DoesNotContain("3001", ids);
-    }
-
-    [Fact]
-    public async Task ItemsFollowTheMapOfTheMode()
+    public async Task ItemsOfTheModeLeaveTheUnbuyableOut()
     {
         var rift = await api.GetJsonAsync($"/api/pickers/items?{Scope}&mode=sr");
         var arena = await api.GetJsonAsync($"/api/pickers/items?{Scope}&mode=arena");
 
-        Assert.Contains("1001", rift.Pluck("options", "id"));
+        Assert.Equal("sr", rift.Text("mode"));
+        Assert.Equal(
+            ["1001", "1004", "1042", "2003", "3006", "3078"],
+            rift.Pluck("options", "id").Order(StringComparer.Ordinal));
+        Assert.Equal(300, rift.Entry("options", "1001").GetProperty("gold").GetInt32());
+        Assert.Equal("arena", arena.Text("mode"));
         Assert.DoesNotContain("1001", arena.Pluck("options", "id"));
     }
 
