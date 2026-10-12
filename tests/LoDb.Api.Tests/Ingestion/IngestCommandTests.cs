@@ -33,28 +33,21 @@ public sealed class IngestCommandTests(PostgresContainerFixture postgres)
             static url => url.AbsolutePath.Contains("/fr_FR/", StringComparison.Ordinal));
     }
 
+    // What a whole run promotes and what --force fetches again are VersionIngestionTests' and
+    // ImageIngestionTests': these runs prove the command picks the newest versions and passes
+    // the switch on.
     [Fact]
-    public async Task NewestVersionsAreIngestedWholeAndPromoted()
+    public async Task NewestVersionsAreIngestedThenAForcedRunFetchesTheImagesAgain()
     {
         await using var host = await IngestionHost.CreateAsync(postgres);
-
-        var exitCode = await RunAsync(host, DdragonFixtures.CreateReplay(), "--latest", "1");
-
-        Assert.Equal(CliExitCodes.Success, exitCode);
-        Assert.Equal(20, host.CountFiles("data/16.19.1"));
-        Assert.Equal(["16.19.1"], await host.QueryAsync(Promoted));
-    }
-
-    [Fact]
-    public async Task ForcedRunFetchesTheImagesAgain()
-    {
-        await using var host = await IngestionHost.CreateAsync(postgres);
-        await RunAsync(host, DdragonFixtures.CreateReplay(), "--latest", "1");
+        var latest = await RunAsync(host, DdragonFixtures.CreateReplay(), "--latest", "1");
         var replay = DdragonFixtures.CreateReplay();
 
-        var exitCode = await RunAsync(host, replay, "--version", "16.19.1", "--force");
+        var forced = await RunAsync(host, replay, "--version", "16.19.1", "--force");
 
-        Assert.Equal(CliExitCodes.Success, exitCode);
+        Assert.Equal((CliExitCodes.Success, CliExitCodes.Success), (latest, forced));
+        Assert.Equal(20, host.CountFiles("data/16.19.1"));
+        Assert.Equal(["16.19.1"], await host.QueryAsync(Promoted));
         Assert.Equal(
             81,
             replay.Requests.Count(static url =>
@@ -76,13 +69,16 @@ public sealed class IngestCommandTests(PostgresContainerFixture postgres)
         Assert.Equal(["0"], await host.QueryAsync(CountVersions));
     }
 
+    // Refused while the arguments are read: the command needs no database to say so.
     [Fact]
     public async Task InvalidArgumentsAreAUsageError()
     {
-        await using var host = await IngestionHost.CreateAsync(postgres);
         var replay = DdragonFixtures.CreateReplay();
 
-        var exitCode = await RunAsync(host, replay, "--latest", "0");
+        var exitCode = await CliRunner.RunAsync(
+            ["ingest", "--latest", "0"],
+            typeof(Program).Assembly,
+            (services, configuration) => IngestionHost.AddZones(services, configuration, replay));
 
         Assert.Equal(CliExitCodes.Usage, exitCode);
         Assert.Empty(replay.Requests);
