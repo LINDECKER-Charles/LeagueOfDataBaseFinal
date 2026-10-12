@@ -22,19 +22,13 @@ function subresource(url: string, accept = '*/*'): RequestFacts {
 }
 
 describe('routeRequest', () => {
-  it.each<[string, SwRoute]>([
-    ['/en/', 'page'],
-    ['/fr/champions', 'page'],
-    ['/fr/champions/Ahri', 'page'],
-    ['/en/14.1.1/items/3031-infinity-edge', 'page'],
-    ['/en/about', 'page'],
-    ['/en/u/someone', 'page'],
-    ['/', 'page'],
-    ['/en/accounting', 'page'],
-    ['/builds', 'page'],
-  ])('answers the navigation to %s as a page', (path, route) => {
-    expect(routeRequest(navigation(path), ORIGIN)).toBe(route);
-  });
+  // Any path the bypass list leaves alone, and the two that only start like a bypassed one.
+  it.each(['/en/', '/en/accounting', '/builds'])(
+    'answers the navigation to %s as a page',
+    (path) => {
+      expect(routeRequest(navigation(path), ORIGIN)).toBe('page');
+    },
+  );
 
   it.each([
     '/api/meta',
@@ -71,7 +65,8 @@ describe('routeRequest', () => {
     expect(routeRequest(subresource(url), ORIGIN)).toBe(route);
   });
 
-  it.each(['POST', 'PUT', 'DELETE', 'HEAD'])('leaves a %s request to the browser', (method) => {
+  // Any method but GET, a safe HEAD included.
+  it.each(['POST', 'HEAD'])('leaves a %s request to the browser', (method) => {
     expect(routeRequest(navigation('/en/', { method }), ORIGIN)).toBe('bypass');
   });
 

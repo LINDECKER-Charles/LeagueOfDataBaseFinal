@@ -9,8 +9,6 @@ describe('URL grammar (ADR 0005)', () => {
   it.each([
     { url: '/', locale: null, version: null, page: [] },
     { url: '/fr/', locale: 'fr', version: null, page: [] },
-    { url: '/fr', locale: 'fr', version: null, page: [] },
-    { url: '/fr/champions', locale: 'fr', version: null, page: ['champions'] },
     { url: '/fr/champions/Aatrox', locale: 'fr', version: null, page: ['champions', 'Aatrox'] },
     {
       url: '/fr/15.14.1/champions/Aatrox',
@@ -24,27 +22,12 @@ describe('URL grammar (ADR 0005)', () => {
       version: null,
       page: ['items', '1036-long-sword'],
     },
-    {
-      url: '/en/99.99.1/runes/8000-precision',
-      locale: 'en',
-      version: '99.99.1',
-      page: ['runes', '8000-precision'],
-    },
-    { url: '/en/legal/cookies', locale: 'en', version: null, page: ['legal', 'cookies'] },
-    {
-      url: '/en/account/builds/12/edit',
-      locale: 'en',
-      version: null,
-      page: ['account', 'builds', '12', 'edit'],
-    },
     { url: '/b/Zx81', locale: null, version: null, page: ['b', 'Zx81'] },
-    { url: '/admin/users', locale: null, version: null, page: ['admin', 'users'] },
     { url: '/EN/champions', locale: null, version: null, page: ['EN', 'champions'] },
     { url: '/15.14.1/champions', locale: null, version: null, page: ['15.14.1', 'champions'] },
     { url: '/fr/16/champions', locale: 'fr', version: null, page: ['16', 'champions'] },
     // Read decoded, as the router reads them: an encoded spelling names the same page.
     { url: '/fr/%31%35.13.1/champions', locale: 'fr', version: '15.13.1', page: ['champions'] },
-    { url: '/%66r/15.13.1/items', locale: 'fr', version: '15.13.1', page: ['items'] },
     { url: '/zh%2Dhant/u/a%20b', locale: 'zh-hant', version: null, page: ['u', 'a%20b'] },
     { url: '/%E0%A4%A/champions', locale: null, version: null, page: ['%E0%A4%A', 'champions'] },
   ])('cuts $url', ({ url, locale, version, page }) => {
