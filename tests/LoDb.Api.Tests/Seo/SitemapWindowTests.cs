@@ -51,13 +51,15 @@ public sealed class SitemapWindowTests
     }
 
     [Fact]
-    public void VersionNotPromotedYetKeepsItsPlaceInTheWindow()
+    public void VersionNotPromotedYetStaysOutOfTheWindow()
     {
         var index = IndexOf(Listed[1], window: 2);
 
-        Assert.Contains(SitemapOf(Listed[0]), index);
+        Assert.Equal(3 * UiLocales.All.Count, index.Count);
+        Assert.DoesNotContain(SitemapOf(Listed[0]), index);
         Assert.Contains(SitemapOf(Listed[2]), index);
-        Assert.DoesNotContain(SitemapOf(Listed[3]), index);
+        Assert.Contains(SitemapOf(Listed[3]), index);
+        Assert.DoesNotContain(SitemapOf(Listed[4]), index);
     }
 
     [Fact]

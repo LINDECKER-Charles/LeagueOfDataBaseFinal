@@ -17,13 +17,15 @@ internal static class SitemapLocations
 {
     /// <summary>
     /// Every locale's primary sitemap, then, version by version from the newest, every
-    /// locale's sitemap of the first <paramref name="window"/> versions listed, the latest
-    /// one aside: it is the primary sitemaps.
+    /// locale's sitemap of the first <paramref name="window"/> versions listed before the
+    /// latest one: it is the primary sitemaps.
     /// </summary>
     /// <remarks>
     /// The window bounds what the index pushes at crawlers, not what the site serves: an
     /// older version's sitemap still answers at its URL, and the patch history links every
-    /// listed version.
+    /// listed version. A version listed but not promoted yet stays out: its pages move to
+    /// the short URLs at its promotion, and the index would announce redirects. Before any
+    /// promotion, the first versions listed fill the window.
     /// </remarks>
     public static IEnumerable<string> Index(
         string origin,
@@ -31,10 +33,11 @@ internal static class SitemapLocations
         int window)
     {
         ArgumentNullException.ThrowIfNull(versions);
+        var latest = versions.Latest;
         IEnumerable<PatchVersion?> files =
         [
             null,
-            .. versions.Listed.Where(version => version != versions.Latest).Take(window),
+            .. versions.Listed.Where(version => latest is null || version < latest).Take(window),
         ];
         return files.SelectMany(version => UiLocales.All.Select(locale =>
             origin + SitemapFile.PathOf(locale, version)));
