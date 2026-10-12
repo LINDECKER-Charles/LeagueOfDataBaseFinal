@@ -25,6 +25,9 @@ const CLIENT_TRACEPARENT = '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7
 const CRAWLER_FILE = 'crawler file\n';
 const BLOCKED_AGENT = 'Mozilla/5.0 (X11; Linux aarch64) AppleWebKit/537.36 (KHTML, like Gecko) '
   + 'Chrome/139.0.0.0 Safari/537.36';
+// Refused on a stack that is never indexed only (nginx-noindex.test.mjs).
+const AI_CRAWLER = 'meta-externalagent/1.1 '
+  + '(+https://developers.facebook.com/docs/sharing/webmasters/crawler)';
 // A client inside the container asks for the stub's large answer, then stops reading for a
 // while (its output goes to a `sleep`). Meanwhile, the script prints the temporary files that
 // nginx's processes hold open: nginx unlinks them as it opens them, so only /proc names them.
@@ -252,6 +255,12 @@ describe('nginx image', { skip: IMAGE ? false : 'LODB_NGINX_IMAGE is not set' },
     // An exact string, never a pattern: the next build of the same browser goes through.
     const nextBuild = BLOCKED_AGENT.replace('Chrome/139.0.0.0', 'Chrome/140.0.0.0');
     assert.equal((await get('/v1/champions', { agent: nextBuild })).status, 200);
+  });
+
+  test('lets the AI crawlers through where pages are indexed', async () => {
+    const answer = await get('/v1/champions', { agent: AI_CRAWLER });
+    assert.equal(answer.status, 200);
+    assert.equal(answer.headers['x-robots-tag'], undefined);
   });
 
   test('exposes /readyz on the API host at its own rate', async () => {

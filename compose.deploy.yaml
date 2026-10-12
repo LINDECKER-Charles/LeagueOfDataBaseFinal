@@ -225,7 +225,8 @@ services:
       # the edge's labels hold it anyway.
       LODB_EDGE_SECRET: ${LODB_EDGE_SECRET:?LODB_EDGE_SECRET is required (set by the deploy job)}
       # 1 on staging: "X-Robots-Tag: noindex, nofollow" on the responses of the stack's edge
-      # (snippets/security-headers.conf). The deploy job checks it per environment.
+      # (snippets/security-headers.conf), and a 403 for the AI crawlers (nginx.conf). The
+      # deploy job checks it per environment.
       LODB_NOINDEX: ${LODB_NOINDEX:-0}
       # First part of the page cache's key. IMAGE_TAG (staging, prod) is the same for every
       # revision: without the key compose.yaml sets, the image's own default applies
