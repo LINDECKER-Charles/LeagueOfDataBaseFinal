@@ -142,9 +142,9 @@ app.use(staticFiles);
 // themselves read them from memory (`buildFiles`), never over HTTP.
 app.use('/i18n', notFound);
 
-// What the URL alone decides (a 400, the static 404, a query cleaned by a redirect) costs no
-// render and takes no slot.
-app.use(preRouter(settings.queryLimits, () => metrics.countRedirect('query')));
+// What the URL alone decides (a 400, the static 404, a slash or a query cleaned by a redirect)
+// costs no render and takes no slot.
+app.use(preRouter(settings.queryLimits, (reason) => metrics.countRedirect(reason)));
 
 // The policy hashes the inline scripts of the page as rendered, before it is compressed.
 async function servedDocument(
