@@ -150,6 +150,7 @@
       "abilities": "Compétences",
       "passive": "Passif",
       "skins": "Skins",
+      "splash_alt": "Illustration de {{ name }}",
       "chromas_available": "{{ count }} chromas disponibles",
       "cooldown": "Recharge",
       "cost": "Coût",

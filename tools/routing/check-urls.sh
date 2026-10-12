@@ -161,7 +161,6 @@ root '' en
 
 # ── Pages without the catalogue ──────────────────────────────────────────────────────
 row /en/ 200 latest - -
-row /en 200 latest - -
 row /ar/ 200 latest - -
 row /fr/about 200 latest - -
 row /ar/legal/cookies 200 latest - -
@@ -219,6 +218,11 @@ row /fr%2Fchampions 400 unstored - -
 row "/en/champions?utm_source=mail&q=ahri" 301 unstored - "/en/champions?q=ahri"
 row "/en/items/$ITEM?x=1" 301 unstored - "/en/items/$ITEM"
 row "/en/$older/$older_item?q=x" 301 unstored - "/en/$older/$older_item"
+# One path per page: the home keeps its slash, no other page has one.
+row /en 301 unstored - /en/
+row /fr/about/ 301 unstored - /fr/about
+row "/en/$item/" 301 unstored - "/en/$item"
+row "/en/items/$ITEM/?x=1" 301 unstored - "/en/items/$ITEM"
 
 if [ "$failures" -gt 0 ]; then
   echo "$failures check(s) failed."

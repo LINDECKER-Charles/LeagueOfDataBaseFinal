@@ -115,6 +115,8 @@ describe('Seo', () => {
 
       expect(meta('og:image')).toBe('https://ddragon.example/Ahri_0.jpg');
       expect(meta('twitter:image')).toBe('https://ddragon.example/Ahri_0.jpg');
+      expect(meta('og:image:width')).toBeUndefined();
+      expect(meta('og:image:alt')).toBe('Ahri, champion de LoL — League Of Data Base');
       expect(meta('og:locale')).toBe('fr_FR');
       expect(meta('og:type')).toBe('website');
       expect(meta('og:site_name')).toBe('League Of Data Base');
@@ -135,11 +137,25 @@ describe('Seo', () => {
       expect(crumbs['@type']).toBe('BreadcrumbList');
     });
 
-    it('falls back to the site description and the home preview', async () => {
+    it('falls back to the site description and the home preview, at its size', async () => {
       await seo().apply({ title: 'Runes', locale: 'fr', path: 'runes' });
 
       expect(meta('description')).toBe("L'encyclopédie de LoL.");
       expect(meta('og:image')).toBe(`${ORIGIN}/preview/home.png`);
+      expect(meta('og:image:width')).toBe('1200');
+      expect(meta('og:image:height')).toBe('630');
+    });
+
+    it('states the size of an image and what it shows', async () => {
+      const splash = { url: '/splash/Ahri_0.jpg', width: 1215, height: 717, alt: 'Ahri splash' };
+
+      await seo().apply({ ...AHRI, image: splash });
+
+      expect(meta('og:image')).toBe(`${ORIGIN}/splash/Ahri_0.jpg`);
+      expect(meta('og:image:width')).toBe('1215');
+      expect(meta('og:image:height')).toBe('717');
+      expect(meta('og:image:alt')).toBe('Ahri splash');
+      expect(meta('twitter:image:alt')).toBe('Ahri splash');
     });
   });
 

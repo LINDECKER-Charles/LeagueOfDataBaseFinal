@@ -11,6 +11,11 @@ public sealed record CatalogVersions
     /// </summary>
     public PatchVersion? Latest { get; init; }
 
+    /// <summary>
+    /// When <see cref="Latest"/> was promoted: the date its pages last changed with a patch.
+    /// </summary>
+    public DateTimeOffset? LatestPromotedAt { get; init; }
+
     /// <summary>Every version Data Dragon lists, newest first, the long tail included.</summary>
     public required IReadOnlyList<PatchVersion> Listed { get; init; }
 

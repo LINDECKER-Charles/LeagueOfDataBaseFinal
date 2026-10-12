@@ -129,6 +129,7 @@
       "abilities": "Abilități",
       "passive": "Pasivă",
       "skins": "Skinuri",
+      "splash_alt": "Ilustrația lui {{ name }}",
       "cooldown": "Timp de reîncărcare",
       "cost": "Cost",
       "range": "Rază de acțiune",

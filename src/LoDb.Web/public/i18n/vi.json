@@ -129,6 +129,7 @@
       "abilities": "Kỹ năng",
       "passive": "Nội tại",
       "skins": "Trang phục",
+      "splash_alt": "Ảnh minh họa {{ name }}",
       "cooldown": "Hồi chiêu",
       "cost": "Chi phí",
       "range": "Tầm xa",

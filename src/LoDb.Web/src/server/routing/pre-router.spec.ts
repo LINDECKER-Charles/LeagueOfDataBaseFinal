@@ -85,15 +85,16 @@ describe('preRouter', () => {
     });
   });
 
-  it('tells each redirect it answers, and nothing else', () => {
+  it('tells each redirect it answers and why, and nothing else', () => {
     const onRedirect = vi.fn();
 
     serve('/en/items/3031-infinity-edge?x=1', onRedirect);
+    serve('/fr/champions/Ahri/', onRedirect);
     serve('/wp-login.php', onRedirect);
     serve('/fr%2Fchampions', onRedirect);
     serve('/en/champions', onRedirect);
 
-    expect(onRedirect).toHaveBeenCalledOnce();
+    expect(onRedirect.mock.calls).toEqual([['query'], ['slash']]);
   });
 
   it.each(['/fr%2Fchampions', '/fr/x/../15.13.1/champions'])(
@@ -199,7 +200,22 @@ describe('preRouteOf', () => {
     ['/fr/patches?x=1', '/fr/patches'],
     ['/fr/patches?version=15.14.1&lang=fr_FR', '/fr/patches'],
   ])('redirects %s to %s', (url, location) => {
-    expect(route(url)).toEqual({ kind: 'redirect', location });
+    expect(route(url)).toEqual({ kind: 'redirect', location, reason: 'query' });
+  });
+
+  // The home of a locale and every other page, each at one path; a detail's query is cleaned
+  // in the same hop, while a page outside the catalogue keeps its own.
+  it.each([
+    ['/fr', '/fr/'],
+    ['/zh-hant', '/zh-hant/'],
+    ['/fr//', '/fr/'],
+    ['/fr/champions/Aatrox/', '/fr/champions/Aatrox'],
+    ['/fr/15.13.1/champions/', '/fr/15.13.1/champions'],
+    ['/fr/about//', '/fr/about'],
+    ['/en/items/1036/?q=sword&version=15.14.1', '/en/items/1036?version=15.14.1'],
+    ['/en/trends/?mode=aram', '/en/trends?mode=aram'],
+  ])('redirects %s to its one path %s', (url, location) => {
+    expect(route(url)).toEqual({ kind: 'redirect', location, reason: 'slash' });
   });
 
   it('keeps the first parameters a list reads, within the bound', () => {
@@ -212,6 +228,7 @@ describe('preRouteOf', () => {
     expect(cleaned).toEqual({
       kind: 'redirect',
       location: `/en/champions?${query.slice(0, 16).join('&')}`,
+      reason: 'query',
     });
   });
 });

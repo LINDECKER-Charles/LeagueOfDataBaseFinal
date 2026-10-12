@@ -33,6 +33,12 @@ public sealed class CatalogDetailTests(CatalogApiFixture api)
         Assert.Equal(
             skins.Items("skins").Count(static skin => skin.GetProperty("number").GetInt32() != 0),
             ahri.GetProperty("alternateSkinCount").GetInt32());
+        Assert.Equal(
+            skins.Items("skins")
+                .Where(static skin => skin.GetProperty("number").GetInt32() != 0)
+                .Select(static skin => skin.Text("name")),
+            ahri.GetProperty("alternateSkinNames").EnumerateArray()
+                .Select(static name => name.GetString()));
     }
 
     [Fact]
@@ -221,6 +227,18 @@ public sealed class CatalogDetailTests(CatalogApiFixture api)
 
         Assert.Equal("runes/8100-domination", tree.Text("canonicalPath"));
         Assert.Equal(4, tree.Items("slots").Count);
+    }
+
+    [Theory]
+    [InlineData("wukong")]
+    [InlineData("MONKEYKING")]
+    [InlineData("Wu-Kong")]
+    public async Task ChampionTypedLooselyAnswersItsCanonicalPath(string segment)
+    {
+        var champion = await api.GetJsonAsync($"{Latest}/champions/{segment}");
+
+        Assert.Equal("champions/MonkeyKing", champion.Text("canonicalPath"));
+        Assert.Equal("Wukong", champion.GetProperty("profile").Text("name"));
     }
 
     [Theory]

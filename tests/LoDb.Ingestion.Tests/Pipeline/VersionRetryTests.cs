@@ -11,12 +11,18 @@ namespace LoDb.Ingestion.Tests.Pipeline;
 
 /// <summary>
 /// A transient failure stores nothing half-read and leaves the version to a later attempt,
-/// which resumes it; the attempts are bounded.
+/// which resumes it; the attempts are bounded behind the latest version, never ahead of it.
 /// </summary>
 public sealed class VersionRetryTests(PostgresContainerFixture postgres)
 {
     private static readonly PatchVersion Latest = DdragonFixtures.Latest;
+    private static readonly PatchVersion Previous = DdragonFixtures.Previous;
     private static readonly TimeSpan RetryDelay = TimeSpan.FromMinutes(10);
+
+    private static readonly Dictionary<string, string?> TwoAttempts = new()
+    {
+        ["LoDb:Ingestion:MaxAttempts"] = "2",
+    };
 
     private static CancellationToken Token => IngestionHarness.Token;
 
@@ -99,23 +105,22 @@ public sealed class VersionRetryTests(PostgresContainerFixture postgres)
     }
 
     [Fact]
-    public async Task AttemptsAreBounded()
+    public async Task AttemptsOfAVersionBehindTheLatestAreBounded()
     {
-        await using var harness = await IngestionHarness.CreateAsync(
-            postgres,
-            new Dictionary<string, string?> { ["LoDb:Ingestion:MaxAttempts"] = "2" });
+        await using var harness = await IngestionHarness.CreateAsync(postgres, TwoAttempts);
+        await SeedAsync(harness, Latest, DdragonVersionStatus.Ready);
         var instance = harness.StartInstance();
         instance.Replay.FailWith(
             VersionIngestionTests.IsAhriPortrait,
             HttpStatusCode.ServiceUnavailable);
 
-        await VersionIngestionTests.IngestAsync(instance, Latest);
+        await VersionIngestionTests.IngestAsync(instance, Previous);
         harness.Clock.Advance(RetryDelay);
-        await VersionIngestionTests.IngestAsync(instance, Latest);
+        await VersionIngestionTests.IngestAsync(instance, Previous);
         harness.Clock.Advance(TimeSpan.FromDays(1));
         var due = await instance.Get<VersionStates>().DueAsync(Token);
 
-        var row = await harness.VersionRowAsync(Latest.Value);
+        var row = await harness.VersionRowAsync(Previous.Value);
         Assert.NotNull(row);
         Assert.Equal(DdragonVersionStatus.Failed, row.Status);
         Assert.Equal(2, row.Attempts);
@@ -125,6 +130,51 @@ public sealed class VersionRetryTests(PostgresContainerFixture postgres)
             instance.Logs,
             static log => log.Id.Name == "ingest.version.abandoned");
         Assert.Equal(LogLevel.Warning, abandoned.Level);
+    }
+
+    [Fact]
+    public async Task VersionAheadOfTheLatestIsNeverAbandoned()
+    {
+        await using var harness = await IngestionHarness.CreateAsync(postgres, TwoAttempts);
+        var instance = harness.StartInstance();
+        instance.Replay.FailWith(
+            VersionIngestionTests.IsAhriPortrait,
+            HttpStatusCode.ServiceUnavailable);
+
+        await VersionIngestionTests.IngestAsync(instance, Latest);
+        harness.Clock.Advance(RetryDelay);
+        await VersionIngestionTests.IngestAsync(instance, Latest);
+        var failedAt = harness.Clock.GetUtcNow();
+        harness.Clock.Advance(TimeSpan.FromDays(1));
+        var due = await instance.Get<VersionStates>().DueAsync(Token);
+
+        var row = await harness.VersionRowAsync(Latest.Value);
+        Assert.NotNull(row);
+        Assert.Equal(DdragonVersionStatus.Discovered, row.Status);
+        Assert.Equal(2, row.Attempts);
+        Assert.Equal(failedAt + (2 * RetryDelay), row.NextAttemptAt);
+        Assert.Equal([Latest], due);
+        Assert.DoesNotContain(
+            instance.Logs,
+            static log => log.Id.Name == "ingest.version.abandoned");
+    }
+
+    [Fact]
+    public async Task VersionAbandonedAheadOfTheLatestIsTakenBack()
+    {
+        await using var harness = await IngestionHarness.CreateAsync(postgres);
+        await SeedAsync(harness, Previous, DdragonVersionStatus.Ready);
+        await SeedAsync(harness, Latest, DdragonVersionStatus.Failed);
+        var instance = harness.StartInstance();
+
+        var due = await instance.Get<VersionStates>().DueAsync(Token);
+        var resumed = await VersionIngestionTests.IngestAsync(instance, Latest);
+
+        Assert.Equal([Latest], due);
+        Assert.Equal(VersionIngestionOutcome.Completed, resumed.Outcome);
+        Assert.True(resumed.Promoted);
+        var row = await harness.VersionRowAsync(Latest.Value);
+        Assert.Equal(DdragonVersionStatus.Ready, row?.Status);
     }
 
     [Fact]
@@ -143,5 +193,27 @@ public sealed class VersionRetryTests(PostgresContainerFixture postgres)
         var row = await harness.VersionRowAsync(Latest.Value);
         Assert.Equal(2, row?.Attempts);
         Assert.Equal(harness.Clock.GetUtcNow() + (2 * RetryDelay), row?.NextAttemptAt);
+    }
+
+    // A ready row is the promoted one; a failed row has spent five attempts, a day ago.
+    private static async Task SeedAsync(
+        IngestionHarness harness,
+        PatchVersion version,
+        DdragonVersionStatus status)
+    {
+        var earlier = IngestionHarness.Start - TimeSpan.FromDays(1);
+        var isReady = status == DdragonVersionStatus.Ready;
+        await using var db = harness.Database.CreateContext();
+        db.DdragonVersions.Add(new DdragonVersion
+        {
+            Version = version.Value,
+            Status = status,
+            Attempts = isReady ? 1 : 5,
+            DiscoveredAt = earlier,
+            UpdatedAt = earlier,
+            ReadyAt = isReady ? earlier : null,
+            PromotedAt = isReady ? earlier : null,
+        });
+        await db.SaveChangesAsync(Token);
     }
 }

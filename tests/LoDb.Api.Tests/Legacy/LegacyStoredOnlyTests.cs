@@ -87,6 +87,10 @@ public sealed class LegacyStoredOnlyTests(LegacyApiFixture api)
         public Task<PatchVersion?> GetLatestAsync(CancellationToken cancellationToken) =>
             inner.GetLatestAsync(cancellationToken);
 
+        public Task<DateTimeOffset?> GetLatestPromotedAtAsync(
+            CancellationToken cancellationToken) =>
+            inner.GetLatestPromotedAtAsync(cancellationToken);
+
         public Task<IReadOnlyList<DdragonLanguage>> GetLanguagesAsync(
             CancellationToken cancellationToken) =>
             inner.GetLanguagesAsync(cancellationToken);

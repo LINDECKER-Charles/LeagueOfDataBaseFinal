@@ -1,4 +1,5 @@
 import type { RequestHandler, Response } from 'express';
+import type { NormalizedRedirectReason } from '../metrics/normalized-redirect-reason';
 import { NOINDEX_HEADERS } from '../../app/core/routing/response/noindex-headers';
 import { documentPolicyHeaders } from '../security/csp/document-policy-headers';
 import { NOT_FOUND_PAGE } from './not-found-page';
@@ -38,13 +39,14 @@ function answer(route: Exclude<PreRoute, { kind: 'render' }>, response: Response
 /**
  * Answers before the render admission what the shape of a URL decides alone (`preRouteOf`):
  * the 400 of a path no page can have, the static 404 of an address outside the grammar,
- * the redirect of a list or a detail to its URL without the parameters it does not read.
- * None of them starts Angular nor takes a render slot; the other requests go on.
- * `onRedirect` is told of each redirect (`lodb_ssr_normalized_redirects_total`).
+ * the redirect of a page to its one path, and of a list or a detail to its URL without the
+ * parameters it does not read. None of them starts Angular nor takes a render slot; the other
+ * requests go on. `onRedirect` is told of each redirect and why
+ * (`lodb_ssr_normalized_redirects_total`).
  */
 export function preRouter(
   limits: QueryLimits,
-  onRedirect: () => void = () => undefined,
+  onRedirect: (reason: NormalizedRedirectReason) => void = () => undefined,
 ): RequestHandler {
   return (request, response, next) => {
     const route = preRouteOf(request.originalUrl, limits);
@@ -53,7 +55,7 @@ export function preRouter(
       return;
     }
     if (route.kind === 'redirect') {
-      onRedirect();
+      onRedirect(route.reason);
     }
     answer(route, response);
   };

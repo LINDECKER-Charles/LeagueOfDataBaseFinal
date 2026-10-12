@@ -1,6 +1,7 @@
 import type { RuneTreeDetails } from '../../../../core/api/generated/models/rune-tree-details';
 import { runePathJsonLd } from '../../../../core/seo/json-ld/game/rune-path-json-ld';
 import type { CatalogueEntry } from '../../../../core/routing/catalogue/catalogue-entry';
+import { previewImage } from '../../../../core/seo/images/preview-image';
 import type { SeoPage } from '../../../../core/seo/seo-page';
 import type { CatalogueTexts } from '../../shared/codex/head/catalogue-texts';
 import { detailTrail } from '../../shared/codex/head/detail-trail';
@@ -22,7 +23,7 @@ export function runeHeadOf(entry: CatalogueEntry<RuneTreeDetails>, texts: Catalo
     locale: context.locale,
     path: details.canonicalPath,
     version: context.pinned ? context.version : null,
-    image: (image.status === 'present' && image.url) || '/preview/runes.png',
+    image: image.status === 'present' && image.url ? image.url : previewImage('runes'),
     jsonLd: (urls) => [detailTrail(trail, urls), runePathJsonLd(details, urls)],
   };
 }

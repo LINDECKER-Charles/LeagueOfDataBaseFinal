@@ -129,6 +129,7 @@
       "abilities": "스킬",
       "passive": "지속 효과",
       "skins": "스킨",
+      "splash_alt": "{{ name }} 일러스트",
       "cooldown": "재사용 대기시간",
       "cost": "소모값",
       "range": "사거리",

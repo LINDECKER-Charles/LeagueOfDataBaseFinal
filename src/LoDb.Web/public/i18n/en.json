@@ -131,6 +131,7 @@
       "abilities": "Abilities",
       "passive": "Passive",
       "skins": "Skins",
+      "splash_alt": "{{ name }} splash art",
       "chromas_available": "{{ count }} chromas available",
       "cooldown": "Cooldown",
       "cost": "Cost",

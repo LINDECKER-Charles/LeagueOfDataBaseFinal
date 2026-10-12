@@ -73,7 +73,9 @@ export class SummonerList {
       }
       const page = this.list.firstPage();
       const count = page?.total ?? null;
-      return { context, texts: 'summoner', path: 'summoners', count, entries: page?.entries ?? [] };
+      const entries = page?.entries ?? [];
+      const number = page?.page ?? null;
+      return { context, texts: 'summoner', path: 'summoners', page: number, count, entries };
     });
   }
 

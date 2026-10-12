@@ -84,7 +84,8 @@ export class ItemList {
       }
       const page = this.list.firstPage();
       const count = page?.total ?? null;
-      return { context, texts: 'item', path: 'items', count, entries: page?.entries ?? [] };
+      const entries = page?.entries ?? [];
+      return { context, texts: 'item', path: 'items', page: page?.page ?? null, count, entries };
     });
   }
 

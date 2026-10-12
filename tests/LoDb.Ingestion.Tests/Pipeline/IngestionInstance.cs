@@ -22,7 +22,10 @@ internal sealed class IngestionInstance : IAsyncDisposable
 {
     private readonly ServiceProvider provider;
 
-    public IngestionInstance(IConfiguration configuration, TimeProvider clock)
+    public IngestionInstance(
+        IConfiguration configuration,
+        TimeProvider clock,
+        Action<IServiceCollection>? configure = null)
     {
         Upstream = new FlakyUpstream(DdragonFixtures.CreateReplay());
         var services = new ServiceCollection()
@@ -39,6 +42,7 @@ internal sealed class IngestionInstance : IAsyncDisposable
             .AddLoDbCatalog(configuration);
         services.AddHttpClient(EgressRegistration.ClientName)
             .ConfigurePrimaryHttpMessageHandler(() => Upstream);
+        configure?.Invoke(services);
         provider = services.BuildServiceProvider(new ServiceProviderOptions
         {
             ValidateOnBuild = true,
