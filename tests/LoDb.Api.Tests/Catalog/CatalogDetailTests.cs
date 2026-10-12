@@ -33,6 +33,12 @@ public sealed class CatalogDetailTests(CatalogApiFixture api)
         Assert.Equal(
             skins.Items("skins").Count(static skin => skin.GetProperty("number").GetInt32() != 0),
             ahri.GetProperty("alternateSkinCount").GetInt32());
+        Assert.Equal(
+            skins.Items("skins")
+                .Where(static skin => skin.GetProperty("number").GetInt32() != 0)
+                .Select(static skin => skin.Text("name")),
+            ahri.GetProperty("alternateSkinNames").EnumerateArray()
+                .Select(static name => name.GetString()));
     }
 
     [Fact]

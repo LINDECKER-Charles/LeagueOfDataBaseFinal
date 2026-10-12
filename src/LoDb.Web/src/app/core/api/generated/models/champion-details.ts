@@ -28,6 +28,12 @@ export interface ChampionDetails {
   alternateSkinCount: number;
 
   /**
+   * The names of those skins, in the gallery's order: the server renders them while the
+   * gallery waits to be scrolled to, so that a crawler reads them without the gallery.
+   */
+  alternateSkinNames: Array<string>;
+
+  /**
    * The base skin's art.
    */
   art: ChampionArt;

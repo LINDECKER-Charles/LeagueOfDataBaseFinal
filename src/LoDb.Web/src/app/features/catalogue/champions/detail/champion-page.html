@@ -38,11 +38,14 @@
               [championName]="profile().name"
             />
           } @placeholder {
-            <div class="flex gap-4 overflow-hidden" aria-hidden="true">
-              @for (tile of [1, 2, 3]; track tile) {
-                <lodb-skeleton class="w-72 shrink-0" shape="tile" />
+            <ul class="flex gap-4 overflow-hidden">
+              @for (name of skinNames(); track $index) {
+                <li class="w-72 shrink-0">
+                  <lodb-skeleton shape="tile" />
+                  <p class="mt-2 font-mono text-xs text-text-muted">{{ name }}</p>
+                </li>
               }
-            </div>
+            </ul>
           }
         </section>
       }

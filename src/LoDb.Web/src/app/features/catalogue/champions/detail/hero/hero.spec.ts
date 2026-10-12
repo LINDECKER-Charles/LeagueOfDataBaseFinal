@@ -38,6 +38,7 @@ function detailsOf(
     blurb: '',
     abilities: [],
     alternateSkinCount: 0,
+    alternateSkinNames: [],
     allyTips: [],
     enemyTips: [],
     neighbours: { previous: null, next: null },
