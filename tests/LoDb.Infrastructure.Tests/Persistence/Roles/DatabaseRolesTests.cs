@@ -21,7 +21,7 @@ public sealed class DatabaseRolesTests(IsolatedPostgres isolated) : IClassFixtur
             rolname, rolcanlogin, rolsuper, rolcreatedb, rolcreaterole, rolreplication,
             rolbypassrls, rolconnlimit)
         FROM pg_roles
-        WHERE rolname IN ('lodb_owner', 'lodb_partitions', 'lodb_app')
+        WHERE rolname IN ('lodb_owner', 'lodb_partitions', 'lodb_app', 'lodb_sauvegarde')
         ORDER BY rolname
         """;
 
@@ -63,7 +63,7 @@ public sealed class DatabaseRolesTests(IsolatedPostgres isolated) : IClassFixtur
 
         var changes = await ApplyAsync(database, new AppRoleOptions { Password = Password });
 
-        Assert.Equal(new RoleChanges(3, 0, PasswordSet: true), changes);
+        Assert.Equal(new RoleChanges(4, 0, PasswordSet: true), changes);
         Assert.Equal(
             [
                 "lodb_app login=t super=f createdb=f createrole=f replication=f"
@@ -72,6 +72,8 @@ public sealed class DatabaseRolesTests(IsolatedPostgres isolated) : IClassFixtur
                     + " bypassrls=f limit=-1",
                 "lodb_partitions login=f super=f createdb=f createrole=f replication=f"
                     + " bypassrls=f limit=-1",
+                "lodb_sauvegarde login=t super=f createdb=f createrole=f replication=f"
+                    + " bypassrls=f limit=2",
             ],
             await database.QueryAsync(RolesSql, Cancellation));
         Assert.Equal(
@@ -225,7 +227,7 @@ public sealed class DatabaseRolesTests(IsolatedPostgres isolated) : IClassFixtur
     // held their grants, are dropped.
     private static Task DropRolesAsync(TestDatabase database) =>
         database.ExecuteAsync(
-            "DROP ROLE IF EXISTS lodb_app, lodb_partitions, lodb_owner",
+            "DROP ROLE IF EXISTS lodb_app, lodb_partitions, lodb_owner, lodb_sauvegarde",
             Cancellation);
 
     private static async Task<string> ShowAsAppAsync(

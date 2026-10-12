@@ -20,6 +20,7 @@ public sealed class MigrationCommandsTests(PostgresContainerFixture postgres)
     private const string IdentifierScrub = "20261011073626_AuditIdentifierScrub";
     private const string RefreshFamilies = "20261011075322_RefreshTokenFamilies";
     private const string AudienceEntityDaily = "20261011092929_AudienceEntityDaily";
+    private const string BackupRuns = "20261012081618_BackupRuns";
     private const string EfHistory = "__EFMigrationsHistory";
 
     private static readonly string UnlimitedAppRoleConnections =
@@ -41,7 +42,7 @@ public sealed class MigrationCommandsTests(PostgresContainerFixture postgres)
         Assert.Equal(
             [
                 Baseline, Lot1, Lot4, Lot6, PaymentStates, QueryStatistics, IdentifierScrub,
-                RefreshFamilies, AudienceEntityDaily,
+                RefreshFamilies, AudienceEntityDaily, BackupRuns,
             ],
             await database.AppliedMigrationsAsync(Cancellation));
     }

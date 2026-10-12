@@ -7,6 +7,8 @@
 --   lodb_partitions  owns analytics_event, its daily partitions and the two functions that
 --                    create and drop them, the only DDL the API runs. Nobody logs in as it.
 --   lodb_app         the API: reads and writes rows, runs those two functions, nothing else.
+--   lodb_sauvegarde  the host's off-host backups (infra-vps): reads every row to dump it,
+--                    appends the journal of its passes to backup_run, nothing else.
 --
 -- The superuser, as which the legacy stack still connects, keeps every right.
 
@@ -23,6 +25,8 @@ BEGIN
     EXECUTE format('REVOKE TEMPORARY ON DATABASE %I FROM PUBLIC', current_database());
     EXECUTE format('REVOKE ALL ON DATABASE %I FROM lodb_app', current_database());
     EXECUTE format('GRANT CONNECT ON DATABASE %I TO lodb_app', current_database());
+    EXECUTE format('REVOKE ALL ON DATABASE %I FROM lodb_sauvegarde', current_database());
+    EXECUTE format('GRANT CONNECT ON DATABASE %I TO lodb_sauvegarde', current_database());
 END
 $database$;
 
@@ -41,6 +45,28 @@ BEGIN
     END LOOP;
 END
 $memberships$;
+
+-- The backups' role reads every row through pg_read_all_data, the one role it belongs to:
+-- any other membership, granted by hand, is taken back.
+DO $backup_memberships$
+DECLARE
+    granted record;
+BEGIN
+    FOR granted IN
+        SELECT m.roleid::regrole AS role, m.grantor::regrole AS grantor
+        FROM pg_auth_members m
+        WHERE m.member = 'lodb_sauvegarde'::regrole
+            AND m.roleid <> 'pg_read_all_data'::regrole
+    LOOP
+        EXECUTE format(
+            'REVOKE %s FROM lodb_sauvegarde GRANTED BY %s',
+            granted.role,
+            granted.grantor);
+    END LOOP;
+END
+$backup_memberships$;
+REVOKE ALL ON SCHEMA public FROM lodb_sauvegarde;
+GRANT pg_read_all_data TO lodb_sauvegarde;
 
 -- Owners: analytics_event and its partitions to lodb_partitions, everything else to
 -- lodb_owner. An extension keeps its own objects; the sequence of an identity or serial
@@ -146,7 +172,8 @@ GRANT EXECUTE ON FUNCTION
 
 -- The API's rows: read and write on every table and view, read only on the two migration
 -- histories, the sequences of the identity columns. Revoked first: a privilege granted by
--- hand does not outlive the next run. An extension's objects keep their own grants.
+-- hand does not outlive the next run, the backups' role's included, whose reads come from
+-- pg_read_all_data. An extension's objects keep their own grants.
 DO $grants$
 DECLARE
     item record;
@@ -165,6 +192,7 @@ BEGIN
     LOOP
         kind := CASE WHEN item.relkind = 'S' THEN 'SEQUENCE' ELSE 'TABLE' END;
         EXECUTE format('REVOKE ALL ON %s %s FROM lodb_app', kind, item.name);
+        EXECUTE format('REVOKE ALL ON %s %s FROM lodb_sauvegarde', kind, item.name);
         EXECUTE format(
             'GRANT %s ON %s %s TO lodb_app',
             CASE
@@ -178,6 +206,20 @@ BEGIN
     END LOOP;
 END
 $grants$;
+
+-- The journal of the backups: rows appended through the columns the container fills, the
+-- identity and the time of arrival left to the server; nothing changed nor deleted. Once
+-- the migration that creates it has run: a database short of it (a test's) grants nothing.
+DO $backup_journal$
+BEGIN
+    IF to_regclass('public.backup_run') IS NOT NULL THEN
+        GRANT INSERT (
+            base, step, started_at, finished_at, succeeded,
+            bytes_read, bytes_added, repository_bytes, detail)
+            ON public.backup_run TO lodb_sauvegarde;
+    END IF;
+END
+$backup_journal$;
 
 -- What a migration creates is the API's as soon as it exists, before the end of the run
 -- hands it to lodb_owner: the migrating role's defaults, and the owners' for the
