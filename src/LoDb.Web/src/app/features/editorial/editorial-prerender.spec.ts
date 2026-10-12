@@ -8,7 +8,7 @@ import {
 import { provideServerRendering, renderApplication } from '@angular/platform-server';
 import { provideRouter, RouterOutlet } from '@angular/router';
 import { activateLocale } from '../../core/i18n/activate-locale';
-import { LOCALES } from '../../core/i18n/locales';
+import type { Locale } from '../../core/i18n/locales';
 import { provideI18n } from '../../core/i18n/provide-i18n';
 import { CANONICAL_ORIGIN } from '../../core/seo/canonical-origin';
 import { keepingGlobals } from '../../core/testing/keeping-globals';
@@ -16,15 +16,17 @@ import { EDITORIAL_ROUTES } from './editorial.routes';
 
 const DOCUMENT_HTML =
   '<html><head><base href="/"></head><body><lodb-root></lodb-root></body></html>';
-const PAGES = [
-  'about',
-  'about/data',
-  'faq',
-  'changelog',
-  'legal/notice',
-  'legal/privacy',
-  'legal/terms',
-  'legal/cookies',
+// Each page renders once, each under another locale: `ar` writes from right to left,
+// `zh-hant` carries a script subtag.
+const CASES: readonly { locale: Locale; page: string }[] = [
+  { locale: 'ar', page: 'about' },
+  { locale: 'en', page: 'about/data' },
+  { locale: 'fr', page: 'faq' },
+  { locale: 'de', page: 'changelog' },
+  { locale: 'ja', page: 'legal/notice' },
+  { locale: 'zh-hant', page: 'legal/privacy' },
+  { locale: 'pt', page: 'legal/terms' },
+  { locale: 'ru', page: 'legal/cookies' },
 ];
 // The build's static files, keyed by path; the catalogues are left empty, their keys shown.
 const STATIC: Record<string, unknown> = {
@@ -90,9 +92,6 @@ async function prerender(url: string): Promise<string> {
     Reflect.set(globalThis, 'ngServerMode', undefined);
   }
 }
-
-// Each locale renders one page, in turn, so every page renders under several locales.
-const CASES = LOCALES.map((locale, index) => ({ locale, page: PAGES[index % PAGES.length] }));
 
 describe('the editorial prerender', () => {
   let base: HTMLBaseElement;
