@@ -1,0 +1,58 @@
+<!doctype html>
+<!--
+  Answered by nginx, with a 503, for every page of the site while a deploy replaces the stack
+  (server.d/maintenance.conf). Self-contained in nginx's image: the SSR server, which renders
+  every other page, is the one being replaced. Its files are served under /maintenance/, which
+  the maintenance leaves open, under a policy that admits them alone. The English below is what
+  a visitor without JavaScript reads; maintenance.js paints the visitor's identity and language
+  before the first frame, writes the estimate, and reloads the page once the site is back.
+-->
+<html lang="en" data-theme="hextech">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#010a13" />
+    <title>Maintenance in progress – League of Data Base</title>
+    <link rel="icon" type="image/png" href="/maintenance/favicon-96x96.png" sizes="96x96" />
+    <link rel="stylesheet" href="/maintenance/fonts.css" />
+    <link rel="stylesheet" href="/maintenance/tokens.css" />
+    <link rel="stylesheet" href="/maintenance/page.css" />
+    <!-- Without a script, the page still comes back on its own. -->
+    <noscript><meta http-equiv="refresh" content="60" /></noscript>
+    <script src="/maintenance/messages.js"></script>
+    <script src="/maintenance/maintenance.js"></script>
+  </head>
+  <body>
+    <main class="frame">
+      <div class="panel">
+        <svg class="crest" viewBox="0 0 800 800" fill="currentColor" aria-hidden="true">
+          <path
+            d="M438.14,168A235.31,235.31,0,0,1,580.08,552.7h79.45a299,299,0,0,0,41.4-152.25c0-153.18-114.63-279.58-262.79-298.11Z"
+          />
+          <path
+            d="M208.88,631.86V537.33a235.17,235.17,0,0,1,0-273.77V169a300.44,300.44,0,0,0,0,462.83Z"
+          />
+          <polygon
+            points="393.14 75 220.98 75 253.88 142.3 253.88 658.33 221.32 724.89 611.49 724.89 647.14 597.7 393.14 597.7 393.14 75"
+          />
+        </svg>
+        <p class="eyebrow">League of Data Base</p>
+        <h1 class="heading" data-message="heading">Maintenance in progress</h1>
+        <p class="lead" data-message="lead">
+          A new version of the site is being deployed. It will be back very soon.
+        </p>
+        <section class="estimate" aria-live="polite" aria-atomic="true">
+          <p class="estimate__label" data-estimate-label>Usual duration</p>
+          <p class="estimate__value" data-estimate-value>10–15 minutes</p>
+          <div class="estimate__track" aria-hidden="true"><span class="estimate__run"></span></div>
+        </section>
+        <p class="note" data-message="autoReload">
+          This page will reload on its own as soon as the site is back.
+        </p>
+        <!-- An empty href reloads the address the visitor asked for. -->
+        <a class="retry" href="" data-message="retry">Try again</a>
+      </div>
+    </main>
+  </body>
+</html>

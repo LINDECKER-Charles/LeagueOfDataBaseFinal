@@ -469,6 +469,28 @@ jobs:
               ls -1t .deploy/backups/*.dump | tail -n +11 | xargs -r rm --
             fi
 
+            # ── Maintenance page while the containers are replaced ────────────────────
+            # From the first step that stops a container to the new stack's probes, every page
+            # answers the maintenance page (docker/nginx/server.d/maintenance.conf), with the
+            # time the previous window took, measured here and kept on this host. A step that
+            # fails in between leaves it on: the stack may not serve, and the job's error says
+            # how to turn it off once it does.
+            maintenance_dir=.deploy/maintenance
+            maintenance() {
+              bash tools/deploy/maintenance.sh "$1" "$maintenance_dir"
+            }
+            maintenance_left_on() {
+              echo "::error title=Maintenance page left on::the stack may not serve; once it" \
+                "does, remove $DEPLOY_PATH/$maintenance_dir/active.json."
+            }
+            in_maintenance=""
+            maintenance_on() {
+              [ -z "$in_maintenance" ] || return 0
+              maintenance start
+              in_maintenance=1
+              trap maintenance_left_on EXIT
+            }
+
             # A stack network created on another subnet (Docker's choice, before the subnet was
             # fixed) is recreated once: about a minute without service, volumes kept (never -v).
             # Before migrate: `compose run` would try to recreate the network under the running
@@ -477,6 +499,7 @@ jobs:
             if [ -n "$current_subnet" ] && [ "$current_subnet" != "$STACK_SUBNET" ]; then
               echo "::notice title=Stack network recreated::$stack_network moves from" \
                 "$current_subnet to $STACK_SUBNET; the stack restarts."
+              maintenance_on
               docker compose down --remove-orphans
             fi
 
@@ -488,9 +511,14 @@ jobs:
 
             # --wait: the job fails if a probe does not turn healthy. --remove-orphans
             # retires the containers of the legacy stack (php, go-fetcher, go-api, mailer).
+            maintenance_on
             docker compose up -d --no-build --remove-orphans --wait --wait-timeout 180
             [ "$(subnets_of "$stack_network")" = "$STACK_SUBNET" ] \
               || fail "$stack_network is not on $STACK_SUBNET, the subnet the API trusts."
+            # The new stack is healthy: the pages are its own again, before the smoke tests
+            # below ask for them.
+            maintenance end
+            trap - EXIT
 
             # ── Front bundles of the previous builds ───────────────────────────────────
             # web-ssr publishes its hashed bundles into the front-builds volume at start, and

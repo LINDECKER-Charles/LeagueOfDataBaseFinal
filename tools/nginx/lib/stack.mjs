@@ -23,10 +23,12 @@ const STUB_COMMAND = `head -c ${LARGE_ANSWER_BYTES} /dev/zero > /tmp/large`
   + ' && exec nginx -c /tmp/stub.conf -g "daemon off;"';
 // The image runs as compose.yaml runs it: read-only, without any capability nor a way to gain
 // one, /tmp a tmpfs, each cache and the temporary files a volume that Docker seeds from the
-// image (owned by `nginx`). The storage, a read-only volume of the API's on the stack, is a
-// tmpfs the checks write to.
+// image (owned by `nginx`). The storage, a read-only volume of the API's on the stack, and the
+// maintenance switch, a read-only folder of the host (compose.deploy.yaml), are tmpfs the checks
+// write to.
 const HARDENING = ['--read-only', '--cap-drop', 'ALL', '--security-opt',
-  'no-new-privileges:true', '--tmpfs', '/tmp:size=64m', '--tmpfs', '/srv/storage'];
+  'no-new-privileges:true', '--tmpfs', '/tmp:size=64m', '--tmpfs', '/srv/storage',
+  '--tmpfs', '/srv/maintenance'];
 const VOLUMES = ['pages', 'archive', 'assets', 'seo', 'legacy', 'temp'];
 
 function docker(...args) {

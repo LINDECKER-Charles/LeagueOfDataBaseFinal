@@ -1,0 +1,130 @@
+/*
+ * The colours, faces and shapes of the four identities that the maintenance page paints: the
+ * values of src/LoDb.Web/src/styles (foundation/tokens.css for Hextech, theme/<name>/ for the
+ * others), restated here because nginx serves this page without the site's build. Only the
+ * tokens the page reads; tools/nginx/test/maintenance-page.test.mjs holds every value to its
+ * source, and every identity to restate each token its source overrides.
+ */
+:root {
+  --color-hextech-black: #010a13;
+  --color-void: #0a1428;
+  --color-panel: #0f1b2d;
+  --color-panel-2: #162033;
+  --color-panel-raised: #1a263c;
+  --color-shadow: #000000;
+  --color-gold: #c8aa6e;
+  --color-gold-bright: #f0e6d2;
+  --color-gold-light: #cdbe91;
+  --color-gold-rich: #c89b3c;
+  --color-gold-deep: #785a28;
+  --color-gold-pale: #f5ecd8;
+  --color-hex: #0ac8b9;
+  --color-hex-deep: #0397ab;
+  --color-blue-steel: #005a82;
+  --color-text: #f0e6d2;
+  --color-text-muted: #a09b8c;
+  --color-text-dim: #8f8d82;
+  --font-beaufort: 'Beaufort', 'Times New Roman', serif;
+  --font-spiegel: 'Spiegel', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, 'SFMono-Regular', 'JetBrains Mono', monospace;
+  --ease-hextech: cubic-bezier(0.22, 1, 0.36, 1);
+  --hx-bevel: polygon(
+    14px 0,
+    100% 0,
+    100% calc(100% - 14px),
+    calc(100% - 14px) 100%,
+    0 100%,
+    0 14px
+  );
+  --hx-bevel-btn: polygon(
+    9px 0,
+    100% 0,
+    100% calc(100% - 9px),
+    calc(100% - 9px) 100%,
+    0 100%,
+    0 9px
+  );
+  --hx-glow-accent: rgba(200, 170, 110, 0.65);
+}
+
+[data-theme='zaun'] {
+  --color-hextech-black: #030706;
+  --color-void: #0a100e;
+  --color-panel: #131b19;
+  --color-panel-2: #1d2825;
+  --color-panel-raised: #243230;
+  --color-shadow: #010403;
+  --color-gold: #3fbf6e;
+  --color-gold-bright: #d8f3e2;
+  --color-gold-light: #7be8a0;
+  --color-gold-rich: #2e9e5e;
+  --color-gold-deep: #1c6b45;
+  --color-gold-pale: #eafaf0;
+  --color-hex: #c98be8;
+  --color-hex-deep: #a64fd0;
+  --color-blue-steel: #3a4642;
+  --color-text: #e3e9e2;
+  --color-text-muted: #9aa8a0;
+  --color-text-dim: #86948b;
+  --font-beaufort: 'Grenze', 'Beaufort', 'Times New Roman', serif;
+  --ease-hextech: cubic-bezier(0.2, 0.9, 0.1, 1);
+  --hx-bevel: none;
+  --hx-bevel-btn: none;
+  --hx-glow-accent: rgba(63, 191, 110, 0.5);
+  --hx-iron-radius: 22px 3px 22px 3px;
+  --hx-iron-radius-btn: 12px 2px 12px 2px;
+}
+
+[data-theme='noxus'] {
+  --color-hextech-black: #08090b;
+  --color-void: #0f1214;
+  --color-panel: #161a1d;
+  --color-panel-2: #1e2427;
+  --color-panel-raised: #252c30;
+  --color-shadow: #000000;
+  --color-gold: #b8925a;
+  --color-gold-bright: #e9e3d7;
+  --color-gold-light: #d4b483;
+  --color-gold-rich: #9c7440;
+  --color-gold-deep: #5c4526;
+  --color-gold-pale: #f4efe4;
+  --color-hex: #e8697a;
+  --color-hex-deep: #c0203a;
+  --color-blue-steel: #3a4448;
+  --color-text: #e9e3d7;
+  --color-text-muted: #9aa0a0;
+  --color-text-dim: #83898a;
+  --font-beaufort: 'Archivo', 'Beaufort', ui-sans-serif, system-ui, sans-serif;
+  --ease-hextech: cubic-bezier(0.45, 0, 0.15, 1);
+  --hx-bevel: none;
+  --hx-bevel-btn: none;
+  --hx-glow-accent: rgba(184, 146, 90, 0.45);
+}
+
+[data-theme='spirit-blossom'] {
+  --color-hextech-black: #07070e;
+  --color-void: #12121e;
+  --color-panel: #1e1e36;
+  --color-panel-2: #2a2a4e;
+  --color-panel-raised: #33335c;
+  --color-shadow: #04040a;
+  --color-gold: #98d8f8;
+  --color-gold-bright: #eef6ff;
+  --color-gold-light: #c6e9fc;
+  --color-gold-rich: #3fb6de;
+  --color-gold-deep: #2a6f8e;
+  --color-gold-pale: #f6fbff;
+  --color-hex: #b78bea;
+  --color-hex-deep: #8b5cf6;
+  --color-blue-steel: #424272;
+  --color-text: #e8e6f5;
+  --color-text-muted: #b9b5d6;
+  --color-text-dim: #9c98bd;
+  --font-beaufort: 'Shippori Mincho', 'Beaufort', 'Times New Roman', serif;
+  --ease-hextech: cubic-bezier(0.16, 0.8, 0.24, 1);
+  --hx-bevel: none;
+  --hx-bevel-btn: none;
+  --hx-glow-accent: rgba(152, 216, 248, 0.42);
+  --sb-arch: 16px 16px 4px 4px;
+  --sb-arch-btn: 10px 10px 3px 3px;
+}
