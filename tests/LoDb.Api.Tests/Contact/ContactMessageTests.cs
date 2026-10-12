@@ -1,6 +1,5 @@
 using System.Globalization;
 using System.Net;
-using LoDb.Api.Tests.Accounts.Support;
 using LoDb.Api.Tests.Contact.Support;
 using LoDb.Domain.Languages;
 using LoDb.Infrastructure.Outbox;
@@ -10,9 +9,12 @@ namespace LoDb.Api.Tests.Contact;
 
 /// <summary>
 /// <c>POST /api/contact</c>: the message is kept for the admin inbox and its notification
-/// queued for the team, the visitor as Reply-To, and a filled honeypot or a foreign origin
-/// keeps nothing.
+/// queued for the team, the visitor as Reply-To, and a filled honeypot keeps nothing.
 /// </summary>
+/// <remarks>
+/// A foreign origin is refused by the forgery guard every endpoint's policy carries,
+/// ForgeryTests' (AnonymousEndpointsTests keeps every endpoint under a policy).
+/// </remarks>
 public sealed class ContactMessageTests(PostgresContainerFixture postgres)
     : IAsyncLifetime
 {
@@ -92,23 +94,6 @@ public sealed class ContactMessageTests(PostgresContainerFixture postgres)
         using var response = await browser.PostAsync(ContactForm.Path, body);
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-        Assert.Empty(await App.MessagesAsync());
-        Assert.Empty(App.Outbox.Messages);
-    }
-
-    [Fact]
-    public async Task ForeignOriginIsRefused()
-    {
-        using var browser = App.Browser();
-        using var request = browser.Post(ContactForm.Path, ContactForm.Valid());
-        request.Headers.Remove(BrowserClient.OriginHeader);
-        request.Headers.Add(BrowserClient.OriginHeader, "https://evil.example");
-
-        using var response = await browser.SendAsync(request);
-
-        Assert.Equal(
-            "origin-mismatch",
-            await ApiJson.ProblemCodeAsync(response, HttpStatusCode.Forbidden));
         Assert.Empty(await App.MessagesAsync());
         Assert.Empty(App.Outbox.Messages);
     }
