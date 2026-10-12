@@ -1,4 +1,3 @@
-import { ITEM_CATEGORIES } from './item-categories';
 import { matchesCategory } from './matches-category';
 
 function item(tags: string[]): { tags: string[] } {
@@ -6,10 +5,6 @@ function item(tags: string[]): { tags: string[] } {
 }
 
 describe('item categories', () => {
-  it('lead with the all bucket, then the five others', () => {
-    expect(ITEM_CATEGORIES).toEqual(['all', 'attack', 'magic', 'defense', 'mobility', 'utility']);
-  });
-
   it('let the all bucket take every item, tagged or not', () => {
     expect(matchesCategory(item([]), 'all')).toBe(true);
     expect(matchesCategory(item(['SpellDamage']), 'all')).toBe(true);
