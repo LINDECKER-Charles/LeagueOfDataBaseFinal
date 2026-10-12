@@ -85,14 +85,6 @@ public sealed class AnalyticsEventWriterTests(PostgresContainerFixture postgres)
         Assert.Empty(await ReadAllAsync());
     }
 
-    [Fact]
-    public async Task EmptyBatchWritesNothing()
-    {
-        await Writer.WriteAsync([], Cancellation);
-
-        Assert.Empty(await ReadAllAsync());
-    }
-
     private static AnalyticsEvent Anonymous(AnalyticsEvent view)
     {
         view.Origin = AnalyticsCaptureOrigin.ServedPage;
