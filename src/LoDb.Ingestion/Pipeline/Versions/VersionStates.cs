@@ -162,10 +162,13 @@ internal sealed class VersionStates(
     }
 
     /// <summary>
-    /// The ready versions, newest first, and the latest one; a promoted version stays ready.
+    /// The ready versions, newest first, the latest one and when it was promoted; a promoted
+    /// version stays ready.
     /// </summary>
-    public async Task<(IReadOnlyList<PatchVersion> Ready, PatchVersion? Latest)> ReadyAsync(
-        CancellationToken cancellationToken)
+    public async Task<(
+        IReadOnlyList<PatchVersion> Ready,
+        PatchVersion? Latest,
+        DateTimeOffset? PromotedAt)> ReadyAsync(CancellationToken cancellationToken)
     {
         var db = await contexts.CreateDbContextAsync(cancellationToken).ConfigureAwait(false);
         await using (db.ConfigureAwait(false))
@@ -173,14 +176,17 @@ internal sealed class VersionStates(
             var rows = await db.DdragonVersions
                 .AsNoTracking()
                 .Where(static row => row.Status == DdragonVersionStatus.Ready)
-                .Select(static row => new { row.Version, Promoted = row.PromotedAt != null })
+                .Select(static row => new { row.Version, row.PromotedAt })
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
-            var latest = rows.Where(static row => row.Promoted)
-                .Select(static row => PatchVersion.Parse(row.Version))
-                .Max();
-            return ([.. rows.Select(static row => PatchVersion.Parse(row.Version))
-                .OrderDescending()], latest);
+            var latest = rows.Where(static row => row.PromotedAt is not null)
+                .MaxBy(static row => PatchVersion.Parse(row.Version));
+            var ready = rows.Select(static row => PatchVersion.Parse(row.Version))
+                .OrderDescending();
+            return (
+                [.. ready],
+                latest is null ? null : PatchVersion.Parse(latest.Version),
+                latest?.PromotedAt);
         }
     }
 

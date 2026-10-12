@@ -1,5 +1,4 @@
 using LoDb.Domain.Languages;
-using LoDb.Domain.Versions;
 using LoDb.Ingestion.Catalog.Reading;
 using LoDb.Ingestion.Catalog.Snapshots;
 
@@ -7,7 +6,8 @@ namespace LoDb.Api.Modules.Seo.Sitemaps;
 
 /// <summary>
 /// What each sitemap lists, as absolute URLs: the index, a locale's primary sitemap and a
-/// locale's sitemap of one past version.
+/// locale's sitemap of one past version. Only what the latest patch changed is dated, by its
+/// promotion.
 /// </summary>
 /// <remarks>
 /// Entity pages come from the catalog's canonical paths, the ones every list and detail of
@@ -27,45 +27,55 @@ internal static class SitemapLocations
     /// the short URLs at its promotion, and the index would announce redirects. Before any
     /// promotion, the first versions listed fill the window.
     /// </remarks>
-    public static IEnumerable<string> Index(
+    public static IEnumerable<SitemapEntry> Index(
         string origin,
         CatalogVersions versions,
         int window)
     {
         ArgumentNullException.ThrowIfNull(versions);
         var latest = versions.Latest;
-        IEnumerable<PatchVersion?> files =
-        [
-            null,
-            .. versions.Listed.Where(version => latest is null || version < latest).Take(window),
-        ];
-        return files.SelectMany(version => UiLocales.All.Select(locale =>
-            origin + SitemapFile.PathOf(locale, version)));
+        var primary = UiLocales.All.Select(locale => new SitemapEntry(
+            origin + SitemapFile.PathOf(locale, null),
+            versions.LatestPromotedAt));
+        var past = versions.Listed
+            .Where(version => latest is null || version < latest)
+            .Take(window)
+            .SelectMany(version => UiLocales.All.Select(locale =>
+                new SitemapEntry(origin + SitemapFile.PathOf(locale, version))));
+        return primary.Concat(past);
     }
 
     /// <summary>
-    /// The pages of the latest version, under their short URLs: the unversioned pages, then
-    /// every entity. <paramref name="catalog"/> is null before the first promotion.
+    /// The pages of the latest version, under their short URLs below
+    /// <paramref name="prefix"/> (<see cref="SitePages.Prefix"/> without a version): the
+    /// pages a patch changes, every entity included, dated by <paramref name="promotedAt"/>,
+    /// then the editorial pages, undated. <paramref name="catalog"/> is null before the first
+    /// promotion.
     /// </summary>
-    public static IEnumerable<string> Latest(
-        string origin,
-        UiLocale locale,
-        CatalogSnapshot? catalog)
+    public static IEnumerable<SitemapEntry> Latest(
+        string prefix,
+        CatalogSnapshot? catalog,
+        DateTimeOffset? promotedAt)
     {
         IEnumerable<string> entities = catalog is null ? [] : EntityPaths(catalog);
-        var prefix = SitePages.Prefix(origin, locale, null);
-        return SitePages.Unversioned.Concat(entities).Select(path => prefix + path);
+        var changed = SitePages.PatchBound.Concat(entities)
+            .Select(path => new SitemapEntry(prefix + path, promotedAt));
+        return changed.Concat(SitePages.Editorial.Select(path => new SitemapEntry(prefix + path)));
     }
 
-    /// <summary>The pages of a past version: the four lists, then every entity.</summary>
-    public static IEnumerable<string> Version(
+    /// <summary>
+    /// The pages of a past version: the four lists, then every entity, undated: the
+    /// ingestion dates no past version.
+    /// </summary>
+    public static IEnumerable<SitemapEntry> Version(
         string origin,
         UiLocale locale,
         CatalogSnapshot catalog)
     {
         ArgumentNullException.ThrowIfNull(catalog);
         var prefix = SitePages.Prefix(origin, locale, catalog.Version);
-        return SitePages.Lists.Concat(EntityPaths(catalog)).Select(path => prefix + path);
+        return SitePages.Lists.Concat(EntityPaths(catalog))
+            .Select(path => new SitemapEntry(prefix + path));
     }
 
     // The entries the lists show: debris has no page (UP 10); the Classic twins do.

@@ -37,6 +37,12 @@ public interface ICatalogReader
     /// </summary>
     Task<PatchVersion?> GetLatestAsync(CancellationToken cancellationToken);
 
+    /// <summary>
+    /// When the latest version was promoted; <see langword="null"/> until the first
+    /// ingestion completes.
+    /// </summary>
+    Task<DateTimeOffset?> GetLatestPromotedAtAsync(CancellationToken cancellationToken);
+
     /// <summary>Every language Data Dragon lists.</summary>
     Task<IReadOnlyList<DdragonLanguage>> GetLanguagesAsync(CancellationToken cancellationToken);
 

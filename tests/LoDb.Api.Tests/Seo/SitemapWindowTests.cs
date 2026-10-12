@@ -92,7 +92,8 @@ public sealed class SitemapWindowTests
     private static List<string> IndexOf(PatchVersion? latest, int window)
     {
         var versions = new CatalogVersions { Latest = latest, Listed = Listed, Ready = [] };
-        return [.. SitemapLocations.Index(Origin, versions, window)];
+        return [.. SitemapLocations.Index(Origin, versions, window)
+            .Select(static entry => entry.Location)];
     }
 
     private static string SitemapOf(PatchVersion version) =>
