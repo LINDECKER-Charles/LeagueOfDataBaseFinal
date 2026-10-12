@@ -3,7 +3,6 @@ using LoDb.Api.Tests.Accounts.Support;
 using LoDb.Api.Tests.Billing.Support;
 using LoDb.Infrastructure.Audit;
 using LoDb.Infrastructure.Persistence.Billing;
-using LoDb.Testing;
 using Microsoft.EntityFrameworkCore;
 
 namespace LoDb.Api.Tests.Billing;
@@ -13,15 +12,24 @@ namespace LoDb.Api.Tests.Billing;
 /// crediting again, and a handler that fails leaves nothing behind, so that the next
 /// delivery applies it whole.
 /// </summary>
-public sealed class WebhookIdempotencyTests(PostgresContainerFixture postgres)
-    : IAsyncLifetime
+/// <remarks>
+/// The tests share a host, each with accounts and Stripe identifiers of its own.
+/// </remarks>
+public sealed class WebhookIdempotencyTests : IClassFixture<SharedBillingApp>
 {
     private const long Requests = 5_000;
 
-    private BillingApp? _app;
+    private readonly StripePayloads _stripe;
 
-    private BillingApp App =>
-        _app ?? throw new InvalidOperationException("The host is not started yet.");
+    public WebhookIdempotencyTests(SharedBillingApp host)
+    {
+        ArgumentNullException.ThrowIfNull(host);
+        App = host.App;
+        App.ResetDoubles();
+        _stripe = host.Payloads();
+    }
+
+    private BillingApp App { get; }
 
     private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
 
@@ -30,9 +38,9 @@ public sealed class WebhookIdempotencyTests(PostgresContainerFixture postgres)
     {
         var buyer = await App.SeedUserAsync("Acheteur");
         var key = await App.SeedKeyAsync(buyer);
-        var paid = StripePayloads.Completed(
+        var paid = _stripe.Completed(
             "evt_pack",
-            StripePayloads.Pack("cs_test_pack", buyer.Id, Requests));
+            _stripe.Pack("cs_test_pack", buyer.Id, Requests));
 
         using var first = await App.DeliverAsync(paid);
         using var second = await App.DeliverAsync(paid);
@@ -41,7 +49,7 @@ public sealed class WebhookIdempotencyTests(PostgresContainerFixture postgres)
         Assert.Equal(HttpStatusCode.OK, second.StatusCode);
         Assert.Equal(Requests, (await App.KeyAsync(key.Id)).CreditsBalance);
         Assert.Single(await App.GrantsOfAsync(key.Id));
-        Assert.Single(await EventsAsync());
+        Assert.Single(await EventsAsync("evt_pack"));
         Assert.Equal([key.Id], App.KeyCache.Invalidated);
     }
 
@@ -50,16 +58,16 @@ public sealed class WebhookIdempotencyTests(PostgresContainerFixture postgres)
     {
         var buyer = await App.SeedUserAsync("Acheteur");
         var key = await App.SeedKeyAsync(buyer);
-        var session = StripePayloads.Pack("cs_test_pack", buyer.Id, Requests);
+        var session = _stripe.Pack("cs_test_pack", buyer.Id, Requests);
 
-        using var first = await App.DeliverAsync(StripePayloads.Completed("evt_1", session));
+        using var first = await App.DeliverAsync(_stripe.Completed("evt_1", session));
         using var second = await App.DeliverAsync(
-            StripePayloads.Completed("evt_2", session.DeepClone().AsObject()));
+            _stripe.Completed("evt_2", session.DeepClone().AsObject()));
 
         Assert.Equal(HttpStatusCode.OK, second.StatusCode);
         Assert.Equal(Requests, (await App.KeyAsync(key.Id)).CreditsBalance);
         Assert.Single(await App.GrantsOfAsync(key.Id));
-        Assert.Equal(2, (await EventsAsync()).Count);
+        Assert.Equal(2, (await EventsAsync("evt_1", "evt_2")).Count);
     }
 
     [Fact]
@@ -67,9 +75,9 @@ public sealed class WebhookIdempotencyTests(PostgresContainerFixture postgres)
     {
         var buyer = await App.SeedUserAsync("Acheteur");
         var key = await App.SeedKeyAsync(buyer);
-        var paid = StripePayloads.Completed(
+        var paid = _stripe.Completed(
             "evt_pack",
-            StripePayloads.Pack("cs_test_pack", buyer.Id, Requests));
+            _stripe.Pack("cs_test_pack", buyer.Id, Requests));
 
         var responses = await Task.WhenAll(
             Enumerable.Range(0, 4).Select(_ => App.DeliverAsync(paid)));
@@ -90,9 +98,9 @@ public sealed class WebhookIdempotencyTests(PostgresContainerFixture postgres)
     public async Task FailingHandlerWritesNothingAndTheRedeliveryApplies()
     {
         var buyer = await App.SeedUserAsync("Acheteur");
-        var paid = StripePayloads.Completed(
+        var paid = _stripe.Completed(
             "evt_pack",
-            StripePayloads.Pack("cs_test_pack", buyer.Id, Requests));
+            _stripe.Pack("cs_test_pack", buyer.Id, Requests));
         App.Fault.Arm();
 
         using var failed = await App.DeliverAsync(paid);
@@ -101,8 +109,8 @@ public sealed class WebhookIdempotencyTests(PostgresContainerFixture postgres)
             "handler-failed",
             await ApiJson.ProblemCodeAsync(failed, HttpStatusCode.InternalServerError));
         Assert.Empty(await App.KeysOfAsync(buyer.Id));
-        Assert.Empty(await App.AuditAsync());
-        Assert.Empty(await EventsAsync());
+        Assert.Empty(await App.AuditOfAsync(buyer.Id));
+        Assert.Empty(await EventsAsync("evt_pack"));
         Assert.Empty(App.KeyCache.Invalidated);
 
         using var redelivered = await App.DeliverAsync(paid);
@@ -111,26 +119,22 @@ public sealed class WebhookIdempotencyTests(PostgresContainerFixture postgres)
         var key = Assert.Single(await App.KeysOfAsync(buyer.Id));
         Assert.Equal(Requests, key.CreditsBalance);
         Assert.Single(await App.GrantsOfAsync(key.Id));
-        Assert.Equal(StripeEventStatus.Processed, Assert.Single(await EventsAsync()).Status);
+        Assert.Equal(
+            StripeEventStatus.Processed,
+            Assert.Single(await EventsAsync("evt_pack")).Status);
         Assert.Equal([key.Id], App.KeyCache.Invalidated);
         Assert.Equal(
             [AuditAction.ApiKeyCreate],
-            (await App.AuditAsync()).Select(static entry => entry.Action));
+            (await App.AuditOfAsync(buyer.Id)).Select(static entry => entry.Action));
     }
 
-    public async ValueTask InitializeAsync() => _app = await BillingApp.StartAsync(postgres);
-
-    public async ValueTask DisposeAsync()
+    // The events the test names, as delivered.
+    private async Task<List<StripeEvent>> EventsAsync(params string[] ids)
     {
-        if (_app is not null)
-        {
-            await _app.DisposeAsync();
-        }
-    }
-
-    private async Task<List<StripeEvent>> EventsAsync()
-    {
+        var delivered = ids.Select(_stripe.Id).ToList();
         await using var db = App.Database();
-        return await db.StripeEvents.AsNoTracking().ToListAsync(Cancellation);
+        return await db.StripeEvents.AsNoTracking()
+            .Where(stripeEvent => delivered.Contains(stripeEvent.Id))
+            .ToListAsync(Cancellation);
     }
 }

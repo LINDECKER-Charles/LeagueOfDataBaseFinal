@@ -7,6 +7,9 @@ public sealed class HandlerFault
 
     public void Arm() => Interlocked.Exchange(ref _armed, 1);
 
+    /// <summary>Unarmed, as a test starts, whatever an earlier one left.</summary>
+    public void Disarm() => Interlocked.Exchange(ref _armed, 0);
+
     /// <summary>Throws once armed, and disarms.</summary>
     public void ThrowIfArmed()
     {

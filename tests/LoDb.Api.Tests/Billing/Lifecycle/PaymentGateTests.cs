@@ -2,8 +2,9 @@ using System.Globalization;
 using System.Net;
 using System.Text.Json.Nodes;
 using LoDb.Api.Tests.Billing.Support;
+using LoDb.Infrastructure.Persistence;
+using LoDb.Infrastructure.Persistence.Billing;
 using LoDb.Infrastructure.Persistence.Billing.Payments;
-using LoDb.Testing;
 using Microsoft.EntityFrameworkCore;
 
 namespace LoDb.Api.Tests.Billing.Lifecycle;
@@ -13,13 +14,22 @@ namespace LoDb.Api.Tests.Billing.Lifecycle;
 /// the catalogue's price: an unpaid session is recorded as pending, a session charging
 /// another amount or currency is refused, and neither grants anything.
 /// </summary>
-public sealed class PaymentGateTests(PostgresContainerFixture postgres)
-    : IAsyncLifetime
+/// <remarks>
+/// The tests share a host, each with accounts and Stripe identifiers of its own.
+/// </remarks>
+public sealed class PaymentGateTests : IClassFixture<SharedBillingApp>
 {
-    private BillingApp? _app;
+    private readonly StripePayloads _stripe;
 
-    private BillingApp App =>
-        _app ?? throw new InvalidOperationException("The host is not started yet.");
+    public PaymentGateTests(SharedBillingApp host)
+    {
+        ArgumentNullException.ThrowIfNull(host);
+        App = host.App;
+        App.ResetDoubles();
+        _stripe = host.Payloads();
+    }
+
+    private BillingApp App { get; }
 
     private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
 
@@ -29,7 +39,7 @@ public sealed class PaymentGateTests(PostgresContainerFixture postgres)
         var buyer = await App.SeedUserAsync("Acheteur");
         var key = await App.SeedKeyAsync(buyer);
 
-        await DeliverAsync(Unpaid(StripePayloads.Pack("cs_test_sepa", buyer.Id, 5_000)));
+        await DeliverAsync(Unpaid(_stripe.Pack("cs_test_sepa", buyer.Id, 5_000)));
 
         var untouched = await App.KeyAsync(key.Id);
         Assert.Equal((0L, 10), (untouched.CreditsBalance, untouched.RateLimitPerMin));
@@ -39,7 +49,7 @@ public sealed class PaymentGateTests(PostgresContainerFixture postgres)
         Assert.Equal(
             (StripeCheckoutKind.Pack, StripeCheckoutStatus.Pending, 500L, "eur"),
             (checkout.Kind, checkout.Status, checkout.AmountCents, checkout.Currency));
-        Assert.Equal(StripePayloads.PaymentOf("cs_test_sepa"), checkout.PaymentIntentId);
+        Assert.Equal(_stripe.PaymentOf("cs_test_sepa"), checkout.PaymentIntentId);
     }
 
     [Fact]
@@ -48,12 +58,15 @@ public sealed class PaymentGateTests(PostgresContainerFixture postgres)
         var buyer = await App.SeedUserAsync("Abonne");
         var key = await App.SeedKeyAsync(buyer);
 
-        await DeliverAsync(Unpaid(StripePayloads.Plan("cs_test_plan", buyer.Id, "annual")));
+        await DeliverAsync(Unpaid(_stripe.Plan("cs_test_plan", buyer.Id, "annual")));
 
         var untouched = await App.KeyAsync(key.Id);
         Assert.Equal(("free", (string?)null), (untouched.Plan, untouched.StripeSubscriptionId));
+        var subscription = _stripe.Subscription;
         await using var db = App.Database();
-        Assert.Empty(await db.StripeSubscriptions.ToListAsync(Cancellation));
+        Assert.Empty(await db.StripeSubscriptions
+            .Where(row => row.Id == subscription)
+            .ToListAsync(Cancellation));
     }
 
     [Fact]
@@ -61,10 +74,10 @@ public sealed class PaymentGateTests(PostgresContainerFixture postgres)
     {
         var donor = await App.SeedUserAsync("Donatrice");
 
-        await DeliverAsync(Unpaid(StripePayloads.Donation("cs_test_don", 1_000, donor.Id)));
+        await DeliverAsync(Unpaid(_stripe.Donation("cs_test_don", 1_000, donor.Id)));
 
         await using var db = App.Database();
-        Assert.Empty(await db.Donations.ToListAsync(Cancellation));
+        Assert.Empty(await DonationsAsync(db, "cs_test_don"));
         Assert.False((await db.Users.SingleAsync(user => user.Id == donor.Id, Cancellation))
             .IsSupporter);
         Assert.Equal(StripeCheckoutStatus.Pending, (await CheckoutAsync("cs_test_don")).Status);
@@ -74,13 +87,13 @@ public sealed class PaymentGateTests(PostgresContainerFixture postgres)
     [Fact]
     public async Task SessionWithoutPaymentToMakeIsGrantedAndPaid()
     {
-        var session = StripePayloads.Donation("cs_test_don", 1_000);
+        var session = _stripe.Donation("cs_test_don", 1_000);
         session["payment_status"] = "no_payment_required";
 
         await DeliverAsync(session);
 
         await using var db = App.Database();
-        Assert.Single(await db.Donations.ToListAsync(Cancellation));
+        Assert.Single(await DonationsAsync(db, "cs_test_don"));
         Assert.Equal(StripeCheckoutStatus.Paid, (await CheckoutAsync("cs_test_don")).Status);
     }
 
@@ -90,7 +103,7 @@ public sealed class PaymentGateTests(PostgresContainerFixture postgres)
     {
         var buyer = await App.SeedUserAsync("Acheteur");
         var key = await App.SeedKeyAsync(buyer);
-        var session = With(StripePayloads.Pack("cs_test_off", 0, 5_000), "amount_total", 499);
+        var session = With(_stripe.Pack("cs_test_off", 0, 5_000), "amount_total", 499);
         session["metadata"]!["user_id"] = buyer.Id.ToString(CultureInfo.InvariantCulture);
         session["client_reference_id"] = buyer.Id.ToString(CultureInfo.InvariantCulture);
 
@@ -100,20 +113,10 @@ public sealed class PaymentGateTests(PostgresContainerFixture postgres)
         Assert.Equal(("free", 0L), (untouched.Plan, untouched.CreditsBalance));
         Assert.Empty(await App.GrantsOfAsync(key.Id));
         await using var db = App.Database();
-        Assert.Empty(await db.Donations.ToListAsync(Cancellation));
+        Assert.Empty(await DonationsAsync(db, "cs_test_off"));
         Assert.False((await db.Users.SingleAsync(user => user.Id == buyer.Id, Cancellation))
             .IsSupporter);
         Assert.Equal(StripeCheckoutStatus.Refused, (await CheckoutAsync("cs_test_off")).Status);
-    }
-
-    public async ValueTask InitializeAsync() => _app = await BillingApp.StartAsync(postgres);
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_app is not null)
-        {
-            await _app.DisposeAsync();
-        }
     }
 
     private static JsonObject With(JsonObject session, string field, JsonNode? value)
@@ -128,14 +131,23 @@ public sealed class PaymentGateTests(PostgresContainerFixture postgres)
     private async Task DeliverAsync(JsonObject session)
     {
         using var response = await App.DeliverAsync(
-            StripePayloads.Completed("evt_completed", session));
+            _stripe.Completed("evt_completed", session));
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     private async Task<StripeCheckout> CheckoutAsync(string sessionId)
     {
+        var delivered = _stripe.Id(sessionId);
         await using var db = App.Database();
         return await db.StripeCheckouts.AsNoTracking()
-            .SingleAsync(checkout => checkout.Id == sessionId, Cancellation);
+            .SingleAsync(checkout => checkout.Id == delivered, Cancellation);
+    }
+
+    // The donations of the session the test names, as delivered.
+    private Task<List<Donation>> DonationsAsync(LoDbDbContext db, string sessionId)
+    {
+        var delivered = _stripe.Id(sessionId);
+        return db.Donations.Where(donation => donation.StripeSessionId == delivered)
+            .ToListAsync(Cancellation);
     }
 }

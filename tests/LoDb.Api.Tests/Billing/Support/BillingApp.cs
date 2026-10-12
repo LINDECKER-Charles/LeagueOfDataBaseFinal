@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net.Mime;
 using System.Security.Cryptography;
 using System.Text;
@@ -28,8 +29,10 @@ namespace LoDb.Api.Tests.Billing.Support;
 /// completed sessions can be made to fail once, after its writes.
 /// </summary>
 /// <remarks>
-/// One per test: the rate limits live in the host. The secrets are placeholders; no call
-/// leaves the machine.
+/// The tests of a class share one (<see cref="SharedBillingApp"/>), each with accounts and
+/// Stripe identifiers of its own and the doubles emptied (<see cref="ResetDoubles"/>), unless
+/// a test reaches a rate limit or advances the clock: it then starts one of its own. The
+/// secrets are placeholders; no call leaves the machine.
 /// </remarks>
 public sealed class BillingApp : IAsyncDisposable
 {
@@ -40,25 +43,35 @@ public sealed class BillingApp : IAsyncDisposable
     private const string Billing = "LoDb:Billing:";
     private const string Accounts = "LoDb:Accounts:";
 
+    // The sign-ins of a whole class come from one address: the limit has tests of its own.
+    private const string SharedSignInLimit = "1000";
+
     private readonly TestDatabase _database;
     private readonly ApiFactory _factory;
     private readonly WebApplicationFactory<Program> _host;
+    private int _seeded;
 
-    private BillingApp(TestDatabase database, bool configured)
+    private BillingApp(TestDatabase database, bool configured, string? signInLimit)
     {
         _database = database;
         Gateway.IsConfigured = configured;
+        var settings = new Dictionary<string, string?>
+        {
+            [Accounts + "SecureCookies"] = bool.TrueString,
+            [Accounts + "SiteOrigin"] = AccountsApp.SiteOrigin,
+            [Billing + "StripeSecretKey"] = configured ? SecretKey : null,
+            [Billing + "StripeWebhookSecret"] = configured ? WebhookSecret : null,
+        };
+        if (signInLimit is not null)
+        {
+            settings["LoDb:RateLimiting:SignInPerWindow"] = signInLimit;
+        }
+
         _factory = new ApiFactory
         {
             PostgresConnectionString = database.AppConnectionString,
             Clock = Clock,
-            Settings = new Dictionary<string, string?>
-            {
-                [Accounts + "SecureCookies"] = bool.TrueString,
-                [Accounts + "SiteOrigin"] = AccountsApp.SiteOrigin,
-                [Billing + "StripeSecretKey"] = configured ? SecretKey : null,
-                [Billing + "StripeWebhookSecret"] = configured ? WebhookSecret : null,
-            },
+            Settings = settings,
         };
         _host = _factory.WithWebHostBuilder(
             builder => builder.ConfigureTestServices(AddDoubles));
@@ -85,7 +98,26 @@ public sealed class BillingApp : IAsyncDisposable
         bool configured = true)
     {
         var database = await postgres.CreateMigratedDatabaseAsync(Cancellation);
-        return new BillingApp(database, configured);
+        return new BillingApp(database, configured, signInLimit: null);
+    }
+
+    /// <summary>
+    /// The host the tests of a class share, Stripe configured, the limit of the sign-ins of
+    /// one address lifted.
+    /// </summary>
+    public static async Task<BillingApp> StartSharedAsync(PostgresContainerFixture postgres)
+    {
+        ArgumentNullException.ThrowIfNull(postgres);
+        var database = await postgres.CreateMigratedDatabaseAsync(Cancellation);
+        return new BillingApp(database, configured: true, SharedSignInLimit);
+    }
+
+    /// <summary>The doubles as a test starts, whatever an earlier one left them.</summary>
+    public void ResetDoubles()
+    {
+        Gateway.Reset();
+        KeyCache.Reset();
+        Fault.Disarm();
     }
 
     /// <summary>A browser on the site, as the donation page posts.</summary>
@@ -121,15 +153,19 @@ public sealed class BillingApp : IAsyncDisposable
         return await stripe.SendAsync(request, Cancellation);
     }
 
-    /// <summary>Creates an account through Identity, as a registration would.</summary>
+    /// <summary>
+    /// Creates an account through Identity, as a registration would, named after
+    /// <paramref name="username"/> and a number no other account of the host bears.
+    /// </summary>
     public async Task<User> SeedUserAsync(string username)
     {
+        var number = Interlocked.Increment(ref _seeded).ToString(CultureInfo.InvariantCulture);
         await using var scope = _host.Services.CreateAsyncScope();
         var users = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
         var user = new User
         {
-            UserName = username,
-            Email = username.ToLowerInvariant() + "@example.test",
+            UserName = $"{username}_{number}",
+            Email = $"{username.ToLowerInvariant()}{number}@example.test",
             EmailConfirmed = true,
             Roles = [],
             CreatedAt = Clock.GetUtcNow(),
@@ -197,11 +233,12 @@ public sealed class BillingApp : IAsyncDisposable
             .ToListAsync(Cancellation);
     }
 
-    /// <summary>The journal, oldest entry first.</summary>
-    public async Task<List<AuditLogEntry>> AuditAsync()
+    /// <summary>The journal entries made as <paramref name="userId"/>, oldest first.</summary>
+    public async Task<List<AuditLogEntry>> AuditOfAsync(int userId)
     {
         await using var db = Database();
         return await db.AuditLog.AsNoTracking()
+            .Where(entry => entry.ActorId == userId)
             .OrderBy(static entry => entry.Id)
             .ToListAsync(Cancellation);
     }

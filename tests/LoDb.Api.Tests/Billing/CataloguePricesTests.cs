@@ -19,6 +19,9 @@ public sealed class CataloguePricesTests
     private const long PackNotOnSale = 7_000;
     private const string PlanOnSale = "annual";
 
+    // No database: the identifiers need no mark.
+    private static readonly StripePayloads Stripe = new(string.Empty);
+
     public static TheoryData<string> CatalogueOffers =>
     [
         "pack at its price",
@@ -68,23 +71,23 @@ public sealed class CataloguePricesTests
     private static SessionEvent Read(JsonObject session)
     {
         var stripeEvent = EventUtility.ParseEvent(
-            StripePayloads.Completed("evt_prices", session).ToJsonString(),
+            Stripe.Completed("evt_prices", session).ToJsonString(),
             throwOnApiVersionMismatch: false);
         return new SessionEventReader(NullLogger<SessionEventReader>.Instance).Read(stripeEvent)
             ?? throw new InvalidOperationException("The event carries no session the site sells.");
     }
 
     private static JsonObject Pack(long requests = PackOnSale) =>
-        StripePayloads.Pack(SessionId, 0, requests);
+        Stripe.Pack(SessionId, 0, requests);
 
     private static long PlanPrice() => ApiPlans.Find(PlanOnSale)!.PriceCents;
 
     private static JsonObject Plan(string plan = PlanOnSale) =>
-        StripePayloads.Plan(SessionId, 0, plan);
+        Stripe.Plan(SessionId, 0, plan);
 
     private static JsonObject Donation(long amountCents)
     {
-        var session = StripePayloads.Donation(SessionId, 0);
+        var session = Stripe.Donation(SessionId, 0);
         session["amount_total"] = amountCents;
         return session;
     }

@@ -6,7 +6,6 @@ using LoDb.Infrastructure.Persistence.Accounts;
 using LoDb.Infrastructure.Persistence.Billing;
 using LoDb.Infrastructure.Persistence.Billing.Payments;
 using LoDb.Infrastructure.Persistence.PublicApi;
-using LoDb.Testing;
 using Microsoft.EntityFrameworkCore;
 
 namespace LoDb.Api.Tests.Billing.Lifecycle;
@@ -17,16 +16,25 @@ namespace LoDb.Api.Tests.Billing.Lifecycle;
 /// spent yet, never below zero nor from another pack; a donation and the supporter badge it
 /// gave; a plan. A partial refund, a repeated one or one the site cannot match takes nothing.
 /// </summary>
-public sealed class RevocationTests(PostgresContainerFixture postgres)
-    : IAsyncLifetime
+/// <remarks>
+/// The tests share a host, each with accounts and Stripe identifiers of its own.
+/// </remarks>
+public sealed class RevocationTests : IClassFixture<SharedBillingApp>
 {
     private const string FirstPack = "cs_test_pack_1";
     private const string SecondPack = "cs_test_pack_2";
 
-    private BillingApp? _app;
+    private readonly StripePayloads _stripe;
 
-    private BillingApp App =>
-        _app ?? throw new InvalidOperationException("The host is not started yet.");
+    public RevocationTests(SharedBillingApp host)
+    {
+        ArgumentNullException.ThrowIfNull(host);
+        App = host.App;
+        App.ResetDoubles();
+        _stripe = host.Payloads();
+    }
+
+    private BillingApp App { get; }
 
     private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
 
@@ -37,7 +45,7 @@ public sealed class RevocationTests(PostgresContainerFixture postgres)
         await BuyAsync(buyer, FirstPack, 5_000);
         await SpendDownToAsync(key, 3_000);
 
-        await DeliverAsync(Later(StripePayloads.Refunded("evt_refund", Payment(FirstPack)), 1));
+        await DeliverAsync(Later(_stripe.Refunded("evt_refund", Payment(FirstPack)), 1));
 
         var revoked = await App.KeyAsync(key.Id);
         Assert.Equal((0L, 10), (revoked.CreditsBalance, revoked.RateLimitPerMin));
@@ -58,7 +66,7 @@ public sealed class RevocationTests(PostgresContainerFixture postgres)
         // Spent from the oldest pack first: 3 000 of the first one are left.
         await SpendDownToAsync(key, 13_000);
 
-        await DeliverAsync(Later(StripePayloads.Refunded("evt_refund", Payment(FirstPack)), 2));
+        await DeliverAsync(Later(_stripe.Refunded("evt_refund", Payment(FirstPack)), 2));
 
         var revoked = await App.KeyAsync(key.Id);
         Assert.Equal((10_000L, 60), (revoked.CreditsBalance, revoked.RateLimitPerMin));
@@ -75,8 +83,8 @@ public sealed class RevocationTests(PostgresContainerFixture postgres)
         await BuyAsync(buyer, FirstPack, 5_000);
         await BuyAsync(buyer, SecondPack, 10_000);
 
-        await DeliverAsync(StripePayloads.Refunded("evt_refund_1", Payment(FirstPack)));
-        await DeliverAsync(StripePayloads.Refunded("evt_refund_2", Payment(FirstPack)));
+        await DeliverAsync(_stripe.Refunded("evt_refund_1", Payment(FirstPack)));
+        await DeliverAsync(_stripe.Refunded("evt_refund_2", Payment(FirstPack)));
 
         Assert.Equal(10_000, (await App.KeyAsync(key.Id)).CreditsBalance);
     }
@@ -87,7 +95,7 @@ public sealed class RevocationTests(PostgresContainerFixture postgres)
         var (buyer, key) = await BuyerAsync();
         await BuyAsync(buyer, FirstPack, 20_000);
 
-        await DeliverAsync(StripePayloads.Disputed("evt_dispute", Payment(FirstPack)));
+        await DeliverAsync(_stripe.Disputed("evt_dispute", Payment(FirstPack)));
 
         Assert.Equal((0L, 10), Rights(await App.KeyAsync(key.Id)));
         Assert.Equal(StripeCheckoutStatus.Revoked, (await CheckoutAsync(FirstPack)).Status);
@@ -98,7 +106,7 @@ public sealed class RevocationTests(PostgresContainerFixture postgres)
     {
         var (buyer, key) = await BuyerAsync();
         await BuyAsync(buyer, FirstPack, 5_000);
-        var refund = StripePayloads.Refunded("evt_refund", Payment(FirstPack));
+        var refund = _stripe.Refunded("evt_refund", Payment(FirstPack));
         var charge = refund["data"]!["object"]!.AsObject();
         charge["refunded"] = false;
         charge["amount_refunded"] = 300;
@@ -115,21 +123,24 @@ public sealed class RevocationTests(PostgresContainerFixture postgres)
     public async Task RefundedDonationTakesItsBadgeBack(bool anotherGift, bool staysSupporter)
     {
         var (donor, _) = await BuyerAsync();
-        await DeliverAsync(StripePayloads.Completed(
+        await DeliverAsync(_stripe.Completed(
             "evt_gift_1",
-            StripePayloads.Donation("cs_test_gift_1", 1_000, donor.Id)));
+            _stripe.Donation("cs_test_gift_1", 1_000, donor.Id)));
         if (anotherGift)
         {
-            await DeliverAsync(StripePayloads.Completed(
+            await DeliverAsync(_stripe.Completed(
                 "evt_gift_2",
-                StripePayloads.Donation("cs_test_gift_2", 500, donor.Id)));
+                _stripe.Donation("cs_test_gift_2", 500, donor.Id)));
         }
 
-        await DeliverAsync(StripePayloads.Refunded("evt_refund", Payment("cs_test_gift_1")));
+        await DeliverAsync(_stripe.Refunded("evt_refund", Payment("cs_test_gift_1")));
 
+        string[] sessions = [_stripe.Id("cs_test_gift_1"), _stripe.Id("cs_test_gift_2")];
         await using var db = App.Database();
-        var gifts = await db.Donations.AsNoTracking().ToListAsync(Cancellation);
-        Assert.DoesNotContain(gifts, static gift => gift.StripeSessionId == "cs_test_gift_1");
+        var gifts = await db.Donations.AsNoTracking()
+            .Where(gift => sessions.Contains(gift.StripeSessionId))
+            .ToListAsync(Cancellation);
+        Assert.DoesNotContain(gifts, gift => gift.StripeSessionId == sessions[0]);
         Assert.Equal(anotherGift ? 1 : 0, gifts.Count);
         Assert.Equal(staysSupporter, await IsSupporterAsync(db, donor));
     }
@@ -138,17 +149,17 @@ public sealed class RevocationTests(PostgresContainerFixture postgres)
     public async Task RefundedSubscriptionPaymentFallsBackToTheFreePlan()
     {
         var (buyer, key) = await BuyerAsync();
-        await DeliverAsync(StripePayloads.Completed(
+        await DeliverAsync(_stripe.Completed(
             "evt_subscribed",
-            StripePayloads.Plan("cs_test_plan", buyer.Id, "monthly_plus")));
+            _stripe.Plan("cs_test_plan", buyer.Id, "monthly_plus")));
 
         await DeliverAsync(Later(
-            StripePayloads.Refunded("evt_refund", "pi_test_invoice", StripePayloads.Customer),
+            _stripe.Refunded("evt_refund", "pi_test_invoice", _stripe.Customer),
             1));
 
         var revoked = await App.KeyAsync(key.Id);
         Assert.Equal(
-            ("free", 500, StripePayloads.Subscription),
+            ("free", 500, _stripe.Subscription),
             (revoked.Plan, revoked.MonthlyQuota, revoked.StripeSubscriptionId));
     }
 
@@ -158,26 +169,17 @@ public sealed class RevocationTests(PostgresContainerFixture postgres)
         var (buyer, key) = await BuyerAsync();
         await BuyAsync(buyer, FirstPack, 5_000);
 
-        await DeliverAsync(StripePayloads.Refunded("evt_refund", "pi_test_elsewhere"));
+        await DeliverAsync(_stripe.Refunded("evt_refund", "pi_test_elsewhere"));
 
         Assert.Equal(5_000, (await App.KeyAsync(key.Id)).CreditsBalance);
+        var delivered = _stripe.Id("evt_refund");
         await using var db = App.Database();
         Assert.Equal(
             StripeEventStatus.Processed,
-            (await db.StripeEvents.SingleAsync(e => e.Id == "evt_refund", Cancellation)).Status);
+            (await db.StripeEvents.SingleAsync(e => e.Id == delivered, Cancellation)).Status);
     }
 
-    public async ValueTask InitializeAsync() => _app = await BillingApp.StartAsync(postgres);
-
-    public async ValueTask DisposeAsync()
-    {
-        if (_app is not null)
-        {
-            await _app.DisposeAsync();
-        }
-    }
-
-    private static string Payment(string sessionId) => StripePayloads.PaymentOf(sessionId);
+    private string Payment(string sessionId) => _stripe.PaymentOf(sessionId);
 
     private static JsonObject Later(JsonObject stripeEvent, int days) =>
         StripePayloads.Later(stripeEvent, days);
@@ -198,9 +200,9 @@ public sealed class RevocationTests(PostgresContainerFixture postgres)
     // The second pack is paid a day after the first, which is then spent first.
     private Task BuyAsync(User buyer, string sessionId, long requests) =>
         DeliverAsync(Later(
-            StripePayloads.Completed(
+            _stripe.Completed(
                 "evt_" + sessionId,
-                StripePayloads.Pack(sessionId, buyer.Id, requests)),
+                _stripe.Pack(sessionId, buyer.Id, requests)),
             sessionId == SecondPack ? 1 : 0));
 
     // What the public API leaves of the balance once requests are spent.
@@ -222,8 +224,9 @@ public sealed class RevocationTests(PostgresContainerFixture postgres)
 
     private async Task<StripeCheckout> CheckoutAsync(string sessionId)
     {
+        var delivered = _stripe.Id(sessionId);
         await using var db = App.Database();
         return await db.StripeCheckouts.AsNoTracking()
-            .SingleAsync(checkout => checkout.Id == sessionId, Cancellation);
+            .SingleAsync(checkout => checkout.Id == delivered, Cancellation);
     }
 }
