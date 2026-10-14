@@ -32,6 +32,7 @@ export function summonerHeadOf(
     locale: context.locale,
     path: details.canonicalPath,
     version: context.pinned ? context.version : null,
+    canonical: details.canonical ?? null,
     image: previewImage('summoners'),
     jsonLd: (urls) => [
       detailTrail(trail, urls),

@@ -23,6 +23,7 @@ export function runeHeadOf(entry: CatalogueEntry<RuneTreeDetails>, texts: Catalo
     locale: context.locale,
     path: details.canonicalPath,
     version: context.pinned ? context.version : null,
+    canonical: details.canonical ?? null,
     image: image.status === 'present' && image.url ? image.url : previewImage('runes'),
     jsonLd: (urls) => [detailTrail(trail, urls), runePathJsonLd(details, urls)],
   };

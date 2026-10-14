@@ -159,7 +159,8 @@ describe('Seo', () => {
     });
   });
 
-  // The alternates of the home and of a pinned version are alternatesOf's (urls/urls.spec.ts).
+  // The alternates of the home and of a pinned version are alternatesOf's (urls/urls.spec.ts),
+  // the canonical of a pinned version buildHeadTags' (head/build-head-tags.spec.ts).
   it('keeps the home title as given, canonical at the root of its locale', async () => {
     await seo().apply({ title: 'League Of Data Base — LoL', titleFormat: 'raw', path: '' });
 
@@ -167,11 +168,11 @@ describe('Seo', () => {
     expect(hrefs('canonical')).toEqual([`${ORIGIN}/en/`]);
   });
 
-  it('makes a pinned version self-canonical, with its patch in the title', async () => {
+  it('titles a pinned version with its patch, canonical at the latest version', async () => {
     await seo().apply({ ...AHRI, version: '16.18.1' });
 
     expect(document.title).toBe('Ahri, champion de LoL (version 16.18.1) — League Of Data Base');
-    expect(hrefs('canonical')).toEqual([`${ORIGIN}/fr/16.18.1/champions/Ahri`]);
+    expect(hrefs('canonical')).toEqual([`${ORIGIN}/fr/champions/Ahri`]);
   });
 
   it('keeps a private page out of the index, titled like the account pages', async () => {

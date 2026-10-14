@@ -135,6 +135,15 @@ soit un `ErrorController` custom, soit des liens statiques (suffisant).
 
 > Révisée le 2026-07-18 : passage aux **URLs de patch indexables** (cf. changelog
 > `2026-07-18-seo-urls-versionnees-sitemaps`).
+>
+> **Remplacée le 2026-10-14** pour les patchs historiques et les sitemaps : une page indexée
+> par entité et par langue, celle du dernier patch. La fiche d'un ancien patch est canonique
+> à l'URL courte de la même entité ; une entité retirée reste indexée dans la dernière version
+> qui la portait, ses fiches antérieures en `noindex, follow` ; les sitemaps des versions
+> passées ne listent plus que ces fiches. Règle et raisons :
+> [ADR 0005, amendement du 2026-10-14](../reecriture/adr/0005-web-ssr-urls-et-seo.md) ;
+> diagnostic : [`seo-anciens-patchs.md`](seo-anciens-patchs.md). Les deux points ci-dessous
+> sur les patchs historiques et le sitemap-index ne valent plus.
 
 - **Dernier patch** — URL courte `/champion/Aatrox`, canonique, non versionnée :
   la page mise en avant. `?version&lang` reste une variante de rendu de cette page

@@ -1,4 +1,6 @@
 using LoDb.Domain.Languages;
+using LoDb.Domain.Paths;
+using LoDb.Ingestion.Catalog.Canonicals;
 using LoDb.Ingestion.Catalog.Reading;
 using LoDb.Ingestion.Catalog.Snapshots;
 
@@ -6,8 +8,8 @@ namespace LoDb.Api.Modules.Seo.Sitemaps;
 
 /// <summary>
 /// What each sitemap lists, as absolute URLs: the index, a locale's primary sitemap and a
-/// locale's sitemap of one past version. Only what the latest patch changed is dated, by its
-/// promotion.
+/// locale's sitemap of one past version. Only canonical URLs (ADR 0005, amendment of
+/// 2026-10-14), and only what the latest patch changed is dated, by its promotion.
 /// </summary>
 /// <remarks>
 /// Entity pages come from the catalog's canonical paths, the ones every list and detail of
@@ -22,10 +24,9 @@ internal static class SitemapLocations
     /// </summary>
     /// <remarks>
     /// The window bounds what the index pushes at crawlers, not what the site serves: an
-    /// older version's sitemap still answers at its URL, and the patch history links every
-    /// listed version. A version listed but not promoted yet stays out: its pages move to
-    /// the short URLs at its promotion, and the index would announce redirects. Before any
-    /// promotion, the first versions listed fill the window.
+    /// older version's sitemap still answers at its URL. A version listed but not promoted
+    /// yet stays out: its pages move to the short URLs at its promotion, and the index would
+    /// announce redirects. Before any promotion, the first versions listed fill the window.
     /// </remarks>
     public static IEnumerable<SitemapEntry> Index(
         string origin,
@@ -69,31 +70,35 @@ internal static class SitemapLocations
     /// </summary>
     public static IEnumerable<string> PatchBound(string prefix, CatalogSnapshot? catalog)
     {
-        IEnumerable<string> entities = catalog is null ? [] : EntityPaths(catalog);
+        IEnumerable<string> entities = catalog is null
+            ? []
+            : EntityPaths(catalog).Select(static path => path.Value);
         return SitePages.PatchBound.Concat(entities).Select(path => prefix + path);
     }
 
     /// <summary>
-    /// The pages of a past version: the four lists, then every entity, undated: the
-    /// ingestion dates no past version.
+    /// The pages of a past version, below <paramref name="prefix"/>
+    /// (<see cref="SitePages.Prefix"/> with the version) that are still their own canonical:
+    /// those of the entities it was the last to hold, undated, the ingestion dating no past
+    /// version. Its lists and the other entities are indexed under the latest short URLs.
     /// </summary>
     public static IEnumerable<SitemapEntry> Version(
-        string origin,
-        UiLocale locale,
-        CatalogSnapshot catalog)
+        string prefix,
+        CatalogSnapshot catalog,
+        CanonicalReferences references)
     {
         ArgumentNullException.ThrowIfNull(catalog);
-        var prefix = SitePages.Prefix(origin, locale, catalog.Version);
-        return SitePages.Lists.Concat(EntityPaths(catalog))
-            .Select(path => new SitemapEntry(prefix + path));
+        ArgumentNullException.ThrowIfNull(references);
+        return EntityPaths(catalog)
+            .Where(references.IsOwnCanonical)
+            .Select(path => new SitemapEntry(prefix + path.Value));
     }
 
     // The entries the lists show: debris has no page (UP 10); the Classic twins do.
-    private static IEnumerable<string> EntityPaths(CatalogSnapshot catalog) =>
+    private static IEnumerable<CanonicalPath> EntityPaths(CatalogSnapshot catalog) =>
         catalog.Champions.Entries.Select(catalog.PathOf)
             .Concat(catalog.ListedItems.Select(catalog.PathOf))
             .Concat(catalog.Runes.Entries.Select(catalog.PathOf))
             .Concat(catalog.Summoners.Entries.Select(catalog.PathOf))
-            .Select(static path => path.Value)
-            .Distinct(StringComparer.Ordinal);
+            .DistinctBy(static path => path.Value, StringComparer.Ordinal);
 }

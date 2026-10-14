@@ -7945,6 +7945,27 @@
         },
         "description": "The live update bundle of a publication; every field is required."
       },
+      "CanonicalLink": {
+        "required": [
+          "version",
+          "path"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The version of that page; `null` for the latest one, under its short\nURL."
+          },
+          "path": {
+            "type": "string",
+            "description": "The entity's path in that version."
+          }
+        },
+        "description": "The page search engines index for the entity of a detail (ADR 0005, amendment of\n2026-10-14), which the front writes as the canonical of a past version's page."
+      },
       "CatalogImage": {
         "required": [
           "status"
@@ -8318,6 +8339,17 @@
           "canonicalPath": {
             "type": "string",
             "description": "The page the routing redirects a stale or slugless URL to."
+          },
+          "canonical": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "The page search engines index for the entity (ADR 0005, amendment of 2026-10-14): its\nshort URL at the latest version, or its page in the last version that held it;\n`null` when this page stays out of the index.",
+                "$ref": "#/components/schemas/CanonicalLink"
+              }
+            ]
           },
           "profile": {
             "description": "The facts of the list's card.",
@@ -9831,6 +9863,17 @@
           "canonicalPath": {
             "type": "string",
             "description": "The page the routing redirects a stale or slugless URL to."
+          },
+          "canonical": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "The page search engines index for the entity (ADR 0005, amendment of 2026-10-14): its\nshort URL at the latest version, or its page in the last version that held it;\n`null` when this page stays out of the index.",
+                "$ref": "#/components/schemas/CanonicalLink"
+              }
+            ]
           },
           "profile": {
             "description": "The facts of the list's card, the edition and its twin among them.",
@@ -11723,6 +11766,17 @@
             "type": "string",
             "description": "The page the routing redirects a stale or slugless URL to."
           },
+          "canonical": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "The page search engines index for the entity (ADR 0005, amendment of 2026-10-14): its\nshort URL at the latest version, or its page in the last version that held it;\n`null` when this page stays out of the index.",
+                "$ref": "#/components/schemas/CanonicalLink"
+              }
+            ]
+          },
           "profile": {
             "$ref": "#/components/schemas/RuneTreeCard"
           },
@@ -12557,6 +12611,17 @@
           "canonicalPath": {
             "type": "string",
             "description": "The page the routing redirects a stale or slugless URL to."
+          },
+          "canonical": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "The page search engines index for the entity (ADR 0005, amendment of 2026-10-14): its\nshort URL at the latest version, or its page in the last version that held it;\n`null` when this page stays out of the index.",
+                "$ref": "#/components/schemas/CanonicalLink"
+              }
+            ]
           },
           "profile": {
             "description": "The facts of the list's card, the edition and its twin among them.",

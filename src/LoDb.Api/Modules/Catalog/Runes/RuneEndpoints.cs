@@ -64,10 +64,19 @@ internal static class RuneEndpoints
             return CatalogProblem.UnknownEntity(Segment, request.Id);
         }
 
+        var canonical = await request.LocateCanonicalAsync(
+            context.Catalog.Version,
+            context.Catalog.PathOf(tree));
+        if (!canonical.IsLocated)
+        {
+            return canonical.Problem;
+        }
+
         var images = await context.ResolveAsync(
             VersionImages.Of(tree),
             ColdDemand.Synchronous,
             request.CancellationToken);
-        return context.Answer(RuneTreeDetails.Of(tree, context.Catalog, images), images);
+        var details = RuneTreeDetails.Of(tree, context.Catalog, images);
+        return context.Answer(details with { Canonical = canonical.Link }, images);
     }
 }

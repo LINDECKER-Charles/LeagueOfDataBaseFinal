@@ -14,6 +14,7 @@ import { ogLocaleOf } from './og-locale-of';
 import { pageTitle } from './page-title';
 
 type PageKind = NonNullable<SeoPage['kind']>;
+type CanonicalTarget = Extract<SeoPage, { readonly path: string }>['canonical'];
 type Metas = HeadTags['metas'];
 
 const ROBOTS: Record<PageKind, string> = {
@@ -24,31 +25,72 @@ const ROBOTS: Record<PageKind, string> = {
   error: 'noindex, nofollow',
   share: 'noindex, nofollow',
 };
+// A page of a pinned version indexed nowhere (ADR 0005, amendment of 2026-10-14): out of the
+// index, but its links still lead crawlers on.
+const UNINDEXED = 'noindex, follow';
 const TWITTER_CARD = 'summary_large_image';
 const SITEMAP = { rel: 'sitemap', href: '/sitemap.xml', type: 'application/xml', title: 'Sitemap' };
 
 /**
- * The head of a page. Only an addressed page gets a canonical and the site graph, and only
- * an indexable one its 21 alternates: a canonical or an alternate pointing at a `noindex`
- * page would send crawlers mixed signals.
+ * The head of a page. Only an addressed page gets a canonical, and only one that is its own
+ * canonical the site graph, and its 21 alternates if indexable: an alternate pointing at a
+ * page canonical elsewhere or `noindex` would send crawlers mixed signals, and the structured
+ * data of a past patch would contradict, under the same ids, those of its canonical.
  */
 export function buildHeadTags(input: HeadInput): HeadTags {
-  const { page, origin, locale } = input;
-  const title = pageTitle(page, input.texts);
-  const address: PageAddress | null =
-    'path' in page ? { origin, locale, version: page.version ?? null, path: page.path } : null;
-  const urls = address === null ? null : seoUrlsOf(address);
-  const kind: PageKind = page.kind ?? 'page';
+  const title = pageTitle(input.page, input.texts);
+  const { urls, robots, links, isOwnCanonical } = indexingOf(input);
   return {
     title,
-    metas: [...pageMetas(input, title, urls), ...siteMetas(kind)],
-    links: [
-      ...(urls === null ? [] : [{ rel: 'canonical', href: urls.canonical }]),
-      ...(address !== null && kind === 'page' ? alternateLinks(address) : []),
-      SITEMAP,
-    ],
-    jsonLd: urls === null ? [] : jsonLdOf(input, title, urls),
+    metas: [...pageMetas(input, title, urls), ...siteMetas(robots)],
+    links: [...links, SITEMAP],
+    jsonLd: isOwnCanonical && urls !== null ? jsonLdOf(input, title, urls) : [],
   };
+}
+
+/** How crawlers may index a page, and under which URL. */
+interface Indexing {
+  /** The URLs of the page's canonical; null when it has none. */
+  readonly urls: SeoUrls | null;
+  readonly robots: string;
+  /** The canonical, then the alternates of an indexable page that is its own canonical. */
+  readonly links: HeadTags['links'];
+  readonly isOwnCanonical: boolean;
+}
+
+function indexingOf(input: HeadInput): Indexing {
+  const { page, origin, locale } = input;
+  const kind: PageKind = page.kind ?? 'page';
+  if (!('path' in page)) {
+    return { urls: null, robots: ROBOTS[kind], links: [], isOwnCanonical: false };
+  }
+  const address: PageAddress = { origin, locale, version: page.version ?? null, path: page.path };
+  const canonical = canonicalOf(address, page.canonical);
+  if (canonical === null) {
+    return { urls: null, robots: UNINDEXED, links: [], isOwnCanonical: false };
+  }
+  const urls = seoUrlsOf(canonical);
+  const isOwnCanonical = isSamePage(canonical, address);
+  const alternates = isOwnCanonical && kind === 'page' ? alternateLinks(address) : [];
+  return {
+    urls,
+    robots: ROBOTS[kind],
+    links: [{ rel: 'canonical', href: urls.canonical }, ...alternates],
+    isOwnCanonical,
+  };
+}
+
+// A page of the latest version is its own canonical. A pinned one is indexed where the API
+// places its entity, by default as the same page at the latest version, or nowhere (null).
+function canonicalOf(address: PageAddress, target: CanonicalTarget): PageAddress | null {
+  if (address.version === null || target === undefined) {
+    return { ...address, version: null };
+  }
+  return target === null ? null : { ...address, version: target.version, path: target.path };
+}
+
+function isSamePage(page: PageAddress, other: PageAddress): boolean {
+  return page.version === other.version && page.path === other.path;
 }
 
 function pageMetas(input: HeadInput, title: string, urls: SeoUrls | null): Metas {
@@ -98,9 +140,9 @@ function ogUrl(urls: SeoUrls): Metas[number] {
   return { attribute: 'property', key: 'og:url', content: urls.canonical };
 }
 
-function siteMetas(kind: PageKind): Metas {
+function siteMetas(robots: string): Metas {
   return [
-    { attribute: 'name', key: 'robots', content: ROBOTS[kind] },
+    { attribute: 'name', key: 'robots', content: robots },
     { attribute: 'property', key: 'og:site_name', content: SITE_IDENTITY.name },
     { attribute: 'name', key: 'twitter:card', content: TWITTER_CARD },
     ...SITE_IDENTITY.googleSiteVerifications.map((token) => ({
