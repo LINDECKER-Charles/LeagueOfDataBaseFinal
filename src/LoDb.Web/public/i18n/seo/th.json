@@ -41,7 +41,8 @@
     },
     "detail": {
       "title": "{{ name }} เวทอัญเชิญ LoL",
-      "description": "เวทอัญเชิญ {{ name }} ใน League of Legends: คูลดาวน์และเอฟเฟกต์ อัปเดตสำหรับแพตช์ {{ version }}"
+      "description": "เวทอัญเชิญ {{ name }} ใน League of Legends: คูลดาวน์และเอฟเฟกต์ อัปเดตสำหรับแพตช์ {{ version }}",
+      "description_unlocked": "เวทอัญเชิญ {{ name }} ใน League of Legends ปลดล็อกที่เลเวลผู้อัญเชิญ {{ level }}: คูลดาวน์และเอฟเฟกต์ อัปเดตสำหรับแพตช์ {{ version }}"
     }
   },
   "donate": {

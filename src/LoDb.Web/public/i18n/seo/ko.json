@@ -41,7 +41,8 @@
     },
     "detail": {
       "title": "{{ name }} (LoL 소환사 주문)",
-      "description": "리그 오브 레전드의 소환사 주문 {{ name }}: 재사용 대기시간과 효과. 패치 {{ version }} 기준 최신 정보."
+      "description": "리그 오브 레전드의 소환사 주문 {{ name }}: 재사용 대기시간과 효과. 패치 {{ version }} 기준 최신 정보.",
+      "description_unlocked": "리그 오브 레전드의 소환사 주문 {{ name }}: 소환사 레벨 {{ level }}에 해제. 재사용 대기시간과 효과. 패치 {{ version }} 기준 최신 정보."
     }
   },
   "donate": {

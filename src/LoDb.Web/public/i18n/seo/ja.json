@@ -41,7 +41,8 @@
     },
     "detail": {
       "title": "{{ name }}（LoLサモナースペル）",
-      "description": "リーグ・オブ・レジェンドのサモナースペル「{{ name }}」：クールダウンと効果。パッチ{{ version }}対応。"
+      "description": "リーグ・オブ・レジェンドのサモナースペル「{{ name }}」：クールダウンと効果。パッチ{{ version }}対応。",
+      "description_unlocked": "リーグ・オブ・レジェンドのサモナースペル「{{ name }}」：サモナーレベル{{ level }}で解放。クールダウンと効果。パッチ{{ version }}対応。"
     }
   },
   "donate": {

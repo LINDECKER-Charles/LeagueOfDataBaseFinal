@@ -41,7 +41,8 @@
     },
     "detail": {
       "title": "{{ name }}, LoL idézői varázslat",
-      "description": "A(z) {{ name }} idézői varázslat a League of Legendsben: visszatöltődés és hatások, a(z) {{ version }} patch-hez frissítve."
+      "description": "A(z) {{ name }} idézői varázslat a League of Legendsben: visszatöltődés és hatások, a(z) {{ version }} patch-hez frissítve.",
+      "description_unlocked": "A(z) {{ name }} idézői varázslat a League of Legendsben, a(z) {{ level }}. idézőszinten oldható fel: visszatöltődés és hatások, a(z) {{ version }} patch-hez frissítve."
     }
   },
   "donate": {

@@ -41,7 +41,8 @@
     },
     "detail": {
       "title": "{{ name }}, feitiço de invocador de LoL",
-      "description": "O feitiço de invocador {{ name }} em League of Legends: tempo de recarga e efeitos, atualizado para o patch {{ version }}."
+      "description": "O feitiço de invocador {{ name }} em League of Legends: tempo de recarga e efeitos, atualizado para o patch {{ version }}.",
+      "description_unlocked": "O feitiço de invocador {{ name }} em League of Legends, desbloqueado no nível de invocador {{ level }}: tempo de recarga e efeitos, atualizado para o patch {{ version }}."
     }
   },
   "donate": {
