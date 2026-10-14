@@ -1,12 +1,14 @@
 import type { Page } from '@playwright/test';
+import { metaOf, olderVersion } from '../../support/catalog';
 import { emptyFields, readHead, typesOf, type Head } from '../../support/head';
 import { LOCALES, pageUrl } from '../../support/public-pages';
 import { expect, test } from '../../support/test';
 
 // The head crawlers read (ADR 0005): the server's, JavaScript off. Each page's head is its own
 // unit tests'; two samples prove the integrated head on real data and configuration, rendered
-// on request and prerendered. The head after hydration is specs/public/smoke.spec.ts's; the
-// diff against production is tools/seo-diff's.
+// on request and prerendered, and a past patch the canonical the API places its entity at.
+// The head after hydration is specs/public/smoke.spec.ts's; the diff against production is
+// tools/seo-diff's.
 const BRAND = 'League Of Data Base';
 const INDEXABLE = 'index, follow';
 const X_DEFAULT = 'x-default';
@@ -78,4 +80,17 @@ test.describe('head of the public pages, as crawlers read it', { tag: '@readonly
       expectJsonLd(head, entry.types);
     });
   }
+
+  // ADR 0005, amendment of 2026-10-14: Annie is in every patch, indexed at the latest one.
+  test('points a past patch to the short URL of the latest one', async ({ page, request }) => {
+    const older = olderVersion(await metaOf(request));
+
+    const head = await crawl(page, pageUrl('en', `${older}/champions/Annie`));
+
+    expect(head.title).toContain(older);
+    expect(head.robots).toBe(INDEXABLE);
+    expect(head.canonicals.map(pathOf)).toEqual([pageUrl('en', 'champions/Annie')]);
+    expect(head.alternates).toEqual([]);
+    expect(head.jsonLd).toEqual([]);
+  });
 });

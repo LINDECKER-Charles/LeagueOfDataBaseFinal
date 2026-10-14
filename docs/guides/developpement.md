@@ -182,9 +182,15 @@ Cycle complet de l'emplacement 1 (pour l'emplacement 2, reprendre ses valeurs) :
 
 ```bash
 LODB_HTTP_PORT=18180 LODB_API_PORT=18181 LODB_SSR_PORT=18182 LODB_PG_PORT=15532 LODB_MAIL_PORT=18125 docker compose -p lodb-dev-e1 -f compose.yaml -f compose.override.yaml up -d --build --wait
-LODB_E2E_BASE_URL=http://localhost:18180 npm --prefix tests/LoDb.E2E test
+LODB_E2E_BASE_URL=http://localhost:18180 LODB_E2E_COMPOSE_PROJECT=lodb-dev-e1 \
+  LODB_E2E_MAIL_URL=http://localhost:18125 npm --prefix tests/LoDb.E2E test
 docker compose -p lodb-dev-e1 -f compose.yaml -f compose.override.yaml down -v --rmi local
 ```
+
+Les trois variables des E2E vont ensemble : les parcours qui écrivent créent leurs comptes
+par `docker compose -p <projet> exec` et lisent leurs e-mails dans Mailpit. Sans
+`LODB_E2E_COMPOSE_PROJECT` ni `LODB_E2E_MAIL_URL`, ils visent la stack d'intégration et
+échouent quand seul l'emplacement tourne.
 
 En dev, les images s'appellent `<projet>-<service>` (`lodb-dev-e1-api`…). Un emplacement
 n'écrase donc jamais les images de la stack d'intégration, et `--rmi local` ne supprime que

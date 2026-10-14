@@ -8,7 +8,7 @@ namespace LoDb.Api.Tests.Seo;
 
 /// <summary>
 /// The window of the sitemap index: the latest version's sitemaps, then those of the versions
-/// listed next, as many as configured (12 by default), never a negative count.
+/// listed next, as many as configured (none by default), never a negative count.
 /// </summary>
 public sealed class SitemapWindowTests
 {
@@ -25,29 +25,27 @@ public sealed class SitemapWindowTests
     private static readonly SeoOptionsValidator Validator = new();
 
     [Fact]
-    public void DefaultWindowAnnouncesTheLatestAndTheTwelvePatchesBefore()
+    public void DefaultWindowLeavesTheLatestSitemapsAlone()
     {
-        const int Window = SeoOptions.DefaultSitemapVersionWindow;
-
         var index = IndexOf(Listed[0], new SeoOptions().SitemapVersionWindow);
 
-        Assert.Equal(12, Window);
-        Assert.Equal((1 + Window) * UiLocales.All.Count, index.Count);
-        Assert.Equal($"{Origin}/sitemaps/ar/latest.xml", index[0]);
-        Assert.Contains(SitemapOf(Listed[Window]), index);
-        Assert.DoesNotContain(SitemapOf(Listed[Window + 1]), index);
-        Assert.DoesNotContain(SitemapOf(Listed[0]), index);
-    }
-
-    [Fact]
-    public void NoWindowLeavesTheLatestSitemapsAlone()
-    {
-        var index = IndexOf(Listed[0], window: 0);
-
+        Assert.Equal(0, SeoOptions.DefaultSitemapVersionWindow);
         Assert.Equal(UiLocales.All.Count, index.Count);
+        Assert.Equal($"{Origin}/sitemaps/ar/latest.xml", index[0]);
         Assert.All(
             index,
             static url => Assert.EndsWith("/latest.xml", url, StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void WindowAnnouncesThePatchesListedBeforeTheLatest()
+    {
+        var index = IndexOf(Listed[0], window: 12);
+
+        Assert.Equal(13 * UiLocales.All.Count, index.Count);
+        Assert.Contains(SitemapOf(Listed[12]), index);
+        Assert.DoesNotContain(SitemapOf(Listed[13]), index);
+        Assert.DoesNotContain(SitemapOf(Listed[0]), index);
     }
 
     [Fact]

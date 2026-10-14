@@ -12,8 +12,9 @@ function pagedPathOf(path: string, page: number | null | undefined): string {
 
 /**
  * The SEO page of a catalogue list, for Seo.apply: canonical on the bare list whatever the
- * filters (they live in the query), on the page itself past the first, self-canonical on a
- * pinned version, and an ItemList of the entries the server rendered, linked to their pages.
+ * filters (they live in the query), on the page itself past the first, on the latest bare
+ * list from a pinned version, and an ItemList of the entries the server rendered, linked to
+ * their pages.
  */
 export function catalogueListSeo(page: CatalogueListPage): SeoPage {
   const { title, description, path, context, entries } = page;
@@ -23,6 +24,8 @@ export function catalogueListSeo(page: CatalogueListPage): SeoPage {
     locale: context.locale,
     path: pagedPathOf(path, page.page),
     version: context.pinned ? context.version : null,
+    // Every list exists at the latest version, its pages listing other entries than a past one.
+    canonical: { version: null, path },
     jsonLd: (urls) => [
       itemList(entries.map((entry) => ({ name: entry.name, url: urls.page(entry.canonicalPath) }))),
     ],

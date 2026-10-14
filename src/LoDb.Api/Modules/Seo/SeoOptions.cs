@@ -7,8 +7,11 @@ internal sealed class SeoOptions
 {
     public const string SectionName = "LoDb:Seo";
 
-    /// <summary>Default of <see cref="SitemapVersionWindow"/>: half a year of patches.</summary>
-    public const int DefaultSitemapVersionWindow = 12;
+    /// <summary>
+    /// Default of <see cref="SitemapVersionWindow"/>: the latest version alone, the one whose
+    /// short URLs are canonical.
+    /// </summary>
+    public const int DefaultSitemapVersionWindow = 0;
 
     /// <summary>
     /// Origin every published URL points to, such as <c>https://league-of-data-base.com</c>;
@@ -23,14 +26,15 @@ internal sealed class SeoOptions
     public string? CanonicalOrigin { get; set; }
 
     /// <summary>
-    /// How many versions before the latest one the sitemap index announces; <c>0</c> leaves
-    /// only the latest version's sitemaps.
+    /// How many versions before the latest one the sitemap index announces; <c>0</c>, the
+    /// default, leaves only the latest version's sitemaps.
     /// </summary>
     /// <remarks>
-    /// Older versions keep their sitemaps, served and immutable, and their pages stay
-    /// canonical and indexable: crawlers reach them through the patch history and the
-    /// previous patches of each page. The index only stops pushing hundreds of versions
-    /// times 21 locales at every crawler.
+    /// A past version's sitemap lists only the pages still canonical there, those of the
+    /// entities it was the last to hold (ADR 0005, amendment of 2026-10-14): every other page
+    /// of a past version is indexed under its latest short URL, or not at all. A window then
+    /// announces the entities the last patches dropped; the sitemap of a version outside it
+    /// is still served.
     /// </remarks>
     public int SitemapVersionWindow { get; set; } = DefaultSitemapVersionWindow;
 

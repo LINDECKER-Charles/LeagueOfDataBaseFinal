@@ -13,7 +13,8 @@ interface PrivacySignals {
 /**
  * Whether this browser's visits are measured. The visitor opts out from the privacy policy
  * (kept in `localStorage`, on this browser only), and a browser that sends Global Privacy
- * Control is never measured, whatever the stored choice. On the server, nothing is measured.
+ * Control is never measured, whatever the stored choice. On the server, nothing is measured,
+ * nor in a browser driven by automation (`navigator.webdriver`).
  */
 @Injectable({ providedIn: 'root' })
 export class AudienceOptOut {
@@ -27,8 +28,11 @@ export class AudienceOptOut {
   /** Whether this browser refuses the measure, by the visitor's choice or by GPC. */
   readonly isRefused = computed(() => this.hasGlobalPrivacyControl || this.optedOut());
 
-  /** Whether the visits of this browser are counted: never while rendering on the server. */
-  readonly isMeasured = computed(() => this.inBrowser && !this.isRefused());
+  // Crawlers that run the scripts would count as visitors: no visitor, so no choice to show.
+  private readonly isAutomated = this.document.defaultView?.navigator.webdriver === true;
+
+  /** Whether the visits of this browser are counted: never on the server nor by a robot. */
+  readonly isMeasured = computed(() => this.inBrowser && !this.isAutomated && !this.isRefused());
 
   /** Records the visitor's choice for this browser. */
   choose(measured: boolean): void {

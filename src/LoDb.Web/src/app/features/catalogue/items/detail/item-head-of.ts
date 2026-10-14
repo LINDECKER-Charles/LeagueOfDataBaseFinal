@@ -29,6 +29,7 @@ export function itemHeadOf(entry: CatalogueEntry<ItemDetails>, texts: CatalogueT
     locale: context.locale,
     path: details.canonicalPath,
     version: context.pinned ? context.version : null,
+    canonical: details.canonical ?? null,
     image: previewImage('items'),
     jsonLd: (urls) => [
       detailTrail(trail, urls),

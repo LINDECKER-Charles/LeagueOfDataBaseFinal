@@ -65,8 +65,7 @@ public sealed class SitemapFileTests
             Ready = [PatchVersion.Parse("16.19.1")],
         };
 
-        var window = SeoOptions.DefaultSitemapVersionWindow;
-        var entries = SitemapLocations.Index(Origin, versions, window).ToList();
+        var entries = SitemapLocations.Index(Origin, versions, window: 1).ToList();
         var sitemaps = entries.Select(static entry => entry.Location).ToList();
 
         Assert.Equal(2 * UiLocales.All.Count, sitemaps.Count);

@@ -14,8 +14,8 @@ namespace LoDb.Api.Modules.Seo.Sitemaps;
 /// <item><c>/sitemap.xml</c>: the index of every locale's sitemaps, the past versions
 /// limited to <see cref="SeoOptions.SitemapVersionWindow"/>.</item>
 /// <item><c>/sitemaps/{locale}/latest.xml</c>: unversioned pages and short entity URLs.</item>
-/// <item><c>/sitemaps/{locale}/{version}.xml</c>: one past version, inside the window or
-/// not; the latest one moves to <c>latest.xml</c>.</item>
+/// <item><c>/sitemaps/{locale}/{version}.xml</c>: the pages still canonical in one past
+/// version, inside the window or not; the latest one moves to <c>latest.xml</c>.</item>
 /// <item>Previous forms: <c>/sitemaps/latest.xml</c> moves to the index,
 /// <c>/sitemaps/{version}.xml</c> to its <c>en</c> sitemap, in a single hop.</item>
 /// </list>
@@ -117,10 +117,16 @@ internal sealed class SitemapPublisher(
             return SeoAnswer.Unavailable();
         }
 
-        // A version newer than the latest one is promoted later: its sitemap then moves.
-        var cache = version < scope.Latest ? SeoCaching.Immutable : SeoCaching.Hour;
-        var pages = SitemapLocations.Version(scope.Origin, scope.Locale, load.Catalog);
-        return SeoAnswer.File(SitemapXml.UrlSet(pages), SitemapXml.ContentType, cache);
+        // What stays canonical in a past version follows the latest one: never immutable.
+        var references = await catalog.ReferencesAsync(version, cancellationToken);
+        if (references is null)
+        {
+            return SeoAnswer.Unavailable();
+        }
+
+        var prefix = SitePages.Prefix(scope.Origin, scope.Locale, version);
+        var pages = SitemapLocations.Version(prefix, load.Catalog, references);
+        return SeoAnswer.File(SitemapXml.UrlSet(pages), SitemapXml.ContentType, SeoCaching.Hour);
     }
 
     private sealed record SitemapScope(
