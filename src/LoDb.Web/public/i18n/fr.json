@@ -192,7 +192,8 @@
       "back_to_list": "Retour à la liste"
     },
     "history": {
-      "title": "Dans les patchs précédents"
+      "title": "Dans les patchs précédents",
+      "latest": "Dans le dernier patch"
     }
   },
   "common": {

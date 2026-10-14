@@ -174,7 +174,8 @@
   },
   "detail": {
     "history": {
-      "title": "Korábbi patchekben"
+      "title": "Korábbi patchekben",
+      "latest": "A legújabb patchben"
     }
   },
   "common": {

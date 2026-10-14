@@ -174,7 +174,8 @@
   },
   "detail": {
     "history": {
-      "title": "W poprzednich patchach"
+      "title": "W poprzednich patchach",
+      "latest": "W najnowszym patchu"
     }
   },
   "common": {

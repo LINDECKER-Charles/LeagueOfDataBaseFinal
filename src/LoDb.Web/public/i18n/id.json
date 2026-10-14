@@ -174,7 +174,8 @@
   },
   "detail": {
     "history": {
-      "title": "Di patch sebelumnya"
+      "title": "Di patch sebelumnya",
+      "latest": "Di patch terbaru"
     }
   },
   "common": {

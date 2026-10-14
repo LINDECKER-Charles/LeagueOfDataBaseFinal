@@ -174,7 +174,8 @@
   },
   "detail": {
     "history": {
-      "title": "Σε προηγούμενα patch"
+      "title": "Σε προηγούμενα patch",
+      "latest": "Στο τελευταίο patch"
     }
   },
   "common": {
