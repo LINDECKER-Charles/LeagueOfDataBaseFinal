@@ -41,7 +41,8 @@
     },
     "detail": {
       "title": "{{ name }}, LoL sihirdar büyüsü",
-      "description": "League of Legends'ta {{ name }} sihirdar büyüsü: bekleme süresi ve etkiler, {{ version }} yaması için güncel."
+      "description": "League of Legends'ta {{ name }} sihirdar büyüsü: bekleme süresi ve etkiler, {{ version }} yaması için güncel.",
+      "description_unlocked": "League of Legends'ta {{ name }} sihirdar büyüsü, {{ level }}. sihirdar seviyesinde açılır: bekleme süresi ve etkiler, {{ version }} yaması için güncel."
     }
   },
   "donate": {

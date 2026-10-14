@@ -41,7 +41,8 @@
     },
     "detail": {
       "title": "{{ name }}, kouzlo vyvolávače LoL",
-      "description": "Kouzlo vyvolávače {{ name }} v League of Legends: přebíjení a efekty, aktuální pro patch {{ version }}."
+      "description": "Kouzlo vyvolávače {{ name }} v League of Legends: přebíjení a efekty, aktuální pro patch {{ version }}.",
+      "description_unlocked": "Kouzlo vyvolávače {{ name }} v League of Legends, odemčené na úrovni vyvolávače {{ level }}: přebíjení a efekty, aktuální pro patch {{ version }}."
     }
   },
   "donate": {

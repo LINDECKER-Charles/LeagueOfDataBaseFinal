@@ -41,7 +41,8 @@
     },
     "detail": {
       "title": "{{ name }}, phép bổ trợ LMHT",
-      "description": "Phép bổ trợ {{ name }} trong Liên Minh Huyền Thoại: thời gian hồi và hiệu ứng, cập nhật cho phiên bản {{ version }}."
+      "description": "Phép bổ trợ {{ name }} trong Liên Minh Huyền Thoại: thời gian hồi và hiệu ứng, cập nhật cho phiên bản {{ version }}.",
+      "description_unlocked": "Phép bổ trợ {{ name }} trong Liên Minh Huyền Thoại, mở khóa ở cấp người triệu hồi {{ level }}: thời gian hồi và hiệu ứng, cập nhật cho phiên bản {{ version }}."
     }
   },
   "donate": {

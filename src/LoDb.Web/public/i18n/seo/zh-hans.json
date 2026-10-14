@@ -41,7 +41,8 @@
     },
     "detail": {
       "title": "{{ name }}（LoL 召唤师技能）",
-      "description": "英雄联盟的召唤师技能 {{ name }}：冷却时间与效果，已更新至版本 {{ version }}。"
+      "description": "英雄联盟的召唤师技能 {{ name }}：冷却时间与效果，已更新至版本 {{ version }}。",
+      "description_unlocked": "英雄联盟的召唤师技能 {{ name }}：在召唤师等级 {{ level }} 解锁；冷却时间与效果，已更新至版本 {{ version }}。"
     }
   },
   "donate": {

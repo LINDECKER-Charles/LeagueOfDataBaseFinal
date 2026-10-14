@@ -41,7 +41,8 @@
     },
     "detail": {
       "title": "{{ name }}, sort d'invocateur LoL",
-      "description": "Le sort d'invocateur {{ name }} dans League of Legends : délai de récupération et effets, à jour pour le patch {{ version }}."
+      "description": "Le sort d'invocateur {{ name }} dans League of Legends : délai de récupération et effets, à jour pour le patch {{ version }}.",
+      "description_unlocked": "Le sort d'invocateur {{ name }} dans League of Legends, débloqué au niveau d'invocateur {{ level }} : délai de récupération et effets, à jour pour le patch {{ version }}."
     }
   },
   "donate": {

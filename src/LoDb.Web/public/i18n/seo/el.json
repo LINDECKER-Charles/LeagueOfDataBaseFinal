@@ -41,7 +41,8 @@
     },
     "detail": {
       "title": "{{ name }}, ξόρκι επικαλεστή του LoL",
-      "description": "Το ξόρκι επικαλεστή {{ name }} στο League of Legends: επαναφόρτιση και εφέ, ενημερωμένα για το patch {{ version }}."
+      "description": "Το ξόρκι επικαλεστή {{ name }} στο League of Legends: επαναφόρτιση και εφέ, ενημερωμένα για το patch {{ version }}.",
+      "description_unlocked": "Το ξόρκι επικαλεστή {{ name }} στο League of Legends, ξεκλειδώνεται στο επίπεδο επικαλεστή {{ level }}: επαναφόρτιση και εφέ, ενημερωμένα για το patch {{ version }}."
     }
   },
   "donate": {

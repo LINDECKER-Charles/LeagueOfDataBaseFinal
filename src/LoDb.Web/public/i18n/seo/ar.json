@@ -41,7 +41,8 @@
     },
     "detail": {
       "title": "{{ name }}، تعويذة مستدعٍ في LoL",
-      "description": "تعويذة المستدعي {{ name }} في League of Legends: وقت الانتظار والتأثيرات، محدثة للتحديث {{ version }}."
+      "description": "تعويذة المستدعي {{ name }} في League of Legends: وقت الانتظار والتأثيرات، محدثة للتحديث {{ version }}.",
+      "description_unlocked": "تعويذة المستدعي {{ name }} في League of Legends، تُفتح عند مستوى المستدعي {{ level }}: وقت الانتظار والتأثيرات، محدثة للتحديث {{ version }}."
     }
   },
   "donate": {
