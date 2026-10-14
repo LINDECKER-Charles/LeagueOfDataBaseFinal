@@ -71,20 +71,38 @@ internal static class ChampionEndpoints
             return CatalogProblem.UnknownEntity(Segment, request.Id);
         }
 
-        var icons = await context.ResolveAsync(
-            VersionImages.Of(champion),
-            ColdDemand.Synchronous,
-            request.CancellationToken);
-        var images = await context.WithStoredArtAsync(
-            icons,
-            ArtVariants.Of(champion),
-            request.CancellationToken);
-        var details = ChampionDetails.Of(champion, context.Catalog, images);
+        var canonical = await request.LocateCanonicalAsync(
+            context.Catalog.Version,
+            context.Catalog.PathOf(champion));
+        if (!canonical.IsLocated)
+        {
+            return canonical.Problem;
+        }
+
+        var images = await ImagesOfAsync(context, champion, request.CancellationToken);
+        var details = ChampionDetails.Of(champion, context.Catalog, images)
+            with { Canonical = canonical.Link };
         // An app gets more than the web: no cache may hand one the other's page.
         request.Context.Response.Headers.Append(HeaderNames.Vary, ClientHeader.Name);
         return context.Answer(
             IsApp(request.Context) ? details.WithSkins(champion, context.Catalog) : details,
             images);
+    }
+
+    // The icons of the version, then the art variants the store already holds.
+    private static async Task<ImageSet> ImagesOfAsync(
+        CatalogContext context,
+        ChampionDetail champion,
+        CancellationToken cancellationToken)
+    {
+        var icons = await context.ResolveAsync(
+            VersionImages.Of(champion),
+            ColdDemand.Synchronous,
+            cancellationToken);
+        return await context.WithStoredArtAsync(
+            icons,
+            ArtVariants.Of(champion),
+            cancellationToken);
     }
 
     // The art is hotlinked (UP 8): nothing to resolve.

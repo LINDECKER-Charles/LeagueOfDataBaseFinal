@@ -1,6 +1,7 @@
 using LoDb.Domain.Languages;
 using LoDb.Domain.Versions;
 using LoDb.Ingestion.Catalog;
+using LoDb.Ingestion.Catalog.Canonicals;
 using LoDb.Ingestion.Catalog.Reading;
 using LoDb.Ingestion.Egress.Errors;
 using LoDb.Ingestion.Queue;
@@ -19,6 +20,7 @@ namespace LoDb.Api.Modules.Seo;
 /// </remarks>
 internal sealed partial class CrawlerCatalog(
     ICatalogReader reader,
+    CanonicalReader canonicals,
     ILogger<CrawlerCatalog> logger)
 {
     private static readonly ColdDemand CrawlerDemand =
@@ -57,6 +59,25 @@ internal sealed partial class CrawlerCatalog(
                 DdragonLanguage.EnUs,
                 CrawlerDemand,
                 cancellationToken);
+        }
+        catch (EgressException exception)
+        {
+            LogUpstreamFailed(logger, version.Value, exception);
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Where the pages of a version are canonical, or null while a catalog this reads is
+    /// queued, or when Data Dragon failed.
+    /// </summary>
+    public async Task<CanonicalReferences?> ReferencesAsync(
+        PatchVersion version,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await canonicals.ReadAsync(version, CrawlerDemand, cancellationToken);
         }
         catch (EgressException exception)
         {

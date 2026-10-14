@@ -8,8 +8,9 @@ namespace LoDb.Api.Tests.Seo;
 /// <summary>
 /// The sitemaps as a crawler gets them: the index of the latest version and of a window of
 /// past ones, the primary sitemap of each locale with the paths the catalog answers, and the
-/// sitemap of a past version, pending until its datasets are stored, served immutable once
-/// they are, inside the window or not.
+/// sitemap of a past version, pending until its datasets are stored, then listing the pages
+/// still canonical there, inside the window or not. Molten Edge (3371) is in 8.7.1, gone from
+/// 16.18.1 on.
 /// </summary>
 [Collection(SeoApiGroup.Name)]
 public sealed class SitemapApiTests(SeoApiFixture api)
@@ -43,7 +44,7 @@ public sealed class SitemapApiTests(SeoApiFixture api)
     }
 
     [Fact]
-    public async Task PastVersionOutsideTheWindowKeepsItsImmutableSitemap()
+    public async Task PastVersionListsOnlyTheEntitiesItWasTheLastToHold()
     {
         var archived = SeoApiFixture.Archived.Value;
 
@@ -51,13 +52,20 @@ public sealed class SitemapApiTests(SeoApiFixture api)
         var pages = SitemapXmlTests.Locations(SitemapXmlTests.Parse(await BodyAsync(response)));
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Equal(
-            "public, max-age=31536000, immutable",
-            CacheHeaderTests.CacheControlOf(response));
-        Assert.Equal(
-            Lists.Select(list => $"{Origin}/fr/{archived}/{list}"),
-            pages.Take(Lists.Length));
-        Assert.Contains($"{Origin}/fr/{archived}/champions/Garen", pages);
+        Assert.Equal(Hour, CacheHeaderTests.CacheControlOf(response));
+        Assert.Equal([$"{Origin}/fr/{archived}/items/3371-molten-edge"], pages);
+    }
+
+    [Fact]
+    public async Task PastVersionWhoseEntitiesTheLatestHoldsListsNothing()
+    {
+        var previous = SeoApiFixture.Previous.Value;
+
+        using var response = await api.GetAsync($"/sitemaps/de/{previous}.xml");
+        var pages = SitemapXmlTests.Locations(SitemapXmlTests.Parse(await BodyAsync(response)));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Empty(pages);
     }
 
     [Fact]
@@ -115,7 +123,7 @@ public sealed class SitemapApiTests(SeoApiFixture api)
     [Fact]
     public async Task ColdVersionIsQueuedAndAnswersLater()
     {
-        using var response = await api.GetAsync("/sitemaps/de/16.18.1.xml");
+        using var response = await api.GetAsync("/sitemaps/de/7.22.1.xml");
 
         Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
         Assert.Equal(TimeSpan.FromSeconds(60), response.Headers.RetryAfter?.Delta);

@@ -62,10 +62,19 @@ internal static class SummonerEndpoints
             return CatalogProblem.UnknownEntity(Segment, request.Id);
         }
 
+        var canonical = await request.LocateCanonicalAsync(
+            context.Catalog.Version,
+            context.Catalog.PathOf(spell));
+        if (!canonical.IsLocated)
+        {
+            return canonical.Problem;
+        }
+
         var images = await context.ResolveAsync(
             VersionImages.Of(spell),
             ColdDemand.Synchronous,
             request.CancellationToken);
-        return context.Answer(SummonerDetails.Of(spell, context.Catalog, images), images);
+        var details = SummonerDetails.Of(spell, context.Catalog, images);
+        return context.Answer(details with { Canonical = canonical.Link }, images);
     }
 }

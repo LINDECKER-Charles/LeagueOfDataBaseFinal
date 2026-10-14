@@ -87,10 +87,13 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
 - **Historique des patchs** (`/{locale}/patches`) : quatre liens par version listée, des
   centaines de versions. Balisage nu et `ViewEncapsulation.None` voulus (l'attribut
   d'encapsulation pesait un tiers de la page) : ni attribut, ni classe, ni pipe par lien.
-  L'index des sitemaps n'annonce que le dernier patch et les 12 versions suivantes
-  (`LoDb__Seo__SitemapVersionWindow`) : un ancien sitemap absent de l'index reste servi, ce
-  n'est pas une régression. Les anciens patchs se découvrent par cette page et le bloc
-  « Dans les patchs précédents » des fiches, qui ne chargent aucun catalogue.
+  L'index des sitemaps n'annonce que le dernier patch (`LoDb__Seo__SitemapVersionWindow`,
+  `0`) ; le sitemap d'un ancien patch reste servi, mais ne liste que les fiches des entités
+  dont c'est la dernière version, souvent aucune : un `urlset` vide n'est pas une
+  régression. La fiche d'un ancien patch est canonique au dernier patch, sans hreflang ni
+  JSON-LD, ou `noindex, follow` avant la dernière version d'une entité retirée (ADR 0005,
+  amendement du 2026-10-14) : voulu. Les visiteurs atteignent les anciens patchs par cette
+  page et le bloc « Dans les patchs précédents » des fiches, qui ne chargent aucun catalogue.
 - Une page qui oublie `Seo.apply` n'a ni canonique ni hreflang. Une clé `about.*`, `api.*`
   ou `seo.*` n'est traduite que si un ancêtre fournit son scope (`provideTranslocoScope`) ;
   sinon la clé brute sort dans le HTML, sans erreur. Le chrome (en-tête, pied de page) n'en

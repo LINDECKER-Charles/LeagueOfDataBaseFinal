@@ -28,6 +28,15 @@ describe('catalogueListSeo', () => {
     expect(catalogueListSeo({ ...base, context: pinned })).toMatchObject({ version: '15.14.1' });
   });
 
+  it('is canonical on the latest bare list from any page of a pinned version', () => {
+    const pinned = { ...CONTEXT, version: '15.14.1', pinned: true };
+
+    expect(catalogueListSeo({ ...base, page: 3, context: pinned })).toMatchObject({
+      path: 'champions?page=3',
+      canonical: { version: null, path: 'champions' },
+    });
+  });
+
   it('is its own canonical past the first page, the first and an unpaged list bare', () => {
     const listOf = (page: number | null) => catalogueListSeo({ ...base, page, context: CONTEXT });
 
