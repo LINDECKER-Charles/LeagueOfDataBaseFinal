@@ -87,9 +87,13 @@ describe('championSeo', () => {
     });
   });
 
-  it('is self-canonical on a pinned version', () => {
-    const page = championSeo({ context: PINNED, details: DETAILS }, translate);
-    expect(page).toMatchObject({ version: '15.14.1' });
+  it('hands over the canonical the API places a pinned champion at', () => {
+    const canonical = { version: null, path: 'champions/Annie' };
+    const page = championSeo({ context: PINNED, details: { ...DETAILS, canonical } }, translate);
+    const unplaced = championSeo({ context: PINNED, details: DETAILS }, translate);
+
+    expect(page).toMatchObject({ version: '15.14.1', canonical });
+    expect(unplaced).toMatchObject({ canonical: null });
   });
 
   it('describes the path home › champions › champion, then the champion as a character', () => {
