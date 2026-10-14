@@ -41,7 +41,8 @@
     },
     "detail": {
       "title": "{{ name }}, incantesimo dell'evocatore di LoL",
-      "description": "L'incantesimo dell'evocatore {{ name }} in League of Legends: ricarica ed effetti, aggiornato alla patch {{ version }}."
+      "description": "L'incantesimo dell'evocatore {{ name }} in League of Legends: ricarica ed effetti, aggiornato alla patch {{ version }}.",
+      "description_unlocked": "L'incantesimo dell'evocatore {{ name }} in League of Legends, sbloccato al livello dell'evocatore {{ level }}: ricarica ed effetti, aggiornato alla patch {{ version }}."
     }
   },
   "donate": {

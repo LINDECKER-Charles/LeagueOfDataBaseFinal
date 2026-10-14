@@ -41,7 +41,8 @@
     },
     "detail": {
       "title": "{{ name }}, vrajă de invocator LoL",
-      "description": "Vraja de invocator {{ name }} din League of Legends: reîncărcare și efecte, actualizat pentru patch-ul {{ version }}."
+      "description": "Vraja de invocator {{ name }} din League of Legends: reîncărcare și efecte, actualizat pentru patch-ul {{ version }}.",
+      "description_unlocked": "Vraja de invocator {{ name }} din League of Legends, deblocată la nivelul de invocator {{ level }}: reîncărcare și efecte, actualizat pentru patch-ul {{ version }}."
     }
   },
   "donate": {

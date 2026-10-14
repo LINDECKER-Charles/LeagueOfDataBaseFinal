@@ -41,7 +41,8 @@
     },
     "detail": {
       "title": "{{ name }}, hechizo de invocador de LoL",
-      "description": "El hechizo de invocador {{ name }} en League of Legends: enfriamiento y efectos, actualizado para el parche {{ version }}."
+      "description": "El hechizo de invocador {{ name }} en League of Legends: enfriamiento y efectos, actualizado para el parche {{ version }}.",
+      "description_unlocked": "El hechizo de invocador {{ name }} en League of Legends, desbloqueado en el nivel de invocador {{ level }}: enfriamiento y efectos, actualizado para el parche {{ version }}."
     }
   },
   "donate": {

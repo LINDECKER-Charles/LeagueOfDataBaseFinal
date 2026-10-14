@@ -41,7 +41,8 @@
     },
     "detail": {
       "title": "{{ name }}, czar przywoływacza LoL",
-      "description": "Czar przywoływacza {{ name }} w League of Legends: czas odnowienia i efekty, aktualne dla patcha {{ version }}."
+      "description": "Czar przywoływacza {{ name }} w League of Legends: czas odnowienia i efekty, aktualne dla patcha {{ version }}.",
+      "description_unlocked": "Czar przywoływacza {{ name }} w League of Legends, odblokowany na poziomie przywoływacza {{ level }}: czas odnowienia i efekty, aktualne dla patcha {{ version }}."
     }
   },
   "donate": {

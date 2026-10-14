@@ -174,7 +174,8 @@
   },
   "detail": {
     "history": {
-      "title": "이전 패치에서"
+      "title": "이전 패치에서",
+      "latest": "최신 패치에서"
     }
   },
   "common": {

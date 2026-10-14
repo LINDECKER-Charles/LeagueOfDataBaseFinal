@@ -41,7 +41,8 @@
     },
     "detail": {
       "title": "{{ name }}, LoL-Beschwörerzauber",
-      "description": "Der Beschwörerzauber {{ name }} in League of Legends: Abklingzeit und Effekte, aktuell für Patch {{ version }}."
+      "description": "Der Beschwörerzauber {{ name }} in League of Legends: Abklingzeit und Effekte, aktuell für Patch {{ version }}.",
+      "description_unlocked": "Der Beschwörerzauber {{ name }} in League of Legends, freigeschaltet ab Beschwörerstufe {{ level }}: Abklingzeit und Effekte, aktuell für Patch {{ version }}."
     }
   },
   "donate": {

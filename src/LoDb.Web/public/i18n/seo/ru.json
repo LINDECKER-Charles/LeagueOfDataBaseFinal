@@ -41,7 +41,8 @@
     },
     "detail": {
       "title": "{{ name }} — заклинание призывателя LoL",
-      "description": "Заклинание призывателя {{ name }} в League of Legends: перезарядка и эффекты, актуально для патча {{ version }}."
+      "description": "Заклинание призывателя {{ name }} в League of Legends: перезарядка и эффекты, актуально для патча {{ version }}.",
+      "description_unlocked": "Заклинание призывателя {{ name }} в League of Legends, доступно с {{ level }} уровня призывателя: перезарядка и эффекты, актуально для патча {{ version }}."
     }
   },
   "donate": {

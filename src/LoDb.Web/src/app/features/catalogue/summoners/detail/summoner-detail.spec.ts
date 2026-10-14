@@ -140,4 +140,21 @@ describe('lodb-summoner-detail', () => {
       height: 630,
     });
   });
+
+  it('says in its description the summoner level that unlocks the spell', async () => {
+    const { heads } = await render();
+
+    expect(heads.at(-1)?.description).toBe(
+      'summoner.detail.description_unlocked {"name":"Flash (LoL Classic)","level":7,"version":"16.19.1"}',
+    );
+  });
+
+  it('keeps the plain description for a spell without an unlock level', async () => {
+    const profile = { ...CARD, summonerLevel: null };
+    const { heads } = await render({ context: CONTEXT, details: { ...DETAILS, profile } });
+
+    expect(heads.at(-1)?.description).toBe(
+      'summoner.detail.description {"name":"Flash (LoL Classic)","version":"16.19.1"}',
+    );
+  });
 });

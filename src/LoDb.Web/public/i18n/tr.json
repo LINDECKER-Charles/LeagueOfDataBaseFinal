@@ -174,7 +174,8 @@
   },
   "detail": {
     "history": {
-      "title": "Önceki yamalarda"
+      "title": "Önceki yamalarda",
+      "latest": "Son yamada"
     }
   },
   "common": {
