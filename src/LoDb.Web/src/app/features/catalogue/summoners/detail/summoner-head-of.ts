@@ -6,6 +6,20 @@ import type { SeoPage } from '../../../../core/seo/seo-page';
 import type { CatalogueTexts } from '../../shared/codex/head/catalogue-texts';
 import { detailTrail } from '../../shared/codex/head/detail-trail';
 
+// The level that unlocks a spell is what players search it by ("barrier level"); a spell
+// Data Dragon gives no level keeps the plain description.
+function descriptionOf(
+  entry: CatalogueEntry<SummonerDetails>,
+  texts: CatalogueTexts,
+  name: string,
+): string {
+  const version = entry.context.version;
+  const level = entry.details.profile.summonerLevel;
+  return level
+    ? texts.seo('summoner.detail.description_unlocked', { name, level, version })
+    : texts.seo('summoner.detail.description', { name, version });
+}
+
 /**
  * The head of a summoner spell page. A LoL Classic twin shares its name with the current
  * spell, so its edition is part of the name its title, description and structured data give
@@ -28,7 +42,7 @@ export function summonerHeadOf(
   };
   return {
     title: texts.seo('summoner.detail.title', { name }),
-    description: texts.seo('summoner.detail.description', { name, version: context.version }),
+    description: descriptionOf(entry, texts, name),
     locale: context.locale,
     path: details.canonicalPath,
     version: context.pinned ? context.version : null,

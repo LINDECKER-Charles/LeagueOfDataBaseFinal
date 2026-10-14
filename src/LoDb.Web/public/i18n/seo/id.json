@@ -41,7 +41,8 @@
     },
     "detail": {
       "title": "{{ name }}, summoner spell LoL",
-      "description": "Summoner spell {{ name }} di League of Legends: cooldown dan efek, diperbarui untuk patch {{ version }}."
+      "description": "Summoner spell {{ name }} di League of Legends: cooldown dan efek, diperbarui untuk patch {{ version }}.",
+      "description_unlocked": "Summoner spell {{ name }} di League of Legends, terbuka di summoner level {{ level }}: cooldown dan efek, diperbarui untuk patch {{ version }}."
     }
   },
   "donate": {
