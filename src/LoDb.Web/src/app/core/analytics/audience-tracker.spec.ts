@@ -243,6 +243,17 @@ describe('AudienceTracker', () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it('stays silent in a browser driven by automation', async () => {
+    page.defaultView.navigator.webdriver = true;
+    const router = await started();
+
+    await visit(router, '/fr/champions');
+    await visit(router, '/fr/champions/103-ahri');
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(TestBed.inject(AudienceOptOut).isRefused()).toBe(false);
+  });
+
   it.each([
     ['android', 'browser'],
     ['desktop', 'browser'],
