@@ -4,7 +4,7 @@ export interface FakeAudienceDocument {
   referrer: string;
   title: string;
   defaultView: {
-    navigator: { language: string; globalPrivacyControl?: boolean };
+    navigator: { language: string; globalPrivacyControl?: boolean; webdriver?: boolean };
     screen: { width: number; height: number };
     localStorage: Storage;
   };
