@@ -9,7 +9,10 @@
     § « Amendement du 2026-10-11 ») ;
   - le 2026-10-11 encore, la CSP ne hache plus que les scripts inline du build, signale ses
     violations et ajoute les Trusted Types en Report-Only (voir § « Amendement du 2026-10-11
-    — CSP »).
+    — CSP ») ;
+  - le 2026-10-14, une page indexée par entité : la fiche d'un ancien patch est canonique au
+    dernier patch, et les sitemaps ne listent plus que des URL canoniques (voir § « Amendement
+    du 2026-10-14 »).
 
 ## Contexte
 
@@ -73,7 +76,7 @@ nginx. Le mode de rendu est choisi route par route :
 /{locale}/                                      accueil
 /{locale}/champions                             liste, dernier patch
 /{locale}/champions/{id}                        détail, dernier patch (URL canonique courte)
-/{locale}/{version}/champions/{id}              détail, patch passé (auto-canonique)
+/{locale}/{version}/champions/{id}              détail, patch passé (amendement du 2026-10-14)
 /{locale}/items/{id}-{slug}   /{locale}/runes/{id}-{slug}   /{locale}/summoners/{id}
 /{locale}/u/{username}                          profil public
 /b/{token}                                      partage de build (hors locale, noindex)
@@ -104,7 +107,8 @@ nginx. Le mode de rendu est choisi route par route :
 - Canonique = schéma + hôte + chemin, sans query. `www` et `.fr` restent redirigés à
   l'edge (nginx), pas dans l'app.
 - **hreflang** entre les 21 locales + `x-default` (nouveau).
-- **Sitemaps par locale** ; les sitemaps des versions passées restent immuables.
+- **Sitemaps par locale** ; ceux des versions passées ne listent plus que leurs fiches
+  canoniques (amendement du 2026-10-14).
 - JSON-LD conservé à l'identique : `@graph` du site, BreadcrumbList, VideoGame,
   PropertyValue pour les stats (jamais Product ou Offer), ItemList, ProfilePage, FAQPage,
   Dataset… Encodage sûr contre la XSS, champs vides retirés.
@@ -180,7 +184,8 @@ chunks.
 - **Rien ne disparaît** : le sitemap d'une version hors de la fenêtre reste servi à son URL,
   immuable, et ses pages restent canoniques et indexables. Ni `noindex` ni `Disallow`. Le
   sitemap principal de chaque locale ne change pas, sinon qu'il liste la nouvelle page
-  ci-dessous.
+  ci-dessous. *Remplacé le 2026-10-14 : les pages d'un ancien patch ne sont plus canoniques,
+  la fenêtre passe à `0`.*
 - **Découverte par liens** : le sélecteur de version est un formulaire, que les robots ne
   soumettent pas. Deux chemins de liens rendent chaque ancien patch atteignable :
   - `/{locale}/patches`, « Historique des patchs », lié depuis le pied de page de chaque
@@ -217,3 +222,71 @@ chunks.
   vides en production.
 - `'unsafe-eval'` est retiré depuis la précompilation des messages ICU (ADR 0006, amendement
   du 2026-10-11) ; `style-src 'unsafe-inline'` reste imposé par Angular.
+
+## Amendement du 2026-10-14 — une page indexée par entité
+
+Le site a perdu presque toute sa visibilité dans Google depuis le 16 août 2026
+([diagnostic](../../produit/seo-anciens-patchs.md)) : 2 570 pages indexées contre ~20 000 fin
+juillet, 31 201 « explorées, actuellement non indexées ». Chaque fiche d'ancien patch était sa
+propre canonique (« patch passé (auto-canonique) ») : une entité existait en autant d'URL
+canoniques que de patchs épinglés, fois 21 langues, presque identiques, que les sitemaps
+annonçaient (~160 000 URL pour 13 versions) et que les liens internes servaient. Google en
+garde une poignée, et les fiches du dernier patch, celles qui comptent, s'y noient.
+
+**Objectif** : une page indexée par entité et par langue, celle du dernier patch ; les anciens
+patchs restent consultables sans lui faire concurrence.
+
+| Option pour la fiche d'un ancien patch | Pour | Contre |
+|---|---|---|
+| A — canonique vers l'URL courte de la même entité, même langue | Le signal se concentre sur le dernier patch ; la page reste explorable, ses liens suivis | Un indice : Google peut l'ignorer entre deux pages qui diffèrent (un patch très ancien) |
+| B — `noindex, follow` | Explicite, certain | Ne transmet rien à la fiche du dernier patch ; une page `noindex` est de moins en moins explorée, ses liens avec elle |
+| Statu quo, fenêtre de sitemaps | Rien à changer | C'est la cause |
+
+**Décision.**
+
+- **Entité présente au dernier patch** (même id : l'id fait foi, comme dans les URL) :
+  option A. Canonique et `og:url` sur l'URL courte, au chemin que lui donne le dernier patch
+  (le slug d'un objet renommé suit) ; `index, follow`. Ni hreflang, dont les alternates d'une
+  page canonisée ailleurs n'auraient pas de retour, ni données structurées, dont les valeurs
+  d'un ancien patch contrediraient sous les mêmes `@id` celles de la canonique.
+- **Liste d'un ancien patch**, quelle que soit sa page : canonique sur la liste nue du dernier
+  patch, qui existe toujours.
+- **Entité absente du dernier patch** (retirée) : son ancienne fiche est un contenu unique,
+  mais en autant de copies que de versions qui la portaient. Elle reste indexable dans **la
+  dernière version qui la portait**, celle dont la version listée ensuite ne la porte plus :
+  auto-canonique, hreflang entre ses 21 langues, données structurées. Ses fiches des versions
+  antérieures sont `noindex, follow`, sans canonique. Aucun index entité → versions n'existe :
+  désigner cette dernière version ne lit qu'un catalogue de plus, celui de la version suivante,
+  quand l'entité manque au dernier patch. Une entité retirée, réintroduite puis retirée de
+  nouveau garde une page par période : rare, accepté.
+- **Une seule règle, côté API** (`CanonicalReferences`, `LoDb.Ingestion/Catalog/Canonicals`) :
+  chaque fiche porte `canonical` (`{ version, path }`, `version` nulle pour l'URL courte ;
+  `null` hors de l'index), que le front écrit dans le `<head>` par `Seo.apply`
+  (`core/seo/head/build-head-tags.ts`) ; les sitemaps lisent la même règle. Présence et chemins
+  ne dépendent pas de la langue : les catalogues en_US répondent pour les 21. Celui du dernier
+  patch est épinglé en mémoire ; celui de la version suivante se charge comme celui de la page,
+  dans le budget du travail à froid (503 avec `Retry-After` sinon, comme une page froide).
+- **Sitemaps** : seulement des URL canoniques. `LoDb__Seo__SitemapVersionWindow` passe à `0`
+  par défaut : l'index n'annonce que les `latest.xml` des 21 langues. Le sitemap d'une version
+  passée reste servi, jamais en 404 pour une version listée : il ne liste plus que les fiches
+  canoniques chez lui (les entités dont elle est la dernière version), un `urlset` vide sinon.
+  Une URL que Google a déjà apprise répond ainsi un document valide plutôt qu'une erreur du
+  rapport Sitemaps, et une fenêtre non nulle garde un sens : annoncer les entités que les
+  derniers patchs ont retirées. Ils ne sont plus `immutable` : ce qu'ils listent suit le
+  dernier patch (`max-age=3600`).
+- **Liens internes** : `/{locale}/patches` et « Dans les patchs précédents » restent, pour les
+  visiteurs ; rien n'est ajouté qui élargisse l'exploration.
+- **Caches** : la réponse d'une fiche d'ancien patch (un jour) et sa page (`lodb_archive`,
+  jusqu'à deux semaines) gardent leur canonique jusqu'à expiration ; une entité que le patch
+  suivant retire ou renomme pointe ce temps vers une URL courte en 404 ou en 301. Rare, borné,
+  accepté. Le `<head>` des anciens patchs change : l'epoch par défaut monte à `3`.
+
+**Mesure** (propriétaire), dans la Search Console, 4 à 8 semaines après le déploiement en
+production, comparée au relevé du 14 octobre 2026 :
+
+- le nombre de pages indexées (2 570) et les impressions des URL courtes remontent ;
+- « Explorée, actuellement non indexée » (31 201) baisse ; « Autre page avec balise canonique
+  correcte » (10 886) monte, attendu avec l'option A, comme « Exclue par la balise `noindex` »
+  (70), avec les fiches antérieures des entités retirées ;
+- si « Google n'a pas choisi la même URL canonique que l'utilisateur » (75) gonfle, Google
+  ignore la canonique entre des pages trop différentes : passer ces fiches à l'option B.
