@@ -53,6 +53,7 @@ export type { BuildRequest } from './models/build-request';
 export type { BuildStep } from './models/build-step';
 export type { BuildStructure } from './models/build-structure';
 export type { BundleRequest } from './models/bundle-request';
+export type { CanonicalLink } from './models/canonical-link';
 export type { CatalogImage } from './models/catalog-image';
 export type { CatalogMeta } from './models/catalog-meta';
 export type { ChampionAbility } from './models/champion-ability';

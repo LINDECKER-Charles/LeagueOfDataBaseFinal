@@ -8,7 +8,7 @@ const ADMIN_SUFFIX = ' · Admin · LODB';
 
 /**
  * The document title. A pinned version weaves its patch into the title, so a past page never
- * shares a title with the latest one: the difference keeps them out of a duplicate cluster.
+ * shares a title with the latest one, in a tab as in a search result.
  */
 export function pageTitle(page: SeoPage, texts: SeoTexts): string {
   const title = page.title.trim();

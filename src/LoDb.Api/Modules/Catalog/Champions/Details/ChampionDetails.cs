@@ -31,6 +31,13 @@ internal sealed record ChampionDetails
     /// <summary>The page the routing redirects a stale or slugless URL to.</summary>
     public required string CanonicalPath { get; init; }
 
+    /// <summary>
+    /// The page search engines index for the entity (ADR 0005, amendment of 2026-10-14): its
+    /// short URL at the latest version, or its page in the last version that held it;
+    /// <see langword="null"/> when this page stays out of the index.
+    /// </summary>
+    public CanonicalLink? Canonical { get; init; }
+
     /// <summary>The facts of the list's card.</summary>
     public required ChampionCard Profile { get; init; }
 

@@ -1,4 +1,5 @@
 using LoDb.Ingestion.Catalog.Art;
+using LoDb.Ingestion.Catalog.Canonicals;
 using LoDb.Ingestion.Catalog.Export;
 using LoDb.Ingestion.Catalog.Images;
 using LoDb.Ingestion.Catalog.Reading;
@@ -10,8 +11,8 @@ using Microsoft.Extensions.Options;
 namespace LoDb.Ingestion.Catalog;
 
 /// <summary>
-/// Registrations of the catalog zone: the in-memory catalog, its cold gate and pinning, the
-/// image resolution and the art variants of the latest version.
+/// Registrations of the catalog zone: the in-memory catalog, its cold gate and pinning, where
+/// its pages are canonical, the image resolution and the art variants of the latest version.
 /// </summary>
 /// <remarks>
 /// Program.cs calls it from the start and the zone's owner fills it, so no shared file
@@ -36,6 +37,7 @@ public static class CatalogRegistration
         services.TryAddSingleton<CatalogCache>();
         services.TryAddSingleton<ICatalogReader, CatalogReader>();
         services.TryAddSingleton<ICatalogPinning, CatalogPinning>();
+        services.TryAddSingleton<CanonicalReader>();
         services.TryAddSingleton<ImageVerdicts>();
         services.TryAddSingleton<IImageResolver, ImageResolver>();
         services.TryAddSingleton<CatalogExport>();

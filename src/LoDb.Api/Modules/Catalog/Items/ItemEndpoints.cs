@@ -65,11 +65,20 @@ internal static class ItemEndpoints
             return CatalogProblem.UnknownEntity(Segment, request.Id);
         }
 
+        var canonical = await request.LocateCanonicalAsync(
+            context.Catalog.Version,
+            context.Catalog.PathOf(item));
+        if (!canonical.IsLocated)
+        {
+            return canonical.Problem;
+        }
+
         var page = ItemPage.Of(context.Catalog, item);
         var images = await context.ResolveAsync(
             page.Images(),
             ColdDemand.Synchronous,
             request.CancellationToken);
-        return context.Answer(ItemDetails.Of(page, images), images);
+        var details = ItemDetails.Of(page, images);
+        return context.Answer(details with { Canonical = canonical.Link }, images);
     }
 }

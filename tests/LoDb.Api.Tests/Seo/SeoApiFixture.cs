@@ -17,13 +17,13 @@ namespace LoDb.Api.Tests.Seo;
 
 /// <summary>
 /// The API over the recorded Data Dragon and its own database holding 16.19.1, ingested whole
-/// and promoted, and the en_US datasets of <see cref="Archived"/>, the sitemaps' language,
-/// read once as a visitor would (its images wait for the workers, which are off).
-/// Crawler reads only queue the other versions, and the workers are off: their sitemaps stay
-/// pending whatever the order of the tests. The sitemap index announces
-/// <see cref="SitemapVersionWindow"/> past versions, 16.18.1 only: 8.7.1 lies outside. The
-/// canonical origin is the test client's, and the promotion of 16.19.1 submitted its pages to
-/// <see cref="IndexNow"/> under <see cref="IndexNowKey"/>.
+/// and promoted, and the en_US datasets of <see cref="Archived"/> and of <see cref="Previous"/>,
+/// listed after it, the sitemaps' language, read once as a visitor would (their images wait
+/// for the workers, which are off). Crawler reads only queue the other versions, and the
+/// workers are off: their sitemaps stay pending whatever the order of the tests. The sitemap
+/// index announces <see cref="SitemapVersionWindow"/> past versions, 16.18.1 only: 8.7.1 lies
+/// outside. The canonical origin is the test client's, and the promotion of 16.19.1 submitted
+/// its pages to <see cref="IndexNow"/> under <see cref="IndexNowKey"/>.
 /// </summary>
 public sealed class SeoApiFixture(PostgresContainerFixture postgres) : IAsyncLifetime
 {
@@ -38,6 +38,12 @@ public sealed class SeoApiFixture(PostgresContainerFixture postgres) : IAsyncLif
 
     /// <summary>A past version outside the window, its en_US datasets stored.</summary>
     public static readonly PatchVersion Archived = PatchVersion.Parse("8.7.1");
+
+    /// <summary>
+    /// The version listed after <see cref="Archived"/> and before the latest one, its en_US
+    /// datasets stored: where its sitemap reads which entities 8.7.1 was the last to hold.
+    /// </summary>
+    public static readonly PatchVersion Previous = PatchVersion.Parse("16.18.1");
 
     private TestDatabase? _database;
     private ApiFactory? _factory;
@@ -123,11 +129,14 @@ public sealed class SeoApiFixture(PostgresContainerFixture postgres) : IAsyncLif
             IngestionRequest.Complete,
             Token);
         Assert.Equal(VersionIngestionOutcome.Completed, latest.Outcome);
-        var archived = await services.GetRequiredService<ICatalogReader>().GetAsync(
-            Archived,
-            DdragonLanguage.EnUs,
-            ColdDemand.Synchronous.By(ColdCaller.Internal),
-            Token);
-        Assert.True(archived.IsReady, $"{Archived.Value}: {archived.Status}");
+        foreach (var version in (PatchVersion[])[Archived, Previous])
+        {
+            var stored = await services.GetRequiredService<ICatalogReader>().GetAsync(
+                version,
+                DdragonLanguage.EnUs,
+                ColdDemand.Synchronous.By(ColdCaller.Internal),
+                Token);
+            Assert.True(stored.IsReady, $"{version.Value}: {stored.Status}");
+        }
     }
 }

@@ -248,9 +248,9 @@ services:
       LODB_PAGE_CACHE_KEYS_SIZE: ${LODB_PAGE_CACHE_KEYS_SIZE:-32m}
       LODB_PAGE_CACHE_INACTIVE: ${LODB_PAGE_CACHE_INACTIVE:-24h}
       # Raised by hand only, the purge of the past patches' pages (docs/guides/configuration.md):
-      # 2 since the catalogues of the front are compiled at build, which the bundles of pages
-      # cached before cannot read.
-      LODB_ARCHIVE_EPOCH: ${LODB_ARCHIVE_EPOCH:-2}
+      # 3 since their head points to the latest patch's canonical (ADR 0005, amendment of
+      # 2026-10-14), which the pages cached before do not.
+      LODB_ARCHIVE_EPOCH: ${LODB_ARCHIVE_EPOCH:-3}
       LODB_ARCHIVE_CACHE_SIZE: ${LODB_ARCHIVE_CACHE_SIZE:-6g}
       LODB_ARCHIVE_CACHE_KEYS_SIZE: ${LODB_ARCHIVE_CACHE_KEYS_SIZE:-32m}
       LODB_ARCHIVE_CACHE_INACTIVE: ${LODB_ARCHIVE_CACHE_INACTIVE:-7d}

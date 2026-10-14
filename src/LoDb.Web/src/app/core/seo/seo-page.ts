@@ -1,3 +1,4 @@
+import type { CanonicalLink } from '../api/generated/models/canonical-link';
 import type { Locale } from '../i18n/locales';
 import type { SeoImage } from './images/seo-image';
 import type { JsonLdNode } from './json-ld/core/json-ld-node';
@@ -30,8 +31,15 @@ interface AddressedPage extends SeoPageBase {
   readonly kind?: 'page' | 'donation-return';
   /** Path below `/{locale}/[{version}/]`: the API's `canonicalPath`, `''` for home. */
   readonly path: string;
-  /** A pinned version older than the latest: the page is then self-canonical. */
+  /** A pinned version, older than the latest one: see {@link canonical}. */
   readonly version?: string | null;
+  /**
+   * Where a page of a pinned version is indexed (ADR 0005, amendment of 2026-10-14): an
+   * entity's page hands its API `canonical` over, null keeping the page out of the index
+   * (`noindex, follow`); unset, the same path at the latest version. A page of the latest
+   * version is its own canonical whatever this says.
+   */
+  readonly canonical?: CanonicalLink | null;
   /** The page's own nodes, after the site graph; built once the URLs are known. */
   readonly jsonLd?: (urls: SeoUrls) => readonly JsonLdNode[];
 }

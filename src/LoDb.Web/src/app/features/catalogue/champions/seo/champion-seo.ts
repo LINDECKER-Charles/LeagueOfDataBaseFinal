@@ -8,8 +8,8 @@ import type { Translate } from './translate';
 
 /**
  * The head of a champion page: its texts from the `seo` scope, its splash art as the preview
- * of its links, self-canonical on a pinned version, a breadcrumb home › champions ›
- * champion, and the champion as a game character.
+ * of its links, on a pinned version the canonical the API places the champion at, a
+ * breadcrumb home › champions › champion, and the champion as a game character.
  */
 export function championSeo(entry: CatalogueEntry<ChampionDetails>, translate: Translate): SeoPage {
   const { context, details } = entry;
@@ -21,6 +21,7 @@ export function championSeo(entry: CatalogueEntry<ChampionDetails>, translate: T
     image: splashImage(details.art.splash, translate('champion.detail.splash_alt', { name })),
     path: details.canonicalPath,
     version: context.pinned ? context.version : null,
+    canonical: details.canonical ?? null,
     jsonLd: (urls) => [
       breadcrumbList([
         { name: translate('header.navigation.home'), url: `${urls.origin}/${context.locale}/` },
