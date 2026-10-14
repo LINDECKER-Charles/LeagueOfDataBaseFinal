@@ -170,6 +170,29 @@ public sealed class CatalogSnapshot
     }
 
     /// <summary>
+    /// The page this catalog gives the entity a path of another version names, or
+    /// <see langword="null"/> when it has none: absent, or debris (UP 10). A champion is found
+    /// as its page segment is (<see cref="FindChampion"/>): Data Dragon changed the case of
+    /// some ids over the years.
+    /// </summary>
+    public CanonicalPath? PageOf(CanonicalPath path)
+    {
+        ArgumentNullException.ThrowIfNull(path);
+        return path.Type switch
+        {
+            ResourceType.Champions => FindChampion(path.Id) is { } champion
+                ? PathOf(champion)
+                : null,
+            ResourceType.Items => Items.Find(path.Id) is { } item && IsListed(item)
+                ? PathOf(item)
+                : null,
+            ResourceType.Runes => Runes.Find(path.Id) is { } tree ? PathOf(tree) : null,
+            ResourceType.Summoners => Summoners.Find(path.Id) is { } spell ? PathOf(spell) : null,
+            _ => null,
+        };
+    }
+
+    /// <summary>
     /// The language-independent resource of a champion ("mana", "energy", "none"), read from
     /// its en_US entry.
     /// </summary>
