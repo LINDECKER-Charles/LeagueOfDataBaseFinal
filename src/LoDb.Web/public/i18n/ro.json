@@ -174,7 +174,8 @@
   },
   "detail": {
     "history": {
-      "title": "În patch-urile anterioare"
+      "title": "În patch-urile anterioare",
+      "latest": "În cel mai recent patch"
     }
   },
   "common": {

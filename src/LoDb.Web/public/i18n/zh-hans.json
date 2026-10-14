@@ -174,7 +174,8 @@
   },
   "detail": {
     "history": {
-      "title": "在以前的版本中"
+      "title": "在以前的版本中",
+      "latest": "在最新版本中"
     }
   },
   "common": {

@@ -4,6 +4,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
+import type { CanonicalLink } from '../../../../../core/api/generated/models/canonical-link';
 import type { PageContext } from '../../../../../core/context/page-context';
 import { provideTestTransloco } from '../../../../../core/testing/provide-test-transloco';
 import { ROOT_CATALOGUES } from '../../../../../core/testing/root-catalogues';
@@ -26,21 +27,29 @@ const VERSIONS = [
 const ANNIE = 'champions/Annie';
 
 let context: PageContext;
+let canonical: CanonicalLink | null | undefined;
 
 @Component({
   selector: 'lodb-host',
   imports: [PreviousPatches],
-  template: '<lodb-previous-patches [context]="context" [path]="path" />',
+  template: `<lodb-previous-patches [context]="context" [path]="path" [canonical]="canonical" />`,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 class Host {
   protected readonly context = context;
   protected readonly path = ANNIE;
+  protected readonly canonical = canonical;
 }
 
-// The block of a page in `version`, at `url`, the versions of the stack being VERSIONS.
-async function render(version: string, url = '/en/champions/Annie'): Promise<HTMLElement> {
+// The block of a page in `version`, at `url`, the versions of the stack being VERSIONS, its
+// entity indexed at `indexedAt`.
+async function render(
+  version: string,
+  url = '/en/champions/Annie',
+  indexedAt?: CanonicalLink | null,
+): Promise<HTMLElement> {
   context = { locale: 'en', version, pinned: version !== LATEST, language: 'en_US' };
+  canonical = indexedAt;
   TestBed.configureTestingModule({
     providers: [
       provideMeta({ latest: LATEST, versions: VERSIONS }),
@@ -98,6 +107,63 @@ describe('PreviousPatches', () => {
     const block = await render('16.12.1');
 
     expect(block.querySelector('nav')).toBeNull();
+  });
+});
+
+describe('PreviousPatches, at the latest patch', () => {
+  afterEach(() => TestBed.inject(HttpTestingController).verify());
+
+  const AT_LATEST: CanonicalLink = { version: null, path: 'champions/Annie' };
+
+  function latestLinkOf(block: HTMLElement): HTMLAnchorElement | null {
+    return block.querySelector('p a');
+  }
+
+  it('links a pinned page to its canonical at the latest patch', async () => {
+    const block = await render('16.14.1', '/en/16.14.1/champions/Annie', AT_LATEST);
+
+    expect(block.querySelector('p')?.textContent).toContain('In the latest patch');
+    expect(latestLinkOf(block)?.getAttribute('href')).toBe(`/en/${ANNIE}`);
+    expect(latestLinkOf(block)?.textContent?.trim()).toBe(LATEST);
+  });
+
+  it('links it from the oldest version listed, which has no previous patch', async () => {
+    const block = await render('16.12.1', '/en/16.12.1/champions/Annie', AT_LATEST);
+
+    expect(latestLinkOf(block)?.getAttribute('href')).toBe(`/en/${ANNIE}`);
+    expect(block.querySelector('nav')).toBeNull();
+  });
+
+  it('follows the path the API gives, a renamed entry keeping its id', async () => {
+    const renamed = { version: null, path: 'items/3082-wardens-mail' };
+    const block = await render('16.14.1', '/en/16.14.1/items/3082-warden-mail', renamed);
+
+    expect(latestLinkOf(block)?.getAttribute('href')).toBe('/en/items/3082-wardens-mail');
+  });
+
+  it('carries the regional variant on', async () => {
+    const block = await render('16.14.1', '/en/16.14.1/champions/Annie?lang=en_GB', AT_LATEST);
+
+    expect(latestLinkOf(block)?.getAttribute('href')).toBe(`/en/${ANNIE}?lang=en_GB`);
+  });
+
+  it('links nothing for an entity retired from the game', async () => {
+    const retired = { version: '16.13.1', path: ANNIE };
+    const block = await render('16.14.1', '/en/16.14.1/champions/Annie', retired);
+
+    expect(latestLinkOf(block)).toBeNull();
+  });
+
+  it('links nothing for a page out of the index', async () => {
+    const block = await render('16.14.1', '/en/16.14.1/champions/Annie', null);
+
+    expect(latestLinkOf(block)).toBeNull();
+  });
+
+  it('links nothing from the latest patch itself', async () => {
+    const block = await render(LATEST, '/en/champions/Annie', AT_LATEST);
+
+    expect(latestLinkOf(block)).toBeNull();
   });
 });
 

@@ -174,7 +174,8 @@
   },
   "detail": {
     "history": {
-      "title": "Trong các phiên bản trước"
+      "title": "Trong các phiên bản trước",
+      "latest": "Trong phiên bản mới nhất"
     }
   },
   "common": {

@@ -174,7 +174,8 @@
   },
   "detail": {
     "history": {
-      "title": "過去のパッチ"
+      "title": "過去のパッチ",
+      "latest": "最新パッチ"
     }
   },
   "common": {
