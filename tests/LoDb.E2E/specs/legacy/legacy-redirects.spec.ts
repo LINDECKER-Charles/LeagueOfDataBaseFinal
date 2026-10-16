@@ -69,7 +69,8 @@ function catalogRows(catalog: Catalog): Row[] {
   const { previous } = catalog;
   return [
     { old: '/objects?lang=fr_FR', target: '/fr/items' },
-    { old: `/${previous}/champions`, target: `/en/${previous}/champions` },
+    // A pinned list is canonical to the latest bare one: the redirect lands there.
+    { old: `/${previous}/champions`, target: '/en/champions' },
     { old: '/object/1004?lang=fr_FR', target: `/fr/${path(catalog, 'object/1004')}` },
     { old: '/object/771004', target: `/en/${path(catalog, 'object/771004')}` },
   ];
