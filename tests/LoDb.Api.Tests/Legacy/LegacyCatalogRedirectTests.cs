@@ -43,6 +43,20 @@ public sealed class LegacyCatalogRedirectTests(LegacyApiFixture api)
     public async Task RenamedEntryLandsOnTheLatestSlugInOneHop() =>
         Assert.Equal("/en/items/3001-evenshroud", await api.LocationOfAsync("/7.22.1/object/3001"));
 
+    // The routes older still, one row per resource and form: a detail as the unversioned one,
+    // a list without its numbers.
+    [Theory]
+    [InlineData("/champion_redirect/Ahri?lang=fr_FR", "/fr/champions/Ahri")]
+    [InlineData("/object_redirect/1004", "/en/items/1004-faerie-charm")]
+    [InlineData("/rune_redirect/Domination", "/en/runes/8100-domination")]
+    [InlineData("/summoner_redirect/SummonerFlash", "/en/summoners/SummonerFlash")]
+    [InlineData("/objects_redirect/9/16", "/en/items")]
+    [InlineData("/champions_redirect/13", "/en/champions")]
+    [InlineData("/runes_redirect", "/en/runes")]
+    [InlineData("/summoners_redirect/1/16?lang=fr_FR", "/fr/summoners")]
+    public async Task OlderRouteLandsOnItsNewForm(string oldUrl, string newUrl) =>
+        Assert.Equal(newUrl, await api.LocationOfAsync(oldUrl));
+
     [Fact]
     public async Task LatestVersionLandsOnTheShortUrlInOneHop() =>
         Assert.Equal("/en/champions/Ahri", await api.LocationOfAsync("/16.19.1/champion/Ahri"));

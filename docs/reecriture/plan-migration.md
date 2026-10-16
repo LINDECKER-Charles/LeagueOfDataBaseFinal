@@ -92,6 +92,8 @@ paramètre en id canonique. Locale cible : `en` par défaut. Si l'ancienne URL p
 | `/summoners`, `/summoner/{name}` | `/en/summoners`, `/en/summoners/{id}` |
 | `/{version}/{ressources}`, `/{ressources}?version=` | liste nue du dernier patch, `/en/{ressources}` (canonique de la liste épinglée ; ADR 0005, amendement du 2026-10-16) |
 | `/{version}/{ressource}/{name}`, `/{ressource}/{name}?version=` | URL courte du dernier patch, `/en/{ressources}/{id}`, si l'entité y existe ; sinon (retirée) `/en/{version}/{ressources}/{id}`, ou 302 vers `/en/{version}/{ressources}` si cette version n'est pas stockée |
+| `/{ressource}_redirect/{name}` (routes plus anciennes encore, jamais versionnées) | comme `/{ressource}/{name}` : URL courte du dernier patch, 404 pour un nom inconnu |
+| `/{ressources}_redirect`, suivi de zéro, un ou deux segments numériques (pagination, filtres) | liste nue, `/en/{ressources}` ; toute autre forme : 404 |
 | `/u/{username}`, `/trends`, `/about`, `/about/data`, `/faq`, `/changelog`, `/developers`, `/donate`, `/legal/*` | même chemin sous `/en/` |
 | `/sitemap.xml`, `/sitemaps/latest.xml` | index des sitemaps par locale |
 | `/login`, `/register`, `/profile/*`, `/reset-password/*` | `/{locale}/account/*` (noindex) |
