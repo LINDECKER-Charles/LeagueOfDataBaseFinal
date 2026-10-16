@@ -21,7 +21,11 @@
     },
     "detail": {
       "title": "{{ name }}، عنصر LoL",
-      "description": "{{ name }} في League of Legends: الإحصائيات والتكلفة والوصفة والترقيات، محدثة للتحديث {{ version }}."
+      "description": "{{ name }} في League of Legends: الإحصائيات والتكلفة والوصفة والترقيات، محدثة للتحديث {{ version }}.",
+      "description_priced": "{{ name }} في League of Legends بسعر {{ gold }} ذهب: التأثيرات والوصفة والترقيات، محدثة للتحديث {{ version }}.",
+      "description_stats": "{{ name }} في League of Legends: {{ stats }}. التأثيرات والوصفة والترقيات، محدثة للتحديث {{ version }}.",
+      "description_full": "{{ name }} في League of Legends: {{ stats }} بسعر {{ gold }} ذهب. الوصفة والترقيات، محدثة للتحديث {{ version }}.",
+      "stat": "{{ value }} {{ label }}"
     }
   },
   "rune": {

@@ -21,7 +21,11 @@
     },
     "detail": {
       "title": "{{ name }}, item de LoL",
-      "description": "{{ name }} em League of Legends: estatísticas, custo, receita e evoluções, atualizado para o patch {{ version }}."
+      "description": "{{ name }} em League of Legends: estatísticas, custo, receita e evoluções, atualizado para o patch {{ version }}.",
+      "description_priced": "{{ name }} em League of Legends custa {{ gold }} de ouro: efeitos, receita e evoluções, atualizado para o patch {{ version }}.",
+      "description_stats": "{{ name }} em League of Legends: {{ stats }} — efeitos, receita e evoluções, atualizado para o patch {{ version }}.",
+      "description_full": "{{ name }} em League of Legends: {{ stats }} por {{ gold }} de ouro. Receita e evoluções, atualizado para o patch {{ version }}.",
+      "stat": "{{ value }} {{ label }}"
     }
   },
   "rune": {

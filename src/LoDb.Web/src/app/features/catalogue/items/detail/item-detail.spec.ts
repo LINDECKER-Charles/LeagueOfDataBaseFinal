@@ -195,6 +195,10 @@ describe('lodb-item-detail', () => {
     const { element, heads } = await render();
 
     expect(heads.at(-1)?.title).toContain('"name":"Faerie Charm (LoL Classic)"');
+    // Its stat block is empty: the description states the price under the twin's name.
+    expect(heads.at(-1)?.description).toBe(
+      'item.detail.description_priced {"name":"Faerie Charm (LoL Classic)","gold":250,"version":"16.19.1"}',
+    );
     expect(element.querySelector('lodb-pager a[rel="prev"]')?.getAttribute('href')).toBe(
       '/en/items/1001-boots',
     );
