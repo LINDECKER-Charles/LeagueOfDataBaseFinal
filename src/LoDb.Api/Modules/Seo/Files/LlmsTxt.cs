@@ -84,7 +84,7 @@ internal static class LlmsTxt
                 CultureInfo.InvariantCulture,
                 $" It publishes {catalog.Champions.Entries.Count} champions, "
                 + $"{catalog.ListedItems.Count} items, {catalog.Runes.Entries.Count} rune "
-                + $"paths and {catalog.Summoners.Entries.Count} summoner spells.")
+                + $"paths and {catalog.ListedSummoners.Count} summoner spells.")
             : string.Empty;
         return patch + counts
             + " Every previously published patch stays browsable at its own permanent URL.";

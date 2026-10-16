@@ -12,7 +12,10 @@
     — CSP ») ;
   - le 2026-10-14, une page indexée par entité : la fiche d'un ancien patch est canonique au
     dernier patch, et les sitemaps ne listent plus que des URL canoniques (voir § « Amendement
-    du 2026-10-14 »).
+    du 2026-10-14 ») ;
+  - le 2026-10-16, une ancienne URL du site qui nomme une version mène à l'URL courte quand
+    l'entité existe au dernier patch, et à la liste nue pour une liste (voir § « Amendement
+    du 2026-10-16 »).
 
 ## Contexte
 
@@ -290,3 +293,27 @@ production, comparée au relevé du 14 octobre 2026 :
   (70), avec les fiches antérieures des entités retirées ;
 - si « Google n'a pas choisi la même URL canonique que l'utilisateur » (75) gonfle, Google
   ignore la canonique entre des pages trop différentes : passer ces fiches à l'option B.
+
+## Amendement du 2026-10-16 — anciennes URL versionnées vers l'URL courte
+
+Les 301 de l'ancien site (`/16.4.1/champion/Poppy`, `/11.7.1/object/3020?lang=en_US`)
+gardaient la version qu'elles nommaient : elles menaient à la fiche épinglée, que l'amendement
+du 2026-10-14 rend canonique à l'URL courte. Google suivait donc une 301 vers une page qui en
+désigne une autre, rendue à la demande dans le budget borné des rendus épinglés (6 par minute
+et par client) : 225 des 256 réponses 5xx servies à Googlebot entre le 10 et le 16 octobre
+2026 venaient de ces pages. Le slug de la version nommée ajoutait parfois un second saut
+(`/10.13.1/object/3001` → `items/3001-evenshroud` du dernier patch, puis `3001-abyssal-mask`
+de 10.13.1).
+
+**Décision.** Une 301 héritée mène directement à la canonique de sa cible :
+
+- **Entité présente au dernier patch** (même id) : l'URL courte, au chemin et au slug du dernier
+  patch, quelle que soit la version de l'ancienne URL (chemin ou `?version=`).
+- **Liste**, épinglée ou non : la liste nue du dernier patch (`/en/16.4.1/champions` est
+  canonique à `/en/champions`, `catalogue-list-seo.ts`).
+- **Entité absente du dernier patch** (retirée) : inchangé. Fiche épinglée de la version
+  nommée, au slug de son catalogue s'il est stocké ; sinon 302 vers la liste de cette version.
+- Tant que le catalogue du dernier patch n'est pas lu, une ancienne URL versionnée ne mène
+  nulle part (503 avec `Retry-After`, comme une page froide) : elle ne sait pas encore si
+  l'entité existe toujours.
+- La locale (`?lang=`) se choisit comme avant ; une 301 reste gardée une heure.

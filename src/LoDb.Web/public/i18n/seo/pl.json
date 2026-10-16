@@ -21,7 +21,11 @@
     },
     "detail": {
       "title": "{{ name }}, przedmiot LoL",
-      "description": "{{ name }} w League of Legends: statystyki, koszt, receptura i ulepszenia, aktualne dla patcha {{ version }}."
+      "description": "{{ name }} w League of Legends: statystyki, koszt, receptura i ulepszenia, aktualne dla patcha {{ version }}.",
+      "description_priced": "{{ name }} w League of Legends kosztuje {{ gold }} złota: efekty, receptura i ulepszenia, aktualne dla patcha {{ version }}.",
+      "description_stats": "{{ name }} w League of Legends: {{ stats }} — efekty, receptura i ulepszenia, aktualne dla patcha {{ version }}.",
+      "description_full": "{{ name }} w League of Legends: {{ stats }} za {{ gold }} złota. Receptura i ulepszenia, aktualne dla patcha {{ version }}.",
+      "stat": "{{ value }} {{ label }}"
     }
   },
   "rune": {

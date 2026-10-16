@@ -27,6 +27,17 @@ public sealed class LegacyPathParserTests
     [InlineData("champions/", "list Champions")]
     [InlineData("/summoner/SummonerFlash_Jade", "detail Summoners SummonerFlash_Jade")]
     [InlineData("/16.18.1/object/1004", "detail Items 1004 16.18.1")]
+    // The routes older still: a detail as the unversioned one, a list with up to two numbers,
+    // which are dropped.
+    [InlineData("/champion_redirect/Lucian", "detail Champions Lucian")]
+    [InlineData("/object_redirect/223085", "detail Items 223085")]
+    [InlineData("/rune_redirect/Resolve", "detail Runes Resolve")]
+    [InlineData("/summoner_redirect/Summoner_UltBookSmitePlaceholder",
+        "detail Summoners Summoner_UltBookSmitePlaceholder")]
+    [InlineData("/objects_redirect", "list Items")]
+    [InlineData("/champions_redirect/13", "list Champions")]
+    [InlineData("/summoners_redirect/1/16/", "list Summoners")]
+    [InlineData("/runes_redirect/33/706", "list Runes")]
     public void OldRouteIsReadIntoItsForm(string path, string form) =>
         Assert.Equal(form, Describe(LegacyPathParser.Parse(path)));
 
@@ -42,6 +53,16 @@ public sealed class LegacyPathParserTests
     [InlineData("/16.19.1")]
     [InlineData("/16.19.1/home")]
     [InlineData("/en/champions")]
+    [InlineData("/champion_redirect")]
+    [InlineData("/champion_redirect/Ahri/skins")]
+    [InlineData("/champions_redirect/Ahri")]
+    [InlineData("/objects_redirect/9/16/2")]
+    [InlineData("/objects_redirect/-1")]
+    [InlineData("/Objects_redirect/9")]
+    [InlineData("/object_redirection/3112")]
+    [InlineData("/build_redirect/42")]
+    [InlineData("/16.19.1/champion_redirect/Ahri")]
+    [InlineData("/16.19.1/objects_redirect")]
     public void PathNoOldRouteHadIsUnknown(string path) =>
         Assert.Equal(Unknown, Describe(LegacyPathParser.Parse(path)));
 

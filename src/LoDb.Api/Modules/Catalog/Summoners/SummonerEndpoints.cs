@@ -57,7 +57,8 @@ internal static class SummonerEndpoints
 
         var context = read.Context;
         var id = CanonicalPath.IdOf(ResourceType.Summoners, request.Id);
-        if (id is null || context.Catalog.Summoners.Find(id) is not { } spell)
+        if (id is null || context.Catalog.Summoners.Find(id) is not { } spell
+            || !context.Catalog.IsListed(spell))
         {
             return CatalogProblem.UnknownEntity(Segment, request.Id);
         }

@@ -21,7 +21,11 @@
     },
     "detail": {
       "title": "{{ name }}, LoL tárgy",
-      "description": "{{ name }} a League of Legendsben: statisztikák, ár, recept és fejlesztések, a(z) {{ version }} patch-hez frissítve."
+      "description": "{{ name }} a League of Legendsben: statisztikák, ár, recept és fejlesztések, a(z) {{ version }} patch-hez frissítve.",
+      "description_priced": "{{ name }} a League of Legendsben {{ gold }} aranyba kerül: hatások, recept és fejlesztések, a(z) {{ version }} patch-hez frissítve.",
+      "description_stats": "{{ name }} a League of Legendsben: {{ stats }} — hatások, recept és fejlesztések, a(z) {{ version }} patch-hez frissítve.",
+      "description_full": "{{ name }} a League of Legendsben: {{ stats }} {{ gold }} aranyért. Recept és fejlesztések, a(z) {{ version }} patch-hez frissítve.",
+      "stat": "{{ value }} {{ label }}"
     }
   },
   "rune": {

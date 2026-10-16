@@ -21,7 +21,11 @@
     },
     "detail": {
       "title": "{{ name }} ไอเทม LoL",
-      "description": "{{ name }} ใน League of Legends: ค่าสถานะ ราคา สูตรผสม และการอัปเกรด อัปเดตสำหรับแพตช์ {{ version }}"
+      "description": "{{ name }} ใน League of Legends: ค่าสถานะ ราคา สูตรผสม และการอัปเกรด อัปเดตสำหรับแพตช์ {{ version }}",
+      "description_priced": "{{ name }} ใน League of Legends ราคา {{ gold }} ทอง: เอฟเฟกต์ สูตรผสม และการอัปเกรด อัปเดตสำหรับแพตช์ {{ version }}",
+      "description_stats": "{{ name }} ใน League of Legends: {{ stats }} เอฟเฟกต์ สูตรผสม และการอัปเกรด อัปเดตสำหรับแพตช์ {{ version }}",
+      "description_full": "{{ name }} ใน League of Legends: {{ stats }} ราคา {{ gold }} ทอง สูตรผสมและการอัปเกรด อัปเดตสำหรับแพตช์ {{ version }}",
+      "stat": "{{ value }} {{ label }}"
     }
   },
   "rune": {

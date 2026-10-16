@@ -21,7 +21,11 @@
     },
     "detail": {
       "title": "{{ name }}, předmět LoL",
-      "description": "{{ name }} v League of Legends: statistiky, cena, recept a vylepšení, aktuální pro patch {{ version }}."
+      "description": "{{ name }} v League of Legends: statistiky, cena, recept a vylepšení, aktuální pro patch {{ version }}.",
+      "description_priced": "{{ name }} v League of Legends stojí {{ gold }} zlata: efekty, recept a vylepšení, aktuální pro patch {{ version }}.",
+      "description_stats": "{{ name }} v League of Legends: {{ stats }} — efekty, recept a vylepšení, aktuální pro patch {{ version }}.",
+      "description_full": "{{ name }} v League of Legends: {{ stats }} za {{ gold }} zlata. Recept a vylepšení, aktuální pro patch {{ version }}.",
+      "stat": "{{ value }} {{ label }}"
     }
   },
   "rune": {

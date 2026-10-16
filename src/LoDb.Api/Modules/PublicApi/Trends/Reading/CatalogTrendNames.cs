@@ -63,7 +63,7 @@ internal sealed class CatalogTrendNames(ICatalogReader catalogs) : ITrendNames
         }
         else if (type == TrendType.Summoners)
         {
-            foreach (var spell in catalog.Summoners.Entries)
+            foreach (var spell in catalog.ListedSummoners)
             {
                 Name(names, spell.Id, spell.Name);
             }

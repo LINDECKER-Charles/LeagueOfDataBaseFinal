@@ -94,6 +94,8 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   JSON-LD, ou `noindex, follow` avant la dernière version d'une entité retirée (ADR 0005,
   amendement du 2026-10-14) : voulu. Les visiteurs atteignent les anciens patchs par cette
   page et le bloc « Dans les patchs précédents » des fiches, qui ne chargent aucun catalogue.
+  Une ancienne URL du site qui nomme une version perd cette version dans sa 301 (URL courte,
+  liste nue) tant que l'entité existe au dernier patch : voulu (amendement du 2026-10-16).
 - Une page qui oublie `Seo.apply` n'a ni canonique ni hreflang. Une clé `about.*`, `api.*`
   ou `seo.*` n'est traduite que si un ancêtre fournit son scope (`provideTranslocoScope`) ;
   sinon la clé brute sort dans le HTML, sans erreur. Le chrome (en-tête, pied de page) n'en

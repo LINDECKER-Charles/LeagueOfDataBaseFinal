@@ -8,7 +8,8 @@ namespace LoDb.Ingestion.Catalog.Snapshots;
 /// </summary>
 /// <remarks>
 /// As in the legacy search: champions, rune paths and summoner spells match on their id or
-/// their name, items on their name alone (their ids are numbers) and debris items not at all
+/// their name, items on their name alone (their ids are numbers) and debris items and
+/// placeholder spells not at all
 /// (UP 10). Hits keep the upstream order.
 /// </remarks>
 internal sealed class CatalogSearch
@@ -27,7 +28,7 @@ internal sealed class CatalogSearch
                 tree.Id.ToString(CultureInfo.InvariantCulture),
                 tree.Name,
                 true)),
-            .. catalog.Summoners.Entries.Select(static spell => Candidate.Of(
+            .. catalog.ListedSummoners.Select(static spell => Candidate.Of(
                 ResourceType.Summoners, spell.Id, spell.Name, true)),
         ];
 

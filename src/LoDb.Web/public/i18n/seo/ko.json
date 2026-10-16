@@ -21,7 +21,11 @@
     },
     "detail": {
       "title": "{{ name }} (LoL 아이템)",
-      "description": "리그 오브 레전드의 {{ name }}: 스탯, 가격, 조합식, 상위 아이템. 패치 {{ version }} 기준 최신 정보."
+      "description": "리그 오브 레전드의 {{ name }}: 스탯, 가격, 조합식, 상위 아이템. 패치 {{ version }} 기준 최신 정보.",
+      "description_priced": "리그 오브 레전드의 {{ name }}: 가격 {{ gold }} 골드. 효과, 조합식, 상위 아이템. 패치 {{ version }} 기준 최신 정보.",
+      "description_stats": "리그 오브 레전드의 {{ name }}: {{ stats }}. 효과, 조합식, 상위 아이템. 패치 {{ version }} 기준 최신 정보.",
+      "description_full": "리그 오브 레전드의 {{ name }}: {{ stats }}, 가격 {{ gold }} 골드. 조합식과 상위 아이템. 패치 {{ version }} 기준 최신 정보.",
+      "stat": "{{ label }} {{ value }}"
     }
   },
   "rune": {

@@ -21,7 +21,11 @@
     },
     "detail": {
       "title": "{{ name }}, objeto de LoL",
-      "description": "{{ name }} en League of Legends: estadísticas, coste, receta y mejoras, actualizado para el parche {{ version }}."
+      "description": "{{ name }} en League of Legends: estadísticas, coste, receta y mejoras, actualizado para el parche {{ version }}.",
+      "description_priced": "{{ name }} en League of Legends cuesta {{ gold }} de oro: efectos, receta y mejoras, actualizado para el parche {{ version }}.",
+      "description_stats": "{{ name }} en League of Legends: {{ stats }} — efectos, receta y mejoras, actualizado para el parche {{ version }}.",
+      "description_full": "{{ name }} en League of Legends: {{ stats }} por {{ gold }} de oro. Receta y mejoras, actualizado para el parche {{ version }}.",
+      "stat": "{{ value }} {{ label }}"
     }
   },
   "rune": {

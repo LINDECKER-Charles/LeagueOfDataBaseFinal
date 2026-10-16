@@ -94,11 +94,12 @@ internal static class SitemapLocations
             .Select(path => new SitemapEntry(prefix + path.Value));
     }
 
-    // The entries the lists show: debris has no page (UP 10); the Classic twins do.
+    // The entries the lists show: debris and placeholder spells have no page (UP 10); the
+    // Classic twins do.
     private static IEnumerable<CanonicalPath> EntityPaths(CatalogSnapshot catalog) =>
         catalog.Champions.Entries.Select(catalog.PathOf)
             .Concat(catalog.ListedItems.Select(catalog.PathOf))
             .Concat(catalog.Runes.Entries.Select(catalog.PathOf))
-            .Concat(catalog.Summoners.Entries.Select(catalog.PathOf))
+            .Concat(catalog.ListedSummoners.Select(catalog.PathOf))
             .DistinctBy(static path => path.Value, StringComparer.Ordinal);
 }

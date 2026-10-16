@@ -21,7 +21,11 @@
     },
     "detail": {
       "title": "{{ name }}（LoL 装备）",
-      "description": "英雄联盟的 {{ name }}：属性、价格、合成配方与升级路线，已更新至版本 {{ version }}。"
+      "description": "英雄联盟的 {{ name }}：属性、价格、合成配方与升级路线，已更新至版本 {{ version }}。",
+      "description_priced": "英雄联盟的 {{ name }}：售价 {{ gold }} 金币。效果、合成配方与升级路线，已更新至版本 {{ version }}。",
+      "description_stats": "英雄联盟的 {{ name }}：{{ stats }}。效果、合成配方与升级路线，已更新至版本 {{ version }}。",
+      "description_full": "英雄联盟的 {{ name }}：{{ stats }}，售价 {{ gold }} 金币。合成配方与升级路线，已更新至版本 {{ version }}。",
+      "stat": "{{ label }}{{ value }}"
     }
   },
   "rune": {

@@ -16,7 +16,8 @@ public sealed class LegacyRedirectContractTests(LegacyApiFixture api)
     // locale (LegacyTargetTests), which no old route had.
     public static TheoryData<string> OldUrls =>
     [
-        "/home", "/16.18.1/objects", "/object/1004?lang=fr_FR",
+        "/home", "/16.18.1/objects", "/object/1004?lang=fr_FR", "/objects_redirect/9/16",
+        "/champion_redirect/Ahri",
     ];
 
     [Fact]
@@ -57,9 +58,12 @@ public sealed class LegacyRedirectContractTests(LegacyApiFixture api)
     [Theory]
     [InlineData("/champion/NotAChampion", "unknown-entity")]
     [InlineData("/object/999999", "unknown-entity")]
+    [InlineData("/object/7050", "unknown-entity")]
     [InlineData("/rune/8100", "unknown-entity")]
     [InlineData("/summoner/Flash", "unknown-entity")]
     [InlineData("/16.19.1/champion/NotAChampion", "unknown-entity")]
+    [InlineData("/object_redirect/999999", "unknown-entity")]
+    [InlineData("/champion_redirect/NotAChampion", "unknown-entity")]
     [InlineData("/9.9.9/champions", "unknown-version")]
     [InlineData("/9.9.9/champion/Ahri", "unknown-version")]
     public async Task UnknownNameOrVersionIsNotFound(string oldUrl, string code) =>
@@ -69,6 +73,7 @@ public sealed class LegacyRedirectContractTests(LegacyApiFixture api)
     [Theory]
     [InlineData("/")]
     [InlineData("/16.19.1/items")]
+    [InlineData("/objects_redirect/9/16/2")]
     public async Task PathNoOldRouteHadIsNotFound(string oldUrl) =>
         await AssertProblemAsync(oldUrl, "unknown-legacy-url");
 

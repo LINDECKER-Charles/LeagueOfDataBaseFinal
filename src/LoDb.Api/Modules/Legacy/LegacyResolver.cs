@@ -22,10 +22,17 @@ namespace LoDb.Api.Modules.Legacy;
 /// them by the thousand, across every version.
 /// </para>
 /// <para>
-/// The latest catalog answers first, held in memory and with ids stable across versions.
-/// Only a name it lacks opens the catalog of the version the URL names, and only if that
-/// version is stored. A version that is not stays unread: its list stands in, by a 302, for
-/// an entry that may have left the game, which must not become a 404.
+/// The latest catalog answers first, held in memory and with ids stable across versions. An
+/// entry it holds lands on its short URL, whatever version the old URL named: the pinned page
+/// of an entry still in the game is canonical to it (ADR 0005, amendment of 2026-10-14), and
+/// pinned renders are the SSR's scarcest. So does a list, a pinned one being canonical to the
+/// latest bare list.
+/// </para>
+/// <para>
+/// Only a name the latest catalog lacks, once read, opens the catalog of the version the URL
+/// names, and only if that version is stored: the entry left the game, and keeps the pinned
+/// page and slug of that version. A version that is not stored stays unread: its list stands
+/// in, by a 302, for an entry that may have left the game, which must not become a 404.
 /// </para>
 /// </remarks>
 internal sealed partial class LegacyResolver(
@@ -83,7 +90,9 @@ internal sealed partial class LegacyResolver(
         var segment = CanonicalPath.SegmentOf(legacy.Resource);
         if (legacy.Kind == LegacyPathKind.List)
         {
-            return LegacyRedirect.Permanent(LegacyTarget.Of(locale, version.Pinned, segment));
+            // Before any promotion, no short list exists yet to land on.
+            var listVersion = versions.Latest is null ? version.Pinned : null;
+            return LegacyRedirect.Permanent(LegacyTarget.Of(locale, listVersion, segment));
         }
 
         var lookup = new EntityLookup(legacy, version, locale, segment)
@@ -101,10 +110,13 @@ internal sealed partial class LegacyResolver(
         var latest = await OpenAsync(lookup.Latest, lookup.Demand, cancellationToken);
         if (Find(latest, lookup) is { } fromLatest)
         {
-            return lookup.Moved(fromLatest);
+            return lookup.MovedToLatest(fromLatest);
         }
 
-        if (lookup.Version.Pinned is not { } pinned)
+        // A latest catalog not read yet may still hold the name, whose target is then its short
+        // URL: nothing answers before. Before any promotion, only the version's own can tell.
+        var isLatestUnread = latest is { IsReady: false };
+        if (isLatestUnread || lookup.Version.Pinned is not { } pinned)
         {
             return latest is { IsReady: true } ? UnknownEntity(lookup) : CatalogProblem.Pending();
         }
@@ -113,10 +125,10 @@ internal sealed partial class LegacyResolver(
         return own switch
         {
             { IsReady: true } => Find(own, lookup) is { } path
-                ? lookup.Moved(path)
+                ? lookup.MovedToPinned(path)
                 : UnknownEntity(lookup),
-            // The list stands in only for a name the latest catalog, once read, lacks too: a
-            // latest catalog not read yet (its load refused for now) may still tell it.
+            // The list stands in only for a name the latest catalog, once read, lacks too:
+            // before any promotion, nothing tells yet whether the entry left the game.
             { Status: CatalogLoadStatus.Pending, Refused: false } when latest is { IsReady: true }
                 => lookup.ToList(),
             _ => CatalogProblem.Pending(),
@@ -157,7 +169,12 @@ internal sealed partial class LegacyResolver(
 
         public required ColdDemand Demand { get; init; }
 
-        public LegacyRedirect Moved(CanonicalPath path) =>
+        /// <summary>An entry of the latest patch: its short URL.</summary>
+        public LegacyRedirect MovedToLatest(CanonicalPath path) =>
+            LegacyRedirect.Permanent(LegacyTarget.Of(Locale, null, path.Value));
+
+        /// <summary>An entry gone from the latest patch: its page in the version named.</summary>
+        public LegacyRedirect MovedToPinned(CanonicalPath path) =>
             LegacyRedirect.Permanent(LegacyTarget.Of(Locale, Version.Pinned, path.Value));
 
         public LegacyRedirect ToList() =>

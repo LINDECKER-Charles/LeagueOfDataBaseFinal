@@ -21,7 +21,11 @@
     },
     "detail": {
       "title": "{{ name }}, obiect LoL",
-      "description": "{{ name }} în League of Legends: statistici, cost, rețetă și îmbunătățiri, actualizat pentru patch-ul {{ version }}."
+      "description": "{{ name }} în League of Legends: statistici, cost, rețetă și îmbunătățiri, actualizat pentru patch-ul {{ version }}.",
+      "description_priced": "{{ name }} în League of Legends costă {{ gold }} de aur: efecte, rețetă și îmbunătățiri, actualizat pentru patch-ul {{ version }}.",
+      "description_stats": "{{ name }} în League of Legends: {{ stats }} — efecte, rețetă și îmbunătățiri, actualizat pentru patch-ul {{ version }}.",
+      "description_full": "{{ name }} în League of Legends: {{ stats }} pentru {{ gold }} de aur. Rețetă și îmbunătățiri, actualizat pentru patch-ul {{ version }}.",
+      "stat": "{{ value }} {{ label }}"
     }
   },
   "rune": {
