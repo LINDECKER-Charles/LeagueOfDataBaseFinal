@@ -57,6 +57,7 @@ public sealed class LegacyRedirectContractTests(LegacyApiFixture api)
     [Theory]
     [InlineData("/champion/NotAChampion", "unknown-entity")]
     [InlineData("/object/999999", "unknown-entity")]
+    [InlineData("/object/7050", "unknown-entity")]
     [InlineData("/rune/8100", "unknown-entity")]
     [InlineData("/summoner/Flash", "unknown-entity")]
     [InlineData("/16.19.1/champion/NotAChampion", "unknown-entity")]

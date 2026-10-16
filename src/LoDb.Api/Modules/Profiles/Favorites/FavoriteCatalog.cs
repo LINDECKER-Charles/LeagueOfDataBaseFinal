@@ -43,7 +43,7 @@ internal static class FavoriteCatalog
             : null;
 
     private static FavoriteEntry? Summoner(CatalogSnapshot catalog, string id) =>
-        catalog.Summoners.Find(id) is { } spell
+        catalog.Summoners.Find(id) is { } spell && catalog.IsListed(spell)
             ? new FavoriteEntry(id, spell.Name, EntityImages.Icon(spell))
             : null;
 

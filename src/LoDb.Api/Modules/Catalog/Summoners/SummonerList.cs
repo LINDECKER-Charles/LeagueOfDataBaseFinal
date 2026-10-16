@@ -32,7 +32,7 @@ internal sealed record SummonerList
     public static IReadOnlyList<SummonerSpell> EntriesOf(CatalogSnapshot catalog)
     {
         ArgumentNullException.ThrowIfNull(catalog);
-        return catalog.Summoners.Entries;
+        return catalog.ListedSummoners;
     }
 
     /// <summary>The spells on either side of <paramref name="spell"/> in the list.</summary>
