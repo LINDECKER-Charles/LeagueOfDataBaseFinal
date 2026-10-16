@@ -5,6 +5,7 @@ import type { SeoPage } from '../../../../core/seo/seo-page';
 import type { CatalogueEntry } from '../../../../core/routing/catalogue/catalogue-entry';
 import type { CatalogueTexts } from '../../shared/codex/head/catalogue-texts';
 import { detailTrail } from '../../shared/codex/head/detail-trail';
+import { itemDescriptionOf } from './item-description-of';
 
 /**
  * The head of an item page. A LoL Classic twin shares its name with the current item, so its
@@ -25,7 +26,7 @@ export function itemHeadOf(entry: CatalogueEntry<ItemDetails>, texts: CatalogueT
   };
   return {
     title: texts.seo('item.detail.title', { name }),
-    description: texts.seo('item.detail.description', { name, version: context.version }),
+    description: itemDescriptionOf(entry, texts, name),
     locale: context.locale,
     path: details.canonicalPath,
     version: context.pinned ? context.version : null,

@@ -21,7 +21,11 @@
     },
     "detail": {
       "title": "{{ name }}, αντικείμενο του LoL",
-      "description": "Το {{ name }} στο League of Legends: στατιστικά, κόστος, συνταγή και αναβαθμίσεις, ενημερωμένα για το patch {{ version }}."
+      "description": "Το {{ name }} στο League of Legends: στατιστικά, κόστος, συνταγή και αναβαθμίσεις, ενημερωμένα για το patch {{ version }}.",
+      "description_priced": "Το {{ name }} στο League of Legends κοστίζει {{ gold }} χρυσό: εφέ, συνταγή και αναβαθμίσεις, ενημερωμένα για το patch {{ version }}.",
+      "description_stats": "Το {{ name }} στο League of Legends: {{ stats }} — εφέ, συνταγή και αναβαθμίσεις, ενημερωμένα για το patch {{ version }}.",
+      "description_full": "Το {{ name }} στο League of Legends: {{ stats }} για {{ gold }} χρυσό. Συνταγή και αναβαθμίσεις, ενημερωμένα για το patch {{ version }}.",
+      "stat": "{{ value }} {{ label }}"
     }
   },
   "rune": {
