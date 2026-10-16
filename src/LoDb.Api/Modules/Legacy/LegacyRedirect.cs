@@ -6,8 +6,8 @@ namespace LoDb.Api.Modules.Legacy;
 /// </summary>
 /// <remarks>
 /// Kept an hour at most, like the host redirect of nginx: a bare 301 is cached almost
-/// forever by browsers, while its target may change with the latest version (a page of the
-/// latest patch leaves the short URL for a pinned one after the next promotion). Engines
+/// forever by browsers, while its target may change with the latest version (an entry the
+/// next promotion retires leaves the short URL for a pinned one). Engines
 /// consolidate on the status alone. The 302 is temporary on purpose: once the version is
 /// stored, the same old URL may find its entry, and an entry gone from the game never turns
 /// into a 404.

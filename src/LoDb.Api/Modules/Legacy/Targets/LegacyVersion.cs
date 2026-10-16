@@ -6,8 +6,9 @@ namespace LoDb.Api.Modules.Legacy.Targets;
 internal sealed record LegacyVersion
 {
     /// <summary>
-    /// The version the new path names; <see langword="null"/> for the latest one, whose
-    /// URL is the short form, so that no second redirect follows.
+    /// The version a pinned target names, for an entry gone from the latest patch or the list
+    /// standing in for it; <see langword="null"/> for the latest one, whose URL is the short
+    /// form, so that no second redirect follows.
     /// </summary>
     public PatchVersion? Pinned { get; init; }
 

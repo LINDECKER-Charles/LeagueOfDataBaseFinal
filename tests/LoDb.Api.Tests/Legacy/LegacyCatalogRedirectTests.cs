@@ -12,11 +12,12 @@ namespace LoDb.Api.Tests.Legacy;
 [Collection(LegacyApiGroup.Name)]
 public sealed class LegacyCatalogRedirectTests(LegacyApiFixture api)
 {
-    // The version in the path, then in the query with the language.
+    // The version in the path, then in the query with the language: a pinned list is
+    // canonical to the latest bare one, where the redirect lands.
     [Theory]
-    [InlineData("/16.18.1/champions", "/en/16.18.1/champions")]
-    [InlineData("/objects?version=16.18.1&lang=fr_FR", "/fr/16.18.1/items")]
-    public async Task ListLandsOnItsLocaleAndVersion(string oldUrl, string newUrl) =>
+    [InlineData("/16.18.1/champions", "/en/champions")]
+    [InlineData("/objects?version=16.18.1&lang=fr_FR", "/fr/items")]
+    public async Task ListOfAPastVersionLandsOnTheLatestList(string oldUrl, string newUrl) =>
         Assert.Equal(newUrl, await api.LocationOfAsync(oldUrl));
 
     // One row per resource: each one looks its old name up its own way.
@@ -28,10 +29,32 @@ public sealed class LegacyCatalogRedirectTests(LegacyApiFixture api)
     public async Task DetailLandsOnTheCanonicalPath(string oldUrl, string newUrl) =>
         Assert.Equal(newUrl, await api.LocationOfAsync(oldUrl));
 
+    // An entry still in the game: its pinned page is canonical to the short URL, so the
+    // redirect lands there, whatever version the old URL named.
     [Theory]
-    [InlineData("/16.18.1/object/1004?lang=fr_FR", "/fr/16.18.1/items/1004-faerie-charm")]
-    [InlineData("/champion/Teemo?version=16.18.1", "/en/16.18.1/champions/Teemo")]
-    public async Task DetailOfAPastVersionKeepsItsVersion(string oldUrl, string newUrl) =>
+    [InlineData("/16.18.1/object/1004?lang=fr_FR", "/fr/items/1004-faerie-charm")]
+    [InlineData("/champion/Teemo?version=16.18.1", "/en/champions/Teemo")]
+    public async Task DetailOfAPastVersionLandsOnTheShortUrl(string oldUrl, string newUrl) =>
+        Assert.Equal(newUrl, await api.LocationOfAsync(oldUrl));
+
+    // 3001 was Abyssal Mask in 7.22.1, Evenshroud now: the latest slug, so no second hop
+    // from a pinned slug to its own.
+    [Fact]
+    public async Task RenamedEntryLandsOnTheLatestSlugInOneHop() =>
+        Assert.Equal("/en/items/3001-evenshroud", await api.LocationOfAsync("/7.22.1/object/3001"));
+
+    // The routes older still, one row per resource and form: a detail as the unversioned one,
+    // a list without its numbers.
+    [Theory]
+    [InlineData("/champion_redirect/Ahri?lang=fr_FR", "/fr/champions/Ahri")]
+    [InlineData("/object_redirect/1004", "/en/items/1004-faerie-charm")]
+    [InlineData("/rune_redirect/Domination", "/en/runes/8100-domination")]
+    [InlineData("/summoner_redirect/SummonerFlash", "/en/summoners/SummonerFlash")]
+    [InlineData("/objects_redirect/9/16", "/en/items")]
+    [InlineData("/champions_redirect/13", "/en/champions")]
+    [InlineData("/runes_redirect", "/en/runes")]
+    [InlineData("/summoners_redirect/1/16?lang=fr_FR", "/fr/summoners")]
+    public async Task OlderRouteLandsOnItsNewForm(string oldUrl, string newUrl) =>
         Assert.Equal(newUrl, await api.LocationOfAsync(oldUrl));
 
     [Fact]

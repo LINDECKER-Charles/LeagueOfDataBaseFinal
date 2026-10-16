@@ -51,12 +51,21 @@ const LEGACY_PATHS = [
   '/reset-password',
   '/builds/42/edit',
   '/14.24.1/champions',
+  // The routes older still, with the "_redirect" suffix.
+  '/champion_redirect/Lucian',
+  '/champions_redirect/13/4',
+  '/object_redirect/3112',
+  '/objects_redirect/9/16',
+  '/rune_redirect/Resolve',
+  '/runes_redirect',
+  '/summoner_redirect/Summoner_UltBookSmitePlaceholder',
+  '/summoners_redirect/1',
 ];
 // The stub's API knows no such name; its SSR server renders the 404 (lib/upstream-stub.conf).
 const UNKNOWN_LEGACY = '/champion/NotAChampion';
 const NOT_FOUND_PAGE = 'not found\n';
-// A first segment the former site never owned, though it starts like one: the SSR server's.
-const LEGACY_LOOKALIKE = '/championship';
+// First segments the former site never owned, though they start like one: the SSR server's.
+const LEGACY_LOOKALIKES = ['/championship', '/champion_redirects/Lucian'];
 // The former site's URLs outnumber the image's legacy burst: rates are nginx-image's checks.
 const LOCAL = { LODB_EDGE_CIDR: '0.0.0.0/0', LODB_EDGE_SECRET: '', LODB_LEGACY_BURST: '100' };
 
@@ -126,8 +135,10 @@ describe('nginx image as a local stack runs it',
         const unknown = await get(UNKNOWN_LEGACY);
         assert.equal(unknown.status, 404);
         assert.equal(unknown.body.toString(), NOT_FOUND_PAGE);
-        const lookalike = await get(LEGACY_LOOKALIKE);
-        assert.equal(lookalike.status, 200);
-        assert.equal(lookalike.headers['x-seen-uri'], undefined);
+        for (const path of LEGACY_LOOKALIKES) {
+          const lookalike = await get(path);
+          assert.equal(lookalike.status, 200, path);
+          assert.equal(lookalike.headers['x-seen-uri'], undefined, path);
+        }
       });
   });
