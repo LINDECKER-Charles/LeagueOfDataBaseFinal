@@ -21,7 +21,11 @@
     },
     "detail": {
       "title": "{{ name }}, LoL-Gegenstand",
-      "description": "{{ name }} in League of Legends: Werte, Kosten, Rezept und Ausbaustufen, aktuell für Patch {{ version }}."
+      "description": "{{ name }} in League of Legends: Werte, Kosten, Rezept und Ausbaustufen, aktuell für Patch {{ version }}.",
+      "description_priced": "{{ name }} in League of Legends kostet {{ gold }} Gold: Effekte, Rezept und Ausbaustufen, aktuell für Patch {{ version }}.",
+      "description_stats": "{{ name }} in League of Legends: {{ stats }} — Effekte, Rezept und Ausbaustufen, aktuell für Patch {{ version }}.",
+      "description_full": "{{ name }} in League of Legends: {{ stats }} für {{ gold }} Gold. Rezept und Ausbaustufen, aktuell für Patch {{ version }}.",
+      "stat": "{{ value }} {{ label }}"
     }
   },
   "rune": {

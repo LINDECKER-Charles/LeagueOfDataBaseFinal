@@ -25,7 +25,7 @@ internal static class LegacyEntityLookup
             ResourceType.Champions => catalog.FindChampion(name) is { } champion
                 ? catalog.PathOf(champion)
                 : null,
-            ResourceType.Items => catalog.Items.Find(name) is { } item
+            ResourceType.Items => catalog.Items.Find(name) is { } item && catalog.IsListed(item)
                 ? catalog.PathOf(item)
                 : null,
             ResourceType.Runes => catalog.Runes.Entries
@@ -34,6 +34,7 @@ internal static class LegacyEntityLookup
                 ? catalog.PathOf(tree)
                 : null,
             ResourceType.Summoners => catalog.Summoners.Find(name) is { } spell
+                && catalog.IsListed(spell)
                 ? catalog.PathOf(spell)
                 : null,
             _ => null,

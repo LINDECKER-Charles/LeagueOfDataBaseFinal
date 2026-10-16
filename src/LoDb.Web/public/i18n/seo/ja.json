@@ -21,7 +21,11 @@
     },
     "detail": {
       "title": "{{ name }}（LoLアイテム）",
-      "description": "リーグ・オブ・レジェンドの{{ name }}：ステータス、価格、レシピ、派生アイテム。パッチ{{ version }}対応。"
+      "description": "リーグ・オブ・レジェンドの{{ name }}：ステータス、価格、レシピ、派生アイテム。パッチ{{ version }}対応。",
+      "description_priced": "リーグ・オブ・レジェンドの{{ name }}：価格{{ gold }}ゴールド。効果、レシピ、派生アイテム。パッチ{{ version }}対応。",
+      "description_stats": "リーグ・オブ・レジェンドの{{ name }}：{{ stats }}。効果、レシピ、派生アイテム。パッチ{{ version }}対応。",
+      "description_full": "リーグ・オブ・レジェンドの{{ name }}：{{ stats }}、価格{{ gold }}ゴールド。レシピと派生アイテム。パッチ{{ version }}対応。",
+      "stat": "{{ label }}{{ value }}"
     }
   },
   "rune": {

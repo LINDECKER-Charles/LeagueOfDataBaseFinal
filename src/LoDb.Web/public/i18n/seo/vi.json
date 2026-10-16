@@ -21,7 +21,11 @@
     },
     "detail": {
       "title": "{{ name }}, trang bị LMHT",
-      "description": "{{ name }} trong Liên Minh Huyền Thoại: chỉ số, giá, công thức ghép và nâng cấp, cập nhật cho phiên bản {{ version }}."
+      "description": "{{ name }} trong Liên Minh Huyền Thoại: chỉ số, giá, công thức ghép và nâng cấp, cập nhật cho phiên bản {{ version }}.",
+      "description_priced": "{{ name }} trong Liên Minh Huyền Thoại có giá {{ gold }} vàng: hiệu ứng, công thức ghép và nâng cấp, cập nhật cho phiên bản {{ version }}.",
+      "description_stats": "{{ name }} trong Liên Minh Huyền Thoại: {{ stats }} — hiệu ứng, công thức ghép và nâng cấp, cập nhật cho phiên bản {{ version }}.",
+      "description_full": "{{ name }} trong Liên Minh Huyền Thoại: {{ stats }}, giá {{ gold }} vàng. Công thức ghép và nâng cấp, cập nhật phiên bản {{ version }}.",
+      "stat": "{{ value }} {{ label }}"
     }
   },
   "rune": {

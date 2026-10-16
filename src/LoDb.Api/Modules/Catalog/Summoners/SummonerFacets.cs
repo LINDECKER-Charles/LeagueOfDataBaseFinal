@@ -15,7 +15,7 @@ internal sealed record SummonerFacets
     public static SummonerFacets Of(CatalogSnapshot catalog)
     {
         ArgumentNullException.ThrowIfNull(catalog);
-        var spells = catalog.Summoners.Entries;
+        var spells = catalog.ListedSummoners;
         var allowed = spells
             .SelectMany(static spell => spell.Modes)
             .ToHashSet(StringComparer.Ordinal);

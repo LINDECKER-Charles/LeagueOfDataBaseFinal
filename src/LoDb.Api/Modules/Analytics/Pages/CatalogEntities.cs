@@ -32,6 +32,7 @@ internal static class CatalogEntities
                 ? (tree.Key, catalog.PathOf(tree).Value)
                 : null,
             ResourceType.Summoners => catalog.Summoners.Find(id) is { } spell
+                && catalog.IsListed(spell)
                 ? (spell.Id, catalog.PathOf(spell).Value)
                 : null,
             _ => null,

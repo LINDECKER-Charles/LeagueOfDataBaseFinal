@@ -21,7 +21,11 @@
     },
     "detail": {
       "title": "{{ name }} — предмет LoL",
-      "description": "{{ name }} в League of Legends: характеристики, стоимость, рецепт и улучшения, актуально для патча {{ version }}."
+      "description": "{{ name }} в League of Legends: характеристики, стоимость, рецепт и улучшения, актуально для патча {{ version }}.",
+      "description_priced": "{{ name }} в League of Legends стоит {{ gold }} золота: эффекты, рецепт и улучшения, актуально для патча {{ version }}.",
+      "description_stats": "{{ name }} в League of Legends: {{ stats }} — эффекты, рецепт и улучшения, актуально для патча {{ version }}.",
+      "description_full": "{{ name }} в League of Legends: {{ stats }} за {{ gold }} золота. Рецепт и улучшения, актуально для патча {{ version }}.",
+      "stat": "{{ value }} {{ label }}"
     }
   },
   "rune": {

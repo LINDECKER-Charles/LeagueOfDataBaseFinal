@@ -22,7 +22,7 @@ internal sealed record SummonerPicker
     public static IReadOnlyList<SummonerSpell> Pickable(CatalogSnapshot catalog)
     {
         ArgumentNullException.ThrowIfNull(catalog);
-        return [.. catalog.Summoners.Entries.Where(static spell =>
+        return [.. catalog.ListedSummoners.Where(static spell =>
             spell.Modes.Contains(RequiredMode, StringComparer.Ordinal))];
     }
 

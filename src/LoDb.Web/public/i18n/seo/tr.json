@@ -21,7 +21,11 @@
     },
     "detail": {
       "title": "{{ name }}, LoL eşyası",
-      "description": "League of Legends'ta {{ name }}: istatistikler, maliyet, tarif ve geliştirmeler, {{ version }} yaması için güncel."
+      "description": "League of Legends'ta {{ name }}: istatistikler, maliyet, tarif ve geliştirmeler, {{ version }} yaması için güncel.",
+      "description_priced": "League of Legends'ta {{ name }}, fiyatı {{ gold }} altın: etkiler, tarif ve geliştirmeler, {{ version }} yaması için güncel.",
+      "description_stats": "League of Legends'ta {{ name }}: {{ stats }} — etkiler, tarif ve geliştirmeler, {{ version }} yaması için güncel.",
+      "description_full": "League of Legends'ta {{ name }}: {{ stats }}, fiyatı {{ gold }} altın. Tarif ve geliştirmeler, {{ version }} yaması için güncel.",
+      "stat": "{{ value }} {{ label }}"
     }
   },
   "rune": {
