@@ -7,6 +7,7 @@ using LoDb.Domain.Catalog.Runes;
 using LoDb.Domain.Catalog.Summoners;
 using LoDb.Domain.Derived.Champions;
 using LoDb.Domain.Derived.Items;
+using LoDb.Domain.Derived.Summoners;
 using LoDb.Domain.Languages;
 using LoDb.Domain.Paths;
 using LoDb.Domain.Versions;
@@ -32,6 +33,7 @@ public sealed class CatalogSnapshot
     private readonly FrozenDictionary<int, RuneLocation> runes;
     private readonly Lazy<FrozenDictionary<string, string>> championAliases;
     private readonly FrozenDictionary<string, string> englishItemNames;
+    private readonly FrozenDictionary<string, string> englishSummonerNames;
     private readonly FrozenDictionary<string, string> englishTreeNames;
     private readonly FrozenDictionary<string, string> resourceTokens;
 
@@ -67,6 +69,10 @@ public sealed class CatalogSnapshot
         var source = english ?? this;
         englishItemNames = NamesOf(source.Items.Entries, static item => (item.Id, item.Name));
         ListedItems = [.. Items.Entries.Where(IsListed)];
+        englishSummonerNames = NamesOf(
+            source.Summoners.Entries,
+            static spell => (spell.Id, spell.Name));
+        ListedSummoners = [.. Summoners.Entries.Where(IsListed)];
         englishTreeNames = NamesOf(
             source.Runes.Entries,
             static tree => (KeyOf(tree.Id), tree.Name));
@@ -93,7 +99,16 @@ public sealed class CatalogSnapshot
     /// <summary>The rune paths, by path id ("8000"); empty before 7.22.1 (UP 1).</summary>
     public CatalogResource<RuneTree> Runes { get; }
 
+    /// <summary>
+    /// Every summoner spell, placeholders included (see <see cref="ListedSummoners"/>).
+    /// </summary>
     public CatalogResource<SummonerSpell> Summoners { get; }
+
+    /// <summary>
+    /// The summoner spells of the encyclopedia, in the upstream order: placeholders left out,
+    /// Classic twins kept.
+    /// </summary>
+    public IReadOnlyList<SummonerSpell> ListedSummoners { get; }
 
     /// <summary>Whether a search folded the searchable entries yet.</summary>
     internal bool IsSearchFolded => search.IsValueCreated;
@@ -106,6 +121,16 @@ public sealed class CatalogSnapshot
     {
         ArgumentNullException.ThrowIfNull(item);
         return !ItemDebris.IsDebris(item, englishItemNames.GetValueOrDefault(item.Id));
+    }
+
+    /// <summary>
+    /// Whether the spell belongs to the encyclopedia: not a placeholder, its marker read from
+    /// its id and its en_US name, which Data Dragon translates in some languages.
+    /// </summary>
+    public bool IsListed(SummonerSpell spell)
+    {
+        ArgumentNullException.ThrowIfNull(spell);
+        return !SummonerDebris.IsDebris(spell, englishSummonerNames.GetValueOrDefault(spell.Id));
     }
 
     /// <summary>A rune of any path, by rune id.</summary>
@@ -171,9 +196,9 @@ public sealed class CatalogSnapshot
 
     /// <summary>
     /// The page this catalog gives the entity a path of another version names, or
-    /// <see langword="null"/> when it has none: absent, or debris (UP 10). A champion is found
-    /// as its page segment is (<see cref="FindChampion"/>): Data Dragon changed the case of
-    /// some ids over the years.
+    /// <see langword="null"/> when it has none: absent, or debris (UP 10, placeholder spells).
+    /// A champion is found as its page segment is (<see cref="FindChampion"/>): Data Dragon
+    /// changed the case of some ids over the years.
     /// </summary>
     public CanonicalPath? PageOf(CanonicalPath path)
     {
@@ -187,7 +212,9 @@ public sealed class CatalogSnapshot
                 ? PathOf(item)
                 : null,
             ResourceType.Runes => Runes.Find(path.Id) is { } tree ? PathOf(tree) : null,
-            ResourceType.Summoners => Summoners.Find(path.Id) is { } spell ? PathOf(spell) : null,
+            ResourceType.Summoners => Summoners.Find(path.Id) is { } spell && IsListed(spell)
+                ? PathOf(spell)
+                : null,
             _ => null,
         };
     }
