@@ -13,7 +13,7 @@
 #
 # Every image this file names is pinned by digest, its tag kept for the reader: a moved tag
 # never changes what is built. Dependabot bumps both (tools/ci/README.md, base images).
-FROM nginx:1.31-alpine@sha256:df221db836e1754089190208cee7eeda94f233197056426eda74a43ab1abeac2 AS runtime
+FROM nginx:1.31-alpine@sha256:892bb2152464f0c5d8972593a5f5afaf8054552580b699d95f8ff4af08c2d33d AS runtime
 ARG APP_REVISION=unknown
 LABEL org.opencontainers.image.title="lodb-nginx" \
       org.opencontainers.image.source="https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal" \
