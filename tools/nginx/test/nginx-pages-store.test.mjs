@@ -1,9 +1,10 @@
 // Boots the built nginx image in front of the stub's page store (lib/upstream-stub.conf) and
 // checks lot 3 of ADR 0011: a past patch's page comes from the store, then from the cache, with
 // its own headers and none of S3's; every failure of the store, a query and a path a pass never
-// writes reach the SSR server, which the store never sees; the rate holds across both. Switched
-// off, nginx never asks the store; with a store whose name does not resolve, or whose
-// certificate no authority signed, it starts and falls back. Needs Docker and the image's tag in
+// writes reach the SSR server, which the store never sees; the rate holds across both; a bundle
+// the SSR server no longer has comes from the store, under the same rate. Switched off, nginx
+// never asks the store; with a store whose name does not resolve, or whose certificate no
+// authority signed, it starts and falls back. Needs Docker and the image's tag in
 // LODB_NGINX_IMAGE (tools/nginx/README.md); skipped without it.
 import assert from 'node:assert/strict';
 import { after, before, describe, test } from 'node:test';
@@ -66,6 +67,15 @@ const STORED_HEADERS = {
 const CLIENT_HEADERS = { cookie: 'lod_prefs=loc=fr', authorization: 'Bearer stolen',
   'x-amz-security-token': 'forged', traceparent:
   '00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01' };
+// Bundles (lib/upstream-stub.conf): one the SSR server no longer has and the store keeps, one
+// neither has (the store answers 403), one only the SSR server has, and a name no pass writes,
+// which nginx resolves to the first one's.
+const PRUNED_BUNDLE = '/build/old-ABCD1234.js';
+const GONE_BUNDLE = '/build/gone-ABCD1234.js';
+const CURRENT_BUNDLE = '/build/main-ABCD1234.js';
+const DOTTED_BUNDLE = '/build/media/../old-ABCD1234.js';
+const STORED_BUNDLE = { body: 'stored bundle\n', type: 'text/javascript',
+  cacheControl: 'public, max-age=31536000, immutable', policy: "default-src 'none'; sandbox" };
 // The store's read timeout (snippets/pages-store/request.conf) is 3 s; a fallback that waited
 // on the SSR server's 30 s would take this long at least.
 const SILENT_STORE_LIMIT_MS = 10_000;
@@ -194,6 +204,59 @@ describe('nginx image in front of the page store',
           [`GET ${OBJECTS}/de/15.3.1/champions`]);
       });
 
+    test('looks a bundle up in the store only when the SSR server has no such name', async () => {
+      const visitor = aClient();
+      const before = await stack.storeRequests();
+      const missed = await get(DOTTED_BUNDLE, visitor);
+      const fetched = await get(PRUNED_BUNDLE, visitor);
+      const kept = await get(PRUNED_BUNDLE, { ...visitor, host: 'test.example.com' });
+      const gone = [await get(GONE_BUNDLE, visitor), await get(GONE_BUNDLE, visitor)];
+
+      assert.equal(missed.status, 404);
+      assert.deepEqual([fetched, kept].map((answer) => answer.headers['x-cache-status']),
+        ['MISS', 'HIT']);
+      for (const answer of [fetched, kept]) {
+        assert.equal(answer.status, 200);
+        assert.equal(answer.body.toString(), STORED_BUNDLE.body);
+        assert.equal(answer.headers['content-type'], STORED_BUNDLE.type);
+        assert.equal(answer.headers['cache-control'], STORED_BUNDLE.cacheControl);
+        assert.deepEqual(storeHeadersOf(answer), []);
+      }
+      for (const answer of gone) {
+        assert.equal(answer.status, 404);
+        assert.equal(answer.headers['x-cache-status'], 'MISS');
+        assert.ok(!answer.body.toString().includes('AccessDenied'));
+      }
+      for (const answer of [missed, fetched, ...gone]) {
+        assert.equal(answer.headers['content-security-policy'], STORED_BUNDLE.policy);
+        assert.equal(answer.headers['x-content-type-options'], 'nosniff');
+      }
+      assert.equal((await get(CURRENT_BUNDLE)).body.toString(), 'bundle\n');
+      assert.deepEqual((await stack.storeRequests()).slice(before.length),
+        [PRUNED_BUNDLE, GONE_BUNDLE, GONE_BUNDLE].map((path) => `GET /lodb-pages${path}`));
+    });
+
+    test("holds a client to the pages' rate on the store's bundles, its misses included",
+      async () => {
+        const visitor = aClient();
+        const before = await stack.storeRequests();
+        // The SSR server's 404s and the hits of the bundles' cache never count.
+        await get(CURRENT_BUNDLE, visitor);
+        await get(DOTTED_BUNDLE, visitor);
+        const missing = [];
+        for (let request = 0; request < PAGES_BEFORE_REFUSAL; request += 1) {
+          missing.push((await get(GONE_BUNDLE, visitor)).status);
+        }
+        const refused = await get(GONE_BUNDLE, visitor);
+
+        assert.deepEqual(missing, Array(PAGES_BEFORE_REFUSAL).fill(404));
+        assert.equal(refused.status, 429);
+        assert.equal(refused.headers['retry-after'], '10');
+        assert.equal(refused.headers['cache-control'], 'no-store');
+        assert.deepEqual((await stack.storeRequests()).slice(before.length),
+          Array(PAGES_BEFORE_REFUSAL).fill(`GET /lodb-pages${GONE_BUNDLE}`));
+      });
+
     test("holds a client to the pages' rate on both ways, apart from the store's own 429",
       async () => {
         const visitor = aClient();
@@ -233,6 +296,14 @@ describe('nginx image with the page store switched off',
         assert.deepEqual(statuses, [200, 200]);
         assert.equal(kept.body.toString(), RENDERED.body);
         assert.equal(kept.headers['x-lodb-source'], 'cache');
+        assert.deepEqual(await stack.storeRequests(), []);
+      });
+
+    test('answers 404 for a bundle the SSR server no longer has, never asking the store',
+      async () => {
+        const gone = await send(stack.port, PRUNED_BUNDLE);
+        assert.equal(gone.status, 404);
+        assert.equal(gone.headers['content-security-policy'], STORED_BUNDLE.policy);
         assert.deepEqual(await stack.storeRequests(), []);
       });
   });
