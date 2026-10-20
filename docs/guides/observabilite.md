@@ -120,6 +120,10 @@ container:lodb-prod-php-1
 # retrouve les lignes de l'API pour cette page
 stack:lodb-prod (service:web-ssr OR service:api) _time:1h "4bf92f3577b34da6a3ce929d0e0e4736"
 
+# La facture Scaleway des panneaux d'administration : lectures réussies et échouées
+# (une ligne par lecture, au plus une par heure ; un échec réessaie 5 minutes après)
+stack:lodb-prod service:api _time:1d ("admin.scaleway_bill.read" OR "admin.scaleway_bill.unavailable")
+
 # Violations de la CSP signalées par les navigateurs (une ligne par minute), et scripts
 # inline que le SSR a laissés hors de la politique d'une page
 stack:lodb-prod _time:1d ("web.csp.violated" OR "ssr.csp.unexpected_scripts")

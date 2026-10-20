@@ -20,6 +20,11 @@
       Include="../fixtures/v1/**"
       LinkBase="fixtures/v1"
       CopyToOutputDirectory="PreserveNewest" />
+    <!-- A real answer of Scaleway's billing API, its ids and names replaced by fakes. -->
+    <None
+      Include="../fixtures/scaleway/*"
+      LinkBase="fixtures/scaleway"
+      CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

@@ -187,5 +187,7 @@ export type { ResumeAdminPrerenderPass$Params as ResumeAdminPrerenderPass$Params
 export { resumeAdminPrerenderPass as resumeAdminPrerenderPass } from './fn/admin-prerender/resume-admin-prerender-pass';
 export type { CancelAdminPrerenderPass$Params as CancelAdminPrerenderPass$Params } from './fn/admin-prerender/cancel-admin-prerender-pass';
 export { cancelAdminPrerenderPass as cancelAdminPrerenderPass } from './fn/admin-prerender/cancel-admin-prerender-pass';
+export type { ReadAdminScalewayBill$Params as ReadAdminScalewayBill$Params } from './fn/admin-scaleway/read-admin-scaleway-bill';
+export { readAdminScalewayBill as readAdminScalewayBill } from './fn/admin-scaleway/read-admin-scaleway-bill';
 export type { PublishClientPolicy$Params as PublishClientPolicy$Params } from './fn/admin-client-policy/publish-client-policy';
 export { publishClientPolicy as publishClientPolicy } from './fn/admin-client-policy/publish-client-policy';

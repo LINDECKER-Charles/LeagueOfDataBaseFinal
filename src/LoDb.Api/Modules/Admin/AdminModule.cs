@@ -9,6 +9,7 @@ using LoDb.Api.Modules.Admin.Mfa;
 using LoDb.Api.Modules.Admin.Monitoring;
 using LoDb.Api.Modules.Admin.Prerender;
 using LoDb.Api.Modules.Admin.Prerender.Http;
+using LoDb.Api.Modules.Admin.Scaleway;
 using LoDb.Api.Modules.Admin.Storage;
 using LoDb.Api.Modules.Admin.Users;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -19,7 +20,8 @@ namespace LoDb.Api.Modules.Admin;
 /// <summary>
 /// Admin module: the second-factor enrollment of the administrators, the moderation of
 /// accounts, builds, contact messages and API keys, the donations, the monitoring, the
-/// storage report, the journal of the off-host backups and the pre-rendering of the catalogue.
+/// storage report, the journal of the off-host backups, the pre-rendering of the catalogue and
+/// the Scaleway bill of both.
 /// </summary>
 /// <remarks>
 /// Program.cs calls both methods from the start, so the module's owner fills this file
@@ -60,6 +62,8 @@ internal static class AdminModule
         // and the command line then do nothing, and the panel says so.
         services.AddAdminPrerender(configuration);
         services.AddAdminPrerenderHttp(configuration);
+        // Off until its read-only key is there: the panels then say it is not configured.
+        services.AddAdminScalewayBilling(configuration);
         return services.AddAdminReports();
     }
 
@@ -95,6 +99,7 @@ internal static class AdminModule
         PrerenderReportEndpoint.Map(prerender);
         PrerenderStartEndpoint.Map(prerender);
         PrerenderPassEndpoints.Map(prerender);
+        ScalewayBillEndpoint.Map(Admin(endpoints, "/scaleway", AdminRoutes.ScalewayTag));
         return endpoints;
     }
 

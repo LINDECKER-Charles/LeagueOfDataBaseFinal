@@ -26,4 +26,5 @@ export { AdminMonitoringService } from './services/admin-monitoring.service';
 export { AdminStorageService } from './services/admin-storage.service';
 export { AdminBackupsService } from './services/admin-backups.service';
 export { AdminPrerenderService } from './services/admin-prerender.service';
+export { AdminScalewayService } from './services/admin-scaleway.service';
 export { AdminClientPolicyService } from './services/admin-client-policy.service';
