@@ -17,7 +17,7 @@ namespace LoDb.Infrastructure.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.12")
+                .HasAnnotation("ProductVersion", "10.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -1281,6 +1281,213 @@ namespace LoDb.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("LoDb.Infrastructure.Persistence.Prerender.PrerenderBuild", b =>
+                {
+                    b.Property<string>("Hash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character(64)")
+                        .HasColumnName("hash")
+                        .IsFixedLength();
+
+                    b.Property<DateTimeOffset>("StoredAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("stored_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.HasKey("Hash")
+                        .HasName("pk_prerender_build");
+
+                    b.ToTable("prerender_build", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_prerender_build_hash", "hash ~ '^[0-9a-f]{64}$'");
+                        });
+                });
+
+            modelBuilder.Entity("LoDb.Infrastructure.Persistence.Prerender.PrerenderPass", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("ActiveSeconds")
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L)
+                        .HasColumnName("active_seconds");
+
+                    b.Property<int?>("AuthorId")
+                        .HasColumnType("integer")
+                        .HasColumnName("author_id");
+
+                    b.Property<long>("BytesWritten")
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L)
+                        .HasColumnName("bytes_written");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<int>("Epoch")
+                        .HasColumnType("integer")
+                        .HasColumnName("epoch");
+
+                    b.Property<DateTimeOffset?>("FinishedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("finished_at");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active")
+                        .HasComputedColumnSql("state IN ('running', 'paused')", true);
+
+                    b.Property<long>("PagesFailed")
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L)
+                        .HasColumnName("pages_failed");
+
+                    b.Property<long>("PagesSkipped")
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L)
+                        .HasColumnName("pages_skipped");
+
+                    b.Property<long>("PagesTotal")
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L)
+                        .HasColumnName("pages_total");
+
+                    b.Property<long>("PagesWritten")
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L)
+                        .HasColumnName("pages_written");
+
+                    b.Property<DateTimeOffset?>("RunningSince")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("running_since");
+
+                    b.Property<string>("Scope")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("scope")
+                        .HasDefaultValueSql("'{}'::jsonb");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("state");
+
+                    b.HasKey("Id")
+                        .HasName("pk_prerender_pass");
+
+                    b.HasIndex("CreatedAt")
+                        .HasDatabaseName("ix_prerender_pass_created_at");
+
+                    b.HasIndex("IsActive")
+                        .IsUnique()
+                        .HasDatabaseName("ux_prerender_pass_active")
+                        .HasFilter("is_active");
+
+                    b.ToTable("prerender_pass", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_prerender_pass_counters", "pages_total >= 0 AND pages_written >= 0 AND pages_skipped >= 0 AND pages_failed >= 0 AND bytes_written >= 0 AND active_seconds >= 0");
+
+                            t.HasCheckConstraint("ck_prerender_pass_epoch", "epoch > 0");
+
+                            t.HasCheckConstraint("ck_prerender_pass_finished", "(finished_at IS NOT NULL) = (state IN ('completed', 'cancelled'))");
+
+                            t.HasCheckConstraint("ck_prerender_pass_running", "(running_since IS NOT NULL) = (state = 'running')");
+
+                            t.HasCheckConstraint("ck_prerender_pass_scope", "jsonb_typeof(scope) = 'object'");
+
+                            t.HasCheckConstraint("ck_prerender_pass_state", "state IN ('running', 'paused', 'completed', 'cancelled')");
+                        });
+                });
+
+            modelBuilder.Entity("LoDb.Infrastructure.Persistence.Prerender.PrerenderUnit", b =>
+                {
+                    b.Property<long>("PassId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("pass_id");
+
+                    b.Property<string>("Version")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("version");
+
+                    b.Property<string>("Locale")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("locale");
+
+                    b.Property<long>("BytesWritten")
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L)
+                        .HasColumnName("bytes_written");
+
+                    b.Property<int>("Cursor")
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("cursor");
+
+                    b.Property<int>("PagesFailed")
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("pages_failed");
+
+                    b.Property<int>("PagesSkipped")
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("pages_skipped");
+
+                    b.Property<int>("PagesTotal")
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("pages_total");
+
+                    b.Property<int>("PagesWritten")
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("pages_written");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("priority");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("state");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.HasKey("PassId", "Version", "Locale")
+                        .HasName("pk_prerender_unit");
+
+                    b.HasIndex("PassId", "State", "Priority")
+                        .HasDatabaseName("ix_prerender_unit_next");
+
+                    b.ToTable("prerender_unit", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_prerender_unit_counters", "pages_total >= 0 AND pages_written >= 0 AND pages_skipped >= 0 AND pages_failed >= 0 AND bytes_written >= 0 AND cursor >= 0");
+
+                            t.HasCheckConstraint("ck_prerender_unit_state", "state IN ('pending', 'running', 'completed', 'failed')");
+                        });
+                });
+
             modelBuilder.Entity("LoDb.Infrastructure.Persistence.PublicApi.ApiCreditGrant", b =>
                 {
                     b.Property<long>("Id")
@@ -1636,6 +1843,18 @@ namespace LoDb.Infrastructure.Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("LoDb.Infrastructure.Persistence.Prerender.PrerenderUnit", b =>
+                {
+                    b.HasOne("LoDb.Infrastructure.Persistence.Prerender.PrerenderPass", "Pass")
+                        .WithMany("Units")
+                        .HasForeignKey("PassId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_prerender_unit_prerender_pass_pass_id");
+
+                    b.Navigation("Pass");
+                });
+
             modelBuilder.Entity("LoDb.Infrastructure.Persistence.PublicApi.ApiCreditGrant", b =>
                 {
                     b.HasOne("LoDb.Infrastructure.Persistence.PublicApi.ApiKey", "ApiKey")
@@ -1697,6 +1916,11 @@ namespace LoDb.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_identity_user_tokens_users_user_id");
+                });
+
+            modelBuilder.Entity("LoDb.Infrastructure.Persistence.Prerender.PrerenderPass", b =>
+                {
+                    b.Navigation("Units");
                 });
 #pragma warning restore 612, 618
         }
