@@ -107,6 +107,12 @@ Logs et requêtes LogsQL : [`observabilite.md`](observabilite.md) et [`logging.m
 est en retard quand `time() - lodb_job_last_success_seconds > 3 * lodb_job_period_seconds`
 (`tools/cutover/monitoring/metrics.promql`, requête `jobs-late`).
 
+Un SSR injoignable (`LoDb__Prerender__SsrBaseUrl` faux, conteneur arrêté, réseau cassé)
+n'incrémente pas `lodb_prerender_pages_total` : la passe retente la page toutes les 30 s. Les
+journaux le disent, une fois par panne : `prerender.ssr.unreachable` (Warning, avec l'adresse
+du SSR) quand elle commence, `prerender.ssr.reachable` (Information, durée de la panne) quand
+le SSR répond de nouveau. Un début de panne sans fin signale une passe bloquée.
+
 ## API — métriques du framework
 
 Noms à confirmer au premier scrape d'un hôte (`.NET 10`, OpenTelemetry 1.x) :
