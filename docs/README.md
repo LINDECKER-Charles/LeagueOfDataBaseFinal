@@ -78,6 +78,7 @@ en privé ([`../SECURITY.md`](../SECURITY.md)).
 | Doc | Contenu |
 |---|---|
 | [seo-indexabilite.md](produit/seo-indexabilite.md) | État des lieux et feuille de route SEO technique |
+| [pre-rendu-catalogue-cdn.md](produit/pre-rendu-catalogue-cdn.md) | Pages des anciens patchs calculées une fois, rangées dans un stockage objet et servies derrière un CDN : constat, décisions, lots |
 
 ## `changelog/` — journal technique
 
