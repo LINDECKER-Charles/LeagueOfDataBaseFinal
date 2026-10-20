@@ -14,12 +14,14 @@ namespace LoDb.Api.Modules.Admin.Prerender.Pages;
 /// <remarks>
 /// Paths do not depend on the language, so the en_US catalog lists them for all 21 locales.
 /// The datasets of every version are stored ahead of the pass; one that is not gets queued
-/// for ingestion as a task of the instance, and the unit waits for it.
+/// for ingestion as a task of the instance, and the unit waits for it. A command line, whose
+/// host runs no worker, ingests it first and waits (<see cref="IngestAsync"/>).
 /// </remarks>
 internal sealed class CatalogPages(ICatalogReader reader, IOptions<CatalogOptions> options)
     : IPrerenderCatalog
 {
     private static readonly ColdDemand Demand = ColdDemand.Queued.By(ColdCaller.Internal);
+    private static readonly ColdDemand Waited = ColdDemand.Synchronous.By(ColdCaller.Internal);
 
     // How long the SSR reuses its copy of /api/meta, which names the latest version: the
     // default of LODB_API_META_TTL_SECONDS.
@@ -60,6 +62,12 @@ internal sealed class CatalogPages(ICatalogReader reader, IOptions<CatalogOption
         return load.IsReady
             ? VersionPageList.Ready([.. VersionPages.Of(load.Catalog)])
             : VersionPageList.Without(load.Status);
+    }
+
+    public async Task IngestAsync(PatchVersion version, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(version);
+        await reader.GetAsync(version, DdragonLanguage.EnUs, Waited, cancellationToken);
     }
 
     // The version the last promotion replaced, the newest ready one below the latest (or any

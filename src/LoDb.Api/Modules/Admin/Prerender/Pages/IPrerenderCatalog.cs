@@ -26,4 +26,14 @@ internal interface IPrerenderCatalog
     /// then every entity they show.
     /// </summary>
     Task<VersionPageList> PagesAsync(PatchVersion version, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Stores the datasets of <paramref name="version"/> now, waiting for their ingestion as a
+    /// command line does. <see cref="PagesAsync"/> only queues it, for the worker of the
+    /// instance: a command's host starts none, and its queue would never be read.
+    /// </summary>
+    /// <exception cref="LoDb.Ingestion.Egress.Errors.EgressException">
+    /// Data Dragon failed: nothing is stored.
+    /// </exception>
+    Task IngestAsync(PatchVersion version, CancellationToken cancellationToken);
 }

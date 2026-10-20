@@ -33,6 +33,9 @@ internal sealed class FakeCatalog : IPrerenderCatalog
     /// </summary>
     public ConcurrentDictionary<PatchVersion, int> PendingReads { get; } = [];
 
+    /// <summary>The versions whose ingestion was waited for, in order.</summary>
+    public ConcurrentQueue<PatchVersion> Ingested { get; } = [];
+
     public Task<IReadOnlyList<PatchVersion>> PinnedVersionsAsync(
         CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyList<PatchVersion>>([.. Pinned]);
@@ -55,6 +58,12 @@ internal sealed class FakeCatalog : IPrerenderCatalog
         }
 
         return Task.FromResult(Pages.GetValueOrDefault(version) ?? VersionPageList.Ready(SixPages));
+    }
+
+    public Task IngestAsync(PatchVersion version, CancellationToken cancellationToken)
+    {
+        Ingested.Enqueue(version);
+        return Task.CompletedTask;
     }
 
     public static VersionPageList Without(CatalogLoadStatus status) =>

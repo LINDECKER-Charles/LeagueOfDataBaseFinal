@@ -1,9 +1,12 @@
 using LoDb.Api.Modules.Admin.Prerender.Options;
+using LoDb.Api.Modules.Admin.Prerender.Pages;
 using LoDb.Api.Modules.Admin.Prerender.Passes;
 using LoDb.Api.Modules.Admin.Prerender.Writing;
+using LoDb.Domain.Versions;
 using LoDb.Infrastructure.Locks;
 using LoDb.Infrastructure.Persistence;
 using LoDb.Infrastructure.Persistence.Prerender;
+using LoDb.Ingestion.Egress.Errors;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -23,8 +26,9 @@ namespace LoDb.Api.Cli.Prerender;
 /// another pass is active or being written.
 /// </para>
 /// <para>
-/// While the unit waits (its catalog queued for ingestion, its version just promoted away), the
-/// command tries again, <c>--wait</c> at most (five minutes by default). A pass it leaves
+/// The command's host starts no worker: the unit's catalog is ingested first, waited for, as a
+/// command line reads, rather than queued for a worker that never comes. While the unit waits
+/// (its catalog not stored in time, its version just promoted away), the command tries again, <c>--wait</c> at most (five minutes by default). A pass it leaves
 /// unfinished, waiting or paused, it cancels: no pass of its own stays active behind it.
 /// </para>
 /// <para>
@@ -88,6 +92,7 @@ internal sealed class PrerenderUnitCommand(IServiceProvider services) : ICliComm
             return CliExitCodes.Failure;
         }
 
+        await IngestAsync(options.Version, cancellationToken);
         var served = services.GetRequiredService<IOptions<PrerenderOptions>>().Value.ServedEpoch;
         var launch = new PassLaunch { Epoch = options.Epoch ?? served, Scope = options.Scope };
         if (await services.GetRequiredService<PassLauncher>().StartAsync(launch, cancellationToken)
@@ -108,6 +113,21 @@ internal sealed class PrerenderUnitCommand(IServiceProvider services) : ICliComm
         }
 
         return await ReportAsync(passId, cancellationToken);
+    }
+
+    // A Data Dragon failure is said, and the unit then waits for a catalog that does not come.
+    private async Task IngestAsync(PatchVersion version, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await services.GetRequiredService<IPrerenderCatalog>()
+                .IngestAsync(version, cancellationToken);
+        }
+        catch (EgressException exception)
+        {
+            await Console.Error.WriteLineAsync(
+                $"Data Dragon failed for {version.Value}: {exception.Message}");
+        }
     }
 
     // Written again while its unit waits, within the wait.

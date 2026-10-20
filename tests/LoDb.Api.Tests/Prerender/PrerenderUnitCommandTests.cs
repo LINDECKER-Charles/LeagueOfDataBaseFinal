@@ -33,8 +33,8 @@ public sealed class PrerenderUnitCommandTests(PostgresContainerFixture postgres)
 
         var scope = options.Scope;
         Assert.Equal(
-            (Version, Version, UiLocale.En, (ResourceType?)null),
-            (scope.Oldest, scope.Newest, scope.Locale, scope.PageType));
+            (Version, Version, Version, UiLocale.En, (ResourceType?)null),
+            (options.Version, scope.Oldest, scope.Newest, scope.Locale, scope.PageType));
         Assert.Null(options.Epoch);
         Assert.Equal(PrerenderUnitArguments.DefaultWait, options.Wait);
     }
@@ -82,6 +82,17 @@ public sealed class PrerenderUnitCommandTests(PostgresContainerFixture postgres)
         await using var db = harness.Database.CreateContext();
         var pass = await db.PrerenderPasses.SingleAsync(Token);
         Assert.Equal((PrerenderPassState.Completed, 2L), (pass.State, pass.PagesWritten));
+    }
+
+    [Fact]
+    public async Task CommandIngestsTheCatalogThatItsHostWouldOnlyQueue()
+    {
+        await using var harness = await StartAsync();
+        var command = new PrerenderUnitCommand(harness.Services);
+
+        await command.ExecuteAsync(["--version", Version.Value, "--type", "runes"], Token);
+
+        Assert.Equal([Version], harness.Catalog.Ingested);
     }
 
     [Fact]

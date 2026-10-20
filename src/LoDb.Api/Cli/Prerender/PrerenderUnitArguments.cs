@@ -41,6 +41,9 @@ internal sealed record PrerenderUnitArguments
         EpochOption,
         WaitOption);
 
+    /// <summary>The older patch whose unit is written.</summary>
+    public required PatchVersion Version { get; init; }
+
     /// <summary>The one (version, locale) to render, and the type of page if only one.</summary>
     public required PassScope Scope { get; init; }
 
@@ -107,6 +110,7 @@ internal sealed record PrerenderUnitArguments
             : UiLocales.Fallback;
         return new PrerenderUnitArguments
         {
+            Version = version,
             Scope = PassScope.Of(version) with
             {
                 Locale = locale,
