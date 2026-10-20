@@ -1,0 +1,134 @@
+@let held = storage();
+<lodb-admin-card
+  [heading]="'admin.prerender.storage.title' | adminText"
+  [chip]="'admin.prerender.storage.chip' | adminText: { cost: cost(held.monthlyCost) }"
+>
+  <div class="hx-table-scroll">
+    <table class="hx-table hx-table--flush admin-tbl">
+      <thead>
+        <tr>
+          <th scope="col">{{ 'admin.prerender.storage.columns.epoch' | adminText }}</th>
+          <th scope="col">{{ 'admin.prerender.storage.columns.state' | adminText }}</th>
+          <th scope="col" class="num">
+            {{ 'admin.prerender.storage.columns.pages' | adminText }}
+          </th>
+          <th scope="col" class="num">
+            {{ 'admin.prerender.storage.columns.volume' | adminText }}
+          </th>
+          <th scope="col" class="num">
+            {{ 'admin.prerender.storage.columns.cost' | adminText }}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (epoch of held.epochs; track epoch.epoch) {
+          <tr [attr.data-epoch]="epoch.epoch">
+            <td>{{ 'admin.prerender.storage.epoch' | adminText: { epoch: epoch.epoch } }}</td>
+            <td>
+              <span class="badges">
+                <span [lodbBadge]="tone(epoch)">
+                  {{ 'admin.prerender.states.' + epoch.state | adminText }}
+                </span>
+                @if (epoch.isWriting && epoch.state !== 'writing') {
+                  <span lodbBadge="warn">{{ 'admin.prerender.states.writing' | adminText }}</span>
+                }
+              </span>
+            </td>
+            <td class="num">{{ epoch.pages | figure }}</td>
+            <td class="num whitespace-nowrap">{{ epoch.bytes | decimalBytes }}</td>
+            <td class="num whitespace-nowrap">{{ cost(epoch.monthlyCost) }}</td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5" class="t-empty">{{ 'admin.prerender.storage.empty' | adminText }}</td>
+          </tr>
+        }
+        <tr data-builds>
+          <td>{{ 'admin.prerender.storage.builds' | adminText }}</td>
+          <td class="text-text-dim">
+            {{
+              'admin.prerender.storage.builds_sub'
+                | adminText: { count: held.builds.count, files: (held.builds.files | figure) }
+            }}
+          </td>
+          <td class="num">—</td>
+          <td class="num whitespace-nowrap">{{ held.builds.bytes | decimalBytes }}</td>
+          <td class="num whitespace-nowrap">{{ cost(held.builds.monthlyCost) }}</td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr data-total>
+          <th scope="row">{{ 'admin.prerender.storage.total' | adminText }}</th>
+          <td class="text-text-dim">{{ 'admin.prerender.storage.total_sub' | adminText }}</td>
+          <td class="num">{{ held.pages | figure }}</td>
+          <td class="num whitespace-nowrap">{{ held.bytes | decimalBytes }}</td>
+          <td class="num whitespace-nowrap">{{ cost(held.monthlyCost) }}</td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+  <p class="mt-4 text-[0.8rem] text-text-dim" data-prices>
+    {{ 'admin.prerender.storage.prices' | adminText: prices() }}
+  </p>
+  @if (held.excludesEgress) {
+    <p class="mt-1.5 text-[0.8rem] text-text-dim" data-egress>
+      {{ 'admin.prerender.storage.egress' | adminText }}
+    </p>
+  }
+  <p class="mt-1.5 text-[0.8rem] text-text-dim" data-counters>
+    {{ 'admin.prerender.storage.counters' | adminText }}
+  </p>
+  @if (hasRetired()) {
+    <p class="mt-1.5 text-[0.8rem] text-text-dim" data-retired>
+      {{ 'admin.prerender.storage.retired' | adminText }}
+    </p>
+  }
+</lodb-admin-card>
+
+<lodb-admin-card
+  [heading]="'admin.prerender.storage.versions.title' | adminText"
+  [chip]="
+    'admin.prerender.storage.versions.chip' | adminText: { count: held.servedVersions.length }
+  "
+>
+  <div class="hx-table-scroll">
+    <table class="hx-table hx-table--flush admin-tbl">
+      <thead>
+        <tr>
+          <th scope="col">{{ 'admin.prerender.storage.columns.version' | adminText }}</th>
+          <th scope="col" class="num">
+            {{ 'admin.prerender.storage.columns.locales' | adminText }}
+          </th>
+          <th scope="col" class="num">
+            {{ 'admin.prerender.storage.columns.pages' | adminText }}
+          </th>
+          <th scope="col" class="num">
+            {{ 'admin.prerender.storage.columns.volume' | adminText }}
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (version of versions.shown(); track version.version) {
+          <tr [attr.data-version]="version.version">
+            <td>{{ version.version }}</td>
+            <td class="num">
+              {{
+                'admin.prerender.storage.versions.locales'
+                  | adminText: { count: version.locales, all: allLocales }
+              }}
+            </td>
+            <td class="num">{{ version.pages | figure }}</td>
+            <td class="num whitespace-nowrap">{{ version.bytes | decimalBytes }}</td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="4" class="t-empty">
+              {{ 'admin.prerender.storage.versions.empty' | adminText }}
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <lodb-fold-toggle [folded]="versions.folded()" [(open)]="versions.open" />
+</lodb-admin-card>
