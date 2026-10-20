@@ -132,9 +132,11 @@ describe('nginx image', { skip: IMAGE ? false : 'LODB_NGINX_IMAGE is not set' },
     assert.equal(moved.headers.location, '/api/');
   });
 
-  test("keeps the edge's header from the upstreams and out of every answer", async () => {
+  test("keeps the edge's header and a client's prerender marker from the upstreams", async () => {
     const answer = await get('/api/edge-header');
-    assert.equal(answer.body.toString(), '[]\n');
+    const page = await get('/en/prerender-header',
+      { forwardedFor: '203.0.113.4', headers: { 'x-lodb-prerender': '1' } });
+    assert.deepEqual([answer, page].map(({ body }) => body.toString()), ['[]\n', '[]\n']);
     assert.ok(!JSON.stringify(answer.headers).includes(EDGE_SECRET));
   });
 

@@ -3,7 +3,7 @@
 Checks of the built nginx image (`docker/nginx/`): the rendered configuration passes
 `nginx -t`, nginx runs as its unprivileged user without any capability on a read-only root,
 the edge's header is required (`403` without it, `/healthz` aside) and never reaches the
-upstreams, and the bounds hold — rates per address with their `429` and `Retry-After`, body
+upstreams, nor does a client's prerender marker (`X-LoDb-Prerender`), and the bounds hold — rates per address with their `429` and `Retry-After`, body
 sizes, the paths nginx answers alone, the blobs and their policy, the page caches (one
 compressed copy for every client, the past patches' kept from their
 `LODB_ARCHIVE_CACHE_MIN_USES`-th request under a key without revision), the bundles' and
