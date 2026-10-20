@@ -427,21 +427,32 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   `application/manifest+json` (sinon ~1,7 s perdues en 4G lente). Un budget Lighthouse ne
   se relâche jamais ; Lighthouse en local est pessimiste (cache de transfert du SSR rangé
   sans le port).
-- **Pages des anciens patchs** (`location ~ "^/{locale}/[0-9]"`, `snippets/archive-cache.conf`) :
-  clé **sans révision**, préfixée par `LODB_ARCHIVE_EPOCH`. Elles survivent aux déploiements
-  et gardent jusqu'à un an le chrome, la CSP et les bundles du build qui les a rendues
-  (`s-maxage` de la classe `archived`, tant que la page est demandée avant son inactivité,
-  puis une dernière copie périmée servie pendant son rafraîchissement) : voulu. Monter l'epoch quand le chrome, la CSP ou le contrat `/api` changent de façon
-  visible, et après tout correctif de sécurité du front (procédure :
-  [`configuration.md`](../guides/configuration.md)). Gardées à la **2ᵉ** demande
-  (`LODB_ARCHIVE_CACHE_MIN_USES`, `2`) : `MISS`, `MISS`, puis `HIT` ; une spec qui attend un
-  `HIT` les demande trois fois. En deçà, chaque URL distincte tient quand même une clé
-  jusqu'à son inactivité, même une réponse non gardée (`301`, `503`) : la zone des clés borne
-  les URL qu'un balayage parcourt avant d'évincer, pas le disque. En local aussi, une page d'ancien patch survit à un rebuild : `down -v` ou monter
-  l'epoch. `archive-cache.conf` sert la copie périmée pendant le rafraîchissement
-  (`updating`) ; `page-cache.conf` **jamais** (elle primerait sur le
-  `stale-while-revalidate` du dernier patch). Les regex de location contenant `{` sont entre
-  guillemets, sinon nginx refuse sa configuration.
+- **Pages des anciens patchs** (`location ~ "^/{locale}/[0-9]"`,
+  `snippets/pages-store/pages.conf`, `snippets/archive-cache.conf`) : le cache chaud
+  `lodb_archive` d'abord, puis le stockage objet (ADR 0011), puis le SSR. Clé **sans
+  révision**, préfixée par les deux epochs (`LODB_ARCHIVE_EPOCH.LODB_ARCHIVE_SERVE_EPOCH`,
+  § « Catalogue pré-rendu » ci-dessous). Elles survivent aux déploiements et gardent jusqu'à
+  un an le chrome, la CSP et les bundles du build qui les a rendues (`s-maxage` d'un an de la
+  classe `archived`, tant que la page est demandée avant ses 90 jours d'inactivité, puis une
+  dernière copie périmée servie pendant son rafraîchissement) : voulu. Monter
+  `LODB_ARCHIVE_EPOCH` quand le chrome, la CSP ou le contrat `/api` changent de façon visible,
+  et après tout correctif de sécurité du front. Elle ne vide que le cache : une fois que nginx
+  lit le stockage (`LODB_PAGES_STORE_ENABLED=1`), la requête suivante y reprend la page d'avant,
+  chrome, CSP et bundles compris. Le changement passe alors par une passe sur une epoch neuve
+  et la bascule de `LODB_ARCHIVE_SERVE_EPOCH`, tout de suite pour un correctif de sécurité
+  (procédure : [`configuration.md`](../guides/configuration.md), « Monter l'epoch des anciens
+  patchs »). Gardées dès la **1ʳᵉ** demande
+  (`LODB_ARCHIVE_CACHE_MIN_USES`, `1`) : `MISS`, puis `HIT`, la copie venant du stockage
+  plutôt que d'un rendu. Chacune des deux locations cherche la page dans le cache : une page
+  absente du stockage compte deux recherches par requête, à retenir avant de remonter le seuil
+  (à `2`, un rendu du SSR serait gardé à la 1ʳᵉ demande, une page du stockage à la 2ᵉ).
+  Au-dessus de `1`, chaque URL distincte tient une clé jusqu'à son inactivité, même une réponse
+  non gardée (`301`, `503`) : la zone des clés borne les URL qu'un balayage parcourt avant
+  d'évincer, pas le disque. En local aussi, une page d'ancien patch survit à un rebuild et au
+  vidage du stockage simulé : `down -v` ou monter l'epoch. `archive-cache.conf` sert la copie
+  périmée pendant le rafraîchissement (`updating`) ; `page-cache.conf` **jamais** (elle
+  primerait sur le `stale-while-revalidate` du dernier patch). Les regex de location contenant
+  `{` sont entre guillemets, sinon nginx refuse sa configuration.
 - **Bundles des builds précédents** : `web-ssr` copie ses bundles hachés dans le volume
   `front-builds` (`LODB_FRONT_BUILDS_DIR`) sans réécrire l'existant, au démarrage puis
   **toutes les heures**, et rafraîchit leur date à chaque fois ; `/build/` sert ceux de
@@ -457,8 +468,13 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   500 : un rechargement en boucle se cherche là. Le volume est écrit par le SSR et survit aux
   déploiements : nginx sert `/build/` sous `default-src 'none'; sandbox` (un fichier ouvert
   directement n'exécute rien ; la politique est ignorée pour un script ou un style qu'une
-  page charge), et après une compromission du SSR on vide `front-builds` et `assets-cache`
-  ([`configuration.md`](../guides/configuration.md)).
+  page charge). Un bundle retiré du volume et du cache de nginx **revient du stockage**
+  (`@lodb_build_store`, sur la 404 du SSR) tant qu'il reste sous `build/`, qu'aucune règle de
+  cycle de vie n'efface et que la clé d'écriture ne supprime pas : un correctif de sécurité l'y
+  retire d'abord, avec la clé de l'opérateur, puis purge le cache. Après une compromission du
+  SSR, on vide `front-builds`, `build/` du stockage puis `assets-cache`, on oublie
+  `prerender_build` (en base, et dans l'API par un redémarrage) et on bascule sur une epoch
+  neuve ([`configuration.md`](../guides/configuration.md)).
 - SSR : `LODB_TRUST_PROXY_HEADERS` obligatoire derrière nginx, `LODB_ALLOWED_HOSTS` liste
   les hôtes acceptés ; `public/` ne contient ni `media/` ni script racine nommé comme un
   bundle (cache `immutable`). Ses métriques sont sur un second serveur HTTP, port 9464
@@ -505,6 +521,120 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   `assets/messages.js` (21 locales), ses couleurs et ses faces recopient `src/styles`
   (`tools/nginx/test/maintenance-sources.test.mjs` tient l'accord) : un jeton de thème changé
   côté site se recopie là, sinon le test échoue.
+
+## Catalogue pré-rendu et CDN (ADR 0011)
+
+Les pages des anciens patchs sont rendues une fois par la passe de l'API, rangées dans un
+stockage objet, puis lues par nginx
+([spécification](../produit/pre-rendu-catalogue-cdn.md),
+[ADR 0011](../reecriture/adr/0011-catalogue-pre-rendu-et-cdn.md)).
+
+- **Deux epochs du stockage, et un compteur du cache à côté.** L'epoch **servie**
+  (`LODB_ARCHIVE_SERVE_EPOCH`, le dossier `pages/<N>/` que nginx lit, transmise à l'API comme
+  `LoDb__Prerender__ServedEpoch` pour le panneau) ; l'epoch **d'écriture**, celle de la passe en
+  cours, en base ; et `LODB_ARCHIVE_EPOCH` (défaut `3`), qui ne numérote que les clés du cache
+  de nginx. La clé de `lodb_archive` porte les deux variables (`3.1|http://…`) : changer d'epoch
+  servie vide aussi le cache chaud, monter `LODB_ARCHIVE_EPOCH` ne change rien au stockage.
+  Monter la mauvaise laisse servir des copies périmées. nginx lit l'epoch servie au démarrage :
+  la bascule est une variable d'`ENV_*` et un redéploiement, aucun point d'accès ne la fait
+  (le panneau donne la consigne). L'epoch `0` est celle des sondes de `scaleway-bucket.sh
+  verifier`, jamais d'une passe ; la première passe de prod écrit l'epoch `1`, servie pendant
+  qu'elle se remplit.
+- **Repli vers le SSR, sans bruit.** Toute réponse du stockage autre qu'un objet (`403`, `404`,
+  `429`, `5xx`, connexion au-delà d'1 s, lecture au-delà de 3 s) renvoie à `@lodb_pinned_ssr`,
+  la voie épinglée d'avant, à l'identique ; le corps XML de Scaleway n'atteint jamais un client
+  (`proxy_intercept_errors on`). Une politique du bucket fautive ou une adresse du VPS changée
+  ne produit donc **aucune erreur** : seulement une part de `X-LoDb-Source: ssr` qui reste haute
+  après une passe complète, puis le retour des 503 du budget épinglé. La passe, elle, continue
+  d'écrire (sa clé ne dépend pas de l'adresse). Un `418` dans `pages.conf` n'est qu'une route
+  interne vers le SSR (chemin hors grammaire, query, méthode autre que `GET`/`HEAD`).
+- **Le 429 du stockage n'est pas celui de `limit_req`.** Scaleway freine en `429` ; la location
+  du stockage refuse donc ses propres dépassements en `limit_req_status 420`, rendus au client
+  en `429` avec `Retry-After` par `@lodb_rate_limited`, et un `429` du stockage mène au SSR.
+  `error_page` ne s'hérite pas : chaque location du stockage répète les siens, et
+  `recursive_error_pages on` laisse la location du SSR atteindre `@lodb_rate_limited` après une
+  première redirection. `limit_req` ne compte une requête qu'une fois, quelle que soit la
+  location qui la sert.
+- **En-tête de précalcul effacé côté public.** `X-LoDb-Prerender: 1` fait passer un rendu dans
+  la voie `prerender` du SSR (son budget, aucune limite par client, prioritaire sur la voie que
+  donne l'URL) et ouvre `/_lodb/build-files`. nginx le pose vide sur toute requête relayée
+  (`snippets/proxy-headers.conf`), comme `X-LoDb-Edge` : ne jamais retirer cette ligne. La passe
+  appelle le SSR en direct (`http://lodb-web-ssr:4000`), jamais à travers nginx, qui effacerait
+  l'en-tête, appliquerait `limit_req`, remplirait `lodb_archive` et compterait des vues. Un
+  `curl -H 'X-LoDb-Prerender: 1'` sur le port publié du SSR (18082) consomme le budget de la
+  passe. La voie n'écrit pas de ligne `http.request.served` par page, sauf sur une `5xx` :
+  voulu (4 millions de lignes sinon).
+- **Hôte public envoyé par la passe.** Chaque rendu part avec `Host` et `X-Forwarded-Host` =
+  `LoDb__Prerender__PublicHost` et `X-Forwarded-Proto: https`, comme nginx les pose ; le SSR
+  croit les deux derniers (`LODB_TRUST_PROXY_HEADERS`) et refuse en `400` tout `Host` hors de
+  `LODB_ALLOWED_HOSTS`, son propre nom (`lodb-web-ssr:4000`) compris. La canonique et
+  les `hreflang` en viennent : un hôte faux et chaque page stockée nomme le mauvais site, pour
+  un an. `test.league-of-data-base.com` au staging, `localhost` en local (canoniques en
+  `https://localhost/…`, voulu). La passe demande aussi `Accept-Encoding: gzip`, sans quoi le
+  SSR rend du HTML en clair qu'elle refuse d'écrire, et son client ne décompresse rien.
+- **En-têtes de la page en métadonnées, sous 2 Ko.** `Content-Type`, `Content-Encoding` et
+  `Cache-Control` sont des en-têtes de l'objet ; la CSP, la CSP en rapport seul,
+  `Reporting-Endpoints`, `Link` et `lodb-build` sont des `x-amz-meta-*`, 2 048 octets au plus
+  en tout (préfixes compris). Au-delà, l'API compte la page en échec, sans nouvel essai : une
+  CSP qui grossit (plus de scripts inline hachés) se voit en pages `failed`, jamais en en-tête
+  tronqué. `Vary` et `Content-Length` ne sont jamais stockés. nginx masque chaque `x-amz-*` par
+  son nom, jamais par motif (`snippets/pages-store/answer.conf`) : une métadonnée ajoutée par la
+  passe s'ajoute là, et se repose dans `archive-cache.conf`, sinon elle sort chez le client.
+  Une réponse du stockage, reconnue à sa métadonnée `lodb-build`, reçoit de nginx le type
+  `text/html`, la `Cache-Control` de la classe `archived` et, si son objet n'a pas de CSP, une
+  politique stricte : jamais aucune.
+- **Clé du stockage tirée d'une `map` stricte, jamais de l'URI brute.** `$lodb_store_page`
+  (`sites/site.conf`) se construit sur `$lodb_request_path`, le chemin tel qu'envoyé, par une
+  expression qui ne laisse passer que les 4 listes et les fiches d'une version, en `GET` ou
+  `HEAD`, sans query ; tout le reste va au SSR sans interroger le stockage. Un `proxy_pass` à
+  variable ne normalise pas l'URI : ni `$uri` ni `$request_uri` n'y entrent. Un nouveau type
+  de page de la grammaire (`src/LoDb.Domain/Paths`) s'ajoute aussi à cette `map`, sinon ses
+  pages restent servies par le SSR, sans erreur. Même règle pour `/build/`
+  (`$lodb_store_bundle`), cherché au stockage sur une `404` du SSR seulement.
+- **Rien du client ne part au stockage** : `proxy_pass_request_headers off` et
+  `proxy_pass_request_body off`, seuls `Host` (celui du stockage) et `Connection ""` partent
+  (`snippets/pages-store/request.conf`). Ne jamais y inclure `proxy-headers.conf` : un
+  `Authorization`, un cookie ou un `x-amz-*` du client atteindrait Scaleway. Le certificat est
+  vérifié sur le magasin de l'image (`proxy_ssl_verify`, profondeur `3` pour la racine
+  croisée) : la CSP d'une page vient de son objet, une réponse d'un tiers pourrait tout
+  exécuter sur l'origine du site.
+- **L'upstream du stockage** est dans `sites/site.conf`, gabarit (`nginx.conf` n'en est pas
+  un), avec `resolve` : nginx démarre même quand l'hôte ne se résout pas (CI, réseau coupé). Le
+  stockage est coupé par défaut (`LODB_PAGES_STORE_ENABLED=0`, `compose.yaml` et `Dockerfile`),
+  mais **allumé dans la pile locale** (`compose.override.yaml`), sur le stockage simulé
+  `pages-store` : moto, en mémoire, sans vérification de signature, vidé à chaque redémarrage
+  alors que `prerender_build` garde les builds pour copiés (sans effet en local, le SSR sert
+  encore leurs bundles). La limite mémoire de nginx sur un hôte (512 Mo) tient compte de la
+  zone de 64 Mo de clés : à mesurer avant de la baisser.
+- **Une liste rendue avant ses images n'est pas stockée.** Tant que les images d'une version
+  ne sont pas ingérées, une liste se rend avec des emplacements vides et la classe `transient`
+  (`inject-catalogue-list.ts`) : la passe la compte `skipped` et la page reste servie par le
+  SSR jusqu'à une passe suivante. Les fiches ne dépendent pas des images. En prod, les versions
+  épinglées sont ingérées en entier avant la passe ; en local, une première passe sur une
+  version neuve saute ses listes.
+- **`prerender unit`** (CLI de l'API) ouvre une passe à lui, refusée tant qu'une autre est
+  active, et l'annule s'il la laisse inachevée. Son hôte ne démarre aucune tâche de fond : il
+  ingère d'abord le catalogue de l'unité en l'attendant, sans quoi l'ingestion mise en file ne
+  partirait jamais. Une version qui vient de quitter le dernier rang attend encore quelques
+  minutes (cache des versions de l'API et du SSR), dans la limite de `--wait`. Une spec E2E qui attend `X-LoDb-Source: store`
+  retire d'abord la copie que nginx a pu garder d'un passage précédent
+  (`specs/prerender/stored-page.spec.ts`) : sinon `cache`.
+- **Au staging, les compteurs ne disent pas ce qui reste.** Les pages y expirent après 14 jours
+  (règle `expire-pages`) alors que les unités restent faites : ces pages retombent sans bruit
+  sur le SSR, et seule une nouvelle passe les remet. Une `401`, une `403` ou une `404` sur un
+  `PUT` est une erreur de configuration (clé tournée, politique sans l'application d'écriture,
+  bucket absent) : la passe se met en pause, la page n'est comptée nulle part. La sonde
+  `verifier` lit en IPv4 seulement (`curl -4`) : l'hôte joint aussi Scaleway en IPv6, d'où la
+  politique répond `403`.
+- **`/` jamais en cache au CDN** (lot 4) : sa `302` dépend d'`Accept-Language` et du cookie
+  `lod_prefs`, et Cloudflare ne distingue pas les réponses selon `Accept-Language`. La règle
+  « jamais en cache » (`/`, `/api/`, `/v1/`, `/webhooks/`, `/admin`, `/b/`, `/u/`, `/healthz`,
+  `/readyz`) se place **après** la règle des pages éligibles, pour l'emporter.
+- **La fermeture de l'origine se coupe avant tout retour en « DNS only »** (lot 4) : allumée,
+  elle répond `403` à tout pair hors des plages de Cloudflare, donc à **tout le monde** dès que
+  les enregistrements repassent en gris. Ordre du retour arrière : fermeture coupée, puis
+  enregistrements en gris. Elle ne s'allume que 48 h au moins après le changement de serveurs
+  de noms (TTL de la délégation du `.com` : 172 800 s), et ne touche ni `api.*` ni `stats.*`.
 
 ## Transition (jusqu'à la décommission)
 
