@@ -76,7 +76,7 @@ describe('PageResponse', () => {
 
     serverResponse(init).cache('archived');
 
-    expect(headersOf(init)['cache-control']).toBe('public, max-age=3600, s-maxage=604800');
+    expect(headersOf(init)['cache-control']).toBe('public, max-age=3600, s-maxage=31536000');
   });
 
   it('keeps a response it may not store out of caches, whatever is set afterwards', () => {

@@ -46,6 +46,10 @@ internal static class AuditCategories
             [AuditAction.AdminApiClientCredit] = Admin,
             [AuditAction.AdminAnalyticsRollup] = Admin,
             [AuditAction.AdminLogsPurge] = Admin,
+            [AuditAction.AdminPrerenderStart] = Admin,
+            [AuditAction.AdminPrerenderPause] = Admin,
+            [AuditAction.AdminPrerenderResume] = Admin,
+            [AuditAction.AdminPrerenderCancel] = Admin,
         }.ToFrozenDictionary();
 
     /// <summary>The groups, in the order of the admin filter.</summary>

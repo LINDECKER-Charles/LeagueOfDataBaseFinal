@@ -31,6 +31,34 @@ const CATALOGUES: Readonly<Record<string, Translation>> = {
       title: ['Activité — ', ['arg', 'name']],
       lede_orphan: 'Compte supprimé · actions effectuées par ce compte ou le ciblant.',
     },
+    prerender: {
+      ready: [
+        "L'epoch ",
+        ['arg', 'epoch'],
+        ' est complète. Pour la servir, posez LODB_ARCHIVE_SERVE_EPOCH=',
+        ['arg', 'epoch'],
+        " et redéployez : nginx ne change pas d'epoch à chaud.",
+      ],
+      states: { running: 'en cours', paused: 'en pause', served: 'servie', retired: 'retirée' },
+      page_types: { items: 'objets' },
+      current: { pause: 'Mettre en pause', resume: 'Reprendre' },
+      kpi: {
+        cost_sub_retired: [
+          '+ ',
+          ['arg', 'retired'],
+          " pour les epochs retirées, jusqu'à leur suppression ; hors sortie",
+        ],
+      },
+    },
+    scaleway_bill: {
+      stale: [
+        "Scaleway n'a pas répondu à la dernière lecture : montants lus le ",
+        ['arg', 'date'],
+        '.',
+      ],
+      fetched: ['Relevé chez Scaleway le ', ['arg', 'date'], '.'],
+      units: { gigabyte_hour: 'Go·h' },
+    },
   },
   'admin/en': {
     actions: { refresh: 'Refresh' },
@@ -56,6 +84,30 @@ const CATALOGUES: Readonly<Record<string, Translation>> = {
     activity: {
       title: ['Activity — ', ['arg', 'name']],
       lede_orphan: 'Deleted account · actions made by this account or targeting it.',
+    },
+    prerender: {
+      ready: [
+        'Epoch ',
+        ['arg', 'epoch'],
+        ' is complete. To serve it, set LODB_ARCHIVE_SERVE_EPOCH=',
+        ['arg', 'epoch'],
+        ' and redeploy: nginx does not switch epochs on the fly.',
+      ],
+      states: { running: 'running', paused: 'paused', served: 'served', retired: 'retired' },
+      page_types: { items: 'items' },
+      current: { pause: 'Pause', resume: 'Resume' },
+      kpi: {
+        cost_sub_retired: [
+          '+ ',
+          ['arg', 'retired'],
+          ' for the retired epochs, until their deletion; egress excluded',
+        ],
+      },
+    },
+    scaleway_bill: {
+      stale: ['Scaleway did not answer the last reading: amounts read on ', ['arg', 'date'], '.'],
+      fetched: ['Read from Scaleway on ', ['arg', 'date'], '.'],
+      units: { gigabyte_hour: 'GB·h' },
     },
   },
 };

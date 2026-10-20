@@ -14,6 +14,7 @@
     "api_clients": "API clients",
     "monitoring": "Monitoring",
     "backups": "Backups",
+    "prerender": "Pre-rendering",
     "journal": "Journal",
     "sign_out": "Sign out"
   },
@@ -76,6 +77,9 @@
     "self_moderation": "You cannot apply this action to your own account.",
     "api_client_revoked": "This key is already revoked.",
     "gone": "This item no longer exists.",
+    "prerender_active": "A pass is already active: one at a time.",
+    "prerender_state": "The pass changed state meanwhile: the panel shows where it is now.",
+    "prerender_dormant": "The pre-rendering is not configured on this host.",
     "rate_limited": "Too many requests. Wait before trying again.",
     "invalid": "The input is invalid.",
     "network": "The API cannot be reached.",
@@ -649,6 +653,173 @@
       "repository": "repository {size}"
     }
   },
+  "prerender": {
+    "title": "Catalogue pre-rendering",
+    "lede": "The pages of the older patches, rendered ahead into the object store and served by nginx without the SSR: the active pass, launching a pass, what the store holds and what it costs.",
+    "dormant": "The pre-rendering is not configured on this host (store or pass settings missing): no pass can start and the background task sleeps.",
+    "ready": "Epoch {epoch} is complete. To serve it, set LODB_ARCHIVE_SERVE_EPOCH={epoch} and redeploy: nginx does not switch epochs on the fly.",
+    "states": {
+      "running": "running",
+      "paused": "paused",
+      "completed": "completed",
+      "cancelled": "cancelled",
+      "served": "served",
+      "writing": "being written",
+      "standby": "standby",
+      "retired": "retired"
+    },
+    "kpi": {
+      "served": "Served epoch",
+      "served_sub": "LODB_ARCHIVE_SERVE_EPOCH, changed by a redeploy",
+      "pass": "Active pass",
+      "pass_sub": "{completed} / {total} units completed",
+      "pass_none": "no active pass",
+      "stored": "Stored",
+      "stored_sub": "{pages} pages, retired epochs excluded",
+      "cost": "Estimated cost / month",
+      "cost_sub": "egress excluded; detail under “Storage”",
+      "cost_sub_retired": "+ {retired} for the retired epochs, until their deletion; egress excluded"
+    },
+    "current": {
+      "title": "Pass #{id} · epoch {epoch}",
+      "none": "No active pass: the store receives nothing.",
+      "progress": "Units completed",
+      "units": "Units",
+      "units_sub": "{running} running · {pending} to come · {failed} failed",
+      "pages": "Pages processed",
+      "pages_sub": "{written} written · {skipped} skipped · {failed} failed, of {total} listed",
+      "pace": "Pace",
+      "pace_value": "{pace} / min",
+      "pace_sub": "pages a minute, over {duration} of running",
+      "end": "Estimated end",
+      "end_sub": "at this pace",
+      "volume": "Volume written",
+      "launched": "Launched on {date} by {author} · {scope}",
+      "launched_auto": "Opened on {date} by a promotion or the command line · {scope}",
+      "pause": "Pause",
+      "resume": "Resume",
+      "cancel": "Cancel the pass",
+      "confirm_cancel": "Confirm cancellation"
+    },
+    "launch": {
+      "title": "Launch a pass",
+      "lede": "Without a perimeter, the pass fills the served epoch with every page of every older patch, newest first.",
+      "epoch": "Epoch written",
+      "epoch_hint": "The served one by default ({epoch}) to fill it; a newer one to replace it.",
+      "oldest": "Oldest version",
+      "newest": "Newest version",
+      "page_type": "Page type",
+      "all_types": "All types",
+      "locale": "Language",
+      "all_locales": "All languages",
+      "priority": "Priority versions",
+      "priority_hint": "In order, one per line or comma-separated: the most requested, read from the edge log (LogsQL, stats by (version)).",
+      "submit": "Launch the pass",
+      "confirm": "Confirm launch",
+      "locked_active": "A pass is already active: one at a time.",
+      "locked_dormant": "Unavailable until the pre-rendering is configured.",
+      "promotions_on": "A patch that leaves the latest rank joins the pass by itself.",
+      "promotions_off": "A patch that leaves the latest rank does not join the pass by itself: launch one for it."
+    },
+    "page_types": {
+      "champions": "champions",
+      "items": "items",
+      "runes": "runes",
+      "summoners": "summoner spells"
+    },
+    "scope": {
+      "all": "every page",
+      "range": "{oldest} → {newest}",
+      "from": "from {oldest}",
+      "until": "up to {newest}",
+      "priority": "{count, plural, one {# priority version} other {# priority versions}}"
+    },
+    "storage": {
+      "title": "What the store holds",
+      "chip": "{cost} / month",
+      "epoch": "Epoch {epoch}",
+      "builds": "Bundles",
+      "builds_sub": "{count, plural, one {# build} other {# builds}} · {files} files, in Multi-AZ",
+      "total": "Total",
+      "total_sub": "retired epochs excluded",
+      "empty": "No page stored.",
+      "prices": "Estimated at {oneZone} per GB and month in One Zone (pages), {multiAz} in Multi-AZ (bundles).",
+      "egress": "Egress excluded: 75 GB free a month, then €0.01 per GB, followed in Grafana.",
+      "counters": "These figures tell what the passes wrote, not what an expiry rule has deleted since: on staging, pages expire after 14 days, a completed unit is not rewritten and its pages fall back to the SSR silently.",
+      "retired": "A retired epoch keeps costing until the store's lifecycle has deleted it, 500,000 objects a day at most: 9 days at least for 4 million pages.",
+      "columns": {
+        "epoch": "Epoch",
+        "state": "State",
+        "pages": "Pages",
+        "volume": "Volume",
+        "cost": "Cost / month",
+        "version": "Version",
+        "locales": "Languages"
+      },
+      "versions": {
+        "title": "By version of the served epoch",
+        "chip": "{count, plural, one {# version} other {# versions}}",
+        "empty": "No page in the served epoch.",
+        "locales": "{count} / {all}"
+      }
+    },
+    "history": {
+      "empty": "No pass launched.",
+      "automatic": "promotion or CLI",
+      "pages": "{written} / {total}",
+      "columns": {
+        "pass": "Pass",
+        "epoch": "Epoch",
+        "state": "State",
+        "scope": "Perimeter",
+        "pages": "Pages written",
+        "volume": "Volume",
+        "started": "Launched",
+        "author": "By",
+        "finished": "End"
+      }
+    },
+    "done": {
+      "start": "Pass #{id} launched on epoch {epoch}: {units, plural, =0 {no unit, the perimeter covers no older patch} one {# unit} other {# units}}.",
+      "pause": "Pass #{id} paused.",
+      "resume": "Pass #{id} resumed.",
+      "cancel": "Pass #{id} cancelled."
+    }
+  },
+  "scaleway_bill": {
+    "title": "Scaleway bill",
+    "chip": "excl. VAT",
+    "not_configured": "Scaleway bill not configured: set LoDb__ScalewayBilling__SecretKey (the billing read key) to show it here.",
+    "loading": "Reading the Scaleway bill…",
+    "failed": "Bill unavailable ({reason}).",
+    "unavailable": "Scaleway has not answered since the API started: the bill will show at the next successful reading, in a few minutes at the earliest.",
+    "stale": "Scaleway did not answer the last reading: amounts read on {date}.",
+    "empty": "No consumption billed over the last six months.",
+    "current": "This month",
+    "current_sub": "{month}, so far",
+    "previous": "Previous month",
+    "previous_none": "no consumption",
+    "lines": "Detail of the current month: {count, plural, =0 {no line} one {# line} other {# lines}}",
+    "lines_empty": "No line this month.",
+    "fetched": "Read from Scaleway on {date}.",
+    "read_again": "Read again",
+    "columns": {
+      "month": "Month",
+      "amount": "Amount excl. VAT",
+      "product": "Product",
+      "resource": "Resource",
+      "quantity": "Quantity"
+    },
+    "units": {
+      "gigabyte_hour": "GB·h",
+      "gigabyte": "GB",
+      "plan": "plan"
+    },
+    "notes": {
+      "backups": "Excluding VAT; Scaleway updates these amounts a few hours late; the bill covers the Object Storage of the whole project.",
+      "pages": "Excluding VAT; Scaleway updates these amounts a few hours late; unlike the estimate, the bill counts egress and requests, and covers the Object Storage of the whole project."
+    }
+  },
   "journal": {
     "title": "Audit journal",
     "lede": "Sensitive actions and security events. Times in UTC. Kept {months} months (CNIL recommendation).",
@@ -786,6 +957,8 @@
     "filter": "Filter",
     "maintenance": "Maintenance",
     "databases": "Backed-up databases",
-    "nights": "Nights"
+    "nights": "Nights",
+    "current_pass": "Active pass",
+    "launch": "Launch"
   }
 }

@@ -21,6 +21,9 @@ const KEYS = [
   'LoDb__Audience__Username',
   'LoDb__Audience__Password',
   'LoDb__Database__BackupRole__Password',
+  'LoDb__Prerender__AccessKey',
+  'LoDb__Prerender__SecretKey',
+  'LoDb__ScalewayBilling__SecretKey',
 ];
 const GENERATED = 'LODB_APP_DB_PASSWORD';
 const HEX_SECRET = /^[0-9a-f]{64}$/;
@@ -93,7 +96,8 @@ describe('split-env.sh', () => {
     assert.deepEqual(readdirSync(place.secrets).sort(), [...KEYS, GENERATED].sort());
     assert.equal(secret(place, 'LODB_DB_PASSWORD'), 'database-secret');
     assert.equal(secret(place, 'LoDb__Billing__StripeSecretKey'), 'sk_live_example');
-    assert.match(run.stdout, /2 of 13 secrets set, 1 generated, revision 1\./);
+    assert.match(run.stdout,
+      new RegExp(`2 of ${KEYS.length} secrets set, 1 generated, revision 1\\.`));
     assert.doesNotMatch(run.stdout + run.stderr, /database-secret|sk_live_example/);
   });
 

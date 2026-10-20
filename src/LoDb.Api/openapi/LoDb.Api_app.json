@@ -5739,6 +5739,360 @@
         }
       }
     },
+    "/api/admin/prerender": {
+      "get": {
+        "tags": [
+          "AdminPrerender"
+        ],
+        "summary": "The passes of the pre-rendering and what the page store holds.",
+        "operationId": "readAdminPrerender",
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrerenderReport"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/prerender/passes": {
+      "post": {
+        "tags": [
+          "AdminPrerender"
+        ],
+        "summary": "Opens a pass of the pre-rendering, running at once.",
+        "operationId": "startAdminPrerenderPass",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/PassRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrerenderPassStarted"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/prerender/passes/{id}/pause": {
+      "post": {
+        "tags": [
+          "AdminPrerender"
+        ],
+        "summary": "Pauses a running pass; it resumes where it stopped.",
+        "operationId": "pauseAdminPrerenderPass",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/prerender/passes/{id}/resume": {
+      "post": {
+        "tags": [
+          "AdminPrerender"
+        ],
+        "summary": "Resumes a paused pass at its cursor.",
+        "operationId": "resumeAdminPrerenderPass",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/prerender/passes/{id}/cancel": {
+      "post": {
+        "tags": [
+          "AdminPrerender"
+        ],
+        "summary": "Ends an active pass for good; its pages stay in the store.",
+        "operationId": "cancelAdminPrerenderPass",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/scaleway/bill": {
+      "get": {
+        "tags": [
+          "AdminScaleway"
+        ],
+        "summary": "The Object Storage bill of the backups and of the page store.",
+        "operationId": "readAdminScalewayBill",
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScalewayBillReport"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/client-policy/{platform}": {
       "put": {
         "tags": [
@@ -10608,6 +10962,58 @@
         },
         "description": "Body of `POST /api/billing/checkout/pack`."
       },
+      "PassRequest": {
+        "type": "object",
+        "properties": {
+          "epoch": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "The epoch written: the served one (the default) to fill it, a newer one to replace it.\nAn older one is retired and refused.",
+            "format": "int32"
+          },
+          "oldest": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The oldest version rendered, included (`14.1.1`)."
+          },
+          "newest": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The newest version rendered, included."
+          },
+          "pageType": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The one type of page rendered: champions, items, runes or summoners."
+          },
+          "locale": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The one locale rendered, as in the URLs (fr, zh-Hans…)."
+          },
+          "priority": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "description": "The versions to render first, in this order: the most asked for, which the operator\nreads from the edge's log. At most 100."
+          }
+        },
+        "description": "A pass to launch: the epoch it writes and its perimeter, every field optional. Empty, it\nfills the served epoch with every page of every older patch, newest first."
+      },
       "PerkView": {
         "required": [
           "id",
@@ -10746,6 +11152,439 @@
           }
         },
         "description": "Body of `PUT /api/profile/version`."
+      },
+      "PrerenderBuildVolume": {
+        "required": [
+          "count",
+          "files",
+          "bytes",
+          "monthlyCost"
+        ],
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "files": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "bytes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "monthlyCost": {
+            "type": "number",
+            "description": "The bytes in GB times the Multi-AZ price, to four decimals.",
+            "format": "double"
+          }
+        },
+        "description": "The front builds copied to the store, every hashed file of each, and what keeping them\ncosts each month."
+      },
+      "PrerenderEpochVolume": {
+        "required": [
+          "epoch",
+          "state",
+          "isWriting",
+          "pages",
+          "bytes",
+          "monthlyCost"
+        ],
+        "type": "object",
+        "properties": {
+          "epoch": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "state": {
+            "type": "string",
+            "description": "served, writing, standby (written, not served) or retired."
+          },
+          "isWriting": {
+            "type": "boolean",
+            "description": "Whether the active pass writes it: the served epoch while it fills, say."
+          },
+          "pages": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "bytes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "monthlyCost": {
+            "type": "number",
+            "description": "The bytes in GB times the One Zone price, to four decimals.",
+            "format": "double"
+          }
+        },
+        "description": "The pages of one epoch of the store, and what keeping them costs each month."
+      },
+      "PrerenderPassStarted": {
+        "required": [
+          "id",
+          "epoch",
+          "units"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "epoch": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "units": {
+            "type": "integer",
+            "description": "Its units, one per (version, locale) of its scope among the older patches: none when\nthe scope matches no older patch.",
+            "format": "int32"
+          }
+        },
+        "description": "The pass just opened, running at once: the worker takes it at its next tick."
+      },
+      "PrerenderPassView": {
+        "required": [
+          "id",
+          "epoch",
+          "state",
+          "scope",
+          "createdAt",
+          "activeSeconds",
+          "pagesTotal",
+          "pagesWritten",
+          "pagesSkipped",
+          "pagesFailed",
+          "bytesWritten",
+          "units"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "epoch": {
+            "type": "integer",
+            "description": "The epoch it writes.",
+            "format": "int32"
+          },
+          "state": {
+            "type": "string",
+            "description": "running, paused, completed or cancelled."
+          },
+          "scope": {
+            "$ref": "#/components/schemas/PrerenderScopeView"
+          },
+          "authorId": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "The administrator who launched it; null for a promotion or the CLI.",
+            "format": "int32"
+          },
+          "authorName": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Their username, null too once their account is deleted."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "finishedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "activeSeconds": {
+            "type": "integer",
+            "description": "Seconds spent running, the pauses left out, up to the time of the report.",
+            "format": "int64"
+          },
+          "pagesTotal": {
+            "type": "integer",
+            "description": "Pages of the units listed so far: a unit's pages are listed when the pass reaches it,\nso the total grows as the pass goes.",
+            "format": "int64"
+          },
+          "pagesWritten": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "pagesSkipped": {
+            "type": "integer",
+            "description": "Pages the SSR did not render as an older patch's (a redirect, a 404).",
+            "format": "int64"
+          },
+          "pagesFailed": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "bytesWritten": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "units": {
+            "$ref": "#/components/schemas/PrerenderUnitCounts"
+          },
+          "pagesPerMinute": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "description": "Pages written, skipped or failed per minute of running time, to one decimal; null\nbefore a minute of it.",
+            "format": "double"
+          },
+          "estimatedEndAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "When it should end at its pace, the units not listed yet counted at the mean of the\nlisted ones; null unless it runs with a known pace and some units listed.",
+            "format": "date-time"
+          }
+        },
+        "description": "A pass of the pre-rendering, its progress, its pace and when it should end."
+      },
+      "PrerenderReport": {
+        "required": [
+          "generatedAt",
+          "isConfigured",
+          "enqueuesPromotions",
+          "servedEpoch",
+          "passes",
+          "storage"
+        ],
+        "type": "object",
+        "properties": {
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "isConfigured": {
+            "type": "boolean",
+            "description": "Whether the pass and its store are both configured; until then no pass may start and the\nworker sleeps."
+          },
+          "enqueuesPromotions": {
+            "type": "boolean",
+            "description": "Whether the patch that leaves the latest rank joins the pass by itself."
+          },
+          "servedEpoch": {
+            "type": "integer",
+            "description": "The epoch nginx serves, from `LODB_ARCHIVE_SERVE_EPOCH`: it changes with that\nvariable and a redeploy, never from the admin.",
+            "format": "int32"
+          },
+          "readyEpoch": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "A newer epoch a pass over every older patch completed: set\n`LODB_ARCHIVE_SERVE_EPOCH` to it and redeploy to serve it. Null when none.",
+            "format": "int32"
+          },
+          "current": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "The active pass, running or paused; null when none.",
+                "$ref": "#/components/schemas/PrerenderPassView"
+              }
+            ]
+          },
+          "passes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PrerenderPassView"
+            },
+            "description": "The latest 50 passes, newest first, the active one included."
+          },
+          "storage": {
+            "$ref": "#/components/schemas/PrerenderStorageView"
+          }
+        },
+        "description": "The pre-rendering of the catalogue as the admin shows it: whether it may run, the epoch\nnginx serves, the active pass, the history of the passes and what the store holds."
+      },
+      "PrerenderScopeView": {
+        "required": [
+          "priority"
+        ],
+        "type": "object",
+        "properties": {
+          "oldest": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The oldest version rendered, included."
+          },
+          "newest": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The newest version rendered, included."
+          },
+          "pageType": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The one type of page rendered: champions, items, runes or summoners."
+          },
+          "locale": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The one locale rendered, as in the URLs (fr, zh-Hans…)."
+          },
+          "priority": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The versions rendered first, in this order."
+          }
+        },
+        "description": "The perimeter of a pass, spelled as the URLs spell it; a field left null is not restricted."
+      },
+      "PrerenderStorageView": {
+        "required": [
+          "epochs",
+          "builds",
+          "servedVersions",
+          "pages",
+          "bytes",
+          "monthlyCost",
+          "pricePerGbMonthOneZone",
+          "pricePerGbMonthMultiAz",
+          "currency",
+          "excludesEgress"
+        ],
+        "type": "object",
+        "properties": {
+          "epochs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PrerenderEpochVolume"
+            },
+            "description": "Each epoch holding pages, plus the served and written ones, newest first."
+          },
+          "builds": {
+            "$ref": "#/components/schemas/PrerenderBuildVolume"
+          },
+          "servedVersions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PrerenderVersionVolume"
+            },
+            "description": "The pages of the served epoch, version by version, newest first."
+          },
+          "pages": {
+            "type": "integer",
+            "description": "Pages of every epoch but the retired ones.",
+            "format": "int64"
+          },
+          "bytes": {
+            "type": "integer",
+            "description": "Bytes of every epoch but the retired ones, and of the builds.",
+            "format": "int64"
+          },
+          "monthlyCost": {
+            "type": "number",
+            "description": "The cost of those epochs and of the builds, to four decimals.",
+            "format": "double"
+          },
+          "pricePerGbMonthOneZone": {
+            "type": "number",
+            "description": "Price of one GB (10^9 bytes) of pages, in One Zone, for a month.",
+            "format": "double"
+          },
+          "pricePerGbMonthMultiAz": {
+            "type": "number",
+            "description": "Price of one GB (10^9 bytes) of bundles, in Multi-AZ, for a month.",
+            "format": "double"
+          },
+          "currency": {
+            "type": "string",
+            "description": "ISO 4217 code of the prices."
+          },
+          "excludesEgress": {
+            "type": "boolean",
+            "description": "Always true: the downloads (75 GB a month free, then billed per GB) are not in the\nestimate; Grafana follows them."
+          }
+        },
+        "description": "What the page store holds, read from the counters the passes keep as they write (the\nwriter key cannot list), and what storing it is estimated to cost each month."
+      },
+      "PrerenderUnitCounts": {
+        "required": [
+          "total",
+          "pending",
+          "running",
+          "completed",
+          "failed"
+        ],
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pending": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "running": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "completed": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "failed": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "description": "The units of a pass, one per (version, locale), by state."
+      },
+      "PrerenderVersionVolume": {
+        "required": [
+          "version",
+          "locales",
+          "pages",
+          "bytes"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "locales": {
+            "type": "integer",
+            "description": "Locales of the version with pages stored, out of the site's 21.",
+            "format": "int32"
+          },
+          "pages": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "bytes": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "description": "The pages of one older patch in the served epoch."
       },
       "ProblemDetails": {
         "type": "object",
@@ -11878,6 +12717,142 @@
           }
         },
         "description": "Body of `PUT /api/profile/favorites`: every slot, stated. Null or blank clears a slot;\nto keep a favorite the patch lacks, send back its `storedId`."
+      },
+      "ScalewayBillLine": {
+        "required": [
+          "product",
+          "resource",
+          "quantity",
+          "unit",
+          "amount"
+        ],
+        "type": "object",
+        "properties": {
+          "product": {
+            "type": "string",
+            "description": "Scaleway's product (`Standard Multi-AZ`, `External Bandwidth`…)."
+          },
+          "resource": {
+            "type": "string",
+            "description": "Scaleway's resource (`Multi-AZ - fr-par`, `Pack`…)."
+          },
+          "quantity": {
+            "type": "number",
+            "description": "The quantity billed, in `unit`; negative for a deduction.",
+            "format": "double"
+          },
+          "unit": {
+            "type": "string",
+            "description": "Scaleway's unit: `gigabyte_hour`, `gigabyte`, `plan`…"
+          },
+          "amount": {
+            "type": "number",
+            "description": "Excluding VAT, to four decimals; negative for a free tier's deduction.",
+            "format": "double"
+          }
+        },
+        "description": "One SKU of the project over the period, as Scaleway bills it."
+      },
+      "ScalewayBillPeriod": {
+        "required": [
+          "period",
+          "total",
+          "lines"
+        ],
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "string",
+            "description": "The billing period, `yyyy-MM`."
+          },
+          "total": {
+            "type": "number",
+            "description": "The sum of the lines, deductions included, to four decimals.",
+            "format": "double"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScalewayBillLine"
+            },
+            "description": "Its lines, dearest first; none before the project's first consumption."
+          }
+        },
+        "description": "What the project was billed for one calendar month (UTC)."
+      },
+      "ScalewayBillReport": {
+        "required": [
+          "configured",
+          "stale"
+        ],
+        "type": "object",
+        "properties": {
+          "configured": {
+            "type": "boolean",
+            "description": "Whether `LoDb:ScalewayBilling:SecretKey` is set."
+          },
+          "stale": {
+            "type": "boolean",
+            "description": "Whether the last reading failed: what is shown, if anything, is older."
+          },
+          "fetchedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "When the bill shown was read from Scaleway; null before any good reading. Scaleway\ntells no time of its own amounts: its `updated_at` is that of the query.",
+            "format": "date-time"
+          },
+          "currency": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "ISO 4217 code of every amount; null before any good reading."
+          },
+          "backups": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ScalewayProjectBill"
+              }
+            ]
+          },
+          "pages": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ScalewayProjectBill"
+              }
+            ]
+          }
+        },
+        "description": "What Scaleway bills for the Object Storage of the backups and of the page store, read at\nmost once an hour, excluding VAT."
+      },
+      "ScalewayProjectBill": {
+        "required": [
+          "projectId",
+          "periods"
+        ],
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "periods": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScalewayBillPeriod"
+            },
+            "description": "The six months ending with the current one, newest first."
+          }
+        },
+        "description": "The Object Storage bill of one Scaleway project: every bucket of the project together,\negress and requests included."
       },
       "SearchResultHit": {
         "required": [
@@ -13460,6 +14435,12 @@
     },
     {
       "name": "AdminBackups"
+    },
+    {
+      "name": "AdminPrerender"
+    },
+    {
+      "name": "AdminScaleway"
     },
     {
       "name": "AdminClientPolicy"

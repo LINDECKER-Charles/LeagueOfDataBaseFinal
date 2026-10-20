@@ -101,10 +101,17 @@ Logs et requêtes LogsQL : [`observabilite.md`](observabilite.md) et [`logging.m
 | `lodb_publicapi_usage_pending` | jauge | — | oui | `LoDb.PublicApi` |
 | `lodb_publicapi_usage_dropped_total`, `…_flush_duration_seconds`, `…_flush_failures_total` | compteurs, histogramme | — | non | `LoDb.PublicApi` |
 | `lodb_client_policy_upgrade_required_total` | compteur | `platform` (`desktop`, `android`) | non | `LoDb.ClientPolicy`, réponses `426` |
+| `lodb_prerender_pages_total` | compteur | `outcome` (`written` : page écrite au stockage ; `skipped` : rendu qui ne se stocke pas, `301`, `404` ou classe autre qu'`archived` ; `refused` : `503` du SSR, la page est retentée après son `Retry-After` ; `failed` : page abandonnée après ses nouvelles tentatives) | non | `LoDb.Prerender` (instrument `lodb.prerender.pages`), une incrémentation par page de la passe de précalcul ; la ligne de synthèse par unité (version, langue) en donne le détail |
 
 `lodb_job_period_seconds` et `lodb_job_last_success_seconds` se lisent ensemble : une tâche
 est en retard quand `time() - lodb_job_last_success_seconds > 3 * lodb_job_period_seconds`
 (`tools/cutover/monitoring/metrics.promql`, requête `jobs-late`).
+
+Un SSR injoignable (`LoDb__Prerender__SsrBaseUrl` faux, conteneur arrêté, réseau cassé)
+n'incrémente pas `lodb_prerender_pages_total` : la passe retente la page toutes les 30 s. Les
+journaux le disent, une fois par panne : `prerender.ssr.unreachable` (Warning, avec l'adresse
+du SSR) quand elle commence, `prerender.ssr.reachable` (Information, durée de la panne) quand
+le SSR répond de nouveau. Un début de panne sans fin signale une passe bloquée.
 
 ## API — métriques du framework
 
@@ -131,7 +138,7 @@ dans chaque ligne de log (`trace_id`), échantillonnée ou non.
 
 | Nom | Type | Labels (valeurs) | Dès le démarrage | Source |
 |---|---|---|---|---|
-| `lodb_ssr_renders_total` | compteur | `lane` (`pinned`, `current`), `outcome` (`admitted`, `refused`), `reason` sur un refus (`capacity`, `lane_capacity`, `client_capacity`, `lane_rate`, `client_rate`) | oui pour `admitted` (0) | comptes de l'admission (`RenderCounts`), lus à chaque scrape |
+| `lodb_ssr_renders_total` | compteur | `lane` (`pinned`, `current`, `prerender`), `outcome` (`admitted`, `refused`), `reason` sur un refus (`capacity`, `lane_capacity`, `client_capacity`, `lane_rate`, `client_rate`) | oui pour `admitted` (0) | comptes de l'admission (`RenderCounts`), lus à chaque scrape |
 | `lodb_ssr_renders_in_flight` | jauge | `lane` | oui | rendus en cours de l'admission |
 | `lodb_ssr_render_duration_seconds` | histogramme, bornes 0,1 · 0,25 · 0,5 · 1 · 1,5 · 3 · 5 · 10 · 20 s | `lane`, `status_class` (`2xx`…`5xx`, `aborted` quand le client est parti) | non | de l'admission à la fin de la réponse |
 | `lodb_ssr_normalized_redirects_total` | compteur | `reason` : `query` (301 du pré-routeur, paramètres que la page ne lit pas, sans rendu), `slash` (301 du pré-routeur vers le seul chemin de la page : `/fr` vers `/fr/`, slash final retiré ailleurs, sans rendu), `canonical` (301/308 d'une page vers son URL canonique : slug, dernier patch dans le chemin, `?version=`) | oui (0) | pré-routeur, réponse du rendu |
@@ -142,6 +149,15 @@ dans chaque ligne de log (`trace_id`), échantillonnée ou non.
 Un refus d'admission n'écrit pas de ligne de log par requête : la ligne `ssr.admission.summary`
 (une par minute de refus) et `lodb_ssr_renders_total` en rendent compte.
 
+Le couloir `prerender` est celui de la passe de précalcul de l'API, reconnue à son en-tête
+`X-LoDb-Prerender: 1` quelle que soit l'URL (nginx l'efface sur le trafic public) : budget
+(`LODB_PRERENDER_RENDERS_PER_MINUTE`, `LODB_PRERENDER_RENDER_BURST`) et créneaux
+(`LODB_PRERENDER_MAX_IN_FLIGHT`) propres, sans part par client, et seulement tant que
+`LODB_PRERENDER_VISITOR_RESERVE` créneaux restent libres pour les visiteurs. Ses refus gardent
+les raisons des autres couloirs (`capacity`, `lane_capacity`, `lane_rate`, jamais `client_*`).
+Ses requêtes n'écrivent pas de ligne `http.request.served`, sauf ses erreurs serveur (5xx) :
+la passe en compterait des millions. Une requête qui somme `lodb_ssr_renders_total` sans filtre `lane` inclut la passe.
+
 ## Exemples
 
 ```promql
@@ -151,6 +167,9 @@ sum(rate(lodb_catalog_cache_lookups_total{stack="lodb-prod", outcome="miss"}[10m
 
 # Refus du SSR par couloir et raison
 sum by (lane, reason) (rate(lodb_ssr_renders_total{stack="lodb-prod", outcome="refused"}[5m]))
+
+# Pages de la passe de précalcul par issue (10 min)
+sum by (outcome) (rate(lodb_prerender_pages_total{stack="lodb-prod"}[10m]))
 
 # p95 d'un rendu du couloir courant
 histogram_quantile(0.95, sum by (le) (

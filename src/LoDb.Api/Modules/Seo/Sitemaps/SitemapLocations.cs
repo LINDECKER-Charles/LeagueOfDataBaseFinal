@@ -1,5 +1,5 @@
+using LoDb.Api.Modules.Seo.Pages;
 using LoDb.Domain.Languages;
-using LoDb.Domain.Paths;
 using LoDb.Ingestion.Catalog.Canonicals;
 using LoDb.Ingestion.Catalog.Reading;
 using LoDb.Ingestion.Catalog.Snapshots;
@@ -72,7 +72,7 @@ internal static class SitemapLocations
     {
         IEnumerable<string> entities = catalog is null
             ? []
-            : EntityPaths(catalog).Select(static path => path.Value);
+            : VersionPages.ListedEntityPaths(catalog).Select(static path => path.Value);
         return SitePages.PatchBound.Concat(entities).Select(path => prefix + path);
     }
 
@@ -89,17 +89,8 @@ internal static class SitemapLocations
     {
         ArgumentNullException.ThrowIfNull(catalog);
         ArgumentNullException.ThrowIfNull(references);
-        return EntityPaths(catalog)
+        return VersionPages.ListedEntityPaths(catalog)
             .Where(references.IsOwnCanonical)
             .Select(path => new SitemapEntry(prefix + path.Value));
     }
-
-    // The entries the lists show: debris and placeholder spells have no page (UP 10); the
-    // Classic twins do.
-    private static IEnumerable<CanonicalPath> EntityPaths(CatalogSnapshot catalog) =>
-        catalog.Champions.Entries.Select(catalog.PathOf)
-            .Concat(catalog.ListedItems.Select(catalog.PathOf))
-            .Concat(catalog.Runes.Entries.Select(catalog.PathOf))
-            .Concat(catalog.ListedSummoners.Select(catalog.PathOf))
-            .DistinctBy(static path => path.Value, StringComparer.Ordinal);
 }

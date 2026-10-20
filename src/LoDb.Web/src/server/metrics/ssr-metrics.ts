@@ -6,7 +6,7 @@ import type { RenderLane } from '../admission/render-lane';
 import type { NormalizedRedirectReason } from './normalized-redirect-reason';
 import { statusClassOf } from './status-class-of';
 
-const LANES: readonly RenderLane[] = ['pinned', 'current'];
+const LANES: readonly RenderLane[] = ['pinned', 'current', 'prerender'];
 const REDIRECT_REASONS: readonly NormalizedRedirectReason[] = ['query', 'slash', 'canonical'];
 // From a render on a catalog the API holds (about 0.1 s) to the render deadline (20 s), with
 // the bounds the alerts read: 1.5 s (a miss of the latest patch) and 3 s (a slow site).
@@ -15,8 +15,8 @@ const PERMANENT_REDIRECTS: ReadonlySet<number> = new Set([301, 308]);
 
 type InFlight = Pick<RenderAdmission, 'inFlightOf'>;
 
-// Read from the admission's own counts at each scrape, so that nothing is counted twice. Both
-// lanes have their admitted series from the start: a rate reads 0 rather than nothing.
+// Read from the admission's own counts at each scrape, so that nothing is counted twice. Every
+// lane has its admitted series from the start: a rate reads 0 rather than nothing.
 function rendersTotal(counts: RenderCounts): Counter<'lane' | 'outcome' | 'reason'> {
   return new Counter({
     name: 'lodb_ssr_renders_total',

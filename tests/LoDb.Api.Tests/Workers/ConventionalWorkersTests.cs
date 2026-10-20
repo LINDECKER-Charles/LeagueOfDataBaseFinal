@@ -7,6 +7,7 @@ using LoDb.Api.Workers.Billing;
 using LoDb.Api.Workers.Catalog;
 using LoDb.Api.Workers.Ingestion;
 using LoDb.Api.Workers.Outbox;
+using LoDb.Api.Workers.Prerender;
 using LoDb.Api.Workers.Security;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -51,6 +52,8 @@ public sealed class ConventionalWorkersTests
             typeof(PatchWatchJob),
             typeof(VersionIngestionWorker),
             typeof(EmailOutboxWorker),
+            typeof(PrerenderReconcileJob),
+            typeof(PrerenderWorker),
             typeof(CspReportSummaryWorker),
         ];
 

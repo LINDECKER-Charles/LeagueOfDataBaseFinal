@@ -29,7 +29,7 @@ test.describe('bundles of a previous build', () => {
   test('still load in a tab opened before the deployment', async ({ page, consoleErrors }) => {
     const name = previousBundleName();
     const bundle = `export const build = 'previous';\n`;
-    execInStack('web-ssr', ['sh', '-c', `cat > ${FRONT_BUILDS}/${name}`], bundle);
+    execInStack('web-ssr', ['sh', '-c', `cat > ${FRONT_BUILDS}/${name}`], { input: bundle });
     try {
       await page.goto('/en/about');
 

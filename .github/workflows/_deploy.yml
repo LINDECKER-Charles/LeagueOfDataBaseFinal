@@ -266,12 +266,14 @@ jobs:
             # staging is never indexed; prod always is.
             expect LODB_NOINDEX "$EXPECTED_NOINDEX" 0
             secret_set LODB_DB_PASSWORD || fail "LODB_DB_PASSWORD is required on $TARGET."
-            # A page of an older patch names the bundles of its build for up to two weeks (a week of
-            # s-maxage, then a stale copy served while it refreshes): never purge them sooner.
+            # A page of an older patch names the bundles of its build for a year (its s-maxage),
+            # then a little longer, its stale copy served while it refreshes: never purge them
+            # sooner than a year and a month. The store's build/ copy (ADR 0011) only covers the
+            # builds a pass wrote pages of, not the pages the SSR renders on a store miss.
             retention="$(env_value LODB_FRONT_BUILDS_RETENTION_DAYS)"
-            retention="${retention:-30}"
-            [[ "$retention" =~ ^[0-9]+$ ]] && (( retention >= 15 )) \
-              || fail "LODB_FRONT_BUILDS_RETENTION_DAYS must be a number of days, 15 or more."
+            retention="${retention:-400}"
+            [[ "$retention" =~ ^[0-9]+$ ]] && (( retention >= 395 )) \
+              || fail "LODB_FRONT_BUILDS_RETENTION_DAYS must be a number of days, 395 or more."
             if [ "$TARGET" = prod ]; then
               [ -n "$(env_value LoDb__Mail__Host)" ] || fail "LoDb__Mail__Host is required in prod."
               for key in LoDb__Billing__StripeSecretKey LoDb__Billing__StripeWebhookSecret; do
@@ -524,7 +526,7 @@ jobs:
             # web-ssr publishes its hashed bundles into the front-builds volume at start, and
             # refreshes their date every hour while it runs; /build/ serves them to the tabs
             # and the cached pages that still name them. A bundle no running build has shipped
-            # for LODB_FRONT_BUILDS_RETENTION_DAYS (30) goes: longer than any cached page lives.
+            # for LODB_FRONT_BUILDS_RETENTION_DAYS (400) goes: longer than any cached page lives.
             # The retention is read with the checks of the .env, above.
             docker compose exec -T web-ssr \
               find /srv/front-builds -type f -mtime +"$retention" -delete \

@@ -74,6 +74,15 @@ deux certificats sont nouveaux ([`configuration.md`](configuration.md), § 2 et 
 clés de l'hôte (`*_SSH_KNOWN_HOSTS`) sont à créer (§ 6.3 du même guide) : absentes, le job
 les lit par `ssh-keyscan`, sans vérification, et le run porte un avertissement.
 
+Le stockage des pages pré-rendues n'ajoute **aucun secret GitHub** : la clé de son application
+d'écriture entre dans `ENV_STAGING` et `ENV_PROD` (lignes 🔒 `LoDb__Prerender__AccessKey` et
+`LoDb__Prerender__SecretKey`), que le job range en fichiers secrets comme les autres
+([`configuration.md`](configuration.md), § 4 et 4.8). La clé temporaire de l'opérateur, qui
+configure le bucket, ne quitte jamais son poste ([`tools/prerender/README.md`](../../tools/prerender/README.md)).
+La facture Scaleway de l'administration n'en ajoute pas non plus : sa clé de lecture
+(`LoDb__ScalewayBilling__SecretKey`, une par environnement) entre aussi dans `ENV_STAGING` et
+`ENV_PROD` ([`configuration.md`](configuration.md), § 4.9).
+
 **Tags d'images** : `:<sha>` (immuable, poussé par `_build.yml` : le commit de `test`
 construit, que la notice *Deployed revision* du déploiement affiche), `:staging` (dernier
 build de `dev` dont le scan est passé), `:staging-validated` (ce que `staging` a servi, smoke

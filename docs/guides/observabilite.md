@@ -120,6 +120,10 @@ container:lodb-prod-php-1
 # retrouve les lignes de l'API pour cette page
 stack:lodb-prod (service:web-ssr OR service:api) _time:1h "4bf92f3577b34da6a3ce929d0e0e4736"
 
+# La facture Scaleway des panneaux d'administration : lectures réussies et échouées
+# (une ligne par lecture, au plus une par heure ; un échec réessaie 5 minutes après)
+stack:lodb-prod service:api _time:1d ("admin.scaleway_bill.read" OR "admin.scaleway_bill.unavailable")
+
 # Violations de la CSP signalées par les navigateurs (une ligne par minute), et scripts
 # inline que le SSR a laissés hors de la politique d'une page
 stack:lodb-prod _time:1d ("web.csp.violated" OR "ssr.csp.unexpected_scripts")
@@ -165,6 +169,63 @@ Les métriques **applicatives** de l'API et du SSR (`lodb_*`, ASP.NET Core, Node
 collectées sur leur port 9464 par le réseau `observability` : le contrat des noms et des
 labels, la règle de cardinalité et des requêtes types sont dans
 [`metriques.md`](metriques.md). Toujours filtrer sur `stack` (`lodb-prod`, `lodb-staging`).
+
+---
+
+## Pages des anciens patchs : ce que voit chaque source (lot 3)
+
+Depuis le lot 3 du [catalogue pré-rendu](../produit/pre-rendu-catalogue-cdn.md), nginx sert
+une page d'ancien patch (`/{locale}/{version}/…`) de trois façons : sa copie du cache chaud
+`lodb_archive`, l'objet du stockage Scaleway, ou un rendu du SSR quand le stockage n'a pas la
+page ou ne répond pas. Chaque réponse le dit dans l'en-tête **`X-LoDb-Source`** :
+
+| `X-LoDb-Source` | Qui a répondu | `X-Cache-Status` |
+|---|---|---|
+| `cache` | la copie gardée par nginx, d'où qu'elle vienne | `HIT`, `STALE`, `UPDATING` ou `REVALIDATED` |
+| `store` | le stockage objet, lu à l'instant | `MISS` (ou `EXPIRED`) |
+| `ssr` | un rendu du SSR, le repli | `MISS`, ou la réponse de délestage (`503`) |
+
+Le stockage ne renvoie jamais d'erreur au visiteur : un objet absent, une `403` (politique du
+bucket, adresse du VPS changée), une `429` de Scaleway ou un délai dépassé repassent par le SSR.
+**Seule la part de `ssr` le montre** : une fois une passe complète, elle doit rester proche de
+zéro, hors des pages avec query (`?page=N`) et des versions pas encore écrites.
+
+Ce que chaque source voit de ces pages :
+
+| Source | Ce qu'elle voit après le lot 3 |
+|---|---|
+| Journal de l'edge (`journal:acces`) | Chaque requête, comme avant, avec `cache` (tiré de `X-Cache-Status`). Il ne garde aucun autre en-tête : `source` n'existe qu'une fois `infra-vps` lit `X-Lodb-Source` (sa forme canonique en Go) dans le champ `.source` de Vector. Avant cela, un `MISS` ne dit plus « rendu » : il peut venir du stockage. |
+| Métriques du SSR (`lodb_ssr_renders_total`) | `lane="pinned"` ne compte plus que les replis vers le SSR ; ses refus (`outcome="refused"`) doivent tomber vers zéro. Les rendus de la passe sont à part, sous `lane="prerender"` ([`metriques.md`](metriques.md)). |
+| Métriques de l'API (`lodb_prerender_pages_total{outcome}`) | Les pages de la passe : `written`, `skipped`, `refused`, `failed`, et une ligne `prerender.unit.completed` par (version, langue). Rien de ce que nginx sert. |
+| Journaux du SSR (`http.request.served`) | Les rendus servis aux visiteurs, replis compris ; aucune ligne par page de la passe, sauf ses `5xx`. Une page servie par le cache ou le stockage n'y paraît pas. |
+| Audience interne (miroir de nginx, balise) | Inchangée : le miroir ne compte jamais une version épinglée, et la passe ne passe pas par nginx. |
+| Umami | Inchangé : il mesure dans le navigateur, quelle que soit la source de la page. |
+
+Requêtes types (le champ `source` suppose la lecture de l'en-tête par Vector) :
+
+```logsql
+# Part de chaque source sur les pages des anciens patchs, sur 24 h
+stack:edge service:caddy journal:acces schema:https hote:league-of-data-base.com
+  chemin:~"^/[a-z]{2}(-han[st])?/[0-9]" _time:1d
+  | stats by (source) count() requetes
+
+# Les versions encore servies par le SSR : celles que la passe n'a pas écrites
+stack:edge service:caddy journal:acces schema:https hote:league-of-data-base.com
+  source:ssr _time:1d
+  | extract_regexp "^/[a-z-]+/(?P<version>[0-9.]+)/" from chemin
+  | stats by (version) count() requetes | sort by (requetes desc) | limit 20
+```
+
+```promql
+# Replis vers le SSR et leurs refus, par motif (24 h)
+sum by (outcome, reason) (
+  increase(lodb_ssr_renders_total{stack="lodb-prod", lane="pinned"}[24h])
+)
+```
+
+Au lot 4, Cloudflare répond seul aux pages qu'il garde : l'edge, nginx et ces sources ne voient
+plus que ses ratés. Ses propres chiffres arrivent par l'exportateur d'`infra-vps`
+([spécification](../produit/pre-rendu-catalogue-cdn.md), lot 4).
 
 ---
 

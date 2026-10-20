@@ -35,6 +35,10 @@ public static class AuditVocabulary
             [AuditAction.AdminApiClientCredit] = "admin.api_client_credit",
             [AuditAction.AdminAnalyticsRollup] = "admin.analytics_rollup",
             [AuditAction.AdminLogsPurge] = "admin.logs_purge",
+            [AuditAction.AdminPrerenderStart] = "admin.prerender_start",
+            [AuditAction.AdminPrerenderPause] = "admin.prerender_pause",
+            [AuditAction.AdminPrerenderResume] = "admin.prerender_resume",
+            [AuditAction.AdminPrerenderCancel] = "admin.prerender_cancel",
         }.ToFrozenDictionary();
 
     private static readonly FrozenDictionary<string, AuditAction> ActionsByName =
@@ -91,6 +95,7 @@ public static class AuditVocabulary
         AuditTargetType.Build => "build",
         AuditTargetType.ApiKey => "apikey",
         AuditTargetType.ApiClient => "api_client",
+        AuditTargetType.PrerenderPass => "prerender_pass",
         _ => throw new ArgumentOutOfRangeException(nameof(type), type, null),
     };
 
@@ -100,6 +105,7 @@ public static class AuditVocabulary
         "build" => AuditTargetType.Build,
         "apikey" => AuditTargetType.ApiKey,
         "api_client" => AuditTargetType.ApiClient,
+        "prerender_pass" => AuditTargetType.PrerenderPass,
         _ => throw new ArgumentOutOfRangeException(nameof(value), value, null),
     };
 }

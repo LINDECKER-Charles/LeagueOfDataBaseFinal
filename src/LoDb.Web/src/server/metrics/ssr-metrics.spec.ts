@@ -48,7 +48,7 @@ describe('SsrMetrics', () => {
 
   beforeEach(() => {
     counts = new RenderCounts();
-    inFlight = { pinned: 0, current: 0 };
+    inFlight = { pinned: 0, current: 0, prerender: 0 };
     metrics = new SsrMetrics(counts, { inFlightOf: (lane) => inFlight[lane] });
   });
 
@@ -56,6 +56,7 @@ describe('SsrMetrics', () => {
     counts.record('current', null);
     counts.record('current', null);
     counts.record('pinned', 'lane_rate');
+    counts.record('prerender', 'lane_capacity');
 
     const first = await scrape();
     counts.record('current', null);
@@ -64,19 +65,24 @@ describe('SsrMetrics', () => {
     const total = 'lodb_ssr_renders_total';
     expect(sampleOf(first, total, { lane: 'current', outcome: 'admitted' })).toBe(2);
     expect(sampleOf(first, total, { lane: 'pinned', outcome: 'admitted' })).toBe(0);
+    expect(sampleOf(first, total, { lane: 'prerender', outcome: 'admitted' })).toBe(0);
     expect(
       sampleOf(first, total, { lane: 'pinned', outcome: 'refused', reason: 'lane_rate' }),
+    ).toBe(1);
+    expect(
+      sampleOf(first, total, { lane: 'prerender', outcome: 'refused', reason: 'lane_capacity' }),
     ).toBe(1);
     expect(sampleOf(second, total, { lane: 'current', outcome: 'admitted' })).toBe(3);
   });
 
   it('reads the renders in flight of each lane at the scrape', async () => {
-    inFlight = { pinned: 1, current: 3 };
+    inFlight = { pinned: 1, current: 3, prerender: 2 };
 
     const exposition = await scrape();
 
     expect(sampleOf(exposition, 'lodb_ssr_renders_in_flight', { lane: 'pinned' })).toBe(1);
     expect(sampleOf(exposition, 'lodb_ssr_renders_in_flight', { lane: 'current' })).toBe(3);
+    expect(sampleOf(exposition, 'lodb_ssr_renders_in_flight', { lane: 'prerender' })).toBe(2);
   });
 
   it('times each render until its response ends, by lane and status class', async () => {

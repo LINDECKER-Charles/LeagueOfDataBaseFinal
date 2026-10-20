@@ -1,0 +1,57 @@
+namespace LoDb.Api.Modules.Admin.Prerender.Http.Views;
+
+/// <summary>A pass of the pre-rendering, its progress, its pace and when it should end.</summary>
+internal sealed record PrerenderPassView
+{
+    public required long Id { get; init; }
+
+    /// <summary>The epoch it writes.</summary>
+    public required int Epoch { get; init; }
+
+    /// <summary>running, paused, completed or cancelled.</summary>
+    public required string State { get; init; }
+
+    public required PrerenderScopeView Scope { get; init; }
+
+    /// <summary>The administrator who launched it; null for a promotion or the CLI.</summary>
+    public int? AuthorId { get; init; }
+
+    /// <summary>Their username, null too once their account is deleted.</summary>
+    public string? AuthorName { get; init; }
+
+    public required DateTimeOffset CreatedAt { get; init; }
+
+    public DateTimeOffset? FinishedAt { get; init; }
+
+    /// <summary>Seconds spent running, the pauses left out, up to the time of the report.</summary>
+    public required long ActiveSeconds { get; init; }
+
+    /// <summary>
+    /// Pages of the units listed so far: a unit's pages are listed when the pass reaches it,
+    /// so the total grows as the pass goes.
+    /// </summary>
+    public required long PagesTotal { get; init; }
+
+    public required long PagesWritten { get; init; }
+
+    /// <summary>Pages the SSR did not render as an older patch's (a redirect, a 404).</summary>
+    public required long PagesSkipped { get; init; }
+
+    public required long PagesFailed { get; init; }
+
+    public required long BytesWritten { get; init; }
+
+    public required PrerenderUnitCounts Units { get; init; }
+
+    /// <summary>
+    /// Pages written, skipped or failed per minute of running time, to one decimal; null
+    /// before a minute of it.
+    /// </summary>
+    public decimal? PagesPerMinute { get; init; }
+
+    /// <summary>
+    /// When it should end at its pace, the units not listed yet counted at the mean of the
+    /// listed ones; null unless it runs with a known pace and some units listed.
+    /// </summary>
+    public DateTimeOffset? EstimatedEndAt { get; init; }
+}

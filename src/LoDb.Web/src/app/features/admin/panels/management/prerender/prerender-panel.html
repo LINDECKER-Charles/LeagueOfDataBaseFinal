@@ -1,0 +1,92 @@
+<lodb-page-head
+  [eyebrow]="'admin.eyebrows.management' | adminText"
+  [title]="'admin.prerender.title' | adminText"
+  [subtitle]="'admin.prerender.lede' | adminText"
+/>
+
+<lodb-panel-state [panel]="report" shape="cards" />
+@if (report.value(); as data) {
+  @if (!data.isConfigured) {
+    <lodb-admin-band data-dormant>{{ 'admin.prerender.dormant' | adminText }}</lodb-admin-band>
+  }
+  @if (data.readyEpoch; as ready) {
+    <lodb-admin-band tone="notice" data-ready-epoch>
+      {{ 'admin.prerender.ready' | adminText: { epoch: ready } }}
+    </lodb-admin-band>
+  }
+
+  <div class="kpi-grid" [attr.aria-busy]="report.busy()">
+    <lodb-kpi
+      accent="hex"
+      [label]="'admin.prerender.kpi.served' | adminText"
+      [value]="data.servedEpoch"
+      [sub]="'admin.prerender.kpi.served_sub' | adminText"
+    />
+    @if (data.current; as current) {
+      <lodb-kpi
+        [accent]="current.state === 'running' ? 'good' : 'warn'"
+        [label]="'admin.prerender.kpi.pass' | adminText"
+        [value]="'admin.prerender.states.' + current.state | adminText"
+        [sub]="
+          'admin.prerender.kpi.pass_sub'
+            | adminText: { completed: current.units.completed, total: current.units.total }
+        "
+      />
+    } @else {
+      <lodb-kpi
+        accent="gold"
+        [label]="'admin.prerender.kpi.pass' | adminText"
+        value="—"
+        [sub]="'admin.prerender.kpi.pass_none' | adminText"
+      />
+    }
+    <lodb-kpi
+      accent="blue"
+      [label]="'admin.prerender.kpi.stored' | adminText"
+      [value]="data.storage.bytes | decimalBytes"
+      [sub]="'admin.prerender.kpi.stored_sub' | adminText: { pages: (data.storage.pages | figure) }"
+    />
+    <lodb-kpi
+      accent="green"
+      [label]="'admin.prerender.kpi.cost' | adminText"
+      [value]="cost()"
+      [sub]="
+        retiredCost()
+          ? ('admin.prerender.kpi.cost_sub_retired' | adminText: { retired: retiredCost() })
+          : ('admin.prerender.kpi.cost_sub' | adminText)
+      "
+    />
+  </div>
+
+  <lodb-admin-rule [label]="'admin.rules.current_pass' | adminText" />
+  @if (data.current; as current) {
+    <lodb-current-pass-card
+      [pass]="current"
+      [busy]="actions.busy()"
+      (paused)="pause(current.id)"
+      (resumed)="resume(current.id)"
+      (cancelled)="cancel(current.id)"
+    />
+  } @else {
+    <lodb-admin-card>
+      <p class="text-text-dim" data-no-pass>{{ 'admin.prerender.current.none' | adminText }}</p>
+    </lodb-admin-card>
+  }
+
+  <lodb-admin-rule [label]="'admin.rules.launch' | adminText" />
+  <lodb-launch-form
+    [servedEpoch]="data.servedEpoch"
+    [enqueuesPromotions]="data.enqueuesPromotions"
+    [lock]="lock()"
+    [busy]="actions.busy()"
+    (launched)="launch($event)"
+  />
+
+  <lodb-admin-rule [label]="'admin.rules.storage' | adminText" />
+  <lodb-storage-section [storage]="data.storage" />
+
+  <lodb-admin-rule [label]="'admin.rules.history' | adminText" />
+  <lodb-admin-card>
+    <lodb-pass-history-table [passes]="data.passes" [attr.aria-busy]="report.busy()" />
+  </lodb-admin-card>
+}
