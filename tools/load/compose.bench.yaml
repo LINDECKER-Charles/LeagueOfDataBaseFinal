@@ -36,6 +36,15 @@ services:
       LoDb__Ingestion__SlotWait:
       LoDb__RateLimiting__SignInPerWindow:
       LoDb__Builds__Votes__MinimumAccountAge:
+      # The dev overlay's simulated store: no pass runs on a bench.
+      LoDb__Prerender__Endpoint:
+      LoDb__Prerender__AllowInsecureEndpoint:
+      LoDb__Prerender__Region:
+      LoDb__Prerender__Bucket:
+      LoDb__Prerender__AccessKey:
+      LoDb__Prerender__SecretKey:
+      LoDb__Prerender__PublicHost:
+      LoDb__Prerender__AutoEnqueueOnPromotion:
     cpu_shares: 1024
     deploy:
       resources:
@@ -64,6 +73,10 @@ services:
       LODB_CURRENT_RENDER_PER_CLIENT_BURST: ${LODB_CURRENT_RENDER_PER_CLIENT_BURST:-}
       LODB_RENDER_DEADLINE_SECONDS: ${LODB_RENDER_DEADLINE_SECONDS:-}
       LODB_RENDER_API_TIMEOUT_SECONDS: ${LODB_RENDER_API_TIMEOUT_SECONDS:-}
+      LODB_PRERENDER_RENDERS_PER_MINUTE: ${LODB_PRERENDER_RENDERS_PER_MINUTE:-}
+      LODB_PRERENDER_RENDER_BURST: ${LODB_PRERENDER_RENDER_BURST:-}
+      LODB_PRERENDER_MAX_IN_FLIGHT: ${LODB_PRERENDER_MAX_IN_FLIGHT:-}
+      LODB_PRERENDER_VISITOR_RESERVE: ${LODB_PRERENDER_VISITOR_RESERVE:-}
     cpu_shares: 1024
     deploy:
       resources:
@@ -82,6 +95,12 @@ services:
       LODB_LEGACY_BURST: ${LODB_LEGACY_BURST:-10}
       LODB_SITEMAPS_RATE: ${LODB_SITEMAPS_RATE:-1r/s}
       LODB_SITEMAPS_BURST: ${LODB_SITEMAPS_BURST:-20}
+      # The store stays off, as compose.yaml has it: a bench measures the SSR's fallback.
+      LODB_PAGES_STORE_ENABLED: ${LODB_PAGES_STORE_ENABLED:-0}
+      LODB_PAGES_STORE_SCHEME: ${LODB_PAGES_STORE_SCHEME:-https}
+      LODB_PAGES_STORE_HOST: ${LODB_PAGES_STORE_HOST:-s3.fr-par.scw.cloud}
+      LODB_PAGES_STORE_PORT: ${LODB_PAGES_STORE_PORT:-443}
+      LODB_PAGES_STORE_BUCKET: ${LODB_PAGES_STORE_BUCKET:-none}
       # The load generator runs on this network and states each client's address in
       # X-Forwarded-For, as the shared edge does on a host: nginx believes this subnet only.
       LODB_EDGE_CIDR: ${LODB_BENCH_SUBNET:-10.213.7.0/24}
@@ -90,7 +109,7 @@ services:
       resources:
         limits:
           cpus: "0.25"
-          memory: 256m
+          memory: 512m
           pids: 256
 
   postgres:
