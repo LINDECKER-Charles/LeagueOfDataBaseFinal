@@ -7,6 +7,7 @@ import type { AdminVisit } from '../../../testing/admin-visit';
 import { notice } from '../../../testing/dom/notice';
 import { press } from '../../../testing/dom/press';
 import { prerenderReport } from '../../../testing/fixtures/prerender-report';
+import { scalewayBillReport } from '../../../testing/fixtures/scaleway-bill-report';
 import { reply } from '../../../testing/http/reply';
 import { sent } from '../../../testing/http/sent';
 import { openPanel } from '../../../testing/panels/open-panel';
@@ -18,6 +19,9 @@ import { PrerenderPanel } from './prerender-panel';
 
 const PRERENDER = '/api/admin/prerender';
 const PASSES = `${PRERENDER}/passes`;
+// The Scaleway bill loads after the panel: every opening answers it.
+const BILL = '/api/admin/scaleway/bill';
+const BILL_CALL = { path: BILL, body: scalewayBillReport() };
 const URL = '/admin/prerender';
 // Polled at once in a spec, then waited for a few rounds once the pass ended.
 const SPEC_POLL_MS = 30;
@@ -39,7 +43,7 @@ function texts(root: ParentNode, selector: string): string[] {
 }
 
 function open(report: PrerenderReport = prerenderReport()) {
-  return openPanel(PrerenderPanel, URL, [{ path: PRERENDER, body: report }]);
+  return openPanel(PrerenderPanel, URL, [{ path: PRERENDER, body: report }, BILL_CALL]);
 }
 
 function field(visit: AdminVisit, name: string, value: string): void {
@@ -212,6 +216,7 @@ describe('PrerenderPanel', () => {
     });
     const { page } = await openPanelInFrench(PrerenderPanel, URL, [
       { path: PRERENDER, body: done },
+      BILL_CALL,
     ]);
 
     expect(texts(page, '[data-ready-epoch]')).toEqual([
@@ -233,7 +238,7 @@ describe('PrerenderPanel', () => {
       [panelRoute(PrerenderPanel, URL)],
       [{ provide: PRERENDER_POLL, useValue: SPEC_POLL_MS }],
     );
-    const visit = await visitPanel(URL, [{ path: PRERENDER, body: prerenderReport() }]);
+    const visit = await visitPanel(URL, [{ path: PRERENDER, body: prerenderReport() }, BILL_CALL]);
 
     // Not rendered in between: while a pass runs, a read is always due, and the page never
     // turns stable.
@@ -250,11 +255,13 @@ describe('PrerenderPanel', () => {
       [panelRoute(PrerenderPanel, URL)],
       [{ provide: PRERENDER_POLL, useValue: SPEC_POLL_MS }],
     );
-    const visit = await visitPanel(URL, [{ path: PRERENDER, body: prerenderReport() }]);
+    const visit = await visitPanel(URL, [{ path: PRERENDER, body: prerenderReport() }, BILL_CALL]);
 
-    // The API redeploys: one read answers 502, the next one finds the pass ended.
+    // The API redeploys: one read answers 502, the next one finds the pass ended. The panel
+    // shows again, and its bill with it, read anew.
     (await sent(visit, PRERENDER)).flush(null, BAD_GATEWAY);
-    await readAgain(visit, IDLE);
+    (await sent(visit, PRERENDER)).flush(IDLE);
+    await reply(visit, await sent(visit, BILL), BILL_CALL.body);
     await new Promise((resolve) => setTimeout(resolve, SPEC_WAIT_MS));
 
     expect(visit.http.match(`${ADMIN_API}${PRERENDER}`)).toHaveLength(0);
@@ -264,6 +271,7 @@ describe('PrerenderPanel', () => {
   it('reads in French, the states and the types of page by their names', async () => {
     const { page } = await openPanelInFrench(PrerenderPanel, URL, [
       { path: PRERENDER, body: prerenderReport() },
+      BILL_CALL,
     ]);
 
     expect(texts(page, '[data-pass-state]')).toEqual(['en cours']);

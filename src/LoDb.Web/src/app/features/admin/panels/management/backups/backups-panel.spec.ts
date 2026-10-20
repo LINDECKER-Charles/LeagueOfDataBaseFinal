@@ -1,9 +1,12 @@
 import { backupReport } from '../../../testing/fixtures/backup-report';
+import { scalewayBillReport } from '../../../testing/fixtures/scaleway-bill-report';
 import { openPanel } from '../../../testing/panels/open-panel';
 import { openPanelInFrench } from '../../../testing/panels/open-panel-in-french';
 import { BackupsPanel } from './backups-panel';
 
 const BACKUPS = '/api/admin/backups';
+// The Scaleway bill loads after the panel: every opening answers it.
+const BILL_CALL = { path: '/api/admin/scaleway/bill', body: scalewayBillReport() };
 
 function texts(root: ParentNode, selector: string): string[] {
   return [...root.querySelectorAll(selector)].map((node) =>
@@ -15,6 +18,7 @@ describe('BackupsPanel', () => {
   it('asks for the window of the URL', async () => {
     const { calls } = await openPanel(BackupsPanel, '/admin/backups?days=7', [
       { path: BACKUPS, body: backupReport() },
+      BILL_CALL,
     ]);
 
     expect(calls[0].request.params.get('days')).toBe('7');
@@ -23,6 +27,7 @@ describe('BackupsPanel', () => {
   it('shows the key figures, a card per database, the nights, then every step', async () => {
     const { page } = await openPanel(BackupsPanel, '/admin/backups?days=7', [
       { path: BACKUPS, body: backupReport() },
+      BILL_CALL,
     ]);
 
     expect(texts(page, 'lodb-kpi')).toEqual([
@@ -63,6 +68,7 @@ describe('BackupsPanel', () => {
     const runs = Array.from({ length: 20 }, (_, index) => ({ ...latest, id: 100 - index }));
     const { page } = await openPanel(BackupsPanel, '/admin/backups', [
       { path: BACKUPS, body: backupReport({ runs }) },
+      BILL_CALL,
     ]);
 
     expect(page.querySelectorAll('tbody tr[data-run]')).toHaveLength(15);
@@ -72,6 +78,7 @@ describe('BackupsPanel', () => {
   it('says the backups are not active yet when the journal is empty', async () => {
     const { page, calls } = await openPanel(BackupsPanel, '/admin/backups?days=365', [
       { path: BACKUPS, body: backupReport({ databases: [], repository: null, runs: [] }) },
+      BILL_CALL,
     ]);
 
     expect(calls[0].request.params.get('days')).toBe('30');
@@ -89,6 +96,7 @@ describe('BackupsPanel', () => {
   it('reads in French, the databases by their names', async () => {
     const { page } = await openPanelInFrench(BackupsPanel, '/admin/backups?days=7', [
       { path: BACKUPS, body: backupReport() },
+      BILL_CALL,
     ]);
 
     expect(texts(page, 'lodb-backup-database-card h2')).toEqual([

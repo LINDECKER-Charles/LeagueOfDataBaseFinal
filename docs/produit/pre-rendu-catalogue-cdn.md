@@ -441,6 +441,11 @@ au staging. En attendant, ses pages passent par le SSR et le cache local.
   Une epoch retirée coûte encore tant que le cycle de vie ne l'a pas effacée (au moins 9 jours
   pour 4 millions d'objets), ce que l'API ne voit pas : sa ligne garde son coût, mais les
   totaux ne la comptent plus ;
+- à côté de l'estimation, qui reste à sa place, la facture réelle de Scaleway pour l'Object
+  Storage de tout le projet des pages, lue avec une clé de lecture de la facturation : le mois
+  en cours, le précédent, l'historique sur six mois et les lignes du mois, hors TVA. Elle
+  compte ce que l'estimation laisse de côté (la sortie, les requêtes) et se charge à part, sans
+  jamais retarder le panneau ([`configuration.md`](../guides/configuration.md) § 4.9) ;
 - la passe en cours, avec sa progression, son rythme et sa fin estimée ;
 - le lancement d'une passe, avec son périmètre (tout, une plage de versions, un type de
   page, une langue), une liste de versions prioritaires et une confirmation ;

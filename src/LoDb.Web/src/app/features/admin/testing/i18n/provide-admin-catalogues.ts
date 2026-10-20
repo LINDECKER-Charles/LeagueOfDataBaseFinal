@@ -50,6 +50,15 @@ const CATALOGUES: Readonly<Record<string, Translation>> = {
         ],
       },
     },
+    scaleway_bill: {
+      stale: [
+        "Scaleway n'a pas répondu à la dernière lecture : montants lus le ",
+        ['arg', 'date'],
+        '.',
+      ],
+      fetched: ['Relevé chez Scaleway le ', ['arg', 'date'], '.'],
+      units: { gigabyte_hour: 'Go·h' },
+    },
   },
   'admin/en': {
     actions: { refresh: 'Refresh' },
@@ -94,6 +103,11 @@ const CATALOGUES: Readonly<Record<string, Translation>> = {
           ' for the retired epochs, until their deletion; egress excluded',
         ],
       },
+    },
+    scaleway_bill: {
+      stale: ['Scaleway did not answer the last reading: amounts read on ', ['arg', 'date'], '.'],
+      fetched: ['Read from Scaleway on ', ['arg', 'date'], '.'],
+      units: { gigabyte_hour: 'GB·h' },
     },
   },
 };

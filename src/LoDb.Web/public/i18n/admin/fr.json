@@ -786,6 +786,40 @@
       "cancel": "Passe n°{id} annulée."
     }
   },
+  "scaleway_bill": {
+    "title": "Facture Scaleway",
+    "chip": "hors TVA",
+    "not_configured": "Facture Scaleway non configurée : posez LoDb__ScalewayBilling__SecretKey (la clé de lecture de la facturation) pour l'afficher ici.",
+    "loading": "Lecture de la facture Scaleway…",
+    "failed": "Facture indisponible ({reason}).",
+    "unavailable": "Scaleway n'a pas encore répondu depuis le démarrage de l'API : la facture s'affichera à la prochaine lecture réussie, dans quelques minutes au plus tôt.",
+    "stale": "Scaleway n'a pas répondu à la dernière lecture : montants lus le {date}.",
+    "empty": "Aucune consommation facturée sur les six derniers mois.",
+    "current": "Ce mois-ci",
+    "current_sub": "{month}, jusqu'ici",
+    "previous": "Mois précédent",
+    "previous_none": "aucune consommation",
+    "lines": "Détail du mois en cours : {count, plural, =0 {aucune ligne} one {# ligne} other {# lignes}}",
+    "lines_empty": "Aucune ligne ce mois-ci.",
+    "fetched": "Relevé chez Scaleway le {date}.",
+    "read_again": "Relire",
+    "columns": {
+      "month": "Mois",
+      "amount": "Montant HT",
+      "product": "Produit",
+      "resource": "Ressource",
+      "quantity": "Quantité"
+    },
+    "units": {
+      "gigabyte_hour": "Go·h",
+      "gigabyte": "Go",
+      "plan": "forfait"
+    },
+    "notes": {
+      "backups": "Hors TVA ; Scaleway met à jour ces montants avec quelques heures de retard ; la facture couvre l'Object Storage de tout le projet.",
+      "pages": "Hors TVA ; Scaleway met à jour ces montants avec quelques heures de retard ; contrairement à l'estimation, la facture compte la sortie et les requêtes, et couvre l'Object Storage de tout le projet."
+    }
+  },
   "journal": {
     "title": "Journal d'audit",
     "lede": "Actions sensibles et événements de sécurité. Horodatage en UTC. Conservation {months} mois (recommandation CNIL).",

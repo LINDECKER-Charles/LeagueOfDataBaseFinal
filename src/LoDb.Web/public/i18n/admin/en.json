@@ -786,6 +786,40 @@
       "cancel": "Pass #{id} cancelled."
     }
   },
+  "scaleway_bill": {
+    "title": "Scaleway bill",
+    "chip": "excl. VAT",
+    "not_configured": "Scaleway bill not configured: set LoDb__ScalewayBilling__SecretKey (the billing read key) to show it here.",
+    "loading": "Reading the Scaleway bill…",
+    "failed": "Bill unavailable ({reason}).",
+    "unavailable": "Scaleway has not answered since the API started: the bill will show at the next successful reading, in a few minutes at the earliest.",
+    "stale": "Scaleway did not answer the last reading: amounts read on {date}.",
+    "empty": "No consumption billed over the last six months.",
+    "current": "This month",
+    "current_sub": "{month}, so far",
+    "previous": "Previous month",
+    "previous_none": "no consumption",
+    "lines": "Detail of the current month: {count, plural, =0 {no line} one {# line} other {# lines}}",
+    "lines_empty": "No line this month.",
+    "fetched": "Read from Scaleway on {date}.",
+    "read_again": "Read again",
+    "columns": {
+      "month": "Month",
+      "amount": "Amount excl. VAT",
+      "product": "Product",
+      "resource": "Resource",
+      "quantity": "Quantity"
+    },
+    "units": {
+      "gigabyte_hour": "GB·h",
+      "gigabyte": "GB",
+      "plan": "plan"
+    },
+    "notes": {
+      "backups": "Excluding VAT; Scaleway updates these amounts a few hours late; the bill covers the Object Storage of the whole project.",
+      "pages": "Excluding VAT; Scaleway updates these amounts a few hours late; unlike the estimate, the bill counts egress and requests, and covers the Object Storage of the whole project."
+    }
+  },
   "journal": {
     "title": "Audit journal",
     "lede": "Sensitive actions and security events. Times in UTC. Kept {months} months (CNIL recommendation).",

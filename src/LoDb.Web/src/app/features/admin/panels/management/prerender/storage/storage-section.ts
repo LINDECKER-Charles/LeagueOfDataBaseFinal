@@ -10,6 +10,7 @@ import { foldRows } from '../../../../widgets/fold-rows';
 import { FoldToggle } from '../../../../widgets/fold-toggle';
 import { monthlyCost } from '../../backups/monthly-cost';
 import { unitPrice } from '../../backups/unit-price';
+import { ScalewayBillBlock } from '../../scaleway-bill/scaleway-bill-block';
 import { DecimalBytesPipe } from '../format/decimal-bytes-pipe';
 import { prerenderTone } from '../prerender-tone';
 
@@ -22,11 +23,20 @@ const RETIRED = 'retired';
  * counters the passes keep (the writer key cannot list): a row per epoch with its state, the
  * bundles of the builds, the total of what is served or kept, then the pages of the served
  * epoch version by version. A line says which prices the estimate takes and what it leaves
- * out: the egress, and how long a retired epoch keeps costing.
+ * out: the egress, and how long a retired epoch keeps costing. Under it, what Scaleway really
+ * bills for the project of the store, loaded on its own.
  */
 @Component({
   selector: 'lodb-storage-section',
-  imports: [AdminCard, AdminTextPipe, Badge, DecimalBytesPipe, FigurePipe, FoldToggle],
+  imports: [
+    AdminCard,
+    AdminTextPipe,
+    Badge,
+    DecimalBytesPipe,
+    FigurePipe,
+    FoldToggle,
+    ScalewayBillBlock,
+  ],
   templateUrl: './storage-section.html',
   host: { class: 'grid gap-[1.15rem]' },
   changeDetection: ChangeDetectionStrategy.OnPush,
