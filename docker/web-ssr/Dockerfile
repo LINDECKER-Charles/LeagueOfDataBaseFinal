@@ -6,7 +6,7 @@
 # never changes what is built. Dependabot bumps both (tools/ci/README.md, base images).
 
 # The bundles are plain JavaScript: building on the build machine avoids emulating Node.
-FROM --platform=$BUILDPLATFORM node:24@sha256:3d27e5c11e5786e309ec3e03f93ae536eb36e6e5eb3714d5eb3300a36157add0 AS build
+FROM --platform=$BUILDPLATFORM node:24@sha256:14078204b6bb268c107ceff6d3c43f45a888105e5c2b18b14c32b3409d93a1b0 AS build
 WORKDIR /source/src/LoDb.Web
 COPY src/LoDb.Web/package.json src/LoDb.Web/package-lock.json ./
 RUN --mount=type=cache,id=lodb-npm,target=/root/.npm \
@@ -16,7 +16,7 @@ COPY src/LoDb.Web/ ./
 RUN npm run build:web && test -f dist/web/browser/changelog/manifest.json
 
 # The server bundle inlines its dependencies: the runtime needs no node_modules.
-FROM node:24-slim@sha256:d6aa754f16b3197301076f047b5def2f02ea1dbbc2ca920407d46d7ec7f87b20 AS runtime
+FROM node:24-slim@sha256:a5f4366e834695d5f363b920c104953a535d3a9864d1bdf74566a0ebe01daee5 AS runtime
 # The distribution's security fixes published since the base image was built: _build.yml
 # rebuilds this stage without its cache, so that each build takes those of the day, before its
 # scan. Then Node's package managers go: the server runs `node` alone, and npm, corepack and

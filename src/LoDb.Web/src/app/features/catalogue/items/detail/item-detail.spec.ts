@@ -191,6 +191,31 @@ describe('lodb-item-detail', () => {
     );
   });
 
+  it('names the mode of a variant kept off the Rift in its head, not its address', async () => {
+    const profile: ItemCard = {
+      ...CARD,
+      canonicalPath: 'items/223748-titanic-hydra',
+      counterpart: null,
+      edition: 'modern',
+      id: '223748',
+      maps: [30],
+      name: 'Titanic Hydra',
+    };
+    const details = { ...DETAILS, canonicalPath: profile.canonicalPath, profile };
+    const { heads } = await render({ context: CONTEXT, details });
+
+    expect(heads.at(-1)?.title).toContain('"name":"Titanic Hydra (map.30)"');
+    expect(heads.at(-1)?.description).toContain('"name":"Titanic Hydra (map.30)"');
+    expect(heads.at(-1)).toMatchObject({ path: 'items/223748-titanic-hydra' });
+  });
+
+  it('keeps the bare name of an item also on the Rift or ARAM', async () => {
+    const profile: ItemCard = { ...CARD, counterpart: null, edition: 'modern', maps: [12, 30] };
+    const { heads } = await render({ context: CONTEXT, details: { ...DETAILS, profile } });
+
+    expect(heads.at(-1)?.title).toContain('"name":"Faerie Charm"}');
+  });
+
   it('names the LoL Classic edition in its head, and turns the pages of the list', async () => {
     const { element, heads } = await render();
 

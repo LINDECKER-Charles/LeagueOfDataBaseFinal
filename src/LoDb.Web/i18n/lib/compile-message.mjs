@@ -1,4 +1,4 @@
-import parser from '@messageformat/parser';
+import { parse } from '@messageformat/parser';
 
 // What MessageFormat accepted at runtime (transloco-messageformat with strictPluralKeys off):
 // `en` messages complete every locale, whose plural categories they need not match.
@@ -64,7 +64,7 @@ function isPlainText(tokens, source) {
 // A message with Transloco parameters is Transloco's alone: no ICU syntax, no ICU quoting.
 function checkedTranslocoMessage(source) {
   const probe = source.replace(TRANSLOCO_PARAMETER, PARAMETER_PROBE);
-  if (!isPlainText(parser.parse(probe, PARSE_OPTIONS), probe)) {
+  if (!isPlainText(parse(probe, PARSE_OPTIONS), probe)) {
     throw new Error('mixes {{ }} parameters with ICU syntax: write {name} arguments instead');
   }
   return source;
@@ -80,7 +80,7 @@ export function compileMessage(source) {
   if (source.search(TRANSLOCO_PARAMETER) >= 0) {
     return checkedTranslocoMessage(source);
   }
-  const parts = compileTokens(parser.parse(source, PARSE_OPTIONS), null);
+  const parts = compileTokens(parse(source, PARSE_OPTIONS), null);
   if (parts.length === 0) {
     return '';
   }

@@ -12,9 +12,11 @@ import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
 import type { AudienceData } from './audience/audience-data';
 import type { AudienceEventName } from './audience/audience-event-name';
+import type { AudienceHit } from './audience/audience-hit';
 import type { AudiencePage } from './audience/audience-page';
 import { audiencePageOf } from './audience/normalize/audience-page-of';
 import { audienceReferrerOf } from './audience/normalize/audience-referrer-of';
+import { AudiencePresence } from './audience/presence/audience-presence';
 import { AudienceSender } from './audience/send/audience-sender';
 
 /**
@@ -26,7 +28,10 @@ import { AudienceSender } from './audience/send/audience-sender';
  *
  * A view waits for the application to settle, so that its title is the page's own
  * (`Seo.apply`). Addresses are normalized before anything leaves (`audiencePageOf`); the
- * referrer is the referring site's origin, on the first view only. Browser only.
+ * referrer is the referring site's origin, on the first view only. Nothing leaves before a
+ * sign that a person is there (`AudiencePresence`): the first view then goes with the title and
+ * the referrer it had once stable, and a robot that loads a page and leaves is never counted.
+ * Browser only.
  */
 @Injectable({ providedIn: 'root' })
 export class AudienceTracker {
@@ -35,6 +40,7 @@ export class AudienceTracker {
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
   private readonly sender = inject(AudienceSender);
+  private readonly presence = inject(AudiencePresence);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
   private current: AudiencePage | null = null;
   private lastKey: string | null = null;
@@ -46,6 +52,7 @@ export class AudienceTracker {
     if (!this.isBrowser) {
       return;
     }
+    this.presence.start();
     this.router.events
       .pipe(
         filter((event): event is NavigationEnd => event instanceof NavigationEnd),
@@ -57,7 +64,13 @@ export class AudienceTracker {
   /** Counts an event of the page shown now (`build-share`); nothing on an unmeasured page. */
   track(name: AudienceEventName, data?: AudienceData): void {
     if (this.current !== null) {
-      this.sender.send({ page: this.current, title: this.current.url, referrer: '', name, data });
+      this.sendOncePresent({
+        page: this.current,
+        title: this.current.url,
+        referrer: '',
+        name,
+        data,
+      });
     }
   }
 
@@ -96,7 +109,11 @@ export class AudienceTracker {
     await this.appRef.whenStable();
     const isStill = navigation === this.navigations;
     const title = page.isPublicPath && isStill ? this.document.title : page.url;
-    this.sender.send({ page, title, referrer });
+    this.sendOncePresent({ page, title, referrer });
+  }
+
+  private sendOncePresent(hit: AudienceHit): void {
+    void this.presence.confirmed.then(() => this.sender.send(hit));
   }
 
   private referrer(): string {
