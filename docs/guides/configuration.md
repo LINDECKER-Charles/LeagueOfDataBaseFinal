@@ -247,7 +247,7 @@ création d'une base, sur un volume vide.
 | `LODB_PAGES_STORE_BUCKET` | `lodb-pages-staging` | `lodb-pages-prod` | avec le précédent | Bucket que nginx lit, le même que `LoDb__Prerender__Bucket` (§ 4.2). Défaut `none` : aucun (une valeur vide est refusée par nginx). |
 | `LODB_PAGES_STORE_SCHEME`, `LODB_PAGES_STORE_HOST`, `LODB_PAGES_STORE_PORT` | ➖ | ➖ | ➖ | Adresse du stockage pour nginx : `https`, `s3.fr-par.scw.cloud`, `443`. Le stockage simulé de la stack locale les remplace (§ 7). nginx lit sans clé, depuis l'adresse de l'hôte, la seule que la politique du bucket admette. |
 | `LODB_ARCHIVE_SERVE_EPOCH` | `1` | `1` | ➖ | Epoch que nginx lit dans le stockage (`pages/<epoch>/…`), aussi transmise à l'API (`LoDb__Prerender__ServedEpoch`) pour le panneau d'administration. Changée à la main, puis redéploiement : voir « Changer l'epoch servie » (§ 4.8). Distincte de `LODB_ARCHIVE_EPOCH`, le compteur des clés du cache de nginx. |
-| `LODB_PRERENDER_RENDERS_PER_MINUTE`, `LODB_PRERENDER_RENDER_BURST`, `LODB_PRERENDER_MAX_IN_FLIGHT`, `LODB_PRERENDER_VISITOR_RESERVE` | ➖ (§ 4.5) | ➖ | ➖ | Voie de rendu de la passe de précalcul du SSR : rendus par minute (`120`) et d'affilée (`10`), rendus simultanés de la passe (`2`, strictement sous `LODB_RENDER_MAX_IN_FLIGHT`), et rendus toujours laissés aux visiteurs (`4`) : la passe n'entre que si `total + 1` reste sous `LODB_RENDER_MAX_IN_FLIGHT` moins cette réserve. Sans part par client : l'API est le seul client de cette voie. |
+| `LODB_PRERENDER_RENDERS_PER_MINUTE`, `LODB_PRERENDER_RENDER_BURST`, `LODB_PRERENDER_MAX_IN_FLIGHT`, `LODB_PRERENDER_VISITOR_RESERVE` | ➖ (§ 4.5) | ➖ | ➖ | Voie de rendu de la passe de précalcul du SSR : rendus par minute (`120`) et d'affilée (`10`), rendus simultanés de la passe (`2`, strictement sous `LODB_RENDER_MAX_IN_FLIGHT`), et rendus toujours laissés aux visiteurs (`4`) : la passe n'entre que si `total + 1` reste sous `LODB_RENDER_MAX_IN_FLIGHT` moins cette réserve. Sans part par client : l'API est le seul client de cette voie. Elle règle la passe sur les mêmes lignes : le rythme et les rendus simultanés lui parviennent aussi (`LoDb__Prerender__RendersPerMinute`, `LoDb__Prerender__MaxInFlight`, § 4.3), si bien qu'un budget relevé ici l'est des deux côtés, et que la passe ne demande jamais plus que la voie n'admet (sinon, chaque refus la fait attendre son `Retry-After`). Un `LODB_RENDER_MAX_IN_FLIGHT` abaissé sous `3` ramène la voie sous `2` à l'insu de l'API : poser alors `LODB_PRERENDER_MAX_IN_FLIGHT`. |
 | `LODB_FRONT_BUILDS_RETENTION_DAYS` | `400` | `400` | ➖ | Lu par le job de déploiement : un bundle du volume `front-builds` qu'aucun build n'a livré depuis ce nombre de jours (`400`) est supprimé, `395` au moins (le job refuse en deçà). Jamais sous la durée de vie d'une page en cache (un an pour un ancien patch, son `s-maxage`, puis sa copie périmée servie le temps de son nouveau rendu) : un onglet ou une page gardée nommerait un bundle disparu. La copie des builds dans le stockage objet (ADR 0011) ne couvre pas les pages rendues par le SSR, que le cache des anciens patchs garde aussi (inactivité `90d`) : un filet de plus, pas une raison de baisser cette durée. Mesuré : 16 Mo en 9 jours, moins de 1 Go par an. |
 | `LODB_ADMIN_LOGIN` | 🔁 `ADMIN_LOGIN` | idem | ➖ | Administrateur racine, tenu par le job à chaque déploiement (`api admin root`) : compte de ce nom, rôle admin, TOTP enrôlé depuis le lien d'invitation que `api admin mfa-invite --email …` affiche sur l'hôte (15 min ; `api admin mfa-reset` retire un TOTP perdu). Absent : aucun, seulement `api admin create`. |
 | `LODB_ADMIN_PASSWORD` 🔒 | 🔁 `ADMIN_PASSWORD` | idem | avec le précédent | Son mot de passe, 12 caractères au moins, sans apostrophe ni guillemet. Changé ici, il est réappliqué au déploiement suivant (sessions fermées). Reste dans le `.env` : le job le passe à la commande par son entrée. |
@@ -402,7 +402,11 @@ le service y pose `LoDb__Database__Password`, lu dans `/run/secrets` ; pour l'AP
 `LoDb__Prerender__SsrBaseUrl` (`http://lodb-web-ssr:4000` : la passe demande ses pages au SSR
 directement, jamais à nginx), `LoDb__Prerender__PublicHost` (`LODB_CANONICAL_HOST` : l'hôte
 pour lequel chaque page est rendue), `LoDb__Prerender__ServedEpoch`
-(`LODB_ARCHIVE_SERVE_EPOCH`), `LoDb__Hosting__KnownProxyNetworks__0` (`LODB_STACK_SUBNET` seul), `AllowedHosts` (les hôtes de
+(`LODB_ARCHIVE_SERVE_EPOCH`), `LoDb__Prerender__RendersPerMinute` et
+`LoDb__Prerender__MaxInFlight` (`LODB_PRERENDER_RENDERS_PER_MINUTE` et
+`LODB_PRERENDER_MAX_IN_FLIGHT`, les lignes de la voie du SSR, `120` et `2` à défaut, `30` et
+`1` au staging : le rythme de la passe et ses pages en vol),
+`LoDb__Hosting__KnownProxyNetworks__0` (`LODB_STACK_SUBNET` seul), `AllowedHosts` (les hôtes de
 `CADDY_DOMAINS` et `API_CADDY_DOMAINS`, puis `lodb-api`, `localhost` et `127.0.0.1` : tout autre
 `Host` reçoit un `400`, le port des métriques excepté), `LoDb__Storage__Root` (`/srv/storage`, volume
 `ddragon`, que nginx sert), et côté SSR `LODB_API_ORIGIN`, `LODB_TRUST_PROXY_HEADERS`,
@@ -492,6 +496,7 @@ Pour en changer un sur un hôte, l'ajouter sous `services.api.environment` de
 | `LoDb:SecurityReports` | `MaxBodyBytes` (65536 : corps d'un envoi de rapports CSP, 413 au-delà, compté), `PerClientPerMinute` (30 envois par adresse et par minute, 429 au-delà), `PerMinute` (600 envois par minute, tous clients confondus, refusés avant d'être lus au-delà) |
 | `LoDb:Telemetry` | `TraceSampleRatio` (`0.05`, de `0` à `1` : part des traces enregistrées et exportées quand `OTEL_EXPORTER_OTLP_ENDPOINT` est posé, choisie par l'identifiant de trace, jamais par le drapeau `sampled` d'un `traceparent` reçu) |
 | `LoDb:PublicApi` | `KeyCacheLifetime` (1 min), `TrendsLifetime` (5 min), `MeteringInterval` (1 s) |
+| `LoDb:Prerender` | `RequestTimeout` (30 s, de 5 min au plus : chaque requête au stockage des pages), `OneZoneStorageClass` (`ONEZONE_IA`, la classe des pages ; une autre exige `AllowInsecureEndpoint`, le stockage de développement seul), `PricePerGbMonthOneZone` et `PricePerGbMonthMultiAz` (§ 4.8) |
 | `LoDb:Audience` | `Host`, `WebsiteId` (posés par `compose.umami.yaml`), `Username`, `Password` (secrets) : sans l'un d'eux, le tirage dort ; `PullPeriod` (1 h), `RefreshDays` (2 : aujourd'hui et hier, réécrits à chaque tirage), `PageSize` (500 chemins par requête), `MaxPages` (40 requêtes par jour au plus), `RequestTimeout` (30 s), `MaxResponseBytes` (4 Mio) ; `TrendsSwitchDate` (aucune : `/v1/trends` lit la mesure maison ; posée, Umami à partir de ce jour), `ClipFactor` (3) et `ClipWindowDays` (28) : le jour d'une entité compte au plus 3 fois la médiane de ses jours des 28 derniers (Umami collecte sans authentification) |
 
 </details>
@@ -535,6 +540,8 @@ quotas se revoient avec ceux de la prod :
 
 Le couloir épinglé reste strictement sous le total des rendus, sinon le SSR refuse de
 démarrer ; la part d'un client (`2` rendus, `6` épinglés par minute) tient dans ces totaux.
+L'API règle la passe sur la voie `prerender` du calque : `30` rendus par minute, `1` page en
+vol, lus sur les mêmes lignes que le SSR (§ 4.1).
 Un nouveau patch met plus longtemps à arriver sur le staging.
 
 **Identifiant sur les pages (facultatif).** Avec `LODB_STAGING_BASIC_AUTH_USER` et

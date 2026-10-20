@@ -73,6 +73,12 @@ services:
       # The epoch nginx serves (LODB_ARCHIVE_SERVE_EPOCH below): one line feeds both, so the
       # admin panel shows what is served.
       LoDb__Prerender__ServedEpoch: ${LODB_ARCHIVE_SERVE_EPOCH:-1}
+      # The pass's pace and pages in flight: the SSR's prerender lane (web-ssr below), from the
+      # same lines, so that the pass never asks more than the lane admits and a budget raised
+      # on a host is raised on both sides. The defaults are the SSR's own; never empty, which
+      # the API would refuse to bind.
+      LoDb__Prerender__RendersPerMinute: ${LODB_PRERENDER_RENDERS_PER_MINUTE:-120}
+      LoDb__Prerender__MaxInFlight: ${LODB_PRERENDER_MAX_IN_FLIGHT:-2}
     <<: *hardening
     # The runtime's diagnostics sockets and any temporary file of the API or its libraries.
     tmpfs: &dotnet-tmpfs

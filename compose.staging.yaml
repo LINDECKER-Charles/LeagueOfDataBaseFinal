@@ -20,6 +20,9 @@ services:
       # Staging stays almost empty (ADR 0011): no pass starts when a patch is promoted, an
       # operator launches small ones, and its bucket forgets every page after 14 days.
       LoDb__Prerender__AutoEnqueueOnPromotion: ${LoDb__Prerender__AutoEnqueueOnPromotion:-false}
+      # The pass keeps to the staging's prerender lane (web-ssr below), from the same lines.
+      LoDb__Prerender__RendersPerMinute: ${LODB_PRERENDER_RENDERS_PER_MINUTE:-30}
+      LoDb__Prerender__MaxInFlight: ${LODB_PRERENDER_MAX_IN_FLIGHT:-1}
     cpu_shares: 128
     deploy:
       resources:
