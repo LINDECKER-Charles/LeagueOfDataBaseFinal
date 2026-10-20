@@ -177,5 +177,15 @@ export type { ReadAdminStorage$Params as ReadAdminStorage$Params } from './fn/ad
 export { readAdminStorage as readAdminStorage } from './fn/admin-storage/read-admin-storage';
 export type { ReadAdminBackups$Params as ReadAdminBackups$Params } from './fn/admin-backups/read-admin-backups';
 export { readAdminBackups as readAdminBackups } from './fn/admin-backups/read-admin-backups';
+export type { ReadAdminPrerender$Params as ReadAdminPrerender$Params } from './fn/admin-prerender/read-admin-prerender';
+export { readAdminPrerender as readAdminPrerender } from './fn/admin-prerender/read-admin-prerender';
+export type { StartAdminPrerenderPass$Params as StartAdminPrerenderPass$Params } from './fn/admin-prerender/start-admin-prerender-pass';
+export { startAdminPrerenderPass as startAdminPrerenderPass } from './fn/admin-prerender/start-admin-prerender-pass';
+export type { PauseAdminPrerenderPass$Params as PauseAdminPrerenderPass$Params } from './fn/admin-prerender/pause-admin-prerender-pass';
+export { pauseAdminPrerenderPass as pauseAdminPrerenderPass } from './fn/admin-prerender/pause-admin-prerender-pass';
+export type { ResumeAdminPrerenderPass$Params as ResumeAdminPrerenderPass$Params } from './fn/admin-prerender/resume-admin-prerender-pass';
+export { resumeAdminPrerenderPass as resumeAdminPrerenderPass } from './fn/admin-prerender/resume-admin-prerender-pass';
+export type { CancelAdminPrerenderPass$Params as CancelAdminPrerenderPass$Params } from './fn/admin-prerender/cancel-admin-prerender-pass';
+export { cancelAdminPrerenderPass as cancelAdminPrerenderPass } from './fn/admin-prerender/cancel-admin-prerender-pass';
 export type { PublishClientPolicy$Params as PublishClientPolicy$Params } from './fn/admin-client-policy/publish-client-policy';
 export { publishClientPolicy as publishClientPolicy } from './fn/admin-client-policy/publish-client-policy';

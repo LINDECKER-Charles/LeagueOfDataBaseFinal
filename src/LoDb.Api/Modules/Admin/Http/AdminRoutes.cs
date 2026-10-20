@@ -22,4 +22,5 @@ internal static class AdminRoutes
     public const string MonitoringTag = "AdminMonitoring";
     public const string StorageTag = "AdminStorage";
     public const string BackupsTag = "AdminBackups";
+    public const string PrerenderTag = "AdminPrerender";
 }

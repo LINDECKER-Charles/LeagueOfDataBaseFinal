@@ -651,6 +651,28 @@ temps de la passe. Le reste, retrait des bundles du stockage compris, est décri
 Deux epochs à ne pas confondre : `LODB_ARCHIVE_EPOCH` numérote les clés du cache de nginx,
 `LODB_ARCHIVE_SERVE_EPOCH` le préfixe des pages dans le stockage.
 
+**Ce que coûte le stockage.** Le panneau « Précalcul du catalogue » (`GET /api/admin/prerender`)
+montre ce que le stockage contient, epoch par epoch (servie, en écriture, en attente de bascule,
+retirée), les builds copiés et, pour l'epoch servie, chaque version : pages et octets, tirés des
+compteurs que la passe tient en écrivant (la clé d'écriture ne liste pas). Le coût mensuel
+estimé multiplie ces octets, en Go de 10⁹ octets, par le prix de leur classe, arrondi à quatre
+décimales :
+
+| Réglage | Défaut | Classe |
+|---|---|---|
+| `LoDb__Prerender__PricePerGbMonthOneZone` | `0.00803` | Standard One Zone, celle des pages : 0,000011 € par Go et par heure (tarif du 1ᵉʳ juin 2026), sur 730 heures |
+| `LoDb__Prerender__PricePerGbMonthMultiAz` | `0.01606` | Standard Multi-AZ, celle des bundles : le double |
+
+Prix hors TVA, en euros, région `fr-par` ; un prix négatif est refusé au démarrage. Les deux
+clés ne sont pas transmises par `compose.deploy.yaml` : les hôtes gardent les défauts, et suivre
+un changement de tarif demande d'y ajouter la clé sans valeur, sous `api.environment`, puis de
+la poser dans `ENV_*`. L'estimation laisse de côté la sortie (75 Go par mois gratuits, puis
+0,01 € par Go), suivie dans Grafana. Une epoch retirée coûte jusqu'à son effacement par le
+cycle de vie (9 jours au moins pour 4 millions d'objets), que l'API ne voit pas : sa ligne
+garde son coût, mais le total la laisse de côté, pour ne pas surestimer la facture une fois
+l'epoch effacée. Sur le staging, dont les pages expirent après 14 jours, les compteurs disent
+ce qui a été écrit, pas ce qui reste.
+
 ## 5. Fichiers et volumes de l'hôte
 
 | Chemin, dans `$STAGING_PATH` ou `$PROD_PATH` | Écrit par | Rôle |

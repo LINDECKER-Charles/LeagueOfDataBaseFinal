@@ -58,14 +58,17 @@ public sealed class AccountsApp : IAsyncDisposable
     private readonly ApiFactory _factory;
     private readonly WebApplicationFactory<Program> _host;
     private readonly bool _realOutbox;
+    private readonly Action<IServiceCollection>? _doubles;
 
     private AccountsApp(
         TestDatabase database,
         Dictionary<string, string?> settings,
-        bool realOutbox)
+        bool realOutbox,
+        Action<IServiceCollection>? doubles = null)
     {
         _database = database;
         _realOutbox = realOutbox;
+        _doubles = doubles;
         _factory = new ApiFactory
         {
             PostgresConnectionString = database.AppConnectionString,
@@ -119,6 +122,28 @@ public sealed class AccountsApp : IAsyncDisposable
         var settings = Settings(withGoogle: true, relay: null);
         settings[SignInLimit] = SharedSignInLimit;
         return new AccountsApp(database, settings, realOutbox: false);
+    }
+
+    /// <summary>
+    /// A host of its own whose module under test needs settings and doubles of its own:
+    /// <paramref name="settings"/> over the defaults, <paramref name="doubles"/> over the
+    /// services, after the doubles of the accounts.
+    /// </summary>
+    public static async Task<AccountsApp> StartAsync(
+        PostgresContainerFixture postgres,
+        IReadOnlyDictionary<string, string?> settings,
+        Action<IServiceCollection> doubles)
+    {
+        ArgumentNullException.ThrowIfNull(postgres);
+        ArgumentNullException.ThrowIfNull(settings);
+        var database = await postgres.CreateMigratedDatabaseAsync(Cancellation);
+        var merged = Settings(withGoogle: true, relay: null);
+        foreach (var (key, value) in settings)
+        {
+            merged[key] = value;
+        }
+
+        return new AccountsApp(database, merged, realOutbox: false, doubles);
     }
 
     /// <summary>A browser on the site: it keeps its cookies and follows no redirect.</summary>
@@ -302,5 +327,6 @@ public sealed class AccountsApp : IAsyncDisposable
         services.Configure<GoogleOptions>(
             GoogleDefaults.AuthenticationScheme,
             options => options.BackchannelHttpHandler = GoogleServer);
+        _doubles?.Invoke(services);
     }
 }
