@@ -34,7 +34,7 @@ public sealed class PromotionTests(PostgresContainerFixture postgres)
     {
         await using var harness = await StartAsync(isAutomatic: true);
         harness.Catalog.Pinned.Add(Older);
-        var passId = await harness.LaunchAsync(new PassScope { Locale = UiLocale.En });
+        var passId = await harness.LaunchAsync(new PassScope { Locales = [UiLocale.En] });
 
         await Listener(harness).OnPromotedAsync(Latest, Token);
         await harness.RunAsync();
@@ -61,7 +61,10 @@ public sealed class PromotionTests(PostgresContainerFixture postgres)
         await using var db = harness.Database.CreateContext();
         var pass = await db.PrerenderPasses.Include(static row => row.Units).SingleAsync(Token);
         Assert.Equal((3, PrerenderPassState.Running), (pass.Epoch, pass.State));
-        Assert.Equal(Left, PassScopeJson.Read(pass.Scope).Newest);
+        // jsonb keeps its own spacing: the stored form is compared as the engine writes it.
+        Assert.Equal(
+            "{\"versions\":[\"16.18.1\"]}",
+            PassScopeJson.Write(PassScopeJson.Read(pass.Scope)));
         Assert.Equal(
             UiLocales.All.Select(UiLocales.Code).Order(StringComparer.Ordinal),
             pass.Units.Select(static unit => unit.Locale).Order(StringComparer.Ordinal));
@@ -152,7 +155,7 @@ public sealed class PromotionTests(PostgresContainerFixture postgres)
     {
         await using var harness = await StartAsync(isAutomatic: true);
         var typed = await harness.LaunchAsync(
-            new PassScope { Locale = UiLocale.En, PageType = ResourceType.Items });
+            new PassScope { Locales = [UiLocale.En], PageTypes = [ResourceType.Items] });
 
         await Listener(harness).OnPromotedAsync(Latest, Token);
         var units = (await harness.PassAsync(typed)).Units.Count;

@@ -73,6 +73,32 @@ public sealed class AdminPrerenderReportTests(PostgresContainerFixture postgres)
         // minute.
         var end = current.GetProperty("estimatedEndAt").GetDateTimeOffset();
         Assert.Equal(Now.AddMinutes(1400 / 60.0), end, TimeSpan.FromSeconds(1));
+        Assert.Equal(1400, current.GetProperty("pagesLeft").GetInt64());
+        Assert.Equal(JsonValueKind.Null, current.GetProperty("pausedAt").ValueKind);
+        Assert.Equal(JsonValueKind.Null, current.GetProperty("pauseReason").ValueKind);
+    }
+
+    // A report carries 50 passes, read every minute: the versions of each are counted.
+    [Fact]
+    public async Task ScopeOfAPassIsSummedUp()
+    {
+        using var admin = await AdminBrowser.OpenAsync(App);
+        await SeedAsync();
+
+        var passes = (await ReadAsync(admin)).GetProperty("passes").EnumerateArray().ToList();
+
+        var listed = passes[^1].GetProperty("scope");
+        Assert.Equal(
+            (3, "16.18.1", "16.12.1", false),
+            (listed.GetProperty("versionCount").GetInt32(), ApiJson.Text(listed, "newestListed"),
+                ApiJson.Text(listed, "oldestListed"),
+                listed.GetProperty("skipComplete").GetBoolean()));
+        Assert.Equal(["fr"], listed.GetProperty("locales").EnumerateArray()
+            .Select(static locale => locale.GetString()));
+        Assert.False(listed.TryGetProperty("versions", out _));
+        var whole = passes[0].GetProperty("scope");
+        Assert.Equal(JsonValueKind.Null, whole.GetProperty("versionCount").ValueKind);
+        Assert.Equal(JsonValueKind.Null, whole.GetProperty("locales").ValueKind);
     }
 
     // The costs to four decimals; the totals leave the retired epoch out, and add the exact
@@ -144,13 +170,21 @@ public sealed class AdminPrerenderReportTests(PostgresContainerFixture postgres)
         return await ApiJson.ReadAsync(response, HttpStatusCode.OK);
     }
 
-    // Epoch 1 retired; epoch 2 served, written again by the running pass after a cancelled
-    // one; epoch 3 complete, waiting for the switch; one build stored.
+    // Epoch 1 retired, written by a pass over three listed versions in French; epoch 2 served,
+    // written again by the running pass after a cancelled one; epoch 3 complete, waiting for
+    // the switch; one build stored.
     private async Task SeedAsync()
     {
         await using var db = App.Database();
+        var listed = Finished(
+            1,
+            PrerenderPassState.Completed,
+            30,
+            Written("16.17.1", "fr", 100, 1));
+        listed.Scope = "{\"versions\":[\"16.17.1\",\"16.12.1\",\"16.18.1\"],"
+            + "\"locales\":[\"fr\"]}";
         db.PrerenderPasses.AddRange(
-            Finished(1, PrerenderPassState.Completed, 30, Written("16.17.1", "fr", 100, 1)),
+            listed,
             Finished(2, PrerenderPassState.Cancelled, 25, Written("16.18.1", "fr", 300, 3)),
             Finished(3, PrerenderPassState.Completed, 20, Written("16.18.1", "fr", 200, 2)),
             Running());

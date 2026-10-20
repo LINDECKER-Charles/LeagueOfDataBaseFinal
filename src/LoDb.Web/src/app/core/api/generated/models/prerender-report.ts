@@ -29,8 +29,8 @@ export interface PrerenderReport {
   passes: Array<PrerenderPassView>;
 
   /**
-   * A newer epoch a pass over every older patch completed: set
-   * `LODB_ARCHIVE_SERVE_EPOCH` to it and redeploy to serve it. Null when none.
+   * A newer epoch ready to serve: set `LODB_ARCHIVE_SERVE_EPOCH` to it and redeploy to
+   * serve it. Null when none.
    */
   readyEpoch?: (number | null);
 
@@ -40,4 +40,10 @@ export interface PrerenderReport {
    */
   servedEpoch: number;
   storage: PrerenderStorageView;
+
+  /**
+   * The page store's bucket, a name and never a secret, for the retirement's variables;
+   * null while the store is not configured.
+   */
+  storeBucket?: (string | null);
 }

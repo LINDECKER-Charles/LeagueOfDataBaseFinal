@@ -74,7 +74,7 @@ internal sealed class VersionEnqueuer(
         }
 
         var active = await db.PrerenderPasses.SingleOrDefaultAsync(static p => p.IsActive, token);
-        if (active is not null && PassScopeJson.Read(active.Scope).PageType is not null)
+        if (active is not null && !PassScopeJson.Read(active.Scope).HasEveryPageType)
         {
             return UnitEnqueue.Deferred(active.Id);
         }
@@ -166,7 +166,7 @@ internal sealed class VersionEnqueuer(
         {
             var hasEnded = State is PrerenderUnitState.Completed or PrerenderUnitState.Failed;
             var isServed = PassEpoch == servedEpoch && hasEnded;
-            return (PassIsActive || isServed) && PassScopeJson.Read(ScopeJson).PageType is null;
+            return (PassIsActive || isServed) && PassScopeJson.Read(ScopeJson).HasEveryPageType;
         }
     }
 }

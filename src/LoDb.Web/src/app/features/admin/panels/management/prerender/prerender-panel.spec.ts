@@ -159,23 +159,23 @@ describe('PrerenderPanel', () => {
     const visit = await open(IDLE);
 
     field(visit, 'epoch', '3');
-    field(visit, 'oldest', '14.1.1');
+    field(visit, 'versions', '14.1.1');
     field(visit, 'pageType', 'items');
     field(visit, 'locale', 'fr');
     field(visit, 'priority', '16.18.1\n16.17.1, 16.18.1');
     press(visit, 'admin.prerender.launch.submit');
     press(visit, 'admin.prerender.launch.confirm');
     const start = await sent(visit, PASSES, 'POST');
-    start.flush({ id: 4, epoch: 3, units: 21 });
+    start.flush({ id: 4, epoch: 3, units: 1, skippedUnits: 0, ignoredVersions: [] });
     await readAgain(visit, prerenderReport({ current: { ...RUNNING, id: 4, epoch: 3 } }));
 
     expect(start.request.body).toEqual({
       epoch: 3,
-      oldest: '14.1.1',
-      newest: null,
-      pageType: 'items',
-      locale: 'fr',
+      versions: ['14.1.1'],
+      locales: ['fr'],
+      pageTypes: ['items'],
       priority: ['16.18.1', '16.17.1'],
+      skipComplete: false,
     });
     expect(notice()).toBe('notice: admin.prerender.done.start');
     expect(texts(visit.page, '[data-launch-lock]')).toEqual([

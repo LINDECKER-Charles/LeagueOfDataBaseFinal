@@ -25,7 +25,7 @@ export type LaunchLock = 'locked_active' | 'locked_dormant';
 
 /**
  * The launch of a pass, the spec's form: the epoch it writes (the served one unless a newer
- * one replaces it), its perimeter (a range of versions, a type of page, a locale) and the
+ * one replaces it), its perimeter (pasted versions, a type of page, a locale) and the
  * versions to render first, pasted from the edge's log. Every field may stay empty. It asks
  * twice, then hands the request to the panel, which runs it.
  */

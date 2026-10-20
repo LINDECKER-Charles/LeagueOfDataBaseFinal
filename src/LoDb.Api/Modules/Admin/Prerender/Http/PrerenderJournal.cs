@@ -2,6 +2,7 @@ using LoDb.Api.Modules.Admin.Prerender.Http.History;
 using LoDb.Api.Modules.Admin.Prerender.Http.Storage;
 using LoDb.Api.Modules.Admin.Prerender.Http.Views;
 using LoDb.Api.Modules.Admin.Prerender.Options;
+using LoDb.Infrastructure.PageStore;
 using Microsoft.Extensions.Options;
 
 namespace LoDb.Api.Modules.Admin.Prerender.Http;
@@ -16,6 +17,7 @@ internal sealed class PrerenderJournal(
     PrerenderActivation activation,
     IOptions<PrerenderOptions> options,
     IOptions<PrerenderPriceOptions> prices,
+    IOptions<PageStoreOptions> store,
     TimeProvider clock)
 {
     public async Task<PrerenderReport> ReportAsync(CancellationToken cancellationToken)
@@ -32,6 +34,8 @@ internal sealed class PrerenderJournal(
             IsConfigured = activation.IsActive,
             EnqueuesPromotions = activation.EnqueuesPromotions,
             ServedEpoch = served,
+            // TODO(B1): the epoch ready by its coverage (EpochReadiness), and the coverage of
+            // each epoch not retired in Storage (StorageFacts.Coverages).
             ReadyEpoch = await history.ReadyEpochAsync(served, writing, cancellationToken),
             Current = active is null ? null : views.First(view => view.Id == active.Pass.Id),
             Passes = views,
@@ -44,6 +48,7 @@ internal sealed class PrerenderJournal(
                     WritingEpoch = writing,
                 },
                 prices.Value),
+            StoreBucket = store.Value.IsConfigured ? store.Value.Bucket : null,
         };
     }
 }

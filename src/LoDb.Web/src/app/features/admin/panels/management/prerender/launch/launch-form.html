@@ -23,14 +23,6 @@
         />
       </label>
       <label class="flex flex-col gap-1.5">
-        <span class="readout-label">{{ 'admin.prerender.launch.oldest' | adminText }}</span>
-        <input name="oldest" type="text" class="admin-input" placeholder="14.1.1" />
-      </label>
-      <label class="flex flex-col gap-1.5">
-        <span class="readout-label">{{ 'admin.prerender.launch.newest' | adminText }}</span>
-        <input name="newest" type="text" class="admin-input" placeholder="16.18.1" />
-      </label>
-      <label class="flex flex-col gap-1.5">
         <span class="readout-label">{{ 'admin.prerender.launch.page_type' | adminText }}</span>
         <select name="pageType" class="hx-select admin-input">
           <option value="">{{ 'admin.prerender.launch.all_types' | adminText }}</option>
@@ -52,6 +44,17 @@
     <p class="readout-text">
       {{ 'admin.prerender.launch.epoch_hint' | adminText: { epoch: servedEpoch() } }}
     </p>
+
+    <label class="flex flex-col gap-1.5">
+      <span class="readout-label">{{ 'admin.prerender.launch.versions' | adminText }}</span>
+      <textarea
+        name="versions"
+        rows="3"
+        class="admin-input admin-input--wide font-mono"
+        placeholder="16.18.1, 15.2.1, 14.24.1"
+      ></textarea>
+      <span class="readout-text">{{ 'admin.prerender.launch.versions_hint' | adminText }}</span>
+    </label>
 
     <label class="flex flex-col gap-1.5">
       <span class="readout-label">{{ 'admin.prerender.launch.priority' | adminText }}</span>

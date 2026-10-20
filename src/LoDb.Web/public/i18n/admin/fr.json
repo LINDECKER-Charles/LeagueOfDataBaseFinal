@@ -719,7 +719,9 @@
       "locked_active": "Une passe est déjà active : une seule à la fois.",
       "locked_dormant": "Indisponible tant que le précalcul n'est pas configuré.",
       "promotions_on": "Un patch qui quitte le dernier rang rejoint la passe de lui-même.",
-      "promotions_off": "Un patch qui quitte le dernier rang ne rejoint pas la passe de lui-même : lancez-la pour lui."
+      "promotions_off": "Un patch qui quitte le dernier rang ne rejoint pas la passe de lui-même : lancez-la pour lui.",
+      "versions": "Versions",
+      "versions_hint": "Une par ligne ou séparées par des virgules ; vide, tous les anciens patchs. Une version qui n'est pas un ancien patch est écartée."
     },
     "page_types": {
       "champions": "champions",

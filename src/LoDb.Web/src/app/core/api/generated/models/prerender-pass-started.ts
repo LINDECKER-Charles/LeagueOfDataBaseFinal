@@ -10,8 +10,17 @@ export interface PrerenderPassStarted {
   id: number;
 
   /**
-   * Its units, one per (version, locale) of its scope among the older patches: none when
-   * the scope matches no older patch.
+   * Versions asked for that are not older patches, left out.
+   */
+  ignoredVersions: Array<string>;
+
+  /**
+   * Units left out, already held in the epoch (`skipComplete`).
+   */
+  skippedUnits: number;
+
+  /**
+   * Its units, one per (version, locale) of its scope among the older patches.
    */
   units: number;
 }

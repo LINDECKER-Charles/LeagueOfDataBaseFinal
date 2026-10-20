@@ -6,6 +6,7 @@ using LoDb.Api.Tests.Accounts.Support;
 using LoDb.Api.Tests.Admin.Support;
 using LoDb.Api.Tests.Audit.Support;
 using LoDb.Api.Tests.Prerender.Support;
+using LoDb.Domain.Languages;
 using LoDb.Domain.Versions;
 using LoDb.Infrastructure.Audit;
 using LoDb.Infrastructure.Persistence.Audit;
@@ -35,6 +36,12 @@ public sealed class AdminPrerenderTests(PostgresContainerFixture postgres) : IAs
 
     private static readonly PatchVersion Newer = PatchVersion.Parse("16.18.1");
     private static readonly PatchVersion Older = PatchVersion.Parse("16.17.1");
+
+    private static readonly string[] French = ["fr"];
+    private static readonly string[] RepeatedTypes = ["runes", "items", "runes"];
+    private static readonly string[] NotPinned = ["15.1.1"];
+    private static readonly string[] OneMalformedVersion = ["16.18.1", "latest"];
+    private static readonly string[] OneUnknownType = ["items", "skins"];
 
     private readonly FakeCatalog _catalog = new() { Pinned = { Newer, Older } };
     private AccountsApp? _app;
@@ -83,23 +90,73 @@ public sealed class AdminPrerenderTests(PostgresContainerFixture postgres) : IAs
     {
         using var admin = await AdminBrowser.OpenAsync(App);
 
-        using var response = await admin.PostAsync(Passes, new { locale = "fr" });
+        using var response = await admin.PostAsync(Passes, new { locales = French });
 
         var started = await ApiJson.ReadAsync(response, HttpStatusCode.Created);
         Assert.Equal(ServedEpoch, started.GetProperty("epoch").GetInt32());
         Assert.Equal(2, started.GetProperty("units").GetInt32());
+        Assert.Equal(0, started.GetProperty("skippedUnits").GetInt32());
+        Assert.Empty(started.GetProperty("ignoredVersions").EnumerateArray());
         var id = started.GetProperty("id").GetInt64();
         var entry = await LastAuditAsync(AuditAction.AdminPrerenderStart);
         Assert.Equal(
             (AuditTargetType.PrerenderPass, Id(id), "epoch 2"),
             (entry.TargetType, entry.TargetId, entry.Target));
         Assert.Equal(AdminBrowser.AdminName, entry.Actor);
-        Assert.Equal("{\"locale\":\"fr\"}", Meta(entry, "scope"));
+        Assert.Equal("{\"locales\":[\"fr\"]}", Meta(entry, "scope"));
+        using (var meta = JsonDocument.Parse(entry.Meta!))
+        {
+            Assert.Equal(2, meta.RootElement.GetProperty("units").GetInt32());
+        }
+
         var current = (await ReadAsync(admin)).GetProperty("current");
         Assert.Equal(
             ("running", AdminBrowser.AdminName),
             (State(current), Text(current, "authorName")));
         Assert.Equal(2, current.GetProperty("units").GetProperty("pending").GetInt32());
+    }
+
+    [Fact]
+    public async Task ListsAreReadOnceEachAndVersionsNotPinnedAreNamedBack()
+    {
+        using var admin = await AdminBrowser.OpenAsync(App);
+
+        using var response = await admin.PostAsync(Passes, new
+        {
+            versions = new[] { "15.1.1", Older.Value, "15.1.1" },
+            locales = UiLocales.All.Reverse().Select(UiLocales.Code),
+            pageTypes = RepeatedTypes,
+            skipComplete = true,
+        });
+
+        var started = await ApiJson.ReadAsync(response, HttpStatusCode.Created);
+        Assert.Equal(UiLocales.All.Count, started.GetProperty("units").GetInt32());
+        Assert.Equal(
+            ["15.1.1"],
+            started.GetProperty("ignoredVersions").EnumerateArray()
+                .Select(static version => version.GetString()));
+        var pass = Assert.Single(await PassesAsync());
+        Assert.Equal(
+            "{\"versions\":[\"15.1.1\",\"16.17.1\"],\"pageTypes\":[\"items\",\"runes\"],"
+                + "\"skipComplete\":true}",
+            PassScopeJson.Write(PassScopeJson.Read(pass.Scope)));
+        var scope = (await ReadAsync(admin)).GetProperty("current").GetProperty("scope");
+        Assert.Equal(
+            (2, "16.17.1", "15.1.1"),
+            (scope.GetProperty("versionCount").GetInt32(), Text(scope, "newestListed"),
+                Text(scope, "oldestListed")));
+    }
+
+    [Fact]
+    public async Task VersionsOfNoOlderPatchAreRefusedBeforeAnythingOpens()
+    {
+        using var admin = await AdminBrowser.OpenAsync(App);
+
+        using var response = await admin.PostAsync(Passes, new { versions = NotPinned });
+
+        var errors = await ApiJson.FieldErrorsAsync(response);
+        Assert.Equal(["none-pinned"], errors["versions"]);
+        Assert.Empty(await PassesAsync());
     }
 
     [Fact]
@@ -151,21 +208,40 @@ public sealed class AdminPrerenderTests(PostgresContainerFixture postgres) : IAs
         using var response = await admin.PostAsync(Passes, new
         {
             epoch = 1,
-            oldest = "16.18.1",
-            newest = "16.17.1",
-            pageType = "skins",
-            locale = "xx",
+            versions = OneMalformedVersion,
+            locales = Array.Empty<string>(),
+            pageTypes = OneUnknownType,
             priority = Enumerable.Repeat("16.18.1", 101),
         });
 
         var errors = await ApiJson.FieldErrorsAsync(response);
         Assert.Equal(["retired"], errors["epoch"]);
-        Assert.Equal(["before-oldest"], errors["newest"]);
-        Assert.Equal(["malformed"], errors["pageType"]);
-        Assert.Equal(["malformed"], errors["locale"]);
+        Assert.Equal(["malformed"], errors["versions"]);
+        Assert.Equal(["required"], errors["locales"]);
+        Assert.Equal(["malformed"], errors["pageTypes"]);
         Assert.Equal(["too-many"], errors["priority"]);
-        Assert.False(errors.ContainsKey("oldest"));
         Assert.Empty(await PassesAsync());
+    }
+
+    [Fact]
+    public async Task ListsBeyondTheirBoundAreRefused()
+    {
+        using var admin = await AdminBrowser.OpenAsync(App);
+
+        using var response = await admin.PostAsync(Passes, new
+        {
+            epoch = 0,
+            versions = Enumerable.Repeat("16.18.1", 1001),
+            pageTypes = Array.Empty<string>(),
+            priority = OneMalformedVersion,
+        });
+
+        var errors = await ApiJson.FieldErrorsAsync(response);
+        Assert.Equal(["out-of-range"], errors["epoch"]);
+        Assert.Equal(["too-many"], errors["versions"]);
+        Assert.Equal(["required"], errors["pageTypes"]);
+        Assert.Equal(["malformed"], errors["priority"]);
+        Assert.False(errors.ContainsKey("locales"));
     }
 
     [Fact]
@@ -183,6 +259,17 @@ public sealed class AdminPrerenderTests(PostgresContainerFixture postgres) : IAs
         Assert.False(report.GetProperty("isConfigured").GetBoolean());
         Assert.Equal(1, report.GetProperty("servedEpoch").GetInt32());
         Assert.Equal(JsonValueKind.Null, report.GetProperty("current").ValueKind);
+        Assert.Equal(JsonValueKind.Null, report.GetProperty("storeBucket").ValueKind);
+    }
+
+    [Fact]
+    public async Task ReportNamesTheBucketOfTheStore()
+    {
+        using var admin = await AdminBrowser.OpenAsync(App);
+
+        var report = await ReadAsync(admin);
+
+        Assert.Equal("lodb-pages-test", Text(report, "storeBucket"));
     }
 
     private static Dictionary<string, string?> Settings => new()

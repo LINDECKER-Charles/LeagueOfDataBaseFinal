@@ -56,7 +56,7 @@ internal sealed class UnitRunner(
         }
 
         waits.End(unit);
-        var paths = PageTypes.Keep(list.Paths, unit.Pass.Scope.PageType);
+        var paths = PageTypes.Keep(list.Paths, unit.Pass.Scope.PageTypes);
         await queue.StartAsync(unit, paths.Count, cancellationToken);
         var walk = new UnitWalk(unit, paths, new UnitTally());
         var started = clock.GetTimestamp();

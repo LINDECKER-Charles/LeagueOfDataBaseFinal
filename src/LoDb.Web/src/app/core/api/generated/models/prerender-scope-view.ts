@@ -3,32 +3,54 @@
 
 
 /**
- * The perimeter of a pass, spelled as the URLs spell it; a field left null is not restricted.
+ * The perimeter of a pass, spelled as the URLs spell it, sized for lists: the versions are
+ * counted, not listed (the full list comes with a complete read of the pass's progress); a
+ * list left null is not restricted.
  */
 export interface PrerenderScopeView {
 
   /**
-   * The one locale rendered, as in the URLs (fr, zh-Hans…).
+   * The locales rendered, in the site's order; null for all 21.
    */
-  locale?: (string | null);
+  locales?: (Array<string> | null);
 
   /**
-   * The newest version rendered, included.
+   * The newest version of a range, for a pass launched before the lists.
    */
   newest?: (string | null);
 
   /**
-   * The oldest version rendered, included.
+   * The newest version of the list; null when it takes every one.
+   */
+  newestListed?: (string | null);
+
+  /**
+   * The oldest version of a range, for a pass launched before the lists.
    */
   oldest?: (string | null);
 
   /**
-   * The one type of page rendered: champions, items, runes or summoners.
+   * The oldest version of the list; null when it takes every one.
    */
-  pageType?: (string | null);
+  oldestListed?: (string | null);
 
   /**
-   * The versions rendered first, in this order.
+   * The types of page rendered; null for all four.
+   */
+  pageTypes?: (Array<string> | null);
+
+  /**
+   * The versions rendered first, in this order (100 at most).
    */
   priority: Array<string>;
+
+  /**
+   * Whether the units already held in the epoch were left out.
+   */
+  skipComplete: boolean;
+
+  /**
+   * How many older patches the pass lists; null when it takes every one.
+   */
+  versionCount?: (number | null);
 }

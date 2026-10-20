@@ -37,39 +37,73 @@ public sealed class PassOrderTests(PostgresContainerFixture postgres)
     }
 
     [Fact]
-    public void ScopeKeepsItsRangeAndItsLocale()
+    public void ScopeKeepsItsListedVersionsAndLocales()
     {
-        var scope = new PassScope { Oldest = Middle, Newest = Middle, Locale = UiLocale.Ja };
+        var scope = new PassScope { Versions = [Oldest, Newest], Locales = [UiLocale.Ja] };
 
         var plan = UnitPlanner.Plan([Newest, Middle, Oldest], scope);
 
-        Assert.Equal([new PlannedUnit(Middle, UiLocale.Ja, 0)], plan);
+        Assert.Equal(
+            [new PlannedUnit(Newest, UiLocale.Ja, 0), new PlannedUnit(Oldest, UiLocale.Ja, 1)],
+            plan);
     }
 
     [Fact]
-    public void ScopeSurvivesItsStoredForm()
+    public void ScopeIsStoredInItsListedForm()
     {
         var scope = new PassScope
         {
-            Oldest = Oldest,
-            Newest = Newest,
-            PageType = ResourceType.Items,
-            Locale = UiLocale.ZhHans,
+            Versions = [Middle, Oldest],
+            PageTypes = [ResourceType.Items, ResourceType.Runes],
+            Locales = [UiLocale.En, UiLocale.ZhHans],
             Priority = [Middle],
+            SkipComplete = true,
         };
 
         var stored = PassScopeJson.Write(scope);
         var read = PassScopeJson.Read(stored);
 
         Assert.Equal(
-            "{\"oldest\":\"16.17.1\",\"newest\":\"16.19.1\",\"pageType\":\"items\","
-                + "\"locale\":\"zh-hans\",\"priority\":[\"16.18.1\"]}",
+            "{\"versions\":[\"16.18.1\",\"16.17.1\"],\"locales\":[\"en\",\"zh-hans\"],"
+                + "\"pageTypes\":[\"items\",\"runes\"],\"priority\":[\"16.18.1\"],"
+                + "\"skipComplete\":true}",
             stored);
-        Assert.Equal(
-            (scope.Oldest, scope.Newest, scope.PageType, scope.Locale),
-            (read.Oldest, read.Newest, read.PageType, read.Locale));
-        Assert.Equal(scope.Priority, read.Priority);
+        Assert.Equal(stored, PassScopeJson.Write(read));
         Assert.Equal("{}", PassScopeJson.Write(PassScope.Everything));
+        Assert.Equal("{\"versions\":[\"16.19.1\"]}", PassScopeJson.Write(PassScope.Of(Newest)));
+    }
+
+    // A pass launched before the lists keeps reading: its range, its one type, its one locale.
+    [Fact]
+    public void ScopeStoredBeforeTheListsStillReads()
+    {
+        var read = PassScopeJson.Read(
+            "{\"oldest\":\"16.17.1\",\"newest\":\"16.18.1\",\"pageType\":\"items\","
+                + "\"locale\":\"fr\",\"priority\":[\"16.18.1\"]}");
+
+        Assert.Equal((Oldest, Middle), (read.Oldest, read.Newest));
+        Assert.Equal([ResourceType.Items], read.PageTypes);
+        Assert.Equal([UiLocale.Fr], read.Locales);
+        Assert.Equal([Middle], read.Priority);
+        Assert.Equal([Middle, Oldest], new[] { Newest, Middle, Oldest }.Where(read.Admits));
+        Assert.False(read.IsWhole);
+        Assert.Equal(
+            "{\"oldest\":\"16.17.1\",\"newest\":\"16.18.1\",\"locales\":[\"fr\"],"
+                + "\"pageTypes\":[\"items\"],\"priority\":[\"16.18.1\"]}",
+            PassScopeJson.Write(read));
+    }
+
+    [Fact]
+    public void FullListsOfLocalesAndTypesReadAsEveryOne()
+    {
+        var read = PassScopeJson.Read(
+            "{\"locales\":[" + string.Join(',', UiLocales.All.Reverse().Select(Quoted)) + "],"
+                + "\"pageTypes\":[\"summoners\",\"runes\",\"items\",\"champions\"]}");
+
+        Assert.Null(read.Locales);
+        Assert.Null(read.PageTypes);
+        Assert.True(read.IsWhole);
+        Assert.Throws<FormatException>(() => PassScopeJson.Read("{\"locales\":[\"xx\"]}"));
     }
 
     [Fact]
@@ -78,7 +112,7 @@ public sealed class PassOrderTests(PostgresContainerFixture postgres)
         await using var harness = await PrerenderHarness.StartAsync(postgres);
         harness.Catalog.Pinned.AddRange([Newest, Middle, Oldest]);
         var passId = await harness.LaunchAsync(
-            new PassScope { Priority = [Middle], Locale = UiLocale.Fr });
+            new PassScope { Priority = [Middle], Locales = [UiLocale.Fr] });
 
         await harness.RunAsync();
 
@@ -92,4 +126,6 @@ public sealed class PassOrderTests(PostgresContainerFixture postgres)
             pass.Units,
             static unit => Assert.Equal(PrerenderUnitState.Completed, unit.State));
     }
+
+    private static string Quoted(UiLocale locale) => $"\"{UiLocales.Code(locale)}\"";
 }

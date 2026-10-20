@@ -3,7 +3,7 @@ using LoDb.Api.Modules.Admin.Prerender.Http.Views;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
-namespace LoDb.Api.Modules.Admin.Prerender.Http;
+namespace LoDb.Api.Modules.Admin.Prerender.Http.Endpoints;
 
 /// <summary>
 /// <c>POST /api/admin/prerender/passes</c>: opens a pass over a perimeter, writing the served

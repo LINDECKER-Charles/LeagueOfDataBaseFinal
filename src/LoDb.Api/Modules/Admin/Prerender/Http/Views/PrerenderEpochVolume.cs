@@ -1,3 +1,5 @@
+using LoDb.Api.Modules.Admin.Prerender.Http.Views.Patches;
+
 namespace LoDb.Api.Modules.Admin.Prerender.Http.Views;
 
 /// <summary>The pages of one epoch of the store, and what keeping them costs each month.</summary>
@@ -17,4 +19,10 @@ internal sealed record PrerenderEpochVolume
 
     /// <summary>The bytes in GB times the One Zone price, to four decimals.</summary>
     public required decimal MonthlyCost { get; init; }
+
+    /// <summary>
+    /// How much of the older patches it holds, (version, locale) by (version, locale); null for
+    /// a retired epoch.
+    /// </summary>
+    public PrerenderEpochCoverage? Coverage { get; init; }
 }

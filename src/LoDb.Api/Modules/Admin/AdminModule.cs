@@ -9,6 +9,7 @@ using LoDb.Api.Modules.Admin.Mfa;
 using LoDb.Api.Modules.Admin.Monitoring;
 using LoDb.Api.Modules.Admin.Prerender;
 using LoDb.Api.Modules.Admin.Prerender.Http;
+using LoDb.Api.Modules.Admin.Prerender.Http.Endpoints;
 using LoDb.Api.Modules.Admin.Scaleway;
 using LoDb.Api.Modules.Admin.Storage;
 using LoDb.Api.Modules.Admin.Users;
@@ -99,6 +100,9 @@ internal static class AdminModule
         PrerenderReportEndpoint.Map(prerender);
         PrerenderStartEndpoint.Map(prerender);
         PrerenderPassEndpoints.Map(prerender);
+        PrerenderPatchesEndpoint.Map(prerender);
+        PrerenderProgressEndpoint.Map(prerender);
+        PrerenderPassVersionEndpoint.Map(prerender);
         ScalewayBillEndpoint.Map(Admin(endpoints, "/scaleway", AdminRoutes.ScalewayTag));
         return endpoints;
     }

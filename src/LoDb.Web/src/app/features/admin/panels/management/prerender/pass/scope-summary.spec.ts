@@ -9,24 +9,49 @@ const TEXTS: AdminText = {
 };
 
 describe('scopeSummary', () => {
+  const NOTHING = { priority: [], skipComplete: false };
+
   it('names a pass over everything', () => {
-    expect(scopeSummary({ priority: [] }, TEXTS)).toBe('prerender.scope.all');
+    expect(scopeSummary(NOTHING, TEXTS)).toBe('prerender.scope.all');
   });
 
-  it('writes the perimeter in a line, a range open at either end', () => {
+  it('writes the perimeter in a line, the listed versions by their bounds', () => {
     expect(
       scopeSummary(
-        { oldest: '14.1.1', newest: '14.24.1', pageType: 'items', locale: 'fr', priority: ['a'] },
+        {
+          ...NOTHING,
+          versionCount: 3,
+          newestListed: '16.19.1',
+          oldestListed: '14.1.1',
+          pageTypes: ['items', 'runes'],
+          locales: ['en', 'fr'],
+          priority: ['a'],
+        },
         TEXTS,
       ),
     ).toBe(
-      'prerender.scope.range 14.1.1 14.24.1 · prerender.page_types.items · fr · ' +
-        'prerender.scope.priority 1',
+      'prerender.scope.range 14.1.1 16.19.1 · prerender.page_types.items, ' +
+        'prerender.page_types.runes · en, fr · prerender.scope.priority 1',
     );
-    expect(scopeSummary({ oldest: '14.1.1', priority: [] }, TEXTS)).toBe(
+    expect(
+      scopeSummary(
+        { ...NOTHING, versionCount: 1, newestListed: '16.1.1', oldestListed: '16.1.1' },
+        TEXTS,
+      ),
+    ).toBe('16.1.1');
+  });
+
+  it('writes the range of a pass launched before the lists, open at either end', () => {
+    expect(
+      scopeSummary(
+        { ...NOTHING, oldest: '14.1.1', newest: '14.24.1', pageTypes: ['items'], locales: ['fr'] },
+        TEXTS,
+      ),
+    ).toBe('prerender.scope.range 14.1.1 14.24.1 · prerender.page_types.items · fr');
+    expect(scopeSummary({ ...NOTHING, oldest: '14.1.1' }, TEXTS)).toBe(
       'prerender.scope.from 14.1.1',
     );
-    expect(scopeSummary({ newest: '16.1.1', priority: [] }, TEXTS)).toBe(
+    expect(scopeSummary({ ...NOTHING, newest: '16.1.1' }, TEXTS)).toBe(
       'prerender.scope.until 16.1.1',
     );
   });

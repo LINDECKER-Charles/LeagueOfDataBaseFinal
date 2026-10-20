@@ -32,13 +32,20 @@ export interface PrerenderPassView {
   epoch: number;
 
   /**
-   * When it should end at its pace, the units not listed yet counted at the mean of the
-   * listed ones; null unless it runs with a known pace and some units listed.
+   * When it should end at its pace, once its pages left are processed; null unless it runs
+   * with a known pace and some units listed.
    */
   estimatedEndAt?: (string | null);
   finishedAt?: (string | null);
   id: number;
   pagesFailed: number;
+
+  /**
+   * Pages still to process: those of the listed units not processed yet, plus each unit not
+   * listed yet at its version's expected pages, else at the mean of the listed ones. Null
+   * before any unit is listed.
+   */
+  pagesLeft?: (number | null);
 
   /**
    * Pages written, skipped or failed per minute of running time, to one decimal; null
@@ -57,6 +64,17 @@ export interface PrerenderPassView {
    */
   pagesTotal: number;
   pagesWritten: number;
+
+  /**
+   * Why the pass paused itself (the store or the SSR refusing it), as the engine says it;
+   * null for a pause of an administrator, and once it runs again.
+   */
+  pauseReason?: (string | null);
+
+  /**
+   * Since when it is paused; null unless paused.
+   */
+  pausedAt?: (string | null);
   scope: PrerenderScopeView;
 
   /**

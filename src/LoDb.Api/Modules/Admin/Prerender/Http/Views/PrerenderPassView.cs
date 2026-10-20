@@ -50,8 +50,24 @@ internal sealed record PrerenderPassView
     public decimal? PagesPerMinute { get; init; }
 
     /// <summary>
-    /// When it should end at its pace, the units not listed yet counted at the mean of the
-    /// listed ones; null unless it runs with a known pace and some units listed.
+    /// When it should end at its pace, once its pages left are processed; null unless it runs
+    /// with a known pace and some units listed.
     /// </summary>
     public DateTimeOffset? EstimatedEndAt { get; init; }
+
+    /// <summary>Since when it is paused; null unless paused.</summary>
+    public DateTimeOffset? PausedAt { get; init; }
+
+    /// <summary>
+    /// Why the pass paused itself (the store or the SSR refusing it), as the engine says it;
+    /// null for a pause of an administrator, and once it runs again.
+    /// </summary>
+    public string? PauseReason { get; init; }
+
+    /// <summary>
+    /// Pages still to process: those of the listed units not processed yet, plus each unit not
+    /// listed yet at its version's expected pages, else at the mean of the listed ones. Null
+    /// before any unit is listed.
+    /// </summary>
+    public long? PagesLeft { get; init; }
 }

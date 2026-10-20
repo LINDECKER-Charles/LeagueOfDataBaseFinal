@@ -125,7 +125,7 @@ public sealed class PassLifecycleTests(PostgresContainerFixture postgres)
         var unknown = PatchVersion.Parse("16.6.1");
         harness.Catalog.Pinned.Add(unknown);
         harness.Catalog.Pages[unknown] = FakeCatalog.Without(CatalogLoadStatus.Unknown);
-        var passId = await harness.LaunchAsync(new PassScope { Locale = UiLocale.En });
+        var passId = await harness.LaunchAsync(new PassScope { Locales = [UiLocale.En] });
 
         await harness.RunAsync();
 
@@ -144,7 +144,7 @@ public sealed class PassLifecycleTests(PostgresContainerFixture postgres)
         var waiting = PatchVersion.Parse("16.8.1");
         harness.Catalog.Pinned.Insert(0, waiting);
         harness.Catalog.Pages[waiting] = FakeCatalog.Without(CatalogLoadStatus.Pending);
-        var passId = await harness.LaunchAsync(new PassScope { Locale = UiLocale.En });
+        var passId = await harness.LaunchAsync(new PassScope { Locales = [UiLocale.En] });
 
         await harness.RunAsync();
         await harness.RunAsync();
@@ -184,7 +184,7 @@ public sealed class PassLifecycleTests(PostgresContainerFixture postgres)
 
             return Task.CompletedTask;
         };
-        var passId = await harness.LaunchAsync(new PassScope { Locale = UiLocale.En });
+        var passId = await harness.LaunchAsync(new PassScope { Locales = [UiLocale.En] });
 
         await harness.RunAsync();
 
@@ -247,7 +247,7 @@ public sealed class PassLifecycleTests(PostgresContainerFixture postgres)
             .Select(static unit => unit.State),
     ];
 
-    private static PassScope Scope() => PassScope.Of(Version) with { Locale = UiLocale.En };
+    private static PassScope Scope() => PassScope.Of(Version) with { Locales = [UiLocale.En] };
 
     private async Task<PrerenderHarness> StartAsync()
     {

@@ -28,17 +28,15 @@ internal sealed class PassHistory(LoDbDbContext db)
             .ThenByDescending(static pass => pass.Id)
             .Take(MaxPasses)
             .ToListAsync(cancellationToken);
-        var units = await UnitsAsync([.. passes.Select(static pass => pass.Id)], cancellationToken);
-        var authors = await AuthorsAsync(passes, cancellationToken);
-        return
-        [
-            .. passes.Select(pass => new PassFacts
-            {
-                Pass = pass,
-                Units = units.GetValueOrDefault(pass.Id) ?? NoUnits,
-                AuthorName = pass.AuthorId is { } id ? authors.GetValueOrDefault(id) : null,
-            }),
-        ];
+        return await FactsOfAsync(passes, cancellationToken);
+    }
+
+    /// <summary>The pass <paramref name="id"/>, any state; null when there is none.</summary>
+    public async Task<PassFacts?> OneAsync(long id, CancellationToken cancellationToken)
+    {
+        var pass = await db.PrerenderPasses.AsNoTracking()
+            .SingleOrDefaultAsync(found => found.Id == id, cancellationToken);
+        return pass is null ? null : (await FactsOfAsync([pass], cancellationToken))[0];
     }
 
     /// <summary>
@@ -56,15 +54,27 @@ internal sealed class PassHistory(LoDbDbContext db)
             .Select(static pass => new { pass.Epoch, pass.Scope })
             .ToListAsync(cancellationToken);
         return completed
-            .Where(pass => pass.Epoch != writingEpoch && IsWhole(PassScopeJson.Read(pass.Scope)))
+            .Where(pass => pass.Epoch != writingEpoch && PassScopeJson.Read(pass.Scope).IsWhole)
             .Select(static pass => (int?)pass.Epoch)
             .Max();
     }
 
-    // A pass restricted to some versions, a type of page or a locale leaves its epoch partial,
-    // however it ended; the order of its versions does not matter.
-    private static bool IsWhole(PassScope scope) =>
-        scope is { Oldest: null, Newest: null, PageType: null, Locale: null };
+    private async Task<IReadOnlyList<PassFacts>> FactsOfAsync(
+        List<PrerenderPass> passes,
+        CancellationToken cancellationToken)
+    {
+        var units = await UnitsAsync([.. passes.Select(static pass => pass.Id)], cancellationToken);
+        var authors = await AuthorsAsync(passes, cancellationToken);
+        return
+        [
+            .. passes.Select(pass => new PassFacts
+            {
+                Pass = pass,
+                Units = units.GetValueOrDefault(pass.Id) ?? NoUnits,
+                AuthorName = pass.AuthorId is { } id ? authors.GetValueOrDefault(id) : null,
+            }),
+        ];
+    }
 
     private async Task<Dictionary<long, IReadOnlyDictionary<PrerenderUnitState, int>>> UnitsAsync(
         List<long> passIds,

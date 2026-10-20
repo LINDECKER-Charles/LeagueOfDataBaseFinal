@@ -8,9 +8,7 @@ namespace LoDb.Api.Modules.Admin.Prerender.Http.History;
 /// </summary>
 /// <remarks>
 /// A unit's pages are listed only when the pass reaches it, so the pages still to come are
-/// those of the listed units not rendered yet, plus each pending unit at the mean of the listed
-/// ones: the units of a pass are the 21 locales of its versions, whose page counts differ
-/// little.
+/// those of the listed units not rendered yet, plus an estimate of each pending unit.
 /// </remarks>
 internal static class PassProgress
 {
@@ -44,8 +42,33 @@ internal static class PassProgress
         pagesPerMinute is { } rate ? Math.Round(rate, RateDecimals) : null;
 
     /// <summary>
-    /// When the pass should end at <paramref name="pagesPerMinute"/>; null unless it runs at a
-    /// known pace with some units listed.
+    /// Pages still to process: those of the listed units not processed yet, plus each pending
+    /// unit at the mean of the listed ones, rounded up; null before any unit is listed.
+    /// </summary>
+    /// <remarks>
+    /// TODO(B2): count each pending unit at its version's expected pages
+    /// (<c>prerender_unit.pages_expected</c>), the mean only for those without: the first units
+    /// of a pass are its biggest, so their mean overstates the rest for days.
+    /// </remarks>
+    public static long? PagesLeft(PassFacts facts)
+    {
+        ArgumentNullException.ThrowIfNull(facts);
+        var pass = facts.Pass;
+        var pending = facts.UnitsIn(PrerenderUnitState.Pending);
+        var listed = facts.Units.Values.Sum() - pending;
+        if (listed == 0)
+        {
+            return null;
+        }
+
+        var unlisted = (long)Math.Ceiling((decimal)pending * pass.PagesTotal / listed);
+        return Math.Max(0, pass.PagesTotal - Processed(pass)) + unlisted;
+    }
+
+    /// <summary>
+    /// When the pass should end at <paramref name="pagesPerMinute"/>, its
+    /// <see cref="PagesLeft"/> processed; null unless it runs at a known pace with some units
+    /// listed.
     /// </summary>
     public static DateTimeOffset? EstimatedEnd(
         PassFacts facts,
@@ -53,16 +76,14 @@ internal static class PassProgress
         DateTimeOffset now)
     {
         ArgumentNullException.ThrowIfNull(facts);
-        var pass = facts.Pass;
-        var pending = facts.UnitsIn(PrerenderUnitState.Pending);
-        var listed = facts.Units.Values.Sum() - pending;
-        if (pass.State != PrerenderPassState.Running || pagesPerMinute is not > 0 || listed == 0)
+        var left = PagesLeft(facts);
+        if (facts.Pass.State != PrerenderPassState.Running
+            || pagesPerMinute is not > 0
+            || left is not { } remaining)
         {
             return null;
         }
 
-        var meanPerUnit = (decimal)pass.PagesTotal / listed;
-        var remaining = Math.Max(0, pass.PagesTotal - Processed(pass)) + (pending * meanPerUnit);
         return now.AddMinutes((double)(remaining / pagesPerMinute.Value));
     }
 

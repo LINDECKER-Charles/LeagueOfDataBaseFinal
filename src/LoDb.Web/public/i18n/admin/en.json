@@ -719,7 +719,9 @@
       "locked_active": "A pass is already active: one at a time.",
       "locked_dormant": "Unavailable until the pre-rendering is configured.",
       "promotions_on": "A patch that leaves the latest rank joins the pass by itself.",
-      "promotions_off": "A patch that leaves the latest rank does not join the pass by itself: launch one for it."
+      "promotions_off": "A patch that leaves the latest rank does not join the pass by itself: launch one for it.",
+      "versions": "Versions",
+      "versions_hint": "One per line or comma-separated; empty, every older patch. A version that is not an older patch is left out."
     },
     "page_types": {
       "champions": "champions",
