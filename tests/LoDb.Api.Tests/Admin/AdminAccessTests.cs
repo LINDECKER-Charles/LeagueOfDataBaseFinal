@@ -22,6 +22,7 @@ public sealed class AdminAccessTests(SharedAccountsApp host)
         "/api/admin/monitoring",
         "/api/admin/storage",
         "/api/admin/backups",
+        "/api/admin/prerender",
     ];
 
     private readonly AccountSeed _admin = host.Unique();
