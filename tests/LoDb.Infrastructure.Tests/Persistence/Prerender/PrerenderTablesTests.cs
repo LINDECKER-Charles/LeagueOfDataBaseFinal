@@ -112,6 +112,49 @@ public sealed class PrerenderTablesTests(PostgresContainerFixture postgres)
         Assert.Equal(PrerenderUnitState.Failed, stored.Units.Single().State);
     }
 
+    // A pass written by the stack before the diagnostics, or paused without them: no
+    // constraint asks for them, so that a return to that stack keeps writing.
+    [Fact]
+    public async Task DiagnosticsAreNullByDefaultWhateverTheState()
+    {
+        await InsertPassAsync("1, 'paused', '{}', NULL, NULL");
+        await Database.ExecuteAsync(
+            """
+            INSERT INTO prerender_unit (pass_id, version, locale, state)
+            SELECT id, '16.20.1', 'fr', 'completed' FROM prerender_pass
+            """,
+            Cancellation);
+
+        await using var context = Database.CreateContext();
+        var pass = await context.PrerenderPasses.Include(static row => row.Units)
+            .SingleAsync(Cancellation);
+        var unit = pass.Units.Single();
+
+        Assert.Equal((null, null), (pass.PausedAt, pass.PauseReason));
+        Assert.Equal(
+            (null, null, null, null),
+            (unit.StartedAt, unit.EndedAt, unit.Failure, unit.PagesExpected));
+    }
+
+    // The units are read in the order they ended through a partial index; updated_at,
+    // rewritten at each page, is indexed nowhere.
+    [Fact]
+    public async Task UnitsAreIndexedByTheirEndAloneNeverByTheirLastUpdate()
+    {
+        var indexes = await Database.QueryAsync(
+            "SELECT indexdef FROM pg_indexes WHERE tablename = 'prerender_unit'",
+            Cancellation);
+
+        var ended = Assert.Single(
+            indexes,
+            static index => index.Contains("ix_prerender_unit_ended", StringComparison.Ordinal));
+        Assert.Contains("(pass_id, ended_at)", ended, StringComparison.Ordinal);
+        Assert.Contains("WHERE (ended_at IS NOT NULL)", ended, StringComparison.Ordinal);
+        Assert.DoesNotContain(
+            indexes,
+            static index => index.Contains("updated_at", StringComparison.Ordinal));
+    }
+
     [Theory]
     [InlineData("'UPPERCASE'")]
     [InlineData("'abc'")]

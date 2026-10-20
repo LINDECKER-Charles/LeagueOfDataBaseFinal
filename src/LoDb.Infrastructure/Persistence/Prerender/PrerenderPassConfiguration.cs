@@ -64,6 +64,7 @@ internal sealed class PrerenderPassConfiguration : IEntityTypeConfiguration<Prer
             .HasColumnType("jsonb")
             .HasDefaultValueSql("'{}'::jsonb");
         builder.Property(pass => pass.CreatedAt).HasDefaultValueSql("now()");
+        builder.Property(pass => pass.PauseReason).HasMaxLength(PrerenderPass.PauseReasonMaxLength);
         builder.Property(pass => pass.IsActive)
             .HasComputedColumnSql(ActiveStates, stored: true);
     }
