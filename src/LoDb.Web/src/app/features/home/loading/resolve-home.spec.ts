@@ -219,7 +219,7 @@ describe('resolveHome', () => {
       query: { lang: 'en_GB' },
     });
     expect(home.sections.items.cards[0]?.link.path).toBe(`/en/${OLDER}/items/1001-boots`);
-    expect(cache).toBe('public, max-age=3600, s-maxage=604800');
+    expect(cache).toBe('public, max-age=3600, s-maxage=31536000');
   });
 
   it('previews the first four rune paths and counts the paths, not their runes', async () => {

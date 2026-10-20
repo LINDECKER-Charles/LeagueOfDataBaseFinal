@@ -2,7 +2,8 @@ namespace LoDb.Infrastructure.Audit;
 
 /// <summary>
 /// The closed set of audited actions: the 24 of the legacy journal, stored under their
-/// legacy names (<see cref="AuditVocabulary.ToText(AuditAction)"/>).
+/// legacy names (<see cref="AuditVocabulary.ToText(AuditAction)"/>), then those of the new
+/// stack, numbered after them.
 /// </summary>
 /// <remarks>
 /// Only state changes and security events tied to an actor: page views belong to the
@@ -84,4 +85,19 @@ public enum AuditAction
 
     /// <summary><c>admin.logs_purge</c>.</summary>
     AdminLogsPurge = 24,
+
+    /// <summary>
+    /// <c>admin.prerender_start</c>, the epoch written in <c>epoch</c> and the perimeter in
+    /// <c>scope</c>.
+    /// </summary>
+    AdminPrerenderStart = 25,
+
+    /// <summary><c>admin.prerender_pause</c>, the epoch in <c>epoch</c>.</summary>
+    AdminPrerenderPause = 26,
+
+    /// <summary><c>admin.prerender_resume</c>, the epoch in <c>epoch</c>.</summary>
+    AdminPrerenderResume = 27,
+
+    /// <summary><c>admin.prerender_cancel</c>, the epoch in <c>epoch</c>.</summary>
+    AdminPrerenderCancel = 28,
 }

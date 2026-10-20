@@ -2,6 +2,8 @@
 
 - **Statut** : acceptée — 2026-09-24
 - **Remplace** : `go/fetcher` (passerelle d'egress) et `go/api` (API publique payante)
+- **Amendement** : le 2026-10-20, un second hôte sortant, le stockage objet des pages
+  pré-rendues, derrière son propre client nommé (voir § « Amendement du 2026-10-20 »).
 
 ## Contexte
 
@@ -87,3 +89,37 @@ explicite ; ce n'est pas le cas aujourd'hui.
   code), derrière une route nginx.
 - **Garde-fou** : les ports d'origine (`/v1/…`, en-têtes, codes d'erreur) sont couverts
   par des tests de contrat avant la bascule, pour ne casser aucun client payant.
+
+## Amendement du 2026-10-20 — le stockage objet des pages pré-rendues
+
+Le catalogue pré-rendu ([ADR 0011](0011-catalogue-pre-rendu-et-cdn.md)) écrit chaque page
+d'ancien patch dans un stockage objet Scaleway. C'est un second hôte sortant, qui ne passe
+pas par l'egress Data Dragon :
+
+- **Client nommé `page-store`**, à part de `ddragon`. Son allow-list ne contient que l'hôte
+  de `LoDb__Prerender__Endpoint` (`s3.fr-par.scw.cloud`), en https ; `AllowInsecureEndpoint`
+  n'admet le http qu'en développement (MinIO). `LoDb:Egress:AllowedHosts` n'est jamais
+  élargi : les deux politiques restent séparées et testées à part.
+- Un `DelegatingHandler` épingle l'hôte, sur le modèle d'`UmamiHostHandler` ; aucune
+  redirection suivie, aucun cookie, `AutomaticDecompression = None` (le corps est déjà en
+  gzip et doit le rester).
+- Seul le `PUT` est signé en SigV4. La clé est d'écriture seule : elle ne liste, ne lit ni
+  ne supprime, et une lecture signée (`HEAD`, `GET`) répondrait toujours 403. Une
+  vérification d'existence est anonyme, depuis l'adresse du VPS, ou n'existe pas : une
+  écriture conditionnelle (`If-None-Match: *`, sur `build/`) qui répond 412 veut dire
+  « déjà là ». La clé et son secret ne sont jamais journalisés.
+- Les erreurs ne suivent **pas** la règle de l'egress, qui vaut pour une lecture. Une
+  **401, 403 ou 404 (`NoSuchBucket`) sur un `PUT` est une erreur de configuration** (clé
+  tournée, politique sans l'application d'écriture, stockage absent) : typée et fatale, elle
+  met la passe en pause avec une ligne de journal, et la page n'est comptée ni écrite ni
+  sautée. **5xx, 429 (freinage de Scaleway) et délai dépassé = transitoires**, typés,
+  jamais persistés. Toute autre 4xx sur le `PUT` d'une page la compte en échec, sans nouvel
+  essai ni pause ; une 409 sur le `PUT` conditionnel d'un bundle est retentée.
+- Un changement d'adresse du VPS ne fait **jamais** échouer un `PUT` : l'écriture est
+  autorisée par l'`application_id`, sans condition d'adresse. Seule la lecture anonyme en
+  dépend : le changement ne se voit qu'aux lectures, quand nginx reçoit 403 et sert le SSR
+  (`X-LoDb-Source: ssr`).
+- Options vides = client et tâche en sommeil : `Add*` ne fait aucune I/O et ne lève rien.
+
+Les appels de la passe au SSR (`http://lodb-web-ssr:4000`) restent sur le réseau de la pile :
+ce n'est pas de l'egress.

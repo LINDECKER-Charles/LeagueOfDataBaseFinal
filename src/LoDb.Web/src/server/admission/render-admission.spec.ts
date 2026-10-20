@@ -1,7 +1,9 @@
 import type { Response } from 'express';
 import { RenderAdmission } from './render-admission';
 import { RenderCounts } from './render-counts';
+import type { RenderLane } from './render-lane';
 import type { RenderLimits } from './render-limits';
+import type { RenderRequest } from './render-request';
 import { SHED_MARKER } from './shed-marker';
 
 const PINNED = '/fr/15.13.1/items/3031-infinity-edge';
@@ -9,6 +11,8 @@ const CURRENT = '/fr/items/3031-infinity-edge';
 const VISITOR = '203.0.113.7';
 const OTHER = '192.0.2.1';
 const THIRD = '2001:db8::/64';
+// The API's address on the stack network, the pass's only client.
+const API = '172.18.0.5';
 const LIMITS: RenderLimits = {
   maxInFlight: 4,
   pinnedMaxInFlight: 2,
@@ -21,6 +25,10 @@ const LIMITS: RenderLimits = {
   currentPerClientPerMinute: 60,
   currentPerClientBurst: 6,
   trackedClients: 100,
+  prerenderPerMinute: 60,
+  prerenderBurst: 3,
+  prerenderMaxInFlight: 2,
+  prerenderVisitorReserve: 1,
 };
 
 interface Answer {
@@ -51,15 +59,30 @@ function responseOf(answer: Answer): Response {
 }
 
 /** Starts a render that holds its slot until `finish` is called. */
-function hold(admission: RenderAdmission, url: string, client = VISITOR) {
+function start(admission: RenderAdmission, request: RenderRequest) {
   const answer: Answer = { headers: {}, locals: {} };
   let finish = (): void => undefined;
-  let started = false;
-  const done = admission.run({ url, client }, responseOf(answer), () => {
-    started = true;
+  let lane: RenderLane | null = null;
+  const done = admission.run(request, responseOf(answer), (admitted) => {
+    lane = admitted;
     return new Promise<void>((resolve) => (finish = resolve));
   });
-  return { answer, done, isStarted: () => started, finish: () => finish() };
+  return {
+    answer,
+    done,
+    laneOf: () => lane,
+    isStarted: () => lane !== null,
+    finish: () => finish(),
+  };
+}
+
+function hold(admission: RenderAdmission, url: string, client = VISITOR) {
+  return start(admission, { url, client, isPrerender: false });
+}
+
+// A render of the pre-render pass: a page of an older patch, asked with the pass's header.
+function holdPrerender(admission: RenderAdmission, url = PINNED) {
+  return start(admission, { url, client: API, isPrerender: true });
 }
 
 async function settle(renders: ReturnType<typeof hold>[]): Promise<void> {
@@ -88,7 +111,7 @@ describe('RenderAdmission', () => {
     const render = vi.fn(async () => undefined);
     const response = responseOf({ headers: {}, locals: {} });
 
-    await admission.run({ url: CURRENT, client: VISITOR }, response, render);
+    await admission.run({ url: CURRENT, client: VISITOR, isPrerender: false }, response, render);
 
     expect(render).toHaveBeenCalledOnce();
   });
@@ -219,7 +242,9 @@ describe('RenderAdmission', () => {
     const response = responseOf({ headers: {}, locals: {} });
 
     await expect(
-      admission.run({ url: CURRENT, client: VISITOR }, response, () => Promise.reject(failure)),
+      admission.run({ url: CURRENT, client: VISITOR, isPrerender: false }, response, () =>
+        Promise.reject(failure),
+      ),
     ).rejects.toBe(failure);
     await settle([hold(admission, CURRENT)]);
 
@@ -238,7 +263,7 @@ describe('RenderAdmission', () => {
     expect(admission.inFlightOf('current')).toBe(2);
     await settle([pinned]);
     await admission.run(
-      { url: PINNED, client: VISITOR },
+      { url: PINNED, client: VISITOR, isPrerender: false },
       responseOf({ headers: {}, locals: {} }),
       render,
     );
@@ -258,5 +283,90 @@ describe('RenderAdmission', () => {
       { lane: 'current', refusal: 'client_capacity', count: 1 },
       { lane: 'pinned', refusal: null, count: 1 },
     ]);
+  });
+
+  describe('pre-render lane', () => {
+    it('runs a render of the pass in its own lane, whatever its URL', async () => {
+      const admission = admissionOf();
+
+      const pass = [holdPrerender(admission), holdPrerender(admission, CURRENT)];
+      const visitor = hold(admission, PINNED);
+
+      expect(pass.map((render) => render.laneOf())).toEqual(['prerender', 'prerender']);
+      expect(visitor.laneOf()).toBe('pinned');
+      expect(admission.inFlightOf('prerender')).toBe(2);
+      expect(admission.inFlightOf('pinned')).toBe(1);
+      await settle(pass);
+      expect(admission.inFlightOf('prerender')).toBe(0);
+    });
+
+    it('takes no client share, nor from the client its address is', async () => {
+      const admission = admissionOf({ perClientMaxInFlight: 1, pinnedPerClientPerMinute: 1 });
+
+      const pass = [holdPrerender(admission), holdPrerender(admission)];
+
+      expect(pass.every((render) => render.isStarted())).toBe(true);
+      expect(hold(admission, PINNED, API).isStarted()).toBe(true);
+      expect(counts.entries()).toEqual([
+        { lane: 'prerender', refusal: null, count: 2 },
+        { lane: 'pinned', refusal: null, count: 1 },
+      ]);
+    });
+
+    it('refuses a render past its own slots, not a visitor', () => {
+      const admission = admissionOf({ prerenderMaxInFlight: 1 });
+      holdPrerender(admission);
+
+      const refused = holdPrerender(admission);
+
+      expect(refused.answer.status).toBe(503);
+      expect(refused.answer.headers['Retry-After']).toBe('30');
+      expect(hold(admission, PINNED).isStarted()).toBe(true);
+      expect(counts.entries()).toContainEqual({
+        lane: 'prerender',
+        refusal: 'lane_capacity',
+        count: 1,
+      });
+    });
+
+    it('leaves the visitors their reserve of slots, which they may fill', () => {
+      const admission = admissionOf({ prerenderMaxInFlight: 3, prerenderVisitorReserve: 2 });
+      hold(admission, CURRENT);
+
+      const admitted = holdPrerender(admission);
+      const refused = holdPrerender(admission);
+
+      expect(admitted.isStarted()).toBe(true);
+      expect(refused.answer.status).toBe(503);
+      expect(holdFromMany(admission, CURRENT, 2).every((render) => render.isStarted())).toBe(true);
+      expect(counts.entries()).toContainEqual({
+        lane: 'prerender',
+        refusal: 'lane_capacity',
+        count: 1,
+      });
+    });
+
+    it('is refused for capacity once the visitors hold every slot', () => {
+      const admission = admissionOf();
+      holdFromMany(admission, CURRENT, LIMITS.maxInFlight);
+
+      expect(holdPrerender(admission).answer.status).toBe(503);
+      expect(counts.entries()).toContainEqual({ lane: 'prerender', refusal: 'capacity', count: 1 });
+    });
+
+    it('refuses renders past its budget, then admits them at its steady rate', async () => {
+      const admission = admissionOf({ prerenderBurst: 2 });
+      await settle([holdPrerender(admission), holdPrerender(admission)]);
+
+      expect(holdPrerender(admission).answer.status).toBe(503);
+      expect(hold(admission, PINNED).isStarted()).toBe(true);
+      expect(counts.entries()).toContainEqual({
+        lane: 'prerender',
+        refusal: 'lane_rate',
+        count: 1,
+      });
+      now += 1_000;
+      expect(holdPrerender(admission).isStarted()).toBe(true);
+    });
   });
 });

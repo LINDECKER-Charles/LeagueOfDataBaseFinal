@@ -22,6 +22,7 @@ public sealed class AuditVocabularyTests
     [InlineData(AuditAction.BuildVote, "build")]
     [InlineData(AuditAction.ApiKeyRegenerate, "apikey")]
     [InlineData(AuditAction.AdminLogsPurge, "admin")]
+    [InlineData(AuditAction.AdminPrerenderCancel, "admin")]
     public void GroupsAreTheLegacyOnes(AuditAction action, string category) =>
         Assert.Equal(category, AuditCategories.Of(action));
 

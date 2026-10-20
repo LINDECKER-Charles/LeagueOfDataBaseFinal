@@ -170,7 +170,8 @@ jobs:
   workflows:
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # The bucket script's bench (tools/prerender) pulls two images and runs a container per call.
+    timeout-minutes: 15
     env:
       ACTIONLINT_VERSION: 1.7.12
       ACTIONLINT_SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
@@ -223,6 +224,12 @@ jobs:
       # report are checked without running it.
       - name: Test the load bench
         run: node --test tools/load/test/*.test.mjs
+
+      # The bucket script of the pre-rendered pages, against the AWS CLI it pins and an S3
+      # played by moto: the operator runs it by hand, too rarely to learn then that it broke.
+      - name: Test the pre-rendered pages' bucket script
+        timeout-minutes: 8
+        run: node --test tools/prerender/test/*.test.mjs
 
       # The reading of `git status` that api:check (job contract) decides the drift by.
       - name: Test the contract check

@@ -96,6 +96,8 @@ BEGIN
           'ddragon_asset.status', 'ddragon_asset.type', 'ddragon_asset.version',
           'ddragon_version.status', 'ddragon_version.version',
           'periodic_job.name',
+          'prerender_build.hash', 'prerender_pass.scope', 'prerender_pass.state',
+          'prerender_unit.locale', 'prerender_unit.state', 'prerender_unit.version',
           'stripe_event.status', 'stripe_event.type',
           'stripe_checkout.currency', 'stripe_checkout.kind', 'stripe_checkout.status',
           'stripe_subscription.plan', 'stripe_subscription.status',

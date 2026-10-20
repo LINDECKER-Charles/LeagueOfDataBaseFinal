@@ -16,7 +16,7 @@ public sealed class HostedCommandsTests
             "admin create", "admin mfa-invite", "admin mfa-reset", "admin root",
             "analytics import", "audit import",
             "baseline mark-applied", "catalog export", "client-policy publish", "ingest",
-            "migrate",
+            "migrate", "prerender unit",
         };
 
         var hosted = CliCommandCatalog.Discover(typeof(Program).Assembly).Commands

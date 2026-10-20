@@ -18,6 +18,11 @@ type Environment = Readonly<Record<string, string | undefined>>;
 // the readers behind one shared address (a home NAT, a carrier's CGNAT) stay far below it. A
 // crawler on one address still gets every page nginx holds in its cache; only its misses past
 // one a second get a 503 and its Retry-After.
+//
+// The pre-render pass gets two renders a second of its own, two at once, and only while four
+// of the eight slots stay free for the visitors: its own budget never spends the pinned
+// lane's, and a visitor's page never waits behind it. It is a single client, the API, so it
+// takes no client share (`RenderAdmission`).
 const DEFAULTS: RenderLimits = {
   maxInFlight: 8,
   pinnedMaxInFlight: 3,
@@ -30,6 +35,10 @@ const DEFAULTS: RenderLimits = {
   currentPerClientPerMinute: 60,
   currentPerClientBurst: 20,
   trackedClients: 50_000,
+  prerenderPerMinute: 120,
+  prerenderBurst: 10,
+  prerenderMaxInFlight: 2,
+  prerenderVisitorReserve: 4,
 };
 
 const VARIABLES: Readonly<Record<keyof RenderLimits, string>> = {
@@ -44,6 +53,10 @@ const VARIABLES: Readonly<Record<keyof RenderLimits, string>> = {
   currentPerClientPerMinute: 'LODB_CURRENT_RENDERS_PER_CLIENT_PER_MINUTE',
   currentPerClientBurst: 'LODB_CURRENT_RENDER_PER_CLIENT_BURST',
   trackedClients: 'LODB_RENDER_TRACKED_CLIENTS',
+  prerenderPerMinute: 'LODB_PRERENDER_RENDERS_PER_MINUTE',
+  prerenderBurst: 'LODB_PRERENDER_RENDER_BURST',
+  prerenderMaxInFlight: 'LODB_PRERENDER_MAX_IN_FLIGHT',
+  prerenderVisitorReserve: 'LODB_PRERENDER_VISITOR_RESERVE',
 };
 
 interface Share {
@@ -51,28 +64,40 @@ interface Share {
   readonly whole: keyof RenderLimits;
   /** Whether the part must leave some of the whole to the others. */
   readonly isStrict: boolean;
+  /** Whether a part left to its default follows a whole set below it (`fitShare`). */
+  readonly isFitted: boolean;
 }
 
 // The pinned lane leaves room to the current pages, or a crawl of the older patches would
-// take every slot again; a client's share is a share, never more than the whole.
+// take every slot again; a client's share is a share, never more than the whole. The
+// pre-render pass leaves a slot at least to the visitors, and their reserve one to the pass.
 const SHARES: readonly Share[] = [
-  { part: 'pinnedMaxInFlight', whole: 'maxInFlight', isStrict: true },
-  { part: 'perClientMaxInFlight', whole: 'maxInFlight', isStrict: false },
-  { part: 'pinnedPerClientPerMinute', whole: 'pinnedPerMinute', isStrict: false },
-  { part: 'currentPerClientPerMinute', whole: 'currentPerMinute', isStrict: false },
-  { part: 'currentPerClientBurst', whole: 'currentBurst', isStrict: false },
+  { part: 'pinnedMaxInFlight', whole: 'maxInFlight', isStrict: true, isFitted: false },
+  { part: 'perClientMaxInFlight', whole: 'maxInFlight', isStrict: false, isFitted: true },
+  { part: 'pinnedPerClientPerMinute', whole: 'pinnedPerMinute', isStrict: false, isFitted: true },
+  {
+    part: 'currentPerClientPerMinute',
+    whole: 'currentPerMinute',
+    isStrict: false,
+    isFitted: true,
+  },
+  { part: 'currentPerClientBurst', whole: 'currentBurst', isStrict: false, isFitted: true },
+  { part: 'prerenderMaxInFlight', whole: 'maxInFlight', isStrict: true, isFitted: true },
+  { part: 'prerenderVisitorReserve', whole: 'maxInFlight', isStrict: true, isFitted: true },
 ];
 
-// A client's share left to its default follows a whole set below it: lowering a lane's
-// budget, the lever of an incident, must not stop the server. Only a share set above its
-// whole is a mistake, which `checkShare` refuses.
+// A client's share or a pre-render bound left to its default follows a whole set below it:
+// lowering a lane's budget or the slots, the lever of an incident (the staging runs three),
+// must not stop the server. Only a part set past its whole is a mistake, which `checkShare`
+// refuses.
 function fitShare(limits: RenderLimits, env: Environment, share: Share): RenderLimits {
-  const { part, whole, isStrict } = share;
+  const { part, whole, isStrict, isFitted } = share;
   const value = env[VARIABLES[part]];
-  if (isStrict || (value !== undefined && value !== '')) {
+  if (!isFitted || (value !== undefined && value !== '')) {
     return limits;
   }
-  return { ...limits, [part]: Math.min(limits[part], limits[whole]) };
+  const ceiling = isStrict ? limits[whole] - 1 : limits[whole];
+  return { ...limits, [part]: Math.min(limits[part], ceiling) };
 }
 
 function checkShare(limits: RenderLimits, { part, whole, isStrict }: Share): void {
@@ -87,8 +112,8 @@ function checkShare(limits: RenderLimits, { part, whole, isStrict }: Share): voi
 
 /**
  * Reads the bounds of the render admission from the `LODB_*` variables of `VARIABLES`, each
- * optional (its default otherwise, a client's share capped by its whole), then checks that
- * each share fits in its whole.
+ * optional (its default otherwise, a client's share or a pre-render bound fitted to its
+ * whole), then checks that each share fits in its whole.
  */
 export function readRenderLimits(env: Environment): RenderLimits {
   const read = (limit: keyof RenderLimits) =>
@@ -105,6 +130,10 @@ export function readRenderLimits(env: Environment): RenderLimits {
     currentPerClientPerMinute: read('currentPerClientPerMinute'),
     currentPerClientBurst: read('currentPerClientBurst'),
     trackedClients: read('trackedClients'),
+    prerenderPerMinute: read('prerenderPerMinute'),
+    prerenderBurst: read('prerenderBurst'),
+    prerenderMaxInFlight: read('prerenderMaxInFlight'),
+    prerenderVisitorReserve: read('prerenderVisitorReserve'),
   };
   const fitted = SHARES.reduce((current, share) => fitShare(current, env, share), limits);
   SHARES.forEach((share) => checkShare(fitted, share));

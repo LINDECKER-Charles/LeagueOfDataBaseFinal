@@ -1,0 +1,148 @@
+@let view = bill.view();
+@let failure = bill.report.failure();
+@if (view?.state === 'not_configured') {
+  <p class="text-[0.8rem] text-text-dim" data-bill-state="not_configured">
+    {{ 'admin.scaleway_bill.not_configured' | adminText }}
+  </p>
+} @else if (!view && !failure) {
+  <!-- One line, the height of the not-configured one: either answer shifts little. -->
+  <p class="sr-only" role="status">{{ 'admin.scaleway_bill.loading' | adminText }}</p>
+  <lodb-skeleton shape="line" class="w-[45%]" data-bill-state="loading" />
+} @else {
+  <lodb-admin-card
+    [heading]="'admin.scaleway_bill.title' | adminText"
+    [chip]="'admin.scaleway_bill.chip' | adminText"
+    [attr.aria-busy]="bill.report.busy()"
+  >
+    @if (failure) {
+      <p class="flex flex-wrap items-center gap-3 text-danger-light" data-bill-state="failed">
+        <span>
+          {{
+            'admin.scaleway_bill.failed'
+              | adminText
+                : {
+                    reason:
+                      ('admin.state.reasons.' + failure.kind
+                      | adminText: { status: failure.status }),
+                  }
+          }}
+        </span>
+        <button
+          lodbButton="ghost"
+          lodbButtonSize="small"
+          type="button"
+          (click)="bill.report.reload()"
+        >
+          {{ 'admin.state.retry' | adminText }}
+        </button>
+      </p>
+    } @else if (view) {
+      @if (view.isStale && view.fetchedAt) {
+        <p class="mb-4 flex flex-wrap items-center gap-3 text-[0.85rem] text-gold" data-bill-stale>
+          <span>
+            {{
+              'admin.scaleway_bill.stale' | adminText: { date: (view.fetchedAt | stamp: 'minute') }
+            }}
+          </span>
+          <!-- Asks again; the API reads Scaleway anew only once its own wait is over. -->
+          <button
+            lodbButton="ghost"
+            lodbButtonSize="small"
+            type="button"
+            data-bill-read-again
+            [disabled]="bill.report.busy()"
+            (click)="bill.report.reload()"
+          >
+            {{ 'admin.scaleway_bill.read_again' | adminText }}
+          </button>
+        </p>
+      }
+      @switch (view.state) {
+        @case ('unavailable') {
+          <p class="flex flex-wrap items-center gap-3 text-text-dim" data-bill-state="unavailable">
+            <span>{{ 'admin.scaleway_bill.unavailable' | adminText }}</span>
+            <!-- Asks again; the API reads Scaleway anew only once its own wait is over. -->
+            <button
+              lodbButton="ghost"
+              lodbButtonSize="small"
+              type="button"
+              data-bill-read-again
+              [disabled]="bill.report.busy()"
+              (click)="bill.report.reload()"
+            >
+              {{ 'admin.scaleway_bill.read_again' | adminText }}
+            </button>
+          </p>
+        }
+        @case ('empty') {
+          <p class="text-text-dim" data-bill-state="empty">
+            {{ 'admin.scaleway_bill.empty' | adminText }}
+          </p>
+        }
+        @case ('billed') {
+          @if (current(); as now) {
+            <div
+              class="grid grid-cols-[repeat(auto-fit,minmax(12rem,1fr))] gap-x-6 gap-y-4"
+              data-bill-state="billed"
+            >
+              <div data-bill-readout="current">
+                <span class="readout-label">{{ 'admin.scaleway_bill.current' | adminText }}</span>
+                <span class="readout-value">{{ amount(now.total, view.currency) }}</span>
+                <p class="readout-text">
+                  {{ 'admin.scaleway_bill.current_sub' | adminText: { month: month(now.period) } }}
+                </p>
+              </div>
+              <div data-bill-readout="previous">
+                <span class="readout-label">{{ 'admin.scaleway_bill.previous' | adminText }}</span>
+                @if (previous(); as last) {
+                  <span class="readout-value">{{ amount(last.total, view.currency) }}</span>
+                  <p class="readout-text">{{ month(last.period) }}</p>
+                } @else {
+                  <span class="readout-value">—</span>
+                  <p class="readout-text">
+                    {{ 'admin.scaleway_bill.previous_none' | adminText }}
+                  </p>
+                }
+              </div>
+            </div>
+            <div class="hx-table-scroll mt-5">
+              <table class="hx-table hx-table--flush admin-tbl">
+                <thead>
+                  <tr>
+                    <th scope="col">{{ 'admin.scaleway_bill.columns.month' | adminText }}</th>
+                    <th scope="col" class="num">
+                      {{ 'admin.scaleway_bill.columns.amount' | adminText }}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (period of view.months; track period.period) {
+                    <tr [attr.data-bill-period]="period.period">
+                      <td>{{ month(period.period) }}</td>
+                      <td class="num whitespace-nowrap">
+                        {{ amount(period.total, view.currency) }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            <lodb-scaleway-bill-lines [lines]="now.lines" [currency]="view.currency" />
+          }
+        }
+      }
+      <div class="mt-4 grid gap-1.5 text-[0.8rem] text-text-dim">
+        <!-- A stale bill says the time of its reading in its banner already. -->
+        @if (view.fetchedAt && !view.isStale) {
+          <p data-bill-fetched>
+            {{
+              'admin.scaleway_bill.fetched'
+                | adminText: { date: (view.fetchedAt | stamp: 'minute') }
+            }}
+          </p>
+        }
+        <p data-bill-note>{{ 'admin.scaleway_bill.notes.' + project() | adminText }}</p>
+      </div>
+    }
+  </lodb-admin-card>
+}

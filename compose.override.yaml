@@ -38,6 +38,17 @@ services:
       # The E2E accounts vote the minute they exist: a served host makes an account wait a
       # day before it votes (docs/architecture/pieges.md, Tests E2E).
       LoDb__Builds__Votes__MinimumAccountAge: "00:00:00"
+      # The pre-rendering pass writes to the stack's simulated store (pages-store below),
+      # over plain HTTP, with its fixed key. No pass starts by itself: an E2E run promotes
+      # versions, and each would render a whole catalogue.
+      LoDb__Prerender__Endpoint: http://lodb-pages-store:5000
+      LoDb__Prerender__AllowInsecureEndpoint: "true"
+      LoDb__Prerender__Region: fr-par
+      LoDb__Prerender__Bucket: lodb-pages-dev
+      LoDb__Prerender__AccessKey: lodb-dev
+      LoDb__Prerender__SecretKey: lodb-dev
+      LoDb__Prerender__PublicHost: localhost
+      LoDb__Prerender__AutoEnqueueOnPromotion: "false"
 
   web-ssr:
     ports:
@@ -58,6 +69,11 @@ services:
       LODB_CURRENT_RENDER_PER_CLIENT_BURST: "1000"
       LODB_RENDER_DEADLINE_SECONDS: "30"
       LODB_RENDER_API_TIMEOUT_SECONDS: "30"
+      # The pass's lane, as lifted as the others: its in-flight cap stays under the total.
+      LODB_PRERENDER_RENDERS_PER_MINUTE: "6000"
+      LODB_PRERENDER_RENDER_BURST: "1000"
+      LODB_PRERENDER_MAX_IN_FLIGHT: "8"
+      LODB_PRERENDER_VISITOR_RESERVE: "4"
 
   nginx:
     ports:
@@ -75,6 +91,13 @@ services:
       LODB_LEGACY_BURST: "10000"
       LODB_SITEMAPS_RATE: 1000r/s
       LODB_SITEMAPS_BURST: "10000"
+      # nginx reads the past patches' pages from the simulated store, as a served host does
+      # from Scaleway's.
+      LODB_PAGES_STORE_ENABLED: "1"
+      LODB_PAGES_STORE_SCHEME: http
+      LODB_PAGES_STORE_HOST: lodb-pages-store
+      LODB_PAGES_STORE_PORT: "5000"
+      LODB_PAGES_STORE_BUCKET: lodb-pages-dev
 
   postgres:
     ports:
@@ -95,3 +118,58 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+  # The object store of the pre-rendered pages (ADR 0011), simulated by moto: S3's API, in
+  # memory, without checking signatures. MinIO's images no longer pull, and ADR 0004 keeps it
+  # out of production anyway; what Scaleway itself does is proven by
+  # tools/prerender/scaleway-bucket.sh verifier. At each start it creates the bucket and lets
+  # anyone read pages/ and build/ (moto reads AWS's policy format, and HEAD as its own
+  # action), as the bucket policy lets the host read on Scaleway; a restart empties it.
+  pages-store:
+    image: motoserver/moto:5.2.3@sha256:91fd602a21f49cf9eb82fdf474015a3c131d40104c8297ea6a2ca920708ae32c
+    init: true
+    read_only: true
+    security_opt: [no-new-privileges:true]
+    cap_drop: [ALL]
+    tmpfs:
+      - /tmp:size=16m
+    entrypoint: [python, -c]
+    command:
+      - |
+        import json, pathlib, threading
+        import boto3
+        from moto.server import ThreadedMotoServer
+        server = ThreadedMotoServer(ip_address="0.0.0.0", port=5000)
+        server.start()
+        bucket = "lodb-pages-dev"
+        store = boto3.client("s3", endpoint_url="http://127.0.0.1:5000", region_name="fr-par",
+                             aws_access_key_id="lodb-dev", aws_secret_access_key="lodb-dev")
+        store.create_bucket(Bucket=bucket,
+                            CreateBucketConfiguration={"LocationConstraint": "fr-par"})
+        store.put_bucket_policy(Bucket=bucket, Policy=json.dumps({
+            "Version": "2012-10-17",
+            "Statement": [{"Effect": "Allow", "Principal": "*",
+                           "Action": ["s3:GetObject", "s3:HeadObject"],
+                           "Resource": [f"arn:aws:s3:::{bucket}/pages/*",
+                                        f"arn:aws:s3:::{bucket}/build/*"]}]}))
+        pathlib.Path("/tmp/ready").touch()
+        threading.Event().wait()
+    networks:
+      default:
+        # The name the API and nginx call, unique on a shared network (see compose.yaml).
+        aliases: [lodb-pages-store]
+    # No host port: the API and nginx reach it on the stack network, and a slot stack
+    # would otherwise collide with the integration stack's port.
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      # Ready once the bucket and its policy are in place, not when the port first answers.
+      test: ["CMD", "test", "-f", "/tmp/ready"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
