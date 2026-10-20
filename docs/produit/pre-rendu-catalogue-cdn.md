@@ -429,6 +429,18 @@ au staging. En attendant, ses pages passent par le SSR et le cache local.
   compteurs disent ce qui a été écrit, pas ce qui reste après l'expiration à 14 jours : une
   unité marquée faite n'est pas réécrite, et ses pages retombent sans bruit sur le SSR ; il
   faut une nouvelle passe pour les remettre ;
+- ce que le stockage contient et ce qu'il coûte, pour le suivre dans le temps : par epoch
+  (servie, en écriture, écrite en attente de bascule, retirée), ses pages, ses octets, son état
+  et son coût mensuel estimé au prix One Zone ; les builds copiés (nombre, octets, coût au prix
+  Multi-AZ) ; les totaux en tête ; et, repliable, le détail par version de l'epoch servie. Le
+  coût vaut les octets divisés par 10⁹, multipliés par un prix par Go et par mois réglable
+  (`LoDb__Prerender__PricePerGbMonthOneZone`, 0,00803 € ;
+  `LoDb__Prerender__PricePerGbMonthMultiAz`, 0,01606 € ; tarifs du 1ᵉʳ juin 2026), arrondi à
+  quatre décimales, en euros. Une ligne sous les totaux nomme les prix et ce que l'estimation
+  laisse de côté : la sortie (75 Go gratuits par mois, puis 0,01 €/Go), suivie dans Grafana.
+  Une epoch retirée coûte encore tant que le cycle de vie ne l'a pas effacée (au moins 9 jours
+  pour 4 millions d'objets), ce que l'API ne voit pas : sa ligne garde son coût, mais les
+  totaux ne la comptent plus ;
 - la passe en cours, avec sa progression, son rythme et sa fin estimée ;
 - le lancement d'une passe, avec son périmètre (tout, une plage de versions, un type de
   page, une langue), une liste de versions prioritaires et une confirmation ;
