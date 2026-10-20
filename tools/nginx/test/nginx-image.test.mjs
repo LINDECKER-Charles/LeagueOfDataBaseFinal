@@ -53,13 +53,14 @@ const SLOW_READ = [
 // may state the client address, so that a check of the caches speaks for a client of its own
 // (`forwardedFor`) and leaves the bursts of the others whole. The first parts of the page
 // caches' keys are named, to be found in the stored keys; a past patch's page waits for a
-// third request rather than the image's second, to show where that count comes from. The
-// edge's secret is set, as on a host: every check sends it unless it says otherwise.
+// third request rather than the image's first, to show where that count comes from. The page
+// store stays off, as in the image. The edge's secret is set: every check sends it by default.
 const LIMITS = {
   LODB_EDGE_CIDR: '0.0.0.0/0',
   LODB_EDGE_SECRET: EDGE_SECRET,
   LODB_REVISION: 'r1',
   LODB_ARCHIVE_EPOCH: 'e7',
+  LODB_ARCHIVE_SERVE_EPOCH: '2',
   LODB_ARCHIVE_CACHE_MIN_USES: '3',
   LODB_PAGES_RATE: '1r/m',
   LODB_PAGES_BURST: '3',
@@ -328,7 +329,7 @@ describe('nginx image', { skip: IMAGE ? false : 'LODB_NGINX_IMAGE is not set' },
       assert.equal(gunzipSync(misses[2].body).toString(), 'archive\n');
       assert.equal(kept.body.toString(), 'archive\n');
       assert.equal(kept.headers.vary, 'Accept-Encoding');
-      assert.deepEqual(await keysOf('archive'), [`KEY: e7|http://localhost${path}`]);
+      assert.deepEqual(await keysOf('archive'), [`KEY: e7.2|http://localhost${path}`]);
       assert.ok((await keysOf('pages')).includes('KEY: r1|http://localhost/en/about'));
     });
 
