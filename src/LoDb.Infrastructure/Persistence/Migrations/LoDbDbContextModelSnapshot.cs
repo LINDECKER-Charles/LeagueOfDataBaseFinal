@@ -1289,6 +1289,16 @@ namespace LoDb.Infrastructure.Persistence.Migrations
                         .HasColumnName("hash")
                         .IsFixedLength();
 
+                    b.Property<long>("Bytes")
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L)
+                        .HasColumnName("bytes");
+
+                    b.Property<int>("Files")
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("files");
+
                     b.Property<DateTimeOffset>("StoredAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
@@ -1301,6 +1311,8 @@ namespace LoDb.Infrastructure.Persistence.Migrations
                     b.ToTable("prerender_build", null, t =>
                         {
                             t.HasCheckConstraint("ck_prerender_build_hash", "hash ~ '^[0-9a-f]{64}$'");
+
+                            t.HasCheckConstraint("ck_prerender_build_size", "files >= 0 AND bytes >= 0");
                         });
                 });
 

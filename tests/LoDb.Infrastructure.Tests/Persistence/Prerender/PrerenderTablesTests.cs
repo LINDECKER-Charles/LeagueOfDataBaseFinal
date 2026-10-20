@@ -125,6 +125,37 @@ public sealed class PrerenderTablesTests(PostgresContainerFixture postgres)
         Assert.Equal("ck_prerender_build_hash", error.ConstraintName);
     }
 
+    [Theory]
+    [InlineData("-1, 0")]
+    [InlineData("0, -1")]
+    public async Task BuildSizeCannotBeNegative(string size)
+    {
+        var error = await Assert.ThrowsAsync<PostgresException>(() =>
+            Database.ExecuteAsync(
+                $"INSERT INTO prerender_build (hash, files, bytes) VALUES ('{Hash}', {size})",
+                Cancellation));
+
+        Assert.Equal("ck_prerender_build_size", error.ConstraintName);
+    }
+
+    [Fact]
+    public async Task BuildSizeSurvivesARoundTrip()
+    {
+        const int files = 214;
+        const long bytes = 9_437_184;
+        await using (var writer = Database.CreateContext())
+        {
+            writer.PrerenderBuilds.Add(
+                new PrerenderBuild { Hash = Hash, Files = files, Bytes = bytes });
+            await writer.SaveChangesAsync(Cancellation);
+        }
+
+        await using var reader = Database.CreateContext();
+        var stored = await reader.PrerenderBuilds.SingleAsync(Cancellation);
+
+        Assert.Equal((files, bytes), (stored.Files, stored.Bytes));
+    }
+
     [Fact]
     public async Task BuildIsStoredOnce()
     {
