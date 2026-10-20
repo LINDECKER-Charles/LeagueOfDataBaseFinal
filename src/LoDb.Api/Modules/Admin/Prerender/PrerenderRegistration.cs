@@ -3,11 +3,13 @@ using LoDb.Api.Modules.Admin.Prerender.Builds;
 using LoDb.Api.Modules.Admin.Prerender.Options;
 using LoDb.Api.Modules.Admin.Prerender.Pages;
 using LoDb.Api.Modules.Admin.Prerender.Passes;
+using LoDb.Api.Modules.Admin.Prerender.Promotion;
 using LoDb.Api.Modules.Admin.Prerender.Rendering;
 using LoDb.Api.Modules.Admin.Prerender.Telemetry;
 using LoDb.Api.Modules.Admin.Prerender.Units;
 using LoDb.Api.Modules.Admin.Prerender.Writing;
 using LoDb.Infrastructure.PageStore;
+using LoDb.Ingestion.Pipeline.Versions;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 
@@ -15,7 +17,8 @@ namespace LoDb.Api.Modules.Admin.Prerender;
 
 /// <summary>
 /// Registrations of the pre-rendering of the catalogue (ADR 0011): its settings, the page
-/// store, the <c>prerender-ssr</c> client and the pass's services.
+/// store, the <c>prerender-ssr</c> client, the pass's services and its share of each
+/// promotion.
 /// </summary>
 /// <remarks>
 /// Neither I/O nor throw, with an empty configuration as well (the OpenAPI generation builds
@@ -49,8 +52,18 @@ internal static class PrerenderRegistration
         services.TryAddSingleton<PassLauncher>();
         services.TryAddSingleton<PassControl>();
         AddEngine(services);
+        AddPromotion(services);
         AddSsrClient(services);
         return services;
+    }
+
+    private static void AddPromotion(IServiceCollection services)
+    {
+        services.TryAddSingleton<PromotedVersions>();
+        services.TryAddSingleton<VersionEnqueuer>();
+        services.TryAddSingleton<PrerenderReconciler>();
+        services.TryAddEnumerable(ServiceDescriptor
+            .Singleton<IPromotionListener, PrerenderPromotionListener>());
     }
 
     private static void AddEngine(IServiceCollection services)
