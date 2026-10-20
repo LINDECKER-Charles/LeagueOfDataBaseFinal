@@ -59,6 +59,7 @@ public sealed class PageOutcomeTests(PostgresContainerFixture postgres)
 
         Assert.All(harness.Ssr.Requests, static request =>
         {
+            Assert.Equal(PrerenderHarness.PublicHost, request.Headers["Host"]);
             Assert.Equal(PrerenderHarness.PublicHost, request.Headers["X-Forwarded-Host"]);
             Assert.Equal("https", request.Headers["X-Forwarded-Proto"]);
             Assert.Equal("gzip", request.Headers["Accept-Encoding"]);

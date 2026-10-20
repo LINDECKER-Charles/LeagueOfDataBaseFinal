@@ -95,7 +95,9 @@ internal static class PrerenderRegistration
             .RemoveAllLoggers();
 
     // The pass renders each page as a visitor of the public host would get it: the SSR trusts
-    // these two proxy headers for the origin of the canonical and hreflang links.
+    // these two proxy headers for the origin of the canonical and hreflang links. The Host is
+    // the public one as well, as nginx sends it: the SSR refuses any Host outside
+    // LODB_ALLOWED_HOSTS (400), its own name on the stack network included.
     private static void Configure(HttpClient client, PrerenderOptions options)
     {
         client.Timeout = SsrTimeout;
@@ -107,6 +109,7 @@ internal static class PrerenderRegistration
 
         client.BaseAddress = new Uri(options.SsrBaseUrl!);
         var headers = client.DefaultRequestHeaders;
+        headers.Host = options.PublicHost;
         headers.TryAddWithoutValidation(
             PrerenderHeaders.Prerender,
             PrerenderHeaders.PrerenderValue);
