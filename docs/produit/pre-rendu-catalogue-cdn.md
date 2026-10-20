@@ -482,11 +482,13 @@ Dans la location des versions épinglées (`sites/site.conf`), derrière
 - **`lodb_archive` reste devant**, comme cache chaud local : `MIN_USES=1`, 20 Go, 64 Mo de
   clés, 90 jours d'inactivité. La clé porte l'epoch servie (§ 3). La limite mémoire de nginx
   (256 Mo) devient trop juste : relevée, puis mesurée. La classe `archived` passe à
-  `s-maxage` d'un an : seul le changement de `cache-control.ts` du commit `083d3be4` est
+  `s-maxage` d'un an : le changement de `cache-control.ts` du commit `083d3be4` est
   repris, avec ses trois specs, `tools/routing/check-urls.sh` et le bouchon des tests
-  nginx (`tools/nginx/lib/upstream-stub.conf`, qui pose encore `s-maxage=604800`) ; le
-  reste du commit (rétention de 400 jours, cache de 68 Go) est remplacé. La purge se fait
-  par l'epoch, et par le CDN au lot 4.
+  nginx (`tools/nginx/lib/upstream-stub.conf`), ainsi que sa rétention de 400 jours pour
+  `front-builds` (le déploiement refuse moins de 395) : la copie sous `build/` ne couvre
+  pas une page que le SSR rend sur un raté du stockage et que `lodb_archive` garde jusqu'à
+  un an. Le cache de 68 Go du commit est remplacé. La purge se fait par l'epoch, et par le
+  CDN au lot 4.
 - **`/build/`** : un bundle que le SSR ne connaît plus (404, et seulement 404) est cherché
   sous `build/` dans le stockage, avec les mêmes garde-fous que les pages :
   - la clé vient d'une `map` stricte (`^/build/(media/)?[A-Za-z0-9._-]+$`) ; hors de cette
