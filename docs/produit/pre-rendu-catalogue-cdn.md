@@ -340,7 +340,8 @@ appliquerait `limit_req`, remplirait `lodb_archive` et déclencherait le miroir 
     `LODB_PRERENDER_MAX_IN_FLIGHT=1` et `LODB_PRERENDER_VISITOR_RESERVE=1` ;
   - un comptage à part dans `lodb_ssr_renders_total{lane="prerender"}` ;
   - aucune ligne `http.request.served` par page, qui en pousserait 4 millions dans
-    VictoriaLogs (marque dans `response.locals`, comme `SHED_MARKER`).
+    VictoriaLogs, sauf ses erreurs serveur (5xx) ; la requête est reconnue à l'en-tête de
+    la passe, comme pour le reste de la voie (liste du build et bundles compris).
 
   `readPositiveInteger` refuse `0` : la passe se met en pause par l'API, pas par le budget.
   La voie `refresh` de la spécification précédente en est le modèle, mais son code n'a

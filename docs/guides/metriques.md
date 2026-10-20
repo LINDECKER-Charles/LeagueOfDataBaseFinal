@@ -149,8 +149,8 @@ Le couloir `prerender` est celui de la passe de précalcul de l'API, reconnue à
 (`LODB_PRERENDER_MAX_IN_FLIGHT`) propres, sans part par client, et seulement tant que
 `LODB_PRERENDER_VISITOR_RESERVE` créneaux restent libres pour les visiteurs. Ses refus gardent
 les raisons des autres couloirs (`capacity`, `lane_capacity`, `lane_rate`, jamais `client_*`).
-Ses requêtes n'écrivent pas de ligne `http.request.served` : la passe en compterait des
-millions. Une requête qui somme `lodb_ssr_renders_total` sans filtre `lane` inclut la passe.
+Ses requêtes n'écrivent pas de ligne `http.request.served`, sauf ses erreurs serveur (5xx) :
+la passe en compterait des millions. Une requête qui somme `lodb_ssr_renders_total` sans filtre `lane` inclut la passe.
 
 ## Exemples
 
