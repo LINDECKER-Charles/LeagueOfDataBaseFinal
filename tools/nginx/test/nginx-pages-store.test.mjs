@@ -74,6 +74,9 @@ const PRUNED_BUNDLE = '/build/old-ABCD1234.js';
 const GONE_BUNDLE = '/build/gone-ABCD1234.js';
 const CURRENT_BUNDLE = '/build/main-ABCD1234.js';
 const DOTTED_BUNDLE = '/build/media/../old-ABCD1234.js';
+// The SSR server's answer to a name no build has (src/server), which nginx keeps whatever the
+// store says: a plain text, never nginx's HTML page nor S3's error document.
+const SSR_NOT_FOUND = { body: 'Not Found', type: 'text/plain; charset=utf-8' };
 const STORED_BUNDLE = { body: 'stored bundle\n', type: 'text/javascript',
   cacheControl: 'public, max-age=31536000, immutable', policy: "default-src 'none'; sandbox" };
 // The store's read timeout (snippets/pages-store/request.conf) is 3 s; a fallback that waited
@@ -227,6 +230,10 @@ describe('nginx image in front of the page store',
         assert.equal(answer.headers['x-cache-status'], 'MISS');
         assert.ok(!answer.body.toString().includes('AccessDenied'));
       }
+      for (const answer of [missed, ...gone]) {
+        assert.equal(answer.body.toString(), SSR_NOT_FOUND.body);
+        assert.equal(answer.headers['content-type'], SSR_NOT_FOUND.type);
+      }
       for (const answer of [missed, fetched, ...gone]) {
         assert.equal(answer.headers['content-security-policy'], STORED_BUNDLE.policy);
         assert.equal(answer.headers['x-content-type-options'], 'nosniff');
@@ -303,6 +310,8 @@ describe('nginx image with the page store switched off',
       async () => {
         const gone = await send(stack.port, PRUNED_BUNDLE);
         assert.equal(gone.status, 404);
+        assert.equal(gone.body.toString(), SSR_NOT_FOUND.body);
+        assert.equal(gone.headers['content-type'], SSR_NOT_FOUND.type);
         assert.equal(gone.headers['content-security-policy'], STORED_BUNDLE.policy);
         assert.deepEqual(await stack.storeRequests(), []);
       });
