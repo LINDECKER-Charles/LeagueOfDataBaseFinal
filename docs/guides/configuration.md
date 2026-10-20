@@ -181,6 +181,7 @@ mis en fichiers :
 - `LoDb__Audience__Username`, `LoDb__Audience__Password` (prod seulement, § 4.6) ;
 - `LoDb__Prerender__AccessKey`, `LoDb__Prerender__SecretKey` (clé de l'application d'écriture
   du stockage des pages pré-rendues, § 4.8) ;
+- `LoDb__ScalewayBilling__SecretKey` (clé de lecture de la facturation Scaleway, § 4.9) ;
 - `LoDb__Database__BackupRole__Password` (prod seulement, monté dans `migrate` seul, § 4.7).
 
 Un secret ne vient **jamais** de `ENV_*` : `LODB_APP_DB_PASSWORD`, le mot de passe du rôle
@@ -388,6 +389,8 @@ même nom.
 | `LoDb__Prerender__Bucket` | avec le stockage | Bucket de l'environnement : `lodb-pages-staging`, `lodb-pages-prod`. Absent : la passe reste en sommeil. |
 | `LoDb__Prerender__AccessKey`, `LoDb__Prerender__SecretKey` 🔒 | avec le stockage | Clé API de l'application `lodb-pages-writer-<env>` : écriture d'objets seule, sur le projet de l'environnement seul ([`tools/prerender/README.md`](../../tools/prerender/README.md)). Absente : la passe reste en sommeil, nginx sert par le SSR. |
 | `LoDb__Prerender__AutoEnqueueOnPromotion` | ➖ | `true` en prod : un patch qui quitte le dernier rang rejoint la passe en cours, ou en ouvre une sur l'epoch servie. `false` sur le staging (son calque, § 4.5), qui reste presque vide. |
+| `LoDb__ScalewayBilling__SecretKey` 🔒 | ➖ | Clé secrète de l'application `lodb-facturation-lecture` (§ 4.9), une par environnement. Absente : les panneaux « Sauvegardes » et « Précalcul du catalogue » disent que la facture n'est pas configurée. |
+| `LoDb__ScalewayBilling__OrganizationId`, `BackupsProjectId`, `PagesProjectId` | avec la clé | Organisation, projet du bucket des sauvegardes et projet des pages de l'environnement, en UUID (§ 4.9). Requis une fois la clé posée ; un id qui n'est pas un UUID est refusé au démarrage, clé posée ou non. |
 | `LoDb__Database__AppRole__StatementTimeout`, `ConnectionLimit` | ➖ | Transmis à `migrate` seulement, qui les pose sur le rôle de l'API (§ 4.3) : `00:00:15` (une requête plus longue est annulée par le serveur) et `50` sessions (`-1` : sans limite ; sous les 60 du serveur, moins les 3 réservées aux superutilisateurs). Pris en compte au déploiement suivant, par les nouvelles connexions. |
 | `LoDb__Database__BackupRole__Password` 🔒 ⚙️ | prod, à l'activation des sauvegardes | Mot de passe de `lodb_sauvegarde`, le rôle des sauvegardes hors hôte (§ 4.7) : la même valeur que `SAUVEGARDE_LODB_MOT_DE_PASSE` d'`infra-vps` (`openssl rand -hex 32`). Fichier monté dans `migrate` seul, qui le pose sur le rôle. Posé, le job exige 16 caractères au moins parmi lettres, chiffres, `-` et `_` (le format d'`infra-vps`). Absent : un rôle neuf n'a pas de mot de passe, personne ne s'y connecte ; un rôle existant garde le sien. |
 
@@ -679,6 +682,46 @@ cycle de vie (9 jours au moins pour 4 millions d'objets), que l'API ne voit pas 
 garde son coût, mais le total la laisse de côté, pour ne pas surestimer la facture une fois
 l'epoch effacée. Sur le staging, dont les pages expirent après 14 jours, les compteurs disent
 ce qui a été écrit, pas ce qui reste.
+
+### 4.9 Facture Scaleway dans l'administration
+
+À côté des coûts estimés, les panneaux « Sauvegardes » et « Précalcul du catalogue » montrent
+ce que Scaleway facture vraiment pour l'Object Storage de leur projet
+(`GET /api/admin/scaleway/bill`) : le mois en cours, les cinq précédents et leurs lignes
+(stockage, sortie, requêtes, déductions de l'essai gratuit et des paliers gratuits, en
+négatif). Les montants sont hors TVA ; Scaleway ne les découpe que par projet, pas par
+bucket : la facture d'un projet est celle de tous ses buckets.
+
+| | Staging | Prod |
+|---|---|---|
+| Application IAM (`BillingReadOnly`, sur l'organisation, rien d'autre) | `lodb-facturation-lecture` | `lodb-facturation-lecture` |
+| Clé (`LoDb__ScalewayBilling__SecretKey` 🔒) | celle du staging | celle de la prod |
+| `LoDb__ScalewayBilling__BackupsProjectId` | projet du bucket `sauvegardes-vps` | le même |
+| `LoDb__ScalewayBilling__PagesProjectId` | projet `lodb-pages-staging` | projet `lodb-pages-prod` |
+
+L'organisation (`LoDb__ScalewayBilling__OrganizationId`) est la même partout. Les ids se
+lisent dans la console Scaleway (paramètres de l'organisation, puis de chaque projet) ; ils
+ne sont pas secrets mais restent hors du dépôt, dans `ENV_*`. La clé ne lit que la
+facturation : l'API IAM, l'API Account et les buckets lui répondent 403.
+
+**Lecture.** Rien n'est lu au démarrage ni en tâche de fond : l'API interroge
+`https://api.scaleway.com/billing/v2beta1/consumptions` (catégorie « Object Storage », par
+organisation, chaque page de chaque mois) quand un panneau demande la facture, puis la garde
+une heure en mémoire, ou jusqu'au changement de mois (UTC) ; les panneaux qui la demandent en
+même temps partagent une lecture. Les six mois sont demandés ensemble et une lecture abandonne
+au bout de 20 s (10 s par requête), avant que le panneau ne cesse d'attendre (30 s). Une
+lecture qui échoue, quelle qu'en soit la raison (refus, erreur, réponse sans la liste,
+délai dépassé), garde la dernière facture lue, marquée périmée avec l'heure de sa lecture, et
+la suivante attend 5 minutes ; une ligne `admin.scaleway_bill.unavailable` le signale,
+`admin.scaleway_bill.read` chaque lecture réussie. Un redémarrage de l'API relit. Le panneau
+date la facture de sa lecture : le champ `updated_at` de Scaleway donne l'heure de la
+requête, pas celle des montants, que Scaleway met à jour avec quelques heures de retard. La
+clé part dans l'en-tête `X-Auth-Token` de chaque requête, jamais dans une URL ni un journal ;
+le client ne suit aucune redirection.
+
+**Mise en service, par environnement** : dans `ENV_*`, la clé de l'environnement et les trois
+ids (`.env.*.example`), puis un déploiement. En local, la facture reste éteinte
+(`compose.override.yaml` ne pose pas la clé).
 
 ## 5. Fichiers et volumes de l'hôte
 

@@ -23,6 +23,7 @@ const KEYS = [
   'LoDb__Database__BackupRole__Password',
   'LoDb__Prerender__AccessKey',
   'LoDb__Prerender__SecretKey',
+  'LoDb__ScalewayBilling__SecretKey',
 ];
 const GENERATED = 'LODB_APP_DB_PASSWORD';
 const HEX_SECRET = /^[0-9a-f]{64}$/;

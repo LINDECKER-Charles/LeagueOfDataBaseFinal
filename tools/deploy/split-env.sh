@@ -49,6 +49,7 @@ readonly SECRET_KEYS=(
   LoDb__Database__BackupRole__Password
   LoDb__Prerender__AccessKey
   LoDb__Prerender__SecretKey
+  LoDb__ScalewayBilling__SecretKey
 )
 # The password of the API's own database role (lodb_app).
 readonly GENERATED_KEYS=(

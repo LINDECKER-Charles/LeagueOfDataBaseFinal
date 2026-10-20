@@ -125,6 +125,11 @@ services:
       LoDb__Prerender__AutoEnqueueOnPromotion:
       # The pass renders each page for the canonical host: its links and canonical carry it.
       LoDb__Prerender__PublicHost: ${LODB_CANONICAL_HOST:?LODB_CANONICAL_HOST is required}
+      # The Scaleway bill of the admin panels (configuration.md § 4.9): the organization and
+      # the projects of the backups and of the pages, read with the key below.
+      LoDb__ScalewayBilling__OrganizationId:
+      LoDb__ScalewayBilling__BackupsProjectId:
+      LoDb__ScalewayBilling__PagesProjectId:
     secrets:
       - source: data-protection
         target: data-protection.pfx
@@ -146,6 +151,9 @@ services:
       # only, on its environment's project. Empty, the pass stays dormant.
       - LoDb__Prerender__AccessKey
       - LoDb__Prerender__SecretKey
+      # The key of the billing reader (lodb-facturation-lecture): BillingReadOnly on the
+      # organization, nothing else. Empty, the admin panels say the bill is not configured.
+      - LoDb__ScalewayBilling__SecretKey
     labels:
       # Raised by the deploy job when a secret file changes. The API reads its files at
       # start-up only, and Compose recreates a service whose definition changed, not one
@@ -376,3 +384,5 @@ secrets:
     file: ./.deploy/secrets/LoDb__Prerender__AccessKey
   LoDb__Prerender__SecretKey:
     file: ./.deploy/secrets/LoDb__Prerender__SecretKey
+  LoDb__ScalewayBilling__SecretKey:
+    file: ./.deploy/secrets/LoDb__ScalewayBilling__SecretKey
