@@ -10,7 +10,8 @@
 - **Amendement** : le 2026-10-10, les points 4 et 5 sont précisés : le coût de la longue
   traîne est borné à chaque étage de l'API (voir § « Amendement du 2026-10-10 »). Le
   2026-10-11, un warm-up dont les images sont refusées se termine `done` (même section,
-  point 4).
+  point 4). Le 2026-10-20, la tâche de précalcul du catalogue (voir § « Amendement du
+  2026-10-20 »).
 
 ## Contexte
 
@@ -186,3 +187,34 @@ Meter `LoDb.Catalog` : `lodb_catalog_cache_lookups_total{outcome}`,
 et `lodb_ingestion_sync_waiting` (meter `LoDb.Ingestion`). Les refus d'ingestion restent
 comptés par `lodb_ingestion_on_demand_refused_total{reason}`. Aucune version, langue ni
 adresse en label.
+
+## Amendement du 2026-10-20 — la tâche de précalcul
+
+Le catalogue pré-rendu ([ADR 0011](0011-catalogue-pre-rendu-et-cdn.md)) ajoute une tâche :
+
+| Tâche | Fréquence | Remplace |
+|---|---|---|
+| Précalcul des pages des anciens patchs, vers le stockage objet | continu pendant une passe, unité par unité | le rendu à la demande dans le budget épinglé |
+| Rapprochement des unités avec les versions du catalogue | périodique | rien : il rattrape un avis de promotion perdu |
+
+- Même socle que les autres : `BackgroundService` et `PeriodicTimer` (`Workers/Prerender/`),
+  verrou consultatif Postgres, coupée par `LoDb:Workers:Enabled=false`. Elle reste en
+  sommeil tant que ses options (`LoDb:Prerender`) sont vides ou que ses services manquent.
+- **Une unité = une (version, langue)** : son catalogue se charge une fois pour toutes ses
+  pages (~8 450 chargements pour la passe complète, au lieu d'un par page), sans réveiller
+  `LodbCatalogueEnThrash`. Les versions prioritaires de la passe d'abord, puis les plus
+  récentes.
+- **Reprise** : l'état vit en Postgres (`prerender_pass`, `prerender_unit`,
+  `prerender_build`) ; une passe reprend au curseur de son unité à travers les
+  déploiements, et la pause ou l'annulation se lisent à chaque page.
+- **Le SSR fixe le rythme** : sa voie `prerender` a son budget et laisse des places aux
+  visiteurs. Une 503 fait reculer la tâche selon son `Retry-After` ; une page en échec est
+  retentée plus tard dans la passe, puis comptée en échec.
+- **Une ligne de synthèse par unité**, jamais une par page ; le compteur
+  `lodb_prerender_pages_total{outcome}` (meter `LoDb.Prerender` : `written`, `skipped`,
+  `refused`, `failed`), sans version, langue ni adresse en label.
+- **Promotion d'un patch** : `IPromotionListener` n'est appelé qu'une fois, sur l'instance
+  qui a ingéré, sans nouvel essai. Il ajoute les unités (une par langue) du patch devenu
+  épinglé à la passe active, ou en ouvre une sur l'epoch servie ; le tour de
+  rapprochement rattrape un avis perdu. Les deux obéissent à
+  `LoDb:Prerender:AutoEnqueueOnPromotion`, vrai en prod, faux au staging.
