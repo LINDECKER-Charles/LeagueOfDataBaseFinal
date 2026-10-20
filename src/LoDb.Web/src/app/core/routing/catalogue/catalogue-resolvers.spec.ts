@@ -172,7 +172,7 @@ describe('catalogue lists (resolveCatalogueContext)', () => {
     expect(requested).toEqual(['/api/meta']);
   });
 
-  it('renders an older version pinned in the path, cached a week', async () => {
+  it('renders an older version pinned in the path, cached a year', async () => {
     const { leaf, init } = await visit(`/fr/${OLDER}/items?page=2`);
 
     expect(leaf.data['context']).toEqual({
@@ -181,7 +181,7 @@ describe('catalogue lists (resolveCatalogueContext)', () => {
       pinned: true,
       language: 'fr_FR',
     });
-    expect(headerOf(init, 'Cache-Control')).toBe('public, max-age=3600, s-maxage=604800');
+    expect(headerOf(init, 'Cache-Control')).toBe('public, max-age=3600, s-maxage=31536000');
   });
 
   it('moves the latest version pinned in the path to the short URL, with a 301', async () => {

@@ -429,9 +429,9 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   sans le port).
 - **Pages des anciens patchs** (`location ~ "^/{locale}/[0-9]"`, `snippets/archive-cache.conf`) :
   clé **sans révision**, préfixée par `LODB_ARCHIVE_EPOCH`. Elles survivent aux déploiements
-  et gardent jusqu'à deux semaines le chrome, la CSP et les bundles du build qui les a
-  rendues (une semaine de `s-maxage`, puis une dernière copie périmée servie pendant son
-  rafraîchissement tant que la page n'a pas atteint ses 7 jours d'inactivité) : voulu. Monter l'epoch quand le chrome, la CSP ou le contrat `/api` changent de façon
+  et gardent jusqu'à un an le chrome, la CSP et les bundles du build qui les a rendues
+  (`s-maxage` de la classe `archived`, tant que la page est demandée avant son inactivité,
+  puis une dernière copie périmée servie pendant son rafraîchissement) : voulu. Monter l'epoch quand le chrome, la CSP ou le contrat `/api` changent de façon
   visible, et après tout correctif de sécurité du front (procédure :
   [`configuration.md`](../guides/configuration.md)). Gardées à la **2ᵉ** demande
   (`LODB_ARCHIVE_CACHE_MIN_USES`, `2`) : `MISS`, `MISS`, puis `HIT` ; une spec qui attend un
@@ -446,10 +446,13 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   `front-builds` (`LODB_FRONT_BUILDS_DIR`) sans réécrire l'existant, au démarrage puis
   **toutes les heures**, et rafraîchit leur date à chaque fois ; `/build/` sert ceux de
   l'image, puis ceux du volume. Le job de déploiement supprime ce qu'aucun build en service
-  n'a livré depuis `LODB_FRONT_BUILDS_RETENTION_DAYS` (30 j) : jamais sous la durée de vie
-  d'une page en cache. La date d'un fichier est celle de la dernière heure où un build l'a
+  n'a livré depuis `LODB_FRONT_BUILDS_RETENTION_DAYS` (400 j, 395 au moins) : jamais sous la
+  durée de vie d'une page en cache (un an). La copie des builds sous `build/` du stockage
+  (ADR 0011) ne la remplace pas : elle ne couvre que les builds dont la passe a écrit une page,
+  pas ceux des pages que le SSR rend sur un raté et que `lodb_archive` garde. La date d'un
+  fichier est celle de la dernière heure où un build l'a
   servi, pas celle du démarrage : sans le rafraîchissement horaire, un build resté en service
-  plus de 30 jours perdrait ses bundles au déploiement qui le remplace. Un chunk introuvable
+  plus de 400 jours perdrait ses bundles au déploiement qui le remplace. Un chunk introuvable
   recharge la page une fois (`ChunkReload`, drapeau en `sessionStorage`), puis affiche la
   500 : un rechargement en boucle se cherche là. Le volume est écrit par le SSR et survit aux
   déploiements : nginx sert `/build/` sous `default-src 'none'; sandbox` (un fichier ouvert

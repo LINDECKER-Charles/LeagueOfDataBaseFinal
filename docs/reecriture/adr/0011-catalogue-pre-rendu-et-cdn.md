@@ -135,6 +135,12 @@ visiteur ─► Cloudflare ── en cache ────────────�
 - La classe `archived` passe à un `s-maxage` d'un an : une page d'ancien patch ne change
   qu'avec une epoch.
 - Un bundle que le SSR ne connaît plus (404) est cherché sous `build/` dans le stockage.
+- `front-builds` garde ses bundles **400 jours** (`LODB_FRONT_BUILDS_RETENTION_DAYS`, le job
+  de déploiement refuse moins de 395), plus que l'an de la classe `archived`. La copie sous
+  `build/` ne vaut que pour un build dont la passe a écrit une page : une page rendue par le
+  SSR sur un raté du stockage, que `lodb_archive` garde jusqu'à un an, nomme les bundles d'un
+  build jamais copié (toutes les pages avant le lot 3, celles du staging, sans passe
+  automatique, et celles des déploiements entre deux passes).
 - `LODB_PAGES_STORE_ENABLED=0` (défaut en local et en CI) laisse nginx tel qu'avant.
 
 ### CDN
@@ -193,7 +199,8 @@ suit.
 - **+** Coût faible : ~1,25 €/mois de stockage One Zone pour 155 Go, le double tant que
   deux epochs coexistent, plus la sortie au-delà de 75 Go gratuits ; cible < 5 €/mois.
 - **+** Une page stockée garde ses bundles aussi longtemps qu'on la sert, quelle que soit
-  la rétention de `front-builds`.
+  la rétention de `front-builds`. Celle-ci reste à 400 jours pour les pages rendues par le
+  SSR, que `lodb_archive` garde un an.
 - **+** Le CDN rapproche toutes les pages des visiteurs lointains et des robots.
 - **−** Un correctif de sécurité du front qui bascule tout de suite sur une epoch vide
   renvoie **toutes** les pages épinglées vers le SSR saturé pendant les 10 à 16 jours de la
