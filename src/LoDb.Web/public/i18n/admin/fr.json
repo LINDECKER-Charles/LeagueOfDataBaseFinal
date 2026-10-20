@@ -666,7 +666,10 @@
       "served": "servie",
       "writing": "en écriture",
       "standby": "en attente",
-      "retired": "retirée"
+      "retired": "retirée",
+      "pending": "à venir",
+      "failed": "en échec",
+      "stopped": "arrêtée"
     },
     "kpi": {
       "served": "Epoch servie",
@@ -786,6 +789,611 @@
       "pause": "Passe n°{id} mise en pause.",
       "resume": "Passe n°{id} reprise.",
       "cancel": "Passe n°{id} annulée."
+    },
+    "common": {
+      "cells": {
+        "pending": "à venir",
+        "running": "en cours",
+        "complete": "terminée",
+        "complete_with_failures": "terminée, avec des pages en échec",
+        "failed": "en échec",
+        "interrupted": "interrompue",
+        "partial": "partielle",
+        "absent": "absente",
+        "out_of_scope": "hors périmètre",
+        "stopped": "arrêtée"
+      },
+      "status": {
+        "complete": "complet",
+        "complete_with_failures": "complet, pages en échec",
+        "partial": "partiel",
+        "absent": "absent",
+        "failed": "en échec"
+      },
+      "seasons": {
+        "label": "{major}.x · {year}",
+        "label_bare": "{major}.x",
+        "patches": "{count, plural, one {# patch} other {# patchs}}"
+      },
+      "strip": "{complete, plural, one {# langue} other {# langues}} complètes sur {total}",
+      "matrix": {
+        "label": "Matrice des unités : {versions, plural, one {# patch} other {# patchs}} × {locales, plural, one {# langue} other {# langues}}",
+        "views": "Affichage de la matrice",
+        "view_matrix": "Matrice",
+        "view_table": "Tableau",
+        "by_rank": "Ordre de passage",
+        "expand_all": "Tout déplier",
+        "collapse_all": "Tout replier",
+        "season_counts": "{versions, plural, one {# patch} other {# patchs}} · {complete, plural, one {# terminé} other {# terminés}} · {running} en cours · {failed} en échec",
+        "season_summary": "Saison {season} : {versions, plural, one {# patch} other {# patchs}}, {complete, plural, one {# terminé} other {# terminés}}, {running} en cours, {failed} en échec, {pending} à venir.",
+        "version_button": "{version} : {complete} / {total, plural, one {# langue} other {# langues}} terminées · détail",
+        "cell": "{version} · {locale} ({language}) — {state}",
+        "cell_pages": "{done} / {total, plural, one {# page} other {# pages}} · {size}",
+        "cell_since": "depuis {duration}",
+        "cell_rank": "rang {rank} dans la passe",
+        "cell_stopped": "arrêtée à {done} / {total} pages, reprendra là",
+        "cell_held": "tient : {types}",
+        "cell_held_none": "ne tient aucun type",
+        "columns": {
+          "version": "Version",
+          "state": "État",
+          "locales": "Langues terminées",
+          "running": "En cours",
+          "failed": "En échec",
+          "pages": "Pages",
+          "volume": "Volume"
+        },
+        "detail": "Détail"
+      },
+      "live": {
+        "live": "En direct · mis à jour {ago}",
+        "late": "Mise à jour en retard : {ago}",
+        "lost": "Hors ligne depuis {since} ({reason}) · nouvel essai {next}",
+        "hidden": "En pause tant que l'onglet est masqué",
+        "retry": "Réessayer maintenant"
+      },
+      "time": {
+        "ago": "il y a {duration}",
+        "in": "dans {duration}",
+        "now": "à l'instant"
+      },
+      "scope": {
+        "all": "tous les anciens patchs",
+        "versions": "{count, plural, one {# patch} other {# patchs}}",
+        "listed": "{count, plural, one {# patch} other {# patchs}} ({newest} → {oldest})",
+        "range": "{oldest} → {newest}",
+        "from": "depuis {oldest}",
+        "until": "jusqu'à {newest}",
+        "locales_all": "21 langues",
+        "locales": "{count, plural, one {# langue} other {# langues}}",
+        "types_all": "tous types",
+        "priority": "{count, plural, one {# prioritaire} other {# prioritaires}}",
+        "skip": "manques seulement"
+      },
+      "units": {
+        "title": "{version} dans la passe n°{id}",
+        "loading": "Chargement des unités…",
+        "error": "Unités indisponibles ({reason}).",
+        "empty": "La passe n'a aucune unité pour ce patch.",
+        "columns": {
+          "locale": "Langue",
+          "state": "État",
+          "progress": "Avancement",
+          "pages": "Écrites · sautées · en échec",
+          "volume": "Volume",
+          "started": "Début",
+          "ended": "Dernier changement",
+          "failure": "Raison"
+        }
+      },
+      "copy": {
+        "copy": "Copier",
+        "copied": "Copié",
+        "error": "Copiez à la main :"
+      },
+      "retry": {
+        "units": "Relancer {units, plural, one {# unité} other {# unités}} (≈ {pages, plural, one {# page} other {# pages}})",
+        "units_gaps": "Relancer {units, plural, one {# unité} other {# unités}} et les manques (≈ {pages, plural, one {# page} other {# pages}})",
+        "later": "disponible quand la passe sera finie"
+      }
+    },
+    "overview": {
+      "cta": {
+        "launch": "Lancer une passe",
+        "refresh": "Actualiser",
+        "locked_loading": "Chargement de l'état du précalcul…",
+        "locked_active": "Une passe est en cours (n°{id}) : une seule à la fois.",
+        "locked_dormant": "Précalcul non configuré sur cet hôte.",
+        "follow": "Suivre"
+      },
+      "bands": {
+        "dormant": "Le précalcul n'est pas configuré sur cet hôte : posez LoDb__Prerender__PublicHost, LoDb__Prerender__SsrBaseUrl et les clés du stockage, puis redéployez. Aucune passe ne peut démarrer ; la tâche de fond dort.",
+        "ready": "L'epoch {epoch} est prête : {versions, plural, one {# patch} other {# patchs}} × 21 langues, sans manque. Pour la servir :",
+        "ready_failed_pages": "{pages, plural, one {# page en échec y restera servie} other {# pages en échec y resteront servies}} par le SSR.",
+        "ready_failed_units": "{units, plural, one {# unité en échec définitif passera} other {# unités en échec définitif passeront}} par le SSR.",
+        "ready_how": "Comment basculer ?",
+        "nearly": "L'epoch {epoch} couvre {share} des anciens patchs : {missing, plural, one {# unité manque} other {# unités manquent}} avant de pouvoir la servir.",
+        "nearly_cta": "Compléter l'epoch {epoch}"
+      },
+      "idle": {
+        "title": "Aucune passe en cours",
+        "lede": "Le stockage ne reçoit rien. Les patchs promus {promotions, select, on {ouvrent une passe d'eux-mêmes} other {n'ouvrent pas de passe d'eux-mêmes}}.",
+        "last": "Dernière passe : n°{id}, {state} le {date} · {units, plural, one {# unité} other {# unités}} · {pages, plural, one {# page} other {# pages}}",
+        "detail": "Détail",
+        "never": "Aucune passe lancée jusqu'ici.",
+        "gaps": "L'epoch servie couvre {share} des anciens patchs : {versions, plural, one {# patch a des manques} other {# patchs ont des manques}}.",
+        "gaps_cta": "Les compléter",
+        "whole": "L'epoch servie couvre tous les anciens patchs."
+      },
+      "kpis": {
+        "served": "Epoch servie",
+        "served_sub": "LODB_ARCHIVE_SERVE_EPOCH, changée par un redéploiement",
+        "served_ready": "l'epoch {epoch} est prête",
+        "coverage": "Couverture servie",
+        "coverage_sub": "{complete} / {total, plural, one {# patch} other {# patchs}} complets",
+        "coverage_none": "aucun ancien patch",
+        "stored": "Stocké",
+        "stored_sub": "{pages, plural, one {# page} other {# pages}}, epochs retirées exclues",
+        "cost": "Coût estimé / mois",
+        "cost_sub": "hors sortie ; détail sous « Stockage et coûts »",
+        "cost_sub_retired": "+ {retired} pour les epochs retirées, jusqu'à leur suppression ; hors sortie"
+      },
+      "tabs": {
+        "label": "Vues du précalcul",
+        "coverage": "Couverture",
+        "costs": "Stockage et coûts",
+        "history": "Historique"
+      },
+      "doc_title": {
+        "idle": "Précalcul du catalogue",
+        "running": "{share} · Précalcul du catalogue",
+        "paused": "⏸ {share} · Précalcul du catalogue",
+        "completed": "✓ Passe n°{id} terminée · Précalcul du catalogue",
+        "cancelled": "✕ Passe n°{id} annulée · Précalcul du catalogue"
+      }
+    },
+    "live": {
+      "title": "Passe n°{id} · epoch {epoch}",
+      "origin": "lancée le {date} par {author}",
+      "origin_auto": "ouverte le {date} par une promotion ou la ligne de commande",
+      "paused_since": "en pause depuis {duration}",
+      "progress_label": "{share} : {written, plural, one {# page} other {# pages}} écrites, {skipped} sautées, {failed} en échec, {left} restantes",
+      "pages_estimated": "{done} / ≈ {total, plural, one {# page} other {# pages}}",
+      "pages_exact": "{done} / {total, plural, one {# page} other {# pages}}",
+      "estimate_note": "Total estimé : les pages d'une unité ne sont listées qu'à son tour.",
+      "first_unit": "En attente de la première unité",
+      "segments": {
+        "written": "écrites",
+        "skipped": "sautées",
+        "failed": "en échec",
+        "left": "restantes"
+      },
+      "units": "Unités : {completed} / {total} — {running} en cours · {pending} à venir · {failed} en échec",
+      "starting": "En attente de la tâche de fond : elle prend une passe à son prochain tour (30 s au plus).",
+      "pace": {
+        "label": "Rythme",
+        "value": "{pace, plural, one {# page} other {# pages}}/min",
+        "average": "moyenne {pace, plural, one {# page} other {# pages}}/min",
+        "measuring": "mesure en cours…",
+        "stopped": "à l'arrêt"
+      },
+      "eta": {
+        "label": "Fin estimée",
+        "average": "{in} (rythme moyen)",
+        "now": "au rythme actuel : {in}",
+        "unknown": "inconnue tant que le rythme n'est pas mesuré",
+        "paused": "suspendue pendant la pause"
+      },
+      "active": {
+        "label": "Temps actif",
+        "sub": "pauses exclues"
+      },
+      "volume": {
+        "label": "Écrit",
+        "sub": "≈ {size} par page"
+      },
+      "now": {
+        "title": "En ce moment",
+        "unit": "{version} · {locale} ({language})",
+        "pages": "{done} / {total, plural, one {# page} other {# pages}} ({share})",
+        "since": "depuis {duration} · dernière page {ago}",
+        "detail": "Détail du patch",
+        "next": "Ensuite :",
+        "none": "Aucune unité en cours.",
+        "resumes_with": "Reprendra par",
+        "stopped": "{version} · {locale} ({language}), arrêtée à {done} / {total} pages ({share})",
+        "waiting_chip": "en attente",
+        "wait": "{version} attend : {reason}, depuis {duration} ; ses unités échouent à {at} s'il n'arrive pas.",
+        "reasons": {
+          "catalog-pending": "son catalogue n'est pas encore stocké",
+          "not-pinned": "l'API ne le compte pas encore parmi les anciens patchs",
+          "settling": "il vient de quitter le dernier rang et les caches le servent encore comme dernier patch"
+        },
+        "ssr_down": "Le SSR est injoignable depuis {duration} : la passe attend sans compter de page.",
+        "remote": "Les signaux de la tâche de fond ne sont pas visibles depuis cette instance.",
+        "worker_off": "La tâche de fond est coupée sur cette instance (LoDb:Workers:Enabled=false) : la passe n'avance pas."
+      },
+      "stall": {
+        "title": "Aucune page depuis {duration}",
+        "ssr": "Le SSR est injoignable : la passe reprendra seule à son retour.",
+        "worker_off": "La tâche de fond est coupée sur cette instance.",
+        "waiting": "Toutes les unités restantes attendent un catalogue.",
+        "remote": "Aucune instance visible n'écrit la passe : une autre instance tient peut-être le verrou, ou l'API vient de redémarrer (la tâche reprend toutes les 30 s).",
+        "unknown": "Cause inconnue : voir le journal de l'API (prerender.*)."
+      },
+      "paused_itself": "La passe s'est mise en pause d'elle-même : {reason}",
+      "paused_itself_hint": "Corrigez la configuration du stockage ou du SSR (clé, politique, hôte public), puis reprenez.",
+      "feed": {
+        "title": "Activité",
+        "done": "{version} · {locale} terminée · {pages, plural, one {# page} other {# pages}} · en {duration}",
+        "done_failures": "{version} · {locale} terminée, {failed, plural, one {# page en échec} other {# pages en échec}}",
+        "failed": "{version} · {locale} en échec",
+        "joined": "{version} a rejoint la passe ({units, plural, one {# unité} other {# unités}})",
+        "total_up": "Total réévalué : + {pages, plural, one {# page} other {# pages}}",
+        "total_up_joined": "Total réévalué : + {pages, plural, one {# page} other {# pages}} · {version} a rejoint la passe",
+        "paused": "Passe mise en pause",
+        "paused_itself": "La passe s'est mise en pause d'elle-même",
+        "resumed": "Passe reprise",
+        "completed": "Passe terminée",
+        "cancelled": "Passe annulée",
+        "empty": "Rien de terminé depuis l'ouverture de la page.",
+        "more": "Tout afficher ({count})",
+        "less": "Réduire"
+      },
+      "failures": {
+        "summary": "{count, plural, one {# unité en échec ou avec des pages en échec} other {# unités en échec ou avec des pages en échec}}",
+        "show": "Voir les échecs",
+        "hide": "Masquer les échecs",
+        "pages": "{failed, plural, one {# page} other {# pages}} en échec sur {total}",
+        "more": "…et {count, plural, one {# autre} other {# autres}}, visibles dans la matrice et la vue tableau.",
+        "detail": "Voir le patch"
+      },
+      "actions": {
+        "pause": "Mettre en pause",
+        "resume": "Reprendre",
+        "resume_itself": "Reprendre…",
+        "cancel": "Annuler la passe…"
+      },
+      "confirm": {
+        "pause_title": "Mettre la passe n°{id} en pause ?",
+        "pause_current": "{version} · {locale} s'arrête après les pages en vol, à {done} / {total}.",
+        "pause_resume": "La passe reprendra exactement là, unité et page.",
+        "pause_promotions": "Pendant la pause, un patch promu rejoint la passe mais attend la reprise.",
+        "pause_slot": "Elle garde la seule place active : aucune autre passe ne peut être lancée avant sa reprise ou son annulation.",
+        "pause_confirm": "Mettre en pause",
+        "pause_keep": "Laisser tourner",
+        "resume_title": "Reprendre malgré l'erreur ?",
+        "resume_reason": "La passe s'est arrêtée d'elle-même : {reason}",
+        "resume_warning": "Sans correction, elle se remettra en pause dès la première page.",
+        "resume_confirm": "Reprendre quand même",
+        "resume_keep": "Laisser en pause",
+        "cancel_title": "Annuler définitivement la passe n°{id} ?",
+        "cancel_left": "{units, plural, one {# unité à venir ne sera pas rendue} other {# unités à venir ne seront pas rendues}}.",
+        "cancel_kept": "Ce qui est écrit reste dans le stockage : {pages, plural, one {# page} other {# pages}}, {size}.",
+        "cancel_partial": "L'epoch {epoch} restera partielle ({share} couverte) jusqu'à une passe qui la complète.",
+        "cancel_later": "Pour finir plus tard : lancez une passe sur l'epoch {epoch} en ignorant ce qui est déjà complet.",
+        "cancel_confirm": "Annuler la passe n°{id}",
+        "cancel_keep": "Garder la passe"
+      },
+      "recap": {
+        "completed": "Passe n°{id} terminée",
+        "cancelled": "Passe n°{id} annulée",
+        "summary": "{units, plural, one {# unité} other {# unités}} · {written, plural, one {# page} other {# pages}} écrites · {failed} en échec · {duration} de marche · {size}",
+        "complete": "Compléter l'epoch {epoch}",
+        "detail": "Voir le détail",
+        "dismiss": "Masquer"
+      }
+    },
+    "launcher": {
+      "eyebrow": "Précalcul",
+      "title": "Lancer une passe",
+      "close": "Fermer",
+      "from_pass": "Prérempli depuis la passe n°{id}.",
+      "steps": {
+        "label": "Étapes",
+        "patches": "Patchs",
+        "scope": "Périmètre",
+        "summary": "Récapitulatif",
+        "position": "Étape {step} sur 3 · {name}"
+      },
+      "nav": {
+        "next_scope": "Suivant : périmètre",
+        "next_summary": "Suivant : récapitulatif",
+        "back": "Retour",
+        "cancel": "Annuler",
+        "launch": "Lancer la passe ({units, plural, one {# unité} other {# unités}})",
+        "launching": "Lancement…"
+      },
+      "footer": "{versions, plural, =0 {Aucun patch} one {# patch} other {# patchs}} · {locales, plural, one {# langue} other {# langues}} · {types} types → ≈ {units, plural, one {# unité} other {# unités}} · ≈ {pages, plural, one {# page} other {# pages}} · ≈ {duration}",
+      "footer_loading": "Chargement des anciens patchs…",
+      "patches": {
+        "title": "Anciens patchs",
+        "target": "Couverture lue dans l'epoch {epoch} ({kind, select, served {servie} standby {en attente} other {nouvelle}})",
+        "change_epoch": "changer d'epoch",
+        "latest": "{version}, le dernier patch, n'est jamais précalculé : le SSR le sert.",
+        "error": "Anciens patchs indisponibles ({reason}).",
+        "retry": "Réessayer",
+        "none": "Aucun ancien patch : rien à précalculer avant la première promotion.",
+        "filter": "Filtrer les versions",
+        "filter_placeholder": "16.1, 15 …",
+        "filter_clear": "Effacer le filtre",
+        "no_match": "Aucun patch ne correspond au filtre.",
+        "status": "Statut",
+        "status_all": "Tous",
+        "status_complete": "Complets",
+        "status_partial": "Partiels",
+        "status_absent": "Absents",
+        "status_failed": "En échec",
+        "range_from": "De",
+        "range_to": "à",
+        "range_apply": "Sélectionner la plage",
+        "tools": "Outils",
+        "all": "Tout",
+        "none_selected": "Aucun",
+        "invert": "Inverser",
+        "uncovered": "Non couverts",
+        "partials": "Partiels",
+        "undo": "Annuler la dernière sélection",
+        "count": "{selected, plural, =0 {Aucun patch sélectionné} one {# patch sélectionné} other {# patchs sélectionnés}}",
+        "count_hidden": "dont {hidden, plural, one {# masqué} other {# masqués}} par le filtre",
+        "count_priority": "{count, plural, one {# prioritaire} other {# prioritaires}}",
+        "grid": "Anciens patchs, par saison",
+        "season_row": "{season}, {count, plural, one {# patch} other {# patchs}}, {selected, plural, one {# sélectionné} other {# sélectionnés}}",
+        "season_select": "Sélectionner toute la saison {season}",
+        "columns": {
+          "version": "Version",
+          "coverage": "Couverture",
+          "pages": "Pages",
+          "status": "Statut",
+          "priority": "Priorité"
+        },
+        "priority_on": "Prioritaire n°{rank} : retirer la priorité",
+        "priority_off": "Rendre prioritaire",
+        "keys": "Clavier : ↑ ↓ parcourir · Espace cocher · Maj étendre · P prioriser · / filtrer",
+        "announce": "{count, plural, one {# patch} other {# patchs}} sélectionnés"
+      },
+      "paste": {
+        "toggle": "Coller une liste de versions (journal de l'edge)",
+        "label": "Versions, une par ligne ou séparées par des virgules",
+        "hint": "Le résultat de LogsQL « stats by (version) » convient tel quel : chaque version reconnue est cochée et rendue prioritaire, dans l'ordre collé.",
+        "replace": "Remplacer les priorités",
+        "append": "Ajouter à la suite",
+        "apply": "Appliquer",
+        "known": "{count, plural, one {# version reconnue} other {# versions reconnues}}",
+        "ignored": "Ignorées : {list}",
+        "latest": "{version} (dernier patch, servi par le SSR)",
+        "unknown": "{version} (pas un ancien patch)",
+        "capped": "Au-delà de 100, les versions sont cochées sans priorité."
+      },
+      "priority": {
+        "title": "Prioritaires, dans l'ordre",
+        "empty": "Aucune : les patchs passent du plus récent au plus ancien.",
+        "up": "Monter {version}",
+        "down": "Descendre {version}",
+        "remove": "Retirer {version} des prioritaires",
+        "max": "100 prioritaires au plus."
+      },
+      "locales": {
+        "title": "Langues",
+        "count": "{selected} / {total}",
+        "all": "Toutes",
+        "none": "Aucune",
+        "complete": "{complete}/{versions, plural, one {# complet} other {# complets}}",
+        "required": "Choisissez au moins une langue."
+      },
+      "types": {
+        "title": "Types de pages",
+        "share": "≈ {share} des pages",
+        "required": "Choisissez au moins un type.",
+        "defer": "Une passe limitée à certains types n'accueille pas les patchs promus pendant qu'elle tourne : ils attendent sa fin."
+      },
+      "epoch": {
+        "title": "Epoch écrite",
+        "served_title": "Compléter l'epoch servie · {epoch}",
+        "served_body": "Chaque page est servie dès qu'elle est écrite. Une page déjà stockée est remplacée en place.",
+        "standby_title": "Continuer l'epoch {epoch} · en attente",
+        "standby_body": "Couverte à {share}. Rien n'en est servi avant la bascule.",
+        "new_title": "Écrire une nouvelle epoch · {epoch}",
+        "new_body": "Rien n'est servi avant la bascule : une fois l'epoch complète, posez LODB_ARCHIVE_SERVE_EPOCH={epoch} et redéployez. Pour un correctif du front (CSP, chrome, sécurité) : l'epoch servie garde l'ancien build tant qu'elle est servie.",
+        "new_cost": "Complète, elle coûtera ≈ {cost} / mois en plus de l'epoch {served}, jusqu'au retrait de celle-ci."
+      },
+      "skip": {
+        "label": "Ignorer ce qui est déjà complet dans l'epoch {epoch}",
+        "count": "{units, plural, =0 {rien à ignorer} one {# unité ignorée} other {# unités ignorées}}",
+        "hint": "Une langue est ignorée si elle tient déjà, sans page en échec, chacun des types choisis."
+      },
+      "summary": {
+        "title": "Récapitulatif",
+        "scope": "Epoch {epoch} ({kind, select, served {servie} standby {en attente} other {nouvelle}}) · {perimeter}",
+        "units": "Unités",
+        "units_sub": "{versions, plural, one {# patch} other {# patchs}} × {locales, plural, one {# langue} other {# langues}}{skipped, plural, =0 {} other {, # ignorées}}",
+        "pages": "Pages",
+        "pages_sub": "≈ {perUnit} par unité",
+        "volume": "Volume",
+        "volume_sub": "≈ {perPage} par page",
+        "duration": "Durée",
+        "duration_measured": "au dernier rythme mesuré ({pace, plural, one {# page} other {# pages}}/min)",
+        "duration_ceiling": "au plafond configuré ({pace} rendus/min) : aucune passe mesurée",
+        "duration_capped": "au plafond configuré ({pace} rendus/min), plus bas que le dernier rythme mesuré",
+        "cost": "Coût ajouté",
+        "cost_value": "+ {cost} / mois",
+        "cost_sub": "au prix One Zone ({price} / Go / mois)",
+        "order": "Ordre : {first} d'abord, puis du plus récent au plus ancien.",
+        "order_default": "Ordre : du plus récent au plus ancien.",
+        "quality_measured": "Pages par unité mesurées sur des passes précédentes.",
+        "quality_mixed": "Pages par unité mesurées pour {known, plural, one {# patch} other {# patchs}} sur {total} ; {guessed, plural, one {# extrapolé} other {# extrapolés}} de leur saison ou du patch voisin.",
+        "how_guess": "{version} : {source, select, season {médiane de la saison {season}} other {comme {neighbour}}}, {pages, plural, one {# page} other {# pages}}",
+        "quality_default": "Aucune mesure : estimation par défaut (≈ {pages, plural, one {# page} other {# pages}} par unité).",
+        "how": "Comment c'est estimé",
+        "how_units": "{units, plural, one {# unité} other {# unités}} = {versions, plural, one {# patch} other {# patchs}} × {locales, plural, one {# langue} other {# langues}} − {skipped} déjà complètes",
+        "how_pages": "≈ {pages, plural, one {# page} other {# pages}} = {units, plural, one {# unité} other {# unités}} × ≈ {perUnit, plural, one {# page} other {# pages}} × {share} des types",
+        "how_volume": "≈ {size} = {pages, plural, one {# page} other {# pages}} × ≈ {perPage}",
+        "how_duration": "≈ {duration} = {pages, plural, one {# page} other {# pages}} ÷ {pace, plural, one {# page} other {# pages}}/min",
+        "how_cost": "+ {cost} / mois = {size} nouveaux ÷ 10⁹ × {price}"
+      },
+      "warnings": {
+        "rerender": "{units, plural, one {# unité déjà complète sera refaite} other {# unités déjà complètes seront refaites}} : ne désactivez « Ignorer… » que pour remplacer des pages (nouveau build, correctif).",
+        "long": "Passe longue : ≈ {duration}. Les patchs promus pendant ce temps la rejoignent en tête.",
+        "types": "Une passe limitée à certains types n'accueille pas les patchs promus pendant qu'elle tourne : ils attendent sa fin.",
+        "new_epoch": "Rien de cette passe n'est servi avant la bascule sur l'epoch {epoch}.",
+        "standby_exists": "L'epoch {epoch} contient déjà des pages non servies : continuez-la plutôt que d'en ouvrir une nouvelle.",
+        "default_estimate": "Aucune mesure : l'estimation est grossière.",
+        "priority_capped": "Au-delà de 100, les versions sont cochées sans priorité.",
+        "nothing": "Rien à rendre : tout ce qui est sélectionné est déjà complet dans l'epoch {epoch}."
+      },
+      "errors": {
+        "versions": {
+          "malformed": "Une version de la liste n'est pas une version de Data Dragon.",
+          "too-many": "1 000 patchs au plus par passe.",
+          "required": "Choisissez au moins un patch.",
+          "none-pinned": "Aucun des patchs choisis n'est un ancien patch : la liste a pu changer depuis l'ouverture (promotion). Rechargez."
+        },
+        "locales": {
+          "malformed": "Une langue de la liste n'existe pas sur le site.",
+          "required": "Choisissez au moins une langue."
+        },
+        "pageTypes": {
+          "malformed": "Un type de page de la liste n'existe pas.",
+          "required": "Choisissez au moins un type."
+        },
+        "priority": {
+          "malformed": "Une version prioritaire n'est pas une version de Data Dragon.",
+          "too-many": "100 prioritaires au plus."
+        },
+        "epoch": {
+          "out-of-range": "L'epoch doit valoir 1 ou plus.",
+          "retired": "Cette epoch est plus ancienne que l'epoch servie : elle est retirée."
+        },
+        "scope": {
+          "nothing-to-render": "Tout est déjà complet dans cette epoch."
+        },
+        "unknown": "La saisie est refusée ({codes})."
+      },
+      "conflict": {
+        "active": "Une passe vient d'être lancée (par un autre administrateur, une promotion ou la ligne de commande) : une seule à la fois.",
+        "follow": "Fermer et suivre la passe",
+        "dormant": "Le précalcul n'est pas configuré sur cet hôte."
+      },
+      "network": "L'API n'a pas répondu : la passe a pu être créée.",
+      "network_check": "Vérifier",
+      "session": "Session expirée : reconnectez-vous, puis relancez.",
+      "done": "Passe n°{id} lancée sur l'epoch {epoch} : {units, plural, one {# unité} other {# unités}}{skipped, plural, =0 {} one {, # déjà complète ignorée} other {, # déjà complètes ignorées}}.",
+      "done_ignored": "{count, plural, one {# version ignorée, absente} other {# versions ignorées, absentes}} des anciens patchs : {versions}."
+    },
+    "coverage": {
+      "epoch_label": "Epoch lue",
+      "epoch_option": "{state} · {epoch} ({share})",
+      "summary": "{complete} / {total, plural, one {# patch} other {# patchs}} complets · {partial, plural, one {# partiel} other {# partiels}} · {absent, plural, one {# absent} other {# absents}} · {failed} en échec — {share} des unités",
+      "latest": "Le dernier patch ({version}) n'est jamais précalculé.",
+      "filter": "Filtrer les versions",
+      "status_all": "Tous",
+      "status_complete": "Complets",
+      "status_partial": "Partiels",
+      "status_absent": "Absents",
+      "status_failed": "En échec",
+      "view_list": "Liste",
+      "view_matrix": "Matrice",
+      "columns": {
+        "version": "Version",
+        "locales": "Langues",
+        "pages": "Pages",
+        "volume": "Volume",
+        "failed": "Échecs",
+        "last": "Dernière écriture"
+      },
+      "season_select": "Sélectionner la saison {season}",
+      "row_select": "Sélectionner {version}",
+      "selection": "{count, plural, one {# patch sélectionné} other {# patchs sélectionnés}}",
+      "launch_selection": "Pré-rendre la sélection",
+      "clear_selection": "Tout désélectionner",
+      "gaps": "Compléter les manques ({count, plural, one {# patch} other {# patchs}})",
+      "no_gaps": "Rien ne manque dans cette epoch.",
+      "error": "Couverture indisponible ({reason}).",
+      "retry": "Réessayer",
+      "empty": "Aucun ancien patch."
+    },
+    "costs": {
+      "title": "Ce que le stockage garde",
+      "chip": "{cost} / mois",
+      "epoch": "Epoch {epoch}",
+      "builds": "Bundles",
+      "builds_sub": "{count, plural, one {# build} other {# builds}} · {files} fichiers, en Multi-AZ",
+      "total": "Total",
+      "total_sub": "epochs retirées exclues",
+      "empty": "Aucune page stockée.",
+      "prices": "Estimation à {oneZone} par Go et par mois en One Zone (pages), {multiAz} en Multi-AZ (bundles).",
+      "egress": "Hors sortie : 75 Go gratuits par mois, puis 0,01 € par Go, suivie dans Grafana.",
+      "counters": "Ces chiffres disent ce que les passes ont écrit, pas ce qu'une règle d'expiration a supprimé depuis : sur le staging, les pages expirent après 14 jours, une unité terminée n'est pas réécrite et ses pages repassent sans bruit par le SSR.",
+      "retired": "Une epoch retirée coûte jusqu'à ce que le cycle de vie du stockage l'ait supprimée, 500 000 objets par jour au plus : 9 jours au moins pour 4 millions de pages.",
+      "columns": {
+        "epoch": "Epoch",
+        "state": "État",
+        "pages": "Pages",
+        "volume": "Volume",
+        "cost": "Coût / mois",
+        "coverage": "Couverture",
+        "actions": "Actions"
+      },
+      "switch": "Préparer la bascule",
+      "complete": "Compléter",
+      "retire": "Retirer…",
+      "projection_title": "Si une nouvelle epoch était écrite",
+      "projection": "Elle pèserait ≈ {size} comme l'epoch servie : + {cost} / mois tant que les deux coexistent (jusqu'au retrait de l'ancienne, 9 jours au moins après la bascule).",
+      "bill_note": "La facture compte aussi la sortie et les requêtes, que l'estimation laisse de côté."
+    },
+    "passes": {
+      "columns": {
+        "pass": "Passe",
+        "epoch": "Epoch",
+        "state": "État",
+        "scope": "Périmètre",
+        "progress": "Progression",
+        "volume": "Volume",
+        "active": "Durée active",
+        "author": "Par",
+        "started": "Lancée",
+        "finished": "Fin"
+      },
+      "automatic": "promotion ou CLI",
+      "empty": "Aucune passe lancée.",
+      "pages": "{written} / {total}",
+      "follow": "Suivre",
+      "detail": {
+        "title": "Passe n°{id} · epoch {epoch}",
+        "ended": "finie le {date}",
+        "scope": "Périmètre",
+        "show_versions": "Voir la liste",
+        "hide_versions": "Masquer la liste",
+        "legacy_range": "Plage d'avant les listes : {oldest} → {newest}, convertie en {count, plural, one {# patch} other {# patchs}} à la relance.",
+        "outcome": "Résultat",
+        "units": "{total, plural, one {# unité} other {# unités}} : {completed} terminées · {failed} en échec · {pending} non rendues",
+        "pages": "{written, plural, one {# page} other {# pages}} écrites · {skipped} sautées · {failed} en échec",
+        "pace": "{pace, plural, one {# page} other {# pages}}/min en moyenne",
+        "matrix": "Matrice",
+        "failures": "Échecs",
+        "relaunch": "Relancer ce périmètre",
+        "follow": "Suivre en direct",
+        "locked": "Une passe est en cours : une seule à la fois.",
+        "loading": "Chargement de la passe…",
+        "error": "Passe indisponible ({reason})."
+      }
+    },
+    "switch": {
+      "title": "Basculer sur l'epoch {epoch}",
+      "ready": "Prête : {versions, plural, one {# patch} other {# patchs}} × 21 langues, sans manque.",
+      "ready_ssr": "{units, plural, =0 {} one {# unité en échec définitif} other {# unités en échec définitif}}{both, select, yes { et } other {}}{pages, plural, =0 {} one {# page en échec} other {# pages en échec}} passeront par le SSR.",
+      "partial": "Couverte à {share} : {missing, plural, one {# unité passera} other {# unités passeront}} par le SSR après la bascule.",
+      "writing": "Une passe écrit encore cette epoch : attendez sa fin.",
+      "no_button": "nginx ne change pas d'epoch à chaud : aucun bouton ne la bascule d'ici.",
+      "step_variable": "Dans le secret ENV_PROD (ou ENV_STAGING), posez :",
+      "step_deploy": "Redéployez (en prod : fusion test → main). Le panneau affichera alors l'epoch servie {epoch}.",
+      "step_retire": "Ensuite seulement, l'epoch {served} sera retirée : sa ligne de « Stockage et coûts » proposera « Retirer… ». Ne posez aucune règle de retrait avant : l'epoch {served} est encore celle que nginx sert.",
+      "retire_title": "Retirer l'epoch {epoch}",
+      "retire_body": "L'epoch {epoch} n'est plus servie (l'epoch servie est {served}). Sa règle de cycle de vie la supprimera, 500 000 objets par jour au plus ; elle coûte jusque-là {cost} / mois.",
+      "retire_vars": "Ajoutez ces variables à la commande de tools/prerender/README.md, § 4, avec les identifiants de la console qu'elle demande :",
+      "retire_no_bucket": "Le nom du bucket n'est pas configuré sur cet hôte : remplacez <bucket>.",
+      "retire_staging": "Au staging : sans objet, la règle d'expiration du bucket efface toute page.",
+      "close": "Fermer"
     }
   },
   "scaleway_bill": {
