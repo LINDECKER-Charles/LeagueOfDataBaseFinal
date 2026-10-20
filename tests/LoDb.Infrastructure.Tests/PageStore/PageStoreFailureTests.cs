@@ -18,12 +18,13 @@ public sealed class PageStoreFailureTests
 
     private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
 
-    // Server errors, Scaleway's throttling, a request timeout.
+    // Server errors, Scaleway's throttling, a request timeout, a concurrent write to the key.
     [Theory]
     [InlineData(HttpStatusCode.InternalServerError)]
     [InlineData(HttpStatusCode.ServiceUnavailable)]
     [InlineData(HttpStatusCode.TooManyRequests)]
     [InlineData(HttpStatusCode.RequestTimeout)]
+    [InlineData(HttpStatusCode.Conflict)]
     public async Task AnOutageIsTransient(HttpStatusCode status)
     {
         var store = new FakeStore((_, _) => Task.FromResult(Answer(status, "SlowDown")));

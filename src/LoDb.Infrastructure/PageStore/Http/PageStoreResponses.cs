@@ -49,7 +49,7 @@ internal static class PageStoreResponses
 
     /// <summary>
     /// The exception an unexpected answer to <paramref name="request"/> stands for: transient
-    /// for 5xx (but 501 and 505), 429 and 408; a configuration error for a redirect, 401, 501,
+    /// for 5xx (but 501 and 505), 429, 409 and 408; a configuration error for a redirect, 401, 501,
     /// 505, and 403 or 404 on a write; a refusal of the object otherwise.
     /// </summary>
     /// <remarks>
@@ -76,9 +76,12 @@ internal static class PageStoreResponses
     }
 
     // 501 and 505 say the store cannot do what every request asks (a conditional write, say):
-    // retrying would only repeat them.
+    // retrying would only repeat them. A 409 is another write to the same key still in
+    // progress (ConditionalRequestConflict on a create-only write): retried, it settles.
     private static bool IsTransient(HttpStatusCode status) =>
-        status is HttpStatusCode.RequestTimeout or HttpStatusCode.TooManyRequests
+        status is HttpStatusCode.RequestTimeout
+            or HttpStatusCode.TooManyRequests
+            or HttpStatusCode.Conflict
         || ((int)status >= (int)HttpStatusCode.InternalServerError
             && status is not (HttpStatusCode.NotImplemented
                 or HttpStatusCode.HttpVersionNotSupported));
