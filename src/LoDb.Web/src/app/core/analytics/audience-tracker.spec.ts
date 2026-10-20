@@ -39,7 +39,7 @@ describe('AudienceTracker', () => {
 
   afterEach(() => vi.unstubAllGlobals());
 
-  async function started(kind: PlatformKind = 'web', platformId = 'browser'): Promise<Router> {
+  async function booted(kind: PlatformKind = 'web', platformId = 'browser'): Promise<Router> {
     TestBed.configureTestingModule({
       providers: [
         provideRouter(
@@ -55,6 +55,13 @@ describe('AudienceTracker', () => {
     });
     await TestBed.inject(ApplicationInitStatus).donePromise;
     return TestBed.inject(Router);
+  }
+
+  // A person is there from the start: the visits of most tests are counted at once.
+  async function started(kind?: PlatformKind, platformId?: string): Promise<Router> {
+    const router = await booted(kind, platformId);
+    page.dispatchEvent(new Event('pointermove'));
+    return router;
   }
 
   async function settle(): Promise<void> {
@@ -94,6 +101,61 @@ describe('AudienceTracker', () => {
       '/fr/champions/103-ahri?lang=fr_FR',
       '/fr/u/:username',
     ]);
+  });
+
+  it('counts the first view at the first gesture, with its title and referrer', async () => {
+    page.referrer = 'https://www.google.com/search?q=ahri';
+    page.title = 'Ahri - League Of Data Base';
+    const router = await booted();
+
+    await visit(router, '/fr/champions/103-ahri');
+    expect(fetchMock).not.toHaveBeenCalled();
+    page.title = 'League Of Data Base';
+    page.dispatchEvent(new Event('wheel'));
+    await settle();
+    await visit(router, '/fr/champions');
+
+    expect(payloads()).toEqual([
+      expect.objectContaining({
+        url: '/fr/champions/103-ahri',
+        title: 'Ahri - League Of Data Base',
+        referrer: 'https://www.google.com',
+      }),
+      expect.objectContaining({ url: '/fr/champions', referrer: '' }),
+    ]);
+  });
+
+  it('counts a reader who keeps the page in sight ten seconds without a gesture', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    try {
+      const router = await booted();
+      void router.navigateByUrl('/fr/champions/103-ahri');
+
+      await vi.advanceTimersByTimeAsync(9_000);
+      expect(fetchMock).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(1_000);
+      expect(sentUrls()).toEqual(['/fr/champions/103-ahri']);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('counts down only while the page is in sight', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    try {
+      page.visibilityState = 'hidden';
+      const router = await booted();
+      void router.navigateByUrl('/fr/champions/103-ahri');
+
+      await vi.advanceTimersByTimeAsync(60_000);
+      expect(fetchMock).not.toHaveBeenCalled();
+      page.visibilityState = 'visible';
+      page.dispatchEvent(new Event('visibilitychange'));
+      await vi.advanceTimersByTimeAsync(10_000);
+      expect(sentUrls()).toEqual(['/fr/champions/103-ahri']);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('posts the send body of Umami, without credentials, outliving the page', async () => {
