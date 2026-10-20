@@ -13,6 +13,7 @@ import { parseAcceptLanguage } from './app/core/routing/locale/parse-accept-lang
 import { CACHE_CONTROL } from './app/core/routing/response/cache-control';
 import { AdmissionSummary } from './server/admission/admission-summary';
 import { clientKeyOf } from './server/admission/client-key-of';
+import { isPrerenderRender } from './server/admission/is-prerender-render';
 import { RenderAdmission } from './server/admission/render-admission';
 import { RenderCounts } from './server/admission/render-counts';
 import { FrontBuildsPublication } from './server/assets/front-builds-publication';
@@ -26,6 +27,7 @@ import { serveMetrics } from './server/metrics/serve-metrics';
 import { SsrMetrics } from './server/metrics/ssr-metrics';
 import { readServerSettings } from './server/read-server-settings';
 import { requestLogging } from './server/request-logging';
+import { cacheClassMark } from './server/prerender/cache-class-mark';
 import { preRouter } from './server/routing/pre-router';
 import { applyServerTimeouts } from './server/security/apply-server-timeouts';
 import { boundedRequests } from './server/security/bounded-requests';
@@ -158,7 +160,11 @@ async function servedDocument(
 
 // Pages only: the files above never wait for a slot, the renders' own catalogues included.
 app.use((request, response, next) => {
-  const admitted = { url: request.originalUrl, client: clientKeyOf(request.ip) };
+  const admitted = {
+    url: request.originalUrl,
+    client: clientKeyOf(request.ip),
+    isPrerender: isPrerenderRender(request),
+  };
   renderAdmission
     .run(admitted, response, async (lane) => {
       metrics.timeRender(lane, response);
@@ -173,6 +179,7 @@ app.use((request, response, next) => {
       metrics.countRendered(rendered.status);
       const sent =
         scriptPolicy === null ? rendered : await servedDocument(rendered, request, scriptPolicy);
+      response.set(cacheClassMark(lane, sent.headers.get('Cache-Control')));
       await writeResponseToNodeResponse(sent, response);
     })
     .catch(next);

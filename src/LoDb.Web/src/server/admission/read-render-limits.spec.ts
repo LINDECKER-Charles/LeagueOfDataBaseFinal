@@ -14,6 +14,10 @@ describe('readRenderLimits', () => {
       currentPerClientPerMinute: 60,
       currentPerClientBurst: 20,
       trackedClients: 50_000,
+      prerenderPerMinute: 120,
+      prerenderBurst: 10,
+      prerenderMaxInFlight: 2,
+      prerenderVisitorReserve: 4,
     });
   });
 
@@ -30,6 +34,10 @@ describe('readRenderLimits', () => {
       LODB_CURRENT_RENDERS_PER_CLIENT_PER_MINUTE: '120',
       LODB_CURRENT_RENDER_PER_CLIENT_BURST: '30',
       LODB_RENDER_TRACKED_CLIENTS: '1000',
+      LODB_PRERENDER_RENDERS_PER_MINUTE: '30',
+      LODB_PRERENDER_RENDER_BURST: '5',
+      LODB_PRERENDER_MAX_IN_FLIGHT: '3',
+      LODB_PRERENDER_VISITOR_RESERVE: '6',
     });
 
     expect(limits).toEqual({
@@ -44,6 +52,10 @@ describe('readRenderLimits', () => {
       currentPerClientPerMinute: 120,
       currentPerClientBurst: 30,
       trackedClients: 1000,
+      prerenderPerMinute: 30,
+      prerenderBurst: 5,
+      prerenderMaxInFlight: 3,
+      prerenderVisitorReserve: 6,
     });
   });
 
@@ -60,6 +72,26 @@ describe('readRenderLimits', () => {
     expect(() =>
       readRenderLimits({ LODB_RENDER_MAX_IN_FLIGHT: '4', LODB_PINNED_RENDER_MAX_IN_FLIGHT: '4' }),
     ).toThrow(/LODB_PINNED_RENDER_MAX_IN_FLIGHT/);
+  });
+
+  it.each(['LODB_PRERENDER_MAX_IN_FLIGHT', 'LODB_PRERENDER_VISITOR_RESERVE'])(
+    'refuses %s set to every slot',
+    (variable) => {
+      expect(() => readRenderLimits({ LODB_RENDER_MAX_IN_FLIGHT: '4', [variable]: '4' })).toThrow(
+        new RegExp(variable),
+      );
+    },
+  );
+
+  // The staging runs three slots and leaves the pre-render bounds to their defaults.
+  it('fits the pre-render bounds left to their default below fewer slots', () => {
+    const limits = readRenderLimits({
+      LODB_RENDER_MAX_IN_FLIGHT: '3',
+      LODB_PINNED_RENDER_MAX_IN_FLIGHT: '1',
+    });
+
+    expect(limits.prerenderMaxInFlight).toBe(2);
+    expect(limits.prerenderVisitorReserve).toBe(2);
   });
 
   it('lets one client take every slot, never more', () => {
