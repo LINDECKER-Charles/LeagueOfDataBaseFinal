@@ -27,7 +27,10 @@ import { serveMetrics } from './server/metrics/serve-metrics';
 import { SsrMetrics } from './server/metrics/ssr-metrics';
 import { readServerSettings } from './server/read-server-settings';
 import { requestLogging } from './server/request-logging';
+import { buildFilesEndpoint } from './server/prerender/build-files-endpoint';
+import { buildMark } from './server/prerender/build-mark';
 import { cacheClassMark } from './server/prerender/cache-class-mark';
+import { readBuildListing } from './server/prerender/read-build-listing';
 import { preRouter } from './server/routing/pre-router';
 import { applyServerTimeouts } from './server/security/apply-server-timeouts';
 import { boundedRequests } from './server/security/bounded-requests';
@@ -54,6 +57,8 @@ const MEMOISED_API_PATHS = ['/api/meta'];
 // scripts they hold are the only ones a page's policy admits (src/server/security/csp).
 const SERVER_TEMPLATE = 'index.server.html';
 const BROWSER_TEMPLATE = 'index.csr.html';
+// Where the pre-render pass reads the list of this build's hashed files.
+const BUILD_FILES_PATH = '/_lodb/build-files';
 
 // Under `ng serve`, the dev server mounts `reqHandler` instead of running this file.
 const listening = isMainModule(import.meta.url);
@@ -75,6 +80,9 @@ const requestContext: SsrRequestContext = {
     () => Date.now(),
   ),
 };
+// Read once: the list the pre-render pass copies, and the build each of its pages names.
+// Under `ng serve`, the build lives in the dev server's memory: no list to give.
+const buildListing = listening ? readBuildListing(browserDistFolder) : null;
 const renderCounts = new RenderCounts();
 const renderAdmission = new RenderAdmission(settings.renderLimits, renderCounts);
 const metrics = new SsrMetrics(renderCounts, renderAdmission);
@@ -108,6 +116,11 @@ app.get('/healthz', (_request, response) => {
 
 app.use(requestLogging(logger));
 app.use(boundedRequests());
+
+// For the pre-render pass alone, which calls this port over the stack network (ADR 0011).
+if (buildListing !== null) {
+  app.get(BUILD_FILES_PATH, buildFilesEndpoint(buildListing));
+}
 
 // `/` has no page of its own: a 302 to the locale the browser prefers (ADR 0005). The
 // answer depends on Accept-Language, and a redirect only lives a minute in a shared cache.
@@ -180,6 +193,7 @@ app.use((request, response, next) => {
       const sent =
         scriptPolicy === null ? rendered : await servedDocument(rendered, request, scriptPolicy);
       response.set(cacheClassMark(lane, sent.headers.get('Cache-Control')));
+      response.set(buildMark(lane, buildListing?.build ?? null));
       await writeResponseToNodeResponse(sent, response);
     })
     .catch(next);
