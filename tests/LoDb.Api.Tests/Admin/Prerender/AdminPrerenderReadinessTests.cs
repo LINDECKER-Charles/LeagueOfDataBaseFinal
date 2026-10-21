@@ -12,7 +12,7 @@ using LoDb.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace LoDb.Api.Tests.Admin;
+namespace LoDb.Api.Tests.Admin.Prerender;
 
 /// <summary>
 /// The epoch ready to serve, judged by its coverage whatever the passes that filled it, the

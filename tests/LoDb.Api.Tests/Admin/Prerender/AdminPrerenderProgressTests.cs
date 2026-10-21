@@ -13,7 +13,7 @@ using LoDb.Infrastructure.Persistence.Prerender;
 using LoDb.Testing;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace LoDb.Api.Tests.Admin;
+namespace LoDb.Api.Tests.Admin.Prerender;
 
 /// <summary>
 /// The progress of a pass for the live monitor: each version's cells in the order the worker

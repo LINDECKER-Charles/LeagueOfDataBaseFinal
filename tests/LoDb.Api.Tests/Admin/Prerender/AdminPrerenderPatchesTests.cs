@@ -14,7 +14,7 @@ using LoDb.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace LoDb.Api.Tests.Admin;
+namespace LoDb.Api.Tests.Admin.Prerender;
 
 /// <summary>
 /// The older patches and what an epoch holds of each, locale by locale, with the bases of the

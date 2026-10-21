@@ -6,7 +6,7 @@ using LoDb.Domain.Languages;
 using LoDb.Infrastructure.Persistence.Prerender;
 using LoDb.Testing;
 
-namespace LoDb.Api.Tests.Admin;
+namespace LoDb.Api.Tests.Admin.Prerender;
 
 /// <summary>
 /// The units of one version of a pass, a row per locale in the site's order: what the monitor

@@ -6,7 +6,7 @@ using LoDb.Api.Tests.Audit.Support;
 using LoDb.Infrastructure.Persistence.Prerender;
 using LoDb.Testing;
 
-namespace LoDb.Api.Tests.Admin;
+namespace LoDb.Api.Tests.Admin.Prerender;
 
 /// <summary>
 /// The report of the pre-rendering: the active pass with its pace and estimated end, the

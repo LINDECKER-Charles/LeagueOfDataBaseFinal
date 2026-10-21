@@ -1,6 +1,6 @@
 using LoDb.Testing;
 
-namespace LoDb.Api.Tests.Admin;
+namespace LoDb.Api.Tests.Admin.Prerender;
 
 /// <summary>
 /// The monitor's reads, read every five seconds, go through an index of
