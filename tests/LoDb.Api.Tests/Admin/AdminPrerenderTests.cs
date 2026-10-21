@@ -103,7 +103,7 @@ public sealed class AdminPrerenderTests(PostgresContainerFixture postgres) : IAs
             (AuditTargetType.PrerenderPass, Id(id), "epoch 2"),
             (entry.TargetType, entry.TargetId, entry.Target));
         Assert.Equal(AdminBrowser.AdminName, entry.Actor);
-        Assert.Equal("{\"locales\":[\"fr\"]}", Meta(entry, "scope"));
+        Assert.Equal("{\"locales\":[\"fr\"],\"locale\":\"fr\"}", Meta(entry, "scope"));
         using (var meta = JsonDocument.Parse(entry.Meta!))
         {
             Assert.Equal(2, meta.RootElement.GetProperty("units").GetInt32());
@@ -137,7 +137,8 @@ public sealed class AdminPrerenderTests(PostgresContainerFixture postgres) : IAs
                 .Select(static version => version.GetString()));
         var pass = Assert.Single(await PassesAsync());
         Assert.Equal(
-            "{\"versions\":[\"15.1.1\",\"16.17.1\"],\"pageTypes\":[\"items\",\"runes\"],"
+            "{\"versions\":[\"15.1.1\",\"16.17.1\"],\"oldest\":\"15.1.1\","
+                + "\"newest\":\"16.17.1\",\"pageTypes\":[\"items\",\"runes\"],"
                 + "\"skipComplete\":true}",
             PassScopeJson.Write(PassScopeJson.Read(pass.Scope)));
         var scope = (await ReadAsync(admin)).GetProperty("current").GetProperty("scope");

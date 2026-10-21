@@ -645,6 +645,16 @@ stockage objet, puis lues par nginx
   de la stack met des passes en pause sans les remplir, et un retour arrière doit rester possible.
   Une passe mise en pause avant la migration n'a pas de `paused_at` : le panneau dit « en pause »
   sans durée.
+- **Le périmètre d'une passe reste lisible par l'image d'avant les listes.** `prerender_pass.scope`
+  porte les listes (`versions`, `locales`, `pageTypes`) **et** les anciens champs qui peuvent les
+  dire (`PassScopeJson`) : les bornes `oldest`/`newest` d'une liste de versions, `locale` et
+  `pageType` quand la liste n'en compte qu'un. L'image précédente ignore les listes : sans ces
+  champs, elle lirait `{}`, tout ancien patch, tout type, toute langue (curseur décalé sur
+  l'unité en cours, couverture comptée complète, epoch annoncée prête). Ne pas les retirer tant
+  qu'un retour à cette image reste possible. Ce qu'ils ne disent pas, elle le lit plus large :
+  plusieurs langues ou plusieurs types sur les 21 et les 4, une liste de versions trouée (toute
+  la plage entre ses bornes). Avant un tel retour, annuler la passe active si son périmètre
+  est de cette forme.
 - **Pas d'index sur `prerender_unit.updated_at`.** Il est réécrit à chaque page : l'indexer
   couperait les mises à jour HOT de la table, quatre millions de fois par passe. Ce qui doit être
   lu par ordre de fin passe par `ended_at`, écrit une fois, et son index partiel.

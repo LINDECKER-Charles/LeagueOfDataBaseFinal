@@ -63,7 +63,7 @@ public sealed class PromotionTests(PostgresContainerFixture postgres)
         Assert.Equal((3, PrerenderPassState.Running), (pass.Epoch, pass.State));
         // jsonb keeps its own spacing: the stored form is compared as the engine writes it.
         Assert.Equal(
-            "{\"versions\":[\"16.18.1\"]}",
+            "{\"versions\":[\"16.18.1\"],\"oldest\":\"16.18.1\",\"newest\":\"16.18.1\"}",
             PassScopeJson.Write(PassScopeJson.Read(pass.Scope)));
         Assert.Equal(
             UiLocales.All.Select(UiLocales.Code).Order(StringComparer.Ordinal),

@@ -65,13 +65,37 @@ public sealed class PassOrderTests(PostgresContainerFixture postgres)
         var read = PassScopeJson.Read(stored);
 
         Assert.Equal(
-            "{\"versions\":[\"16.18.1\",\"16.17.1\"],\"locales\":[\"en\",\"zh-hans\"],"
+            "{\"versions\":[\"16.18.1\",\"16.17.1\"],\"oldest\":\"16.17.1\","
+                + "\"newest\":\"16.18.1\",\"locales\":[\"en\",\"zh-hans\"],"
                 + "\"pageTypes\":[\"items\",\"runes\"],\"priority\":[\"16.18.1\"],"
                 + "\"skipComplete\":true}",
             stored);
+        Assert.Equal(scope.Versions, read.Versions);
+        Assert.Null(read.Oldest);
         Assert.Equal(stored, PassScopeJson.Write(read));
         Assert.Equal("{}", PassScopeJson.Write(PassScope.Everything));
-        Assert.Equal("{\"versions\":[\"16.19.1\"]}", PassScopeJson.Write(PassScope.Of(Newest)));
+    }
+
+    // The image before the lists reads the former fields alone: a scope it can say in them
+    // must not read as every older patch, every type and every locale there.
+    [Fact]
+    public void ScopeStaysReadableByTheImageBeforeTheLists()
+    {
+        var scope = new PassScope
+        {
+            Versions = [Middle],
+            PageTypes = [ResourceType.Items],
+            Locales = [UiLocale.Fr],
+        };
+
+        Assert.Equal(
+            "{\"versions\":[\"16.18.1\"],\"oldest\":\"16.18.1\",\"newest\":\"16.18.1\","
+                + "\"locales\":[\"fr\"],\"pageTypes\":[\"items\"],\"pageType\":\"items\","
+                + "\"locale\":\"fr\"}",
+            PassScopeJson.Write(scope));
+        Assert.Equal(
+            "{\"versions\":[\"16.19.1\"],\"oldest\":\"16.19.1\",\"newest\":\"16.19.1\"}",
+            PassScopeJson.Write(PassScope.Of(Newest)));
     }
 
     // A pass launched before the lists keeps reading: its range, its one type, its one locale.
@@ -90,7 +114,8 @@ public sealed class PassOrderTests(PostgresContainerFixture postgres)
         Assert.False(read.IsWhole);
         Assert.Equal(
             "{\"oldest\":\"16.17.1\",\"newest\":\"16.18.1\",\"locales\":[\"fr\"],"
-                + "\"pageTypes\":[\"items\"],\"priority\":[\"16.18.1\"]}",
+                + "\"pageTypes\":[\"items\"],\"priority\":[\"16.18.1\"],"
+                + "\"pageType\":\"items\",\"locale\":\"fr\"}",
             PassScopeJson.Write(read));
     }
 

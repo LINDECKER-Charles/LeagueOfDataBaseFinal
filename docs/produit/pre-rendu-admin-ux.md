@@ -1780,7 +1780,12 @@ internal sealed record PassScope
 IReadOnlyList<ResourceType>? types)` garde les chemins de **l'un** des types (`null` : tous) ;
 `UnitRunner.RunAsync` appelle `PageTypes.Keep(list.Paths, unit.Pass.Scope.PageTypes)`.
 
-**`Pages/PassScopeJson.cs`** lit l'ancienne forme et la nouvelle, et n'écrit que la nouvelle :
+**`Pages/PassScopeJson.cs`** lit l'ancienne forme et la nouvelle, et écrit la nouvelle **avec**
+les anciens champs qui peuvent la dire : l'image d'avant les listes ignore `versions`, `locales`
+et `pageTypes`, et lirait sans eux `{}`, tout ancien patch, tout type, toute langue (curseur de
+l'unité en cours décalé, couverture comptée complète, epoch annoncée prête). Un retour à cette
+image doit rester possible tant que la migration n'est pas contractée
+([pièges](../architecture/pieges.md)).
 
 | Champ JSON | Lu | Écrit | Vers |
 |---|---|---|---|
@@ -1789,11 +1794,13 @@ IReadOnlyList<ResourceType>? types)` garde les chemins de **l'un** des types (`n
 | `pageTypes` | ✓ | ✓ (absent si `null`) | `PageTypes` (4 → `null`) |
 | `priority` | ✓ | ✓ (absent si vide) | `Priority` |
 | `skipComplete` | ✓ | ✓ (absent si `false`) | `SkipComplete` |
-| `oldest`, `newest` | ✓ | ✓ seulement s'ils sont posés (jamais par le nouveau code) | `Oldest`, `Newest` |
-| `pageType` (ancien) | ✓ | jamais | `PageTypes = [type]` |
-| `locale` (ancien) | ✓ | jamais | `Locales = [locale]` |
+| `oldest`, `newest` | ✓, ignorés à côté de `versions` | les bornes de `versions`, ou la plage d'avant | `Oldest`, `Newest` |
+| `pageType` (ancien) | ✓ | quand `pageTypes` n'en compte qu'un | `PageTypes = [type]` |
+| `locale` (ancien) | ✓ | quand `locales` n'en compte qu'une | `Locales = [locale]` |
 
-Si un document porte à la fois `locale` et `locales` (impossible en pratique), `locales` gagne.
+Quand un document porte à la fois `locale` et `locales`, `locales` gagne ; `versions` gagne sur
+les bornes. Ce que les anciens champs ne disent pas, l'image précédente le lit plus large :
+plusieurs langues ou types sur 21 et 4, une liste trouée (toute la plage entre ses bornes).
 Un document illisible lève toujours `FormatException` (inchangé).
 
 Exemples :
@@ -1803,8 +1810,8 @@ Exemples :
 | `{}` | `Everything` |
 | `{"oldest":"14.1.1","newest":"14.24.1","pageType":"items","locale":"fr","priority":["14.24.1"]}` (avant les listes) | `Oldest 14.1.1, Newest 14.24.1, PageTypes [Items], Locales [Fr], Priority [14.24.1]` |
 | `{"oldest":"16.19.1","newest":"16.19.1"}` (promotion d'avant) | une plage d'une version |
-| `{"versions":["16.19.1"]}` (promotion d'après) | `Versions [16.19.1]` |
-| `{"versions":["16.18.1","16.12.1"],"locales":["en","fr"],"priority":["16.18.1"],"skipComplete":true}` | — |
+| `{"versions":["16.19.1"],"oldest":"16.19.1","newest":"16.19.1"}` (promotion d'après) | `Versions [16.19.1]` |
+| `{"versions":["16.18.1","16.12.1"],"oldest":"16.12.1","newest":"16.18.1","locales":["en","fr"],"priority":["16.18.1"],"skipComplete":true}` | — |
 
 **Vue** (`Http/Views/PrerenderScopeView.cs`, remplace l'actuelle). Elle part dans chaque vue de
 liste : le rapport, relu toutes les 60 s, en porte jusqu'à 50 (`PassHistory.MaxPasses`), et la
