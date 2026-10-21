@@ -11832,6 +11832,14 @@
             "description": "When it should end at its pace, once its pages left are processed; null unless it runs\nwith a known pace and some units listed.",
             "format": "date-time"
           },
+          "runningSince": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Since when it runs, from its launch or its last resume; null unless running. A resume\nwrites no unit: without it, a pass resumed after a long pause would look stalled.",
+            "format": "date-time"
+          },
           "pausedAt": {
             "type": [
               "null",

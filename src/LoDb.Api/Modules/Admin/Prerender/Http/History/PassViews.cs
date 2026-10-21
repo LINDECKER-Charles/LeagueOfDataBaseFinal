@@ -34,6 +34,7 @@ internal static class PassViews
             Units = UnitsOf(facts),
             PagesPerMinute = PassProgress.Shown(rate),
             EstimatedEndAt = PassProgress.EstimatedEnd(facts, rate, now),
+            RunningSince = pass.RunningSince,
             PausedAt = pass.PausedAt,
             PauseReason = pass.PauseReason,
             PagesLeft = PassProgress.PagesLeft(facts),

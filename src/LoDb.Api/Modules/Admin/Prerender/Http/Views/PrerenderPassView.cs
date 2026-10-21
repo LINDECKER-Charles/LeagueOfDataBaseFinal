@@ -55,6 +55,12 @@ internal sealed record PrerenderPassView
     /// </summary>
     public DateTimeOffset? EstimatedEndAt { get; init; }
 
+    /// <summary>
+    /// Since when it runs, from its launch or its last resume; null unless running. A resume
+    /// writes no unit: without it, a pass resumed after a long pause would look stalled.
+    /// </summary>
+    public DateTimeOffset? RunningSince { get; init; }
+
     /// <summary>Since when it is paused; null unless paused.</summary>
     public DateTimeOffset? PausedAt { get; init; }
 

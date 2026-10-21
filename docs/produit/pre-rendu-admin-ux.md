@@ -1873,6 +1873,12 @@ entières.
 **Ajouts à `Http/Views/PrerenderPassView.cs`** (le reste inchangé) :
 
 ```csharp
+    /// <summary>
+    /// Since when it runs, from its launch or its last resume; null unless running. A resume
+    /// writes no unit: without it, a pass resumed after a long pause would look stalled.
+    /// </summary>
+    public DateTimeOffset? RunningSince { get; init; }
+
     /// <summary>Since when it is paused; null unless paused.</summary>
     public DateTimeOffset? PausedAt { get; init; }
 
@@ -2436,7 +2442,8 @@ Exemple (lecture incrémentale) :
     "bytesWritten": 58979700000, "units": { "total": 4452, "pending": 1410, "running": 1,
       "completed": 3024, "failed": 17 },
     "pagesPerMinute": 231.4, "estimatedEndAt": "2026-10-23T14:00:00+00:00",
-    "pausedAt": null, "pauseReason": null, "pagesLeft": 613590 },
+    "runningSince": "2026-10-21T06:00:00+00:00", "pausedAt": null, "pauseReason": null,
+    "pagesLeft": 613590 },
   "locales": ["ar","cs","de","el","en","es","fr","hu","id","it","ja","ko","pl","pt","ro","ru","th","tr","vi","zh-hans","zh-hant"],
   "isComplete": false,
   "scopeVersions": null,

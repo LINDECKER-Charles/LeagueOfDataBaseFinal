@@ -75,6 +75,12 @@ export interface PrerenderPassView {
    * Since when it is paused; null unless paused.
    */
   pausedAt?: (string | null);
+
+  /**
+   * Since when it runs, from its launch or its last resume; null unless running. A resume
+   * writes no unit: without it, a pass resumed after a long pause would look stalled.
+   */
+  runningSince?: (string | null);
   scope: PrerenderScopeView;
 
   /**

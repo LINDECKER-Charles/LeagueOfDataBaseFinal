@@ -78,6 +78,10 @@ public sealed class AdminPrerenderReportTests(PostgresContainerFixture postgres)
         Assert.Equal(1400, current.GetProperty("pagesLeft").GetInt64());
         Assert.Equal(JsonValueKind.Null, current.GetProperty("pausedAt").ValueKind);
         Assert.Equal(JsonValueKind.Null, current.GetProperty("pauseReason").ValueKind);
+        Assert.Equal(
+            Now.AddMinutes(-10),
+            current.GetProperty("runningSince").GetDateTimeOffset(),
+            TimeSpan.FromSeconds(1));
     }
 
     // A report carries 50 passes, read every minute: the versions of each are counted.
