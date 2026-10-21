@@ -61,7 +61,15 @@
     >
       <lodb-coverage-tab [report]="data" [lock]="lock()" (launch)="openLaunch($event)" />
     </lodb-tab>
-    <lodb-tab key="prerender-costs" [label]="'admin.prerender.overview.tabs.costs' | adminText">
+    <lodb-tab
+      key="prerender-costs"
+      [label]="
+        (isPhone()
+          ? 'admin.prerender.overview.tabs.costs_short'
+          : 'admin.prerender.overview.tabs.costs'
+        ) | adminText
+      "
+    >
       <lodb-costs-tab [report]="data" [lock]="lock()" (launch)="openLaunch($event)" />
     </lodb-tab>
     <lodb-tab key="prerender-history" [label]="'admin.prerender.overview.tabs.history' | adminText">

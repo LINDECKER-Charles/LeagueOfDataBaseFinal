@@ -1,8 +1,10 @@
+import { BreakpointObserver } from '@angular/cdk/layout';
 import { HttpStatusCode } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import type { PrerenderEpochCoverage } from '../../../../../core/api/generated/models/prerender-epoch-coverage';
 import type { PrerenderPassView } from '../../../../../core/api/generated/models/prerender-pass-view';
 import type { PrerenderReport } from '../../../../../core/api/generated/models/prerender-report';
+import { of } from 'rxjs';
 import { Seo } from '../../../../../core/seo/seo';
 import { AdminNotices } from '../../../layout/admin-notices';
 import { PRERENDER_CADENCE } from './common/scope/prerender-cadence';
@@ -179,6 +181,20 @@ describe('PrerenderPanel, its states', () => {
     }
 
     expect(launched.current()).toBeNull();
+  });
+
+  it('names its tabs short on a phone, so that all three hold in its width', async () => {
+    const phone = { observe: () => of({ matches: true, breakpoints: {} }), isMatched: () => true };
+    const visit = await openPrerender({
+      report: IDLE,
+      providers: [{ provide: BreakpointObserver, useValue: phone }],
+    });
+
+    expect(texts(visit.page, '[role="tab"]')).toEqual([
+      'admin.prerender.overview.tabs.coverage',
+      'admin.prerender.overview.tabs.costs_short',
+      'admin.prerender.overview.tabs.history',
+    ]);
   });
 
   it('remembers a recap dismissed in this browser', async () => {

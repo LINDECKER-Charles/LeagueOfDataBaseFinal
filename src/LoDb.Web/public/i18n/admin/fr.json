@@ -836,6 +836,7 @@
         "label": "Vues du précalcul",
         "coverage": "Couverture",
         "costs": "Stockage et coûts",
+        "costs_short": "Coûts",
         "history": "Historique"
       },
       "doc_title": {

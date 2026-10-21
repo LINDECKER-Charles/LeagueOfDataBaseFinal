@@ -1,3 +1,4 @@
+import { BreakpointObserver } from '@angular/cdk/layout';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -12,7 +13,8 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
-import { firstValueFrom } from 'rxjs';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { firstValueFrom, map } from 'rxjs';
 import type { PrerenderReport } from '../../../../../core/api/generated/models/prerender-report';
 import { AdminNotices } from '../../../layout/admin-notices';
 import { PageHead } from '../../../layout/page-head';
@@ -57,6 +59,8 @@ interface TitleSource {
 // The pass a visitor dismissed from the recap, kept in this browser by PassRecap.
 const DISMISSED_KEY = 'lodb.admin.prerender.recap-dismissed';
 const MONITOR_ID = 'prerender-monitor';
+// Under the `sm` breakpoint the three tabs must hold in 328px: « Coûts » stands for the costs.
+const PHONE = '(max-width: 639.98px)';
 
 /**
  * `/admin/prerender`: the pre-rendering of the older patches into the object store (§ 2).
@@ -94,10 +98,15 @@ export class PrerenderPanel {
   private readonly document = inject(DOCUMENT);
   private readonly injector = inject(Injector);
   private readonly notices = inject(AdminNotices);
+  private readonly breakpoints = inject(BreakpointObserver);
   private readonly coverage = viewChild(CoverageTab);
   // Once a pass starts, the focus goes to its monitor as soon as the report shows it.
   private readonly isFocusDue = signal(false);
 
+  protected readonly isPhone = toSignal(
+    this.breakpoints.observe(PHONE).pipe(map((state) => state.matches)),
+    { initialValue: this.breakpoints.isMatched(PHONE) },
+  );
   protected readonly report = injectPrerenderReport();
   protected readonly quiet = quietPanel(this.report);
   protected readonly dismissed = signal<number | null>(this.storedDismissal());

@@ -836,6 +836,7 @@
         "label": "Pre-rendering views",
         "coverage": "Coverage",
         "costs": "Storage and costs",
+        "costs_short": "Costs",
         "history": "History"
       },
       "doc_title": {

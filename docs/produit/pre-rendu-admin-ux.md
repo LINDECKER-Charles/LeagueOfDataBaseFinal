@@ -350,7 +350,7 @@ Une passe est en cours (n°12) : une seule à la fois.
 ┌ Stocké ──┐┌ Coût / mois ┐
 │ 58.98 GB ││ 0,47 €      │
 └──────────┘└─────────────┘
- COUVERTURE  STOCKAGE…  HIST…  ← la liste d'onglets défile (lodb-tabs : overflow-x-auto)
+ COUVERTURE  COÛTS  HISTORIQUE  ← « Coûts » sur téléphone ; un débord s'estompe au bord
 ```
 
 Règles du téléphone (sous `sm`, 640 px ; `(max-width: 639.98px)` comme
@@ -1482,6 +1482,10 @@ sortie `detail`. « Masquer » mémorise l'identifiant de la passe dans `localSt
 `<lodb-tabs [label]="'Vues du précalcul'">` (`src/app/ui/tabs/tabs.ts`), trois `<lodb-tab>` de clés
 `prerender-coverage`, `prerender-costs`, `prerender-history` (uniques dans la page, `tab.ts`).
 Activation automatique aux flèches, comme partout. Le premier est sélectionné à l'ouverture.
+Sur téléphone (sous `sm`), « Stockage et coûts » devient « Coûts » (`overview.tabs.costs_short`) :
+les trois tiennent dans 328 px, et « Historique » ne disparaît plus hors écran. Partout,
+`lodb-tabs` estompe le bord d'une liste qui déborde (`tabFade`, `mask-image`, sa barre de
+défilement étant masquée) ; la flèche qui déplace le focus amène son onglet dans la vue.
 
 ### 5.2 Couverture
 
@@ -3250,6 +3254,7 @@ de lot suit la même règle, et chaque spécification de composant vérifie au m
 | `doc_title.paused` | ⏸ {share} · Précalcul du catalogue | ⏸ {share} · Catalogue pre-rendering |
 | `doc_title.completed` | ✓ Passe n°{id} terminée · Précalcul du catalogue | ✓ Pass #{id} completed · Catalogue pre-rendering |
 | `doc_title.cancelled` | ✕ Passe n°{id} annulée · Précalcul du catalogue | ✕ Pass #{id} cancelled · Catalogue pre-rendering |
+| `tabs.costs_short` | Coûts | Costs |
 
 **`live`** (F3) — le moniteur, ses dialogues, le récapitulatif ; `done.pause`, `done.resume`,
 `done.cancel` existants restent à F3.
