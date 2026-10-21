@@ -50,7 +50,7 @@ public sealed class BaselineSchemaTests(PostgresContainerFixture postgres)
 
     /// <summary>Tables of the pre-rendering passes; like lot 4's, not in NewTables.</summary>
     internal static readonly string[] PrerenderTables =
-        ["prerender_build", "prerender_pass", "prerender_unit"];
+        ["prerender_build", "prerender_demand", "prerender_pass", "prerender_unit"];
 
     // Everything a migration adds to a Doctrine table, frozen: Identity's columns on users
     // (nullable, with a default or generated, so that the legacy stack keeps inserting rows)
