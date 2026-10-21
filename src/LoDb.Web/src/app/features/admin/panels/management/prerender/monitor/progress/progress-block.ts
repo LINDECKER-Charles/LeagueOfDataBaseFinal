@@ -117,9 +117,10 @@ export class ProgressBlock {
       left: figure(left),
     });
   });
+  // Paused, the unit left running in the base is stopped: « 1 en pause », not « en cours ».
   protected readonly units = computed(() => {
     const { completed, total, running, pending, failed } = this.pass().units;
-    return this.texts.text(`${LIVE}.units`, {
+    return this.texts.text(`${LIVE}.${this.isPaused() ? 'units_paused' : 'units'}`, {
       completed: figure(completed),
       total: figure(total),
       running: figure(running),

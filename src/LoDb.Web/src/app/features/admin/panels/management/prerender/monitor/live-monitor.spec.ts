@@ -41,6 +41,7 @@ describe('LiveMonitor', () => {
     expect(monitor.text('[data-pass-state]')).toBe('admin.prerender.states.running');
     expect(monitor.text('[data-share]')).toBe('71.4 %');
     expect(monitor.text('[data-pages]')).toBe('admin.prerender.live.pages_estimated');
+    expect(monitor.text('[data-units]')).toBe('admin.prerender.live.units');
     expect(monitor.text('lodb-now-block h3')).toBe('admin.prerender.live.now.title');
     expect(monitor.text('[data-now-line]')).toBe('admin.prerender.live.now.unit');
     expect(monitor.page.querySelectorAll('[data-now-next] .now-chip')).toHaveLength(2);
@@ -87,6 +88,7 @@ describe('LiveMonitor', () => {
       'admin.prerender.live.pace.stopped',
     );
     expect(monitor.page.querySelector('.monitor-matrix--paused')).not.toBeNull();
+    expect(monitor.text('[data-units]')).toBe('admin.prerender.live.units_paused');
     expect(monitor.text('[data-action="resume"]')).toBe('admin.prerender.live.actions.resume');
   });
 

@@ -1110,7 +1110,8 @@ ligne vers la fin, propriétés logiques : en RTL la barre part de la droite) :
   voie sur 2 millions de pages.
 - Sous la barre, une `Legend` (`admin/widgets/legend.ts`) avec la valeur de chaque segment, puis
   la ligne des unités : « Unités : 3 024 / 4 452 — 1 en cours · 1 410 à venir · 17 en échec »
-  (exactes, `PrerenderUnitCounts`).
+  (exactes, `PrerenderUnitCounts`) ; en pause, l'unité restée `running` est arrêtée : « 1 en
+  pause » (`live.units_paused`).
 - Accessibilité : `StackedBar` porte `role="img"` et un `aria-label` qui dit tout (« 71.4 % :
   1 512 300 pages écrites, 19 840 sautées, 270 en échec, environ 613 590 restantes ») ; la
   légende répète les valeurs en texte.
@@ -1151,12 +1152,15 @@ entrée `gaps` (indices de coupure) sans changer son rendu sans coupure. Décora
 
 - au rythme moyen : `pass.estimatedEndAt` du serveur ;
 - au rythme actuel : `serverNow + pagesLeft / rythmeRécent` ;
+- tant que ni l'un ni l'autre n'est connu (une page rouverte sur une passe à peine reprise : le
+  serveur attend une minute de marche, le rythme récent cinq), `serverNow + pagesLeft /
+  rythmeInstantané`, le rythme que le bloc affiche : jamais « inconnue » à côté d'un rythme ;
 - affichage : la date absolue (`stamp(…, 'minute')`, en UTC comme tout l'admin,
   `admin/format/stamp.ts`, sous le libellé « Fin estimée (UTC) »), « dans 2 j 3 h » (`duration`), et une seconde
   ligne « au rythme actuel : dans 1 j 22 h » avec **hystérésis** : elle apparaît quand les deux
   estimations diffèrent de plus de 15 %, disparaît quand l'écart retombe sous 5 %, et garde son
   état entre les deux (`etaOf` reçoit l'état précédent ; il est tenu par `MonitorState`) ;
-- `null` partout (rythme inconnu) : « inconnue tant que le rythme n'est pas mesuré » ; en pause :
+- `null` partout (aucun rythme, pas même instantané) : « en cours d'estimation… » ; en pause :
   « suspendue pendant la pause ».
 
 **Temps actif** : `duration(pass.activeSeconds)`, « pauses exclues ». **Écrit** :
@@ -3233,7 +3237,7 @@ de lot suit la même règle, et chaque spécification de composant vérifie au m
 | `eta.label` | Fin estimée (UTC) | Estimated end (UTC) |
 | `eta.average` | {in} (rythme moyen) | {in} (average pace) |
 | `eta.now` | au rythme actuel : {in} | at the current pace: {in} |
-| `eta.unknown` | inconnue tant que le rythme n'est pas mesuré | unknown until the pace is measured |
+| `eta.unknown` | en cours d'estimation… | being estimated… |
 | `eta.paused` | suspendue pendant la pause | on hold while paused |
 | `active.label` | Temps actif | Running time |
 | `active.sub` | pauses exclues | pauses left out |
@@ -3319,6 +3323,7 @@ de lot suit la même règle, et chaque spécification de composant vérifie au m
 | `folds.activity` | Activité ({count}) | Activity ({count}) |
 | `folds.failures` | Échecs ({count}) | Failures ({count}) |
 | `folds.matrix` | Matrice ({count, plural, one {# patch} other {# patchs}}) | Matrix ({count, plural, one {# patch} other {# patches}}) |
+| `units_paused` | Unités : {completed} / {total} — {running} en pause · {pending} à venir · {failed} en échec | Units: {completed} / {total} — {running} paused · {pending} to come · {failed} failed |
 
 **`launcher`** (F2)
 

@@ -74,7 +74,12 @@ function stateOf(seed: Seed, response: PrerenderPassProgress, receivedAt: number
   const samples = seed.samples.add(response.pass, generatedAt);
   const activity = activityEvents(seed.last, response, seed.seen);
   const eta = etaOf(
-    { pass: response.pass, recentPace: samples.recent(), serverNow: generatedAt },
+    {
+      pass: response.pass,
+      recentPace: samples.recent(),
+      instantPace: samples.instant(),
+      serverNow: generatedAt,
+    },
     seed.isCurrentShown,
   );
   return {

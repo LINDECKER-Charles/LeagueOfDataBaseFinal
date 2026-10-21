@@ -862,6 +862,7 @@
         "left": "restantes"
       },
       "units": "Unités : {completed} / {total} — {running} en cours · {pending} à venir · {failed} en échec",
+      "units_paused": "Unités : {completed} / {total} — {running} en pause · {pending} à venir · {failed} en échec",
       "starting": "En attente de la tâche de fond : elle prend une passe à son prochain tour (30 s au plus).",
       "pace": {
         "label": "Rythme",
@@ -874,7 +875,7 @@
         "label": "Fin estimée (UTC)",
         "average": "{in} (rythme moyen)",
         "now": "au rythme actuel : {in}",
-        "unknown": "inconnue tant que le rythme n'est pas mesuré",
+        "unknown": "en cours d'estimation…",
         "paused": "suspendue pendant la pause"
       },
       "active": {

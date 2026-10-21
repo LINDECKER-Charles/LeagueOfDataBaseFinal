@@ -862,6 +862,7 @@
         "left": "left"
       },
       "units": "Units: {completed} / {total} — {running} running · {pending} to come · {failed} failed",
+      "units_paused": "Units: {completed} / {total} — {running} paused · {pending} to come · {failed} failed",
       "starting": "Waiting for the background task: it takes a pass at its next tick (30 s at most).",
       "pace": {
         "label": "Pace",
@@ -874,7 +875,7 @@
         "label": "Estimated end (UTC)",
         "average": "{in} (average pace)",
         "now": "at the current pace: {in}",
-        "unknown": "unknown until the pace is measured",
+        "unknown": "being estimated…",
         "paused": "on hold while paused"
       },
       "active": {
