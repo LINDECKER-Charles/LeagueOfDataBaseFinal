@@ -3116,6 +3116,7 @@ de lot suit la même règle, et chaque spécification de composant vérifie au m
 | `retry.units` | Relancer {units, plural, one {# unité} other {# unités}} (≈ {pages, plural, one {# page} other {# pages}}) | Relaunch {units, plural, one {# unit} other {# units}} (≈ {pages, plural, one {# page} other {# pages}}) |
 | `retry.units_gaps` | Relancer {units, plural, one {# unité} other {# unités}} et les manques (≈ {pages, plural, one {# page} other {# pages}}) | Relaunch {units, plural, one {# unit} other {# units}} and the gaps (≈ {pages, plural, one {# page} other {# pages}}) |
 | `retry.later` | disponible quand la passe sera finie | available once the pass ends |
+| `close` | Fermer | Close |
 
 **`overview`** (F4)
 
@@ -3214,7 +3215,7 @@ de lot suit la même règle, et chaque spécification de composant vérifie au m
 | `now.ssr_down` | Le SSR est injoignable depuis {duration} : la passe attend sans compter de page. | The SSR has been out of reach for {duration}: the pass waits without counting a page. |
 | `now.remote` | Les signaux de la tâche de fond ne sont pas visibles depuis cette instance. | The background task's signals are not visible from this instance. |
 | `now.worker_off` | La tâche de fond est coupée sur cette instance (LoDb:Workers:Enabled=false) : la passe n'avance pas. | The background task is off on this instance (LoDb:Workers:Enabled=false): the pass does not move. |
-| `stall.title` | Aucune page depuis {duration} | No page for {duration} |
+| `stall.title` | Aucune page écrite depuis {duration} | No page written for {duration} |
 | `stall.ssr` | Le SSR est injoignable : la passe reprendra seule à son retour. | The SSR is out of reach: the pass resumes by itself once it is back. |
 | `stall.worker_off` | La tâche de fond est coupée sur cette instance. | The background task is off on this instance. |
 | `stall.waiting` | Toutes les unités restantes attendent un catalogue. | Every unit left waits for a catalog. |
@@ -3272,6 +3273,11 @@ de lot suit la même règle, et chaque spécification de composant vérifie au m
 | `recap.complete` | Compléter l'epoch {epoch} | Complete epoch {epoch} |
 | `recap.detail` | Voir le détail | See the detail |
 | `recap.dismiss` | Masquer | Dismiss |
+| `failing` | {version} · {locale} échoue : {failed, plural, one {# page en échec} other {# pages en échec}} sur {processed} ({share}). Dernière raison : | {version} · {locale} is failing: {failed, plural, one {# page failed} other {# pages failed}} out of {processed} ({share}). Last reason: |
+| `matrix_title` | Matrice | Matrix |
+| `folds.activity` | Activité ({count}) | Activity ({count}) |
+| `folds.failures` | Échecs ({count}) | Failures ({count}) |
+| `folds.matrix` | Matrice ({count, plural, one {# patch} other {# patchs}}) | Matrix ({count, plural, one {# patch} other {# patches}}) |
 
 **`launcher`** (F2)
 
@@ -3431,6 +3437,7 @@ de lot suit la même règle, et chaque spécification de composant vérifie au m
 | `session` | Session expirée : reconnectez-vous, puis relancez. | Session expired: sign in again, then relaunch. |
 | `done` | Passe n°{id} lancée sur l'epoch {epoch} : {units, plural, one {# unité} other {# unités}}{skipped, plural, =0 {} one {, # déjà complète ignorée} other {, # déjà complètes ignorées}}. | Pass #{id} launched on epoch {epoch}: {units, plural, one {# unit} other {# units}}{skipped, plural, =0 {} one {, # already complete left out} other {, # already complete left out}}. |
 | `done_ignored` | {count, plural, one {# version ignorée, absente} other {# versions ignorées, absentes}} des anciens patchs : {versions}. | {count, plural, one {# version left out, not} other {# versions left out, not}} among the older patches: {versions}. |
+| `season_count` | {count, plural, one {# patch} other {# patchs}} · {selected, plural, =0 {aucun sélectionné} one {# sélectionné} other {# sélectionnés}} | {count, plural, one {# patch} other {# patches}} · {selected, plural, =0 {none selected} other {# selected}} |
 
 **`coverage`** (F4)
 
@@ -3455,6 +3462,7 @@ de lot suit la même règle, et chaque spécification de composant vérifie au m
 | `error` | Couverture indisponible ({reason}). | Coverage unavailable ({reason}). |
 | `retry` | Réessayer | Try again |
 | `empty` | Aucun ancien patch. | No older patch. |
+| `season_counts` | {versions, plural, one {# patch} other {# patchs}} · {complete, plural, one {# complet} other {# complets}}{missing, plural, =0 {} one { · # à compléter} other { · # à compléter}} | {versions, plural, one {# patch} other {# patches}} · {complete} complete{missing, plural, =0 {} other { · # to complete}} |
 
 **`costs`** (F4) — reprend mot pour mot les textes de `storage.*` sous de nouvelles clés :
 `title`, `chip`, `epoch`, `builds`, `builds_sub`, `total`, `total_sub`, `empty`, `prices`,
