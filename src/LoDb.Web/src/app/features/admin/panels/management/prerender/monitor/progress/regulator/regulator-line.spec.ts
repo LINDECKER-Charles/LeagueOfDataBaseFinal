@@ -78,6 +78,14 @@ describe('regulatorLine', () => {
     );
   });
 
+  it('says the manual pace, and the brake that holds it with its reason', () => {
+    expect(line('manual', { rendersPerMinute: 600, reason: 'manual', hostCpu: null })).toBe(
+      `${REGULATOR}.manual {"rate":600}`,
+    );
+    const braked = line('held', { reason: 'visitors-refused' });
+    expect(braked).toContain(`${REASONS}.visitors-refused`);
+  });
+
   it('says nothing of a state or a reason it does not know', () => {
     expect(line('galloping')).toBeNull();
     expect(line('slowed', { reason: 'solar-flare' })).toBeNull();

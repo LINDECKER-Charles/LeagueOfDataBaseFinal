@@ -83,7 +83,8 @@
     "rate_limited": "Too many requests. Wait before trying again.",
     "invalid": "The input is invalid.",
     "network": "The API cannot be reached.",
-    "generic": "The action failed."
+    "generic": "The action failed.",
+    "prerender_pace_fixed": "The environment fixes the pace: the speed is not set here."
   },
   "actions": {
     "cancel": "Cancel",
@@ -678,7 +679,8 @@
     "done": {
       "pause": "Pass #{id} paused.",
       "resume": "Pass #{id} resumed.",
-      "cancel": "Pass #{id} cancelled."
+      "cancel": "Pass #{id} cancelled.",
+      "speed": "Speed saved: applied within 30 s."
     },
     "common": {
       "cells": {
@@ -880,7 +882,8 @@
           "steady": "holding at {rate} p/min: {reason}",
           "slowed": "slowed to {rate} p/min: {reason}",
           "held": "held until {at} UTC: {reason}",
-          "fixed": "fixed pace: {rate} p/min (regulation off)"
+          "fixed": "fixed pace: {rate} p/min (regulation off)",
+          "manual": "manual: {rate} p/min"
         },
         "reasons": {
           "warming-up": "measuring",
@@ -895,7 +898,8 @@
           "pass-latency": "pass renders slowed",
           "pass-ssr-pressure": "the VPS takes the pass's CPU back",
           "signal-missing": "a measure is missing",
-          "fixed": "regulation off"
+          "fixed": "regulation off",
+          "manual": "manual setting"
         }
       },
       "eta": {
@@ -1335,6 +1339,58 @@
       "retire_no_bucket": "The bucket's name is not configured on this host: replace <bucket>.",
       "retire_staging": "On staging: not needed, the bucket's expiry rule deletes every page.",
       "close": "Close"
+    },
+    "speed": {
+      "title": "Pre-rendering speed",
+      "lede": "How many pages the pre-rendering renderers render a minute. Visitors always come first: the renderers only take the CPU they leave.",
+      "loading": "Reading the speed…",
+      "dormant": "The pre-rendering is not configured on this host: the setting waits.",
+      "fixed": "The environment fixes the pace (LODB_PRERENDER_PACE_MODE=fixed): this setting only applies once that kill switch is lifted.",
+      "mode": {
+        "label": "Mode",
+        "adaptive": "Adaptive",
+        "adaptive_hint": "The regulator follows the CPU the VPS and the visitors leave free, between {min} and {max} pages/min.",
+        "manual": "Manual",
+        "manual_hint": "The renderers hold the chosen speed whatever the load, but for the emergency brake."
+      },
+      "rate": {
+        "label": "Pages per minute",
+        "range": "from {min} to {max}",
+        "unit": "pages/min"
+      },
+      "brake": "Emergency brake: no render for {hold} min as soon as a visitor of the latest patch is refused, or after {minutes} min over {busy} % of the VPS's CPU (the host's steal included) or without the visitors' load. The pass then resumes at the chosen speed.",
+      "apply": "Apply",
+      "applied": "Set on {at} UTC; applied within 30 s by the instance writing the pass.",
+      "never_set": "Never set: adaptive by default.",
+      "now": {
+        "title": "Resources now",
+        "unread": "No reading yet: the first comes 30 s after the API starts.",
+        "host": "VPS",
+        "host_value": "{busy} busy, {steal} of it taken back by the host · {free} cores free of {cpus}",
+        "renderers": "Pre-rendering renderers",
+        "renderers_value": "{count, plural, one {# renderer} other {# renderers}} · {cores} core · {pace} pages/min",
+        "visitors": "Visitors' SSR",
+        "visitors_value": "{cores} core · {refused} refused on the latest patch · {older} older pages refused/min",
+        "api": "API",
+        "api_value": "{cores} core"
+      },
+      "forecast": {
+        "title": "At {pace} pages/min",
+        "cpu": "Forecast CPU",
+        "cpu_value": "{total} core: renderers {renderers} + API and Postgres {stack}",
+        "host": "VPS then",
+        "host_value": "≈ {busy} busy · {margin} core to spare",
+        "capacity": "Renderers' capacity",
+        "capacity_value": "{capacity} pages/min at best: {renderers} × {cpus} core at {cost} s of CPU a page ({measured})",
+        "measured": "measured here",
+        "estimated": "measured in prod on 10/21",
+        "pass": "Current pass",
+        "pass_value": "ends in ≈ {eta} · {pages} pages left",
+        "catalogue": "Whole catalogue",
+        "catalogue_value": "≈ {eta} for ≈ {pages} pages missing from the served epoch",
+        "cost": "Cost",
+        "cost_value": "+ {euros} / month of storage for these pages · VPS already paid: no extra cost, the pass takes {share} of its CPU"
+      }
     }
   },
   "scaleway_bill": {
