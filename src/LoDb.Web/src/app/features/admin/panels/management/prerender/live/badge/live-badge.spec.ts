@@ -16,6 +16,8 @@ const FRENCH: Translation = {
       live: {
         live: ['En direct · mis à jour ', ['arg', 'ago']],
         late: ['Mise à jour en retard : ', ['arg', 'ago']],
+        compact_late: ['En retard · ', ['arg', 'ago']],
+        compact_lost: ['Hors ligne · ', ['arg', 'ago']],
         lost: [
           'Hors ligne depuis ',
           ['arg', 'since'],
@@ -47,11 +49,12 @@ function fakePoll() {
   } satisfies LivePoll<unknown>;
 }
 
-async function render(poll: LivePoll<unknown>, isCompact = false) {
+async function render(poll: LivePoll<unknown>, isCompact = false, announces = true) {
   const fixture = TestBed.createComponent(LiveBadge);
   fixture.componentRef.setInput('poll', poll);
   fixture.componentRef.setInput('every', EVERY_MS);
   fixture.componentRef.setInput('isCompact', isCompact);
+  fixture.componentRef.setInput('announces', announces);
   await settle(fixture, 0);
   return fixture;
 }
@@ -131,6 +134,23 @@ describe('LiveBadge', () => {
     expect(read(fixture, '[data-live-line]')).toBe('il y a 4 s');
     expect(line?.getAttribute('title')).toBe('En direct · mis à jour il y a 4 s');
     expect((fixture.nativeElement as HTMLElement).querySelector('button')).toBeNull();
+  });
+
+  it('says late or offline in words when compact, not by the colour of its dot alone', async () => {
+    const poll = fakePoll();
+    poll.lastSuccessAt.set(Date.now() - 30_000);
+    const fixture = await render(poll, true);
+    expect(read(fixture, '[data-live-line]')).toBe('En retard · il y a 30 s');
+
+    poll.lastSuccessAt.set(Date.now() - 120_000);
+    await settle(fixture, 0);
+    expect(read(fixture, '[data-live-line]')).toBe('Hors ligne · il y a 2 min');
+  });
+
+  it('leaves the announcement to another badge when asked', async () => {
+    const fixture = await render(fakePoll(), true, false);
+
+    expect((fixture.nativeElement as HTMLElement).querySelector('[aria-live]')).toBeNull();
   });
 
   it('shows nothing before the first answer', async () => {

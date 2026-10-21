@@ -9,7 +9,8 @@ import type { LaunchLock } from '../state/launch-lock-of';
 const REASON_ID = 'prerender-launch-lock';
 
 /**
- * The actions of the page's head (§ 2.1): how fresh the report is, « Actualiser », then
+ * The actions of the page's head (§ 2.1): how fresh the report is (announced only while no
+ * monitor says how fresh its own reads are, as a failing API fails both), « Actualiser », then
  * « Lancer une passe », the one strong call of the page. While no pass may start the button
  * is disabled and says why under it, never in a tooltip, with a way to the pass that holds
  * it. On a phone the launch takes the whole width.
@@ -24,6 +25,7 @@ const REASON_ID = 'prerender-launch-lock';
         [poll]="poll()"
         [every]="every()"
         [isCompact]="true"
+        [announces]="lock()?.kind !== 'active'"
       />
       <button
         class="max-sm:order-2"

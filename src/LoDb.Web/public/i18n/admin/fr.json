@@ -740,6 +740,8 @@
         "late": "Mise à jour en retard : {ago}",
         "lost": "Hors ligne depuis {since} ({reason}) · nouvel essai {next}",
         "hidden": "En pause tant que l'onglet est masqué",
+        "compact_late": "En retard · {ago}",
+        "compact_lost": "Hors ligne · {ago}",
         "retry": "Réessayer maintenant"
       },
       "time": {

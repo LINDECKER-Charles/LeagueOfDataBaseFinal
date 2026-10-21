@@ -442,6 +442,13 @@ sur l'heure **du client** au succès (pas d'écart d'horloge) :
 Le texte « il y a 4 s » avance chaque seconde (`injectNow(1000)`, F1, suspendu onglet masqué) ;
 seul le **changement d'état** est annoncé (`aria-live="polite"`), jamais chaque seconde.
 
+**Forme compacte** (en-tête de page) : le point et l'âge, l'état en toutes lettres dès qu'il
+n'est plus `live` (« En retard · il y a 2 min », « Hors ligne · il y a 2 min » :
+`common.live.compact_*`), jamais par la seule couleur du point, qui est `aria-hidden` (WCAG
+1.4.1) ; la phrase entière en `title`. Une API en panne fait échouer le rapport et la
+progression à la fois : tant que le moniteur est là (`lock.kind === 'active'`), le badge de
+l'en-tête n'annonce rien (`announces` à `false`) et seul celui du moniteur parle.
+
 **Transitions.**
 
 - Une action réussie (lancer, pause, reprise, annulation) relit le rapport et la progression
@@ -2862,6 +2869,8 @@ export class LiveBadge {
   readonly every = input.required<number>();
   /** Compact: the dot and « il y a 4 s » only, for the page header (§ 2.4). */
   readonly isCompact = input(false);
+  /** Whether a change of state is announced: false while another badge says the same. */
+  readonly announces = input(true);
 }
 
 // F1 — bars/stacked-bar.ts
@@ -3147,6 +3156,8 @@ de lot suit la même règle, et chaque spécification de composant vérifie au m
 | `retry.units_gaps` | Relancer {units, plural, one {# unité} other {# unités}} et les manques (≈ {pages, plural, one {# page} other {# pages}}) | Relaunch {units, plural, one {# unit} other {# units}} and the gaps (≈ {pages, plural, one {# page} other {# pages}}) |
 | `retry.later` | disponible quand la passe sera finie | available once the pass ends |
 | `close` | Fermer | Close |
+| `live.compact_late` | En retard · {ago} | Late · {ago} |
+| `live.compact_lost` | Hors ligne · {ago} | Offline · {ago} |
 
 **`overview`** (F4)
 

@@ -740,6 +740,8 @@
         "late": "Update late: {ago}",
         "lost": "Offline for {since} ({reason}) · next try {next}",
         "hidden": "Paused while the tab is hidden",
+        "compact_late": "Late · {ago}",
+        "compact_lost": "Offline · {ago}",
         "retry": "Try again now"
       },
       "time": {

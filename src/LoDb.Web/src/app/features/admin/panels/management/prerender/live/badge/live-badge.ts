@@ -16,8 +16,10 @@ const NO_RESPONSE = 0;
  * How fresh a live read is (§ 2.5): a dot and a line, « En direct · mis à jour il y a 4 s »,
  * « Mise à jour en retard », « Hors ligne depuis 2 min (HTTP 502) · nouvel essai dans 18 s »
  * with a way to try again at once, or « En pause tant que l'onglet est masqué ». The line
- * moves every second; only a change of state is announced. Compact, for the head of the
- * page: the dot and « il y a 4 s », the whole line in its title.
+ * moves every second; only a change of state is announced, unless another badge on the page
+ * already says it (`announces`). Compact, for the head of the page: the dot and « il y a 4 s »,
+ * « En retard · il y a 2 min » or « Hors ligne · il y a 2 min » in words, never by the colour
+ * of the dot alone; the whole line in its title.
  */
 @Component({
   selector: 'lodb-live-badge',
@@ -26,7 +28,7 @@ const NO_RESPONSE = 0;
     @if (freshness(); as state) {
       <span class="live-dot" [attr.data-freshness]="state" aria-hidden="true"></span>
       @if (isCompact()) {
-        <span class="text-text-dim" [title]="line()" data-live-line>{{ ago() }}</span>
+        <span class="text-text-dim" [title]="line()" data-live-line>{{ compact() }}</span>
       } @else {
         <span class="text-text-muted" data-live-line>{{ line() }}</span>
         @if (state === 'lost') {
@@ -36,7 +38,9 @@ const NO_RESPONSE = 0;
         }
       }
     }
-    <span class="sr-only" aria-live="polite">{{ announced() }}</span>
+    @if (announces()) {
+      <span class="sr-only" aria-live="polite">{{ announced() }}</span>
+    }
   `,
   styles: `
     .live-dot {
@@ -75,6 +79,8 @@ export class LiveBadge {
   readonly every = input.required<number>();
   /** Compact: the dot and « il y a 4 s » only, for the page header (§ 2.4). */
   readonly isCompact = input(false);
+  /** Whether a change of state is announced: false while another badge says the same. */
+  readonly announces = input(true);
 
   private readonly texts = injectAdminText();
   private readonly now = injectNow(SECOND_MS);
@@ -87,6 +93,13 @@ export class LiveBadge {
   protected readonly ago = computed(() => {
     const at = this.poll().lastSuccessAt();
     return at === null ? '' : relativeTime(at, this.now(), this.texts);
+  });
+  // The state in words before the age once it is not live: the dot is no text (WCAG 1.4.1).
+  protected readonly compact = computed(() => {
+    const state = this.freshness();
+    return state === 'late' || state === 'lost'
+      ? this.texts.text(`${LIVE}.compact_${state}`, { ago: this.ago() })
+      : this.ago();
   });
   protected readonly line = computed(() => {
     const state = this.freshness();
