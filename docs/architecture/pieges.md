@@ -644,7 +644,9 @@ stockage objet, puis lues par nginx
   `PrerenderDiagnostics`) n'ont aucune contrainte de cohérence avec `state` : l'image précédente
   de la stack met des passes en pause sans les remplir, et un retour arrière doit rester possible.
   Une passe mise en pause avant la migration n'a pas de `paused_at` : le panneau dit « en pause »
-  sans durée.
+  sans durée. Les unités finies avant la migration reçoivent `ended_at = updated_at` ; une unité
+  finie par l'image précédente après un retour à elle n'en a pas, et manque à la liste des échecs
+  du moniteur (la matrice, lue par l'état, la montre).
 - **Le périmètre d'une passe reste lisible par l'image d'avant les listes.** `prerender_pass.scope`
   porte les listes (`versions`, `locales`, `pageTypes`) **et** les anciens champs qui peuvent les
   dire (`PassScopeJson`) : les bornes `oldest`/`newest` d'une liste de versions, `locale` et

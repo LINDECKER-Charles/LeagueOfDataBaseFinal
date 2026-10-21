@@ -2536,9 +2536,12 @@ de page (`UnitQueue.RecordAsync`) : l'indexer empêcherait les mises à jour HOT
 quatre millions de fois par passe. `ended_at` n'est écrit qu'une fois par unité : son index
 partiel ne coûte qu'à la fin d'une unité, et sert les récentes, les échecs et le tampon de
 `CoverageCache` (§ 6.5). Les versions changées depuis `since` se lisent sans index, par le
-préfixe `pass_id` de la clé primaire (8 400 lignes, quelques ms). Les unités finies avant la
-migration gardent `ended_at` nul : elles n'apparaissent ni dans les récentes ni dans le tampon,
-et la couverture les ordonne par `updated_at`.
+préfixe `pass_id` de la clé primaire (8 400 lignes, quelques ms). La migration date les unités
+finies avant elle de leur dernier changement (`ended_at = updated_at`, sur la seule colonne
+neuve) : sans cela, les échecs d'une passe en cours au déploiement, ou de toute passe ancienne,
+manqueraient à la liste, à son compteur et aux récentes, que la matrice montre pourtant. Une
+unité finie par l'image précédente après un retour à elle garde `ended_at` nul ; la couverture
+ordonne par `updated_at`.
 
 **Aucune contrainte de vérification** sur ces colonnes (pas de `(paused_at IS NOT NULL) =
 (state = 'paused')`) : un retour à l'image précédente de la stack (runbook, AGENTS.md

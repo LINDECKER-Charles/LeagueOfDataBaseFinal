@@ -11,7 +11,9 @@ namespace LoDb.Infrastructure.Persistence.Migrations;
 /// Additive: nullable columns without a constraint tying them to the state, on tables the
 /// legacy stack ignores. The image before them pauses and ends passes without filling them, and
 /// a return to it must stay possible: the rows it writes keep them null. No index on
-/// <c>updated_at</c>, rewritten at each page: <c>ended_at</c> is written once per unit.
+/// <c>updated_at</c>, rewritten at each page: <c>ended_at</c> is written once per unit. The
+/// units ended before it get their last change as their end, so that the admin lists their
+/// failures: an update of the new column alone, which that image never reads.
 /// </remarks>
 public partial class PrerenderDiagnostics : Migration
 {
@@ -67,6 +69,9 @@ public partial class PrerenderDiagnostics : Migration
             table: UnitTable,
             columns: ["pass_id", EndedAt],
             filter: "ended_at IS NOT NULL");
+        migrationBuilder.Sql(
+            "UPDATE prerender_unit SET ended_at = updated_at "
+                + "WHERE state IN ('completed', 'failed') AND ended_at IS NULL;");
     }
 
     protected override void Down(MigrationBuilder migrationBuilder)
