@@ -106,6 +106,14 @@ services:
       LoDb__PublicApi__Reference__BaseUrl: ${PUBLIC_API_BASE_URL:-https://api.league-of-data-base.com}
       # Empty: traces stay local (log correlation) until infra-vps exposes a collector.
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      # The automatic queue of the pre-rendering (docs/guides/configuration.md § 4.11): the
+      # older patches' pages the visitors' SSR refused, read on its metrics port (never
+      # published), rendered by themselves into the served epoch. `false` is the kill switch,
+      # applied by a deploy; the share is the queue's part of the pass SSR's renders while a
+      # manual pass runs (all of them without one). Dormant like the pass without a store.
+      LoDb__Prerender__Demand__Enabled: ${LODB_PRERENDER_DEMAND_ENABLED:-true}
+      LoDb__Prerender__Demand__QueueSharePercent: ${LODB_PRERENDER_DEMAND_SHARE:-50}
+      LoDb__Prerender__Demand__RefusedPagesUrl: http://lodb-web-ssr:9464/refused
       # The pre-rendering pass (ADR 0011) asks its own SSR server directly, never nginx, which
       # would clear its header, bound it per address and fill its own cache. Never the
       # visitors' web-ssr: a render in flight there slows them from the first one (measured
