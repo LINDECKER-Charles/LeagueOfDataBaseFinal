@@ -445,9 +445,10 @@ jobs:
 
             # The pre-rendering pass's pace (configuration.md § 4.10), read from the resolved
             # configuration like the networks above. The API refuses to start on a floor, a
-            # step or a fixed pace above the ceiling, and the pass renderer's lane (whose
-            # budget is the ceiling) would refuse the fixed pace: stopped here, before any
-            # container changes, instead of an API that does not come up mid-deploy.
+            # step or a fixed pace above the ceiling, and each renderer's lane (whose budget is
+            # LODB_PRERENDER_MANUAL_MAX) would refuse a ceiling or a manual maximum above it:
+            # stopped here, before any container changes, instead of an API that does not come
+            # up mid-deploy or a pass that the renderers answer 503.
             api_config="$(docker compose config api)"
             pace_value() {
               sed -nE "s/^ +LoDb__Prerender__$1: //p" <<< "$api_config" | tr -d "\"'" | head -n 1
@@ -458,13 +459,20 @@ jobs:
             pace_step="$(pace_value Pace__StepRendersPerMinute)"
             pace_step="${pace_step:-30}"
             pace_fixed="$(pace_value RendersPerMinute)"
-            for pace in "$pace_min" "$pace_max" "$pace_step" "$pace_fixed"; do
+            pace_manual="$(pace_value Pace__ManualMaxRendersPerMinute)"
+            pace_lane="$(docker compose config web-ssr-prerender \
+              | sed -nE 's/^ +LODB_PRERENDER_RENDERS_PER_MINUTE: //p' | tr -d "\"'" | head -n 1)"
+            for pace in "$pace_min" "$pace_max" "$pace_step" "$pace_fixed" "$pace_manual" \
+              "$pace_lane"; do
               [[ "$pace" =~ ^[0-9]+$ ]] \
                 || fail "The pass's pace settings must be whole numbers (got '$pace')."
             done
             (( pace_min <= pace_max && pace_step <= pace_max && pace_fixed <= pace_max )) \
               || fail "The pass's floor ($pace_min), step ($pace_step) and fixed pace" \
                 "($pace_fixed) must not exceed its ceiling ($pace_max)."
+            (( pace_max <= pace_lane && pace_manual <= pace_lane )) \
+              || fail "The pass's ceiling ($pace_max) and manual maximum ($pace_manual) must" \
+                "not exceed its renderers' lane ($pace_lane)."
 
             # ── Pull, then migrations before the traffic switch ────────────────────────
             # Logged in with this run's token for the pull only: the packages may be private,
