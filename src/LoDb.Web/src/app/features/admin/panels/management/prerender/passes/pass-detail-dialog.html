@@ -74,7 +74,11 @@
           <h3 class="readout-label m-0">
             {{ 'admin.prerender.passes.detail.failures' | adminText }}
           </h3>
-          <lodb-failures-list [progress]="read" (opened)="openVersion($event)" />
+          <lodb-failures-list
+            [progress]="read"
+            [servedEpoch]="data.report.servedEpoch"
+            (opened)="openVersion($event)"
+          />
         </section>
       }
     } @else if (progress.failure()) {

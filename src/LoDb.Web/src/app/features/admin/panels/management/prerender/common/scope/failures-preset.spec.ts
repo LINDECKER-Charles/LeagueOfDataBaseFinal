@@ -3,6 +3,8 @@ import type { PrerenderVersionProgress } from '../../../../../../../core/api/gen
 import { prerenderProgress } from '../../../../../testing/fixtures/prerender-progress';
 import { failuresPreset } from './failures-preset';
 
+// The pass wrote epoch 2, still the served one.
+const SERVED = 2;
 const PASS: PrerenderPassView = {
   ...prerenderProgress().pass,
   state: 'completed',
@@ -35,11 +37,11 @@ const VERSIONS = [
 
 describe('failuresPreset', () => {
   it('relaunches the versions a cell of which is not complete', () => {
-    expect(failuresPreset(PASS, VERSIONS)?.preset.versions).toEqual(['16.18.1', '15.2.1']);
+    expect(failuresPreset(PASS, VERSIONS, SERVED)?.preset.versions).toEqual(['16.18.1', '15.2.1']);
   });
 
   it('keeps the locales, the types and the epoch of the pass, leaving out what is held', () => {
-    expect(failuresPreset(PASS, VERSIONS)?.preset).toEqual({
+    expect(failuresPreset(PASS, VERSIONS, SERVED)?.preset).toEqual({
       origin: 'failures',
       versions: ['16.18.1', '15.2.1'],
       priority: ['16.18.1', '15.2.1'],
@@ -51,8 +53,12 @@ describe('failuresPreset', () => {
     });
   });
 
+  it("goes to the served epoch once the pass's epoch was retired", () => {
+    expect(failuresPreset(PASS, VERSIONS, 3)?.preset.epoch).toBe(3);
+  });
+
   it('counts the units it renders again and their pages, each at its version mean', () => {
-    const preset = failuresPreset(PASS, VERSIONS);
+    const preset = failuresPreset(PASS, VERSIONS, SERVED);
 
     expect(preset?.units).toBe(2);
     // One unit of 16.18.1 (3 000 / 3) and one of 15.2.1 (1 000 / 3, its f counted listed).
@@ -62,11 +68,15 @@ describe('failuresPreset', () => {
 
   it('takes the gaps of a cancelled pass too, at the mean of the pass when never listed', () => {
     const cancelled = { ...PASS, state: 'cancelled' };
-    const preset = failuresPreset(cancelled, [
-      version('16.18.1', 'cci', 3_000),
-      version('16.12.1', 'z..', 1_000),
-      version('15.2.1', '...', 0),
-    ]);
+    const preset = failuresPreset(
+      cancelled,
+      [
+        version('16.18.1', 'cci', 3_000),
+        version('16.12.1', 'z..', 1_000),
+        version('15.2.1', '...', 0),
+      ],
+      SERVED,
+    );
 
     expect(preset?.units).toBe(7);
     expect(preset?.hasGaps).toBe(true);
@@ -78,10 +88,10 @@ describe('failuresPreset', () => {
   it('leaves the gaps of a pass still running to the pass', () => {
     const running = { ...PASS, state: 'running' };
 
-    expect(failuresPreset(running, [version('16.18.1', 'cr.', 1_000)])).toBeNull();
+    expect(failuresPreset(running, [version('16.18.1', 'cr.', 1_000)], SERVED)).toBeNull();
   });
 
   it('offers nothing when every unit completed cleanly', () => {
-    expect(failuresPreset(PASS, [version('16.12.1', 'ccc', 2_400)])).toBeNull();
+    expect(failuresPreset(PASS, [version('16.12.1', 'ccc', 2_400)], SERVED)).toBeNull();
   });
 });

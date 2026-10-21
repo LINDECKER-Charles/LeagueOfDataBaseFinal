@@ -35,6 +35,7 @@ const VERSIONS = [
   template: `
     <lodb-pass-recap
       [pass]="pass()"
+      [servedEpoch]="2"
       (launch)="presets.push($event)"
       (detail)="details.push($event)"
       (dismissed)="dismissals.push($event)"

@@ -37,6 +37,7 @@
     } @else if (recent(); as pass) {
       <lodb-pass-recap
         [pass]="pass"
+        [servedEpoch]="data.servedEpoch"
         (launch)="openLaunch($event)"
         (detail)="openDetail($event)"
         (dismissed)="dismiss($event)"

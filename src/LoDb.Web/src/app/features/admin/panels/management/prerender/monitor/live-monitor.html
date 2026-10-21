@@ -101,6 +101,7 @@
       @if (isOpen('failures')) {
         <lodb-failures-list
           [progress]="live.progress"
+          [servedEpoch]="report().servedEpoch"
           (launch)="launch.emit($event)"
           (opened)="openVersion($event)"
         />

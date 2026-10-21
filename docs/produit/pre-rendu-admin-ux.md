@@ -509,7 +509,7 @@ export interface LaunchPreset {
 | `coverage` | « Pré-rendre la sélection » (§ 5.2) | la sélection | `epoch` = epoch lue dans l'onglet, `skipComplete: true` | 2 |
 | `complete-epoch` | bande « presque prête », « Compléter » d'une epoch (§ 5.3), « Compléter les manques » (§ 5.2), récapitulatif d'une passe annulée (§ 4.8) | `'incomplete'` | `epoch` = cette epoch, `skipComplete: true` | 3 |
 | `relaunch` | « Relancer ce périmètre » (§ 5.4) | le périmètre de la passe (`relaunchPreset`, liste complète lue par la progression complète, § 6.7 ; plage d'avant les listes convertie) | ses langues, types, priorités, son epoch ; `skipComplete: false` | 3 |
-| `failures` | « Relancer N unités (≈ P pages) » (moniteur, récapitulatif, détail) | versions ayant une cellule autre que `c` dans la passe (`f`, `w`, et pour une passe annulée `.`, `i`, `z`) | langues et types de la passe, son epoch, `skipComplete: true` (qui, conscient des types, ignore les langues déjà tenues, § 3.4) | 3 |
+| `failures` | « Relancer N unités (≈ P pages) » (moniteur, récapitulatif, détail) | versions ayant une cellule autre que `c` dans la passe (`f`, `w`, et pour une passe annulée `.`, `i`, `z`) | langues et types de la passe, son epoch (l'epoch servie si la sienne a été retirée depuis, comme `relaunch` : l'API refuse d'écrire une epoch retirée), `skipComplete: true` (qui, conscient des types, ignore les langues déjà tenues, § 3.4) | 3 |
 
 `'incomplete'` se résout dans la modale, une fois la couverture de l'epoch chargée : chaque patch
 qui a un **manque**, une cellule `-` ou `p` (§ 6.5). Les cellules `f` (échec définitif) et `w`
@@ -2972,6 +2972,7 @@ export interface FailuresPreset {
 export function failuresPreset(
   pass: PrerenderPassView,
   versions: readonly PrerenderVersionProgress[],
+  servedEpoch: number, // a retired epoch is relaunched into the served one
 ): FailuresPreset | null; // null: nothing to render again
 
 // F2 — launch/dialog/launch-opener.ts
@@ -3019,7 +3020,7 @@ ouvrir `PassDetailDialog`.
 | `versionTokens` | F1 | lignes, virgules, TSV de LogsQL (le compte ignoré), JSON, doublons, `1.5.` en bord |
 | `scopeSummary` | F1 | entier ; compte et bornes (`versionCount`, `newestListed`, `oldestListed`) ; une version ; plage d'avant les listes ; langue et type uniques (lus de l'ancien stockage par l'API) ; priorités ; `skipComplete` |
 | `relativeTime` | F1 | passé, futur, < 1 s |
-| `failuresPreset` | F1 | versions dont une cellule n'est pas `c` ; langues et types de la passe ; epoch ; `skipComplete` ; `units` et `pages` comptés ; `hasGaps` avec `.`/`i`/`z` ; `null` sans rien à refaire |
+| `failuresPreset` | F1 | versions dont une cellule n'est pas `c` ; langues et types de la passe ; epoch, servie si la sienne est retirée ; `skipComplete` ; `units` et `pages` comptés ; `hasGaps` avec `.`/`i`/`z` ; `null` sans rien à refaire |
 | `pollDelay` | F1 | 0 échec ; 1, 2, 3 ; plafond 60 s ; base 60 s plafonnée à 300 s |
 | `freshnessOf` | F1 | `live`, `late`, `lost`, `hidden`, jamais lu |
 | `stackedSegments` | F1 | parts qui somment à 1 ; segment minuscule relevé au minimum ; total nul |

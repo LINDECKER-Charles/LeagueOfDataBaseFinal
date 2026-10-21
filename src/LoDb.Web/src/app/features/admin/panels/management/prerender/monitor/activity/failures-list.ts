@@ -33,6 +33,8 @@ const LATER_ID = 'prerender-failures-later';
 })
 export class FailuresList {
   readonly progress = input.required<PrerenderPassProgress>();
+  /** The epoch nginx serves: a relaunch of a retired epoch goes to it. */
+  readonly servedEpoch = input.required<number>();
   /** The relaunch of the failures, for the page to open the launch with. */
   readonly launch = output<LaunchPreset>();
   /** A version's detail, asked for. */
@@ -46,7 +48,7 @@ export class FailuresList {
   protected readonly count = computed(() => this.progress().unitsWithFailures);
   protected readonly relaunch = computed(() => {
     const { pass, versions } = this.progress();
-    return failuresPreset(pass, versions);
+    return failuresPreset(pass, versions, this.servedEpoch());
   });
   protected readonly relaunchLabel = computed(() => {
     const relaunch = this.relaunch();

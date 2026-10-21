@@ -47,6 +47,8 @@ const DISMISSED_KEY = 'lodb.admin.prerender.recap-dismissed';
 })
 export class PassRecap {
   readonly pass = input.required<PrerenderPassView>();
+  /** The epoch nginx serves: a relaunch of a retired epoch goes to it. */
+  readonly servedEpoch = input.required<number>();
   readonly launch = output<LaunchPreset>();
   readonly detail = output<number>();
   readonly dismissed = output<number>();
@@ -91,7 +93,7 @@ export class PassRecap {
   );
   protected readonly relaunch = computed(() => {
     const progress = this.progress.value();
-    return progress ? failuresPreset(this.pass(), progress.versions) : null;
+    return progress ? failuresPreset(this.pass(), progress.versions, this.servedEpoch()) : null;
   });
   protected readonly relaunchLabel = computed(() => {
     const relaunch = this.relaunch();

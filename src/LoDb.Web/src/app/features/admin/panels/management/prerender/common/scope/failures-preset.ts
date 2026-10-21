@@ -37,14 +37,20 @@ function passMeanOf(versions: readonly PrerenderVersionProgress[]): number {
   return listed > 0 ? pages / listed : 0;
 }
 
-function presetOf(pass: PrerenderPassView, versions: readonly string[]): LaunchPreset {
+// The pass's epoch, unless retired since (older than the served one): then the served one,
+// as relaunchPreset does; the API refuses to write a retired epoch.
+function presetOf(
+  pass: PrerenderPassView,
+  versions: readonly string[],
+  servedEpoch: number,
+): LaunchPreset {
   return {
     origin: 'failures',
     versions,
     priority: pass.scope.priority.filter((version) => versions.includes(version)),
     locales: pass.scope.locales ?? null,
     pageTypes: pass.scope.pageTypes ?? null,
-    epoch: pass.epoch,
+    epoch: pass.epoch < servedEpoch ? servedEpoch : pass.epoch,
     skipComplete: true,
     fromPass: pass.id,
   };
@@ -53,13 +59,15 @@ function presetOf(pass: PrerenderPassView, versions: readonly string[]): LaunchP
 /**
  * The relaunch of the versions a pass did not complete cleanly (§ 3.1): those with a cell
  * failed or with failed pages, and for a cancelled pass those it never reached or cut short;
- * over the pass's locales, types and epoch, leaving out what the epoch already holds. Its
+ * over the pass's locales, types and epoch (the served one when it was retired since), leaving
+ * out what the epoch already holds. Its
  * units and pages say on the button what it renders again: a unit with two failed pages is
  * rendered whole. Null when nothing is to render again.
  */
 export function failuresPreset(
   pass: PrerenderPassView,
   versions: readonly PrerenderVersionProgress[],
+  servedEpoch: number,
 ): FailuresPreset | null {
   const codes = pass.state === CANCELLED ? FAILED + GAPS : FAILED;
   const passMean = passMeanOf(versions);
@@ -76,6 +84,7 @@ export function failuresPreset(
     preset: presetOf(
       pass,
       kept.map((version) => version.version),
+      servedEpoch,
     ),
     units,
     pages: Math.round(pages),

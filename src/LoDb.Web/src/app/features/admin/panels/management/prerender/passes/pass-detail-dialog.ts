@@ -136,7 +136,9 @@ export class PassDetailDialog {
   protected readonly outcome = computed(() => this.outcomeOf(this.pass));
   protected readonly failures = computed(() => {
     const progress = this.progress.value();
-    return progress ? failuresPreset(this.pass, progress.versions) : null;
+    return progress
+      ? failuresPreset(this.pass, progress.versions, this.data.report.servedEpoch)
+      : null;
   });
   protected readonly failuresLabel = computed(() => {
     const failures = this.failures();
