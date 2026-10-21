@@ -1,6 +1,9 @@
+using System.Net;
 using LoDb.Api.Modules.Admin.Prerender.Options;
 using LoDb.Api.Modules.Admin.Prerender.Pace;
 using LoDb.Api.Modules.Admin.Prerender.Pace.Decision;
+using LoDb.Api.Modules.Admin.Prerender.Pace.Manual;
+using LoDb.Api.Modules.Admin.Prerender.Pace.Resources;
 using LoDb.Api.Modules.Admin.Prerender.Pace.Telemetry;
 using LoDb.Api.Modules.Admin.Prerender.Pace.Windows;
 using LoDb.Infrastructure.PageStore;
@@ -29,7 +32,7 @@ public sealed class PaceSamplerTests
     }
 
     [Fact]
-    public async Task HostIsSampledEveryTickAndTheSsrsOnlyToDecide()
+    public async Task HostIsSampledEveryTickAndTheSsrsEveryThirdEvenWithoutAPass()
     {
         using var rig = new PaceRig();
         var (sampler, sources) = Sampler(rig);
@@ -40,7 +43,8 @@ public sealed class PaceSamplerTests
         await TicksAsync(rig, sampler, 3);
 
         Assert.Equal((6, 6), (sources.HostReads, sources.CgroupReads));
-        Assert.Equal((0, 2), (idleLoads, sources.LoadReads));
+        Assert.Equal((2, 4), (idleLoads, sources.LoadReads));
+        Assert.Equal(2, sources.SettingReads);
         var snapshot = rig.Regulator.Snapshot()!;
         Assert.Equal(PaceState.Starting, snapshot.State);
         Assert.Equal(0.2, snapshot.HostBusy!.Value, 6);
@@ -100,6 +104,41 @@ public sealed class PaceSamplerTests
         Assert.Equal(PaceState.Held, rig.Regulator.Snapshot()!.State);
     }
 
+    [Fact]
+    public async Task EveryRendererIsReadForTheResourcesAndTheRegulatorReadsTheBusiest()
+    {
+        using var rig = new PaceRig();
+        rig.Options.Renderers = 2;
+        var (sampler, sources) = Sampler(rig);
+        sources.Renderers = [IPAddress.Parse("172.30.0.21"), IPAddress.Parse("172.30.0.22")];
+        sources.RendererLoads["172.30.0.21"] = sources.Pass! with { CpuPressureSomeAvg10 = 0.01 };
+        sources.RendererLoads["172.30.0.22"] = sources.Pass! with { CpuPressureSomeAvg10 = 0.4 };
+        rig.Regulator.Begin(1);
+
+        await TicksAsync(rig, sampler, 9);
+
+        Assert.Equal((2, 9), (rig.Resources.Readings!.Renderers, sources.LoadReads));
+        var snapshot = rig.Regulator.Snapshot()!;
+        Assert.Equal(PaceReason.PassSsrPressure, snapshot.Reason);
+    }
+
+    [Fact]
+    public async Task StoredSettingIsReadEveryThirtySecondsAndDrivesTheDrain()
+    {
+        using var rig = new PaceRig();
+        var (sampler, sources) = Sampler(rig);
+        rig.Regulator.Begin(1);
+        sources.Stored = new PaceSetting(PaceChoice.Manual, 500)
+        {
+            UpdatedAt = rig.Clock.GetUtcNow(),
+        };
+
+        await TicksAsync(rig, sampler, 3);
+
+        Assert.Equal(500, rig.Regulator.Allowance());
+        Assert.True(rig.Regulator.Snapshot()!.IsManual);
+    }
+
     private static IEnumerable<string> Names(PaceRig rig) => rig.EventNames;
 
     private static async Task TicksAsync(PaceRig rig, PaceSampler sampler, int ticks)
@@ -127,10 +166,13 @@ public sealed class PaceSamplerTests
             options,
             sources,
             sources,
-            sources,
+            new SsrLoadsReader(options, sources, new(options, sources, rig.Clock)),
             new PassRenderTimes(rig.Clock),
             rig.Regulator,
             new PaceSourceWatch(rig.Clock, new FakeLogger<PaceSourceWatch>(rig.Logs)),
+            rig.Settings,
+            sources,
+            rig.Resources,
             rig.Clock);
         return (sampler, sources);
     }

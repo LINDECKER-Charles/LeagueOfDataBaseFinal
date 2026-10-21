@@ -18,6 +18,7 @@ import { PrerenderPassProgress } from '../models/prerender-pass-progress';
 import { PrerenderPassStarted } from '../models/prerender-pass-started';
 import { PrerenderPatchesReport } from '../models/prerender-patches-report';
 import { PrerenderReport } from '../models/prerender-report';
+import { PrerenderSpeedReport } from '../models/prerender-speed-report';
 import { PrerenderVersionUnits } from '../models/prerender-version-units';
 import { readAdminPrerender } from '../fn/admin-prerender/read-admin-prerender';
 import { ReadAdminPrerender$Params } from '../fn/admin-prerender/read-admin-prerender';
@@ -27,8 +28,12 @@ import { readAdminPrerenderPassVersion } from '../fn/admin-prerender/read-admin-
 import { ReadAdminPrerenderPassVersion$Params } from '../fn/admin-prerender/read-admin-prerender-pass-version';
 import { readAdminPrerenderPatches } from '../fn/admin-prerender/read-admin-prerender-patches';
 import { ReadAdminPrerenderPatches$Params } from '../fn/admin-prerender/read-admin-prerender-patches';
+import { readAdminPrerenderSpeed } from '../fn/admin-prerender/read-admin-prerender-speed';
+import { ReadAdminPrerenderSpeed$Params } from '../fn/admin-prerender/read-admin-prerender-speed';
 import { resumeAdminPrerenderPass } from '../fn/admin-prerender/resume-admin-prerender-pass';
 import { ResumeAdminPrerenderPass$Params } from '../fn/admin-prerender/resume-admin-prerender-pass';
+import { setAdminPrerenderSpeed } from '../fn/admin-prerender/set-admin-prerender-speed';
+import { SetAdminPrerenderSpeed$Params } from '../fn/admin-prerender/set-admin-prerender-speed';
 import { startAdminPrerenderPass } from '../fn/admin-prerender/start-admin-prerender-pass';
 import { StartAdminPrerenderPass$Params } from '../fn/admin-prerender/start-admin-prerender-pass';
 
@@ -315,6 +320,76 @@ export class AdminPrerenderService extends BaseService {
     const resp = this.readAdminPrerenderPassVersion$Response(params, context);
     return resp.pipe(
       map((r: StrictHttpResponse<PrerenderVersionUnits>): PrerenderVersionUnits => r.body)
+    );
+  }
+
+  /** Path part for operation `readAdminPrerenderSpeed()` */
+  static readonly ReadAdminPrerenderSpeedPath = '/api/admin/prerender/speed';
+
+  /**
+   * The pace setting of the pre-rendering, its bounds and the resources.
+   *
+   *
+   *
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `readAdminPrerenderSpeed()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  readAdminPrerenderSpeed$Response(params?: ReadAdminPrerenderSpeed$Params, context?: HttpContext): Observable<StrictHttpResponse<PrerenderSpeedReport>> {
+    const obs = readAdminPrerenderSpeed(this.http, this.rootUrl, params, context);
+    return obs;
+  }
+
+  /**
+   * The pace setting of the pre-rendering, its bounds and the resources.
+   *
+   *
+   *
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `readAdminPrerenderSpeed$Response()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  readAdminPrerenderSpeed(params?: ReadAdminPrerenderSpeed$Params, context?: HttpContext): Observable<PrerenderSpeedReport> {
+    const resp = this.readAdminPrerenderSpeed$Response(params, context);
+    return resp.pipe(
+      map((r: StrictHttpResponse<PrerenderSpeedReport>): PrerenderSpeedReport => r.body)
+    );
+  }
+
+  /** Path part for operation `setAdminPrerenderSpeed()` */
+  static readonly SetAdminPrerenderSpeedPath = '/api/admin/prerender/speed';
+
+  /**
+   * Sets the pace of the pre-rendering, adaptive or manual, live.
+   *
+   *
+   *
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `setAdminPrerenderSpeed()` instead.
+   *
+   * This method sends `application/json` and handles request body of type `application/json`.
+   */
+  setAdminPrerenderSpeed$Response(params?: SetAdminPrerenderSpeed$Params, context?: HttpContext): Observable<StrictHttpResponse<void>> {
+    const obs = setAdminPrerenderSpeed(this.http, this.rootUrl, params, context);
+    return obs;
+  }
+
+  /**
+   * Sets the pace of the pre-rendering, adaptive or manual, live.
+   *
+   *
+   *
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `setAdminPrerenderSpeed$Response()` instead.
+   *
+   * This method sends `application/json` and handles request body of type `application/json`.
+   */
+  setAdminPrerenderSpeed(params?: SetAdminPrerenderSpeed$Params, context?: HttpContext): Observable<void> {
+    const resp = this.setAdminPrerenderSpeed$Response(params, context);
+    return resp.pipe(
+      map((r: StrictHttpResponse<void>): void => r.body)
     );
   }
 

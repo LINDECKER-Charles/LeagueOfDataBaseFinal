@@ -1,4 +1,6 @@
+using LoDb.Api.Modules.Admin.Prerender.Pace.Manual;
 using LoDb.Api.Modules.Admin.Prerender.Pace.Readings;
+using LoDb.Api.Modules.Admin.Prerender.Pace.Resources;
 using LoDb.Api.Modules.Admin.Prerender.Pace.Telemetry;
 using LoDb.Api.Modules.Admin.Prerender.Pace.Windows;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -6,8 +8,9 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 namespace LoDb.Api.Modules.Admin.Prerender.Pace;
 
 /// <summary>
-/// The regulator of the pass's pace, its readers and its <c>prerender-load</c> client. Neither
-/// I/O nor throw: the readers read at each tick of <c>PrerenderPaceWorker</c>, never before.
+/// The regulator of the pass's pace, the operator's setting, the resources view, its readers
+/// and its <c>prerender-load</c> client. Neither I/O nor throw: the readers read at each tick of
+/// <c>PrerenderPaceWorker</c>, never before.
 /// </summary>
 internal static class PaceRegistration
 {
@@ -27,6 +30,12 @@ internal static class PaceRegistration
         services.TryAddSingleton<IHostCpuReader, ProcStatReader>();
         services.TryAddSingleton<ICgroupCpuReader, CgroupCpuReader>();
         services.TryAddSingleton<ISsrLoadReader, SsrLoadClient>();
+        services.TryAddSingleton<SsrLoadsReader>();
+        services.TryAddSingleton<ResourceBoard>();
+        services.TryAddSingleton<PaceSettings>();
+        services.TryAddSingleton<PaceSettingStore>();
+        services.TryAddSingleton<IPaceSettingSource>(
+            static provider => provider.GetRequiredService<PaceSettingStore>());
         AddLoadClient(services);
         return services;
     }

@@ -16,4 +16,5 @@ internal enum PaceReason
     PassSsrPressure,
     SignalMissing,
     Fixed,
+    Manual,
 }

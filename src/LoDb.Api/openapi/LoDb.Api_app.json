@@ -6263,6 +6263,115 @@
         }
       }
     },
+    "/api/admin/prerender/speed": {
+      "get": {
+        "tags": [
+          "AdminPrerender"
+        ],
+        "summary": "The pace setting of the pre-rendering, its bounds and the resources.",
+        "operationId": "readAdminPrerenderSpeed",
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrerenderSpeedReport"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "AdminPrerender"
+        ],
+        "summary": "Sets the pace of the pre-rendering, adaptive or manual, live.",
+        "operationId": "setAdminPrerenderSpeed",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/PrerenderSpeedRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/scaleway/bill": {
       "get": {
         "tags": [
@@ -11623,11 +11732,11 @@
         "properties": {
           "mode": {
             "type": "string",
-            "description": "`adaptive`, or `fixed` when the regulation is off."
+            "description": "`adaptive`, `manual` (the operator's target from the admin), or `fixed`\nwhen the regulation is off."
           },
           "state": {
             "type": "string",
-            "description": "`starting`, `climbing`, `steady`, `slowed`, `held` or\n`fixed`."
+            "description": "`starting`, `climbing`, `steady`, `slowed`, `held`,\n`fixed` or `manual`."
           },
           "rendersPerMinute": {
             "type": "integer",
@@ -11649,7 +11758,7 @@
               "null",
               "string"
             ],
-            "description": "What limits the pace, the worst signal or the regulator's own rule: `warming-up`,\n`ceiling`, `host-cpu`, `host-cpu-sustained`, `host-steal`,\n`visitors-ssr`, `visitors-refused`, `api-cpu`, `pass-latency`,\n`pass-ssr-pressure`, `signal-missing` or `fixed`; null while it climbs\nfreely."
+            "description": "What limits the pace, the worst signal or the regulator's own rule: `warming-up`,\n`ceiling`, `host-cpu`, `host-cpu-sustained`, `host-steal`,\n`visitors-ssr`, `visitors-refused`, `api-cpu`, `pass-latency`,\n`pass-ssr-pressure`, `signal-missing`, `fixed` or `manual`; null while\nit climbs freely."
           },
           "hostCpu": {
             "type": [
@@ -12125,6 +12234,98 @@
         },
         "description": "The pre-rendering of the catalogue as the admin shows it: whether it may run, the epoch\nnginx serves, the active pass, the history of the passes and what the store holds."
       },
+      "PrerenderResourcesView": {
+        "required": [
+          "at",
+          "renderers"
+        ],
+        "type": "object",
+        "properties": {
+          "at": {
+            "type": "string",
+            "description": "When they were read.",
+            "format": "date-time"
+          },
+          "hostCpus": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "The host's CPUs.",
+            "format": "int32"
+          },
+          "hostBusy": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "description": "The host's busy share over the last minute, steal counted as busy.",
+            "format": "double"
+          },
+          "hostSteal": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "description": "The share the hypervisor stole over the last minute, within the busy one.",
+            "format": "double"
+          },
+          "renderers": {
+            "type": "integer",
+            "description": "The renderers that answered.",
+            "format": "int32"
+          },
+          "renderersCores": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "description": "Cores the renderers used over the last minute.",
+            "format": "double"
+          },
+          "renderersPerMinute": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "description": "Renders the renderers ended a minute, over the last minute.",
+            "format": "double"
+          },
+          "visitorsCores": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "description": "Cores the visitors' SSR used over the last minute.",
+            "format": "double"
+          },
+          "visitorsRefused": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "Visitors of the latest patch refused over the last 30 s: the brake's sign.",
+            "format": "int64"
+          },
+          "olderRefusedPerMinute": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "description": "Older-patch pages the visitors' SSR refused a minute (503), over the last 30 s.",
+            "format": "double"
+          },
+          "apiCores": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "description": "Cores the API used over the last minute.",
+            "format": "double"
+          }
+        },
+        "description": "The host's resources as this instance last read them, every 30 s: shares in 0..1 and cores,\neach null while it cannot be told. Counts and CPU only, nothing of a visitor."
+      },
       "PrerenderScopeView": {
         "required": [
           "priority",
@@ -12201,6 +12402,180 @@
           }
         },
         "description": "The perimeter of a pass, spelled as the URLs spell it, sized for lists: the versions are\ncounted, not listed (the full list comes with a complete read of the pass's progress); a\nlist left null is not restricted."
+      },
+      "PrerenderSpeedLimits": {
+        "required": [
+          "minRendersPerMinute",
+          "maxRendersPerMinute",
+          "manualMaxRendersPerMinute",
+          "renderers",
+          "rendererCpus",
+          "brakeHostBusy",
+          "brakeMinutes",
+          "holdMinutes",
+          "rendererCpuSecondsPerPage",
+          "isCostMeasured",
+          "stackCpuSecondsPerPage"
+        ],
+        "type": "object",
+        "properties": {
+          "minRendersPerMinute": {
+            "type": "integer",
+            "description": "The adaptive floor.",
+            "format": "int32"
+          },
+          "maxRendersPerMinute": {
+            "type": "integer",
+            "description": "The adaptive ceiling.",
+            "format": "int32"
+          },
+          "manualMaxRendersPerMinute": {
+            "type": "integer",
+            "description": "The hard maximum of the manual target.",
+            "format": "int32"
+          },
+          "renderers": {
+            "type": "integer",
+            "description": "The renderers the stack runs (web-ssr-prerender's replicas).",
+            "format": "int32"
+          },
+          "rendererCpus": {
+            "type": "number",
+            "description": "The CPU quota of one renderer, in cores.",
+            "format": "double"
+          },
+          "brakeHostBusy": {
+            "type": "number",
+            "description": "The brake's threshold on the host's busy share, steal included (0..1).",
+            "format": "double"
+          },
+          "brakeMinutes": {
+            "type": "integer",
+            "description": "Minutes over the threshold, or without the visitors' load, before the brake.",
+            "format": "int32"
+          },
+          "holdMinutes": {
+            "type": "integer",
+            "description": "Minutes the brake holds new renders from its last braking decision.",
+            "format": "int32"
+          },
+          "rendererCpuSecondsPerPage": {
+            "type": "number",
+            "description": "A renderer's CPU seconds per page: measured over the last 10 minutes when enough pages\nwere rendered (bool PrerenderSpeedLimits.IsCostMeasured), the production figure otherwise.",
+            "format": "double"
+          },
+          "isCostMeasured": {
+            "type": "boolean",
+            "description": "Whether decimal PrerenderSpeedLimits.RendererCpuSecondsPerPage was measured here."
+          },
+          "stackCpuSecondsPerPage": {
+            "type": "number",
+            "description": "The API's and Postgres's CPU seconds per page, measured once in production.",
+            "format": "double"
+          }
+        },
+        "description": "What the environment allows the pace (`LoDb:Prerender`), the emergency brake of the\nmanual mode, and what a page costs the host, for the admin's predictions."
+      },
+      "PrerenderSpeedReport": {
+        "required": [
+          "generatedAt",
+          "isConfigured",
+          "isFixed",
+          "setting",
+          "limits"
+        ],
+        "type": "object",
+        "properties": {
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "isConfigured": {
+            "type": "boolean",
+            "description": "Whether the pass and its store are configured on this host."
+          },
+          "isFixed": {
+            "type": "boolean",
+            "description": "Whether the environment's kill switch holds the fixed pace\n(`LoDb:Prerender:Pace:Mode=fixed`): the setting then waits, unused."
+          },
+          "setting": {
+            "$ref": "#/components/schemas/PrerenderSpeedSettingView"
+          },
+          "limits": {
+            "$ref": "#/components/schemas/PrerenderSpeedLimits"
+          },
+          "pace": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "The pace in force while this instance drains a pass; null otherwise.",
+                "$ref": "#/components/schemas/PrerenderPaceView"
+              }
+            ]
+          },
+          "resources": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "The host's resources; null before the first read (30 s after the start).",
+                "$ref": "#/components/schemas/PrerenderResourcesView"
+              }
+            ]
+          }
+        },
+        "description": "The speed of the pre-rendering as the admin sets and watches it: the operator's setting,\nwhat the environment allows, the pace in force and the host's resources."
+      },
+      "PrerenderSpeedRequest": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "`adaptive` or `manual`."
+          },
+          "rendersPerMinute": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "The manual target in renders a minute, from 1 to the hard maximum; required in manual\nmode, kept as it was when absent in adaptive mode.",
+            "format": "int32"
+          }
+        },
+        "description": "The pace the operator sets from the admin."
+      },
+      "PrerenderSpeedSettingView": {
+        "required": [
+          "mode",
+          "rendersPerMinute"
+        ],
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string",
+            "description": "`adaptive` or `manual`."
+          },
+          "rendersPerMinute": {
+            "type": "integer",
+            "description": "The manual target in renders a minute, bounded by the hard maximum.",
+            "format": "int32"
+          },
+          "updatedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "When an operator last set it; null while never set (adaptive by default).",
+            "format": "date-time"
+          }
+        },
+        "description": "The operator's choice of pace, as stored."
       },
       "PrerenderStorageView": {
         "required": [

@@ -9,7 +9,14 @@ namespace LoDb.Api.Modules.Admin.Prerender.Pace.Signals;
 /// </summary>
 /// <param name="Worst">The gravest reading.</param>
 /// <param name="HostBusy">The host's busy share over the last minute, for the admin.</param>
-internal sealed record PaceBoard(SignalReading Worst, double? HostBusy)
+/// <param name="VisitorsRefused">
+/// Visitors the latest-patch lane refused since the read before; null while the visitors' load
+/// cannot be read. The manual mode's brake reads it.
+/// </param>
+internal sealed record PaceBoard(
+    SignalReading Worst,
+    double? HostBusy,
+    long? VisitorsRefused = null)
 {
     /// <summary>Every signal of <paramref name="readings"/>, rated.</summary>
     public static PaceBoard Of(PaceReadings readings)
@@ -17,8 +24,12 @@ internal sealed record PaceBoard(SignalReading Worst, double? HostBusy)
         ArgumentNullException.ThrowIfNull(readings);
         var worst = ReadingsOf(readings)
             .Aggregate(static (worst, next) => next.Level > worst.Level ? next : worst);
-        return new PaceBoard(worst, readings.Host.Busy);
+        return new PaceBoard(worst, readings.Host.Busy, RefusedOf(readings.Visitors));
     }
+
+    // A counter that went back (the SSR restarted) refused nothing anyone can tell.
+    private static long? RefusedOf(SsrSignals? visitors) =>
+        visitors is null ? null : visitors.Current?.Refused ?? 0;
 
     private static IEnumerable<SignalReading> ReadingsOf(PaceReadings readings)
     {

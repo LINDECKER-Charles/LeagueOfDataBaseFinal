@@ -30,7 +30,8 @@ export interface PrerenderPaceView {
   minRendersPerMinute: number;
 
   /**
-   * `adaptive`, or `fixed` when the regulation is off.
+   * `adaptive`, `manual` (the operator's target from the admin), or `fixed`
+   * when the regulation is off.
    */
   mode: string;
 
@@ -38,8 +39,8 @@ export interface PrerenderPaceView {
    * What limits the pace, the worst signal or the regulator's own rule: `warming-up`,
    * `ceiling`, `host-cpu`, `host-cpu-sustained`, `host-steal`,
    * `visitors-ssr`, `visitors-refused`, `api-cpu`, `pass-latency`,
-   * `pass-ssr-pressure`, `signal-missing` or `fixed`; null while it climbs
-   * freely.
+   * `pass-ssr-pressure`, `signal-missing`, `fixed` or `manual`; null while
+   * it climbs freely.
    */
   reason?: (string | null);
 
@@ -54,8 +55,8 @@ export interface PrerenderPaceView {
   since: string;
 
   /**
-   * `starting`, `climbing`, `steady`, `slowed`, `held` or
-   * `fixed`.
+   * `starting`, `climbing`, `steady`, `slowed`, `held`,
+   * `fixed` or `manual`.
    */
   state: string;
 }

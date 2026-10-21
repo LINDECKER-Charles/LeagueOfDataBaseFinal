@@ -1,7 +1,9 @@
 using LoDb.Api.Modules.Admin.Prerender.Options;
 using LoDb.Api.Modules.Admin.Prerender.Pace.Decision;
+using LoDb.Api.Modules.Admin.Prerender.Pace.Manual;
 using LoDb.Api.Modules.Admin.Prerender.Pace.Readings;
 using LoDb.Api.Modules.Admin.Prerender.Pace.Readings.Load;
+using LoDb.Api.Modules.Admin.Prerender.Pace.Resources;
 using LoDb.Api.Modules.Admin.Prerender.Pace.Signals;
 using LoDb.Api.Modules.Admin.Prerender.Pace.Telemetry;
 using LoDb.Api.Modules.Admin.Prerender.Pace.Windows;
@@ -11,8 +13,9 @@ namespace LoDb.Api.Modules.Admin.Prerender.Pace;
 
 /// <summary>
 /// The regulator's eyes, ticked every <see cref="PaceTiming.SamplePeriod"/> by
-/// <c>PrerenderPaceWorker</c>: samples the host and the API's cgroup at each tick, and every
-/// third, while a pass drains here, reads both SSRs' load and lets the regulator decide.
+/// <c>PrerenderPaceWorker</c>: samples the host and the API's cgroup at each tick; every
+/// third, reads the operator's setting again, both SSRs' load for the admin's resources view,
+/// and, while a pass drains here, lets the regulator decide.
 /// </summary>
 /// <remarks>
 /// Reads nothing in fixed mode, nor while the pass is not configured. Takes no advisory lock:
@@ -23,10 +26,13 @@ internal sealed class PaceSampler(
     IOptions<PrerenderOptions> options,
     IHostCpuReader hostCpu,
     ICgroupCpuReader apiCgroup,
-    ISsrLoadReader loads,
+    SsrLoadsReader loads,
     PassRenderTimes renders,
     PaceRegulator regulator,
     PaceSourceWatch sources,
+    PaceSettings settings,
+    IPaceSettingSource stored,
+    ResourceBoard resources,
     TimeProvider clock)
 {
     private readonly HostWindow _host = new();
@@ -45,18 +51,22 @@ internal sealed class PaceSampler(
         }
 
         await SampleAsync(cancellationToken);
-        if (++_ticks % PaceTiming.SamplesPerDecision != 0 || !regulator.IsDriven)
+        if (++_ticks % PaceTiming.SamplesPerDecision != 0)
         {
             return;
         }
 
-        if (regulator.Drive != _drive)
+        settings.Apply(await stored.ReadAsync(cancellationToken)
+            ?? PaceSetting.DefaultOf(options.Value.Pace));
+        var read = await loads.ReadAsync(cancellationToken);
+        resources.Note(read, _host.Shares(), new StackCpu(_host.Cpus, _api.Cores()));
+        if (regulator.IsDriven)
         {
-            (_drive, _visitorsBefore) = (regulator.Drive, null);
-            _baseline.Clear();
+            Restart();
+            regulator.Decide(Evaluate(read));
         }
 
-        regulator.Decide(await EvaluateAsync(cancellationToken));
+        _visitorsBefore = read.Visitors;
     }
 
     private async Task SampleAsync(CancellationToken cancellationToken)
@@ -72,13 +82,22 @@ internal sealed class PaceSampler(
         }
     }
 
-    private async Task<PaceEvaluation> EvaluateAsync(CancellationToken cancellationToken)
+    // A new drain forgets what the sampler read of the one before.
+    private void Restart()
     {
-        var pace = options.Value.Pace;
-        var visitorsRead = ReadAsync(pace.VisitorsLoadUrl, cancellationToken);
-        var passRead = ReadAsync(pace.PassLoadUrl, cancellationToken);
-        var (visitors, pass) = (await visitorsRead, await passRead);
+        if (regulator.Drive == _drive)
+        {
+            return;
+        }
+
+        (_drive, _visitorsBefore) = (regulator.Drive, null);
+        _baseline.Clear();
+    }
+
+    private PaceEvaluation Evaluate(SsrLoadSet read)
+    {
         var stats = renders.Measure();
+        var (visitors, pass) = (read.Visitors, read.WorstRenderer);
         var readings = new PaceReadings
         {
             Host = _host.Shares(),
@@ -87,15 +106,9 @@ internal sealed class PaceSampler(
             Pass = pass is null ? null : SsrSignals.Of(null, pass),
             PassLatency = LatencyOf(stats),
         };
-        _visitorsBefore = visitors;
         NoteSources(readings);
         return new PaceEvaluation(PaceBoard.Of(readings), clock.GetUtcNow(), stats.Starts);
     }
-
-    private Task<SsrLoad?> ReadAsync(string? url, CancellationToken cancellationToken) =>
-        string.IsNullOrWhiteSpace(url)
-            ? Task.FromResult<SsrLoad?>(null)
-            : loads.ReadAsync(new Uri(url), cancellationToken);
 
     // The current minute's median joins the baseline first: a baseline never above it.
     private PassLatencySample LatencyOf(PassRenderStats stats)

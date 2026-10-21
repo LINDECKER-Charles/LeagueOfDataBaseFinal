@@ -57,8 +57,15 @@ internal sealed class ProcStatReader(IOptions<PrerenderOptions> options) : IHost
         return new HostCpuSample(
             samples.Sum(static sample => sample!.Idle),
             samples.Sum(static sample => sample!.Steal),
-            samples.Sum(static sample => sample!.Total));
+            samples.Sum(static sample => sample!.Total),
+            cpus?.Count ?? CpusOf(text));
     }
+
+    // The per-CPU lines, cpu0 to cpuN, after the aggregate one.
+    private static int CpusOf(string text) =>
+        text.Split('\n').Count(static line => line.Length > AggregateLabel.Length
+            && line.StartsWith(AggregateLabel, StringComparison.Ordinal)
+            && char.IsAsciiDigit(line[AggregateLabel.Length]));
 
     private static HostCpuSample? SampleOf(string[] fields)
     {
