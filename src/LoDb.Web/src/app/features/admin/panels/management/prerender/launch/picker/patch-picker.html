@@ -1,0 +1,249 @@
+<h3 id="launch-patches-title" class="readout-label mb-2">
+  {{ 'admin.prerender.launcher.patches.title' | adminText }}
+</h3>
+
+<div class="picker-bar">
+  <label class="picker-filter">
+    <span class="sr-only">{{ 'admin.prerender.launcher.patches.filter' | adminText }}</span>
+    <input
+      lodbField
+      type="search"
+      class="w-full font-mono"
+      autocomplete="off"
+      data-filter
+      [placeholder]="'admin.prerender.launcher.patches.filter_placeholder' | adminText"
+      [value]="query()"
+      (input)="filterBy($event)"
+      (keydown)="onFilterKey($event)"
+    />
+  </label>
+  <div
+    class="picker-statuses"
+    role="group"
+    [attr.aria-label]="'admin.prerender.launcher.patches.status' | adminText"
+  >
+    @for (each of statuses; track each) {
+      <button
+        type="button"
+        class="picker-tool"
+        [attr.aria-pressed]="status() === each"
+        [attr.data-status]="each"
+        (click)="status.set(each)"
+      >
+        {{ 'admin.prerender.launcher.patches.status_' + each | adminText }}
+      </button>
+    }
+  </div>
+  <label class="picker-status-select">
+    <span class="sr-only">{{ 'admin.prerender.launcher.patches.status' | adminText }}</span>
+    <select lodbField (change)="chooseStatus($event)">
+      @for (each of statuses; track each) {
+        <option [value]="each" [selected]="status() === each">
+          {{ 'admin.prerender.launcher.patches.status_' + each | adminText }}
+        </option>
+      }
+    </select>
+  </label>
+  <button
+    type="button"
+    class="picker-tool picker-tools-toggle"
+    [attr.aria-expanded]="isToolsOpen()"
+    aria-controls="launch-patches-tools"
+    (click)="isToolsOpen.set(!isToolsOpen())"
+  >
+    {{ 'admin.prerender.launcher.patches.tools' | adminText }}
+  </button>
+</div>
+
+<div id="launch-patches-tools" class="picker-more" [attr.data-open]="isToolsOpen()">
+  <div class="flex flex-wrap items-end gap-2">
+    <label class="grid gap-1">
+      <span class="readout-label">{{
+        'admin.prerender.launcher.patches.range_from' | adminText
+      }}</span>
+      <select lodbField class="font-mono" data-range-from (change)="readFrom($event, 'from')">
+        @for (version of versions(); track version) {
+          <option [value]="version" [selected]="version === rangeFrom()">{{ version }}</option>
+        }
+      </select>
+    </label>
+    <label class="grid gap-1">
+      <span class="readout-label">{{
+        'admin.prerender.launcher.patches.range_to' | adminText
+      }}</span>
+      <select lodbField class="font-mono" data-range-to (change)="readFrom($event, 'to')">
+        @for (version of versions(); track version) {
+          <option [value]="version" [selected]="version === rangeTo()">{{ version }}</option>
+        }
+      </select>
+    </label>
+    <button lodbButton="ghost" lodbButtonSize="small" type="button" (click)="applyRange()">
+      {{ 'admin.prerender.launcher.patches.range_apply' | adminText }}
+    </button>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    @for (tool of tools; track tool) {
+      <button
+        lodbButton="ghost"
+        lodbButtonSize="small"
+        type="button"
+        [attr.data-tool]="tool"
+        (click)="useTool(tool)"
+      >
+        {{ 'admin.prerender.launcher.patches.' + tool | adminText }}
+      </button>
+    }
+    <button
+      lodbButton="ghost"
+      lodbButtonSize="small"
+      type="button"
+      data-tool="undo"
+      [disabled]="!canUndo()"
+      [attr.aria-label]="'admin.prerender.launcher.patches.undo' | adminText"
+      (click)="undone.emit()"
+    >
+      ↶
+    </button>
+  </div>
+</div>
+
+<p class="readout-text my-2" data-count>{{ count() }}</p>
+
+@if (rows().lines.length === 0) {
+  <div class="flex flex-wrap items-center gap-3 py-4 text-text-dim" data-no-match>
+    {{ 'admin.prerender.launcher.patches.no_match' | adminText }}
+    <button
+      lodbButton="ghost"
+      lodbButtonSize="small"
+      type="button"
+      (click)="query.set(''); status.set('all')"
+    >
+      {{ 'admin.prerender.launcher.patches.filter_clear' | adminText }}
+    </button>
+  </div>
+} @else {
+  <div
+    class="picker-grid"
+    role="treegrid"
+    aria-multiselectable="true"
+    aria-labelledby="launch-patches-title"
+    aria-describedby="launch-patches-keys"
+  >
+    @for (line of rows().lines; track line.key) {
+      @if (line.kind === 'season') {
+        <div
+          class="picker-row picker-season"
+          role="row"
+          aria-level="1"
+          [attr.aria-expanded]="line.isOpen"
+          [attr.aria-label]="
+            'admin.prerender.launcher.patches.season_row'
+              | adminText
+                : { season: seasonLabel(line), count: line.versions.length, selected: line.ticked }
+          "
+          [attr.tabindex]="tabStop() === line.key ? 0 : -1"
+          [attr.data-key]="line.key"
+          [attr.data-season]="line.season.key"
+          (click)="toggleFold(line)"
+          (keydown)="onKey($event, line)"
+        >
+          <div role="gridcell">
+            <input
+              type="checkbox"
+              tabindex="-1"
+              class="picker-season-box"
+              [checked]="line.ticked > 0 && line.ticked === line.versions.length"
+              [indeterminate]="line.ticked > 0 && line.ticked < line.versions.length"
+              [attr.aria-label]="
+                'admin.prerender.launcher.patches.season_select'
+                  | adminText: { season: seasonLabel(line) }
+              "
+              (click)="tickSeason($event, line)"
+            />
+          </div>
+          <div role="rowheader" class="picker-season-name">
+            <span class="picker-chevron" aria-hidden="true">{{ line.isOpen ? '▾' : '▸' }}</span>
+            {{ seasonLabel(line) }}
+          </div>
+          <div role="gridcell" class="picker-season-count">
+            {{
+              'admin.prerender.launcher.season_count'
+                | adminText: { count: line.versions.length, selected: line.ticked }
+            }}
+          </div>
+          <div role="gridcell" class="picker-season-strip">
+            <lodb-cell-strip
+              [cells]="line.cells"
+              [label]="
+                'admin.prerender.common.strip'
+                  | adminText: { complete: completeIn(line.cells), total: line.cells.length }
+              "
+            />
+          </div>
+        </div>
+      } @else {
+        <div
+          class="picker-row picker-patch"
+          role="row"
+          aria-level="2"
+          [attr.aria-selected]="line.isTicked"
+          [attr.tabindex]="tabStop() === line.key ? 0 : -1"
+          [attr.data-key]="line.key"
+          [attr.data-version]="line.key"
+          (click)="onRowClick($event, line)"
+          (mousedown)="holdText($event)"
+          (keydown)="onKey($event, line)"
+        >
+          <div role="gridcell"><span class="picker-box" aria-hidden="true"></span></div>
+          <div role="rowheader" class="font-mono text-gold-bright">{{ line.key }}</div>
+          <div role="gridcell" class="picker-coverage">
+            <lodb-cell-strip
+              [cells]="line.row.cells"
+              [label]="
+                'admin.prerender.common.strip'
+                  | adminText: { complete: line.row.completeLocales, total: line.row.cells.length }
+              "
+            />
+            <span class="font-mono text-[0.75rem] text-text-dim">
+              {{ line.row.completeLocales }}/{{ line.row.cells.length }}
+            </span>
+          </div>
+          <div role="gridcell" class="picker-pages num">
+            {{ line.row.pages > 0 ? (line.row.pages | figure) : '—' }}
+          </div>
+          <div role="gridcell" class="picker-status">
+            <span [lodbBadge]="toneOf(line.status)">
+              {{ 'admin.prerender.common.status.' + line.status | adminText }}
+            </span>
+          </div>
+          <div role="gridcell" class="text-end">
+            <button
+              type="button"
+              tabindex="-1"
+              class="picker-star"
+              [attr.aria-pressed]="line.rank > 0"
+              [disabled]="line.rank === 0 && isPriorityFull()"
+              [title]="
+                isPriorityFull() ? ('admin.prerender.launcher.priority.max' | adminText) : ''
+              "
+              [attr.aria-label]="
+                line.rank > 0
+                  ? ('admin.prerender.launcher.patches.priority_on'
+                    | adminText: { rank: line.rank })
+                  : ('admin.prerender.launcher.patches.priority_off' | adminText)
+              "
+              (click)="prioritise($event, line)"
+            >
+              {{ line.rank > 0 ? '★ ' + line.rank : '☆' }}
+            </button>
+          </div>
+        </div>
+      }
+    }
+  </div>
+}
+
+<p id="launch-patches-keys" class="readout-text picker-keys">
+  {{ 'admin.prerender.launcher.patches.keys' | adminText }}
+</p>
+<p class="sr-only" aria-live="polite" data-announce>{{ announced() }}</p>

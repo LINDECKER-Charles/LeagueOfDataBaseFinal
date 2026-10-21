@@ -1285,7 +1285,8 @@
       "network_check": "Vérifier",
       "session": "Session expirée : reconnectez-vous, puis relancez.",
       "done": "Passe n°{id} lancée sur l'epoch {epoch} : {units, plural, one {# unité} other {# unités}}{skipped, plural, =0 {} one {, # déjà complète ignorée} other {, # déjà complètes ignorées}}.",
-      "done_ignored": "{count, plural, one {# version ignorée, absente} other {# versions ignorées, absentes}} des anciens patchs : {versions}."
+      "done_ignored": "{count, plural, one {# version ignorée, absente} other {# versions ignorées, absentes}} des anciens patchs : {versions}.",
+      "season_count": "{count, plural, one {# patch} other {# patchs}} · {selected, plural, =0 {aucun sélectionné} one {# sélectionné} other {# sélectionnés}}"
     },
     "coverage": {
       "epoch_label": "Epoch lue",
