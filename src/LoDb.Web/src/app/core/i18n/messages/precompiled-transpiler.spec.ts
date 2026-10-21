@@ -56,6 +56,16 @@ const CATALOGUES: Record<string, Translation> = {
       ],
     ],
   },
+  'admin/fr': {
+    pages: [
+      [
+        'plural',
+        'count',
+        0,
+        { one: [['#', 'count', 0], ' page'], other: [['#', 'count', 0], ' pages'] },
+      ],
+    ],
+  },
 };
 
 describe('PrecompiledTranspiler', () => {
@@ -69,7 +79,7 @@ describe('PrecompiledTranspiler', () => {
       ],
     });
     transloco = TestBed.inject(TranslocoService);
-    await Promise.all(['en', 'fr'].map((lang) => firstValueFrom(transloco.load(lang))));
+    await Promise.all(['en', 'fr', 'admin/fr'].map((lang) => firstValueFrom(transloco.load(lang))));
   });
 
   it('leaves a plain message to Transloco, parameters and key references included', () => {
@@ -95,6 +105,13 @@ describe('PrecompiledTranspiler', () => {
       '1 résultat',
       '2 résultats',
       '1 234 résultats',
+    ]);
+  });
+
+  it('keeps the plurals and the numbers of the admin in French, whatever the active language', () => {
+    expect([0, 31500].map((count) => transloco.translate('pages', { count }, 'admin/fr'))).toEqual([
+      '0 page',
+      '31\u202f500 pages',
     ]);
   });
 
