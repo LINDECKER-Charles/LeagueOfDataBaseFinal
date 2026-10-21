@@ -29,6 +29,7 @@ celui des visites : les pages réellement consultées attendaient leur tour.
   chemin de la passe (même SSR, même rythme, même clé et mêmes métadonnées) dans l'epoch
   servie ; une page déjà écrite par une passe est ignorée.
 - Partage avec une passe manuelle : la file tient 50 % des places en vol du SSR de la passe
-  pendant une passe, toutes sans passe (`LODB_PRERENDER_DEMAND_SHARE`).
+  pendant une passe, toutes sans passe (`LODB_PRERENDER_DEMAND_SHARE`). Sans passe, le
+  régulateur ne surveille rien : la file s'en tient à son plancher (`LODB_PRERENDER_PACE_MIN`).
 - Interrupteur `LODB_PRERENDER_DEMAND_ENABLED` (vrai par défaut) ; bloc « File automatique »
   au pupitre `/admin/prerender` ; métriques `lodb_prerender_demand_*`.

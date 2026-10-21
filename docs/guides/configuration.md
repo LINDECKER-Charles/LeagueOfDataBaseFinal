@@ -797,7 +797,8 @@ rendre le site.
 
 Chaque page d'ancien patch que le SSR des visiteurs refuse (`503`) entre dans
 `prerender_demand`, puis l'API la précalcule d'elle-même dans l'epoch servie, la plus demandée
-d'abord, sur le SSR de la passe et à son rythme (§ 4.10). Elle dort sans stockage configuré,
+d'abord, sur le SSR de la passe et à son rythme (§ 4.10) ; sans passe en cours, au plancher
+`LODB_PRERENDER_PACE_MIN` du mode adaptatif. Elle dort sans stockage configuré,
 comme la passe. Règles : [spécification](../produit/pre-rendu-catalogue-cdn.md), lot 2,
 « File automatique des pages refusées ».
 

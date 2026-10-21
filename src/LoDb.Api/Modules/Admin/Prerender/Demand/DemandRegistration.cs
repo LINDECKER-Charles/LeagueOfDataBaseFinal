@@ -36,6 +36,7 @@ internal static class DemandRegistration
             .Singleton<IValidateOptions<DemandOptions>, DemandOptionsValidator>());
         services.TryAddSingleton<DemandActivation>();
         services.TryAddSingleton<RenderSlots>();
+        services.TryAddSingleton<QueuePace>();
         services.TryAddSingleton<DemandMetrics>();
         services.TryAddSingleton<PageIndexCache>();
         services.TryAddSingleton<DemandValidator>();

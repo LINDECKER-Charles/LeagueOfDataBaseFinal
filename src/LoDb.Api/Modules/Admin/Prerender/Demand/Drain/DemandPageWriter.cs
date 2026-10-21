@@ -10,8 +10,9 @@ using LoDb.Infrastructure.PageStore.Errors;
 namespace LoDb.Api.Modules.Admin.Prerender.Demand.Drain;
 
 /// <summary>
-/// One try of a page of the queue, by the pass's own path: a slot of the pass's SSR shared with
-/// the passes (<see cref="RenderSlots"/>), a turn at the pass's pacer, the render, then its
+/// One try of a page of the queue, by the pass's own path: the floor's turn while no pass drives
+/// the pace (<see cref="QueuePace"/>), a slot of the pass's SSR shared with the passes
+/// (<see cref="RenderSlots"/>), a turn at the pass's pacer, the render, then its
 /// build and the page written as a pass writes it (<see cref="PageObjects"/>, same key, same
 /// metadata): a page of the queue is a page of the epoch like any other.
 /// </summary>
@@ -23,6 +24,7 @@ namespace LoDb.Api.Modules.Admin.Prerender.Demand.Drain;
 /// </remarks>
 internal sealed class DemandPageWriter(
     SsrClient ssr,
+    QueuePace queuePace,
     RenderSlots slots,
     RenderPacer pacer,
     SsrOutage outage,
@@ -41,6 +43,8 @@ internal sealed class DemandPageWriter(
     {
         ArgumentNullException.ThrowIfNull(job);
         RenderedPage page;
+        // Before a slot: the floor's wait never keeps a pass's page waiting.
+        await queuePace.WaitTurnAsync(cancellationToken);
         using (await slots.EnterAsync(RenderClaimant.Queue, cancellationToken))
         {
             if (!await pacer.WaitTurnAsync(cancellationToken))

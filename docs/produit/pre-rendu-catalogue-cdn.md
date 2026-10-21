@@ -768,6 +768,12 @@ sans passe ni clic.
   **`QueueSharePercent` (50 %)** des places, une au moins ; la passe prend les autres et toutes
   celles que la file laisse ; sans passe, la file les prend toutes. Les places se donnent dans
   l'ordre des demandes : ni l'une ni l'autre n'attend indéfiniment.
+- **Rythme sans passe.** Hors passe, `RenderPacer` donne le rythme fixe
+  (`LoDb__Prerender__RendersPerMinute`), prévu pour l'unité d'une ligne de commande, que nul
+  signal ne surveille. En mode adaptatif, la file s'en tient alors au plancher du régulateur
+  (`Pace:MinRendersPerMinute`, 30/min en prod), le rythme qu'il prend lui-même quand il ne voit
+  plus (`QueuePace`) : elle tourne en continu, sans regard sur l'hôte, l'API ni les visiteurs.
+  Pendant une passe, elle partage le rythme piloté ; en mode fixe, elle suit le rythme fixe.
 - **Bornes.** Toutes les heures (`prerender.demand.prune`) : les pages qu'aucun visiteur ne
   s'est vu refuser depuis 30 jours partent, quel que soit leur état (sauf en rendu), puis les
   pages `pending` les moins demandées au-delà de 100 000 ; une page en échec définitif
