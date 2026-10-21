@@ -259,8 +259,10 @@ révise renvoient vers elle par un amendement daté :
   seulement** (`curl -4`, ou depuis un conteneur du réseau de la pile) : l'hôte joint aussi
   Scaleway en IPv6, d'où la politique répondrait 403 alors que les conteneurs, en IPv4,
   passent. Elle doit montrer, depuis le VPS, une 200 avec les en-têtes, les métadonnées et
-  le corps gzip intacts. L'opérateur vérifie ensuite la 403 par un `GET` de la même clé
-  depuis son poste (la commande est dans `tools/prerender/README.md`). Le lot 3 ne part pas
+  le corps gzip intacts (une clé absente y répond `404 NoSuchKey`, pas 403 : la politique
+  laisse passer l'adresse du VPS, S3 dit donc l'absence). L'opérateur vérifie ensuite la 403
+  par un `GET` de la même clé depuis son poste (la commande est dans
+  `tools/prerender/README.md`). Le lot 3 ne part pas
   en prod sans elles.
 - Les variables, validées au démarrage :
   - API (options `LoDb`) : `LoDb__Prerender__Endpoint` (`https://s3.fr-par.scw.cloud`),
@@ -493,8 +495,9 @@ Dans la location des versions épinglées (`sites/site.conf`), derrière
     politique du stockage n'est plus le seul garde-fou, surtout si la lecture devient
     publique (§ 3, accès) ;
   - délais courts (connexion 1 s, lecture 3 à 5 s), et un `proxy_cache_lock_timeout` court ;
-  - `proxy_intercept_errors on` ; une 403, une 404, une 429, une 5xx ou un délai dépassé
-    mènent à une location nommée qui reprend le chemin actuel vers le SSR, à l'identique.
+  - `proxy_intercept_errors on` ; une 404 (page absente, `NoSuchKey`), une 403 (politique,
+    adresse changée), une 429, une 5xx ou un délai dépassé mènent à une location nommée qui
+    reprend le chemin actuel vers le SSR, à l'identique.
     Le freinage de Scaleway répond 429, comme `limit_req` : la location du stockage refuse
     en `limit_req_status 420`, renvoyé à `@lodb_rate_limited`. `error_page` ne s'hérite pas
     et se répète dans chaque location.
@@ -739,7 +742,8 @@ Selon `docs/guides/tests.md`, au plus près de la couche qui porte le comporteme
   refusé.
 - **nginx (`tools/nginx`, stockage simulé par un stub)** :
   - une page trouvée est servie avec ses en-têtes reposés, aussi depuis le cache ;
-  - une 403, une 404, une 429, une 5xx ou un délai dépassé du stockage mènent au SSR ; la
+  - une 404 (page absente), une 403 (politique, adresse changée), une 429, une 5xx ou un
+    délai dépassé du stockage mènent au SSR ; la
     429 du stockage reste distincte de celle de `limit_req` ;
   - une query, un chemin hors grammaire ou une méthode autre que `GET` et `HEAD` (un
     `POST`, `PUT` ou `DELETE` avec un corps) mène au SSR sans interroger le stockage ;

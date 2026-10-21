@@ -149,6 +149,10 @@ abandonne après 5 s sans connexion ou 30 s en tout. La sonde s'efface d'elle-m�
 Le script affiche enfin la commande à lancer **depuis le poste**, qui doit répondre `403` :
 hors de l'adresse du VPS, personne ne lit le bucket.
 
+Une clé absente répond `404 NoSuchKey` au `GET` depuis le VPS, pas `403` : la politique laisse
+passer l'adresse du VPS, et S3 peut donc dire l'absence (sonde non écrite, mauvaise clé).
+nginx retombe sur le SSR dans les deux cas.
+
 Un `403` au `GET` depuis le VPS : l'adresse de sortie n'est pas `VPS_IPV4` (§ 1, point 7),
 ou la lecture anonyme conditionnée par l'adresse ne marche pas chez Scaleway (rien ne la
 documente). Le repli que prévoit l'ADR 0011 (correction C3) : une lecture publique de

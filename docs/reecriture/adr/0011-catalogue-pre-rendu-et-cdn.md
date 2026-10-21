@@ -46,7 +46,7 @@ visiteur ─► Cloudflare ── en cache ────────────�
                                                  │ absente
                                                  ▼
                                               stockage fr-par ── trouvée ─► servi
-                                                 │ absente, 403, 429, 5xx, délai
+                                                 │ absente (404), 403, 429, 5xx, délai
                                                  ▼
                                               SSR, voie épinglée          (repli)
 ```
@@ -125,8 +125,11 @@ visiteur ─► Cloudflare ── en cache ────────────�
 
 - Pour une page épinglée sans query, nginx cherche `pages/{epoch servie}{chemin}` dans le
   stockage, derrière `lodb_archive`, devenu un **cache chaud** (gardé à la 1ʳᵉ demande,
-  20 Go, 90 jours d'inactivité). Une 403, une 404, une 429, une 5xx ou un délai dépassé
-  reprennent le chemin actuel vers le SSR, à l'identique.
+  20 Go, 90 jours d'inactivité). Une page absente répond `404 NoSuchKey` à une lecture
+  anonyme depuis l'adresse du VPS (la politique l'y autorise, S3 sait donc dire l'absence) ;
+  la `403` ne vient que d'une politique qui refuse ou d'une adresse changée. nginx traite les
+  deux, comme une 429, une 5xx ou un délai dépassé, par le chemin actuel vers le SSR, à
+  l'identique.
 - La clé vient d'une `map` stricte sur le chemin ; un chemin hors grammaire ou une query va au
   SSR. Aucun en-tête ni aucun corps du client ne part vers le stockage, et seuls `GET` et
   `HEAD` l'interrogent. La 429 du stockage reste distincte de celle de `limit_req`.

@@ -544,9 +544,10 @@ stockage objet, puis lues par nginx
   (le panneau donne la consigne). L'epoch `0` est celle des sondes de `scaleway-bucket.sh
   verifier`, jamais d'une passe ; la première passe de prod écrit l'epoch `1`, servie pendant
   qu'elle se remplit.
-- **Repli vers le SSR, sans bruit.** Toute réponse du stockage autre qu'un objet (`403`, `404`,
-  `429`, `5xx`, connexion au-delà d'1 s, lecture au-delà de 3 s) renvoie à `@lodb_pinned_ssr`,
-  la voie épinglée d'avant, à l'identique ; le corps XML de Scaleway n'atteint jamais un client
+- **Repli vers le SSR, sans bruit.** Toute réponse du stockage autre qu'un objet (`404` pour
+  une page absente, `403` pour une politique ou une adresse en cause, `429`, `5xx`, connexion
+  au-delà d'1 s, lecture au-delà de 3 s) renvoie à `@lodb_pinned_ssr`, la voie épinglée
+  d'avant, à l'identique ; le corps XML de Scaleway n'atteint jamais un client
   (`proxy_intercept_errors on`). Une politique du bucket fautive ou une adresse du VPS changée
   ne produit donc **aucune erreur** : seulement une part de `X-LoDb-Source: ssr` qui reste haute
   après une passe complète, puis le retour des 503 du budget épinglé. La passe, elle, continue
