@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input, output, signal } f
 import type { PrerenderPatchRow } from '../../../../../../core/api/generated/models/prerender-patch-row';
 import type { PrerenderReport } from '../../../../../../core/api/generated/models/prerender-report';
 import { Button } from '../../../../../../ui/controls/button';
+import { Field } from '../../../../../../ui/controls/field';
 import { Skeleton } from '../../../../../../ui/surfaces/skeleton';
 import { figure } from '../../../../format/figure';
 import { FigurePipe } from '../../../../format/figure-pipe';
@@ -69,6 +70,7 @@ function tickedOf(group: CoverageGroup, selected: ReadonlySet<string>): Season['
     Button,
     CellStrip,
     DecimalBytesPipe,
+    Field,
     FigurePipe,
     Skeleton,
     StackedBar,

@@ -169,8 +169,8 @@
           <div role="gridcell">
             <input
               type="checkbox"
+              lodbField
               tabindex="-1"
-              class="picker-season-box"
               [checked]="line.ticked > 0 && line.ticked === line.versions.length"
               [indeterminate]="line.ticked > 0 && line.ticked < line.versions.length"
               [attr.aria-label]="

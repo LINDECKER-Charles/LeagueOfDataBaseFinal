@@ -677,7 +677,10 @@ d'abord), groupées par **saison** : le premier segment de la version (`seasonOf
 encore, `PatchVersion` les accepte : `src/LoDb.Domain/Versions/PatchVersion.cs`), pas d'année.
 Libellé : `16.x · 2026`, ou `0.x`.
 
-**Ligne de saison** : case à trois états (cochée, mixte, vide), chevron (plié / déplié), libellé,
+**Ligne de saison** : case à trois états (cochée, mixte, vide ; native au style Hextech,
+`lodbField` → `hx-check` et son trait mixte, comme les cases de l'onglet Couverture, jamais la
+case blanche du navigateur ; les boutons radio de la modale prennent `accent-hex scheme-dark`),
+chevron (plié / déplié), libellé,
 « 19 patchs · 11 sélectionnés », et une bande agrégée (part de cellules complètes par langue sur
 la saison). **Ligne de patch** :
 

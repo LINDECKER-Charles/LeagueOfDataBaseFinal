@@ -40,7 +40,7 @@ const EPOCH = 'prerender.launcher.epoch';
               <input
                 type="radio"
                 name="launch-epoch"
-                class="size-4 shrink-0"
+                class="size-4 shrink-0 accent-hex scheme-dark"
                 [checked]="card.choice.epoch === epoch()"
                 (change)="chosen.emit(card.choice)"
               />

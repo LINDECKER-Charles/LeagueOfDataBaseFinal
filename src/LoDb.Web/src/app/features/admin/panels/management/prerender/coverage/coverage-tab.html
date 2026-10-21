@@ -164,6 +164,7 @@
               <td>
                 <input
                   type="checkbox"
+                  lodbField
                   [checked]="season.ticked === 'all'"
                   [indeterminate]="season.ticked === 'some'"
                   [attr.aria-label]="
@@ -205,6 +206,7 @@
                   <td>
                     <input
                       type="checkbox"
+                      lodbField
                       [checked]="selection().selected.has(row.version)"
                       [attr.aria-label]="
                         'admin.prerender.coverage.row_select' | adminText: { version: row.version }

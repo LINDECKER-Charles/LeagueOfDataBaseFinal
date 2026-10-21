@@ -52,6 +52,7 @@ const LIST_SEPARATOR = ', ';
             <input
               type="radio"
               name="paste-rank"
+              class="accent-hex scheme-dark"
               [checked]="!append()"
               (change)="append.set(false)"
             />
@@ -61,6 +62,7 @@ const LIST_SEPARATOR = ', ';
             <input
               type="radio"
               name="paste-rank"
+              class="accent-hex scheme-dark"
               [checked]="append()"
               (change)="append.set(true)"
             />

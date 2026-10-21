@@ -150,12 +150,6 @@
   color: var(--color-text-dim);
 }
 
-.picker-season-box {
-  inline-size: 1rem;
-  block-size: 1rem;
-  accent-color: var(--color-hex);
-}
-
 /* The tick of a row: drawn, since the state lives on the row as aria-selected. */
 .picker-box {
   display: grid;
