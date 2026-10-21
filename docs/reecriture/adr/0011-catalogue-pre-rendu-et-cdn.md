@@ -46,7 +46,7 @@ visiteur ─► Cloudflare ── en cache ────────────�
                                                  │ absente
                                                  ▼
                                               stockage fr-par ── trouvée ─► servi
-                                                 │ absente, 403, 429, 5xx, délai
+                                                 │ absente (404), 403, 429, 5xx, délai
                                                  ▼
                                               SSR, voie épinglée          (repli)
 ```
@@ -115,7 +115,8 @@ visiteur ─► Cloudflare ── en cache ────────────�
   sans lister le stockage.
 - À la promotion d'un patch, les unités (une par langue) du patch devenu épinglé
   rejoignent la passe active ou en ouvrent une, en prod seulement
-  (`LoDb__Prerender__AutoEnqueueOnPromotion`). Le staging reste presque vide : des passes
+  (`LoDb__Prerender__AutoEnqueueOnPromotion`, faux en prod tant que la passe complète, lancée
+  à la main, n'est pas terminée). Le staging reste presque vide : des passes
   manuelles sur un petit périmètre.
 - Un panneau d'administration pilote la passe sous `/api/admin/prerender` ; chaque action
   est auditée. Il montre l'epoch servie et, quand une passe est complète, la consigne de
@@ -125,8 +126,12 @@ visiteur ─► Cloudflare ── en cache ────────────�
 
 - Pour une page épinglée sans query, nginx cherche `pages/{epoch servie}{chemin}` dans le
   stockage, derrière `lodb_archive`, devenu un **cache chaud** (gardé à la 1ʳᵉ demande,
-  20 Go, 90 jours d'inactivité). Une 403, une 404, une 429, une 5xx ou un délai dépassé
-  reprennent le chemin actuel vers le SSR, à l'identique.
+  20 Go, 90 jours d'inactivité). Une page absente répond `404 NoSuchKey` à une lecture
+  anonyme depuis l'adresse du VPS (Scaleway le dit à une lecture que la politique admet, sans
+  `s3:ListBucket`, là où AWS répondrait 403 ; mesuré le 21 octobre 2026) ;
+  la `403` ne vient que d'une politique qui refuse ou d'une adresse changée. nginx traite les
+  deux, comme une 429, une 5xx ou un délai dépassé, par le chemin actuel vers le SSR, à
+  l'identique.
 - La clé vient d'une `map` stricte sur le chemin ; un chemin hors grammaire ou une query va au
   SSR. Aucun en-tête ni aucun corps du client ne part vers le stockage, et seuls `GET` et
   `HEAD` l'interrogent. La 429 du stockage reste distincte de celle de `limit_req`.
@@ -215,9 +220,14 @@ suit.
   que nginx lise le stockage en prod ; à défaut, la lecture devient publique sur `pages/*`
   et `build/*`. Les tests et le développement utilisent MinIO, qui ne prouve rien de
   Scaleway.
-- **−** **Facturation à vérifier** avant d'écrire 4 millions d'objets : Scaleway compte
-  « 1 Ko pendant 1 seconde comme 1 Go-heure », sans dire si l'arrondi se fait par objet ou
-  sur le total. À confirmer par un ticket au support ou la facture du staging.
+- **+** **Facturation tranchée : l'arrondi se fait sur le total du projet, pas par objet.**
+  Scaleway compte « 1 Ko pendant 1 seconde comme 1 Go-heure » sans dire sur quoi il arrondit.
+  Mesure du 20 octobre 2026 : 300 objets de 1 Ko en `ONEZONE_IA`, écrits entre 18 h 33 et
+  18 h 40 UTC dans `lodb-pages-staging` ; la première ligne de facture, environ 4 h plus tard
+  sur le projet des pages, est « Standard One Zone / ONEZONE - fr-par », 3 Go-heures soit
+  0,01 € (couverts par l'essai gratuit, −0,01 €). Un arrondi par objet aurait donné environ
+  300 Go-heures par heure. Les 4 millions d'objets de la prod gardent donc le coût du volume
+  (~1,25 €/mois), sans condition à lever avant la passe complète.
 - **−** Une epoch retirée met au moins 9 jours à disparaître (500 000 objets supprimés par
   jour) ; plus vite, une suppression par lots depuis le poste de l'opérateur.
 - **−** Derrière le CDN, le journal de l'edge et les métriques de Caddy ne voient plus que
