@@ -485,6 +485,11 @@ Dans la location des versions épinglées (`sites/site.conf`), derrière
 - **Sans query**, nginx cherche `pages/{epoch servie}$lodb_request_path` dans le stockage :
   - la clé se construit par une `map` à expression stricte ; un chemin hors grammaire va au
     SSR sans interroger le stockage (un `proxy_pass` à variable ne normalise pas l'URI) ;
+  - le dernier patch épinglé dans le chemin va au SSR sans interroger le stockage, qui ne le
+    tient jamais : le SSR répond sa `301` vers l'URL courte. nginx lit le dernier patch dans
+    `GET /api/meta` toutes les 30 s (module njs, `njs/latest-version.js`), une promotion le
+    changeant entre deux déploiements ; tant qu'aucune lecture n'a abouti, le stockage est
+    interrogé comme pour toute version ;
   - `upstream` en HTTPS dans `sites/site.conf`, gabarit (`nginx.conf` n'en est pas un),
     avec `resolve` et `keepalive` : nginx démarre même si l'hôte ne se résout pas ;
   - `proxy_ssl_server_name on`, `proxy_ssl_name`, `proxy_ssl_verify on` sur le magasin de
@@ -506,7 +511,9 @@ Dans la location des versions épinglées (`sites/site.conf`), derrière
     et se répète dans chaque location.
 - **Avec une query**, le chemin actuel.
 - **En-têtes** :
-  - `proxy_hide_header` des `x-amz-*` ;
+  - `proxy_hide_header` des `x-amz-*`, et d'`ETag`, `Last-Modified` et `Accept-Ranges`, qui
+    décrivent l'objet gzip et non la réponse : une requête conditionnelle reçoit la page, jamais
+    un `304` sur l'empreinte d'un autre corps, et un `Range` la page entière ;
   - les en-têtes du § 3 reposés depuis `$upstream_http_x_amz_meta_*`, y compris sur une
     copie servie par le cache (`HIT`) ;
   - la `Cache-Control` de la classe `archived`, posée par nginx
@@ -744,12 +751,16 @@ Selon `docs/guides/tests.md`, au plus près de la couche qui porte le comporteme
   argument ni en sortie, politique sans l'opérateur refusée, retrait de l'epoch servie
   refusé.
 - **nginx (`tools/nginx`, stockage simulé par un stub)** :
-  - une page trouvée est servie avec ses en-têtes reposés, aussi depuis le cache ;
+  - une page trouvée est servie avec ses en-têtes reposés, aussi depuis le cache, sans aucun
+    en-tête du stockage (`x-amz-*`, `ETag`, `Last-Modified`, `Accept-Ranges`) : un `HEAD`, une
+    requête conditionnelle sur les validateurs du stockage ou un `Range` reçoivent la page ;
   - une 404 (page absente), une 403 (politique, adresse changée), une 429, une 5xx ou un
     délai dépassé du stockage mènent au SSR ; la
     429 du stockage reste distincte de celle de `limit_req` ;
   - une query, un chemin hors grammaire ou une méthode autre que `GET` et `HEAD` (un
     `POST`, `PUT` ou `DELETE` avec un corps) mène au SSR sans interroger le stockage ;
+  - le dernier patch épinglé dans le chemin (lu dans `/api/meta`) aussi, quelle que soit la
+    langue, mais pas une version qui commence comme lui (`15.10.10` pour `15.10.1`) ;
   - le repli de `/build/`, sur une 404 du SSR seulement ; un nom hors grammaire, une query
     ou un en-tête `Authorization` / `x-amz-*` du client n'atteignent pas le stockage, et
     une erreur du stockage rend la 404 du SSR ;
