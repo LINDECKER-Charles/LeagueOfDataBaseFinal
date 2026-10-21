@@ -266,7 +266,7 @@ révise renvoient vers elle par un amendement daté :
   - API (options `LoDb`) : `LoDb__Prerender__Endpoint` (`https://s3.fr-par.scw.cloud`),
     `__Region`, `__Bucket`, `__AccessKey` et `__SecretKey` (secrets), `__PublicHost`
     (`league-of-data-base.com`, `test.league-of-data-base.com` au staging), `__SsrBaseUrl`
-    (`http://lodb-web-ssr:4000`), `__ServedEpoch` (`${LODB_ARCHIVE_SERVE_EPOCH}`),
+    (`http://lodb-web-ssr-prerender:4000`, le SSR de la passe), `__ServedEpoch` (`${LODB_ARCHIVE_SERVE_EPOCH}`),
     `__AutoEnqueueOnPromotion` (vrai en prod, faux au staging), `__AllowInsecureEndpoint`
     (développement). Vides, elles laissent la tâche en sommeil : `Add*` ne fait aucune I/O ;
   - nginx : `LODB_PAGES_STORE_ENABLED` (`0` par défaut : en local et en CI, rien ne change),

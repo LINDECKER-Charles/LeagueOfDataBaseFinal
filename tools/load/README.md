@@ -49,7 +49,15 @@ LODB_MAIL_PORT=18125 docker compose -p lodb-dev-e1 -f compose.yaml \
 - Il pose les limites mémoire de `compose.deploy.yaml` et les quotas CPU prévus pour l'hôte
   (`cpus` / `cpu_shares` / `pids`) : web-ssr 1,0 / 1024 / 256, api 1,25 / 1024 / 512,
   postgres 0,5 / 1024 / 256, nginx 0,25 / 2048 / 256. Le test vérifie qu'ils suivent ceux de
-  `compose.deploy.yaml` dès que celui-ci en pose.
+  `compose.deploy.yaml` dès que celui-ci en pose. Le SSR de la passe (`web-ssr-prerender`)
+  reçoit ceux de la prod, 1,0 / 128 / 256 : un banc avec une passe en cours mesure ce que les
+  visiteurs reçoivent à côté d'elle.
+- Le rythme adaptatif de la passe y reprend les bornes de `compose.yaml` (plancher 30,
+  plafond 240, pas du code), celles de l'hôte. Une preuve du régulateur sur ce poste (qui a 14
+  CPU, quand l'hôte en a 4) pose son propre calque : il épingle les conteneurs sur des
+  `cpuset` et peut poser `LoDb__Prerender__Pace__HostCpuSet: "0-3"`, pour que la charge de
+  l'hôte ne compte que les quatre CPU épinglés. **Réglage de banc seulement, jamais posé sur
+  un hôte.**
 - Il fixe le sous-réseau de l'emplacement (`LODB_BENCH_SUBNET`, `10.213.7.0/24`) et le donne à
   `LODB_EDGE_CIDR` : nginx croit l'`X-Forwarded-For` du générateur comme celui de l'edge sur un
   hôte, et chaque requête porte l'adresse du client qu'elle représente.

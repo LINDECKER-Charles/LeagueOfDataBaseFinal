@@ -13,17 +13,18 @@ Logs et requêtes LogsQL : [`observabilite.md`](observabilite.md) et [`logging.m
 |---|---|---|
 | API (`api`) | `GET /metrics` sur le port **9464**, seule route de ce port | `LoDb:Hosting:MetricsPort` |
 | SSR (`web-ssr`) | `GET /metrics` sur le port **9464**, serveur HTTP séparé du site (404 pour tout le reste) | `LODB_METRICS_PORT` |
+| SSR de la passe de précalcul (`web-ssr-prerender`) | comme `web-ssr`, même port **9464** ; ses séries portent `service="web-ssr-prerender"` | `LODB_METRICS_PORT` |
 
 - Le port 9464 n'est **jamais publié** (`compose*.yaml`) ni **routé par nginx**. Sur le
   port du site, `/metrics` est la 404 statique du pré-routeur ; sur le port 8080 de l'API,
   une 404.
-- Sur un hôte, `api` et `web-ssr` rejoignent le réseau partagé `observability` et portent
+- Sur un hôte, `api`, `web-ssr` et `web-ssr-prerender` rejoignent le réseau partagé `observability` et portent
   les labels `prometheus.scrape: "true"` et `prometheus.port: "9464"`
   (`compose.deploy.yaml`, contrat d'`infra-vps` `docs/APPLICATIONS.md` § 4). La collecte
   (job `applications`) ajoute `stack` (`lodb-prod`, `lodb-staging`), `service` et
   `container`. Toute requête filtre sur `stack` : staging et prod partagent l'hôte.
-- Sur ce réseau partagé, tout conteneur de l'hôte joint l'API et le SSR : le port 8080 de
-  l'API et le port 4000 du SSR ne répondent qu'au réseau de la stack et à la loopback
+- Sur ce réseau partagé, tout conteneur de l'hôte joint l'API et les SSR : le port 8080 de
+  l'API et le port 4000 des SSR ne répondent qu'au réseau de la stack et à la loopback
   (`NetworkGate`, `networkGate`, 404 sinon), et les conteneurs de la stack ne s'appellent
   que par leurs alias préfixés (`lodb-api`, `lodb-postgres`). Ce que les ports 9464
   exposent est lisible de tout l'hôte : jamais de donnée personnelle ni de secret.

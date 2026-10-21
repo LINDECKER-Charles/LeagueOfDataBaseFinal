@@ -489,7 +489,7 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   en local) et à la loopback ; tout autre pair reçoit un 404 vide, compté par
   `lodb_ssr_network_gate_refusals_total`, sans log. Vide ou absente, la variable laisse la
   seule loopback : un `node server.mjs` lancé hors de la stack ne sert que la machine.
-- Collecte (`compose.deploy.yaml`) : `api` et `web-ssr` rejoignent le réseau partagé
+- Collecte (`compose.deploy.yaml`) : `api`, `web-ssr` et `web-ssr-prerender` rejoignent le réseau partagé
   `observability` avec les labels `prometheus.scrape`/`prometheus.port`. Sur ce réseau, le
   nom court d'un service (`api`, `postgres`) désigne aussi ceux des autres projets : un
   conteneur de la stack n'appelle ses voisins que par les alias préfixés (`lodb-api`,
@@ -563,7 +563,7 @@ stockage objet, puis lues par nginx
   la voie `prerender` du SSR (son budget, aucune limite par client, prioritaire sur la voie que
   donne l'URL) et ouvre `/_lodb/build-files`. nginx le pose vide sur toute requête relayée
   (`snippets/proxy-headers.conf`), comme `X-LoDb-Edge` : ne jamais retirer cette ligne. La passe
-  appelle le SSR en direct (`http://lodb-web-ssr:4000`), jamais à travers nginx, qui effacerait
+  appelle son SSR en direct (`http://lodb-web-ssr-prerender:4000`), jamais à travers nginx, qui effacerait
   l'en-tête, appliquerait `limit_req`, remplirait `lodb_archive` et compterait des vues. Un
   `curl -H 'X-LoDb-Prerender: 1'` sur le port publié du SSR (18082) consomme le budget de la
   passe. La voie n'écrit pas de ligne `http.request.served` par page, sauf sur une `5xx` :

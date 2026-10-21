@@ -239,5 +239,5 @@ plus que ses ratés. Ses propres chiffres arrivent par l'exportateur d'`infra-vp
 | Staging et prod se mélangent dans un panneau | requête sans filtre `stack` | toujours préfixer `stack:lodb-prod` — les deux stacks sont co-localisés |
 | Le niveau `error` explose sans incident | `.level` deviné, ou clé de contexte `error` | filtrer sur la clé d'événement, jamais sur `level` |
 | Une ligne JSON est coupée en plein milieu | `log_limit` FPM | vérifier que `[global] log_limit = 65536` est bien dans `php-fpm.conf` ; alléger le contexte |
-| Aucune série `lodb_*` pour un `stack` | `api` ou `web-ssr` hors du réseau `observability`, ou labels `prometheus.*` absents | `docker inspect <conteneur> --format '{{json .NetworkSettings.Networks}}'` ; redéployer (`compose.deploy.yaml` les pose) |
+| Aucune série `lodb_*` pour un `stack` | `api`, `web-ssr` ou `web-ssr-prerender` hors du réseau `observability`, ou labels `prometheus.*` absents | `docker inspect <conteneur> --format '{{json .NetworkSettings.Networks}}'` ; redéployer (`compose.deploy.yaml` les pose) |
 | Le site disparaît du dashboard *Edge — trafic* | une directive `log` ou `caddy.import: journal-acces` a été réintroduite quelque part | `docker inspect <conteneur> --format '{{json .Config.Labels}}'` ; retirer le label. L'alerte `SiteAbsentDuJournalAcces` le détecte site par site |
