@@ -1,0 +1,47 @@
+@let switching = snippets;
+<lodb-dialog
+  [heading]="'admin.prerender.switch.title' | adminText: { epoch: switching.target }"
+  [headingId]="headingId"
+  [closeLabel]="'admin.prerender.switch.close' | adminText"
+>
+  <div class="flex flex-col gap-4 text-[0.9rem] text-text-muted">
+    @if (switching.isWritten) {
+      <p
+        class="m-0 border border-gold/40 bg-gold/10 px-3 py-2 text-gold-bright"
+        role="status"
+        data-writing
+      >
+        {{ 'admin.prerender.switch.writing' | adminText }}
+      </p>
+    }
+    @for (line of stateLines(); track line) {
+      <p class="m-0" [class.text-gold-bright]="$first" data-switch-state>
+        @if ($first && switching.state?.kind === 'ready') {
+          <span aria-hidden="true">✓</span>
+        }
+        {{ line }}
+      </p>
+    }
+    <p class="m-0">{{ 'admin.prerender.switch.no_button' | adminText }}</p>
+
+    <ol class="m-0 flex list-decimal flex-col gap-3 ps-5">
+      <li>
+        <p class="m-0">{{ 'admin.prerender.switch.step_variable' | adminText }}</p>
+        <div class="mt-2 flex flex-wrap items-center gap-3">
+          <code class="font-mono text-gold-bright" data-variable>{{ switching.variable }}</code>
+          <lodb-copy-link [url]="switching.variable" [labels]="copyLabels()" />
+        </div>
+      </li>
+      <li>{{ 'admin.prerender.switch.step_deploy' | adminText: { epoch: switching.target } }}</li>
+      <li data-step-retire>
+        {{ 'admin.prerender.switch.step_retire' | adminText: { served: switching.served } }}
+      </li>
+    </ol>
+
+    <div class="flex justify-end">
+      <button lodbButton="ghost" type="button" (click)="ref.close()">
+        {{ 'admin.prerender.switch.close' | adminText }}
+      </button>
+    </div>
+  </div>
+</lodb-dialog>

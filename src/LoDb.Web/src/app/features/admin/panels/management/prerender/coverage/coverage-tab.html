@@ -1,0 +1,276 @@
+<div
+  class="flex flex-wrap items-center gap-2"
+  role="group"
+  [attr.aria-labelledby]="'prerender-coverage-epoch'"
+>
+  <span class="readout-label" id="prerender-coverage-epoch">
+    {{ 'admin.prerender.coverage.epoch_label' | adminText }}
+  </span>
+  @for (option of epochs(); track option.epoch) {
+    <button
+      lodbButton="ghost"
+      lodbButtonSize="small"
+      type="button"
+      [attr.aria-pressed]="option.epoch === shownEpoch()"
+      [attr.data-epoch-option]="option.epoch"
+      (click)="epoch.set(option.epoch)"
+    >
+      {{ option.label }}
+    </button>
+  }
+</div>
+
+@if (patches.failure(); as failure) {
+  <lodb-admin-band data-coverage-error>
+    <span>{{ errorText() }}</span>
+    <button lodbButton="ghost" lodbButtonSize="small" type="button" (click)="reload()">
+      {{ 'admin.prerender.coverage.retry' | adminText }}
+    </button>
+  </lodb-admin-band>
+} @else if (summary(); as counted) {
+  <div class="flex flex-col gap-2" [attr.aria-busy]="patches.busy()">
+    <p class="m-0 text-[0.9rem] text-text-muted" data-coverage-summary>{{ summaryText() }}</p>
+    @if (patches.value()?.latestVersion; as latest) {
+      <p class="readout-text m-0" data-latest>
+        {{ 'admin.prerender.coverage.latest' | adminText: { version: latest } }}
+      </p>
+    }
+    <ul class="m-0 flex list-none flex-wrap gap-x-5 gap-y-2 p-0">
+      @for (season of counted.seasons; track season.key) {
+        <li class="flex min-w-[9rem] items-center gap-2 text-[0.78rem] text-text-dim">
+          <span class="whitespace-nowrap">{{ seasonLabel(season) }}</span>
+          <lodb-stacked-bar
+            class="grow"
+            size="thin"
+            [segments]="barOf(season)"
+            [label]="seasonLabel(season)"
+          />
+        </li>
+      }
+    </ul>
+  </div>
+
+  <div class="toolbar flex flex-wrap items-center gap-3">
+    <label class="flex min-w-0 grow items-center gap-2 sm:max-w-[18rem]">
+      <span class="sr-only">{{ 'admin.prerender.coverage.filter' | adminText }}</span>
+      <input
+        class="admin-input w-full text-base"
+        type="search"
+        [placeholder]="'admin.prerender.coverage.filter' | adminText"
+        [value]="query()"
+        (input)="filter($event)"
+      />
+    </label>
+    <div
+      class="flex flex-wrap gap-1"
+      role="group"
+      [attr.aria-label]="'admin.prerender.coverage.filter' | adminText"
+    >
+      @for (choice of statuses; track choice) {
+        <button
+          lodbButton="ghost"
+          lodbButtonSize="small"
+          type="button"
+          [attr.aria-pressed]="status() === choice"
+          [attr.data-status]="choice"
+          (click)="status.set(choice)"
+        >
+          {{ 'admin.prerender.coverage.status_' + choice | adminText }}
+        </button>
+      }
+    </div>
+    <div
+      class="flex gap-1 sm:ms-auto"
+      role="group"
+      [attr.aria-label]="'admin.prerender.common.matrix.views' | adminText"
+    >
+      @for (choice of views; track choice) {
+        <button
+          lodbButton="ghost"
+          lodbButtonSize="small"
+          type="button"
+          [attr.aria-pressed]="view() === choice"
+          (click)="view.set(choice)"
+        >
+          {{ 'admin.prerender.coverage.view_' + choice | adminText }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="flex flex-wrap items-center gap-3">
+    @if (counted.gapVersions.length > 0) {
+      <button
+        lodbButton
+        lodbButtonSize="small"
+        type="button"
+        data-complete-gaps
+        [disabled]="lock() !== null"
+        [attr.aria-describedby]="lock() ? 'prerender-coverage-lock' : null"
+        (click)="completeGaps()"
+      >
+        {{ 'admin.prerender.coverage.gaps' | adminText: { count: counted.gapVersions.length } }}
+      </button>
+    } @else {
+      <p class="readout-text m-0" data-no-gaps>
+        {{ 'admin.prerender.coverage.no_gaps' | adminText }}
+      </p>
+    }
+    @if (lock(); as held) {
+      <p class="readout-text m-0" id="prerender-coverage-lock">
+        {{ 'admin.prerender.overview.cta.locked_' + held.kind | adminText: held }}
+      </p>
+    }
+  </div>
+
+  @if (view() === 'matrix') {
+    <lodb-unit-matrix
+      mode="coverage"
+      [locales]="patches.value()?.locales ?? []"
+      [versions]="patches.value()?.patches ?? []"
+      [held]="held()"
+      [selected]="selection().selected"
+      (toggled)="tickFromMatrix($event)"
+    />
+  } @else {
+    <div class="hx-table-scroll">
+      <table class="hx-table hx-table--flush admin-tbl">
+        <thead>
+          <tr>
+            <th scope="col">
+              <span class="sr-only">{{
+                'admin.prerender.coverage.launch_selection' | adminText
+              }}</span>
+            </th>
+            <th scope="col">{{ 'admin.prerender.coverage.columns.version' | adminText }}</th>
+            <th scope="col" class="min-w-[12rem]">
+              {{ 'admin.prerender.coverage.columns.locales' | adminText }}
+            </th>
+            <th scope="col" class="num">
+              {{ 'admin.prerender.coverage.columns.pages' | adminText }}
+            </th>
+            <th scope="col" class="num">
+              {{ 'admin.prerender.coverage.columns.volume' | adminText }}
+            </th>
+            <th scope="col" class="num">
+              {{ 'admin.prerender.coverage.columns.failed' | adminText }}
+            </th>
+            <th scope="col">{{ 'admin.prerender.coverage.columns.last' | adminText }}</th>
+          </tr>
+        </thead>
+        @for (season of seasons(); track season.key) {
+          <tbody [attr.data-season]="season.key">
+            <tr class="bg-gold/5">
+              <td>
+                <input
+                  type="checkbox"
+                  [checked]="season.ticked === 'all'"
+                  [indeterminate]="season.ticked === 'some'"
+                  [attr.aria-label]="
+                    'admin.prerender.coverage.season_select'
+                      | adminText: { season: seasonLabel(season) }
+                  "
+                  (click)="tickSeason(season, $event)"
+                />
+              </td>
+              <th scope="rowgroup" colspan="6" class="text-start">
+                <button
+                  class="inline-flex items-center gap-2 text-gold-bright"
+                  type="button"
+                  [attr.aria-expanded]="season.isOpen"
+                  (click)="fold(season)"
+                >
+                  <span aria-hidden="true">{{ season.isOpen ? '▾' : '▸' }}</span>
+                  {{ seasonLabel(season) }}
+                </button>
+                <span
+                  class="ms-3 text-[0.78rem] text-text-dim normal-case tracking-normal"
+                  data-season-counts
+                >
+                  {{
+                    'admin.prerender.coverage.season_counts'
+                      | adminText
+                        : {
+                            versions: season.rows.length,
+                            complete: season.complete,
+                            missing: season.missing,
+                          }
+                  }}
+                </span>
+              </th>
+            </tr>
+            @if (season.isOpen) {
+              @for (row of season.rows; track row.version) {
+                <tr [attr.data-version]="row.version">
+                  <td>
+                    <input
+                      type="checkbox"
+                      [checked]="selection().selected.has(row.version)"
+                      [attr.aria-label]="
+                        'admin.prerender.coverage.row_select' | adminText: { version: row.version }
+                      "
+                      (click)="toggle(row.version, $event)"
+                    />
+                  </td>
+                  <td class="font-mono">{{ row.version }}</td>
+                  <td>
+                    <span class="flex items-center gap-2">
+                      <lodb-cell-strip class="grow" [cells]="row.cells" [label]="stripLabel(row)" />
+                      <span class="num whitespace-nowrap text-[0.78rem]" aria-hidden="true">
+                        {{ row.completeLocales }}/{{ row.cells.length }}
+                      </span>
+                    </span>
+                  </td>
+                  <td class="num">{{ row.pages | figure }}</td>
+                  <td class="num whitespace-nowrap">{{ row.bytes | decimalBytes }}</td>
+                  <td class="num">{{ row.failedPages > 0 ? (row.failedPages | figure) : '—' }}</td>
+                  <td class="whitespace-nowrap">{{ row.lastEndedAt | stamp: 'minute' }}</td>
+                </tr>
+              }
+            }
+          </tbody>
+        } @empty {
+          <tbody>
+            <tr>
+              <td colspan="7" class="t-empty">
+                {{ 'admin.prerender.coverage.empty' | adminText }}
+              </td>
+            </tr>
+          </tbody>
+        }
+      </table>
+    </div>
+  }
+
+  @if (selection().selected.size > 0) {
+    <div
+      class="sticky bottom-0 z-10 flex flex-wrap items-center gap-3 border-t border-gold/28 bg-void/95 px-4 py-3"
+      data-selection-bar
+    >
+      <span class="me-auto text-[0.88rem] text-gold-bright" aria-live="polite">
+        {{ 'admin.prerender.coverage.selection' | adminText: { count: selection().selected.size } }}
+      </span>
+      <button lodbButton="ghost" lodbButtonSize="small" type="button" (click)="clear()">
+        {{ 'admin.prerender.coverage.clear_selection' | adminText }}
+      </button>
+      <button
+        lodbButton="gold"
+        lodbButtonSize="small"
+        type="button"
+        data-launch-selection
+        [disabled]="lock() !== null"
+        [attr.aria-describedby]="lock() ? 'prerender-coverage-lock' : null"
+        (click)="launchSelection()"
+      >
+        {{ 'admin.prerender.coverage.launch_selection' | adminText }}
+      </button>
+    </div>
+  }
+} @else {
+  <div class="flex flex-col gap-3" aria-busy="true">
+    <lodb-skeleton shape="line" class="w-[60%]" />
+    <lodb-skeleton shape="line" class="h-6" />
+    <lodb-skeleton shape="line" class="h-6" />
+    <lodb-skeleton shape="line" class="h-6" />
+  </div>
+}

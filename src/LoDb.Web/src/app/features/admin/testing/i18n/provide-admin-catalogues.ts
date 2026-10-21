@@ -32,22 +32,20 @@ const CATALOGUES: Readonly<Record<string, Translation>> = {
       lede_orphan: 'Compte supprimé · actions effectuées par ce compte ou le ciblant.',
     },
     prerender: {
-      ready: [
-        "L'epoch ",
-        ['arg', 'epoch'],
-        ' est complète. Pour la servir, posez LODB_ARCHIVE_SERVE_EPOCH=',
-        ['arg', 'epoch'],
-        " et redéployez : nginx ne change pas d'epoch à chaud.",
-      ],
       states: { running: 'en cours', paused: 'en pause', served: 'servie', retired: 'retirée' },
       page_types: { items: 'objets' },
-      current: { pause: 'Mettre en pause', resume: 'Reprendre' },
-      kpi: {
-        cost_sub_retired: [
-          '+ ',
-          ['arg', 'retired'],
-          " pour les epochs retirées, jusqu'à leur suppression ; hors sortie",
-        ],
+      overview: {
+        cta: {
+          launch: 'Lancer une passe',
+          locked_active: ['Une passe est en cours (n°', ['arg', 'id'], ') : une seule à la fois.'],
+        },
+        kpis: {
+          cost_sub_retired: [
+            '+ ',
+            ['arg', 'retired'],
+            " pour les epochs retirées, jusqu'à leur suppression ; hors sortie",
+          ],
+        },
       },
     },
     scaleway_bill: {
@@ -86,22 +84,20 @@ const CATALOGUES: Readonly<Record<string, Translation>> = {
       lede_orphan: 'Deleted account · actions made by this account or targeting it.',
     },
     prerender: {
-      ready: [
-        'Epoch ',
-        ['arg', 'epoch'],
-        ' is complete. To serve it, set LODB_ARCHIVE_SERVE_EPOCH=',
-        ['arg', 'epoch'],
-        ' and redeploy: nginx does not switch epochs on the fly.',
-      ],
       states: { running: 'running', paused: 'paused', served: 'served', retired: 'retired' },
       page_types: { items: 'items' },
-      current: { pause: 'Pause', resume: 'Resume' },
-      kpi: {
-        cost_sub_retired: [
-          '+ ',
-          ['arg', 'retired'],
-          ' for the retired epochs, until their deletion; egress excluded',
-        ],
+      overview: {
+        cta: {
+          launch: 'Launch a pass',
+          locked_active: ['A pass is running (#', ['arg', 'id'], '): one at a time.'],
+        },
+        kpis: {
+          cost_sub_retired: [
+            '+ ',
+            ['arg', 'retired'],
+            ' for the retired epochs, until deleted; egress left out',
+          ],
+        },
       },
     },
     scaleway_bill: {

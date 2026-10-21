@@ -655,9 +655,7 @@
   },
   "prerender": {
     "title": "Précalcul du catalogue",
-    "lede": "Les pages des anciens patchs, rendues d'avance dans le stockage objet et servies par nginx sans passer par le SSR : la passe active, le lancement d'une passe, ce que le stockage garde et ce qu'il coûte.",
-    "dormant": "Le précalcul n'est pas configuré sur cet hôte (stockage ou passe sans réglages) : aucune passe ne peut démarrer et la tâche de fond dort.",
-    "ready": "L'epoch {epoch} est complète. Pour la servir, posez LODB_ARCHIVE_SERVE_EPOCH={epoch} et redéployez : nginx ne change pas d'epoch à chaud.",
+    "lede": "Les pages des anciens patchs, rendues d'avance dans le stockage objet et servies par nginx sans passer par le SSR : la passe en cours, ce que chaque epoch couvre, ce que le stockage garde et ce qu'il coûte.",
     "states": {
       "running": "en cours",
       "paused": "en pause",
@@ -671,121 +669,13 @@
       "failed": "en échec",
       "stopped": "arrêtée"
     },
-    "kpi": {
-      "served": "Epoch servie",
-      "served_sub": "LODB_ARCHIVE_SERVE_EPOCH, changée par un redéploiement",
-      "pass": "Passe active",
-      "pass_sub": "{completed} / {total} unités terminées",
-      "pass_none": "aucune passe active",
-      "stored": "Stocké",
-      "stored_sub": "{pages} pages, epochs retirées exclues",
-      "cost": "Coût estimé / mois",
-      "cost_sub": "hors sortie ; détail sous « Stockage »",
-      "cost_sub_retired": "+ {retired} pour les epochs retirées, jusqu'à leur suppression ; hors sortie"
-    },
-    "current": {
-      "title": "Passe n°{id} · epoch {epoch}",
-      "none": "Aucune passe active : le stockage ne reçoit rien.",
-      "progress": "Unités terminées",
-      "units": "Unités",
-      "units_sub": "{running} en cours · {pending} à venir · {failed} en échec",
-      "pages": "Pages traitées",
-      "pages_sub": "{written} écrites · {skipped} sautées · {failed} en échec, sur {total} listées",
-      "pace": "Rythme",
-      "pace_value": "{pace} / min",
-      "pace_sub": "pages par minute, en {duration} de marche",
-      "end": "Fin estimée",
-      "end_sub": "à ce rythme",
-      "volume": "Volume écrit",
-      "launched": "Lancée le {date} par {author} · {scope}",
-      "launched_auto": "Ouverte le {date} par une promotion ou la ligne de commande · {scope}",
-      "pause": "Mettre en pause",
-      "resume": "Reprendre",
-      "cancel": "Annuler la passe",
-      "confirm_cancel": "Confirmer l'annulation"
-    },
-    "launch": {
-      "title": "Lancer une passe",
-      "lede": "Sans périmètre, la passe remplit l'epoch servie de toutes les pages de tous les anciens patchs, les plus récents d'abord.",
-      "epoch": "Epoch écrite",
-      "epoch_hint": "La servie par défaut ({epoch}) pour la remplir ; une plus récente pour la remplacer.",
-      "oldest": "Version la plus ancienne",
-      "newest": "Version la plus récente",
-      "page_type": "Type de page",
-      "all_types": "Tous les types",
-      "locale": "Langue",
-      "all_locales": "Toutes les langues",
-      "priority": "Versions prioritaires",
-      "priority_hint": "Dans l'ordre, une par ligne ou séparées par des virgules : les plus demandées, tirées du journal de l'edge (LogsQL, stats by (version)).",
-      "submit": "Lancer la passe",
-      "confirm": "Confirmer le lancement",
-      "locked_active": "Une passe est déjà active : une seule à la fois.",
-      "locked_dormant": "Indisponible tant que le précalcul n'est pas configuré.",
-      "promotions_on": "Un patch qui quitte le dernier rang rejoint la passe de lui-même.",
-      "promotions_off": "Un patch qui quitte le dernier rang ne rejoint pas la passe de lui-même : lancez-la pour lui.",
-      "versions": "Versions",
-      "versions_hint": "Une par ligne ou séparées par des virgules ; vide, tous les anciens patchs. Une version qui n'est pas un ancien patch est écartée."
-    },
     "page_types": {
       "champions": "champions",
       "items": "objets",
       "runes": "runes",
       "summoners": "sorts d'invocateur"
     },
-    "scope": {
-      "all": "toutes les pages",
-      "range": "{oldest} → {newest}",
-      "from": "depuis {oldest}",
-      "until": "jusqu'à {newest}",
-      "priority": "{count, plural, one {# version prioritaire} other {# versions prioritaires}}"
-    },
-    "storage": {
-      "title": "Ce que le stockage garde",
-      "chip": "{cost} / mois",
-      "epoch": "Epoch {epoch}",
-      "builds": "Bundles",
-      "builds_sub": "{count, plural, one {# build} other {# builds}} · {files} fichiers, en Multi-AZ",
-      "total": "Total",
-      "total_sub": "epochs retirées exclues",
-      "empty": "Aucune page stockée.",
-      "prices": "Estimation à {oneZone} par Go et par mois en One Zone (pages), {multiAz} en Multi-AZ (bundles).",
-      "egress": "Hors sortie : 75 Go gratuits par mois, puis 0,01 € par Go, suivie dans Grafana.",
-      "counters": "Ces chiffres disent ce que les passes ont écrit, pas ce qu'une règle d'expiration a supprimé depuis : sur le staging, les pages expirent après 14 jours, une unité terminée n'est pas réécrite et ses pages repassent sans bruit par le SSR.",
-      "retired": "Une epoch retirée coûte jusqu'à ce que le cycle de vie du stockage l'ait supprimée, 500 000 objets par jour au plus : 9 jours au moins pour 4 millions de pages.",
-      "columns": {
-        "epoch": "Epoch",
-        "state": "État",
-        "pages": "Pages",
-        "volume": "Volume",
-        "cost": "Coût / mois",
-        "version": "Version",
-        "locales": "Langues"
-      },
-      "versions": {
-        "title": "Par version de l'epoch servie",
-        "chip": "{count, plural, one {# version} other {# versions}}",
-        "empty": "Aucune page dans l'epoch servie.",
-        "locales": "{count} / {all}"
-      }
-    },
-    "history": {
-      "empty": "Aucune passe lancée.",
-      "automatic": "promotion ou CLI",
-      "pages": "{written} / {total}",
-      "columns": {
-        "pass": "Passe",
-        "epoch": "Epoch",
-        "state": "État",
-        "scope": "Périmètre",
-        "pages": "Pages écrites",
-        "volume": "Volume",
-        "started": "Lancée",
-        "author": "Par",
-        "finished": "Fin"
-      }
-    },
     "done": {
-      "start": "Passe n°{id} lancée sur l'epoch {epoch} : {units, plural, =0 {aucune unité, le périmètre ne couvre aucun ancien patch} one {# unité} other {# unités}}.",
       "pause": "Passe n°{id} mise en pause.",
       "resume": "Passe n°{id} reprise.",
       "cancel": "Passe n°{id} annulée."
@@ -1318,7 +1208,8 @@
       "no_gaps": "Rien ne manque dans cette epoch.",
       "error": "Couverture indisponible ({reason}).",
       "retry": "Réessayer",
-      "empty": "Aucun ancien patch."
+      "empty": "Aucun ancien patch.",
+      "season_counts": "{versions, plural, one {# patch} other {# patchs}} · {complete, plural, one {# complet} other {# complets}}{missing, plural, =0 {} one { · # à compléter} other { · # à compléter}}"
     },
     "costs": {
       "title": "Ce que le stockage garde",
@@ -1575,8 +1466,6 @@
     "filter": "Filtrer",
     "maintenance": "Maintenance",
     "databases": "Bases sauvegardées",
-    "nights": "Nuits",
-    "current_pass": "Passe active",
-    "launch": "Lancement"
+    "nights": "Nuits"
   }
 }

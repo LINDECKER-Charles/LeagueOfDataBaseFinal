@@ -655,9 +655,7 @@
   },
   "prerender": {
     "title": "Catalogue pre-rendering",
-    "lede": "The pages of the older patches, rendered ahead into the object store and served by nginx without the SSR: the active pass, launching a pass, what the store holds and what it costs.",
-    "dormant": "The pre-rendering is not configured on this host (store or pass settings missing): no pass can start and the background task sleeps.",
-    "ready": "Epoch {epoch} is complete. To serve it, set LODB_ARCHIVE_SERVE_EPOCH={epoch} and redeploy: nginx does not switch epochs on the fly.",
+    "lede": "The pages of the older patches, rendered ahead into the object store and served by nginx without the SSR: the pass running, what each epoch covers, what the store holds and what it costs.",
     "states": {
       "running": "running",
       "paused": "paused",
@@ -671,121 +669,13 @@
       "failed": "failed",
       "stopped": "stopped"
     },
-    "kpi": {
-      "served": "Served epoch",
-      "served_sub": "LODB_ARCHIVE_SERVE_EPOCH, changed by a redeploy",
-      "pass": "Active pass",
-      "pass_sub": "{completed} / {total} units completed",
-      "pass_none": "no active pass",
-      "stored": "Stored",
-      "stored_sub": "{pages} pages, retired epochs excluded",
-      "cost": "Estimated cost / month",
-      "cost_sub": "egress excluded; detail under “Storage”",
-      "cost_sub_retired": "+ {retired} for the retired epochs, until their deletion; egress excluded"
-    },
-    "current": {
-      "title": "Pass #{id} · epoch {epoch}",
-      "none": "No active pass: the store receives nothing.",
-      "progress": "Units completed",
-      "units": "Units",
-      "units_sub": "{running} running · {pending} to come · {failed} failed",
-      "pages": "Pages processed",
-      "pages_sub": "{written} written · {skipped} skipped · {failed} failed, of {total} listed",
-      "pace": "Pace",
-      "pace_value": "{pace} / min",
-      "pace_sub": "pages a minute, over {duration} of running",
-      "end": "Estimated end",
-      "end_sub": "at this pace",
-      "volume": "Volume written",
-      "launched": "Launched on {date} by {author} · {scope}",
-      "launched_auto": "Opened on {date} by a promotion or the command line · {scope}",
-      "pause": "Pause",
-      "resume": "Resume",
-      "cancel": "Cancel the pass",
-      "confirm_cancel": "Confirm cancellation"
-    },
-    "launch": {
-      "title": "Launch a pass",
-      "lede": "Without a perimeter, the pass fills the served epoch with every page of every older patch, newest first.",
-      "epoch": "Epoch written",
-      "epoch_hint": "The served one by default ({epoch}) to fill it; a newer one to replace it.",
-      "oldest": "Oldest version",
-      "newest": "Newest version",
-      "page_type": "Page type",
-      "all_types": "All types",
-      "locale": "Language",
-      "all_locales": "All languages",
-      "priority": "Priority versions",
-      "priority_hint": "In order, one per line or comma-separated: the most requested, read from the edge log (LogsQL, stats by (version)).",
-      "submit": "Launch the pass",
-      "confirm": "Confirm launch",
-      "locked_active": "A pass is already active: one at a time.",
-      "locked_dormant": "Unavailable until the pre-rendering is configured.",
-      "promotions_on": "A patch that leaves the latest rank joins the pass by itself.",
-      "promotions_off": "A patch that leaves the latest rank does not join the pass by itself: launch one for it.",
-      "versions": "Versions",
-      "versions_hint": "One per line or comma-separated; empty, every older patch. A version that is not an older patch is left out."
-    },
     "page_types": {
       "champions": "champions",
       "items": "items",
       "runes": "runes",
       "summoners": "summoner spells"
     },
-    "scope": {
-      "all": "every page",
-      "range": "{oldest} → {newest}",
-      "from": "from {oldest}",
-      "until": "up to {newest}",
-      "priority": "{count, plural, one {# priority version} other {# priority versions}}"
-    },
-    "storage": {
-      "title": "What the store holds",
-      "chip": "{cost} / month",
-      "epoch": "Epoch {epoch}",
-      "builds": "Bundles",
-      "builds_sub": "{count, plural, one {# build} other {# builds}} · {files} files, in Multi-AZ",
-      "total": "Total",
-      "total_sub": "retired epochs excluded",
-      "empty": "No page stored.",
-      "prices": "Estimated at {oneZone} per GB and month in One Zone (pages), {multiAz} in Multi-AZ (bundles).",
-      "egress": "Egress excluded: 75 GB free a month, then €0.01 per GB, followed in Grafana.",
-      "counters": "These figures tell what the passes wrote, not what an expiry rule has deleted since: on staging, pages expire after 14 days, a completed unit is not rewritten and its pages fall back to the SSR silently.",
-      "retired": "A retired epoch keeps costing until the store's lifecycle has deleted it, 500,000 objects a day at most: 9 days at least for 4 million pages.",
-      "columns": {
-        "epoch": "Epoch",
-        "state": "State",
-        "pages": "Pages",
-        "volume": "Volume",
-        "cost": "Cost / month",
-        "version": "Version",
-        "locales": "Languages"
-      },
-      "versions": {
-        "title": "By version of the served epoch",
-        "chip": "{count, plural, one {# version} other {# versions}}",
-        "empty": "No page in the served epoch.",
-        "locales": "{count} / {all}"
-      }
-    },
-    "history": {
-      "empty": "No pass launched.",
-      "automatic": "promotion or CLI",
-      "pages": "{written} / {total}",
-      "columns": {
-        "pass": "Pass",
-        "epoch": "Epoch",
-        "state": "State",
-        "scope": "Perimeter",
-        "pages": "Pages written",
-        "volume": "Volume",
-        "started": "Launched",
-        "author": "By",
-        "finished": "End"
-      }
-    },
     "done": {
-      "start": "Pass #{id} launched on epoch {epoch}: {units, plural, =0 {no unit, the perimeter covers no older patch} one {# unit} other {# units}}.",
       "pause": "Pass #{id} paused.",
       "resume": "Pass #{id} resumed.",
       "cancel": "Pass #{id} cancelled."
@@ -1318,7 +1208,8 @@
       "no_gaps": "Nothing is missing in this epoch.",
       "error": "Coverage unavailable ({reason}).",
       "retry": "Try again",
-      "empty": "No older patch."
+      "empty": "No older patch.",
+      "season_counts": "{versions, plural, one {# patch} other {# patches}} · {complete} complete{missing, plural, =0 {} other { · # to complete}}"
     },
     "costs": {
       "title": "What the store holds",
@@ -1575,8 +1466,6 @@
     "filter": "Filter",
     "maintenance": "Maintenance",
     "databases": "Backed-up databases",
-    "nights": "Nights",
-    "current_pass": "Active pass",
-    "launch": "Launch"
+    "nights": "Nights"
   }
 }

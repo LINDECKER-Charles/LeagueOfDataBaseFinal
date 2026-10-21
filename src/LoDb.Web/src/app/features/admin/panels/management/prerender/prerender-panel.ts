@@ -1,103 +1,204 @@
-import { ChangeDetectionStrategy, Component, computed, linkedSignal } from '@angular/core';
-import { readAdminPrerender } from '../../../../../core/api/generated/fn/admin-prerender/read-admin-prerender';
-import type { PassRequest } from '../../../../../core/api/generated/models/pass-request';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DOCUMENT,
+  Injector,
+  afterNextRender,
+  computed,
+  effect,
+  inject,
+  linkedSignal,
+  signal,
+  untracked,
+  viewChild,
+} from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 import type { PrerenderReport } from '../../../../../core/api/generated/models/prerender-report';
-import { FigurePipe } from '../../../format/figure-pipe';
-import { AdminBand } from '../../../layout/admin-band';
-import { AdminCard } from '../../../layout/admin-card';
-import { AdminRule } from '../../../layout/admin-rule';
 import { PageHead } from '../../../layout/page-head';
 import { AdminTextPipe } from '../../../shared/admin-text-pipe';
-import { injectPanel } from '../../../state/inject-panel';
+import { injectAdminText } from '../../../shared/inject-admin-text';
 import { PanelState } from '../../../state/panel-state';
-import { Kpi } from '../../../widgets/kpi';
-import { monthlyCost } from '../backups/monthly-cost';
-import { DecimalBytesPipe } from './format/decimal-bytes-pipe';
-import { injectPassActions } from './inject-pass-actions';
-import { LaunchForm, type LaunchLock } from './launch/launch-form';
-import { CurrentPassCard } from './pass/current-pass-card';
-import { PassHistoryTable } from './pass/pass-history-table';
-import { pollWhile } from './poll-while';
-import { StorageSection } from './storage/storage-section';
+import { Tab } from '../../../../../ui/tabs/tab';
+import { Tabs } from '../../../../../ui/tabs/tabs';
+import type { LaunchPreset } from './common/scope/launch-preset';
+import { PRERENDER_CADENCE } from './common/scope/prerender-cadence';
+import { CostsTab } from './costs/costs-tab';
+import { SwitchDialog, type SwitchData } from './costs/switch/switch-dialog';
+import { CoverageTab } from './coverage/coverage-tab';
+import { injectAdminDialogs } from './dialogs/inject-admin-dialogs';
+import { LaunchOpener } from './launch/dialog/launch-opener';
+import { LiveMonitor } from './monitor/live-monitor';
+import { PassRecap } from './monitor/recap/pass-recap';
+import { entryPreset } from './overview/blocks/entry-preset';
+import { IdleCard } from './overview/blocks/idle-card';
+import { LaunchCta } from './overview/blocks/launch-cta';
+import { PrerenderBands } from './overview/blocks/prerender-bands';
+import { PrerenderKpis } from './overview/blocks/prerender-kpis';
+import { bandStateOf } from './overview/state/band-state-of';
+import { injectPrerenderReport } from './overview/state/inject-prerender-report';
+import { launchLockOf } from './overview/state/launch-lock-of';
+import { type PassTitle, passTitleOf } from './overview/state/pass-title-of';
+import { quietPanel } from './overview/state/quiet-panel';
+import { recentPassOf } from './overview/state/recent-pass-of';
+import {
+  PassDetailDialog,
+  type PassDetailData,
+  type PassDetailResult,
+} from './passes/pass-detail-dialog';
+import { PassesTab } from './passes/passes-tab';
 
-const RUNNING = 'running';
-const RETIRED = 'retired';
+/** What the title of the document follows. */
+interface TitleSource {
+  readonly report: PrerenderReport | undefined;
+  readonly dismissed: number | null;
+}
+
+// The pass a visitor dismissed from the recap, kept in this browser by PassRecap.
+const DISMISSED_KEY = 'lodb.admin.prerender.recap-dismissed';
+const MONITOR_ID = 'prerender-monitor';
 
 /**
- * `/admin/prerender`: the pre-rendering of the older patches into the object store. The key
- * figures (the epoch nginx serves, the active pass, what the store holds and its estimated
- * monthly cost), the notice to switch the served epoch once a newer one is complete (a
- * variable and a redeploy, never from here), the active pass with its pause, resume and
- * cancel, the launch of a pass, the store epoch by epoch and version by version, then the
- * latest passes. It reads itself again every few seconds while a pass runs.
+ * `/admin/prerender`: the pre-rendering of the older patches into the object store (§ 2).
+ * Its head launches a pass and says how fresh the page is; bands say what needs doing; then
+ * the live monitor of the active pass, the recap of one just ended, or what to do without
+ * one; the key figures; and three tabs: coverage, storage and costs, history. The page alone
+ * opens the launch dialog and the detail of a pass: every other block hands it a preset.
  */
 @Component({
   selector: 'lodb-prerender-panel',
   imports: [
-    AdminBand,
-    AdminCard,
-    AdminRule,
-    CurrentPassCard,
-    DecimalBytesPipe,
-    FigurePipe,
-    Kpi,
-    LaunchForm,
+    AdminTextPipe,
+    CostsTab,
+    CoverageTab,
+    IdleCard,
+    LaunchCta,
+    LiveMonitor,
     PageHead,
     PanelState,
-    PassHistoryTable,
-    StorageSection,
-    AdminTextPipe,
+    PassRecap,
+    PassesTab,
+    PrerenderBands,
+    PrerenderKpis,
+    Tab,
+    Tabs,
   ],
   templateUrl: './prerender-panel.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PrerenderPanel {
-  protected readonly report = injectPanel(readAdminPrerender, () => ({}));
-  protected readonly actions = injectPassActions(() => this.report.reload());
-  /** Why no pass may be launched now, null when one may. */
-  protected readonly lock = computed<LaunchLock | null>(() => {
+  private readonly texts = injectAdminText();
+  private readonly opener = inject(LaunchOpener);
+  private readonly dialogs = injectAdminDialogs();
+  private readonly cadence = inject(PRERENDER_CADENCE);
+  private readonly document = inject(DOCUMENT);
+  private readonly injector = inject(Injector);
+  private readonly coverage = viewChild(CoverageTab);
+  // Once a pass starts, the focus goes to its monitor as soon as the report shows it.
+  private readonly isFocusDue = signal(false);
+
+  protected readonly report = injectPrerenderReport();
+  protected readonly quiet = quietPanel(this.report);
+  protected readonly dismissed = signal<number | null>(this.storedDismissal());
+  protected readonly lock = computed(() => launchLockOf(this.report.value()));
+  protected readonly bands = computed(() => {
     const report = this.report.value();
-    if (report && !report.isConfigured) {
-      return 'locked_dormant';
-    }
-    return report?.current ? 'locked_active' : null;
+    return report ? bandStateOf(report) : null;
   });
-  protected readonly cost = computed(() => {
-    const storage = this.report.value()?.storage;
-    return storage ? monthlyCost(storage.monthlyCost, storage.currency) : '';
+  protected readonly recent = computed(() => {
+    const report = this.report.value();
+    return report ? recentPassOf(report, this.dismissed()) : null;
   });
-  /** What the retired epochs still cost until the lifecycle deletes them, '' when none. */
-  protected readonly retiredCost = computed(() => {
-    const storage = this.report.value()?.storage;
-    const retired = storage?.epochs.filter((epoch) => epoch.state === RETIRED) ?? [];
-    const amount = retired.reduce((sum, epoch) => sum + epoch.monthlyCost, 0);
-    return storage && retired.length > 0 ? monthlyCost(amount, storage.currency) : '';
+  protected readonly reportEvery = computed(() =>
+    this.report.value()?.current ? this.cadence.reportActiveMs : this.cadence.reportIdleMs,
+  );
+  private readonly title = linkedSignal<TitleSource, PassTitle>({
+    source: () => ({ report: this.report.value(), dismissed: this.dismissed() }),
+    computation: ({ report, dismissed }, previous) =>
+      passTitleOf(report, dismissed, previous?.value.held ?? null),
   });
-  // A failed read clears the report, but not what it last said: a 502 while the API
-  // redeploys must not end the polling of a pass that runs for days.
-  private readonly isRunning = linkedSignal<PrerenderReport | undefined, boolean>({
-    source: this.report.value,
-    computation: (report, previous) =>
-      report ? report.current?.state === RUNNING : (previous?.value ?? false),
+  protected readonly documentTitle = computed(() => {
+    const { key, params } = this.title();
+    return this.texts.text(key, params);
   });
 
   constructor() {
-    pollWhile(this.isRunning, this.report);
+    effect(() => {
+      if (this.isFocusDue() && this.report.value()?.current) {
+        untracked(() => this.isFocusDue.set(false));
+        afterNextRender(() => this.follow(), { injector: this.injector });
+      }
+    });
   }
 
-  protected launch(request: PassRequest): void {
-    void this.actions.start(request);
+  protected async openLaunch(preset: LaunchPreset): Promise<void> {
+    const report = this.report.value();
+    if (!report || this.lock() !== null) {
+      return;
+    }
+    const started = await this.opener.open(preset, report);
+    // Even closed without a pass: after a 409, « Fermer et suivre la passe » expects it.
+    this.refresh();
+    this.isFocusDue.set(started !== null);
   }
 
-  protected pause(id: number): void {
-    void this.actions.pause(id);
+  protected launchFromHead(): void {
+    void this.openLaunch(entryPreset('header', null));
   }
 
-  protected resume(id: number): void {
-    void this.actions.resume(id);
+  protected completeEpoch(epoch: number): void {
+    void this.openLaunch(entryPreset('complete-epoch', epoch));
   }
 
-  protected cancel(id: number): void {
-    void this.actions.cancel(id);
+  /** Reads the report and the coverage again; the monitor reads itself. */
+  protected refresh(): void {
+    this.report.reload();
+    this.coverage()?.reload();
+  }
+
+  protected openSwitch(target: number): void {
+    const report = this.report.value();
+    if (report) {
+      this.dialogs.open<SwitchDialog, SwitchData, void>(SwitchDialog, {
+        labelledBy: SwitchDialog.HEADING_ID,
+        data: { target, report },
+      });
+    }
+  }
+
+  protected async openDetail(id: number): Promise<void> {
+    const report = this.report.value();
+    const pass = report?.passes.find((one) => one.id === id) ?? report?.current;
+    if (!report || pass?.id !== id) {
+      return;
+    }
+    const ref = this.dialogs.open<PassDetailDialog, PassDetailData, PassDetailResult>(
+      PassDetailDialog,
+      { labelledBy: PassDetailDialog.HEADING_ID, data: { pass, report }, size: 'wide' },
+    );
+    const result = await firstValueFrom(ref.closed);
+    if (result === 'follow') {
+      afterNextRender(() => this.follow(), { injector: this.injector });
+    } else if (result) {
+      await this.openLaunch(result);
+    }
+  }
+
+  /** Takes the operator to the monitor of the active pass. */
+  protected follow(): void {
+    this.document.getElementById(MONITOR_ID)?.focus();
+  }
+
+  protected dismiss(id: number): void {
+    this.dismissed.set(id);
+  }
+
+  private storedDismissal(): number | null {
+    try {
+      const stored = this.document.defaultView?.localStorage.getItem(DISMISSED_KEY);
+      return stored ? Number(stored) : null;
+    } catch {
+      // Private browsing or storage refused: nothing was dismissed in this browser.
+      return null;
+    }
   }
 }

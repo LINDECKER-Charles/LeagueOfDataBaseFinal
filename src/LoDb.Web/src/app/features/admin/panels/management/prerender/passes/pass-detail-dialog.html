@@ -1,0 +1,124 @@
+<lodb-dialog
+  [heading]="title"
+  [headingId]="headingId"
+  [closeLabel]="'admin.prerender.common.close' | adminText"
+>
+  <div class="flex flex-col gap-5 text-[0.9rem] text-text-muted">
+    <p class="m-0 flex flex-wrap items-center gap-x-3 gap-y-1" data-detail-head>
+      <span [lodbBadge]="tone">{{ 'admin.prerender.states.' + pass.state | adminText }}</span>
+      <span>{{ head() }}</span>
+    </p>
+
+    <section class="flex flex-col gap-2" data-detail-scope>
+      <h3 class="readout-label m-0">{{ 'admin.prerender.passes.detail.scope' | adminText }}</h3>
+      <p class="m-0 flex flex-wrap items-center gap-x-3 gap-y-1">
+        <span>{{ scope() }}</span>
+        @if (scopeVersions().length > 0) {
+          <button
+            lodbButton="ghost"
+            lodbButtonSize="small"
+            type="button"
+            aria-controls="prerender-pass-versions"
+            [attr.aria-expanded]="isListOpen()"
+            (click)="isListOpen.set(!isListOpen())"
+          >
+            {{
+              (isListOpen()
+                ? 'admin.prerender.passes.detail.hide_versions'
+                : 'admin.prerender.passes.detail.show_versions'
+              ) | adminText
+            }}
+          </button>
+        }
+      </p>
+      @if (isListOpen()) {
+        <ul
+          class="m-0 flex list-none flex-wrap gap-1.5 p-0"
+          id="prerender-pass-versions"
+          data-scope-versions
+        >
+          @for (version of scopeVersions(); track version) {
+            <li class="border border-gold/28 px-1.5 font-mono text-[0.78rem] text-gold-bright">
+              {{ version }}
+            </li>
+          }
+        </ul>
+      }
+      @if (legacyRange(); as range) {
+        <p class="readout-text m-0" data-legacy-range>{{ range }}</p>
+      }
+    </section>
+
+    <section class="flex flex-col gap-1" data-detail-outcome>
+      <h3 class="readout-label m-0">{{ 'admin.prerender.passes.detail.outcome' | adminText }}</h3>
+      <ul class="m-0 flex list-none flex-col gap-1 p-0">
+        @for (line of outcome(); track $index) {
+          <li>{{ line }}</li>
+        }
+      </ul>
+    </section>
+
+    @if (progress.value(); as read) {
+      <section class="flex flex-col gap-2" data-detail-matrix>
+        <h3 class="readout-label m-0">{{ 'admin.prerender.passes.detail.matrix' | adminText }}</h3>
+        <lodb-unit-matrix
+          mode="pass"
+          [locales]="read.locales"
+          [versions]="read.versions"
+          [details]="details()"
+          (opened)="openVersion($event)"
+        />
+      </section>
+      @if (read.unitsWithFailures > 0) {
+        <section class="flex flex-col gap-2" data-detail-failures>
+          <h3 class="readout-label m-0">
+            {{ 'admin.prerender.passes.detail.failures' | adminText }}
+          </h3>
+          <lodb-failures-list [progress]="read" (opened)="openVersion($event)" />
+        </section>
+      }
+    } @else if (progress.failure()) {
+      <p class="m-0 text-bad" role="alert" data-detail-error>
+        {{ 'admin.prerender.passes.detail.error' | adminText: { reason: reason() } }}
+      </p>
+    } @else {
+      <p class="m-0 text-text-dim" role="status" data-detail-loading>
+        {{ 'admin.prerender.passes.detail.loading' | adminText }}
+      </p>
+    }
+
+    <div class="flex flex-wrap items-center justify-end gap-3 border-t border-gold/16 pt-4">
+      @if (lock && !isActive) {
+        <p class="readout-text m-0 me-auto" id="prerender-pass-detail-lock">{{ lockReason() }}</p>
+      }
+      @if (isActive) {
+        <button lodbButton="gold" type="button" data-follow (click)="ref.close('follow')">
+          {{ 'admin.prerender.passes.detail.follow' | adminText }}
+        </button>
+      } @else {
+        @if (failures(); as relaunchFailures) {
+          <button
+            lodbButton
+            type="button"
+            data-relaunch-failures
+            [disabled]="lock !== null"
+            [attr.aria-describedby]="lock ? 'prerender-pass-detail-lock' : null"
+            (click)="relaunchWith(relaunchFailures.preset)"
+          >
+            {{ failuresLabel() }}
+          </button>
+        }
+        <button
+          lodbButton="ghost"
+          type="button"
+          data-relaunch-scope
+          [disabled]="lock !== null || relaunch() === null"
+          [attr.aria-describedby]="lock ? 'prerender-pass-detail-lock' : null"
+          (click)="relaunchWith(relaunch())"
+        >
+          {{ 'admin.prerender.passes.detail.relaunch' | adminText }}
+        </button>
+      }
+    </div>
+  </div>
+</lodb-dialog>
