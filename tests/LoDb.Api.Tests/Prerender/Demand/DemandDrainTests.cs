@@ -1,6 +1,7 @@
 using System.Net;
 using LoDb.Api.Modules.Admin.Prerender.Demand;
 using LoDb.Api.Modules.Admin.Prerender.Demand.Drain;
+using LoDb.Api.Modules.Admin.Prerender.Demand.Queue;
 using LoDb.Api.Modules.Admin.Prerender.Pages;
 using LoDb.Api.Tests.Prerender.Support;
 using LoDb.Domain.Languages;
@@ -197,6 +198,29 @@ public sealed class DemandDrainTests(PostgresContainerFixture postgres)
         var row = await rig.RowAsync(Aatrox);
         Assert.Equal((PrerenderDemandState.Pending, 0), (row!.State, row.Attempts));
         Assert.DoesNotContain(Sword, rig.Harness.Ssr.Pages);
+    }
+
+    [Fact]
+    public async Task SsrLeftDownIsSaidOnceNotAtEveryTick()
+    {
+        await using var rig = await DemandRig.StartAsync(postgres);
+        Func<HttpResponseMessage> down = static () => throw new HttpRequestException(
+            HttpRequestError.ConnectionError,
+            "refused");
+        rig.Harness.Ssr.Answer(Aatrox, down, down);
+        rig.Refused.Refuse(Aatrox);
+        await rig.CollectAsync();
+
+        await rig.DrainAsync();
+        var asked = rig.Harness.Ssr.Pages.Count;
+        rig.Harness.Clock.Advance(DemandQueue.RetryAfter + TimeSpan.FromSeconds(1));
+        await rig.DrainAsync();
+
+        Assert.True(rig.Harness.Ssr.Pages.Count > asked);
+        Assert.Equal(PrerenderDemandState.Pending, (await rig.RowAsync(Aatrox))!.State);
+        Assert.Single(
+            rig.Harness.Logs.GetSnapshot(),
+            static record => record.Id.Name == "prerender.demand.stopped");
     }
 
     [Fact]

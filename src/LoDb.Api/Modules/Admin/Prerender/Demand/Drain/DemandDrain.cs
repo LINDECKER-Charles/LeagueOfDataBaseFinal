@@ -41,6 +41,7 @@ internal sealed class DemandDrain(
     private const string NoReason = "none.";
 
     private int? _revivedEpoch;
+    private string? _stoppedBy;
 
     /// <summary>Drains the queue, unless it is off or another instance drains it.</summary>
     public async Task RunAsync(CancellationToken cancellationToken)
@@ -80,9 +81,11 @@ internal sealed class DemandDrain(
             metrics.Pending(await queue.PendingAsync(cancellationToken));
             if (tally.StoppedBy is { } reason)
             {
-                DemandLog.Stopped(logger, reason);
+                NoteStop(reason);
                 return;
             }
+
+            _stoppedBy = null;
         }
 
         metrics.Pending(await queue.PendingAsync(cancellationToken));
@@ -108,6 +111,17 @@ internal sealed class DemandDrain(
             }
         });
         return tally;
+    }
+
+    // Said once per cause, as the pass says an outage: an SSR left down stops every tick.
+    private void NoteStop(string reason)
+    {
+        if (reason != _stoppedBy)
+        {
+            DemandLog.Stopped(logger, reason);
+        }
+
+        _stoppedBy = reason;
     }
 
     private void Log(DemandTally tally, int epoch, long durationMs) =>
