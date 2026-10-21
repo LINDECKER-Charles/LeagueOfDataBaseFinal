@@ -447,18 +447,30 @@ au staging. En attendant, ses pages passent par le SSR et le cache local.
   compte ce que l'estimation laisse de côté (la sortie, les requêtes) et se charge à part, sans
   jamais retarder le panneau ([`configuration.md`](../guides/configuration.md) § 4.9) ;
 - la passe en cours, avec sa progression, son rythme et sa fin estimée ;
-- le lancement d'une passe, avec son périmètre (tout, une plage de versions, un type de
-  page, une langue), une liste de versions prioritaires et une confirmation ;
+- le lancement d'une passe, avec son périmètre en listes explicites : les anciens patchs
+  (`versions`, 1 000 au plus), les langues (`locales`) et les types de page (`pageTypes`),
+  chacun laissé vide pour « tous », une liste de versions prioritaires et `skipComplete`, qui
+  laisse de côté chaque (version, langue) que l'epoch tient déjà sur tous les types demandés ;
+  une passe qui n'aurait rien à rendre est refusée avant d'être ouverte. Un périmètre stocké
+  avant les listes (une plage, un type, une langue) se lit toujours ;
 - pause, reprise, annulation ;
-- l'epoch servie, lue dans la configuration ; quand une passe est complète, la consigne
-  « poser `LODB_ARCHIVE_SERVE_EPOCH=N` et redéployer » (nginx ne change pas d'epoch à
-  chaud) ;
+- l'epoch servie, lue dans la configuration ; quand une epoch plus récente est prête, la
+  consigne « poser `LODB_ARCHIVE_SERVE_EPOCH=N` et redéployer » (nginx ne change pas d'epoch à
+  chaud). Une epoch est prête quand sa couverture n'a plus de manque : chaque (ancien patch,
+  langue) a une unité terminée sur les quatre types de pages, ou une unité en échec définitif
+  que le SSR servira, quelles que soient les passes qui l'ont remplie ;
 - l'historique.
 
 Les points d'accès vivent sous `/api/admin/prerender` (`GET`, `POST …/passes`,
-`POST …/passes/{id}/pause|resume|cancel`), sous la politique administrateur. Chaque action
-s'écrit au journal d'audit (`admin.prerender_*`). Le contrat OpenAPI et le client généré
-sont mis à jour dans le même commit.
+`POST …/passes/{id}/pause|resume|cancel`), sous la politique administrateur. Trois lectures
+servent le pupitre : `GET …/patches?epoch={n}` (chaque ancien patch et ce qu'une epoch en
+tient, langue par langue et type par type, avec les bases des estimations),
+`GET …/passes/{id}/progress?since={iso}` (le suivi en direct d'une passe, entier ou limité aux
+versions changées depuis la lecture précédente) et `GET …/passes/{id}/versions/{version}` (les
+unités d'une version, une par langue). Chaque action s'écrit au journal d'audit
+(`admin.prerender_*`). Le contrat OpenAPI et le client généré sont mis à jour dans le même
+commit. L'interface du pupitre (modale de lancement, suivi en direct, couverture, coûts,
+historique) est décrite dans [`pre-rendu-admin-ux.md`](pre-rendu-admin-ux.md).
 
 ### Lot 3 — nginx sert les anciens patchs depuis le stockage
 
