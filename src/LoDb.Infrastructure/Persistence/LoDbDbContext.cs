@@ -11,6 +11,7 @@ using LoDb.Infrastructure.Persistence.Contact;
 using LoDb.Infrastructure.Persistence.Ddragon;
 using LoDb.Infrastructure.Persistence.Outbox;
 using LoDb.Infrastructure.Persistence.Prerender;
+using LoDb.Infrastructure.Persistence.Prerender.Demand;
 using LoDb.Infrastructure.Persistence.PublicApi;
 using LoDb.Infrastructure.Persistence.Scheduling;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
@@ -80,6 +81,8 @@ public sealed class LoDbDbContext(DbContextOptions<LoDbDbContext> options)
     public DbSet<PrerenderUnit> PrerenderUnits => Set<PrerenderUnit>();
 
     public DbSet<PrerenderBuild> PrerenderBuilds => Set<PrerenderBuild>();
+
+    public DbSet<PrerenderDemandPage> PrerenderDemand => Set<PrerenderDemandPage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
