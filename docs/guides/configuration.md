@@ -248,7 +248,9 @@ création d'une base, sur un volume vide.
 | `LODB_PAGES_STORE_BUCKET` | `lodb-pages-staging` | `lodb-pages-prod` | avec le précédent | Bucket que nginx lit, le même que `LoDb__Prerender__Bucket` (§ 4.2). Défaut `none` : aucun (une valeur vide est refusée par nginx). |
 | `LODB_PAGES_STORE_SCHEME`, `LODB_PAGES_STORE_HOST`, `LODB_PAGES_STORE_PORT` | ➖ | ➖ | ➖ | Adresse du stockage pour nginx : `https`, `s3.fr-par.scw.cloud`, `443`. Le stockage simulé de la stack locale les remplace (§ 7). nginx lit sans clé, depuis l'adresse de l'hôte, la seule que la politique du bucket admette. |
 | `LODB_ARCHIVE_SERVE_EPOCH` | `1` | `1` | ➖ | Epoch que nginx lit dans le stockage (`pages/<epoch>/…`), aussi transmise à l'API (`LoDb__Prerender__ServedEpoch`) pour le panneau d'administration. Changée à la main, puis redéploiement : voir « Changer l'epoch servie » (§ 4.8). Distincte de `LODB_ARCHIVE_EPOCH`, le compteur des clés du cache de nginx. |
-| `LODB_PRERENDER_RENDERS_PER_MINUTE`, `LODB_PRERENDER_RENDER_BURST`, `LODB_PRERENDER_MAX_IN_FLIGHT`, `LODB_PRERENDER_VISITOR_RESERVE` | ➖ (§ 4.5) | ➖ | ➖ | Voie de rendu de la passe de précalcul du SSR : rendus par minute (`120`) et d'affilée (`10`), rendus simultanés de la passe (`2`, strictement sous `LODB_RENDER_MAX_IN_FLIGHT`), et rendus toujours laissés aux visiteurs (`4`) : la passe n'entre que si `total + 1` reste sous `LODB_RENDER_MAX_IN_FLIGHT` moins cette réserve. Sans part par client : l'API est le seul client de cette voie. Elle règle la passe sur les mêmes lignes : le rythme et les rendus simultanés lui parviennent aussi (`LoDb__Prerender__RendersPerMinute`, `LoDb__Prerender__MaxInFlight`, § 4.3), si bien qu'un budget relevé ici l'est des deux côtés, et que la passe ne demande jamais plus que la voie n'admet (sinon, chaque refus la fait attendre son `Retry-After`). Un `LODB_RENDER_MAX_IN_FLIGHT` abaissé sous `3` ramène la voie sous `2` à l'insu de l'API : poser alors `LODB_PRERENDER_MAX_IN_FLIGHT`. |
+| `LODB_PRERENDER_RENDERS_PER_MINUTE`, `LODB_PRERENDER_RENDER_BURST`, `LODB_PRERENDER_MAX_IN_FLIGHT`, `LODB_PRERENDER_VISITOR_RESERVE` | ➖ (§ 4.5) | ➖ | ➖ | Voie `prerender` du SSR des visiteurs : rendus par minute (`120`) et d'affilée (`10`), rendus simultanés de la passe (`2`, strictement sous `LODB_RENDER_MAX_IN_FLIGHT`), rendus toujours laissés aux visiteurs (`4`). Inutilisée depuis que la passe a son propre SSR (§ 4.10), gardée telle quelle. Deux de ces lignes servent ailleurs : `LODB_PRERENDER_RENDERS_PER_MINUTE` est aussi le **rythme fixe** de la passe (`LoDb__Prerender__RendersPerMinute`, § 4.3 : interrupteur `LODB_PRERENDER_PACE_MODE=fixed` et commande `prerender unit`), jamais au-dessus de `LODB_PRERENDER_PACE_MAX` ; `LODB_PRERENDER_MAX_IN_FLIGHT` donne les pages en vol de la passe (`LoDb__Prerender__MaxInFlight`) et la voie du SSR de la passe, sous ses `4` rendus simultanés (`3` au plus). `LODB_PRERENDER_RENDER_BURST` règle aussi la rafale de la voie du SSR de la passe. |
+| `LODB_PRERENDER_PACE_MODE` | ➖ | ➖ | ➖ | Rythme de la passe de précalcul (§ 4.10) : `adaptive` (défaut), il suit le CPU libre de l'hôte entre le plancher et le plafond ci-dessous ; `fixed`, il reste à `LODB_PRERENDER_RENDERS_PER_MINUTE` sans rien mesurer. L'interrupteur, appliqué par un redéploiement de l'API ; le levier immédiat reste la pause au pupitre. |
+| `LODB_PRERENDER_PACE_MIN`, `LODB_PRERENDER_PACE_MAX` | ➖ (§ 4.5) | ➖ | ➖ | Plancher (`30`) et plafond (`240`) du rythme adaptatif, en rendus par minute. Le plafond est aussi le budget de la voie `prerender` du SSR de la passe (`web-ssr-prerender`) : le SSR borne la passe même si l'API se trompe. L'API refuse de démarrer, et le job de déployer, sur un plancher, un pas ou un rythme fixe au-dessus du plafond. Monter le plafond à `300` après une semaine sans alerte ni ralentissement mesuré (§ 4.10). |
 | `LODB_FRONT_BUILDS_RETENTION_DAYS` | `400` | `400` | ➖ | Lu par le job de déploiement : un bundle du volume `front-builds` qu'aucun build n'a livré depuis ce nombre de jours (`400`) est supprimé, `395` au moins (le job refuse en deçà). Jamais sous la durée de vie d'une page en cache (un an pour un ancien patch, son `s-maxage`, puis sa copie périmée servie le temps de son nouveau rendu) : un onglet ou une page gardée nommerait un bundle disparu. La copie des builds dans le stockage objet (ADR 0011) ne couvre pas les pages rendues par le SSR, que le cache des anciens patchs garde aussi (inactivité `90d`) : un filet de plus, pas une raison de baisser cette durée. Mesuré : 16 Mo en 9 jours, moins de 1 Go par an. |
 | `LODB_ADMIN_LOGIN` | 🔁 `ADMIN_LOGIN` | idem | ➖ | Administrateur racine, tenu par le job à chaque déploiement (`api admin root`) : compte de ce nom, rôle admin, TOTP enrôlé depuis le lien d'invitation que `api admin mfa-invite --email …` affiche sur l'hôte (15 min ; `api admin mfa-reset` retire un TOTP perdu). Absent : aucun, seulement `api admin create`. |
 | `LODB_ADMIN_PASSWORD` 🔒 | 🔁 `ADMIN_PASSWORD` | idem | avec le précédent | Son mot de passe, 12 caractères au moins, sans apostrophe ni guillemet. Changé ici, il est réappliqué au déploiement suivant (sessions fermées). Reste dans le `.env` : le job le passe à la commande par son entrée. |
@@ -402,13 +404,22 @@ le service y pose `LoDb__Database__Password`, lu dans `/run/secrets` ; pour l'AP
 `LoDb__Accounts__SiteOrigin`, `LoDb__Seo__CanonicalOrigin` et `LoDb__PublicApi__SiteOrigin`
 (`https://` + `LODB_CANONICAL_HOST`), `LoDb__PublicApi__Reference__BaseUrl`
 (`LODB_PUBLIC_API_ORIGIN`), `LoDb__DataProtection__CertificatePath`,
-`LoDb__Prerender__SsrBaseUrl` (`http://lodb-web-ssr:4000` : la passe demande ses pages au SSR
-directement, jamais à nginx), `LoDb__Prerender__PublicHost` (`LODB_CANONICAL_HOST` : l'hôte
+`LoDb__Prerender__SsrBaseUrl` (`http://lodb-web-ssr-prerender:4000` : la passe demande ses
+pages à son propre SSR, directement, jamais à nginx ni au SSR des visiteurs, § 4.10),
+`LoDb__Prerender__PublicHost` (`LODB_CANONICAL_HOST` : l'hôte
 pour lequel chaque page est rendue), `LoDb__Prerender__ServedEpoch`
 (`LODB_ARCHIVE_SERVE_EPOCH`), `LoDb__Prerender__RendersPerMinute` et
 `LoDb__Prerender__MaxInFlight` (`LODB_PRERENDER_RENDERS_PER_MINUTE` et
-`LODB_PRERENDER_MAX_IN_FLIGHT`, les lignes de la voie du SSR, `120` et `2` à défaut, `30` et
-`1` au staging : le rythme de la passe et ses pages en vol),
+`LODB_PRERENDER_MAX_IN_FLIGHT`, `120` et `2` à défaut, `30` et `1` au staging : le rythme
+fixe de la passe et ses pages en vol), `LoDb__Prerender__Pace__Mode`,
+`LoDb__Prerender__Pace__MinRendersPerMinute` et `LoDb__Prerender__Pace__MaxRendersPerMinute`
+(`LODB_PRERENDER_PACE_MODE`, `LODB_PRERENDER_PACE_MIN`, `LODB_PRERENDER_PACE_MAX`),
+`LoDb__Prerender__Pace__VisitorsLoadUrl` et `LoDb__Prerender__Pace__PassLoadUrl`
+(`http://lodb-web-ssr:9464/load`, `http://lodb-web-ssr-prerender:9464/load` : l'état des
+deux SSR que lit le régulateur), et côté `web-ssr-prerender` les variables du SSR des
+visiteurs, sauf `LODB_FRONT_BUILDS_DIR`, avec `LODB_RENDER_MAX_IN_FLIGHT=4`,
+`LODB_PRERENDER_VISITOR_RESERVE=1` et `LODB_PRERENDER_RENDERS_PER_MINUTE` tiré de
+`LODB_PRERENDER_PACE_MAX`,
 `LoDb__Hosting__KnownProxyNetworks__0` (`LODB_STACK_SUBNET` seul), `AllowedHosts` (les hôtes de
 `CADDY_DOMAINS` et `API_CADDY_DOMAINS`, puis `lodb-api`, `localhost` et `127.0.0.1` : tout autre
 `Host` reçoit un `400`, le port des métriques excepté), `LoDb__Storage__Root` (`/srv/storage`, volume
@@ -447,13 +458,17 @@ processus (`pids`).
 | Service | `cpus` | `cpu_shares` | `pids` | Mémoire |
 |---|---|---|---|---|
 | `web-ssr` | `1.0` | `1024` | `256` | `704m` |
+| `web-ssr-prerender` | `1.0` | `128` | `256` | `704m` |
 | `api` | `1.25` | `1024` | `512` | `1152m` |
 | `postgres` | `0.5` | `1024` | `256` | `512m` |
 | `nginx` | `0.25` | `2048` | `256` | `512m` |
 | `migrate` | — | — | `256` | `128m` |
 
-Les quotas totalisent 3 des 4 vCPU de l'hôte : sous une charge qui les dépasse, la stack
-déleste (`503` avec `Retry-After`) au lieu de prendre l'hôte des autres projets. Le bridage se
+Les quotas des services des visiteurs totalisent 3 des 4 vCPU de l'hôte : sous une charge
+qui les dépasse, la stack déleste (`503` avec `Retry-After`) au lieu de prendre l'hôte des
+autres projets. Le SSR de la passe (`web-ssr-prerender`) s'y ajoute au poids le plus bas :
+le noyau ne lui cède que le CPU que personne ne demande, et son régulateur le freine avant
+(§ 4.10). Le bridage se
 lit dans `container_cpu_cfs_throttled_seconds_total` (alerte `ConteneurCpuBride`,
 `infra-vps`) : recalibrer après 7 jours, en regard de la latence. La sonde de santé de l'API
 démarre un runtime .NET dans ce quota : toutes les 60 s en marche, toutes les 2 s au
@@ -468,13 +483,14 @@ un tmpfs borné, compté dans sa limite mémoire.
 |---|---|---|---|
 | `api`, `migrate` | `app` (image chiseled) | `ddragon` (`api`), tmpfs `/tmp` (64 Mio) | — |
 | `web-ssr` | `node` | `front-builds`, tmpfs `/tmp` (16 Mio) | — |
+| `web-ssr-prerender` | `node` | tmpfs `/tmp` (16 Mio) : aucun volume | — |
 | `nginx` | `nginx`, port 8080 | caches et fichiers temporaires (volumes), tmpfs `/tmp` (64 Mio : configuration rendue, pid) | — |
 | `postgres` | root, puis `postgres` | `pgdata`, tmpfs `/var/run/postgresql` (8 Mio) et `/tmp` (16 Mio) | `CHOWN`, `DAC_OVERRIDE`, `FOWNER`, `SETGID`, `SETUID` (entrée de l'image), toutes parmi celles que Docker accorde par défaut |
 
 Réseaux : `default` (nginx, SSR, API, `migrate`) porte le HTTP, sur `LODB_STACK_SUBNET`
 (§ 6.8) ; `data` (Postgres, API, `migrate`) est interne sur un hôte, sans route vers
-l'extérieur : nginx et le SSR ne joignent pas la base. nginx rejoint aussi `edge`, l'API et
-le SSR `observability` ; en prod, Postgres rejoint `sauvegardes` (§ 4.7).
+l'extérieur : nginx et les SSR ne joignent pas la base. nginx rejoint aussi `edge`, l'API et
+les deux SSR `observability` ; en prod, Postgres rejoint `sauvegardes` (§ 4.7).
 
 <details>
 <summary>Réglages internes de l'API, avec leur défaut (non transmis par compose)</summary>
@@ -500,6 +516,7 @@ Pour en changer un sur un hôte, l'ajouter sous `services.api.environment` de
 | `LoDb:Telemetry` | `TraceSampleRatio` (`0.05`, de `0` à `1` : part des traces enregistrées et exportées quand `OTEL_EXPORTER_OTLP_ENDPOINT` est posé, choisie par l'identifiant de trace, jamais par le drapeau `sampled` d'un `traceparent` reçu) |
 | `LoDb:PublicApi` | `KeyCacheLifetime` (1 min), `TrendsLifetime` (5 min), `MeteringInterval` (1 s) |
 | `LoDb:Prerender` | `RequestTimeout` (30 s, de 5 min au plus : chaque requête au stockage des pages), `OneZoneStorageClass` (`ONEZONE_IA`, la classe des pages ; une autre exige `AllowInsecureEndpoint`, le stockage de développement seul), `PricePerGbMonthOneZone` et `PricePerGbMonthMultiAz` (§ 4.8) |
+| `LoDb:Prerender:Pace` | `StepRendersPerMinute` (30 : le pas de montée du rythme adaptatif, posé par les calques du staging et local, § 4.10) ; les seuils des signaux sont des constantes du code, revues avec ses tests |
 | `LoDb:Audience` | `Host`, `WebsiteId` (posés par `compose.umami.yaml`), `Username`, `Password` (secrets) : sans l'un d'eux, le tirage dort ; `PullPeriod` (1 h), `RefreshDays` (2 : aujourd'hui et hier, réécrits à chaque tirage), `PageSize` (500 chemins par requête), `MaxPages` (40 requêtes par jour au plus), `RequestTimeout` (30 s), `MaxResponseBytes` (4 Mio) ; `TrendsSwitchDate` (aucune : `/v1/trends` lit la mesure maison ; posée, Umami à partir de ce jour), `ClipFactor` (3) et `ClipWindowDays` (28) : le jour d'une entité compte au plus 3 fois la médiane de ses jours des 28 derniers (Umami collecte sans authentification) |
 
 </details>
@@ -537,14 +554,18 @@ quotas se revoient avec ceux de la prod :
 | `LODB_RENDER_MAX_IN_FLIGHT`, `LODB_PINNED_RENDER_MAX_IN_FLIGHT` | `3`, `1` | `8`, `3` |
 | `LODB_PINNED_RENDERS_PER_MINUTE`, `LODB_PINNED_RENDER_BURST` | `10`, `5` | `60`, `10` |
 | `LODB_PRERENDER_RENDERS_PER_MINUTE`, `LODB_PRERENDER_RENDER_BURST`, `LODB_PRERENDER_MAX_IN_FLIGHT`, `LODB_PRERENDER_VISITOR_RESERVE` | `30`, `5`, `1`, `1` | `120`, `10`, `2`, `4` |
+| `LODB_PRERENDER_PACE_MIN`, `LODB_PRERENDER_PACE_MAX`, `LoDb__Prerender__Pace__StepRendersPerMinute` | `10`, `30`, `10` | `30`, `240`, `30` |
+| `web-ssr-prerender` : `cpus`, `cpu_shares` | `0.25`, `64` | `1.0`, `128` |
 | `LoDb__Prerender__AutoEnqueueOnPromotion` | `false` | `true` (`.env.prod.example`) |
 | `LoDb__Ingestion__SyncConcurrency`, `LoDb__Ingestion__LanguageConcurrency`, `LoDb__Egress__FetchConcurrency` | `1`, `1`, `1` | `4`, `4`, `16` |
 | Sonde de santé de l'API au démarrage | toutes les 10 s pendant 60 s | toutes les 2 s pendant 20 s |
 
 Le couloir épinglé reste strictement sous le total des rendus, sinon le SSR refuse de
 démarrer ; la part d'un client (`2` rendus, `6` épinglés par minute) tient dans ces totaux.
-L'API règle la passe sur la voie `prerender` du calque : `30` rendus par minute, `1` page en
-vol, lus sur les mêmes lignes que le SSR (§ 4.1).
+Le plafond du rythme adaptatif du staging est son rythme d'avant (`30` rendus par minute,
+`1` page en vol) : le régulateur ne fait que le freiner quand l'hôte, qu'il partage avec la
+prod, est chargé (§ 4.10). Son SSR de la passe pèse moins que ses autres services et
+s'ajoute à leurs 0,75 cœur, sans rien prendre que le CPU libre.
 Un nouveau patch met plus longtemps à arriver sur le staging.
 
 **Identifiant sur les pages (facultatif).** Avec `LODB_STAGING_BASIC_AUTH_USER` et
@@ -728,6 +749,50 @@ le client ne suit aucune redirection.
 ids (`.env.*.example`), puis un déploiement. En local, la facture reste éteinte
 (`compose.override.yaml` ne pose pas la clé).
 
+### 4.10 Rythme de la passe de précalcul
+
+La passe rend ses pages sur son propre SSR, `web-ssr-prerender` : la même image que `web-ssr`,
+au poids CPU le plus bas de l'hôte (`cpu_shares` `128`, `64` au staging), plafonnée
+(`cpus` `1.0`, `0.25` au staging), que nginx ne connaît pas. Son rythme suit le CPU libre de
+l'hôte : un régulateur de l'API le monte d'un pas par minute tant que tout est calme, le divise
+par deux au premier signe (VPS occupé, steal, SSR des visiteurs lent ou sous pression, API
+bridée, rendus de la passe ralentis, une mesure illisible) et le retient 5 minutes au rouge.
+Signaux, seuils et règles : [spécification](../produit/pre-rendu-catalogue-cdn.md), lot 2,
+« Capacité adaptative de la passe ».
+
+| Réglage | Staging | Prod | Rôle |
+|---|---|---|---|
+| `LODB_PRERENDER_PACE_MODE` | `adaptive` | `adaptive` | `fixed` : le rythme fixe, sans mesure |
+| `LODB_PRERENDER_PACE_MIN` | `10` | `30` | plancher, et rythme de départ de chaque passe |
+| `LODB_PRERENDER_PACE_MAX` | `30` | `240` | plafond, et budget de la voie du SSR de la passe |
+| `LODB_PRERENDER_RENDERS_PER_MINUTE` | `30` | `120` | rythme fixe : mode `fixed`, commande `prerender unit` |
+| `LODB_PRERENDER_MAX_IN_FLIGHT` | `1` | `2` | pages en vol, de la passe et de la voie de son SSR |
+
+**Couper la régulation.** Le levier immédiat est la pause de la passe au pupitre : plus aucune
+page ne part, celles en vol finissent. Pour garder la passe à un rythme fixe : la ligne
+`LODB_PRERENDER_PACE_MODE=fixed` dans `ENV_*`, puis un déploiement, qui recrée l'API. Le
+pupitre dit alors « rythme fixe ».
+
+**Relever le plafond.** Après une semaine de passe sans alerte (`HoteCpuRisqueBridage`,
+`HoteCpuSature`, `ConteneurCpuBride`, `ConteneurCpuEnHausseBrutale`,
+`LodbSsrRefuseDesVisiteurs`) ni hausse de la latence de l'edge : `LODB_PRERENDER_PACE_MAX=300`
+dans `ENV_PROD`, puis un déploiement. Le pas et le plancher ne changent pas.
+
+**À vérifier une fois par hôte** (lecture seule, depuis le VPS) :
+
+- `/proc/stat` d'un conteneur est celui de l'hôte (pas de lxcfs), sinon le régulateur ne voit
+  que le conteneur : `docker run --rm alpine grep -c '^cpu' /proc/stat` et
+  `grep -c '^cpu' /proc/stat` doivent donner le même nombre ;
+- le poids réel du SSR de la passe, que `runc` dérive de `cpu_shares` (5 ou 21 selon sa
+  version, contre 39 ou 100 pour `1024`) :
+  `docker compose exec -T web-ssr-prerender cat /sys/fs/cgroup/cpu.weight`.
+
+**Ce qui le montre** : le relevé « Rythme » du pupitre (droit du moment et sa raison), les
+métriques `lodb_prerender_pace_*` ([`metriques.md`](metriques.md)) et les lignes
+`prerender.pace.*` de l'API, une par changement d'état. Le SSR de la passe tombé n'arrête que
+la passe, qui l'attend (`prerender.ssr.unreachable`) ; le déploiement ne l'attend pas pour
+rendre le site.
+
 ## 5. Fichiers et volumes de l'hôte
 
 | Chemin, dans `$STAGING_PATH` ou `$PROD_PATH` | Écrit par | Rôle |
@@ -899,7 +964,9 @@ en mémoire, sans vérification de signature). Il y crée le bucket `lodb-pages-
 tous sous `pages/` et `build/`, à chaque démarrage : un redémarrage le vide. L'API y écrit
 avec la clé fixe `lodb-dev` (`LoDb__Prerender__*`, dont `AllowInsecureEndpoint=true`, propre
 à ce calque, pour son point d'accès en `http`), nginx l'y lit (`LODB_PAGES_STORE_*`), et
-aucune passe ne part d'elle-même. L'API s'y connecte aussi
+aucune passe ne part d'elle-même. La passe y a son SSR, `web-ssr-prerender`, sans quota, et
+un rythme adaptatif plus large (`120` à `1200` rendus par minute, pas de `120`), pour voir le
+régulateur monter en quelques minutes ; ses signaux sont ceux de la VM Docker. L'API s'y connecte aussi
 comme `lodb_app`, mot de passe `lodb-app` (`migrate` le pose), et `migrate` comme `lodb`/`lodb` :
 `psql` sur le port publié (15432) se connecte avec l'un ou l'autre. Un `.env` racine ne sert
 qu'à surcharger un port ou une variable ; ne jamais y copier `.env.staging` ni `.env.prod`.
