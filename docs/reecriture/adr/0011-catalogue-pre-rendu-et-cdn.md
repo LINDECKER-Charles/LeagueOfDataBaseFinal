@@ -215,9 +215,14 @@ suit.
   que nginx lise le stockage en prod ; à défaut, la lecture devient publique sur `pages/*`
   et `build/*`. Les tests et le développement utilisent MinIO, qui ne prouve rien de
   Scaleway.
-- **−** **Facturation à vérifier** avant d'écrire 4 millions d'objets : Scaleway compte
-  « 1 Ko pendant 1 seconde comme 1 Go-heure », sans dire si l'arrondi se fait par objet ou
-  sur le total. À confirmer par un ticket au support ou la facture du staging.
+- **+** **Facturation tranchée : l'arrondi se fait sur le total du projet, pas par objet.**
+  Scaleway compte « 1 Ko pendant 1 seconde comme 1 Go-heure » sans dire sur quoi il arrondit.
+  Mesure du 20 octobre 2026 : 300 objets de 1 Ko en `ONEZONE_IA`, écrits entre 18 h 33 et
+  18 h 40 UTC dans `lodb-pages-staging` ; la première ligne de facture, environ 4 h plus tard
+  sur le projet des pages, est « Standard One Zone / ONEZONE - fr-par », 3 Go-heures soit
+  0,01 € (couverts par l'essai gratuit, −0,01 €). Un arrondi par objet aurait donné environ
+  300 Go-heures par heure. Les 4 millions d'objets de la prod gardent donc le coût du volume
+  (~1,25 €/mois), sans condition à lever avant la passe complète.
 - **−** Une epoch retirée met au moins 9 jours à disparaître (500 000 objets supprimés par
   jour) ; plus vite, une suppression par lots depuis le poste de l'opérateur.
 - **−** Derrière le CDN, le journal de l'edge et les métriques de Caddy ne voient plus que

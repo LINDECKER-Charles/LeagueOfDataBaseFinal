@@ -644,8 +644,8 @@ l'hôte, que la politique du bucket est seule à admettre.
 **Mise en service, par environnement** : le script et sa vérification depuis l'hôte (README,
 § 1 et 2) ; puis, dans `ENV_*`, le bucket et la clé de l'application d'écriture, et un
 déploiement : la passe se lance depuis l'administration ; enfin `LODB_PAGES_STORE_ENABLED=1` et
-un déploiement : nginx lit le stockage. Avant la passe complète de la prod, vérifier la
-facturation du stockage (README, § 5).
+un déploiement : nginx lit le stockage. La facturation du stockage suit le volume, pas le
+nombre d'objets (README, § 5).
 
 **Changer l'epoch servie.** Une passe écrit une epoch pendant que nginx sert la précédente.
 Quand l'administration la montre prête, poser `LODB_ARCHIVE_SERVE_EPOCH=<N>` dans `ENV_*`

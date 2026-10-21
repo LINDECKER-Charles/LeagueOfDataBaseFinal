@@ -786,9 +786,9 @@ d'attribution. Pas de push sur `dev`, `test` ni `main`.
    Cloudflare :
    - le script et la sonde `verifier` sur le stockage de prod ; les mesures de départ
      relevées de nouveau ;
-   - **la facturation vérifiée** : Scaleway compte « 1 Ko pendant 1 seconde comme
-     1 Go-heure », sans dire si l'arrondi se fait par objet ou sur le total. Avant d'écrire
-     4 millions d'objets, on le confirme (ticket au support, ou facture du staging) ;
+   - **la facturation, tranchée** : Scaleway compte « 1 Ko pendant 1 seconde comme
+     1 Go-heure » et arrondit sur le total du projet, pas par objet (mesure du 20 octobre 2026
+     sur le staging, ADR 0011, § Conséquences) : rien à confirmer avant la passe complète ;
    - une première petite unité à budget bas, pour mesurer le débit, puis la passe complète
      dans l'ordre de la demande ;
    - l'effet du lot 3 mesuré seul, 7 jours plus tard (lot 5).
