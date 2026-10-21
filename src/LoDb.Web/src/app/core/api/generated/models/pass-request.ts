@@ -3,40 +3,42 @@
 
 
 /**
- * A pass to launch: the epoch it writes and its perimeter, every field optional. Empty, it
- * fills the served epoch with every page of every older patch, newest first.
+ * A pass to launch: the epoch it writes and its perimeter, as explicit lists. Every field is
+ * optional: empty, it fills the served epoch with every page of every older patch, newest
+ * first.
  */
 export interface PassRequest {
 
   /**
-   * The epoch written: the served one (the default) to fill it, a newer one to replace it.
-   * An older one is retired and refused.
+   * The epoch written: the served one by default, to fill it; a newer one to fill or to
+   * replace it. An older one is retired and refused.
    */
   epoch?: (number | null);
 
   /**
-   * The one locale rendered, as in the URLs (fr, zh-Hans…).
+   * The locales rendered, as the URLs spell them (fr, zh-hans…); null for all 21.
    */
-  locale?: (string | null);
+  locales?: (Array<string> | null);
 
   /**
-   * The newest version rendered, included.
+   * The types of page rendered (champions, items, runes, summoners); null for all four.
    */
-  newest?: (string | null);
+  pageTypes?: (Array<string> | null);
 
   /**
-   * The oldest version rendered, included (`14.1.1`).
-   */
-  oldest?: (string | null);
-
-  /**
-   * The one type of page rendered: champions, items, runes or summoners.
-   */
-  pageType?: (string | null);
-
-  /**
-   * The versions to render first, in this order: the most asked for, which the operator
-   * reads from the edge's log. At most 100.
+   * The versions rendered first, in this order: the most asked for. At most 100.
    */
   priority?: (Array<string> | null);
+
+  /**
+   * Whether each (version, locale) the epoch already holds for every type asked (the latest
+   * completed unit over each of them failed no page) is left out.
+   */
+  skipComplete?: boolean;
+
+  /**
+   * The older patches rendered, as Data Dragon spells them; null for every one of them. A
+   * version that is not an older patch is left out and named back. At most 1,000.
+   */
+  versions?: (Array<string> | null);
 }

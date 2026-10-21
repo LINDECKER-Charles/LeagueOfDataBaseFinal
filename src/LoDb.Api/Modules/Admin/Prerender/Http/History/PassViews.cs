@@ -34,16 +34,25 @@ internal static class PassViews
             Units = UnitsOf(facts),
             PagesPerMinute = PassProgress.Shown(rate),
             EstimatedEndAt = PassProgress.EstimatedEnd(facts, rate, now),
+            RunningSince = pass.RunningSince,
+            PausedAt = pass.PausedAt,
+            PauseReason = pass.PauseReason,
+            PagesLeft = PassProgress.PagesLeft(facts),
         };
     }
 
+    // The versions are counted, not listed: a report carries 50 passes, read every minute.
     private static PrerenderScopeView ScopeOf(PassScope scope) => new()
     {
+        VersionCount = scope.Versions?.Count,
+        NewestListed = scope.Versions?.Max()?.Value,
+        OldestListed = scope.Versions?.Min()?.Value,
         Oldest = scope.Oldest?.Value,
         Newest = scope.Newest?.Value,
-        PageType = scope.PageType is { } type ? CanonicalPath.SegmentOf(type) : null,
-        Locale = scope.Locale is { } locale ? UiLocales.Code(locale) : null,
+        Locales = scope.Locales?.Select(UiLocales.Code).ToList(),
+        PageTypes = scope.PageTypes?.Select(CanonicalPath.SegmentOf).ToList(),
         Priority = [.. scope.Priority.Select(static version => version.Value)],
+        SkipComplete = scope.SkipComplete,
     };
 
     private static PrerenderUnitCounts UnitsOf(PassFacts facts) => new()

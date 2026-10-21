@@ -54,14 +54,15 @@ internal static class StorageLedger
         };
     }
 
-    // Every epoch holding pages, and the served and written ones even while empty: the panel
-    // shows the epoch it fills from its first page on.
+    // Every epoch holding pages, and the served, written and covered ones even while empty: the
+    // panel shows the epoch it fills from its first page on.
     private static List<PrerenderEpochVolume> EpochsOf(StorageFacts facts, decimal price)
     {
         var byEpoch = facts.Units.ToLookup(static unit => unit.Epoch);
         var epochs = byEpoch.Select(static units => units.Key)
             .Append(facts.ServedEpoch)
             .Concat(facts.WritingEpoch is { } writing ? [writing] : [])
+            .Concat(facts.Coverages.Keys)
             .Distinct()
             .OrderDescending();
         return
@@ -77,6 +78,7 @@ internal static class StorageLedger
                     Pages = byEpoch[epoch].Sum(static unit => (long)unit.Pages),
                     Bytes = bytes,
                     MonthlyCost = Rounded(ExactCost(bytes, price)),
+                    Coverage = facts.Coverages.GetValueOrDefault(epoch),
                 };
             }),
         ];

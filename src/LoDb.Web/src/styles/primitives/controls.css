@@ -111,6 +111,14 @@
     background-position: center;
     background-size: 0.7rem;
   }
+  /* Mixed, as a season some of whose rows are ticked: a bar, never the browser's own box. */
+  &:indeterminate {
+    border-color: var(--color-hex);
+    background-image: linear-gradient(var(--color-hex), var(--color-hex));
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 0.5rem 2px;
+  }
 }
 /*
  * Pure-CSS toggle over a native checkbox, so a form still submits without JavaScript. Cyan is

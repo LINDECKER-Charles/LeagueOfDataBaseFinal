@@ -24,8 +24,8 @@ internal sealed record PrerenderReport
     public required int ServedEpoch { get; init; }
 
     /// <summary>
-    /// A newer epoch a pass over every older patch completed: set
-    /// <c>LODB_ARCHIVE_SERVE_EPOCH</c> to it and redeploy to serve it. Null when none.
+    /// A newer epoch ready to serve: set <c>LODB_ARCHIVE_SERVE_EPOCH</c> to it and redeploy to
+    /// serve it. Null when none.
     /// </summary>
     public int? ReadyEpoch { get; init; }
 
@@ -36,4 +36,10 @@ internal sealed record PrerenderReport
     public required IReadOnlyList<PrerenderPassView> Passes { get; init; }
 
     public required PrerenderStorageView Storage { get; init; }
+
+    /// <summary>
+    /// The page store's bucket, a name and never a secret, for the retirement's variables;
+    /// null while the store is not configured.
+    /// </summary>
+    public string? StoreBucket { get; init; }
 }

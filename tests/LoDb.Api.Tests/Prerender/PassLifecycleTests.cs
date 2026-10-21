@@ -104,13 +104,12 @@ public sealed class PassLifecycleTests(PostgresContainerFixture postgres)
     public async Task SecondPassIsRefusedWhileOneIsActive()
     {
         await using var harness = await StartAsync();
-        var launcher = harness.Get<PassLauncher>();
         var first = await harness.LaunchAsync(Scope());
         await harness.Get<PassControl>().PauseAsync(first, Token);
 
-        var refused = await launcher.StartAsync(new PassLaunch { Epoch = 2 }, Token);
+        var refused = await harness.OpenAsync(new PassLaunch { Epoch = 2 });
         await harness.Get<PassControl>().CancelAsync(first, Token);
-        var second = await launcher.StartAsync(new PassLaunch { Epoch = 2 }, Token);
+        var second = await harness.OpenAsync(new PassLaunch { Epoch = 2 });
 
         Assert.Null(refused);
         Assert.NotNull(second);
@@ -125,7 +124,7 @@ public sealed class PassLifecycleTests(PostgresContainerFixture postgres)
         var unknown = PatchVersion.Parse("16.6.1");
         harness.Catalog.Pinned.Add(unknown);
         harness.Catalog.Pages[unknown] = FakeCatalog.Without(CatalogLoadStatus.Unknown);
-        var passId = await harness.LaunchAsync(new PassScope { Locale = UiLocale.En });
+        var passId = await harness.LaunchAsync(new PassScope { Locales = [UiLocale.En] });
 
         await harness.RunAsync();
 
@@ -144,7 +143,7 @@ public sealed class PassLifecycleTests(PostgresContainerFixture postgres)
         var waiting = PatchVersion.Parse("16.8.1");
         harness.Catalog.Pinned.Insert(0, waiting);
         harness.Catalog.Pages[waiting] = FakeCatalog.Without(CatalogLoadStatus.Pending);
-        var passId = await harness.LaunchAsync(new PassScope { Locale = UiLocale.En });
+        var passId = await harness.LaunchAsync(new PassScope { Locales = [UiLocale.En] });
 
         await harness.RunAsync();
         await harness.RunAsync();
@@ -184,7 +183,7 @@ public sealed class PassLifecycleTests(PostgresContainerFixture postgres)
 
             return Task.CompletedTask;
         };
-        var passId = await harness.LaunchAsync(new PassScope { Locale = UiLocale.En });
+        var passId = await harness.LaunchAsync(new PassScope { Locales = [UiLocale.En] });
 
         await harness.RunAsync();
 
@@ -247,7 +246,7 @@ public sealed class PassLifecycleTests(PostgresContainerFixture postgres)
             .Select(static unit => unit.State),
     ];
 
-    private static PassScope Scope() => PassScope.Of(Version) with { Locale = UiLocale.En };
+    private static PassScope Scope() => PassScope.Of(Version) with { Locales = [UiLocale.En] };
 
     private async Task<PrerenderHarness> StartAsync()
     {

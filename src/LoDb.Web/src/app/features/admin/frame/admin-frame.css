@@ -150,8 +150,11 @@ lodb-admin-frame .admin-logout:focus-visible {
 /*
  * The full-size buttons of the legacy admin (.btn) were smaller than the site's: 0.78rem
  * type. The compact size keeps its own (hx-btn-sm), and a coarse pointer keeps its 44px.
+ * The dialogs of the admin, mounted under <body> by the CDK, reach them through
+ * `.admin-overlay` on their host, as they reach the chips below.
  */
-lodb-admin-frame :is(.hx-btn, .hx-btn-ghost, .hx-btn-gold, .hx-btn-danger):not(.hx-btn-sm) {
+:is(lodb-admin-frame, .admin-overlay)
+  :is(.hx-btn, .hx-btn-ghost, .hx-btn-gold, .hx-btn-danger):not(.hx-btn-sm) {
   padding-block: 0.6rem;
   padding-inline: 1.1rem;
   font-size: 0.78rem;
@@ -159,7 +162,7 @@ lodb-admin-frame :is(.hx-btn, .hx-btn-ghost, .hx-btn-gold, .hx-btn-danger):not(.
 }
 
 /* The chips of the legacy admin (.chip) were tighter than the site's, more tracked, and solid. */
-lodb-admin-frame .hx-chip {
+:is(lodb-admin-frame, .admin-overlay) .hx-chip {
   padding-block: 0.18rem;
   padding-inline: 0.5rem;
   border-color: var(--color-gold-deep);

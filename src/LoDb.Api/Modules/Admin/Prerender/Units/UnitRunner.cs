@@ -3,6 +3,7 @@ using LoDb.Api.Modules.Admin.Prerender.Options;
 using LoDb.Api.Modules.Admin.Prerender.Pages;
 using LoDb.Api.Modules.Admin.Prerender.Passes;
 using LoDb.Api.Modules.Admin.Prerender.Telemetry;
+using LoDb.Api.Modules.Admin.Prerender.Units.Waits;
 using LoDb.Api.Modules.Admin.Prerender.Writing;
 using LoDb.Infrastructure.Persistence.Prerender;
 using LoDb.Ingestion.Catalog.Reading;
@@ -40,6 +41,7 @@ internal sealed class UnitRunner(
     private const string NoFailure = "none.";
     private const string NotStored = "its catalog is not stored yet.";
     private const string NotPinned = "the API does not count it among the older patches yet.";
+    private const string Unknown = "Data Dragon does not list this version.";
 
     public async Task<UnitEnd> RunAsync(ClaimedUnit unit, CancellationToken cancellationToken)
     {
@@ -50,13 +52,13 @@ internal sealed class UnitRunner(
             return await UnknownAsync(unit, cancellationToken);
         }
 
-        if (await WhyWaitAsync(unit, list.Status, cancellationToken) is { } reason)
+        if (await WhyWaitAsync(unit, list.Status, cancellationToken) is { } why)
         {
-            return await WaitAsync(unit, reason, cancellationToken);
+            return await WaitAsync(unit, why, cancellationToken);
         }
 
         waits.End(unit);
-        var paths = PageTypes.Keep(list.Paths, unit.Pass.Scope.PageType);
+        var paths = PageTypes.Keep(list.Paths, unit.Pass.Scope.PageTypes);
         await queue.StartAsync(unit, paths.Count, cancellationToken);
         var walk = new UnitWalk(unit, paths, new UnitTally());
         var started = clock.GetTimestamp();
@@ -132,8 +134,9 @@ internal sealed class UnitRunner(
     {
         if (result.IsMisconfigured)
         {
-            await control.PauseAsync(unit.Pass.Id, cancellationToken);
-            PrerenderLog.PassPaused(logger, unit.Pass.Id, result.Reason ?? string.Empty);
+            var reason = result.Reason ?? string.Empty;
+            await control.PauseItselfAsync(unit.Pass.Id, reason, cancellationToken);
+            PrerenderLog.PassPaused(logger, unit.Pass.Id, reason);
         }
 
         return UnitEnd.Interrupted;
@@ -142,34 +145,36 @@ internal sealed class UnitRunner(
     // Unknown to Data Dragon, the unit fails for good.
     private async Task<UnitEnd> UnknownAsync(ClaimedUnit unit, CancellationToken cancellationToken)
     {
-        await queue.FinishAsync(unit, PrerenderUnitState.Failed, cancellationToken);
+        await queue.FailAsync(unit, Unknown, cancellationToken);
         PrerenderLog.UnitUnknown(logger, unit.Version.Value, unit.LocaleCode);
         return UnitEnd.Finished;
     }
 
-    private async Task<string?> WhyWaitAsync(
+    private async Task<UnitWaitWhy?> WhyWaitAsync(
         ClaimedUnit unit,
         CatalogLoadStatus status,
         CancellationToken cancellationToken)
     {
         if (status != CatalogLoadStatus.Ready)
         {
-            return NotStored;
+            return new UnitWaitWhy(UnitWaitReason.CatalogPending, NotStored);
         }
 
         var from = await catalog.PinnedFromAsync(unit.Version, cancellationToken);
-        return from is null ? NotPinned
-            : from > clock.GetUtcNow() ? SettlingUntil(from.Value)
+        return from is null ? new UnitWaitWhy(UnitWaitReason.NotPinned, NotPinned)
+            : from > clock.GetUtcNow()
+                ? new UnitWaitWhy(UnitWaitReason.Settling, SettlingUntil(from.Value))
             : null;
     }
 
     // The first wait of a version is said once; past the longest wait, its units fail.
     private async Task<UnitEnd> WaitAsync(
         ClaimedUnit unit,
-        string reason,
+        UnitWaitWhy why,
         CancellationToken cancellationToken)
     {
-        if (waits.TryBegin(unit))
+        var reason = why.Message;
+        if (waits.TryBegin(unit, why.Reason))
         {
             PrerenderLog.UnitWaiting(logger, unit.Version.Value, unit.Pass.Id, reason);
             return UnitEnd.Waiting;
@@ -181,11 +186,14 @@ internal sealed class UnitRunner(
         }
 
         waits.End(unit);
-        await queue.AbandonAsync(unit, cancellationToken);
         var minutes = (int)UnitWaits.Longest.TotalMinutes;
+        await queue.AbandonAsync(unit, GaveUp(minutes, reason), cancellationToken);
         PrerenderLog.UnitAbandoned(logger, unit.Version.Value, unit.Pass.Id, minutes, reason);
         return UnitEnd.Finished;
     }
+
+    private static string GaveUp(int minutes, string reason) =>
+        string.Create(CultureInfo.InvariantCulture, $"Gave up after {minutes} minutes: {reason}");
 
     private static string SettlingUntil(DateTimeOffset from) =>
         "it just left the latest rank, and the API and the SSR hold it for the latest patch"
@@ -209,4 +217,7 @@ internal sealed class UnitRunner(
     }
 
     private sealed record UnitWalk(ClaimedUnit Unit, IReadOnlyList<string> Paths, UnitTally Tally);
+
+    // Why the units of a version wait, and how the log says it.
+    private sealed record UnitWaitWhy(UnitWaitReason Reason, string Message);
 }

@@ -21,6 +21,9 @@ internal sealed record UnitStep
     /// <summary>Bytes written to the store.</summary>
     public long Bytes { get; init; }
 
+    /// <summary>Why the last failed page of the step failed; null when none did.</summary>
+    public string? Failure { get; init; }
+
     /// <summary>
     /// This step and the page at its cursor, which ended as <paramref name="page"/>.
     /// </summary>
@@ -32,7 +35,7 @@ internal sealed record UnitStep
         {
             PageOutcome.Written => next with { Written = Written + 1, Bytes = Bytes + page.Bytes },
             PageOutcome.Skipped => next with { Skipped = Skipped + 1 },
-            PageOutcome.Failed => next with { Failed = Failed + 1 },
+            PageOutcome.Failed => next with { Failed = Failed + 1, Failure = page.Reason },
             _ => throw new ArgumentOutOfRangeException(nameof(page), page.Outcome, null),
         };
     }

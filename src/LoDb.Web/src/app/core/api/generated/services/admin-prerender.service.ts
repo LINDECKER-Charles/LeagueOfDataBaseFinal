@@ -14,10 +14,19 @@ import { cancelAdminPrerenderPass } from '../fn/admin-prerender/cancel-admin-pre
 import { CancelAdminPrerenderPass$Params } from '../fn/admin-prerender/cancel-admin-prerender-pass';
 import { pauseAdminPrerenderPass } from '../fn/admin-prerender/pause-admin-prerender-pass';
 import { PauseAdminPrerenderPass$Params } from '../fn/admin-prerender/pause-admin-prerender-pass';
+import { PrerenderPassProgress } from '../models/prerender-pass-progress';
 import { PrerenderPassStarted } from '../models/prerender-pass-started';
+import { PrerenderPatchesReport } from '../models/prerender-patches-report';
 import { PrerenderReport } from '../models/prerender-report';
+import { PrerenderVersionUnits } from '../models/prerender-version-units';
 import { readAdminPrerender } from '../fn/admin-prerender/read-admin-prerender';
 import { ReadAdminPrerender$Params } from '../fn/admin-prerender/read-admin-prerender';
+import { readAdminPrerenderPassProgress } from '../fn/admin-prerender/read-admin-prerender-pass-progress';
+import { ReadAdminPrerenderPassProgress$Params } from '../fn/admin-prerender/read-admin-prerender-pass-progress';
+import { readAdminPrerenderPassVersion } from '../fn/admin-prerender/read-admin-prerender-pass-version';
+import { ReadAdminPrerenderPassVersion$Params } from '../fn/admin-prerender/read-admin-prerender-pass-version';
+import { readAdminPrerenderPatches } from '../fn/admin-prerender/read-admin-prerender-patches';
+import { ReadAdminPrerenderPatches$Params } from '../fn/admin-prerender/read-admin-prerender-patches';
 import { resumeAdminPrerenderPass } from '../fn/admin-prerender/resume-admin-prerender-pass';
 import { ResumeAdminPrerenderPass$Params } from '../fn/admin-prerender/resume-admin-prerender-pass';
 import { startAdminPrerenderPass } from '../fn/admin-prerender/start-admin-prerender-pass';
@@ -201,6 +210,111 @@ export class AdminPrerenderService extends BaseService {
     const resp = this.cancelAdminPrerenderPass$Response(params, context);
     return resp.pipe(
       map((r: StrictHttpResponse<void>): void => r.body)
+    );
+  }
+
+  /** Path part for operation `readAdminPrerenderPatches()` */
+  static readonly ReadAdminPrerenderPatchesPath = '/api/admin/prerender/patches';
+
+  /**
+   * The older patches and what one epoch of the store holds of each.
+   *
+   *
+   *
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `readAdminPrerenderPatches()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  readAdminPrerenderPatches$Response(params?: ReadAdminPrerenderPatches$Params, context?: HttpContext): Observable<StrictHttpResponse<PrerenderPatchesReport>> {
+    const obs = readAdminPrerenderPatches(this.http, this.rootUrl, params, context);
+    return obs;
+  }
+
+  /**
+   * The older patches and what one epoch of the store holds of each.
+   *
+   *
+   *
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `readAdminPrerenderPatches$Response()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  readAdminPrerenderPatches(params?: ReadAdminPrerenderPatches$Params, context?: HttpContext): Observable<PrerenderPatchesReport> {
+    const resp = this.readAdminPrerenderPatches$Response(params, context);
+    return resp.pipe(
+      map((r: StrictHttpResponse<PrerenderPatchesReport>): PrerenderPatchesReport => r.body)
+    );
+  }
+
+  /** Path part for operation `readAdminPrerenderPassProgress()` */
+  static readonly ReadAdminPrerenderPassProgressPath = '/api/admin/prerender/passes/{id}/progress';
+
+  /**
+   * The progress of a pass, whole or since a time, for the live monitor.
+   *
+   *
+   *
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `readAdminPrerenderPassProgress()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  readAdminPrerenderPassProgress$Response(params: ReadAdminPrerenderPassProgress$Params, context?: HttpContext): Observable<StrictHttpResponse<PrerenderPassProgress>> {
+    const obs = readAdminPrerenderPassProgress(this.http, this.rootUrl, params, context);
+    return obs;
+  }
+
+  /**
+   * The progress of a pass, whole or since a time, for the live monitor.
+   *
+   *
+   *
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `readAdminPrerenderPassProgress$Response()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  readAdminPrerenderPassProgress(params: ReadAdminPrerenderPassProgress$Params, context?: HttpContext): Observable<PrerenderPassProgress> {
+    const resp = this.readAdminPrerenderPassProgress$Response(params, context);
+    return resp.pipe(
+      map((r: StrictHttpResponse<PrerenderPassProgress>): PrerenderPassProgress => r.body)
+    );
+  }
+
+  /** Path part for operation `readAdminPrerenderPassVersion()` */
+  static readonly ReadAdminPrerenderPassVersionPath = '/api/admin/prerender/passes/{id}/versions/{version}';
+
+  /**
+   * The units of one version of a pass, a row per locale.
+   *
+   *
+   *
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `readAdminPrerenderPassVersion()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  readAdminPrerenderPassVersion$Response(params: ReadAdminPrerenderPassVersion$Params, context?: HttpContext): Observable<StrictHttpResponse<PrerenderVersionUnits>> {
+    const obs = readAdminPrerenderPassVersion(this.http, this.rootUrl, params, context);
+    return obs;
+  }
+
+  /**
+   * The units of one version of a pass, a row per locale.
+   *
+   *
+   *
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `readAdminPrerenderPassVersion$Response()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  readAdminPrerenderPassVersion(params: ReadAdminPrerenderPassVersion$Params, context?: HttpContext): Observable<PrerenderVersionUnits> {
+    const resp = this.readAdminPrerenderPassVersion$Response(params, context);
+    return resp.pipe(
+      map((r: StrictHttpResponse<PrerenderVersionUnits>): PrerenderVersionUnits => r.body)
     );
   }
 

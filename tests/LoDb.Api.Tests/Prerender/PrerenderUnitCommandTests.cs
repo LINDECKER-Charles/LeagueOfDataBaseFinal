@@ -32,9 +32,10 @@ public sealed class PrerenderUnitCommandTests(PostgresContainerFixture postgres)
             ["--version", "16.5.1", "--ConnectionStrings:LoDb=Host=elsewhere"]);
 
         var scope = options.Scope;
-        Assert.Equal(
-            (Version, Version, Version, UiLocale.En, (ResourceType?)null),
-            (options.Version, scope.Oldest, scope.Newest, scope.Locale, scope.PageType));
+        Assert.Equal(Version, options.Version);
+        Assert.Equal([Version], scope.Versions);
+        Assert.Equal([UiLocale.En], scope.Locales);
+        Assert.Null(scope.PageTypes);
         Assert.Null(options.Epoch);
         Assert.Equal(PrerenderUnitArguments.DefaultWait, options.Wait);
     }
@@ -48,9 +49,9 @@ public sealed class PrerenderUnitCommandTests(PostgresContainerFixture postgres)
                 "--wait=0",
             ]);
 
-        Assert.Equal(
-            (UiLocale.ZhHant, ResourceType.Runes, 2, TimeSpan.Zero),
-            (options.Scope.Locale, options.Scope.PageType, options.Epoch, options.Wait));
+        Assert.Equal([UiLocale.ZhHant], options.Scope.Locales);
+        Assert.Equal([ResourceType.Runes], options.Scope.PageTypes);
+        Assert.Equal((2, TimeSpan.Zero), (options.Epoch, options.Wait));
     }
 
     [Theory]

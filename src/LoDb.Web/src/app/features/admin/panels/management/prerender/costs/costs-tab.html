@@ -1,0 +1,160 @@
+@let held = storage();
+<lodb-admin-card
+  [heading]="'admin.prerender.costs.title' | adminText"
+  [chip]="'admin.prerender.costs.chip' | adminText: { cost: cost(held.monthlyCost) }"
+>
+  <div class="hx-table-scroll">
+    <table class="hx-table hx-table--flush admin-tbl">
+      <thead>
+        <tr>
+          <th scope="col">{{ 'admin.prerender.costs.columns.epoch' | adminText }}</th>
+          <th scope="col">{{ 'admin.prerender.costs.columns.state' | adminText }}</th>
+          <th scope="col" class="min-w-[9rem]">
+            {{ 'admin.prerender.costs.columns.coverage' | adminText }}
+          </th>
+          <th scope="col" class="num">{{ 'admin.prerender.costs.columns.pages' | adminText }}</th>
+          <th scope="col" class="num">{{ 'admin.prerender.costs.columns.volume' | adminText }}</th>
+          <th scope="col" class="num">{{ 'admin.prerender.costs.columns.cost' | adminText }}</th>
+          <th scope="col">{{ 'admin.prerender.costs.columns.actions' | adminText }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (epoch of held.epochs; track epoch.epoch) {
+          @let actions = actionsOf(epoch);
+          @let covered = share(epoch);
+          <tr [attr.data-epoch]="epoch.epoch">
+            <th scope="row">
+              {{ 'admin.prerender.costs.epoch' | adminText: { epoch: epoch.epoch } }}
+            </th>
+            <td>
+              <span class="badges">
+                <span [lodbBadge]="tone(epoch)">
+                  {{ 'admin.prerender.states.' + epoch.state | adminText }}
+                </span>
+                @if (epoch.isWriting && epoch.state !== 'writing') {
+                  <span lodbBadge="warn">{{ 'admin.prerender.states.writing' | adminText }}</span>
+                }
+              </span>
+            </td>
+            <td data-coverage>
+              @if (covered !== null) {
+                <span class="flex items-center gap-2">
+                  <lodb-stacked-bar
+                    class="w-16"
+                    size="thin"
+                    [segments]="shareBar(covered)"
+                    [label]="covered | figure: 'share'"
+                  />
+                  <span class="num whitespace-nowrap">{{ covered | figure: 'share' }}</span>
+                </span>
+              } @else {
+                —
+              }
+            </td>
+            <td class="num">{{ epoch.pages | figure }}</td>
+            <td class="num whitespace-nowrap">{{ epoch.bytes | decimalBytes }}</td>
+            <td class="num whitespace-nowrap">{{ cost(epoch.monthlyCost) }}</td>
+            <td class="actions">
+              @if (actions.canSwitch) {
+                <button
+                  lodbButton="ghost"
+                  lodbButtonSize="small"
+                  type="button"
+                  data-switch
+                  (click)="prepareSwitch(epoch.epoch)"
+                >
+                  {{ 'admin.prerender.costs.switch' | adminText }}
+                </button>
+              }
+              @if (actions.canComplete) {
+                <button
+                  lodbButton="ghost"
+                  lodbButtonSize="small"
+                  type="button"
+                  data-complete
+                  [disabled]="lock() !== null"
+                  [attr.aria-describedby]="lock() ? 'prerender-costs-lock' : null"
+                  (click)="complete(epoch.epoch)"
+                >
+                  {{ 'admin.prerender.costs.complete' | adminText }}
+                </button>
+              }
+              @if (actions.canRetire) {
+                <button
+                  lodbButton="ghost"
+                  lodbButtonSize="small"
+                  type="button"
+                  data-retire
+                  (click)="retire(epoch.epoch)"
+                >
+                  {{ 'admin.prerender.costs.retire' | adminText }}
+                </button>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="7" class="t-empty">{{ 'admin.prerender.costs.empty' | adminText }}</td>
+          </tr>
+        }
+        <tr data-builds>
+          <th scope="row">{{ 'admin.prerender.costs.builds' | adminText }}</th>
+          <td colspan="2" class="text-text-dim">
+            {{
+              'admin.prerender.costs.builds_sub'
+                | adminText: { count: held.builds.count, files: (held.builds.files | figure) }
+            }}
+          </td>
+          <td class="num">—</td>
+          <td class="num whitespace-nowrap">{{ held.builds.bytes | decimalBytes }}</td>
+          <td class="num whitespace-nowrap">{{ cost(held.builds.monthlyCost) }}</td>
+          <td></td>
+        </tr>
+      </tbody>
+      <tfoot>
+        <tr data-total>
+          <th scope="row">{{ 'admin.prerender.costs.total' | adminText }}</th>
+          <td colspan="2" class="text-text-dim">
+            {{ 'admin.prerender.costs.total_sub' | adminText }}
+          </td>
+          <td class="num">{{ held.pages | figure }}</td>
+          <td class="num whitespace-nowrap">{{ held.bytes | decimalBytes }}</td>
+          <td class="num whitespace-nowrap">{{ cost(held.monthlyCost) }}</td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+  @if (lock(); as locked) {
+    <p class="readout-text mt-3" id="prerender-costs-lock">
+      {{ 'admin.prerender.overview.cta.locked_' + locked.kind | adminText: locked }}
+    </p>
+  }
+  <p class="mt-4 text-[0.8rem] text-text-dim" data-prices>
+    {{ 'admin.prerender.costs.prices' | adminText: prices() }}
+  </p>
+  @if (held.excludesEgress) {
+    <p class="mt-1.5 text-[0.8rem] text-text-dim" data-egress>
+      {{ 'admin.prerender.costs.egress' | adminText }}
+    </p>
+  }
+  <p class="mt-1.5 text-[0.8rem] text-text-dim" data-counters>
+    {{ 'admin.prerender.costs.counters' | adminText }}
+  </p>
+  @if (hasRetired()) {
+    <p class="mt-1.5 text-[0.8rem] text-text-dim" data-retired>
+      {{ 'admin.prerender.costs.retired' | adminText }}
+    </p>
+  }
+</lodb-admin-card>
+
+@if (projection(); as text) {
+  <lodb-admin-card [heading]="'admin.prerender.costs.projection_title' | adminText" data-projection>
+    <p class="m-0 text-[0.9rem] text-text-muted">{{ text }}</p>
+  </lodb-admin-card>
+}
+
+<p class="m-0 text-[0.8rem] text-text-dim" data-bill-note>
+  {{ 'admin.prerender.costs.bill_note' | adminText }}
+</p>
+<lodb-scaleway-bill project="pages" />

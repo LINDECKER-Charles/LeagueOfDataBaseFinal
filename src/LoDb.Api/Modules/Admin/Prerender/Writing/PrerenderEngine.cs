@@ -13,6 +13,7 @@ namespace LoDb.Api.Modules.Admin.Prerender.Writing;
 /// <remarks>
 /// One instance writes at a time, under an advisory lock that the command line takes too.
 /// Dormant until the pass and its store are configured (<see cref="PrerenderActivation"/>).
+/// Each turn beats its <see cref="EnginePulse"/>, for the admin's monitor.
 /// </remarks>
 internal sealed class PrerenderEngine(
     PrerenderActivation activation,
@@ -20,6 +21,7 @@ internal sealed class PrerenderEngine(
     UnitQueue queue,
     UnitRunner units,
     PassControl control,
+    EnginePulse pulse,
     TimeProvider clock,
     ILogger<PrerenderEngine> logger)
 {
@@ -37,6 +39,7 @@ internal sealed class PrerenderEngine(
         await using var held = await locks.TryAcquireAsync(LockName, cancellationToken);
         if (held is not null)
         {
+            pulse.Beat();
             await DrainAsync(cancellationToken);
         }
     }
@@ -51,6 +54,7 @@ internal sealed class PrerenderEngine(
         var waiting = new WaitingVersions(clock);
         while (await queue.RunningPassAsync(cancellationToken) is { } pass)
         {
+            pulse.Beat();
             var held = waiting.Held();
             if (await queue.NextAsync(pass, held, cancellationToken) is not { } unit)
             {

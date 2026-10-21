@@ -1,0 +1,46 @@
+<h3 class="readout-label">{{ 'admin.prerender.live.feed.title' | adminText }}</h3>
+
+<ol class="flex flex-col gap-1.5 text-[0.82rem]" aria-live="off" data-feed>
+  @for (line of lines(); track line.key) {
+    <li class="flex min-w-0 flex-col" [attr.data-event]="line.kind">
+      <span class="flex min-w-0 gap-2">
+        <time class="flex-none font-mono text-text-dim">{{ line.time }}</time>
+        <span class="flex-none" [attr.data-tone]="line.kind" aria-hidden="true">{{
+          line.icon
+        }}</span>
+        <span class="min-w-0 text-text-muted">{{ line.text }}</span>
+      </span>
+      @if (line.reason; as reason) {
+        <span
+          class="truncate ps-[3.4rem] font-mono text-[0.72rem] text-text-dim"
+          lang="en"
+          dir="ltr"
+          [title]="reason"
+          data-reason
+          >{{ reason }}</span
+        >
+      }
+    </li>
+  } @empty {
+    <li class="text-text-dim" data-feed-empty>
+      {{ 'admin.prerender.live.feed.empty' | adminText }}
+    </li>
+  }
+</ol>
+
+@if (hidden() > 0) {
+  <button
+    type="button"
+    class="self-start text-[0.78rem] text-text-muted underline-offset-2 hover:text-hex hover:underline"
+    [attr.aria-expanded]="isOpen()"
+    (click)="isOpen.set(!isOpen())"
+  >
+    {{
+      isOpen()
+        ? ('admin.prerender.live.feed.less' | adminText)
+        : ('admin.prerender.live.feed.more' | adminText: { count: events().length })
+    }}
+  </button>
+}
+
+<span class="sr-only" aria-live="polite">{{ announced() }}</span>

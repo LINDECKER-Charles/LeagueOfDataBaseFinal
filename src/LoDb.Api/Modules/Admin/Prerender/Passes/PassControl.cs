@@ -1,3 +1,4 @@
+using LoDb.Api.Modules.Admin.Prerender.Telemetry;
 using LoDb.Infrastructure.Persistence;
 using LoDb.Infrastructure.Persistence.Prerender;
 using Microsoft.EntityFrameworkCore;
@@ -17,22 +18,33 @@ namespace LoDb.Api.Modules.Admin.Prerender.Passes;
 internal sealed class PassControl(IDbContextFactory<LoDbDbContext> contexts, TimeProvider clock)
 {
     public Task<PassChange> PauseAsync(long passId, CancellationToken cancellationToken) =>
-        MoveAsync(passId, PrerenderPassState.Paused, cancellationToken);
+        MoveAsync(passId, new PassTarget(PrerenderPassState.Paused), cancellationToken);
+
+    /// <summary>
+    /// Pauses the pass for <paramref name="reason"/>: the store or the SSR refuses it, and every
+    /// page would fail alike. The reason shows until it runs again.
+    /// </summary>
+    public Task<PassChange> PauseItselfAsync(
+        long passId,
+        string reason,
+        CancellationToken cancellationToken) =>
+        MoveAsync(passId, new PassTarget(PrerenderPassState.Paused, reason), cancellationToken);
 
     public Task<PassChange> ResumeAsync(long passId, CancellationToken cancellationToken) =>
-        MoveAsync(passId, PrerenderPassState.Running, cancellationToken);
+        MoveAsync(passId, new PassTarget(PrerenderPassState.Running), cancellationToken);
 
     public Task<PassChange> CancelAsync(long passId, CancellationToken cancellationToken) =>
-        MoveAsync(passId, PrerenderPassState.Cancelled, cancellationToken);
+        MoveAsync(passId, new PassTarget(PrerenderPassState.Cancelled), cancellationToken);
 
     public Task<PassChange> CompleteAsync(long passId, CancellationToken cancellationToken) =>
-        MoveAsync(passId, PrerenderPassState.Completed, cancellationToken);
+        MoveAsync(passId, new PassTarget(PrerenderPassState.Completed), cancellationToken);
 
     private async Task<PassChange> MoveAsync(
         long passId,
-        PrerenderPassState to,
+        PassTarget target,
         CancellationToken cancellationToken)
     {
+        var to = target.State;
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
         var pass = await db.PrerenderPasses.AsNoTracking()
             .SingleOrDefaultAsync(row => row.Id == passId, cancellationToken);
@@ -48,13 +60,16 @@ internal sealed class PassControl(IDbContextFactory<LoDbDbContext> contexts, Tim
         }
 
         PassTimes.Move(pass, to, clock.GetUtcNow());
+        var reason = DiagnosticText.Clip(target.Reason, PrerenderPass.PauseReasonMaxLength);
         var moved = await Movable(db.PrerenderPasses.Where(row => row.Id == passId), from, to)
             .ExecuteUpdateAsync(
                 setters => setters
                     .SetProperty(row => row.State, pass.State)
                     .SetProperty(row => row.RunningSince, pass.RunningSince)
                     .SetProperty(row => row.ActiveSeconds, pass.ActiveSeconds)
-                    .SetProperty(row => row.FinishedAt, pass.FinishedAt),
+                    .SetProperty(row => row.FinishedAt, pass.FinishedAt)
+                    .SetProperty(row => row.PausedAt, pass.PausedAt)
+                    .SetProperty(row => row.PauseReason, reason),
                 cancellationToken);
         return moved == 1 ? PassChange.Changed : PassChange.Refused;
     }

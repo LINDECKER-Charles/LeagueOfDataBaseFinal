@@ -43,6 +43,13 @@ describe('the SVG charts of the admin', () => {
     expect(all(fixture, 'polygon')[0]?.getAttribute('fill')).toBe('var(--color-gold)');
   });
 
+  it('breaks a sparkline into a line and an area per run between its gaps', () => {
+    const fixture = render(Sparkline, { values: [1, 4, 2, 5, 3], gaps: [2] });
+
+    expect(all(fixture, 'polyline')).toHaveLength(2);
+    expect(all(fixture, 'polygon')).toHaveLength(2);
+  });
+
   it('rings each slice of a donut, titled with its share, its count in the legend', () => {
     const fixture = render(DonutChart, {
       slices: [

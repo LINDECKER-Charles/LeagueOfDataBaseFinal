@@ -1,6 +1,7 @@
 using LoDb.Api.Modules.Admin.Prerender.Options;
 using LoDb.Api.Modules.Admin.Prerender.Pages;
 using LoDb.Api.Modules.Admin.Prerender.Passes;
+using LoDb.Api.Modules.Admin.Prerender.Passes.Planning;
 using LoDb.Api.Modules.Admin.Prerender.Writing;
 using LoDb.Domain.Versions;
 using LoDb.Infrastructure.Locks;
@@ -22,14 +23,16 @@ namespace LoDb.Api.Cli.Prerender;
 /// <c>prerender unit --version &lt;x.y.z&gt; [--locale &lt;code&gt;] [--type &lt;type&gt;]
 /// [--epoch &lt;n&gt;] [--wait &lt;seconds&gt;]</c>. The locale defaults to <c>en</c>, the
 /// epoch to the served one; <c>--type</c> keeps one type of page, its list and its entities.
-/// The pass is opened, then written here, under the lock the worker takes: it is refused while
-/// another pass is active or being written.
+/// The pass is planned and opened, then written here, under the lock the worker takes: it is
+/// refused while another pass is active or being written. A plan without a unit still opens its
+/// pass, reported as such.
 /// </para>
 /// <para>
 /// The command's host starts no worker: the unit's catalog is ingested first, waited for, as a
 /// command line reads, rather than queued for a worker that never comes. While the unit waits
-/// (its catalog not stored in time, its version just promoted away), the command tries again, <c>--wait</c> at most (five minutes by default). A pass it leaves
-/// unfinished, waiting or paused, it cancels: no pass of its own stays active behind it.
+/// (its catalog not stored in time, its version just promoted away), the command tries again,
+/// <c>--wait</c> at most (five minutes by default). A pass it leaves unfinished, waiting or
+/// paused, it cancels: no pass of its own stays active behind it.
 /// </para>
 /// <para>
 /// Exit code 0 when every page was written or skipped; 1 when the version is not an older
@@ -95,8 +98,10 @@ internal sealed class PrerenderUnitCommand(IServiceProvider services) : ICliComm
         await IngestAsync(options.Version, cancellationToken);
         var served = services.GetRequiredService<IOptions<PrerenderOptions>>().Value.ServedEpoch;
         var launch = new PassLaunch { Epoch = options.Epoch ?? served, Scope = options.Scope };
-        if (await services.GetRequiredService<PassLauncher>().StartAsync(launch, cancellationToken)
-            is not { } passId)
+        var plan = await services.GetRequiredService<PassPlanning>()
+            .PlanAsync(launch, cancellationToken);
+        if (await services.GetRequiredService<PassLauncher>()
+                .StartAsync(launch, plan, cancellationToken) is not { } passId)
         {
             await Console.Error.WriteLineAsync(
                 "A pass is already active: let it end, or pause or cancel it, first.");

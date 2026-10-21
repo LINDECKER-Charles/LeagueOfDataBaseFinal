@@ -5,6 +5,7 @@ using LoDb.Api.Modules.Admin.Prerender.Http.Views;
 using LoDb.Api.Modules.Admin.Prerender.Options;
 using LoDb.Api.Modules.Admin.Prerender.Pages;
 using LoDb.Api.Modules.Admin.Prerender.Passes;
+using LoDb.Api.Modules.Admin.Prerender.Passes.Planning;
 using LoDb.Infrastructure.Audit;
 using LoDb.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -23,6 +24,7 @@ namespace LoDb.Api.Modules.Admin.Prerender.Http;
 /// </remarks>
 internal sealed class PrerenderDesk(
     LoDbDbContext db,
+    PassPlanning planning,
     PassLauncher launcher,
     PassControl control,
     PrerenderActivation activation,
@@ -32,6 +34,8 @@ internal sealed class PrerenderDesk(
 {
     private const string EpochKey = "epoch";
     private const string ScopeKey = "scope";
+    private const string UnitsKey = "units";
+    private const string SkippedKey = "skipped";
     private const string LabelPrefix = "epoch ";
 
     private static readonly PassMove Pause = new(
@@ -48,8 +52,12 @@ internal sealed class PrerenderDesk(
 
     /// <summary>
     /// Opens the pass <paramref name="request"/> asks for; refused while the pre-rendering is
-    /// not configured here or while another pass is active.
+    /// not configured here, while another pass is active, or when it has nothing to render.
     /// </summary>
+    /// <remarks>
+    /// In this order: the request read whole, the host and the active pass checked before the
+    /// cost of planning, then the plan, refused when empty before any row is written.
+    /// </remarks>
     public async Task<(PrerenderPassStarted? Started, AccountProblem? Problem)> StartAsync(
         PassRequest request,
         CancellationToken cancellationToken)
@@ -63,19 +71,21 @@ internal sealed class PrerenderDesk(
             return (null, problem);
         }
 
-        if (!activation.IsActive)
+        if (await RefusalAsync(cancellationToken) is { } refusal)
         {
-            return (null, PrerenderProblems.Conflict(PrerenderProblems.Dormant));
+            return (null, refusal);
         }
 
-        var id = await launcher.StartAsync(launch, cancellationToken);
-        if (id is not { } passId)
+        var plan = await planning.PlanAsync(launch, cancellationToken);
+        if (plan.Units.Count == 0)
         {
-            return (null, PrerenderProblems.Conflict(PrerenderProblems.PassActive));
+            return (null, Empty(plan));
         }
 
-        await audit.RecordAsync(StartLine(passId, launch), cancellationToken);
-        return (await StartedAsync(passId, launch.Epoch, cancellationToken), null);
+        var id = await launcher.StartAsync(launch, plan, cancellationToken);
+        return id is { } passId
+            ? (await StartedAsync(passId, launch, plan, cancellationToken), null)
+            : (null, PrerenderProblems.Conflict(PrerenderProblems.PassActive));
     }
 
     public Task<AccountProblem?> PauseAsync(long id, CancellationToken cancellationToken) =>
@@ -113,23 +123,64 @@ internal sealed class PrerenderDesk(
         }
     }
 
+    // Before planning, which reads the catalog: the launcher checks it again, in a race.
+    private async Task<AccountProblem?> RefusalAsync(CancellationToken cancellationToken)
+    {
+        if (!activation.IsActive)
+        {
+            return PrerenderProblems.Conflict(PrerenderProblems.Dormant);
+        }
+
+        var isTaken = await db.PrerenderPasses.AnyAsync(
+            static pass => pass.IsActive,
+            cancellationToken);
+        return isTaken ? PrerenderProblems.Conflict(PrerenderProblems.PassActive) : null;
+    }
+
+    // Nothing skipped: no version asked for, or none at all, is an older patch. Else every
+    // unit asked for is complete already.
+    private static AccountProblem Empty(PassPlan plan)
+    {
+        var errors = new FieldErrors();
+        if (plan.Skipped == 0)
+        {
+            errors.Add(PassRequestReader.VersionsField, PassRequestReader.NonePinned);
+        }
+        else
+        {
+            errors.Add(PassRequestReader.ScopeField, PassRequestReader.NothingToRender);
+        }
+
+        return errors.ToProblem();
+    }
+
     private async Task<PrerenderPassStarted> StartedAsync(
         long id,
-        int epoch,
-        CancellationToken cancellationToken) => new()
+        PassLaunch launch,
+        PassPlan plan,
+        CancellationToken cancellationToken)
     {
-        Id = id,
-        Epoch = epoch,
-        Units = await db.PrerenderUnits.CountAsync(unit => unit.PassId == id, cancellationToken),
-    };
+        var started = new PrerenderPassStarted
+        {
+            Id = id,
+            Epoch = launch.Epoch,
+            Units = plan.Units.Count,
+            SkippedUnits = plan.Skipped,
+            IgnoredVersions = plan.Ignored,
+        };
+        await audit.RecordAsync(StartLine(started, launch.Scope), cancellationToken);
+        return started;
+    }
 
-    private static AuditEvent StartLine(long id, PassLaunch launch) =>
-        Line(AuditAction.AdminPrerenderStart, id, launch.Epoch) with
+    private static AuditEvent StartLine(PrerenderPassStarted started, PassScope scope) =>
+        Line(AuditAction.AdminPrerenderStart, started.Id, started.Epoch) with
         {
             Meta = new Dictionary<string, object?>
             {
-                [EpochKey] = launch.Epoch,
-                [ScopeKey] = PassScopeJson.Write(launch.Scope),
+                [EpochKey] = started.Epoch,
+                [ScopeKey] = PassScopeJson.Write(scope),
+                [UnitsKey] = started.Units,
+                [SkippedKey] = started.SkippedUnits,
             },
         };
 

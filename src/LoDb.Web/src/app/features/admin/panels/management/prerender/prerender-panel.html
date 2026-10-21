@@ -1,92 +1,79 @@
+@let heading = 'admin.prerender.title' | adminText;
 <lodb-page-head
   [eyebrow]="'admin.eyebrows.management' | adminText"
-  [title]="'admin.prerender.title' | adminText"
+  [title]="heading"
   [subtitle]="'admin.prerender.lede' | adminText"
-/>
+  [documentTitle]="heading ? documentTitle() : ''"
+>
+  <lodb-launch-cta
+    [lock]="lock()"
+    [poll]="report"
+    [every]="reportEvery()"
+    (launch)="launchFromHead()"
+    (refresh)="refresh()"
+    (follow)="follow()"
+  />
+</lodb-page-head>
 
-<lodb-panel-state [panel]="report" shape="cards" />
+<lodb-panel-state [panel]="quiet" shape="cards" />
 @if (report.value(); as data) {
-  @if (!data.isConfigured) {
-    <lodb-admin-band data-dormant>{{ 'admin.prerender.dormant' | adminText }}</lodb-admin-band>
-  }
-  @if (data.readyEpoch; as ready) {
-    <lodb-admin-band tone="notice" data-ready-epoch>
-      {{ 'admin.prerender.ready' | adminText: { epoch: ready } }}
-    </lodb-admin-band>
+  @if (bands(); as state) {
+    <lodb-prerender-bands
+      [state]="state"
+      (switchTo)="openSwitch($event)"
+      (complete)="completeEpoch($event)"
+    />
   }
 
-  <div class="kpi-grid" [attr.aria-busy]="report.busy()">
-    <lodb-kpi
-      accent="hex"
-      [label]="'admin.prerender.kpi.served' | adminText"
-      [value]="data.servedEpoch"
-      [sub]="'admin.prerender.kpi.served_sub' | adminText"
-    />
+  <div class="mb-[1.15rem]">
     @if (data.current; as current) {
-      <lodb-kpi
-        [accent]="current.state === 'running' ? 'good' : 'warn'"
-        [label]="'admin.prerender.kpi.pass' | adminText"
-        [value]="'admin.prerender.states.' + current.state | adminText"
-        [sub]="
-          'admin.prerender.kpi.pass_sub'
-            | adminText: { completed: current.units.completed, total: current.units.total }
-        "
+      <lodb-live-monitor
+        [pass]="current"
+        [report]="data"
+        (launch)="openLaunch($event)"
+        (changed)="report.reload()"
+        (ended)="onEnded()"
+      />
+    } @else if (recent(); as pass) {
+      <lodb-pass-recap
+        [pass]="pass"
+        [servedEpoch]="data.servedEpoch"
+        (launch)="openLaunch($event)"
+        (detail)="openDetail($event)"
+        (dismissed)="dismiss($event)"
       />
     } @else {
-      <lodb-kpi
-        accent="gold"
-        [label]="'admin.prerender.kpi.pass' | adminText"
-        value="—"
-        [sub]="'admin.prerender.kpi.pass_none' | adminText"
+      <lodb-idle-card
+        [report]="data"
+        [lock]="lock()"
+        (launch)="openLaunch($event)"
+        (detail)="openDetail($event)"
       />
     }
-    <lodb-kpi
-      accent="blue"
-      [label]="'admin.prerender.kpi.stored' | adminText"
-      [value]="data.storage.bytes | decimalBytes"
-      [sub]="'admin.prerender.kpi.stored_sub' | adminText: { pages: (data.storage.pages | figure) }"
-    />
-    <lodb-kpi
-      accent="green"
-      [label]="'admin.prerender.kpi.cost' | adminText"
-      [value]="cost()"
-      [sub]="
-        retiredCost()
-          ? ('admin.prerender.kpi.cost_sub_retired' | adminText: { retired: retiredCost() })
-          : ('admin.prerender.kpi.cost_sub' | adminText)
-      "
-    />
   </div>
 
-  <lodb-admin-rule [label]="'admin.rules.current_pass' | adminText" />
-  @if (data.current; as current) {
-    <lodb-current-pass-card
-      [pass]="current"
-      [busy]="actions.busy()"
-      (paused)="pause(current.id)"
-      (resumed)="resume(current.id)"
-      (cancelled)="cancel(current.id)"
-    />
-  } @else {
-    <lodb-admin-card>
-      <p class="text-text-dim" data-no-pass>{{ 'admin.prerender.current.none' | adminText }}</p>
-    </lodb-admin-card>
-  }
+  <lodb-prerender-kpis [report]="data" />
 
-  <lodb-admin-rule [label]="'admin.rules.launch' | adminText" />
-  <lodb-launch-form
-    [servedEpoch]="data.servedEpoch"
-    [enqueuesPromotions]="data.enqueuesPromotions"
-    [lock]="lock()"
-    [busy]="actions.busy()"
-    (launched)="launch($event)"
-  />
-
-  <lodb-admin-rule [label]="'admin.rules.storage' | adminText" />
-  <lodb-storage-section [storage]="data.storage" />
-
-  <lodb-admin-rule [label]="'admin.rules.history' | adminText" />
-  <lodb-admin-card>
-    <lodb-pass-history-table [passes]="data.passes" [attr.aria-busy]="report.busy()" />
-  </lodb-admin-card>
+  <lodb-tabs class="mt-6" [label]="'admin.prerender.overview.tabs.label' | adminText">
+    <lodb-tab
+      key="prerender-coverage"
+      [label]="'admin.prerender.overview.tabs.coverage' | adminText"
+    >
+      <lodb-coverage-tab [report]="data" [lock]="lock()" (launch)="openLaunch($event)" />
+    </lodb-tab>
+    <lodb-tab
+      key="prerender-costs"
+      [label]="
+        (isPhone()
+          ? 'admin.prerender.overview.tabs.costs_short'
+          : 'admin.prerender.overview.tabs.costs'
+        ) | adminText
+      "
+    >
+      <lodb-costs-tab [report]="data" [lock]="lock()" (launch)="openLaunch($event)" />
+    </lodb-tab>
+    <lodb-tab key="prerender-history" [label]="'admin.prerender.overview.tabs.history' | adminText">
+      <lodb-passes-tab [report]="data" (detail)="openDetail($event)" (follow)="follow()" />
+    </lodb-tab>
+  </lodb-tabs>
 }

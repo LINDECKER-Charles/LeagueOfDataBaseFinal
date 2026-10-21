@@ -45,7 +45,10 @@ internal static class ConventionalWorkers
             .OrderBy(static type => type.FullName, StringComparer.Ordinal)
             .ToArray();
 
-    private static bool IsEnabled(IConfiguration configuration) =>
+    /// <summary>
+    /// Whether this host runs its background tasks: the admin says so of the pass.
+    /// </summary>
+    public static bool IsEnabled(IConfiguration configuration) =>
         !OpenApiDocuments.IsBuildTimeGeneration
         && !(bool.TryParse(configuration[EnabledKey], out var enabled) && !enabled);
 }

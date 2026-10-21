@@ -36,15 +36,36 @@ describe('sparklineShape', () => {
   });
 
   it('spans the whole width, the lowest value at the bottom and the highest at the top', () => {
-    expect(sparklineShape([0, 5, 10])?.line).toBe('0.0,28.0 60.0,15.0 120.0,2.0');
+    expect(sparklineShape([0, 5, 10])?.runs.map((run) => run.line)).toEqual([
+      '0.0,28.0 60.0,15.0 120.0,2.0',
+    ]);
   });
 
   it('lays a flat series along the bottom and closes the area on the baseline', () => {
     const shape = sparklineShape([3, 3]);
 
-    expect(shape?.line).toBe('0.0,28.0 120.0,28.0');
-    expect(shape?.area).toBe('0.0,30.0 0.0,28.0 120.0,28.0 120.0,30.0');
+    expect(shape?.runs).toEqual([
+      { line: '0.0,28.0 120.0,28.0', area: '0.0,30.0 0.0,28.0 120.0,28.0 120.0,30.0' },
+    ]);
     expect(shape?.viewBox).toBe('0 0 120 30');
+  });
+
+  it('breaks the line at each gap, each run over its own stretch of the width', () => {
+    const shape = sparklineShape([0, 10, 10, 0, 5], [2]);
+
+    expect(shape?.runs).toEqual([
+      { line: '0.0,28.0 30.0,2.0', area: '0.0,30.0 0.0,28.0 30.0,2.0 30.0,30.0' },
+      {
+        line: '60.0,2.0 90.0,28.0 120.0,15.0',
+        area: '60.0,30.0 60.0,2.0 90.0,28.0 120.0,15.0 120.0,30.0',
+      },
+    ]);
+  });
+
+  it('draws nothing of a run of a single value between two gaps', () => {
+    expect(sparklineShape([1, 2, 3, 4], [1, 2])?.runs.map((run) => run.line)).toEqual([
+      '80.0,10.7 120.0,2.0',
+    ]);
   });
 });
 

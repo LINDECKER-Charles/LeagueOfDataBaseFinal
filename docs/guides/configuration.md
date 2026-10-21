@@ -648,10 +648,15 @@ un déploiement : nginx lit le stockage. Avant la passe complète de la prod, v�
 facturation du stockage (README, § 5).
 
 **Changer l'epoch servie.** Une passe écrit une epoch pendant que nginx sert la précédente.
-Quand l'administration la montre complète, poser `LODB_ARCHIVE_SERVE_EPOCH=<N>` dans `ENV_*`
+Quand l'administration la montre prête, poser `LODB_ARCHIVE_SERVE_EPOCH=<N>` dans `ENV_*`
 et redéployer : nginx lit `pages/<N>/` (la clé de son cache comprend l'epoch servie, ses copies
-de l'ancienne ne servent plus) et le panneau affiche `<N>`. Retirer ensuite l'ancienne
-(README, § 4). Un changement visible du chrome, de la CSP ou du contrat `/api` attend ainsi que
+de l'ancienne ne servent plus) et le panneau affiche `<N>`. Une epoch est prête quand elle n'a
+plus aucun manque : chaque (ancien patch, langue) y est terminé sur tous les types de pages, ou
+en échec définitif (version inconnue de Data Dragon, catalogue jamais arrivé), et ces unités
+comme les pages en échec des unités terminées seront servies par le SSR ; plusieurs passes
+ciblées peuvent la remplir. Le dialogue de bascule de l'administration donne la variable à
+poser. Retirer ensuite l'ancienne (README, § 4) : le retrait se prépare depuis la ligne de
+l'epoch retirée, une fois la bascule déployée. Un changement visible du chrome, de la CSP ou du contrat `/api` attend ainsi que
 sa passe soit complète (§ 4.1). Après un **correctif de sécurité du front** ou une
 **compromission du serveur SSR**, basculer tout de suite sur une epoch neuve, avant qu'elle
 soit écrite : les pages pas encore écrites repassent par le SSR, borné par sa voie épinglée, le

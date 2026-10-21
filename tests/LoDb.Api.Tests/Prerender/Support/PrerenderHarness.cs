@@ -1,6 +1,7 @@
 using LoDb.Api.Modules.Admin.Prerender;
 using LoDb.Api.Modules.Admin.Prerender.Pages;
 using LoDb.Api.Modules.Admin.Prerender.Passes;
+using LoDb.Api.Modules.Admin.Prerender.Passes.Planning;
 using LoDb.Api.Modules.Admin.Prerender.Rendering;
 using LoDb.Api.Modules.Admin.Prerender.Writing;
 using LoDb.Infrastructure.Jobs;
@@ -81,11 +82,17 @@ internal sealed class PrerenderHarness : IAsyncDisposable
         where T : notnull => _services.GetRequiredService<T>();
 
     /// <summary>Opens a pass over <paramref name="scope"/>, writing epoch 1.</summary>
-    public async Task<long> LaunchAsync(PassScope scope)
-    {
-        var launch = new PassLaunch { Epoch = 1, Scope = scope };
-        return await Get<PassLauncher>().StartAsync(launch, Token)
+    public async Task<long> LaunchAsync(PassScope scope) =>
+        await OpenAsync(new PassLaunch { Epoch = 1, Scope = scope })
             ?? throw new InvalidOperationException("A pass is already active.");
+
+    /// <summary>
+    /// Plans <paramref name="launch"/>, then opens it; null when a pass is active.
+    /// </summary>
+    public async Task<long?> OpenAsync(PassLaunch launch)
+    {
+        var plan = await Get<PassPlanning>().PlanAsync(launch, Token);
+        return await Get<PassLauncher>().StartAsync(launch, plan, Token);
     }
 
     /// <summary>One tick of the worker: the running pass, written as far as it goes.</summary>

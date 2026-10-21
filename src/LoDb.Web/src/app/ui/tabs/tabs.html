@@ -1,7 +1,10 @@
 <div
+  #tabList
   role="tablist"
   class="flex overflow-x-auto border-b border-gold-deep/40 [scrollbar-width:none]"
   [attr.aria-label]="label()"
+  [style.mask-image]="fade()"
+  (scroll)="measure()"
 >
   @for (tab of tabs(); track tab.key(); let index = $index) {
     <button
