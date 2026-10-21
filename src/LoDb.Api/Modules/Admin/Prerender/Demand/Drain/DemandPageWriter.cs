@@ -1,3 +1,4 @@
+using System.Net;
 using LoDb.Api.Modules.Admin.Prerender.Builds;
 using LoDb.Api.Modules.Admin.Prerender.Demand.Queue;
 using LoDb.Api.Modules.Admin.Prerender.Demand.Sharing;
@@ -15,7 +16,8 @@ namespace LoDb.Api.Modules.Admin.Prerender.Demand.Drain;
 /// metadata): a page of the queue is a page of the epoch like any other.
 /// </summary>
 /// <remarks>
-/// The verdicts are the pass's (<see cref="RenderVerdicts"/>). An SSR out of reach, or an answer
+/// The verdicts are the pass's (<see cref="RenderVerdicts"/>), but for a 200 without the
+/// archived mark, a try that failed rather than a page skipped. An SSR out of reach, or an answer
 /// that refuses every page (a setting), stops the drain until its next tick; the outage is
 /// said once, with the pass's (<see cref="SsrOutage"/>).
 /// </remarks>
@@ -28,6 +30,12 @@ internal sealed class DemandPageWriter(
     IPageStore store)
 {
     private const string Unreachable = "The SSR is out of reach.";
+
+    // A pass walks a unit whose catalogue its opening pages loaded; the queue's page often
+    // opens its (version, locale), and a render that ran out of time on a cold catalogue
+    // comes back as a page of a shorter class: tried again later, never skipped for good.
+    private const string Unmarked =
+        "The SSR answered 200 without the archived mark: its catalogue was likely still loading.";
 
     public async Task<DemandTry> TryAsync(PageJob job, CancellationToken cancellationToken)
     {
@@ -61,6 +69,8 @@ internal sealed class DemandPageWriter(
         RenderVerdicts.Of(page) switch
         {
             RenderVerdict.Storable => await StoreAsync(job, page, cancellationToken),
+            RenderVerdict.Skipped when page.Status == HttpStatusCode.OK =>
+                DemandTry.Failed(Unmarked),
             RenderVerdict.Skipped => DemandTry.Ended(DemandEnd.Skipped(
                 $"The SSR answered {(int)page.Status}, a page that is never stored.")),
             RenderVerdict.Refused => DemandTry.Refused(RetryDelays.AfterRefusal(page.RetryAfter)),

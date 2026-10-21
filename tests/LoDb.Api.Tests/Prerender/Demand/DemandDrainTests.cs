@@ -136,6 +136,37 @@ public sealed class DemandDrainTests(PostgresContainerFixture postgres)
     }
 
     [Fact]
+    public async Task PageWithoutTheArchivedMarkIsTriedAgainNotSkipped()
+    {
+        await using var rig = await DemandRig.StartAsync(postgres);
+        rig.Harness.Ssr.Answer(Runes, () => FakeSsr.Unmarked(Runes, "public, max-age=60"));
+        rig.Refused.Refuse(Runes);
+        await rig.CollectAsync();
+
+        await rig.DrainAsync();
+        rig.Harness.Clock.Advance(TimeSpan.FromMinutes(6));
+        await rig.DrainAsync();
+
+        var row = await rig.RowAsync(Runes);
+        Assert.Equal((PrerenderDemandState.Done, 1), (row!.State, row.Attempts));
+        Assert.True(rig.Harness.Store!.Objects.ContainsKey($"pages/1{Runes}"));
+    }
+
+    [Fact]
+    public async Task RedirectIsSkippedForGood()
+    {
+        await using var rig = await DemandRig.StartAsync(postgres);
+        rig.Harness.Ssr.Answer(Runes, static () => FakeSsr.Status(HttpStatusCode.MovedPermanently));
+        rig.Refused.Refuse(Runes);
+        await rig.CollectAsync();
+
+        await rig.DrainAsync();
+
+        var row = await rig.RowAsync(Runes);
+        Assert.Equal((PrerenderDemandState.Skipped, 0), (row!.State, row.Attempts));
+    }
+
+    [Fact]
     public async Task RefusalOfThePassSsrIsWaitedOutUncounted()
     {
         await using var rig = await DemandRig.StartAsync(postgres);
