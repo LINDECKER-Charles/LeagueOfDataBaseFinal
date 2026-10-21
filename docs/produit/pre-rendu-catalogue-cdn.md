@@ -259,16 +259,18 @@ révise renvoient vers elle par un amendement daté :
   seulement** (`curl -4`, ou depuis un conteneur du réseau de la pile) : l'hôte joint aussi
   Scaleway en IPv6, d'où la politique répondrait 403 alors que les conteneurs, en IPv4,
   passent. Elle doit montrer, depuis le VPS, une 200 avec les en-têtes, les métadonnées et
-  le corps gzip intacts. L'opérateur vérifie ensuite la 403 par un `GET` de la même clé
-  depuis son poste (la commande est dans `tools/prerender/README.md`). Le lot 3 ne part pas
-  en prod sans elles.
+  le corps gzip intacts (une clé absente y répond `404 NoSuchKey`, pas 403 : Scaleway le
+  dit à une lecture que la politique admet, sans `s3:ListBucket`, mesuré le 21 octobre 2026).
+  L'opérateur vérifie ensuite la 403 par un `GET` de la même clé depuis son poste (la
+  commande est dans `tools/prerender/README.md`). Le lot 3 ne part pas en prod sans elles.
 - Les variables, validées au démarrage :
   - API (options `LoDb`) : `LoDb__Prerender__Endpoint` (`https://s3.fr-par.scw.cloud`),
     `__Region`, `__Bucket`, `__AccessKey` et `__SecretKey` (secrets), `__PublicHost`
     (`league-of-data-base.com`, `test.league-of-data-base.com` au staging), `__SsrBaseUrl`
     (`http://lodb-web-ssr:4000`), `__ServedEpoch` (`${LODB_ARCHIVE_SERVE_EPOCH}`),
-    `__AutoEnqueueOnPromotion` (vrai en prod, faux au staging), `__AllowInsecureEndpoint`
-    (développement). Vides, elles laissent la tâche en sommeil : `Add*` ne fait aucune I/O ;
+    `__AutoEnqueueOnPromotion` (faux au staging ; faux en prod jusqu'à la fin de la passe
+    complète, puis vrai), `__AllowInsecureEndpoint` (développement). Vides, elles laissent
+    la tâche en sommeil : `Add*` ne fait aucune I/O ;
   - nginx : `LODB_PAGES_STORE_ENABLED` (`0` par défaut : en local et en CI, rien ne change),
     `LODB_PAGES_STORE_SCHEME`, `_HOST`, `_PORT`, `_BUCKET`, et l'epoch servie
     (`LODB_ARCHIVE_SERVE_EPOCH`) ;
@@ -419,8 +421,11 @@ une version épinglée. Ses 21 unités (une par langue), environ 24 000 pages, r
 passe active, ou en ouvrent une sur l'epoch servie. L'avis de promotion
 (`IPromotionListener`) ne part qu'une fois, sur une seule instance, sans nouvel essai : un
 tour de rapprochement de la tâche (versions du catalogue face aux unités) rattrape un avis
-perdu. Les deux obéissent à `LoDb__Prerender__AutoEnqueueOnPromotion`, vrai en prod et faux
-au staging. En attendant, ses pages passent par le SSR et le cache local.
+perdu. Les deux obéissent à `LoDb__Prerender__AutoEnqueueOnPromotion`, faux au staging et en
+prod tant que la passe complète (lancée à la main) n'est pas terminée, puis vrai en prod.
+Vrai trop tôt, le rapprochement ouvrirait de lui-même, sans promotion, une passe sur l'epoch
+servie pour le patch précédent dans la demi-heure qui suit le déploiement, et la passe de
+l'opérateur répondrait `409`. En attendant, ses pages passent par le SSR et le cache local.
 
 **Administration.** Un panneau « Précalcul du catalogue », sur le modèle de `backups/` :
 
@@ -498,8 +503,9 @@ Dans la location des versions épinglées (`sites/site.conf`), derrière
     politique du stockage n'est plus le seul garde-fou, surtout si la lecture devient
     publique (§ 3, accès) ;
   - délais courts (connexion 1 s, lecture 3 à 5 s), et un `proxy_cache_lock_timeout` court ;
-  - `proxy_intercept_errors on` ; une 403, une 404, une 429, une 5xx ou un délai dépassé
-    mènent à une location nommée qui reprend le chemin actuel vers le SSR, à l'identique.
+  - `proxy_intercept_errors on` ; une 404 (page absente, `NoSuchKey`), une 403 (politique,
+    adresse changée), une 429, une 5xx ou un délai dépassé mènent à une location nommée qui
+    reprend le chemin actuel vers le SSR, à l'identique.
     Le freinage de Scaleway répond 429, comme `limit_req` : la location du stockage refuse
     en `limit_req_status 420`, renvoyé à `@lodb_rate_limited`. `error_page` ne s'hérite pas
     et se répète dans chaque location.
@@ -748,7 +754,8 @@ Selon `docs/guides/tests.md`, au plus près de la couche qui porte le comporteme
   - une page trouvée est servie avec ses en-têtes reposés, aussi depuis le cache, sans aucun
     en-tête du stockage (`x-amz-*`, `ETag`, `Last-Modified`, `Accept-Ranges`) : un `HEAD`, une
     requête conditionnelle sur les validateurs du stockage ou un `Range` reçoivent la page ;
-  - une 403, une 404, une 429, une 5xx ou un délai dépassé du stockage mènent au SSR ; la
+  - une 404 (page absente), une 403 (politique, adresse changée), une 429, une 5xx ou un
+    délai dépassé du stockage mènent au SSR ; la
     429 du stockage reste distincte de celle de `limit_req` ;
   - une query, un chemin hors grammaire ou une méthode autre que `GET` et `HEAD` (un
     `POST`, `PUT` ou `DELETE` avec un corps) mène au SSR sans interroger le stockage ;
@@ -797,9 +804,9 @@ d'attribution. Pas de push sur `dev`, `test` ni `main`.
    Cloudflare :
    - le script et la sonde `verifier` sur le stockage de prod ; les mesures de départ
      relevées de nouveau ;
-   - **la facturation vérifiée** : Scaleway compte « 1 Ko pendant 1 seconde comme
-     1 Go-heure », sans dire si l'arrondi se fait par objet ou sur le total. Avant d'écrire
-     4 millions d'objets, on le confirme (ticket au support, ou facture du staging) ;
+   - **la facturation, tranchée** : Scaleway compte « 1 Ko pendant 1 seconde comme
+     1 Go-heure » et arrondit sur le total du projet, pas par objet (mesure du 20 octobre 2026
+     sur le staging, ADR 0011, § Conséquences) : rien à confirmer avant la passe complète ;
    - une première petite unité à budget bas, pour mesurer le débit, puis la passe complète
      dans l'ordre de la demande ;
    - l'effet du lot 3 mesuré seul, 7 jours plus tard (lot 5).

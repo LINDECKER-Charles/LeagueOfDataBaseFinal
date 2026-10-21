@@ -217,4 +217,5 @@ Le catalogue pré-rendu ([ADR 0011](0011-catalogue-pre-rendu-et-cdn.md)) ajoute 
   qui a ingéré, sans nouvel essai. Il ajoute les unités (une par langue) du patch devenu
   épinglé à la passe active, ou en ouvre une sur l'epoch servie ; le tour de
   rapprochement rattrape un avis perdu. Les deux obéissent à
-  `LoDb:Prerender:AutoEnqueueOnPromotion`, vrai en prod, faux au staging.
+  `LoDb:Prerender:AutoEnqueueOnPromotion`, faux au staging et en prod tant que la passe
+  complète n'est pas terminée, puis vrai en prod.

@@ -149,6 +149,11 @@ abandonne après 5 s sans connexion ou 30 s en tout. La sonde s'efface d'elle-m�
 Le script affiche enfin la commande à lancer **depuis le poste**, qui doit répondre `403` :
 hors de l'adresse du VPS, personne ne lit le bucket.
 
+Une clé absente répond `404 NoSuchKey` au `GET` depuis le VPS, pas `403` (sonde non écrite,
+chemin d'objet erroné) : Scaleway dit l'absence à une lecture que la politique admet, sans
+`s3:ListBucket`, là où AWS répondrait `403` (mesuré le 21 octobre 2026 sur les deux buckets).
+nginx retombe sur le SSR dans les deux cas.
+
 Un `403` au `GET` depuis le VPS : l'adresse de sortie n'est pas `VPS_IPV4` (§ 1, point 7),
 ou la lecture anonyme conditionnée par l'adresse ne marche pas chez Scaleway (rien ne la
 documente). Le repli que prévoit l'ADR 0011 (correction C3) : une lecture publique de
@@ -228,24 +233,22 @@ ENVIRONMENT=prod BUCKET=lodb-pages-prod SERVED_EPOCH=2 WRITE_EPOCH=2 RETIRED_EPO
   dans l'ordre : [`configuration.md`](../../docs/guides/configuration.md), « Monter l'epoch
   des anciens patchs ».
 
-## 5. Vérifier la facturation avant la passe complète de la prod
+## 5. Facturation : l'arrondi porte sur le total du projet
 
-La grille de Scaleway facture « 1 Ko pendant 1 seconde comme 1 Go-heure ». Elle ne dit pas
-si cet arrondi s'applique **par objet** ou au **total** du bucket. Au total, la prod coûte
-environ 1,25 € par mois (155 Go en One Zone, 0,000011 € par Go-heure). Par objet, chaque page
-compterait pour 1 Go : 4,2 millions d'objets × 0,000011 € ≈ **46 € par heure**.
+La grille de Scaleway facture « 1 Ko pendant 1 seconde comme 1 Go-heure ». Cet arrondi
+s'applique au **total** du projet, **pas par objet** : la prod coûte environ 1,25 € par mois
+(155 Go en One Zone, 0,000011 € par Go-heure). Par objet, chaque page compterait pour 1 Go :
+4,2 millions d'objets × 0,000011 € ≈ **46 € par heure**, ce que la mesure exclut.
 
-Avant d'écrire la passe complète de la prod :
+La mesure (20 octobre 2026) : 300 objets de 1 Ko en `ONEZONE_IA`, écrits entre 18 h 33 et
+18 h 40 UTC dans `lodb-pages-staging`. Environ 4 h plus tard, la première ligne de
+*Facturation → Consommation* du projet des pages est « Standard One Zone / ONEZONE - fr-par » :
+3 Go-heures, soit 0,01 € (couverts par l'essai gratuit, −0,01 €). Un arrondi par objet aurait
+affiché environ 300 Go-heures par heure. La décision est consignée dans l'ADR 0011 ; la passe
+complète de la prod n'attend plus de vérification de facturation.
 
-1. ouvrir un ticket au support Scaleway (*Object Storage*, question de facturation) : « la
-   règle 1 Ko × 1 s = 1 Go-heure s'applique-t-elle par objet ou au volume total du bucket ? » ;
-2. et, sans attendre la réponse, lire la consommation du projet `lodb-pages-staging` après une
-   passe du staging (environ 2 500 pages) et au moins une journée pleine : *Facturation →
-   Consommation*, ligne *Object Storage – One Zone*. Au total, quelques dizaines de Mo
-   pendant 24 h ne coûtent rien de visible ; par objet, 2 500 pages × 24 h × 0,000011 €
-   donnent environ **0,66 € par jour** ;
-3. noter la réponse dans l'ADR 0011 ; ne lancer la passe complète que si l'arrondi porte sur
-   le total.
+Pour surveiller la prod, la même ligne reste la référence : elle doit suivre le volume écrit
+(0,000011 € par Go-heure), pas le nombre de pages.
 
 ## 6. Erreur de politique : reprendre la main
 
