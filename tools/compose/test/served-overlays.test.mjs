@@ -1,9 +1,9 @@
 // Checks what Compose makes of the served overlays, from the .env examples: the production
 // stack's CPU quotas, weights and process caps (compose.deploy.yaml), its runtime hardening
-// and networks, the edge's route to nginx, the hosts the API answers, the smaller share of
-// the staging stack (compose.staging.yaml), the optional login on the staging pages
-// (compose.staging-auth.yaml), whose bcrypt hash must reach the edge's label intact, and the
-// production's declaration to Umami (compose.umami.yaml).
+// and networks (the pass renderer included), the edge's route to nginx, the hosts the API
+// answers, the smaller share of the staging stack (compose.staging.yaml), the optional login
+// on the staging pages (compose.staging-auth.yaml), whose bcrypt hash must reach the edge's
+// label intact, and the production's declaration to Umami (compose.umami.yaml).
 // Needs the Docker CLI only: `compose config` reads files, it starts nothing.
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
@@ -22,13 +22,23 @@ const STAGING_AUTH = [...STAGING, 'compose.staging-auth.yaml'];
 const PROD_UMAMI = [...SERVED, 'compose.umami.yaml'];
 const DASHBOARD = 'stats.league-of-data-base.com';
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
-const RUNNING = ['api', 'web-ssr', 'nginx', 'postgres'];
+// The services that serve the visitors: their quotas make the stack's share of the host.
+const VISITORS = ['api', 'web-ssr', 'nginx', 'postgres'];
+// The pre-rendering pass's own renderer: idle CPU only, at the lowest weight of the host.
+const PASS_SSR = 'web-ssr-prerender';
+const RUNNING = [...VISITORS, PASS_SSR];
+const PASS_SSR_ALIAS = 'lodb-web-ssr-prerender';
 // What the deploy job writes on a host, absent from the examples.
 const EDGE_SECRET = '5e'.repeat(32);
 const HOST_ADDITIONS = 'LODB_EDGE_CIDR=172.18.0.0/16\nLODB_STACK_SUBNET=10.231.1.0/24\n'
   + `LODB_EDGE_SECRET=${EDGE_SECRET}\n`;
 // Every service of the stack, the one-shot migrate included.
 const SERVICES = [...RUNNING, 'migrate'];
+// The pass renderer's CPU weight and quota: prod, then the staging's smaller ones.
+const PASS_SSR_LIMITS = {
+  prod: { shares: 128, cpus: 1, memory: 704 * 1024 * 1024 },
+  staging: { shares: 64, cpus: 0.25, memory: 704 * 1024 * 1024 },
+};
 // What postgres's entrypoint needs, as root, before it becomes `postgres`: none beyond
 // Docker's defaults (DAC_READ_SEARCH would also open open_by_handle_at, compose.yaml).
 const POSTGRES_CAPABILITIES = ['CHOWN', 'DAC_OVERRIDE', 'FOWNER', 'SETGID', 'SETUID'];
@@ -64,8 +74,10 @@ const servicesOf = async (envFiles, files) => (await configOf(envFiles, files)).
 const networksOf = (service) => Object.keys(service.networks ?? {}).sort();
 
 const limitsOf = (service) => service.deploy?.resources?.limits ?? {};
+// The quotas that add up to the stack's share of the host: the visitors' services alone. The
+// pass renderer is bounded apart, and weighs next to nothing under contention.
 const coresOf = (services) =>
-  RUNNING.reduce((total, name) => total + Number(limitsOf(services[name]).cpus), 0);
+  VISITORS.reduce((total, name) => total + Number(limitsOf(services[name]).cpus), 0);
 
 describe('served overlays through Compose',
   { skip: hasCompose ? false : 'docker compose is not available' }, () => {
@@ -110,6 +122,7 @@ describe('served overlays through Compose',
       assert.deepEqual(networksOf(prod.migrate), ['data', 'default']);
       assert.deepEqual(networksOf(prod.nginx), ['default', 'edge']);
       assert.deepEqual(networksOf(prod['web-ssr']), ['default', 'observability']);
+      assert.deepEqual(networksOf(prod[PASS_SSR]), ['default', 'observability']);
       // The network nginx reaches the API from is the one the API trusts.
       const [{ subnet }] = served.networks.default.ipam.config;
       assert.equal(prod.api.environment.LoDb__Hosting__KnownProxyNetworks__0, subnet);
@@ -136,6 +149,40 @@ describe('served overlays through Compose',
       assert.ok(limitsOf(prod.migrate).pids > 0, 'migrate has a process cap');
       assert.ok(coresOf(prod) < 4, `${coresOf(prod)} cores leave the host some`);
       assert.ok(RUNNING.every((name) => prod.nginx.cpu_shares >= prod[name].cpu_shares));
+    });
+
+    test("gives the pass renderer the lowest weight of the host, so it takes idle CPU only", () => {
+      for (const [name, services] of [['prod', prod], ['staging', staging]]) {
+        const expected = PASS_SSR_LIMITS[name];
+        const pass = services[PASS_SSR];
+        assert.equal(pass.cpu_shares, expected.shares, `${name} weight`);
+        assert.equal(Number(limitsOf(pass).cpus), expected.cpus, `${name} quota`);
+        assert.equal(Number(limitsOf(pass).memory), expected.memory, `${name} memory`);
+        for (const other of SERVICES.filter((service) => service !== PASS_SSR)) {
+          const weight = services[other].cpu_shares;
+          assert.ok(weight === undefined || pass.cpu_shares < weight, `${name} ${other}`);
+        }
+      }
+    });
+
+    test('answers to its own alias only, and keeps nginx from depending on it', () => {
+      assert.deepEqual(prod[PASS_SSR].networks.default.aliases, [PASS_SSR_ALIAS]);
+      assert.deepEqual(prod['web-ssr'].networks.default.aliases, ['lodb-web-ssr']);
+      assert.deepEqual(Object.keys(prod.nginx.depends_on).sort(), ['api', 'web-ssr']);
+      assert.equal(prod.api.environment.LoDb__Prerender__SsrBaseUrl,
+        `http://${PASS_SSR_ALIAS}:4000`);
+    });
+
+    test('has the pass renderer write nothing shared, and be scraped like web-ssr', () => {
+      const pass = prod[PASS_SSR];
+      assert.equal(pass.volumes, undefined, 'no volume: the bundles keep a single writer');
+      assert.equal(pass.environment.LODB_FRONT_BUILDS_DIR, undefined);
+      assert.equal(prod['web-ssr'].environment.LODB_FRONT_BUILDS_DIR, '/srv/front-builds');
+      assert.deepEqual(pass.labels, prod['web-ssr'].labels);
+      assert.equal(pass.labels['prometheus.scrape'], 'true');
+      assert.equal(pass.labels['prometheus.port'], '9464');
+      assert.equal(pass.ports, undefined, 'no published port');
+      assert.equal(pass.image, prod['web-ssr'].image, 'the same image, no extra build');
     });
 
     test('gives staging a smaller share, with work queues to match', () => {

@@ -1,6 +1,9 @@
 import type { PrerenderEnginePulse } from '../../../../../../../core/api/generated/models/prerender-engine-pulse';
 import type { PrerenderPassProgress } from '../../../../../../../core/api/generated/models/prerender-pass-progress';
-import { prerenderProgress } from '../../../../../testing/fixtures/prerender-progress';
+import {
+  prerenderPace,
+  prerenderProgress,
+} from '../../../../../testing/fixtures/prerender-progress';
 import { stallOf } from './stall-of';
 
 const BASE = prerenderProgress();
@@ -69,6 +72,21 @@ describe('stallOf', () => {
     expect(cause({ observedAt: null })).toBe('remote');
     expect(cause({ observedAt: new Date(QUIET - 3 * MINUTE).toISOString() })).toBe('remote');
     expect(cause({})).toBe('unknown');
+  });
+
+  it('names a held pass after the SSR, before every other cause', () => {
+    const since = '2026-10-21T08:43:00+00:00';
+    const pace = prerenderPace('held', { rendersPerMinute: 0, reason: 'host-cpu' });
+    const cause = (pulse: Partial<PrerenderEnginePulse>) => {
+      const stall = stallOf(progress({ pace, ...pulse }), QUIET, LAST_PAGE);
+      return stall?.kind === 'stalled' ? stall.cause : null;
+    };
+
+    expect(cause({})).toBe('held');
+    expect(cause({ isWorkerEnabled: false })).toBe('held');
+    expect(cause({ observedAt: null })).toBe('held');
+    expect(cause({ ssrUnreachableSince: since })).toBe('ssr');
+    expect(cause({ pace: prerenderPace('slowed') })).toBe('unknown');
   });
 
   it('counts how long no page was written', () => {

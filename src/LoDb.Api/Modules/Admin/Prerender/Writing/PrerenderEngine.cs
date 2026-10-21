@@ -1,4 +1,5 @@
 using LoDb.Api.Modules.Admin.Prerender.Options;
+using LoDb.Api.Modules.Admin.Prerender.Pace;
 using LoDb.Api.Modules.Admin.Prerender.Passes;
 using LoDb.Api.Modules.Admin.Prerender.Telemetry;
 using LoDb.Api.Modules.Admin.Prerender.Units;
@@ -13,7 +14,8 @@ namespace LoDb.Api.Modules.Admin.Prerender.Writing;
 /// <remarks>
 /// One instance writes at a time, under an advisory lock that the command line takes too.
 /// Dormant until the pass and its store are configured (<see cref="PrerenderActivation"/>).
-/// Each turn beats its <see cref="EnginePulse"/>, for the admin's monitor.
+/// Each turn beats its <see cref="EnginePulse"/>, for the admin's monitor. Its pace is the
+/// <see cref="PaceRegulator"/>'s while it drains a pass.
 /// </remarks>
 internal sealed class PrerenderEngine(
     PrerenderActivation activation,
@@ -22,6 +24,7 @@ internal sealed class PrerenderEngine(
     UnitRunner units,
     PassControl control,
     EnginePulse pulse,
+    PaceRegulator regulator,
     TimeProvider clock,
     ILogger<PrerenderEngine> logger)
 {
@@ -40,7 +43,27 @@ internal sealed class PrerenderEngine(
         if (held is not null)
         {
             pulse.Beat();
+            await DriveAsync(cancellationToken);
+        }
+    }
+
+    // The regulator sets the pace while this drain runs, from the floor; the command line,
+    // which drains without it, keeps the fixed pace.
+    private async Task DriveAsync(CancellationToken cancellationToken)
+    {
+        if (await queue.RunningPassAsync(cancellationToken) is not { } pass)
+        {
+            return;
+        }
+
+        regulator.Begin(pass.Id);
+        try
+        {
             await DrainAsync(cancellationToken);
+        }
+        finally
+        {
+            regulator.End();
         }
     }
 

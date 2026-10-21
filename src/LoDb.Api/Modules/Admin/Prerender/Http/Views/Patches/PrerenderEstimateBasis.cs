@@ -20,7 +20,10 @@ internal sealed record PrerenderEstimateBasis
     /// </summary>
     public decimal? MeasuredPagesPerMinute { get; init; }
 
-    /// <summary>The pass's ceiling, LoDb:Prerender:RendersPerMinute.</summary>
+    /// <summary>
+    /// The pass's ceiling: LoDb:Prerender:Pace:MaxRendersPerMinute while the pace is adaptive,
+    /// the fixed pace LoDb:Prerender:RendersPerMinute when the regulation is off.
+    /// </summary>
     public required int ConfiguredRendersPerMinute { get; init; }
 
     public required decimal PricePerGbMonthOneZone { get; init; }

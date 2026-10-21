@@ -149,8 +149,10 @@ public sealed class PageOutcomeTests(PostgresContainerFixture postgres)
             .Where(static record => record.Id.Name == "prerender.unit.completed")
             .ToList();
         Assert.Equal(UiLocales.All.Count, summaries.Count);
-        Assert.Equal(summaries.Count + 1, lines.Count);
+        // Besides the summaries: the pass that completes, and its fixed pace said once.
+        Assert.Equal(summaries.Count + 2, lines.Count);
         Assert.Contains(lines, static record => record.Id.Name == "prerender.pass.completed");
+        Assert.Contains(lines, static record => record.Id.Name == "prerender.pace.fixed");
         Assert.Contains("6 pages written", summaries[0].Message, StringComparison.Ordinal);
     }
 

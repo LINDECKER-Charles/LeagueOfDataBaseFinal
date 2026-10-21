@@ -6,6 +6,8 @@
   précalcul), [ADR 0004](0004-stockage-etat-et-scaling.md) (nginx sert aussi depuis un
   stockage objet), [ADR 0005](0005-web-ssr-urls-et-seo.md) (`lodb_archive` en cache chaud,
   la classe `archived` gardée un an, le CDN devant le site)
+- **Amendement** : le 2026-10-21, la passe a son propre SSR, de faible priorité, et un rythme
+  qui suit le CPU libre de l'hôte (voir § « Amendement du 2026-10-21 »)
 - **Remplace** : la spécification du cache recyclé de 68 Go, interrompue et jamais
   publiée
 - **Détail** : [spécification](../../produit/pre-rendu-catalogue-cdn.md) (lots, réglages,
@@ -232,3 +234,27 @@ suit.
   jour) ; plus vite, une suppression par lots depuis le poste de l'opérateur.
 - **−** Derrière le CDN, le journal de l'edge et les métriques de Caddy ne voient plus que
   les ratés : les mesures d'audience et de trafic changent de source, avec une date chacune.
+
+## Amendement du 2026-10-21 — un SSR et un rythme pour la passe
+
+Mesuré sur une pile aux quotas de la prod, le rythme fixe de la passe (120 rendus par minute,
+24 jours pour le catalogue) ralentit les visiteurs dès son premier rendu en vol, puisqu'il
+passe par leur SSR : +45 % sur la médiane d'une page non gardée, +250 % à huit rendus.
+
+- La passe rend ses pages sur **un second conteneur de la même image**, `web-ssr-prerender`
+  (alias `lodb-web-ssr-prerender`), que nginx ne connaît pas : un poids CPU d'un huitième
+  (`cpu_shares: 128`), pour que le noyau ne lui cède que le CPU libre, et un plafond dur
+  (`cpus: 1.0`). Le SSR des visiteurs ne reçoit plus aucun rendu de la passe.
+- Son rythme n'est plus fixe : un **régulateur** de l'API le monte d'un pas par minute tant
+  que l'hôte, son steal, le SSR des visiteurs et l'API sont calmes, le divise par deux au
+  premier signe et le retient au rouge, entre un plancher (30 par minute) et un plafond
+  (240, aussi le budget de la voie du SSR dédié). Il tient aussi la moyenne de 30 minutes que
+  l'hébergeur regarde avant de brider tout le VPS. Une source illisible vaut un ralentissement.
+- Les SSR exposent `GET /load` sur leur port des métriques : la passe lit leur état sans
+  remettre à zéro les histogrammes que lit la collecte.
+- `LODB_PRERENDER_PACE_MODE=fixed` rend le rythme fixe d'avant, sur le SSR dédié.
+
+Débit attendu : 150 à 220 pages par minute en moyenne, le catalogue en 13 à 19 jours, sans
+ralentissement mesurable des visiteurs jusqu'à ~80 % d'occupation de l'hôte. Détail, seuils
+et réglages : [spécification](../../produit/pre-rendu-catalogue-cdn.md), lot 2, « Capacité
+adaptative de la passe ».

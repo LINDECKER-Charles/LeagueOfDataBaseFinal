@@ -45,6 +45,11 @@ services:
       LoDb__Prerender__SecretKey:
       LoDb__Prerender__PublicHost:
       LoDb__Prerender__AutoEnqueueOnPromotion:
+      # The regulator's range back to compose.yaml's, the host's (prod's ceiling and floor);
+      # the step is the code's default.
+      LoDb__Prerender__Pace__MinRendersPerMinute: ${LODB_PRERENDER_PACE_MIN:-30}
+      LoDb__Prerender__Pace__MaxRendersPerMinute: ${LODB_PRERENDER_PACE_MAX:-240}
+      LoDb__Prerender__Pace__StepRendersPerMinute:
     cpu_shares: 1024
     deploy:
       resources:
@@ -78,6 +83,19 @@ services:
       LODB_PRERENDER_MAX_IN_FLIGHT: ${LODB_PRERENDER_MAX_IN_FLIGHT:-}
       LODB_PRERENDER_VISITOR_RESERVE: ${LODB_PRERENDER_VISITOR_RESERVE:-}
     cpu_shares: 1024
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 704m
+          pids: 256
+
+  # The pass's renderer with a host's quotas, so that a bench with a pass running measures
+  # what the visitors get beside it: the lowest weight, a core at most.
+  web-ssr-prerender:
+    environment:
+      LODB_PRERENDER_RENDERS_PER_MINUTE: ${LODB_PRERENDER_PACE_MAX:-240}
+    cpu_shares: 128
     deploy:
       resources:
         limits:

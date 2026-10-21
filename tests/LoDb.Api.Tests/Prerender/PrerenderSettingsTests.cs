@@ -36,6 +36,17 @@ public sealed class PrerenderSettingsTests
         { "MaxInFlight", "0" },
         { "MaxInFlight", "17" },
         { "Endpoint", "http://s3.fr-par.scw.cloud" },
+        { "Pace:MinRendersPerMinute", "0" },
+        { "Pace:MinRendersPerMinute", "241" },
+        { "Pace:MaxRendersPerMinute", "6001" },
+        { "Pace:StepRendersPerMinute", "0" },
+        { "Pace:StepRendersPerMinute", "241" },
+        { "RendersPerMinute", "241" },
+        { "Pace:VisitorsLoadUrl", "http://lodb-web-ssr:9464" },
+        { "Pace:VisitorsLoadUrl", "http://user:secret@lodb-web-ssr:9464/load" },
+        { "Pace:PassLoadUrl", "ftp://lodb-web-ssr-prerender:9464/load" },
+        { "Pace:PassLoadUrl", "http://lodb-web-ssr-prerender:9464/load?all=1" },
+        { "Pace:HostCpuSet", "3-1" },
     };
 
     [Fact]
@@ -72,6 +83,25 @@ public sealed class PrerenderSettingsTests
             services.GetRequiredService<PrerenderActivation>().IsActive);
     }
 
+    // The hosts' settings: a pace that holds together, both SSRs' load, a bench's CPU list.
+    [Fact]
+    public void AdaptivePaceWithinItsBoundsIsAccepted()
+    {
+        using var services = Services(Configured(
+            ("RendersPerMinute", "120"),
+            ("Pace:MinRendersPerMinute", "30"),
+            ("Pace:MaxRendersPerMinute", "120"),
+            ("Pace:StepRendersPerMinute", "120"),
+            ("Pace:VisitorsLoadUrl", "http://lodb-web-ssr:9464/load"),
+            ("Pace:PassLoadUrl", "http://lodb-web-ssr-prerender:9464/load"),
+            ("Pace:HostCpuSet", "0,2-3")));
+
+        Assert.True(services.GetRequiredService<PrerenderActivation>().IsActive);
+        var pace = services.GetRequiredService<IOptions<PrerenderOptions>>().Value.Pace;
+        Assert.Equal((PaceMode.Adaptive, 30, 120), (pace.Mode, pace.MinRendersPerMinute,
+            pace.MaxRendersPerMinute));
+    }
+
     [Fact]
     public void PlainHttpStoreIsForTheDevelopmentStackAlone()
     {
@@ -102,6 +132,23 @@ public sealed class PrerenderSettingsTests
             empty.GetRequiredService<IServiceScopeFactory>(),
             new FakeTimeProvider(),
             new FakeLogger<PrerenderWorker>(logs));
+
+        await worker.StartAsync(Token);
+        await worker.StopAsync(Token);
+
+        Assert.False(worker.ExecuteTask?.IsFaulted);
+        Assert.Empty(logs.GetSnapshot());
+    }
+
+    [Fact]
+    public async Task PaceWorkerSleepsWhileTheModuleIsNotRegistered()
+    {
+        var logs = new FakeLogCollector();
+        await using var empty = new ServiceCollection().BuildServiceProvider();
+        using var worker = new PrerenderPaceWorker(
+            empty.GetRequiredService<IServiceScopeFactory>(),
+            new FakeTimeProvider(),
+            new FakeLogger<PrerenderPaceWorker>(logs));
 
         await worker.StartAsync(Token);
         await worker.StopAsync(Token);

@@ -12,18 +12,19 @@ Logs et requêtes LogsQL : [`observabilite.md`](observabilite.md) et [`logging.m
 | Processus | Point de collecte | Réglage |
 |---|---|---|
 | API (`api`) | `GET /metrics` sur le port **9464**, seule route de ce port | `LoDb:Hosting:MetricsPort` |
-| SSR (`web-ssr`) | `GET /metrics` sur le port **9464**, serveur HTTP séparé du site (404 pour tout le reste) | `LODB_METRICS_PORT` |
+| SSR (`web-ssr`) | `GET /metrics` sur le port **9464**, serveur HTTP séparé du site ; `GET /load` sur le même port : la charge du SSR en JSON, lue par le régulateur de la passe de l'API, **pas un point Prometheus** (404 pour tout le reste) | `LODB_METRICS_PORT` |
+| SSR de la passe de précalcul (`web-ssr-prerender`) | comme `web-ssr`, même port **9464** ; ses séries portent `service="web-ssr-prerender"` | `LODB_METRICS_PORT` |
 
 - Le port 9464 n'est **jamais publié** (`compose*.yaml`) ni **routé par nginx**. Sur le
   port du site, `/metrics` est la 404 statique du pré-routeur ; sur le port 8080 de l'API,
   une 404.
-- Sur un hôte, `api` et `web-ssr` rejoignent le réseau partagé `observability` et portent
+- Sur un hôte, `api`, `web-ssr` et `web-ssr-prerender` rejoignent le réseau partagé `observability` et portent
   les labels `prometheus.scrape: "true"` et `prometheus.port: "9464"`
   (`compose.deploy.yaml`, contrat d'`infra-vps` `docs/APPLICATIONS.md` § 4). La collecte
   (job `applications`) ajoute `stack` (`lodb-prod`, `lodb-staging`), `service` et
   `container`. Toute requête filtre sur `stack` : staging et prod partagent l'hôte.
-- Sur ce réseau partagé, tout conteneur de l'hôte joint l'API et le SSR : le port 8080 de
-  l'API et le port 4000 du SSR ne répondent qu'au réseau de la stack et à la loopback
+- Sur ce réseau partagé, tout conteneur de l'hôte joint l'API et les SSR : le port 8080 de
+  l'API et le port 4000 des SSR ne répondent qu'au réseau de la stack et à la loopback
   (`NetworkGate`, `networkGate`, 404 sinon), et les conteneurs de la stack ne s'appellent
   que par leurs alias préfixés (`lodb-api`, `lodb-postgres`). Ce que les ports 9464
   exposent est lisible de tout l'hôte : jamais de donnée personnelle ni de secret.
@@ -102,6 +103,9 @@ Logs et requêtes LogsQL : [`observabilite.md`](observabilite.md) et [`logging.m
 | `lodb_publicapi_usage_dropped_total`, `…_flush_duration_seconds`, `…_flush_failures_total` | compteurs, histogramme | — | non | `LoDb.PublicApi` |
 | `lodb_client_policy_upgrade_required_total` | compteur | `platform` (`desktop`, `android`) | non | `LoDb.ClientPolicy`, réponses `426` |
 | `lodb_prerender_pages_total` | compteur | `outcome` (`written` : page écrite au stockage ; `skipped` : rendu qui ne se stocke pas, `301`, `404` ou classe autre qu'`archived` ; `refused` : `503` du SSR, la page est retentée après son `Retry-After` ; `failed` : page abandonnée après ses nouvelles tentatives) | non | `LoDb.Prerender` (instrument `lodb.prerender.pages`), une incrémentation par page de la passe de précalcul ; la ligne de synthèse par unité (version, langue) en donne le détail |
+| `lodb_prerender_pace_renders_per_minute` | jauge | — | non : seulement pendant que le moteur de cette instance écrit une passe | `LoDb.Prerender` (instrument `lodb.prerender.pace.renders_per_minute`), le droit du régulateur : rendus que la passe peut démarrer par minute, 0 en retenue, le plancher quand aucune décision ne l'a renouvelé depuis 90 s, le rythme fixe en mode `fixed` |
+| `lodb_prerender_pace_limit` | jauge | `reason` (`none`, `warming_up`, `ceiling`, `host_cpu`, `host_cpu_sustained`, `host_steal`, `visitors_ssr`, `visitors_refused`, `api_cpu`, `pass_latency`, `pass_ssr_pressure`, `signal_missing`, `fixed`) | non : idem | `LoDb.Prerender`, 1 pour la raison qui borne le rythme, 0 pour les autres |
+| `lodb_prerender_pace_changes_total` | compteur | `change` (`increased`, `decreased`, `held`, `released`), `reason` (idem) | non | `LoDb.Prerender`, une incrémentation par mouvement du régulateur : quelques-unes par heure |
 
 `lodb_job_period_seconds` et `lodb_job_last_success_seconds` se lisent ensemble : une tâche
 est en retard quand `time() - lodb_job_last_success_seconds > 3 * lodb_job_period_seconds`
@@ -112,6 +116,17 @@ n'incrémente pas `lodb_prerender_pages_total` : la passe retente la page toutes
 journaux le disent, une fois par panne : `prerender.ssr.unreachable` (Warning, avec l'adresse
 du SSR) quand elle commence, `prerender.ssr.reachable` (Information, durée de la panne) quand
 le SSR répond de nouveau. Un début de panne sans fin signale une passe bloquée.
+
+Les jauges du rythme n'existent que sur l'instance dont le moteur écrit une passe, et le temps
+qu'il l'écrit : une autre instance, ou celle-ci entre deux passes, n'en rapporte aucune, et une
+somme sur la stack donne le rythme de sa passe. Le régulateur
+([`pre-rendu-catalogue-cdn.md`](../produit/pre-rendu-catalogue-cdn.md), lot 2) écrit une ligne
+par changement d'état, jamais par évaluation ni par page : `prerender.pace.slowed`,
+`prerender.pace.held` (Warning), `prerender.pace.recovered`, `prerender.pace.ceiling_reached`,
+`prerender.pace.fixed` (une fois par passe à rythme fixe), `prerender.pace.signal_lost`
+(Warning) puis `prerender.pace.signal_restored`, une fois par panne de source (`HostCpu`,
+`ApiCgroup`, `VisitorsSsr`, `PassSsr`), et `prerender.pace.tick_failed` (Error) sur un tour
+de la tâche en échec.
 
 ## API — métriques du framework
 
@@ -157,6 +172,19 @@ Le couloir `prerender` est celui de la passe de précalcul de l'API, reconnue à
 les raisons des autres couloirs (`capacity`, `lane_capacity`, `lane_rate`, jamais `client_*`).
 Ses requêtes n'écrivent pas de ligne `http.request.served`, sauf ses erreurs serveur (5xx) :
 la passe en compterait des millions. Une requête qui somme `lodb_ssr_renders_total` sans filtre `lane` inclut la passe.
+
+Depuis le SSR dédié à la passe (ADR 0011, amendement du 2026-10-21), les séries
+`lodb_ssr_*{lane="prerender"}` viennent de `service="web-ssr-prerender"` ; le couloir
+`prerender` de `web-ssr` reste à 0.
+
+`GET /load` (même port 9464) n'est pas un point de collecte : du JSON sans effet de bord que
+le régulateur de la passe lit toutes les 30 s sur chaque SSR. Il donne `cpuSeconds`,
+`eventLoopDelayP99Seconds` (la dernière fenêtre close de 30 s, tenue par un moniteur à part ;
+`null` avant la première), `cpuPressureSomeAvg10` et `cpuThrottledSeconds` (cgroup du
+conteneur, `null` hors cgroup v2) et, par couloir, `renders`, `renderSeconds` et `refused`
+cumulés (refus `capacity`, `lane_capacity`, `lane_rate`, jamais `client_*`). Il ne lit jamais
+le registre : `prom-client` remet à zéro son histogramme du retard de la boucle à chaque
+collecte, et un second lecteur de `/metrics` tronquerait `nodejs_eventloop_lag_p99_seconds`.
 
 ## Exemples
 

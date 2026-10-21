@@ -122,6 +122,9 @@ internal sealed class PrerenderHarness : IAsyncDisposable
             [$"{Section}:PublicHost"] = PublicHost,
             [$"{Section}:SsrBaseUrl"] = SsrBaseUrl,
             [$"{Section}:RendersPerMinute"] = "6000",
+            // The fixed pace by default: the regulator's own tests turn it on.
+            [$"{Section}:Pace:Mode"] = "Fixed",
+            [$"{Section}:Pace:MaxRendersPerMinute"] = "6000",
             [$"{Section}:Endpoint"] = "https://s3.fr-par.scw.cloud",
             [$"{Section}:Bucket"] = "lodb-pages-test",
             [$"{Section}:AccessKey"] = "writer",
