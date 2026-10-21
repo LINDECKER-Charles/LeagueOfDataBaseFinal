@@ -1,6 +1,6 @@
 import { HttpStatusCode } from '@angular/common/http';
 import type { PrerenderPassView } from '../../../../../../core/api/generated/models/prerender-pass-view';
-import { prerenderProgress } from '../../../../testing/fixtures/prerender-progress';
+import { prerenderPace, prerenderProgress } from '../../../../testing/fixtures/prerender-progress';
 import { MonitorHarness } from './live-monitor-harness';
 
 const BASE = prerenderProgress();
@@ -90,6 +90,34 @@ describe('LiveMonitor', () => {
     expect(monitor.page.querySelector('.monitor-matrix--paused')).not.toBeNull();
     expect(monitor.text('[data-units]')).toBe('admin.prerender.live.units_paused');
     expect(monitor.text('[data-action="resume"]')).toBe('admin.prerender.live.actions.resume');
+  });
+
+  it('says what the regulator does under the pace, when this instance drains the pass', async () => {
+    const monitor = MonitorHarness.open();
+    const pace = prerenderPace('slowed', { rendersPerMinute: 45, reason: 'visitors-ssr' });
+    await monitor.read(prerenderProgress({ pulse: { ...BASE.pulse, pace } }));
+
+    const readout = monitor.page.querySelector('[data-readout="pace"]');
+    const lines = [...(readout?.querySelectorAll('.readout-text') ?? [])];
+    expect(lines[0]?.hasAttribute('data-pace-regulator')).toBe(true);
+    expect(lines[0]?.textContent).toContain('admin.prerender.live.pace.regulator.slowed');
+  });
+
+  it('shows no regulator line without a pace', async () => {
+    const monitor = MonitorHarness.open();
+    await monitor.read();
+
+    expect(monitor.page.querySelector('[data-pace-regulator]')).toBeNull();
+  });
+
+  it('shows no regulator line for a paused pass, whatever its pace', async () => {
+    const pace = prerenderPace('steady', { reason: 'ceiling' });
+    const monitor = MonitorHarness.open(paused());
+    await monitor.read(
+      prerenderProgress({ ...pausedProgress(paused()), pulse: { ...BASE.pulse, pace } }),
+    );
+
+    expect(monitor.page.querySelector('[data-pace-regulator]')).toBeNull();
   });
 
   it('says why a pass paused itself, in a band that resumes it', async () => {

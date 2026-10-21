@@ -10,6 +10,7 @@ import { type BarSegment, StackedBar } from '../../bars/stacked-bar';
 import { decimalBytes } from '../../format/decimal-bytes';
 import type { MonitorState } from '../merge-progress';
 import { progressSegments } from './progress-segments';
+import { regulatorLine } from './regulator/regulator-line';
 
 const LIVE = 'prerender.live';
 const PAUSED = 'paused';
@@ -129,6 +130,12 @@ export class ProgressBlock {
     });
   });
   protected readonly pace = computed(() => this.paceOf());
+  // What the regulator does, under the pace; nothing paused, or when this instance is not
+  // the one draining the pass (`pace` is null).
+  protected readonly regulator = computed(() => {
+    const pace = this.state().progress.pulse.pace;
+    return pace && !this.isPaused() ? regulatorLine(pace, this.texts) : null;
+  });
   protected readonly curve = computed(() => this.curveOf());
   protected readonly eta = computed(() => this.etaOf());
   protected readonly active = computed(() => duration(this.pass().activeSeconds));

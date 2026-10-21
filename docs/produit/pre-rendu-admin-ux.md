@@ -65,8 +65,8 @@ relancer ce qui a échoué.
 
 ### 0.1 Principes de conception
 
-- **Le direct d'abord.** Une passe dure des jours (10 à 16 jours au rythme de la voie
-  `prerender`, spécification § 4 lot 2, « Débit ») : quand elle tourne, c'est elle qu'on vient
+- **Le direct d'abord.** Une passe dure des jours (13 à 19 jours au rythme adaptatif de la
+  voie `prerender`, spécification § 4 lot 2, « Débit ») : quand elle tourne, c'est elle qu'on vient
   voir. Rien d'autre ne passe au-dessus d'elle, sauf une bande qui exige une action.
 - **Toute action dit sa conséquence avant d'agir.** Lancer montre le récapitulatif chiffré ;
   mettre en pause, reprendre une passe arrêtée d'elle-même et annuler ouvrent un dialogue qui dit
@@ -403,7 +403,7 @@ en vol), suspendu ou ralenti quand l'onglet est masqué (`hiddenEvery`), avec re
 La facture Scaleway garde son propre chargement (`scaleway-bill/inject-scaleway-bill.ts`) :
 la page ne l'attend jamais.
 
-**Le titre de l'onglet.** L'opérateur laisse l'onglet en arrière-plan pendant les 10 à 16 jours
+**Le titre de l'onglet.** L'opérateur laisse l'onglet en arrière-plan pendant les 13 à 19 jours
 d'une passe : le titre du document porte donc l'avancement, tiré du rapport
 (`passTitleOf(report)`, F4, pur), par l'entrée `documentTitle` que F4 ajoute à `PageHead`
 (qui la passe à `injectAdminTitle`, `admin/layout/admin-title.ts`, sans changer le `<h1>`) :
@@ -1158,6 +1158,27 @@ la passe sur son temps actif, pauses exclues, `PassProgress.PagesPerMinute`, `nu
 minute). Affichage : « 246 pages/min » en grand (instantané, à défaut le moyen), « moyenne
 231 pages/min » dessous.
 
+**Ligne du régulateur** (`regulatorLine(pace, texts)`, pur, `monitor/progress/regulator/`). Le
+rythme est réglé par le régulateur de la passe (spécification, lot 2, « Capacité adaptative ») :
+la première ligne sous le rythme dit où il en est et, s'il retient la passe, pourquoi. Elle se
+lit dans `pulse.pace`, que seule l'instance qui draine la passe renseigne : `pace` nul (autre
+instance, rien à drainer) ou passe en pause, aucune ligne. Un état ou un motif inconnu n'en
+donne pas non plus : jamais un jeton brut à l'écran.
+
+| État | Ligne |
+|---|---|
+| `starting` | « démarrage prudent : 30 p/min » |
+| `climbing` | « adapté : jusqu'à 90 p/min · CPU du VPS à 37 % » (le CPU seulement s'il est connu) |
+| `steady`, motif `ceiling` | « au plafond : 240 p/min · CPU du VPS à 37 % » |
+| `steady`, autre motif | « stable à 90 p/min : visiteurs actifs » |
+| `slowed` | « ralenti à 45 p/min : rendus de la passe ralentis » |
+| `held` | « en retenue jusqu'à 21/10/2026 08:05 UTC : l'hébergeur reprend du CPU » (heure en UTC, comme la fin estimée) |
+| `fixed` | « rythme fixe : 120 p/min (régulation coupée) » |
+
+Le motif `host-cpu` porte le chiffre quand le CPU est connu (« CPU du VPS à 62 % »), sinon il
+se lit « CPU du VPS chargé ». Les textes sont sous `prerender.live.pace.regulator.*` et
+`prerender.live.pace.reasons.*`.
+
 **Courbe** : `rates()` rend le rythme de chaque intervalle, lissé par une moyenne glissante de 3,
 sur les **15 dernières minutes** (180 points au plus) ; tracée par la `Sparkline` existante
 (`admin/charts/sparkline.ts`, `--color-hex`), qui ne sait tracer qu'une ligne : F1 lui ajoute une
@@ -1324,6 +1345,7 @@ première cause vraie, dans cet ordre :
 | Cause | Condition | Texte |
 |---|---|---|
 | `ssr` | `pulse.ssrUnreachableSince` | « Le SSR est injoignable : la passe reprendra seule à son retour. » |
+| `held` | `pulse.pace.state === 'held'` | « La régulation retient la passe pour laisser le CPU au site et à l'hôte ; elle reprend seule au plancher. » |
 | `worker_off` | `!pulse.isWorkerEnabled` | « La tâche de fond est coupée sur cette instance. » |
 | `waiting` | `pulse.waiting` non vide et `running` vide | « Toutes les unités restantes attendent un catalogue. » |
 | `remote` | `pulse.observedAt` nul ou vieux de plus de 2 min | « Aucune instance visible n'écrit la passe : une autre instance tient peut-être le verrou, ou l'API vient de redémarrer (la tâche reprend toutes les 30 s). » |
