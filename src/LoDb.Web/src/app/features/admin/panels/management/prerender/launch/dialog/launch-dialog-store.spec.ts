@@ -126,6 +126,19 @@ describe('LaunchDialogStore', () => {
     expect(store.draft().selection.selected.size).toBe(2);
   });
 
+  it('says the priorities were capped once a list added after others passes 100', async () => {
+    const { store } = await ready();
+    const versions = (from: number) =>
+      Array.from({ length: 60 }, (_, index) => `14.${from + index}.1`);
+
+    store.paste({ versions: versions(0), append: false, isCapped: false });
+    expect(store.draft().isPriorityCapped).toBe(false);
+    store.paste({ versions: versions(60), append: true, isCapped: false });
+
+    expect(store.draft().selection.priority).toHaveLength(100);
+    expect(store.draft().isPriorityCapped).toBe(true);
+  });
+
   it('sends the draft, then closes on the pass started', async () => {
     const { store, api, ref } = await ready({ ...HEADER, versions: ['16.18.1'] });
 

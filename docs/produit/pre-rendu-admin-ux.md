@@ -1015,7 +1015,7 @@ extrapolés et leur source (« 14.3.1 : médiane de la saison 14.x, 412 pages »
 | `new_epoch` | epoch nouvelle ou en attente | « Rien de cette passe n'est servi avant la bascule sur l'epoch K. » |
 | `standby_exists` | epoch nouvelle choisie alors qu'une epoch en attente existe | « L'epoch M contient déjà des pages non servies : continuez-la plutôt que d'en ouvrir une nouvelle. » |
 | `default_estimate` | aucune version de tout le rapport n'a `pagesPerLocale` | « Aucune mesure : l'estimation est grossière. » |
-| `priority_capped` | collage au-delà de 100 | « Au-delà de 100, les versions sont cochées sans priorité. » |
+| `priority_capped` | collage qui porte les priorités au-delà de 100 : la liste seule, ou ajoutée (« Ajouter à la suite ») à celles déjà posées ; mesuré après coup, sur les priorités gardées | « Au-delà de 100, les versions sont cochées sans priorité. » |
 | `nothing` | unités = 0 | « Rien à rendre : tout ce qui est sélectionné est déjà complet dans l'epoch N. » (le bouton de lancement est désactivé) |
 
 ### 3.6 La requête, la validation et les erreurs

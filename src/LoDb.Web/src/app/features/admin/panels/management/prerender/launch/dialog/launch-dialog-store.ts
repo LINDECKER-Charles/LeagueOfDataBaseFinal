@@ -116,10 +116,15 @@ export class LaunchDialogStore {
     this.update({ selection: selectionAfter(selection, action) });
   }
 
-  /** Applies a pasted list: ticked, rendered first; past 100, the summary says so. */
+  /**
+   * Applies a pasted list: ticked, rendered first. Past 100 priorities, the pasted ones left
+   * without one, those of the list or added after the ones already set, the summary says so.
+   */
   paste(pasted: PastedVersions): void {
+    const prior = pasted.append ? this.draft().selection.priority : [];
+    const asked = new Set([...prior, ...pasted.versions]).size;
     this.act({ kind: 'paste', versions: pasted.versions, append: pasted.append });
-    this.update({ isPriorityCapped: pasted.isCapped });
+    this.update({ isPriorityCapped: asked > this.draft().selection.priority.length });
   }
 
   undoLast(): void {
