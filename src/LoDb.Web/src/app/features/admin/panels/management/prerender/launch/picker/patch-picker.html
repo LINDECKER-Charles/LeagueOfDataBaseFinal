@@ -108,6 +108,11 @@
 </div>
 
 <p class="readout-text my-2" data-count>{{ count() }}</p>
+@if (rangeHint(); as version) {
+  <p class="readout-text picker-hint" data-range-hint>
+    {{ 'admin.prerender.launcher.patches.range_hint' | adminText: { version } }}
+  </p>
+}
 
 @if (rows().lines.length === 0) {
   <div class="flex flex-wrap items-center gap-3 py-4 text-text-dim" data-no-match>
@@ -255,7 +260,8 @@
   </div>
 }
 
-<p id="launch-patches-keys" class="readout-text picker-keys">
-  {{ 'admin.prerender.launcher.patches.keys' | adminText }}
-</p>
+<div id="launch-patches-keys" class="readout-text picker-keys">
+  <p class="m-0">{{ 'admin.prerender.launcher.patches.mouse' | adminText }}</p>
+  <p class="m-0">{{ 'admin.prerender.launcher.patches.keys' | adminText }}</p>
+</div>
 <p class="sr-only" aria-live="polite" data-announce>{{ announced() }}</p>

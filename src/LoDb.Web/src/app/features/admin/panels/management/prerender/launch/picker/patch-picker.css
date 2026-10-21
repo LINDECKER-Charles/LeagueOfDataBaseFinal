@@ -183,6 +183,11 @@
   flex: 1;
 }
 
+.picker-hint {
+  margin-block: -0.25rem 0.5rem;
+  color: var(--color-gold);
+}
+
 .picker-pages {
   text-align: end;
   font-variant-numeric: tabular-nums;
@@ -211,6 +216,7 @@
   .picker-status,
   .picker-head-pages,
   .picker-head-status,
+  .picker-hint,
   .picker-keys {
     display: none;
   }

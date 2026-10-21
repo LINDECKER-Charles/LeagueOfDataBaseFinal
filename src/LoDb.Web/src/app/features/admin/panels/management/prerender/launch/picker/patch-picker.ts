@@ -83,8 +83,12 @@ export class PatchPicker {
   protected readonly isToolsOpen = signal(false);
   protected readonly focus = new PickerFocus();
   protected readonly versions = computed(() => this.patches().patches.map((row) => row.version));
+  // A range of one patch at first: « à » the oldest would tick all 400 at one click.
   protected readonly rangeFrom = linkedSignal(() => this.versions()[0] ?? '');
-  protected readonly rangeTo = linkedSignal(() => this.versions().at(-1) ?? '');
+  protected readonly rangeTo = linkedSignal(() => this.versions()[0] ?? '');
+  /** The patch a first click ticked, until a Shift click shows the range is known. */
+  protected readonly rangeHint = signal<string | null>(null);
+  private hasExtended = false;
   // Read once: the newest season, and each season the preset ticked a patch of (§ 3.3.1).
   private readonly open = linkedSignal<ReadonlySet<string>>(() =>
     untracked(() => this.openAtFirst()),
@@ -132,6 +136,8 @@ export class PatchPicker {
 
   protected onRowClick(event: MouseEvent, line: PatchLine): void {
     this.focus.moveTo(line.key);
+    this.hasExtended ||= event.shiftKey;
+    this.rangeHint.set(this.hasExtended ? null : line.key);
     this.acted.emit(
       event.shiftKey
         ? { kind: 'extend', version: line.key, rows: this.rows().order }

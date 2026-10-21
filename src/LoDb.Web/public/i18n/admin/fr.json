@@ -1048,7 +1048,9 @@
         },
         "priority_on": "Prioritaire n°{rank} : retirer la priorité",
         "priority_off": "Rendre prioritaire",
-        "keys": "Clavier : ↑ ↓ parcourir · Espace cocher · Maj étendre · P prioriser · / filtrer",
+        "mouse": "Souris : clic pour cocher · Maj+clic pour cocher une plage · ☆ pour prioriser",
+        "keys": "Clavier : ↑ ↓ parcourir · Espace cocher · Maj+↑ ↓ étendre · P prioriser · / filtrer",
+        "range_hint": "Maj+clic sur un autre patch pour cocher toute la plage depuis {version}.",
         "announce": "{count, plural, one {# patch} other {# patchs}} sélectionnés"
       },
       "paste": {

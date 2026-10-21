@@ -566,7 +566,7 @@ lecteur d'écran pendant une sélection au clavier.
 │ 16.20.1, le dernier patch, n'est jamais précalculé : le SSR le sert.                    │
 │                                                                                         │
 │ [Filtrer : 16.1, 15 …        ] Statut [Tous|Complets|Partiels|Absents|En échec]         │
-│ De [16.19.1 ▾] à [14.1.1 ▾] [Sélectionner la plage]                                     │
+│ De [16.19.1 ▾] à [16.19.1 ▾] [Sélectionner la plage]                                    │
 │ [Tout] [Aucun] [Inverser] [Non couverts] [Partiels] [↶ Annuler]                          │
 │ 38 patchs sélectionnés (dont 5 masqués par le filtre) · 3 prioritaires                  │
 │ ┌─────────────────────────────────────────────────────────────────────────────────────┐ │
@@ -578,7 +578,8 @@ lecteur d'écran pendant une sélection au clavier.
 │ │   ☐ 15.24.1  ░░░░░░░░░░░░░░░░░░░░░  0/21        —   absent               ☆         │ │
 │ │ ☐ ▸ 14.x · 2024   24 patchs · 0 sélectionné                                         │ │
 │ └─────────────────────────────────────────────────────────────────────────────────────┘ │
-│ Clavier : ↑ ↓ parcourir · Espace cocher · Maj étendre · P prioriser · / filtrer         │
+│ Souris : clic pour cocher · Maj+clic pour cocher une plage · ☆ pour prioriser           │
+│ Clavier : ↑ ↓ parcourir · Espace cocher · Maj+↑ ↓ étendre · P prioriser · / filtrer     │
 │ ▸ Coller une liste de versions (journal de l'edge)                                      │
 │ PRIORITAIRES, DANS L'ORDRE                                                              │
 │  1. 16.18.1 [↑][↓][×]   2. 16.12.1 [↑][↓][×]   3. 15.2.1 [↑][↓][×]                      │
@@ -786,7 +787,8 @@ pas : ils se défont d'un clic.
   paramètre d'URL, donc pas `SegmentBar`).
 - **Plage De / à** : deux `<select>` (classe `hx-select`, 16 px) de toutes les versions, plus
   récente d'abord ; « Sélectionner la plage » fait `set` de toutes les versions comprises,
-  bornes incluses, **sans** tenir compte des filtres (l'opérateur a nommé les bornes).
+  bornes incluses, **sans** tenir compte des filtres (l'opérateur a nommé les bornes). Les deux
+  bornes partent du patch le plus récent : une plage d'un seul patch, jamais les 400 d'un clic.
 
 Une saison dont aucun patch ne passe les filtres disparaît. Aucun résultat : « Aucun patch ne
 correspond au filtre. » et un bouton « Effacer le filtre ».
@@ -866,7 +868,10 @@ fonction pure, testée seule ; le composant applique.
 
 **Souris.** Clic n'importe où sur une ligne de patch : `toggle` (sauf le bouton ☆). Maj+clic :
 `extend` (et `preventDefault` sur `mousedown` pour ne pas sélectionner le texte). Ctrl/⌘+clic :
-`toggle`. Clic sur la case de saison : `season` ; sur son libellé ou son chevron : plier /
+`toggle`. Le Maj+clic est le cœur de la plage à la souris, et rien ne le montre : l'aide sous la
+liste a une ligne « Souris » avant la ligne « Clavier », et après le premier clic simple, une
+ligne dorée dit « Maj+clic sur un autre patch pour cocher toute la plage depuis 16.11.1. »
+jusqu'au premier Maj+clic (masquée sur téléphone, sans touche Maj). Clic sur la case de saison : `season` ; sur son libellé ou son chevron : plier /
 déplier.
 
 **Ordre du focus à l'étape 1** : pas-à-pas → « changer d'epoch » → filtre texte → filtre de statut
@@ -3355,7 +3360,7 @@ de lot suit la même règle, et chaque spécification de composant vérifie au m
 | `patches.columns.priority` | Priorité | Priority |
 | `patches.priority_on` | Prioritaire n°{rank} : retirer la priorité | First #{rank}: remove the priority |
 | `patches.priority_off` | Rendre prioritaire | Render first |
-| `patches.keys` | Clavier : ↑ ↓ parcourir · Espace cocher · Maj étendre · P prioriser · / filtrer | Keyboard: ↑ ↓ browse · Space tick · Shift extend · P first · / filter |
+| `patches.keys` | Clavier : ↑ ↓ parcourir · Espace cocher · Maj+↑ ↓ étendre · P prioriser · / filtrer | Keyboard: ↑ ↓ move · Space tick · Shift+↑ ↓ extend · P put first · / filter |
 | `patches.announce` | {count, plural, one {# patch} other {# patchs}} sélectionnés | {count, plural, one {# patch} other {# patches}} selected |
 | `paste.toggle` | Coller une liste de versions (journal de l'edge) | Paste a list of versions (edge log) |
 | `paste.label` | Versions, une par ligne ou séparées par des virgules | Versions, one a line or comma-separated |
@@ -3454,6 +3459,8 @@ de lot suit la même règle, et chaque spécification de composant vérifie au m
 | `done_ignored` | {count, plural, one {# version ignorée, absente} other {# versions ignorées, absentes}} des anciens patchs : {versions}. | {count, plural, one {# version left out, not} other {# versions left out, not}} among the older patches: {versions}. |
 | `season_count` | {count, plural, one {# patch} other {# patchs}} · {selected, plural, =0 {aucun sélectionné} one {# sélectionné} other {# sélectionnés}} | {count, plural, one {# patch} other {# patches}} · {selected, plural, =0 {none selected} other {# selected}} |
 | `patches.columns.select` | Cocher | Tick |
+| `patches.mouse` | Souris : clic pour cocher · Maj+clic pour cocher une plage · ☆ pour prioriser | Mouse: click to tick · Shift+click to tick a range · ☆ to put first |
+| `patches.range_hint` | Maj+clic sur un autre patch pour cocher toute la plage depuis {version}. | Shift+click another patch to tick the whole range from {version}. |
 
 **`coverage`** (F4)
 

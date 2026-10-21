@@ -1048,7 +1048,9 @@
         },
         "priority_on": "First #{rank}: remove the priority",
         "priority_off": "Render first",
-        "keys": "Keyboard: ↑ ↓ browse · Space tick · Shift extend · P first · / filter",
+        "mouse": "Mouse: click to tick · Shift+click to tick a range · ☆ to put first",
+        "keys": "Keyboard: ↑ ↓ move · Space tick · Shift+↑ ↓ extend · P put first · / filter",
+        "range_hint": "Shift+click another patch to tick the whole range from {version}.",
         "announce": "{count, plural, one {# patch} other {# patches}} selected"
       },
       "paste": {

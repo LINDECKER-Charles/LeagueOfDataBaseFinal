@@ -140,6 +140,27 @@ describe('PatchPicker', () => {
     expect(ticked(fixture)).toEqual(['16.11.1', '16.10.1', '16.9.1', '16.8.1']);
   });
 
+  it('tells after a first click that a Shift click ticks the range, until one does', async () => {
+    const fixture = await open();
+    const hint = () => page(fixture).querySelector('[data-range-hint]');
+    expect(hint()).toBeNull();
+
+    await click(fixture, '16.11.1');
+    expect(hint()?.textContent?.trim()).toBe('admin.prerender.launcher.patches.range_hint');
+
+    await click(fixture, '16.8.1', true);
+    expect(hint()).toBeNull();
+    await click(fixture, '16.7.1');
+    expect(hint()).toBeNull();
+  });
+
+  it('bounds the range by its first patch at first: one patch, not all of them', async () => {
+    const fixture = await open();
+    const to = page(fixture).querySelector<HTMLSelectElement>('[data-range-to]');
+
+    expect(to?.value).toBe('16.12.1');
+  });
+
   it('ticks a season with its box: all, then none; mixed in between', async () => {
     const fixture = await open();
     const box = () => row(fixture, 'season:16').querySelector<HTMLInputElement>('input')!;
