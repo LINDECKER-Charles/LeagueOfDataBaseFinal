@@ -1,10 +1,10 @@
 // Boots the built nginx image in front of the stub's page store (lib/upstream-stub.conf) and
 // checks lot 3 of ADR 0011: a past patch's page comes from the store, then from the cache, with
 // its own headers and none of S3's; every failure of the store, a query and a path a pass never
-// writes reach the SSR server, which the store never sees; the rate holds across both; a bundle
-// the SSR server no longer has comes from the store, under the same rate. Switched off, nginx
-// never asks the store; with a store whose name does not resolve, or whose certificate no
-// authority signed, it starts and falls back. Needs Docker and the image's tag in
+// writes reach the SSR server, which the store never sees, and so does the latest patch pinned
+// in the path; the rate holds across both; a bundle the SSR server no longer has comes from the
+// store, under the same rate. Switched off, nginx never asks the store; a store it cannot trust
+// or find is nginx-pages-store-unreachable.test.mjs's. Needs Docker and the image's tag in
 // LODB_NGINX_IMAGE (tools/nginx/README.md); skipped without it.
 import assert from 'node:assert/strict';
 import { after, before, describe, test } from 'node:test';
@@ -44,6 +44,13 @@ const FAILING = {
 };
 // Answers with the headers nginx sent along with the key.
 const ECHOED = '/en/15.8.1/champions';
+// The latest patch, as the stub's API states it (/api/meta), pinned in the path: the SSR server
+// redirects it to the short URL, and no pass stores it. A patch that only starts like it does
+// not stand for it.
+const LATEST_PINNED = ['/en/15.10.1/champions/Ahri', '/zh-hant/15.10.1/items',
+  '/fr/15.10.1/runes/8005-press-the-attack'];
+const LATEST_REDIRECT = { status: 301, cacheControl: 'public, max-age=0, s-maxage=60' };
+const LATEST_LOOKALIKE = '/en/15.10.10/champions';
 // A page stored without its policy nor its type, and the policy nginx gives it instead.
 const UNLABELLED = '/en/15.9.1/champions';
 const FALLBACK_POLICY = "default-src 'self'; img-src 'self' data:; "
@@ -86,8 +93,12 @@ const SILENT_STORE_LIMIT_MS = 10_000;
 // A client address of its own for each use: the burst of one never runs into another's.
 let lastClient = 0;
 const aClient = () => ({ forwardedFor: `203.0.113.${(lastClient += 1)}` });
-// What a store adds of its own (snippets/pages-store/answer.conf), S3's and the local stack's.
-const STORE_HEADER = /^(?:x-amzn?-|access-control-)/;
+// What a store adds of its own (snippets/pages-store/answer.conf), S3's and the local stack's,
+// the validators and ranges it states of its object included.
+const STORE_HEADER = /^(?:x-amzn?-|access-control-|etag$|last-modified$|accept-ranges$)/;
+// The validators the store states of an object, as its headers name them, and the conditional
+// request a client holding each one sends.
+const VALIDATORS = { etag: 'if-none-match', 'last-modified': 'if-modified-since' };
 const storeHeadersOf = (answer) => Object.keys(answer.headers).filter((name) =>
   STORE_HEADER.test(name));
 const sourceOf = (answer) =>
@@ -100,6 +111,18 @@ describe('nginx image in front of the page store',
     const keysOf = async () => {
       const { stdout } = await stack.exec('grep', '-rah', '^KEY: ', '/var/cache/nginx/archive');
       return stdout.split('\n').filter(Boolean);
+    };
+    // What a client would send, holding the validators the store gives a page's object, read
+    // from the store itself (busybox's wget prints the headers it got).
+    const conditionalHeadersOf = async (path) => {
+      const object = `http://${STORE.LODB_PAGES_STORE_HOST}:${STORE.LODB_PAGES_STORE_PORT}`
+        + `${OBJECTS}${path}`;
+      const { stderr } = await stack.exec('wget', '-S', '-O', '/dev/null', object);
+      return Object.entries(VALIDATORS).map(([validator, condition]) => {
+        const value = new RegExp(`^\\s*${validator}: (.+)$`, 'im').exec(stderr)?.[1].trim();
+        assert.ok(value, validator);
+        return { [condition]: value };
+      });
     };
 
     before(async () => {
@@ -135,6 +158,37 @@ describe('nginx image in front of the page store',
         }
         assert.deepEqual(await stack.storeRequests(), [`GET ${OBJECTS}${STORED}`]);
         assert.ok((await keysOf()).includes(`KEY: 4.5|http://localhost${STORED}`));
+      });
+
+    test('answers a HEAD and a conditional request with the page, under no validator of S3',
+      async () => {
+        const path = STORED.replace('/en/', '/de/');
+        const head = await get(path, { ...aClient(), method: 'HEAD' });
+        const conditional = [];
+        for (const headers of await conditionalHeadersOf(path)) {
+          conditional.push([await get(path, { ...aClient(), headers }),
+            await get(path, { ...aClient(), encoding: 'gzip', headers })]);
+        }
+        // Never a range of the compressed bytes, which are not the page.
+        const ranged = await get(path, { ...aClient(), encoding: 'gzip',
+          headers: { range: 'bytes=0-3' } });
+
+        assert.equal(head.status, 200);
+        assert.equal(head.body.length, 0);
+        assert.deepEqual(sourceOf(head), ['MISS', 'store']);
+        assert.equal(head.headers['content-type'], STORED_HEADERS['content-type']);
+        assert.equal(head.headers['cache-control'], STORED_HEADERS['cache-control']);
+        for (const [plain, compressed] of conditional) {
+          assert.deepEqual([plain, compressed].map(sourceOf), [['HIT', 'cache'], ['HIT', 'cache']]);
+          assert.deepEqual([plain.status, compressed.status], [200, 200]);
+          assert.equal(plain.body.toString(), stack.storedPage);
+          assert.equal(gunzipSync(compressed.body).toString(), stack.storedPage);
+        }
+        assert.equal(ranged.status, 200);
+        assert.equal(gunzipSync(ranged.body).toString(), stack.storedPage);
+        for (const answer of [head, ...conditional.flat(), ranged]) {
+          assert.deepEqual(storeHeadersOf(answer), []);
+        }
       });
 
     test('sends the store a page\'s key with its own Host and none of the client\'s headers',
@@ -205,6 +259,22 @@ describe('nginx image in front of the page store',
         await get(FAILING.forbidden.replace('/en/', '/de/'), aClient());
         assert.deepEqual((await stack.storeRequests()).slice(before.length),
           [`GET ${OBJECTS}/de/15.3.1/champions`]);
+      });
+
+    test('leaves the latest patch pinned in the path to the SSR server, never asking the store',
+      async () => {
+        const before = await stack.storeRequests();
+        for (const path of LATEST_PINNED) {
+          const answer = await get(path, aClient());
+          assert.equal(answer.status, LATEST_REDIRECT.status, path);
+          assert.equal(answer.headers['cache-control'], LATEST_REDIRECT.cacheControl, path);
+          assert.deepEqual(sourceOf(answer), ['MISS', 'ssr'], path);
+        }
+        const lookalike = await get(LATEST_LOOKALIKE, aClient());
+
+        assert.equal(lookalike.body.toString(), RENDERED.body);
+        assert.deepEqual((await stack.storeRequests()).slice(before.length),
+          [`GET ${OBJECTS}${LATEST_LOOKALIKE}`]);
       });
 
     test('looks a bundle up in the store only when the SSR server has no such name', async () => {
@@ -315,28 +385,4 @@ describe('nginx image with the page store switched off',
         assert.equal(gone.headers['content-security-policy'], STORED_BUNDLE.policy);
         assert.deepEqual(await stack.storeRequests(), []);
       });
-  });
-
-describe('nginx image with a page store it cannot trust or find',
-  { skip: IMAGE ? false : 'LODB_NGINX_IMAGE is not set' }, () => {
-    const stores = {
-      // The stub's TLS port, under a certificate that no authority signed.
-      untrusted: { LODB_PAGES_STORE_SCHEME: 'https', LODB_PAGES_STORE_PORT: '9443' },
-      // As on a stack without network or DNS: nginx must start all the same.
-      unresolved: { LODB_PAGES_STORE_HOST: 'lodb-pages-store.invalid' },
-    };
-
-    for (const [store, settings] of Object.entries(stores)) {
-      test(`starts and renders the pages with the SSR server: ${store} store`, async () => {
-        const stack = await startStack(IMAGE, { ...STORE, ...settings });
-        try {
-          const answer = await send(stack.port, STORED, aClient());
-          assert.equal(answer.body.toString(), RENDERED.body);
-          assert.equal(answer.headers['x-lodb-source'], 'ssr');
-          assert.deepEqual(await stack.storeRequests(), []);
-        } finally {
-          await stack.stop();
-        }
-      });
-    }
   });
