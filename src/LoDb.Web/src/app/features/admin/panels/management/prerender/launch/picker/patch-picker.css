@@ -24,6 +24,14 @@
 .picker-statuses {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
+}
+
+/* « Afficher : », « Cocher : »: a filter and a tool read alike, and do opposite things. */
+.picker-group-label {
+  margin-inline-end: 0.5rem;
+  color: var(--color-text-dim);
+  font-size: 0.8rem;
 }
 
 .picker-tool {

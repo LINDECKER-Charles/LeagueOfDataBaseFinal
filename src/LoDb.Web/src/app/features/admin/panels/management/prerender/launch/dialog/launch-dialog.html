@@ -200,7 +200,14 @@
   }
 
   <footer class="launch-foot">
-    <p class="font-mono text-[0.82rem] text-text-muted" data-launch-footer>{{ footer() }}</p>
+    <p
+      class="font-mono text-[0.82rem] text-text-muted"
+      [class.text-gold]="isEmpty()"
+      [id]="footerId"
+      data-launch-footer
+    >
+      {{ footer() }}
+    </p>
     <p class="sr-only" aria-live="polite">{{ announced() }}</p>
     <div class="mt-3 flex flex-wrap justify-end gap-3">
       @if (store.step() === 1) {
@@ -237,6 +244,7 @@
           type="button"
           data-next
           [disabled]="!store.validity()[store.step()]"
+          [attr.aria-describedby]="isEmpty() ? footerId : null"
           (click)="next()"
         >
           {{

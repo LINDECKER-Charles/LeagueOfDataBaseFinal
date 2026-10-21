@@ -551,6 +551,10 @@ moins une langue et un type). Sur téléphone : « Étape 1 sur 3 · Patchs » e
                                               [Annuler]  [Suivant : périmètre →]
 ```
 
+Sans patch coché, la ligne dit à la place « Cochez au moins un patch pour continuer. »
+(`footer_empty`), en or, et « Suivant » désactivé la désigne (`aria-describedby`) : jamais
+« ≈ 0 unité · ≈ 0 page · ≈ 0 s » à côté d'un bouton grisé sans raison.
+
 La ligne se recalcule à chaque changement (fonction pure `launchEstimate`, § 3.5). Elle est un
 `<p aria-live="polite">` mis à jour au plus toutes les 500 ms (anti-rebond) pour ne pas noyer un
 lecteur d'écran pendant une sélection au clavier.
@@ -565,9 +569,9 @@ lecteur d'écran pendant une sélection au clavier.
 │ Couverture lue dans l'epoch 2 (servie) · changer d'epoch                                │
 │ 16.20.1, le dernier patch, n'est jamais précalculé : le SSR le sert.                    │
 │                                                                                         │
-│ [Filtrer : 16.1, 15 …        ] Statut [Tous|Complets|Partiels|Absents|En échec]         │
+│ [Filtrer : 16.1, 15 …        ] Afficher : [Tous|Complets|Partiels|Absents|En échec]     │
 │ De [16.19.1 ▾] à [16.19.1 ▾] [Sélectionner la plage]                                    │
-│ [Tout] [Aucun] [Inverser] [Non couverts] [Partiels] [↶ Annuler]                          │
+│ Cocher : [Tout] [Aucun] [Inverser] [Non couverts] [Partiels] [↶ Défaire]                 │
 │ 38 patchs sélectionnés (dont 5 masqués par le filtre) · 3 prioritaires                  │
 │ ┌─────────────────────────────────────────────────────────────────────────────────────┐ │
 │ │ ☑ ▾ 16.x · 2026   19 patchs · 19 sélectionnés          ▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇        │ │
@@ -772,7 +776,8 @@ visibles de statut `absent` ou `failed` ; « Partiels » par les visibles `parti
 **Annuler.** `SelectionUndo` (F1, `common/selection/selection-undo.ts`) garde jusqu'à 20 états : chaque
 action groupée (`extend`, `season`, `set`, `replace`, `invert`, `clear`, `paste`) empile l'état
 d'avant ; une suite d'`extend` d'une même plage (`extent` non nul) n'empile qu'une fois, l'état
-d'avant sa première extension. « ↶ Annuler » (et Ctrl/⌘+Z dans la liste) dépile. Les `toggle` isolés ne s'empilent
+d'avant sa première extension. « ↶ Défaire » (et Ctrl/⌘+Z dans la liste) dépile : son texte
+est visible, et pas « Annuler », que porte déjà le bouton du pied qui ferme la modale. Les `toggle` isolés ne s'empilent
 pas : ils se défont d'un clic.
 
 #### 3.3.3 Filtres
@@ -784,7 +789,9 @@ pas : ils se défont d'un clic.
   tout passe.
 - **Statut** : Tous / Complets (`complete`) / Partiels (`partial`, `complete_with_failures`) /
   Absents (`absent`) / En échec (`failed`) ; groupe de boutons à `aria-pressed`, local (pas de
-  paramètre d'URL, donc pas `SegmentBar`).
+  paramètre d'URL, donc pas `SegmentBar`), précédé de « Afficher : » qui le nomme. Les outils de
+  sélection, aux mots voisins (« Tout », « Partiels ») mais qui remplacent la sélection au lieu
+  de filtrer, sont précédés de « Cocher : ».
 - **Plage De / à** : deux `<select>` (classe `hx-select`, 16 px) de toutes les versions, plus
   récente d'abord ; « Sélectionner la plage » fait `set` de toutes les versions comprises,
   bornes incluses, **sans** tenir compte des filtres (l'opérateur a nommé les bornes). Les deux
@@ -3461,6 +3468,10 @@ de lot suit la même règle, et chaque spécification de composant vérifie au m
 | `patches.columns.select` | Cocher | Tick |
 | `patches.mouse` | Souris : clic pour cocher · Maj+clic pour cocher une plage · ☆ pour prioriser | Mouse: click to tick · Shift+click to tick a range · ☆ to put first |
 | `patches.range_hint` | Maj+clic sur un autre patch pour cocher toute la plage depuis {version}. | Shift+click another patch to tick the whole range from {version}. |
+| `footer_empty` | Cochez au moins un patch pour continuer. | Tick a patch at least to go on. |
+| `patches.show` | Afficher : | Show: |
+| `patches.tick` | Cocher : | Tick: |
+| `patches.undo_short` | Défaire | Undo |
 
 **`coverage`** (F4)
 

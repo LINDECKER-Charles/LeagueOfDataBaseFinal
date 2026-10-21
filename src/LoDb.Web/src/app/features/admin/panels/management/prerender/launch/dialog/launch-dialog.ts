@@ -41,6 +41,7 @@ const STEPS: readonly StepLink[] = [
 // Six rows hold the place of the list while the coverage loads (§ 3.1).
 const SKELETON_ROWS = [1, 2, 3, 4, 5, 6];
 const LAUNCHER = 'prerender.launcher';
+const FOOTER_ID = 'prerender-launch-footer';
 
 /**
  * The launch of a pass, in three steps (§ 3): the patches, the perimeter, then the summary,
@@ -97,10 +98,18 @@ export class LaunchDialog {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
   private readonly injector = inject(Injector);
 
+  /** Nothing ticked at step 1: « Suivant » waits, and the footer says why. */
+  protected readonly isEmpty = computed(
+    () => this.store.step() === 1 && this.store.estimate()?.versions === 0,
+  );
+  protected readonly footerId = FOOTER_ID;
   protected readonly footer = computed(() => {
     const estimate = this.store.estimate();
     if (!estimate || this.store.patches.busy()) {
       return this.texts.text(`${LAUNCHER}.footer_loading`);
+    }
+    if (this.isEmpty()) {
+      return this.texts.text(`${LAUNCHER}.footer_empty`);
     }
     return this.texts.text(`${LAUNCHER}.footer`, {
       ...estimate,

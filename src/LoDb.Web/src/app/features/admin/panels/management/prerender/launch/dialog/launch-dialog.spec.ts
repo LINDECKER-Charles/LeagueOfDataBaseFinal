@@ -94,6 +94,10 @@ describe('LaunchDialog', () => {
     expect(current(fixture)).toBe('1');
     expect(button(fixture, '[data-next]').disabled).toBe(true);
     expect(button(fixture, '[data-step="3"]').disabled).toBe(true);
+    // With nothing ticked, the footer says why « Suivant » waits, and the button points to it.
+    const footer = page(fixture).querySelector('[data-launch-footer]');
+    expect(footer?.textContent?.trim()).toBe('admin.prerender.launcher.footer_empty');
+    expect(button(fixture, '[data-next]').getAttribute('aria-describedby')).toBe(footer?.id);
 
     page(fixture).querySelector<HTMLElement>('[data-key="16.18.1"]')?.click();
     await settle(fixture);
@@ -107,9 +111,10 @@ describe('LaunchDialog', () => {
 
     await press(fixture, '[data-step="1"]');
     expect(current(fixture)).toBe('1');
-    expect(page(fixture).querySelector('[data-launch-footer]')?.textContent).toContain(
+    expect(page(fixture).querySelector('[data-launch-footer]')?.textContent?.trim()).toBe(
       'admin.prerender.launcher.footer',
     );
+    expect(button(fixture, '[data-next]').hasAttribute('aria-describedby')).toBe(false);
   });
 
   it('keeps the focus on the forward button when the footer changes its buttons', async () => {

@@ -17,11 +17,10 @@
       (keydown)="onFilterKey($event)"
     />
   </label>
-  <div
-    class="picker-statuses"
-    role="group"
-    [attr.aria-label]="'admin.prerender.launcher.patches.status' | adminText"
-  >
+  <div class="picker-statuses" role="group" aria-labelledby="launch-patches-show">
+    <span id="launch-patches-show" class="picker-group-label">{{
+      'admin.prerender.launcher.patches.show' | adminText
+    }}</span>
     @for (each of statuses; track each) {
       <button
         type="button"
@@ -81,7 +80,10 @@
       {{ 'admin.prerender.launcher.patches.range_apply' | adminText }}
     </button>
   </div>
-  <div class="flex flex-wrap gap-2">
+  <div class="flex flex-wrap items-center gap-2" role="group" aria-labelledby="launch-patches-tick">
+    <span id="launch-patches-tick" class="picker-group-label">{{
+      'admin.prerender.launcher.patches.tick' | adminText
+    }}</span>
     @for (tool of tools; track tool) {
       <button
         lodbButton="ghost"
@@ -99,10 +101,10 @@
       type="button"
       data-tool="undo"
       [disabled]="!canUndo()"
-      [attr.aria-label]="'admin.prerender.launcher.patches.undo' | adminText"
+      [title]="'admin.prerender.launcher.patches.undo' | adminText"
       (click)="undone.emit()"
     >
-      ↶
+      ↶ {{ 'admin.prerender.launcher.patches.undo_short' | adminText }}
     </button>
   </div>
 </div>
