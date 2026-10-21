@@ -10,6 +10,12 @@ internal sealed record PageJob(ClaimedUnit Unit, string Path)
 {
     private const string PagesPrefix = "pages/";
 
+    /// <summary>
+    /// Among the first pages of a run of its unit: they load the unit's catalog into the SSR,
+    /// and their render times say nothing of the host's load.
+    /// </summary>
+    public bool IsOpening { get; init; }
+
     /// <summary>The page's path on the site: <c>/fr/16.19.1/items/1036-long-sword</c>.</summary>
     public string RequestPath =>
         $"/{Unit.LocaleCode}/{Unit.Version.Value}/{Path}";

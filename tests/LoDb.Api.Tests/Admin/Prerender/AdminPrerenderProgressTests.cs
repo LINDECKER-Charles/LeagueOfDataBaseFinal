@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Net;
 using System.Text.Json;
+using LoDb.Api.Modules.Admin.Prerender.Pace;
 using LoDb.Api.Modules.Admin.Prerender.Pages;
 using LoDb.Api.Modules.Admin.Prerender.Passes;
 using LoDb.Api.Modules.Admin.Prerender.Units;
@@ -150,6 +151,37 @@ public sealed class AdminPrerenderProgressTests(PostgresContainerFixture postgre
             wait.GetProperty("since").GetDateTimeOffset() + UnitWaits.Longest,
             wait.GetProperty("givesUpAt").GetDateTimeOffset());
         Assert.Equal(since, wait.GetProperty("since").GetDateTimeOffset(), TimeSpan.FromSeconds(1));
+    }
+
+    // The pace is the regulator's of the instance answering, while it drains this pass alone.
+    [Fact]
+    public async Task PaceShowsOnlyWhileThisInstanceDrainsThePass()
+    {
+        using var admin = await AdminBrowser.OpenAsync(App);
+        var id = await SeedAsync(PrerenderPassState.Running);
+        var regulator = App.Services.GetRequiredService<PaceRegulator>();
+
+        var idle = await ReadAsync(admin, id, since: null);
+        regulator.Begin(id + 1);
+        var other = await ReadAsync(admin, id, since: null);
+        regulator.Begin(id);
+        var driven = await ReadAsync(admin, id, since: null);
+        regulator.End();
+
+        Assert.Equal(JsonValueKind.Null, idle.GetProperty("pulse").GetProperty("pace").ValueKind);
+        Assert.Equal(JsonValueKind.Null, other.GetProperty("pulse").GetProperty("pace").ValueKind);
+        var pace = driven.GetProperty("pulse").GetProperty("pace");
+        Assert.Equal(
+            ("adaptive", "starting", "warming-up"),
+            (ApiJson.Text(pace, "mode"), ApiJson.Text(pace, "state"),
+                ApiJson.Text(pace, "reason")));
+        Assert.Equal(
+            (30, 30, 240),
+            (pace.GetProperty("rendersPerMinute").GetInt32(),
+                pace.GetProperty("minRendersPerMinute").GetInt32(),
+                pace.GetProperty("maxRendersPerMinute").GetInt32()));
+        Assert.Equal(JsonValueKind.Null, pace.GetProperty("hostCpu").ValueKind);
+        Assert.Equal(JsonValueKind.Null, pace.GetProperty("heldUntil").ValueKind);
     }
 
     [Fact]

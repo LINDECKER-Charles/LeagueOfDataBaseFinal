@@ -36,6 +36,9 @@
         </span>
       }
     </span>
+    @if (regulator(); as line) {
+      <p class="readout-text" data-pace-regulator>{{ line }}</p>
+    }
     @for (line of pace().lines; track $index) {
       <p class="readout-text">{{ line }}</p>
     }

@@ -20,7 +20,13 @@ services:
       # Staging stays almost empty (ADR 0011): no pass starts when a patch is promoted, an
       # operator launches small ones, and its bucket forgets every page after 14 days.
       LoDb__Prerender__AutoEnqueueOnPromotion: ${LoDb__Prerender__AutoEnqueueOnPromotion:-false}
-      # The pass keeps to the staging's prerender lane (web-ssr below), from the same lines.
+      # The pass keeps to the staging's prerender lane (web-ssr-prerender below), from the same
+      # lines. Its ceiling is the pace staging already ran at: it only ever slows down here,
+      # and keeps prod's topology to prove the deploy. Step 10: a climb from the floor to the
+      # ceiling in two minutes.
+      LoDb__Prerender__Pace__MinRendersPerMinute: ${LODB_PRERENDER_PACE_MIN:-10}
+      LoDb__Prerender__Pace__MaxRendersPerMinute: ${LODB_PRERENDER_PACE_MAX:-30}
+      LoDb__Prerender__Pace__StepRendersPerMinute: ${LoDb__Prerender__Pace__StepRendersPerMinute:-10}
       LoDb__Prerender__RendersPerMinute: ${LODB_PRERENDER_RENDERS_PER_MINUTE:-30}
       LoDb__Prerender__MaxInFlight: ${LODB_PRERENDER_MAX_IN_FLIGHT:-1}
     cpu_shares: 128
@@ -47,13 +53,29 @@ services:
       LODB_PINNED_RENDER_MAX_IN_FLIGHT: ${LODB_PINNED_RENDER_MAX_IN_FLIGHT:-1}
       LODB_PINNED_RENDERS_PER_MINUTE: ${LODB_PINNED_RENDERS_PER_MINUTE:-10}
       LODB_PINNED_RENDER_BURST: ${LODB_PINNED_RENDER_BURST:-5}
-      # The pre-rendering pass's lane: one render at a time, and one of the three left to the
-      # visitors whatever the pass does.
+      # The pre-rendering pass's lane, unused since the pass has its own renderer (below):
+      # one render at a time, and one of the three left to the visitors.
       LODB_PRERENDER_RENDERS_PER_MINUTE: ${LODB_PRERENDER_RENDERS_PER_MINUTE:-30}
       LODB_PRERENDER_RENDER_BURST: ${LODB_PRERENDER_RENDER_BURST:-5}
       LODB_PRERENDER_MAX_IN_FLIGHT: ${LODB_PRERENDER_MAX_IN_FLIGHT:-1}
       LODB_PRERENDER_VISITOR_RESERVE: ${LODB_PRERENDER_VISITOR_RESERVE:-1}
     cpu_shares: 128
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+
+  # The pass's renderer at the scale of staging: below the staging stack's lowest weight (128)
+  # and a quarter of a core at most, so that staging still gets idle CPU only. Its lane is
+  # the pace staging already ran at: the ceiling of the regulator (30), one render at a time.
+  # It adds to the 0.75 core of staging's visitor services (a bound, not a share), which
+  # tools/compose checks over those four alone.
+  web-ssr-prerender:
+    environment:
+      LODB_PRERENDER_RENDERS_PER_MINUTE: ${LODB_PRERENDER_PACE_MAX:-30}
+      LODB_PRERENDER_RENDER_BURST: ${LODB_PRERENDER_RENDER_BURST:-5}
+      LODB_PRERENDER_MAX_IN_FLIGHT: ${LODB_PRERENDER_MAX_IN_FLIGHT:-1}
+    cpu_shares: 64
     deploy:
       resources:
         limits:

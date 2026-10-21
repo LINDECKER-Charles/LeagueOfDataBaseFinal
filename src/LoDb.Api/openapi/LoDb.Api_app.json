@@ -11426,6 +11426,17 @@
             "description": "Since when the SSR is out of reach for the pass; null while it answers.",
             "format": "date-time"
           },
+          "pace": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "The pace while this instance drains this pass; null otherwise (another instance writes\nit, or none, or another pass).",
+                "$ref": "#/components/schemas/PrerenderPaceView"
+              }
+            ]
+          },
           "waiting": {
             "type": "array",
             "items": {
@@ -11585,7 +11596,7 @@
           },
           "configuredRendersPerMinute": {
             "type": "integer",
-            "description": "The pass's ceiling, LoDb:Prerender:RendersPerMinute.",
+            "description": "The pass's ceiling: LoDb:Prerender:Pace:MaxRendersPerMinute while the pace is adaptive,\nthe fixed pace LoDb:Prerender:RendersPerMinute when the regulation is off.",
             "format": "int32"
           },
           "pricePerGbMonthOneZone": {
@@ -11598,6 +11609,71 @@
           }
         },
         "description": "What the admin estimates a pass with, all measured here."
+      },
+      "PrerenderPaceView": {
+        "required": [
+          "mode",
+          "state",
+          "rendersPerMinute",
+          "minRendersPerMinute",
+          "maxRendersPerMinute",
+          "since"
+        ],
+        "type": "object",
+        "properties": {
+          "mode": {
+            "type": "string",
+            "description": "`adaptive`, or `fixed` when the regulation is off."
+          },
+          "state": {
+            "type": "string",
+            "description": "`starting`, `climbing`, `steady`, `slowed`, `held` or\n`fixed`."
+          },
+          "rendersPerMinute": {
+            "type": "integer",
+            "description": "Renders the pass may start per minute now: 0 while held.",
+            "format": "int32"
+          },
+          "minRendersPerMinute": {
+            "type": "integer",
+            "description": "The floor (LoDb:Prerender:Pace:MinRendersPerMinute).",
+            "format": "int32"
+          },
+          "maxRendersPerMinute": {
+            "type": "integer",
+            "description": "The ceiling (LoDb:Prerender:Pace:MaxRendersPerMinute).",
+            "format": "int32"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "What limits the pace, the worst signal or the regulator's own rule: `warming-up`,\n`ceiling`, `host-cpu`, `host-cpu-sustained`, `host-steal`,\n`visitors-ssr`, `visitors-refused`, `api-cpu`, `pass-latency`,\n`pass-ssr-pressure`, `signal-missing` or `fixed`; null while it climbs\nfreely."
+          },
+          "hostCpu": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "description": "The VPS's busy share, steal included, over the last minute (0..1, 3 decimals); null\nbefore the regulator's first decision, and in fixed mode.",
+            "format": "double"
+          },
+          "heldUntil": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Until when the pass starts no render, at least; null unless held.",
+            "format": "date-time"
+          },
+          "since": {
+            "type": "string",
+            "description": "Since when the regulator is in its state.",
+            "format": "date-time"
+          }
+        },
+        "description": "The pace of the pass as the regulator of the instance answering sets it, while that\ninstance drains the pass (docs/produit/pre-rendu-catalogue-cdn.md, lot 2)."
       },
       "PrerenderPassProgress": {
         "required": [

@@ -15,6 +15,12 @@ internal sealed record PrerenderEnginePulse
     /// <summary>Since when the SSR is out of reach for the pass; null while it answers.</summary>
     public DateTimeOffset? SsrUnreachableSince { get; init; }
 
+    /// <summary>
+    /// The pace while this instance drains this pass; null otherwise (another instance writes
+    /// it, or none, or another pass).
+    /// </summary>
+    public PrerenderPaceView? Pace { get; init; }
+
     /// <summary>The versions of this pass whose units wait.</summary>
     public required IReadOnlyList<PrerenderWaitView> Waiting { get; init; }
 }

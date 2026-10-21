@@ -29,11 +29,13 @@ const DEV_SETTINGS = new Set([
 // The quotas planned for a served host (4 shared vCPU): cpus, cpu_shares, pids per container.
 const QUOTAS = {
   'web-ssr': { cpus: 1, shares: 1024, pids: 256 },
+  // The pass's renderer: the lowest weight of the host, so that it takes idle CPU only.
+  'web-ssr-prerender': { cpus: 1, shares: 128, pids: 256 },
   api: { cpus: 1.25, shares: 1024, pids: 512 },
   postgres: { cpus: 0.5, shares: 1024, pids: 256 },
   nginx: { cpus: 0.25, shares: 2048, pids: 256 },
 };
-const LIMITED = ['api', 'migrate', 'web-ssr', 'nginx', 'postgres'];
+const LIMITED = ['api', 'migrate', 'web-ssr', 'web-ssr-prerender', 'nginx', 'postgres'];
 // The relaxations the dev overlay holds today, at least: SSR admission, cold catalog gate,
 // warm-up, ingestion budget, sign-ins, nginx rates. Fewer read means a broken reading.
 const FEWEST_LIFTS = 30;

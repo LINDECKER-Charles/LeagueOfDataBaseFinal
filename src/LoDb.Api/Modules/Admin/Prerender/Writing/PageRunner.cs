@@ -1,4 +1,5 @@
 using LoDb.Api.Modules.Admin.Prerender.Builds;
+using LoDb.Api.Modules.Admin.Prerender.Pace.Windows;
 using LoDb.Api.Modules.Admin.Prerender.Rendering;
 using LoDb.Api.Modules.Admin.Prerender.Telemetry;
 using LoDb.Api.Modules.Admin.Prerender.Units;
@@ -23,7 +24,9 @@ namespace LoDb.Api.Modules.Admin.Prerender.Writing;
 /// </para>
 /// <para>
 /// Whether the pass still runs is read before each try: a pause or a cancel stops the page
-/// there. An answer that refuses the pass itself ends the page unfinished, and the pass pauses.
+/// there. A page the regulator holds back (<see cref="RenderPacer"/>) is no try: it reads it
+/// again every 10 s, uncounted. An answer that refuses the pass itself ends the page
+/// unfinished, and the pass pauses.
 /// </para>
 /// </remarks>
 internal sealed class PageRunner(
@@ -34,6 +37,7 @@ internal sealed class PageRunner(
     IPageStore store,
     UnitQueue queue,
     PrerenderMetrics metrics,
+    PassRenderTimes renders,
     TimeProvider clock)
 {
     public async Task<PageResult> RunAsync(PageJob job, CancellationToken cancellationToken)
@@ -55,7 +59,7 @@ internal sealed class PageRunner(
                     return Ended(PageResult.Failed(reason) with { Refusals = refusals });
                 }
             }
-            else if (!attempt.IsOutage)
+            else if (attempt is { IsOutage: false, IsHeld: false })
             {
                 refusals++;
                 metrics.Count(PageOutcome.Refused);
@@ -95,11 +99,15 @@ internal sealed class PageRunner(
 
     private async Task<Attempt> TryOnceAsync(PageJob job, CancellationToken cancellationToken)
     {
-        await pacer.WaitTurnAsync(cancellationToken);
+        if (!await pacer.WaitTurnAsync(cancellationToken))
+        {
+            return Attempt.Held;
+        }
+
         RenderedPage page;
         try
         {
-            page = await ssr.RenderAsync(job.RequestPath, cancellationToken);
+            page = await TimedRenderAsync(job, cancellationToken);
         }
         catch (SsrUnavailableException exception)
         {
@@ -115,6 +123,22 @@ internal sealed class PageRunner(
                 $"The SSR answered {(int)page.Status} to {job.RequestPath}.")),
             _ => Attempt.Failed($"The SSR answered {(int)page.Status}, not a page to store."),
         };
+    }
+
+    // The wall time of a page that renders for the store is the regulator's pass latency; the
+    // opening pages of a unit, which load its catalog, are not.
+    private async Task<RenderedPage> TimedRenderAsync(
+        PageJob job,
+        CancellationToken cancellationToken)
+    {
+        var started = clock.GetTimestamp();
+        var page = await ssr.RenderAsync(job.RequestPath, cancellationToken);
+        if (!job.IsOpening && RenderVerdicts.Of(page) == RenderVerdict.Storable)
+        {
+            renders.Rendered(clock.GetElapsedTime(started));
+        }
+
+        return page;
     }
 
     // The build first, then the page: a page is never in the store before its bundles.
@@ -156,14 +180,19 @@ internal sealed class PageRunner(
     }
 
     // One try of a page: it ended, or it is tried again after a refusal (no reason) or after a
-    // failure (its reason), at once when the failure is only a build that changed, or after an
-    // outage of the SSR.
+    // failure (its reason), at once when the failure is only a build that changed or the
+    // regulator held it back, or after an outage of the SSR.
     private sealed record Attempt(PageResult? Result, string? Failure, TimeSpan? Wait)
     {
         public static Attempt Outage { get; } =
             new(null, null, RetryDelays.Default) { IsOutage = true };
 
+        /// <summary>The regulator holds the pass: no try, nothing counted.</summary>
+        public static Attempt Held { get; } = new(null, null, TimeSpan.Zero) { IsHeld = true };
+
         public bool IsOutage { get; private init; }
+
+        public bool IsHeld { get; private init; }
 
         public static Attempt Ended(PageResult result) => new(result, null, null);
 

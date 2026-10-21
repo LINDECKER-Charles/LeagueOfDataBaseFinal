@@ -267,10 +267,10 @@ révise renvoient vers elle par un amendement daté :
   - API (options `LoDb`) : `LoDb__Prerender__Endpoint` (`https://s3.fr-par.scw.cloud`),
     `__Region`, `__Bucket`, `__AccessKey` et `__SecretKey` (secrets), `__PublicHost`
     (`league-of-data-base.com`, `test.league-of-data-base.com` au staging), `__SsrBaseUrl`
-    (`http://lodb-web-ssr:4000`), `__ServedEpoch` (`${LODB_ARCHIVE_SERVE_EPOCH}`),
-    `__AutoEnqueueOnPromotion` (faux au staging ; faux en prod jusqu'à la fin de la passe
-    complète, puis vrai), `__AllowInsecureEndpoint` (développement). Vides, elles laissent
-    la tâche en sommeil : `Add*` ne fait aucune I/O ;
+    (`http://lodb-web-ssr-prerender:4000`, le SSR de la passe), `__ServedEpoch`
+    (`${LODB_ARCHIVE_SERVE_EPOCH}`), `__AutoEnqueueOnPromotion` (faux au staging ; faux en prod
+    jusqu'à la fin de la passe complète, puis vrai), `__AllowInsecureEndpoint` (développement).
+    Vides, elles laissent la tâche en sommeil : `Add*` ne fait aucune I/O ;
   - nginx : `LODB_PAGES_STORE_ENABLED` (`0` par défaut : en local et en CI, rien ne change),
     `LODB_PAGES_STORE_SCHEME`, `_HOST`, `_PORT`, `_BUCKET`, et l'epoch servie
     (`LODB_ARCHIVE_SERVE_EPOCH`) ;
@@ -303,8 +303,10 @@ ordonnée de versions, que l'opérateur tire du journal de l'edge (LogsQL,
 `stats by (version)`). Sans liste, les plus récentes d'abord.
 
 **Chemin d'un rendu.** La tâche de l'API appelle le SSR sur le réseau de la pile, en
-direct (`http://lodb-web-ssr:4000`), jamais à travers nginx, qui effacerait l'en-tête,
-appliquerait `limit_req`, remplirait `lodb_archive` et déclencherait le miroir :
+direct, jamais à travers nginx, qui effacerait l'en-tête, appliquerait `limit_req`,
+remplirait `lodb_archive` et déclencherait le miroir. Depuis le 2026-10-21, ce SSR est un
+conteneur à elle, `http://lodb-web-ssr-prerender:4000`, et non plus celui des visiteurs
+(« Capacité adaptative de la passe », fin du lot) :
 
 - elle envoie l'**hôte public** de son environnement (`X-Forwarded-Host`,
   `test.league-of-data-base.com` au staging) et `X-Forwarded-Proto: https`, deux des
@@ -396,6 +398,11 @@ seconde (instance louée), un ticket au support de Scaleway d'abord : aucune lim
 publiée, et le freinage répond 429. Le stockage se remplit au fil de la passe, et nginx sert
 ce qui y est déjà (lot 3).
 
+Mesuré le 2026-10-21 et tranché : le second conteneur, de faible priorité, et un rythme qui
+suit le CPU libre du VPS, 150 à 220 pages par minute en moyenne plutôt que 10 par seconde. Le
+tableau ci-dessus reste l'estimation de départ ; la décision et ses chiffres sont dans
+« Capacité adaptative de la passe », à la fin de ce lot.
+
 **Persistance et reprise.**
 
 - Une table des passes (`prerender_pass`) : epoch, état, périmètre, auteur, dates,
@@ -476,6 +483,233 @@ unités d'une version, une par langue). Chaque action s'écrit au journal d'audi
 (`admin.prerender_*`). Le contrat OpenAPI et le client généré sont mis à jour dans le même
 commit. L'interface du pupitre (modale de lancement, suivi en direct, couverture, coûts,
 historique) est décrite dans [`pre-rendu-admin-ux.md`](pre-rendu-admin-ux.md).
+
+#### Capacité adaptative de la passe (décision du 2026-10-21)
+
+**Constat.** Au rythme fixe (120 rendus par minute en prod), les 4,19 millions de pages
+prennent 24 jours, et 97 jours à 30 par minute. Ce rythme passe en outre par le SSR des
+visiteurs, qu'il ralentit dès la première page en vol : sur une pile locale aux quotas de la
+prod, la médiane d'une page non gardée prend +45 % avec un rendu de la passe en vol, +90 %
+avec deux, +250 % avec huit ; le retard p99 de la boucle d'événements du SSR passe de 13 à
+50-60 ms, sa pression CPU (`cpu.pressure`) de 0,1 % à 15 %. Décision : la passe ne prend que
+le CPU **libre** du VPS, avec une **marge large** : aucun ralentissement des visiteurs, aucun
+effet sur les autres projets de l'hôte.
+
+**Mesures du 2026-10-21** (pile `lodb-dev-e1` aux quotas de la prod, épinglée sur 4 CPU ;
+étalonnage sur la fenêtre de précalcul du staging du 20 octobre ; 7 jours de
+VictoriaMetrics) :
+
+| Mesure | Valeur |
+|---|---|
+| CPU par page sur le VPS | 0,115 à 0,165 CPU-s : SSR 0,08-0,10, API 0,03-0,056 (écriture comprise), Postgres 0,005-0,009 |
+| Un cœur de SSR | 600 à 750 pages/min au plus. Un seul thread Node, saturé dès 2 rendus en vol : au-delà, le débit stagne et la latence double |
+| VPS sur 7 jours (moyennes de 5 min) | occupé, steal compris : moyenne 35 %, p95 48 %, p99 57,5 %, max 80 % ; consommé, steal exclu : moyenne 22 %, p95 25 %, max 51 % ; steal : moyenne 13 %, p95 24 %, max 45 % |
+| SSR dédié de faible poids (`cpu_shares: 128`) | visiteurs inchangés au bruit près (±30 %) jusqu'à ~80 % d'occupation de l'hôte ; vers 89 %, avec 4 rendus en vol, leur p95 prend +50 % |
+| Âge du patch | sans effet de 11.x à 16.x ; un très vieux patch (7.x) coûte ~1,5 fois plus de CPU à sa première unité (Data Dragon froid) |
+
+Le steal vient des voisins de la machine physique : aucun poids ne l'arbitre. Et l'hébergeur
+bride **tout le VPS** sur une consommation forte et **durable** (le 10/10 ; alerte
+`HoteCpuRisqueBridage` d'`infra-vps` à 60 % sur 30 min) : la passe tient donc aussi une
+moyenne sur 30 minutes. Trois leviers :
+
+1. un **SSR réservé à la passe**, de faible priorité : le noyau ne lui donne que le CPU que
+   personne ne demande ;
+2. un **régulateur** dans la passe, qui monte doucement tant que l'hôte et les visiteurs sont
+   calmes et recule vite au moindre signe ;
+3. l'**ordre de la demande** : la liste des versions prioritaires collée dans la modale de
+   lancement, tirée du journal de l'edge (déjà là, rien à changer).
+
+**Le SSR de la passe (`web-ssr-prerender`).** La même image que `web-ssr`, un second service
+que seule l'API appelle ; nginx ne le connaît pas.
+
+| Réglage | Valeur | Pourquoi |
+|---|---|---|
+| Alias | `lodb-web-ssr-prerender` seul, jamais `lodb-web-ssr` | Docker répartirait sinon le trafic de nginx sur lui |
+| `LoDb__Prerender__SsrBaseUrl` | `http://lodb-web-ssr-prerender:4000` | le SSR des visiteurs ne reçoit plus aucun rendu de la passe |
+| `cpu_shares` | `128` en prod (un huitième des autres services), `64` au staging (sous ses `128`) | le noyau ne lui cède que le CPU libre. Plus bas (poids 1, ou `cpus: 0.5`), le débit est divisé par deux sans gain mesurable pour les visiteurs |
+| `cpus` | `1.0` en prod, `0.25` au staging | le pire que puisse faire un régulateur cassé ; un thread Node n'en prend pas plus |
+| `memory`, `pids` | `704m`, `256` | ceux de `web-ssr` ; le tas V8 reste borné par `NODE_OPTIONS` |
+| Voie `prerender` | budget `LODB_PRERENDER_RENDERS_PER_MINUTE` = le plafond du régulateur (`LODB_PRERENDER_PACE_MAX`) ; `LODB_PRERENDER_MAX_IN_FLIGHT` (2, 1 au staging) ; `LODB_RENDER_MAX_IN_FLIGHT=4` et `LODB_PRERENDER_VISITOR_RESERVE=1` | le SSR borne lui-même la passe à son plafond, quoi que demande l'API |
+| Bundles | ni `LODB_FRONT_BUILDS_DIR` ni volume `front-builds` | le volume partagé garde un seul écrivain ; la passe lit les bundles de l'image (`/build/`, `/_lodb/build-files`) |
+| Sonde de santé | celle de `web-ssr`, toutes les 30 s, 60 s de grâce au démarrage | de faible poids, il démarre lentement sur un hôte chargé |
+| Métriques | sur un hôte, réseau `observability` et labels `prometheus.scrape`/`prometheus.port`, comme `web-ssr` | `lodb_ssr_*{lane="prerender"}` passent sous `service="web-ssr-prerender"` : rien ne se perd, et les alertes qui lisent `current` et `pinned` ne changent pas |
+
+S'il tombe, la passe attend sans compter de page (`SsrOutage` : une ligne au début de la
+panne, une à la fin) ; les visiteurs n'en voient rien. Le déploiement ne l'attend pas pour
+rendre le site : le job lève la page de maintenance dès que les services des visiteurs sont
+sains, puis le démarre, et un échec n'y est qu'un avertissement. Le SSR des visiteurs garde
+sa voie `prerender` et ses réglages, désormais inutilisés : la rouvrir à la passe ralentirait
+les visiteurs dès le premier rendu.
+
+**Ce que règle le régulateur** : les rendus que la passe démarre par minute (`RenderPacer`),
+entre un **plancher** et un **plafond**. Les pages en vol restent fixes
+(`LODB_PRERENDER_MAX_IN_FLIGHT`, 2 en prod) : au-delà de deux, le débit stagne ; et quand les
+rendus ralentissent, cette borne freine déjà la passe d'elle-même.
+
+**Ce qu'il lit**, toutes les 30 secondes, pendant que son instance écrit une passe :
+
+| Signal | Source | Fenêtre | Vert : peut monter | Tenir | Orange : × 0,5 | Rouge : retenue |
+|---|---|---|---|---|---|---|
+| VPS occupé, steal compris (`1 − idle`) | `/proc/stat`, lu par l'API : celui de l'hôte | 1 min | < 50 % | 50-55 % | ≥ 55 % | ≥ 65 % |
+| Steal | idem | 1 min | < 25 % | — | ≥ 25 % | ≥ 40 % |
+| VPS consommé, steal exclu (`1 − idle − steal`, comme `noeud:cpu_utilise_ratio`) | idem | 30 min | < 40 % | 40-45 % | ≥ 45 % | ≥ 55 % |
+| Retard p99 de la boucle d'événements | `/load` du SSR des visiteurs | 30 s | < 50 ms | 50-80 ms | ≥ 80 ms | ≥ 250 ms |
+| Pression CPU du conteneur (`cpu.pressure`, *some avg10*) | idem | 10 s | < 2 % | 2-5 % | ≥ 5 % | ≥ 15 % |
+| Rendu moyen du couloir `current` (5 rendus au moins) | idem | 30 s | < 0,3 s | 0,3-0,5 s | ≥ 0,5 s | — |
+| Refus du couloir `current`, hors part d'un client | idem | 30 s | aucun | — | — | au moins un |
+| Temps bridé de l'API (`throttled_usec` sur le temps écoulé) | cgroup de l'API | 1 min | < 2 % | 2-5 % | ≥ 5 % | ≥ 20 % |
+| Pression CPU du SSR de la passe | `/load` du SSR de la passe | 10 s | < 20 % | 20-30 % | ≥ 30 % | — |
+| Rendu médian de la passe (10 rendus au moins), face à sa base | l'API, autour de chaque rendu | 1 min | < 1,5 × | 1,5-2 × | ≥ 2 × et ≥ 0,25 s | ≥ 1,5 s |
+| Une source illisible | — | — | — | — | orange | — |
+
+- La **base** du rendu de la passe est la plus basse de ses médianes d'une minute des
+  30 dernières minutes, 50 ms au moins. La médiane ignore les premiers rendus d'une unité
+  (autant que de pages en vol), qui chargent son catalogue, et ne compte que les pages à
+  stocker, jamais un refus ni une redirection.
+- Trop peu de rendus dans la fenêtre ne disent rien : le signal est vert.
+- Le signal le plus grave l'emporte ; le pupitre et les journaux nomment celui-là.
+- D'où viennent les seuils : le VPS reste sous 50 % d'occupation 96 % du temps, la passe ne
+  monte que dans ce creux ; 45 % sur 30 min reste 15 points sous l'alerte de bridage, qui
+  n'est elle-même qu'un point de départ ; 25 % de steal est son p95 sur 7 jours, 40 % le
+  plateau d'un bridage (`HoteCpuBrideParHebergeur`) ; le retard p99 de la prod a un p95 de
+  40 à 50 ms sur 7 jours ; la pression du SSR des visiteurs vaut 0,1 % au repos, 0,2 à 3 %
+  avec le SSR dédié et 15 % avec la passe partagée ; 20 % de bridage de l'API est le seuil
+  de `ConteneurCpuBride` ; le SSR de la passe privé de CPU à 30 % dit un hôte pris.
+
+**Comment il bouge** (montée additive, baisse multiplicative) :
+
+- **Démarrage** au plancher, à chaque passe que son instance prend et après chaque
+  redémarrage de l'API ; aucune montée avant une minute de mesures.
+- **Montée** d'un pas (30 rendus par minute en prod) quand tous les signaux sont verts, au
+  plus une fois par minute, et seulement si la passe a démarré au moins 80 % de son droit sur
+  la minute écoulée : une passe qui attend un catalogue ou change d'unité ne gonfle pas un
+  droit qu'elle n'use pas. Du plancher au plafond : 7 minutes en prod.
+- **Tenue** : un signal dans sa bande « tenir » fige le rythme ; c'est l'hystérésis entre la
+  montée et la baisse.
+- **Baisse** : × 0,5 à chaque évaluation orange, toutes les 30 s, jamais sous le plancher
+  (de 240 à 30 en trois évaluations, une minute), puis aucune montée pendant 3 minutes.
+- **Retenue** : un signal rouge arrête les nouveaux rendus 5 minutes, prolongées tant qu'il
+  reste rouge ; les pages en vol finissent. Ensuite, le plancher, puis la montée. La passe
+  reste `running` en base : seul le régulateur la retient, et une pause ou une annulation se
+  voit en 10 s au plus.
+- **Source illisible** (fichier absent, SSR injoignable, compteur reparti de zéro après un
+  redémarrage) : orange, donc le plancher tant qu'elle dure, jamais le rythme fixe, plus
+  rapide. Un droit que le régulateur n'a pas renouvelé depuis 90 s retombe au plancher.
+
+Au pire, régulateur cassé compris, la passe reste bornée par le budget de la voie de son SSR
+(le plafond) et par son `cpus: 1.0`, au plus bas poids de l'hôte.
+
+**Interrupteur et rythme fixe.** `LODB_PRERENDER_PACE_MODE=fixed`, puis un redéploiement de
+l'API, rend le rythme fixe d'aujourd'hui, `LODB_PRERENDER_RENDERS_PER_MINUTE` (120 en prod),
+sans rien lire, toujours sur le SSR dédié. Le levier immédiat reste la pause au pupitre. La
+commande `prerender unit` garde le rythme fixe : bornée, lancée à la main, sans la tâche de
+fond qui mesure.
+
+**Avec ce qui existe.**
+
+- L'admission du SSR dédié borne la passe à son plafond. Un refus (`503`) reste attendu selon
+  son `Retry-After` et compté `refused`, comme aujourd'hui ; il ne devrait plus arriver.
+- `SsrOutage` : le SSR de la passe injoignable rend sa source illisible, donc le plancher ; la
+  passe attend comme avant.
+- Pause, reprise, annulation : le régulateur ne tourne que pendant que son instance écrit une
+  passe, et repart du plancher à la suivante.
+- Deux instances, le temps d'un déploiement : seule celle qui tient le verrou de la passe
+  règle ; l'autre ne lit rien.
+
+**Où il vit.** Une tâche de fond sous `Workers/Prerender/` (`PeriodicTimer` de 10 s) relève
+`/proc/stat` et le cgroup de l'API ; toutes les 30 s, pendant que le moteur de son instance
+écrit une passe, elle lit les deux `/load` et décide. Sans verrou consultatif : elle ne règle
+que la mémoire de son instance. `LoDb:Workers:Enabled=false` la coupe avec les autres, et le
+rythme est alors le rythme fixe. Le `/proc/stat` d'un conteneur est celui de l'hôte : vérifié
+en local (sans lxcfs), à vérifier une fois sur le VPS
+([`configuration.md`](../guides/configuration.md) § 4.10).
+
+**Le point `/load` des SSR.** `prom-client` remet à zéro l'histogramme du retard de la boucle
+d'événements à chaque lecture de `/metrics` : un second lecteur tronquerait la série que lit
+Grafana. Le SSR expose donc, sur son port des métriques (9464, jamais publié ni routé),
+`GET /load`, du JSON sans effet de bord :
+
+- `cpuSeconds` : le CPU du processus, cumulé ;
+- `eventLoopDelayP99Seconds` : la dernière fenêtre close de 30 s, tenue par un moniteur à
+  lui (`null` avant la première) ;
+- `cpuPressureSomeAvg10`, `cpuThrottledSeconds` : le cgroup du conteneur (`null` s'il est
+  illisible) ;
+- par couloir (`current`, `pinned`, `prerender`) : rendus terminés et leur durée cumulée,
+  refus hors part d'un client (`capacity`, `lane_capacity`, `lane_rate`).
+
+**Réglages par environnement.**
+
+| Réglage | Local (`compose.override.yaml`) | Staging (`compose.staging.yaml`) | Prod (défaut) |
+|---|---|---|---|
+| `LODB_PRERENDER_PACE_MODE` | `adaptive` | `adaptive` | `adaptive` |
+| `LODB_PRERENDER_PACE_MIN` : plancher | `120` | `10` | `30` |
+| `LODB_PRERENDER_PACE_MAX` : plafond, et budget de la voie du SSR dédié | `1200` | `30` | `240` |
+| `LoDb__Prerender__Pace__StepRendersPerMinute` : pas de montée | `120` | `10` | `30` |
+| `LODB_PRERENDER_RENDERS_PER_MINUTE` : rythme fixe (interrupteur, `prerender unit`) | `120` | `30` | `120` |
+| `LODB_PRERENDER_MAX_IN_FLIGHT` | `2` | `1` | `2` |
+| `web-ssr-prerender` : `cpus`, `cpu_shares` | sans limite | `0.25`, `64` | `1.0`, `128` |
+
+- **Prod** : le plancher coûte ~2 % du VPS, ce que le staging fait déjà sans bruit. Au
+  plafond, ~0,4 cœur au SSR dédié et ~0,22 à l'API, ~16 % du VPS en tout : le SSR reste sous
+  le plancher de 0,5 cœur de `ConteneurCpuEnHausseBrutale`, l'API loin de ses 1,25 cœur. Le
+  rythme fixe reste à 120, entre les deux.
+- **Staging** : il partage le VPS avec la prod. Son plafond est son rythme d'aujourd'hui : le
+  régulateur ne fait que le freiner quand l'hôte est chargé. La topologie est celle de la
+  prod, pour éprouver le déploiement.
+- **Local** : de quoi voir le régulateur monter en quelques minutes ; ses signaux sont ceux de
+  la VM Docker.
+- L'API refuse de démarrer sur un plancher au-dessus du plafond, un pas au-dessus du plafond,
+  ou un rythme fixe au-dessus du plafond (la voie du SSR dédié le refuserait) ; le job de
+  déploiement vérifie la même chose avant de toucher aux conteneurs.
+
+**Ce que montre le pupitre.** Le relevé « Rythme » du suivi en direct gagne une ligne, tirée
+de `pulse.pace` du suivi d'une passe (`GET …/passes/{id}/progress`) :
+
+- « démarrage prudent : 30 p/min » ;
+- « adapté : jusqu'à 180 p/min · CPU du VPS à 41 % » ;
+- « au plafond : 240 p/min · CPU du VPS à 38 % » ;
+- « ralenti à 60 p/min : visiteurs actifs » ;
+- « en retenue jusqu'à 14:05 UTC : CPU du VPS à 67 % » ;
+- « rythme fixe : 120 p/min (régulation coupée) ».
+
+Une passe retenue plus de 3 minutes n'est plus « bloquée, cause inconnue » : le suivi dit que
+la régulation la retient, et pourquoi. `pace` est nul quand l'instance qui répond n'écrit pas
+la passe. Rien d'autre ne change à l'écran.
+
+**Métriques et journaux** (meter `LoDb.Prerender`, [`metriques.md`](../guides/metriques.md)) :
+
+- `lodb_prerender_pace_renders_per_minute` (jauge) : le droit du moment, 0 en retenue, le
+  rythme fixe en mode fixe ;
+- `lodb_prerender_pace_limit{reason}` (jauge, 1 pour la raison du moment, 0 pour les autres) :
+  `none`, `warming_up`, `ceiling`, `host_cpu`, `host_cpu_sustained`, `host_steal`,
+  `visitors_ssr`, `visitors_refused`, `api_cpu`, `pass_latency`, `pass_ssr_pressure`,
+  `signal_missing`, `fixed` ;
+- `lodb_prerender_pace_changes_total{change, reason}` (compteur), `change` : `increased`,
+  `decreased`, `held`, `released` ;
+- une ligne de journal par changement d'état, jamais par évaluation ni par page :
+  `prerender.pace.slowed`, `prerender.pace.held` (Warning), `prerender.pace.recovered`,
+  `prerender.pace.ceiling_reached`, `prerender.pace.fixed` au début d'une passe à rythme
+  fixe, et `prerender.pace.signal_lost` (Warning) puis `prerender.pace.signal_restored`, une
+  fois par panne de source. Les règles de montée et de baisse en bornent le nombre à
+  quelques-unes par heure.
+
+**Débit attendu.** Rejoué sur le profil réel des 7 jours du VPS : 150 à 220 pages par minute
+en moyenne, selon le coût d'une page et la part de steal que le travail ajouté entraîne. Les
+4,19 millions de pages en **13 à 19 jours**, contre 24 au rythme fixe de 120, qui ralentissait
+les visiteurs, et 97 à 30. Le gain est de 1,5 à 2 fois, pas de 10 : la borne est le CPU
+partagé de l'hôte et son steal, pas le code de la passe. Après une semaine sans alerte ni
+ralentissement mesuré, le plafond peut passer à 300 par une ligne du `.env`.
+
+**Preuve, avant la prod.** Sur une pile locale aux quotas de la prod, épinglée sur 4 CPU,
+avec une charge voisine de 1,4 à 2,8 cœurs et la sonde des visiteurs des mesures : sans passe,
+puis avec la passe régulée, la médiane et le p95 des visiteurs restent dans le bruit jusqu'à
+~80 % d'occupation ; au-delà, le régulateur ralentit ou retient la passe en une évaluation
+(30 s) ; l'interrupteur, une source coupée, le SSR de la passe arrêté et une retenue se voient
+au pupitre, dans les métriques et en une ligne de journal chacun ; la série
+`nodejs_eventloop_lag_p99_seconds` du SSR des visiteurs ne change pas quand l'API lit `/load`.
+Au staging puis en prod, en lecture seule : `/proc/stat` d'un conteneur égal à celui de
+l'hôte, le poids réel du SSR de la passe (`cpu.weight`), une petite passe suivie, et les
+alertes `HoteCpu*`, `ConteneurCpu*` et `LodbSsrRefuseDesVisiteurs` muettes.
 
 ### Lot 3 — nginx sert les anciens patchs depuis le stockage
 
@@ -700,7 +934,10 @@ LCP et le CLS sont mesurés avant et après.
   - la clé du stockage tirée d'une `map` stricte, jamais de l'URI brute ;
   - `/` jamais en cache au CDN ;
   - la fermeture de l'origine coupée avant tout retour en « DNS only ».
-- `docs/guides/configuration.md` : variables, secrets, stockage, Cloudflare.
+- `docs/guides/configuration.md` : variables, secrets, stockage, Cloudflare ; le rythme
+  adaptatif de la passe et son SSR (§ 4.10).
+- `docs/guides/metriques.md` : `GET /load` des SSR, les métriques du régulateur, la voie
+  `prerender` sous `service="web-ssr-prerender"`.
 - `tools/prerender/README.md` : les étapes de la console Scaleway, le script, la sonde, la
   vérification de la facturation.
 - `docs/guides/cdn.md` (nouveau) : réglages Cloudflare, bascule du DNS et retour arrière.
@@ -723,7 +960,17 @@ Selon `docs/guides/tests.md`, au plus près de la couche qui porte le comporteme
   - sans l'en-tête, une requête reste dans sa voie ;
   - la marque de la classe `archived` et l'en-tête `X-LoDb-Build`, sur la voie `prerender`
     seulement ;
-  - `/_lodb/build-files` répond 404 sans l'en-tête.
+  - `/_lodb/build-files` répond 404 sans l'en-tête ;
+  - `GET /load` : ses champs, cumulés ; la fenêtre du retard de la boucle d'événements
+    tourne toutes les 30 s ; une lecture de `/load` ne remet rien à zéro de ce que lit
+    `/metrics` ; le cgroup illisible donne `null`.
+- **Régulateur du rythme (xUnit, horloge simulée, sources simulées)** : démarrage au
+  plancher, montée d'un pas par minute de vert, tenue, baisse de moitié jamais sous le
+  plancher, attente de 3 min après une baisse, retenue de 5 min prolongée puis reprise au
+  plancher, aucune montée d'une passe qui n'use pas son droit, source illisible prise pour
+  orange, droit périmé ramené au plancher, mode fixe sans lecture ; lecture de `/proc/stat`
+  (steal, `guest` non compté deux fois) et de `cpu.stat` ; le `RenderPacer` à rythme variable
+  et en retenue ; une ligne de journal par changement d'état ; `pulse.pace` du suivi.
 - **API (xUnit, Postgres réel ; stockage S3 simulé par MinIO dans Testcontainers)** :
   - la liste des pages d'une (version, langue) : les 4 listes et toutes les entités
     listées, les sitemaps inchangés ;

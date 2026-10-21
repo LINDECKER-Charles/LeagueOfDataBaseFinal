@@ -871,7 +871,32 @@
         "value": "{pace, plural, one {# page} other {# pages}}/min",
         "average": "moyenne {pace, plural, one {# page} other {# pages}}/min",
         "measuring": "mesure en cours…",
-        "stopped": "à l'arrêt"
+        "stopped": "à l'arrêt",
+        "regulator": {
+          "starting": "démarrage prudent : {rate} p/min",
+          "climbing": "adapté : jusqu'à {rate} p/min",
+          "ceiling": "au plafond : {rate} p/min",
+          "cpu": "CPU du VPS à {cpu}",
+          "steady": "stable à {rate} p/min : {reason}",
+          "slowed": "ralenti à {rate} p/min : {reason}",
+          "held": "en retenue jusqu'à {at} UTC : {reason}",
+          "fixed": "rythme fixe : {rate} p/min (régulation coupée)"
+        },
+        "reasons": {
+          "warming-up": "mesure en cours",
+          "ceiling": "plafond atteint",
+          "host-cpu": "CPU du VPS à {cpu}",
+          "host-cpu-busy": "CPU du VPS chargé",
+          "host-cpu-sustained": "CPU du VPS soutenu sur 30 min",
+          "host-steal": "l'hébergeur reprend du CPU",
+          "visitors-ssr": "visiteurs actifs",
+          "visitors-refused": "des visiteurs sont refusés",
+          "api-cpu": "API chargée",
+          "pass-latency": "rendus de la passe ralentis",
+          "pass-ssr-pressure": "le VPS reprend le CPU de la passe",
+          "signal-missing": "une mesure manque",
+          "fixed": "régulation coupée"
+        }
       },
       "eta": {
         "label": "Fin estimée (UTC)",
@@ -915,7 +940,8 @@
         "worker_off": "La tâche de fond est coupée sur cette instance.",
         "waiting": "Toutes les unités restantes attendent un catalogue.",
         "remote": "Aucune instance visible n'écrit la passe : une autre instance tient peut-être le verrou, ou l'API vient de redémarrer (la tâche reprend toutes les 30 s).",
-        "unknown": "Cause inconnue : voir le journal de l'API (prerender.*)."
+        "unknown": "Cause inconnue : voir le journal de l'API (prerender.*).",
+        "held": "La régulation retient la passe pour laisser le CPU au site et à l'hôte ; elle reprend seule au plancher."
       },
       "paused_itself": "La passe s'est mise en pause d'elle-même : {reason}",
       "paused_itself_hint": "Corrigez la configuration du stockage ou du SSR (clé, politique, hôte public), puis reprenez.",
