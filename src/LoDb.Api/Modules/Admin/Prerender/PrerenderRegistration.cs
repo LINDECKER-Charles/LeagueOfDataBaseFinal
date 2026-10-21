@@ -1,8 +1,10 @@
 using System.Net;
 using LoDb.Api.Modules.Admin.Prerender.Builds;
+using LoDb.Api.Modules.Admin.Prerender.Coverage;
 using LoDb.Api.Modules.Admin.Prerender.Options;
 using LoDb.Api.Modules.Admin.Prerender.Pages;
 using LoDb.Api.Modules.Admin.Prerender.Passes;
+using LoDb.Api.Modules.Admin.Prerender.Passes.Planning;
 using LoDb.Api.Modules.Admin.Prerender.Promotion;
 using LoDb.Api.Modules.Admin.Prerender.Rendering;
 using LoDb.Api.Modules.Admin.Prerender.Telemetry;
@@ -49,12 +51,21 @@ internal static class PrerenderRegistration
         services.TryAddSingleton<PrerenderActivation>();
         services.TryAddSingleton<PrerenderMetrics>();
         services.TryAddSingleton<IPrerenderCatalog, CatalogPages>();
-        services.TryAddSingleton<PassLauncher>();
-        services.TryAddSingleton<PassControl>();
+        AddPasses(services);
         AddEngine(services);
         AddPromotion(services);
         AddSsrClient(services);
         return services;
+    }
+
+    // The command line plans and opens a pass as the admin does.
+    private static void AddPasses(IServiceCollection services)
+    {
+        services.TryAddSingleton<EpochCoverage>();
+        services.TryAddSingleton<ExpectedPages>();
+        services.TryAddSingleton<PassPlanning>();
+        services.TryAddSingleton<PassLauncher>();
+        services.TryAddSingleton<PassControl>();
     }
 
     private static void AddPromotion(IServiceCollection services)
@@ -76,6 +87,7 @@ internal static class PrerenderRegistration
         services.TryAddSingleton<PageRunner>();
         services.TryAddSingleton<UnitRunner>();
         services.TryAddSingleton<PrerenderEngine>();
+        services.TryAddSingleton<EnginePulse>();
         services.TryAddSingleton<UnitWaits>();
     }
 

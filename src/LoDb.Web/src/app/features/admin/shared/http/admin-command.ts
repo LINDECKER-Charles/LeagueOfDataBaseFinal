@@ -3,7 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { TranslocoService } from '@jsverse/transloco';
 import { firstValueFrom, map, timeout } from 'rxjs';
 import { API_BASE_URL } from '../../../../core/api/api-base-url';
-import { AdminNotices } from '../../layout/admin-notices';
+import { type AdminNotice, AdminNotices } from '../../layout/admin-notices';
 import { ADMIN_I18N } from '../admin-i18n';
 import type { AdminCall } from './admin-call';
 import type { AdminMessage } from './admin-message';
@@ -15,7 +15,8 @@ import { problemOf } from './problem-of';
  * Runs the actions of the admin (ban, purge, credit…) and tells how they went in the band at
  * the top of the page, as the legacy flash messages did: `done` on success, the reason of the
  * refusal otherwise, from the API's problem code. The panel reloads itself on success; a
- * refusal leaves it as it was.
+ * refusal leaves it as it was. `attempt` says how it went without the band, for a panel that
+ * tells it beside the button pressed.
  */
 @Injectable({ providedIn: 'root' })
 export class AdminCommand {
@@ -34,6 +35,17 @@ export class AdminCommand {
     params: P,
     done: AdminMessage | ((body: T) => AdminMessage),
   ): Promise<T | null> {
+    const outcome = await this.attempt(call, params, done);
+    this.notices.post(outcome.notice);
+    return outcome.body;
+  }
+
+  /** Runs the call as `run` does, and answers how it went instead of posting it. */
+  async attempt<P, T>(
+    call: AdminCall<P, T>,
+    params: P,
+    done: AdminMessage | ((body: T) => AdminMessage),
+  ): Promise<{ readonly body: T | null; readonly notice: AdminNotice }> {
     try {
       const body = await firstValueFrom(
         call(this.http, this.rootUrl, params).pipe(
@@ -42,12 +54,10 @@ export class AdminCommand {
         ),
       );
       const message = typeof done === 'function' ? done(body) : done;
-      this.notices.post({ tone: 'notice', text: await this.text(message) });
-      return body;
+      return { body, notice: { tone: 'notice', text: await this.text(message) } };
     } catch (error) {
       const reason = await this.text({ key: problemKey(problemOf(error)) });
-      this.notices.post({ tone: 'alert', text: reason });
-      return null;
+      return { body: null, notice: { tone: 'alert', text: reason } };
     }
   }
 

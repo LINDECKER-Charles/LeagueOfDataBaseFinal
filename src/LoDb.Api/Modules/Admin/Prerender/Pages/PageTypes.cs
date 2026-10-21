@@ -31,19 +31,21 @@ internal static class PageTypes
     }
 
     /// <summary>
-    /// The paths of <paramref name="paths"/> of type <paramref name="type"/>, the list then its
-    /// entities, in their order; all of them when <paramref name="type"/> is null.
+    /// The paths of <paramref name="paths"/> of one of <paramref name="types"/>, each list then
+    /// its entities, in their order; all of them when <paramref name="types"/> is null.
     /// </summary>
-    public static IReadOnlyList<string> Keep(IReadOnlyList<string> paths, ResourceType? type)
+    public static IReadOnlyList<string> Keep(
+        IReadOnlyList<string> paths,
+        IReadOnlyList<ResourceType>? types)
     {
         ArgumentNullException.ThrowIfNull(paths);
-        if (type is not { } kept)
+        if (types is null)
         {
             return paths;
         }
 
-        var segment = CanonicalPath.SegmentOf(kept);
-        return [.. paths.Where(path => IsOf(path, segment))];
+        var segments = types.Select(CanonicalPath.SegmentOf).ToList();
+        return [.. paths.Where(path => segments.Exists(segment => IsOf(path, segment)))];
     }
 
     private static bool IsOf(string path, string segment) =>

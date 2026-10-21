@@ -10,4 +10,13 @@ describe('prerenderTone', () => {
       'bad',
     ]);
   });
+
+  it('reads the states of a unit', () => {
+    expect(['pending', 'failed', 'stopped', 'completed'].map(prerenderTone)).toEqual([
+      'muted',
+      'bad',
+      'warn',
+      'good',
+    ]);
+  });
 });

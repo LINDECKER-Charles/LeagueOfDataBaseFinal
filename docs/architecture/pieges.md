@@ -153,6 +153,10 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   n'a plus de lien (celle du mot de passe renvoie vers une nouvelle demande), c'est voulu.
   Les anciennes formes (`verify-email?token=`, `reset-password/{token}`) restent lues pour les
   liens déjà envoyés (valides une heure) ; ne pas remettre le jeton dans le chemin ni la query.
+- **Les dialogues de l'admin vivent hors de sa page.** Le CDK les monte sous `<body>` :
+  les règles de `admin-page.css` et `admin-frame.css` ne les atteignent que par `.admin-overlay`,
+  que chaque composant de dialogue de l'admin porte sur son hôte. Un nouveau sélecteur de ces
+  feuilles s'écrit `:is(lodb-admin-page, .admin-overlay) …`.
 
 ## API, données et comptes
 
@@ -635,6 +639,32 @@ stockage objet, puis lues par nginx
   les enregistrements repassent en gris. Ordre du retour arrière : fermeture coupée, puis
   enregistrements en gris. Elle ne s'allume que 48 h au moins après le changement de serveurs
   de noms (TTL de la délégation du `.com` : 172 800 s), et ne touche ni `api.*` ni `stats.*`.
+- **Diagnostics de la passe sans contrainte.** `prerender_pass.paused_at`, `pause_reason`,
+  `prerender_unit.started_at`, `ended_at`, `failure` et `pages_expected` (migration
+  `PrerenderDiagnostics`) n'ont aucune contrainte de cohérence avec `state` : l'image précédente
+  de la stack met des passes en pause sans les remplir, et un retour arrière doit rester possible.
+  Une passe mise en pause avant la migration n'a pas de `paused_at` : le panneau dit « en pause »
+  sans durée. Les unités finies avant la migration reçoivent `ended_at = updated_at` ; une unité
+  finie par l'image précédente après un retour à elle n'en a pas, et manque à la liste des échecs
+  du moniteur (la matrice, lue par l'état, la montre).
+- **Le périmètre d'une passe reste lisible par l'image d'avant les listes.** `prerender_pass.scope`
+  porte les listes (`versions`, `locales`, `pageTypes`) **et** les anciens champs qui peuvent les
+  dire (`PassScopeJson`) : les bornes `oldest`/`newest` d'une liste de versions, `locale` et
+  `pageType` quand la liste n'en compte qu'un. L'image précédente ignore les listes : sans ces
+  champs, elle lirait `{}`, tout ancien patch, tout type, toute langue (curseur décalé sur
+  l'unité en cours, couverture comptée complète, epoch annoncée prête). Ne pas les retirer tant
+  qu'un retour à cette image reste possible. Ce qu'ils ne disent pas, elle le lit plus large :
+  plusieurs langues ou plusieurs types sur les 21 et les 4, une liste de versions trouée (toute
+  la plage entre ses bornes). Avant un tel retour, annuler la passe active si son périmètre
+  est de cette forme.
+- **Pas d'index sur `prerender_unit.updated_at`.** Il est réécrit à chaque page : l'indexer
+  couperait les mises à jour HOT de la table, quatre millions de fois par passe. Ce qui doit être
+  lu par ordre de fin passe par `ended_at`, écrit une fois, et son index partiel.
+- **Epoch prête = plus aucun manque.** `readyEpoch` ne regarde plus si une passe « entière » a
+  fini, mais si chaque (ancien patch, langue) de l'epoch a une unité terminée sur les quatre types
+  de pages, ou une unité en échec définitif (`f`), quelles que soient les passes. Ces échecs et
+  les pages en échec des unités terminées restent servis par le SSR après la bascule : la bande
+  les compte.
 
 ## Transition (jusqu'à la décommission)
 

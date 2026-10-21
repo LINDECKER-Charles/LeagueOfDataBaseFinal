@@ -6,6 +6,9 @@ namespace LoDb.Infrastructure.Persistence.Prerender;
 /// </summary>
 public sealed class PrerenderPass
 {
+    /// <summary>The longest reason of a pause kept; a longer one is cut.</summary>
+    public const int PauseReasonMaxLength = 300;
+
     public long Id { get; set; }
 
     /// <summary>
@@ -20,7 +23,7 @@ public sealed class PrerenderPass
     public required PrerenderPassState State { get; set; }
 
     /// <summary>
-    /// The perimeter as a JSON object (versions, page type, language); empty means all of it.
+    /// The perimeter as a JSON object (versions, locales, types of page); empty means all of it.
     /// Kept as text so that the engine owns its shape.
     /// </summary>
     public string Scope { get; set; } = "{}";
@@ -40,6 +43,18 @@ public sealed class PrerenderPass
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset? FinishedAt { get; set; }
+
+    /// <summary>
+    /// Since when it is paused; null otherwise. No constraint ties it to <see cref="State"/>:
+    /// the stack before the column pauses passes without it.
+    /// </summary>
+    public DateTimeOffset? PausedAt { get; set; }
+
+    /// <summary>
+    /// Why the pass paused itself (the store or the SSR refusing it); null for a pause of an
+    /// administrator, and once it runs again.
+    /// </summary>
+    public string? PauseReason { get; set; }
 
     /// <summary>
     /// When the pass last entered <see cref="PrerenderPassState.Running"/>; set exactly while it

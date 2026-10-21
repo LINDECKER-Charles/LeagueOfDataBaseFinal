@@ -7,6 +7,7 @@ import type { ScalewayProjectBill } from '../../../../../core/api/generated/mode
 import { configureAdminTestBed } from '../../../testing/admin-test-bed';
 import { press } from '../../../testing/dom/press';
 import { backupReport } from '../../../testing/fixtures/backup-report';
+import { prerenderPatches } from '../../../testing/fixtures/prerender-patches';
 import { prerenderReport } from '../../../testing/fixtures/prerender-report';
 import { scalewayBillReport } from '../../../testing/fixtures/scaleway-bill-report';
 import { reply } from '../../../testing/http/reply';
@@ -27,6 +28,8 @@ interface BilledPanel {
   readonly url: string;
   /** The report of the panel, which comes first. */
   readonly report: PanelCall;
+  /** What the panel reads after its report and before the bill. */
+  readonly before: readonly PanelCall[];
 }
 
 const BACKUPS: BilledPanel = {
@@ -34,6 +37,7 @@ const BACKUPS: BilledPanel = {
   panel: BackupsPanel,
   url: '/admin/backups',
   report: { path: '/api/admin/backups', body: backupReport() },
+  before: [],
 };
 const PAGES: BilledPanel = {
   project: 'pages',
@@ -41,6 +45,8 @@ const PAGES: BilledPanel = {
   url: '/admin/prerender',
   // No pass runs: the panel does not read itself again meanwhile.
   report: { path: '/api/admin/prerender', body: prerenderReport({ current: null }) },
+  // The coverage of the served epoch: the « Couverture » tab renders at once.
+  before: [{ path: '/api/admin/prerender/patches', body: prerenderPatches() }],
 };
 
 function texts(root: ParentNode, selector: string): string[] {
@@ -57,17 +63,17 @@ function unbilled(bill: ScalewayProjectBill | null | undefined): ScalewayProject
 
 describe.each([BACKUPS, PAGES])(
   'the Scaleway bill of the $project',
-  ({ project, panel, url, report }) => {
+  ({ project, panel, url, report, before }) => {
     const block = `lodb-scaleway-bill[data-bill="${project}"]`;
 
     function open(bill: ScalewayBillReport | null, status?: number) {
-      return openPanel(panel, url, [report, { path: BILL, body: bill, status }]);
+      return openPanel(panel, url, [report, ...before, { path: BILL, body: bill, status }]);
     }
 
     it('says in one line which setting turns it on while the key is not set', async () => {
       const { page, calls } = await open({ configured: false, stale: false });
 
-      expect(calls[1]?.request.method).toBe('GET');
+      expect(calls[1 + before.length]?.request.method).toBe('GET');
       expect(texts(page, `${block} [data-bill-state]`)).toEqual([
         'admin.scaleway_bill.not_configured',
       ]);
@@ -178,17 +184,21 @@ describe('the Scaleway bill of a panel', () => {
   it('shows the pages in their store section, with no previous month billed yet', async () => {
     const { page } = await openPanel(PAGES.panel, PAGES.url, [
       PAGES.report,
+      ...PAGES.before,
       { path: BILL, body: scalewayBillReport() },
     ]);
 
-    expect(page.querySelector('lodb-storage-section lodb-scaleway-bill')).not.toBeNull();
+    expect(page.querySelector('lodb-costs-tab lodb-scaleway-bill')).not.toBeNull();
     expect(texts(page, '[data-bill-readout="previous"] > *')).toEqual([
       'admin.scaleway_bill.previous',
       '—',
       'admin.scaleway_bill.previous_none',
     ]);
     expect(texts(page, 'tr[data-bill-period] td')).toEqual(['octobre 2026', '0,00 €']);
-    expect(texts(page, '[data-bill-note]')).toEqual(['admin.scaleway_bill.notes.pages']);
+    // The tab adds its own note above the block: only the block's is read here.
+    expect(texts(page, 'lodb-scaleway-bill [data-bill-note]')).toEqual([
+      'admin.scaleway_bill.notes.pages',
+    ]);
   });
 
   it('reads in French, the time of the reading and the units by their names', async () => {

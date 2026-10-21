@@ -13,17 +13,27 @@ namespace LoDb.Api.Modules.Admin.Prerender.Http;
 /// fields, all of them at once.
 /// </summary>
 /// <remarks>
+/// <para>
 /// An epoch older than the served one is refused: nginx no longer reads it, and its retirement
 /// may already have set the store to delete it.
+/// </para>
+/// <para>
+/// Each list keeps the first occurrence of an item; the locales and the types are put in the
+/// site's order and a list that holds them all becomes null (<see cref="ScopeLists"/>). The
+/// versions keep the order sent, and are never made null: only the client may say "every older
+/// patch", since they change at each promotion.
+/// </para>
 /// </remarks>
 internal static class PassRequestReader
 {
     public const string EpochField = "epoch";
-    public const string OldestField = "oldest";
-    public const string NewestField = "newest";
-    public const string PageTypeField = "pageType";
-    public const string LocaleField = "locale";
+    public const string VersionsField = "versions";
+    public const string LocalesField = "locales";
+    public const string PageTypesField = "pageTypes";
     public const string PriorityField = "priority";
+
+    /// <summary>The field of the refusals that concern the perimeter as a whole.</summary>
+    public const string ScopeField = "scope";
 
     /// <summary>An epoch below 1: epoch 0 is the store probes'.</summary>
     public const string OutOfRange = "out-of-range";
@@ -31,14 +41,49 @@ internal static class PassRequestReader
     /// <summary>An epoch below the served one.</summary>
     public const string Retired = "retired";
 
-    /// <summary>A newest version below the oldest one.</summary>
-    public const string BeforeOldest = "before-oldest";
-
-    /// <summary>More priority versions than <see cref="MaxPriorityVersions"/>.</summary>
+    /// <summary>A list longer than its bound.</summary>
     public const string TooMany = "too-many";
+
+    /// <summary>
+    /// No version asked for is an older patch, or there is no older patch at all.
+    /// </summary>
+    public const string NonePinned = "none-pinned";
+
+    /// <summary>Every unit of the perimeter is already complete in the epoch.</summary>
+    public const string NothingToRender = "nothing-to-render";
 
     /// <summary>More than the patches of several years: a bound on a pasted log.</summary>
     public const int MaxPriorityVersions = 100;
+
+    /// <summary>
+    /// More than every older patch Data Dragon lists, about 400 in 2026. The locales and the
+    /// types share the bound: repeated, they are still read once each.
+    /// </summary>
+    public const int MaxVersions = 1000;
+
+    private static readonly ListRule VersionsRule = new(
+        VersionsField,
+        MaxVersions,
+        IsRequired: true,
+        static text => PatchVersion.TryParse(text, out _));
+
+    private static readonly ListRule LocalesRule = new(
+        LocalesField,
+        MaxVersions,
+        IsRequired: true,
+        static text => UiLocales.TryParse(text, out _));
+
+    private static readonly ListRule PageTypesRule = new(
+        PageTypesField,
+        MaxVersions,
+        IsRequired: true,
+        static text => PageTypes.TryParse(text, out _));
+
+    private static readonly ListRule PriorityRule = new(
+        PriorityField,
+        MaxPriorityVersions,
+        IsRequired: false,
+        static text => PatchVersion.TryParse(text, out _));
 
     /// <summary>
     /// The pass <paramref name="request"/> asks for, launched by <paramref name="authorId"/>;
@@ -73,61 +118,61 @@ internal static class PassRequestReader
 
     private static PassScope ScopeOf(PassRequest request, FieldErrors errors)
     {
-        var oldest = VersionOf(errors, OldestField, request.Oldest);
-        var newest = VersionOf(errors, NewestField, request.Newest);
-        if (oldest is not null && newest is not null && newest < oldest)
-        {
-            errors.Add(NewestField, BeforeOldest);
-        }
-
+        var locales = TextsOf(errors, request.Locales, LocalesRule);
+        var types = TextsOf(errors, request.PageTypes, PageTypesRule);
         return new PassScope
         {
-            Oldest = oldest,
-            Newest = newest,
-            PageType = PageTypeOf(errors, request.PageType),
-            Locale = LocaleOf(errors, request.Locale),
-            Priority = PriorityOf(errors, request.Priority ?? []),
+            Versions = TextsOf(errors, request.Versions, VersionsRule)
+                ?.Select(PatchVersion.Parse)
+                .ToList(),
+            Locales = locales is null ? null : ScopeLists.LocalesOf(locales.Select(LocaleOf)),
+            PageTypes = types is null ? null : ScopeLists.TypesOf(types.Select(PageTypeOf)),
+            Priority = [.. (TextsOf(errors, request.Priority, PriorityRule) ?? [])
+                .Select(PatchVersion.Parse)],
+            SkipComplete = request.SkipComplete,
         };
     }
 
-    private static PatchVersion? VersionOf(FieldErrors errors, string field, string? text)
+    // The items of a list once each, in their order; null for a list not sent, and for one
+    // refused, whose code goes to its field.
+    private static List<string>? TextsOf(
+        FieldErrors errors,
+        IReadOnlyList<string?>? texts,
+        ListRule rule)
     {
-        errors.CheckShape(field, text, static value => PatchVersion.TryParse(value, out _));
-        return PatchVersion.TryParse(text, out var version) ? version : null;
-    }
-
-    private static ResourceType? PageTypeOf(FieldErrors errors, string? text)
-    {
-        errors.CheckShape(PageTypeField, text, static value => PageTypes.TryParse(value, out _));
-        return PageTypes.TryParse(text, out var type) ? type : null;
-    }
-
-    private static UiLocale? LocaleOf(FieldErrors errors, string? text)
-    {
-        errors.CheckShape(LocaleField, text, static value => UiLocales.TryParse(value, out _));
-        return UiLocales.TryParse(text, out var locale) ? locale : null;
-    }
-
-    private static List<PatchVersion> PriorityOf(FieldErrors errors, IReadOnlyList<string> texts)
-    {
-        if (texts.Count > MaxPriorityVersions)
+        if (texts is null)
         {
-            errors.Add(PriorityField, TooMany);
-            return [];
+            return null;
         }
 
-        var versions = new List<PatchVersion>(texts.Count);
-        foreach (var text in texts)
+        var code = texts switch
         {
-            if (!PatchVersion.TryParse(text, out var version))
-            {
-                errors.Add(PriorityField, FieldErrors.Malformed);
-                return [];
-            }
-
-            versions.Add(version);
+            { Count: 0 } when rule.IsRequired => FieldErrors.Required,
+            _ when texts.Count > rule.Max => TooMany,
+            _ when !texts.All(rule.IsWellFormed) => FieldErrors.Malformed,
+            _ => null,
+        };
+        if (code is not null)
+        {
+            errors.Add(rule.Field, code);
+            return null;
         }
 
-        return versions;
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        return [.. texts.OfType<string>().Where(seen.Add)];
     }
+
+    private static UiLocale LocaleOf(string text) =>
+        UiLocales.TryParse(text, out var locale) ? locale : throw new FormatException(text);
+
+    private static ResourceType PageTypeOf(string text) =>
+        PageTypes.TryParse(text, out var type) ? type : throw new FormatException(text);
+
+    // How a list of the request is read: its field, its bound, whether it may be empty, and
+    // what each of its items must look like.
+    private sealed record ListRule(
+        string Field,
+        int Max,
+        bool IsRequired,
+        Func<string?, bool> IsWellFormed);
 }

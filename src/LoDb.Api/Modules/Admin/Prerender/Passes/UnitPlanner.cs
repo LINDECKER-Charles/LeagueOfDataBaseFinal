@@ -11,20 +11,35 @@ namespace LoDb.Api.Modules.Admin.Prerender.Passes;
 /// </summary>
 internal static class UnitPlanner
 {
-    /// <summary>The units of <paramref name="scope"/> among the pinned versions.</summary>
+    /// <summary>
+    /// The units of <paramref name="scope"/> among the pinned versions, but those
+    /// <paramref name="held"/>, ranked from 0 without a gap.
+    /// </summary>
     /// <param name="pinned">The older patches, newest first.</param>
     /// <param name="scope">The perimeter of the pass.</param>
+    /// <param name="held">
+    /// The (version, locale code) the epoch already holds over the scope's types, left out;
+    /// none when null.
+    /// </param>
     public static IReadOnlyList<PlannedUnit> Plan(
         IReadOnlyList<PatchVersion> pinned,
-        PassScope scope)
+        PassScope scope,
+        IReadOnlySet<(string Version, string Locale)>? held = null)
     {
         ArgumentNullException.ThrowIfNull(pinned);
         ArgumentNullException.ThrowIfNull(scope);
         var admitted = pinned.Where(scope.Admits).ToList();
         var first = scope.Priority.Where(admitted.Contains).Distinct().ToList();
-        var versions = first.Concat(admitted.Except(first)).ToList();
+        var versions = first.Concat(admitted.Except(first));
         var locales = UiLocales.All.Where(scope.Admits).ToList();
-        return Ranked(versions, locales, firstPriority: 0);
+        return
+        [
+            .. versions
+                .SelectMany(version => locales.Select(locale => (Version: version, Locale: locale)))
+                .Where(unit => held is null
+                    || !held.Contains((unit.Version.Value, UiLocales.Code(unit.Locale))))
+                .Select(static (unit, rank) => new PlannedUnit(unit.Version, unit.Locale, rank)),
+        ];
     }
 
     /// <summary>

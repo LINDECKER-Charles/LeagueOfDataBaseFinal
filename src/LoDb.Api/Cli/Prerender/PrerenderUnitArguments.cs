@@ -113,8 +113,8 @@ internal sealed record PrerenderUnitArguments
             Version = version,
             Scope = PassScope.Of(version) with
             {
-                Locale = locale,
-                PageType = options.TryGetValue(TypeOption, out var type) ? TypeOf(type) : null,
+                Locales = [locale],
+                PageTypes = options.TryGetValue(TypeOption, out var type) ? [TypeOf(type)] : null,
             },
             Epoch = options.TryGetValue(EpochOption, out var epoch) ? EpochOf(epoch) : null,
             Wait = options.TryGetValue(WaitOption, out var wait) ? WaitOf(wait) : DefaultWait,

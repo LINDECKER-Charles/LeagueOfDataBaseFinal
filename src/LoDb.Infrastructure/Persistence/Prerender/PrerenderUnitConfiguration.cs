@@ -34,9 +34,17 @@ internal sealed class PrerenderUnitConfiguration : IEntityTypeConfiguration<Prer
         builder.Property(unit => unit.BytesWritten).HasDefaultValue(0L).ValueGeneratedNever();
         builder.Property(unit => unit.Cursor).HasDefaultValue(0).ValueGeneratedNever();
         builder.Property(unit => unit.UpdatedAt).HasDefaultValueSql("now()");
+        builder.Property(unit => unit.Failure).HasMaxLength(PrerenderUnit.FailureMaxLength);
 
         // The worker takes the next unit of a pass by state, then priority.
         builder.HasIndex(unit => new { unit.PassId, unit.State, unit.Priority })
             .HasDatabaseName("ix_prerender_unit_next");
+
+        // The admin reads the units of a pass in the order they ended. ended_at is written once
+        // per unit, unlike updated_at, rewritten at each page: indexing that one would cost an
+        // index entry per page and the table's in-place updates.
+        builder.HasIndex(unit => new { unit.PassId, unit.EndedAt })
+            .HasFilter("ended_at IS NOT NULL")
+            .HasDatabaseName("ix_prerender_unit_ended");
     }
 }

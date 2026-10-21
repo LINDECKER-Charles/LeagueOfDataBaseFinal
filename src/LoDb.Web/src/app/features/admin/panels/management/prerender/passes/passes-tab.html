@@ -1,0 +1,67 @@
+<div class="hx-table-scroll">
+  <table class="hx-table hx-table--flush admin-tbl">
+    <thead>
+      <tr>
+        <th scope="col">{{ 'admin.prerender.passes.columns.pass' | adminText }}</th>
+        <th scope="col" class="num">{{ 'admin.prerender.passes.columns.epoch' | adminText }}</th>
+        <th scope="col">{{ 'admin.prerender.passes.columns.state' | adminText }}</th>
+        <th scope="col">{{ 'admin.prerender.passes.columns.scope' | adminText }}</th>
+        <th scope="col" class="min-w-[10rem]">
+          {{ 'admin.prerender.passes.columns.progress' | adminText }}
+        </th>
+        <th scope="col" class="num">{{ 'admin.prerender.passes.columns.volume' | adminText }}</th>
+        <th scope="col">{{ 'admin.prerender.passes.columns.active' | adminText }}</th>
+        <th scope="col">{{ 'admin.prerender.passes.columns.author' | adminText }}</th>
+        <th scope="col">{{ 'admin.prerender.passes.columns.started' | adminText }}</th>
+        <th scope="col">{{ 'admin.prerender.passes.columns.finished' | adminText }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (row of fold.shown(); track row.pass.id) {
+        <!-- The whole row opens the detail; its number is the way in for the keyboard. -->
+        <tr
+          class="cursor-pointer"
+          [attr.data-pass]="row.pass.id"
+          (click)="detail.emit(row.pass.id)"
+        >
+          <th scope="row" class="whitespace-nowrap">
+            <button class="font-mono text-hex underline" type="button">#{{ row.pass.id }}</button>
+            @if (row.isActive) {
+              <button
+                class="ms-2"
+                lodbButton="ghost"
+                lodbButtonSize="small"
+                type="button"
+                data-follow
+                (click)="followFrom($event)"
+              >
+                {{ 'admin.prerender.passes.follow' | adminText }}
+              </button>
+            }
+          </th>
+          <td class="num">{{ row.pass.epoch }}</td>
+          <td>
+            <span [lodbBadge]="row.tone">
+              {{ 'admin.prerender.states.' + row.pass.state | adminText }}
+            </span>
+          </td>
+          <td class="min-w-[14rem]">{{ row.scope }}</td>
+          <td>
+            <lodb-stacked-bar size="thin" [segments]="row.segments" [label]="row.pages" />
+            <span class="cell-sub num">{{ row.pages }}</span>
+          </td>
+          <td class="num whitespace-nowrap">{{ row.pass.bytesWritten | decimalBytes }}</td>
+          <td class="whitespace-nowrap">{{ row.active }}</td>
+          <td>{{ row.pass.authorName ?? ('admin.prerender.passes.automatic' | adminText) }}</td>
+          <td class="whitespace-nowrap">{{ row.pass.createdAt | stamp: 'minute' }}</td>
+          <td class="whitespace-nowrap">{{ row.pass.finishedAt | stamp: 'minute' }}</td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="10" class="t-empty">{{ 'admin.prerender.passes.empty' | adminText }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+<lodb-fold-toggle [folded]="fold.folded()" [(open)]="fold.open" />

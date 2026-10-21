@@ -73,7 +73,7 @@ public sealed class PageOutcomeTests(PostgresContainerFixture postgres)
         await using var harness = await StartAsync();
         var other = PatchVersion.Parse("16.9.1");
         harness.Catalog.Pinned.Add(other);
-        await harness.LaunchAsync(new PassScope { Locale = UiLocale.En });
+        await harness.LaunchAsync(new PassScope { Locales = [UiLocale.En] });
 
         await harness.RunAsync();
 
@@ -137,7 +137,7 @@ public sealed class PageOutcomeTests(PostgresContainerFixture postgres)
     public async Task EachUnitSaysWhatItDidInOneLine()
     {
         await using var harness = await StartAsync();
-        await harness.LaunchAsync(PassScope.Of(Version) with { Locale = null });
+        await harness.LaunchAsync(PassScope.Of(Version) with { Locales = null });
 
         await harness.RunAsync();
 
@@ -161,7 +161,7 @@ public sealed class PageOutcomeTests(PostgresContainerFixture postgres)
     private static bool IsBuildFile(string key) =>
         key.StartsWith("build/", StringComparison.Ordinal);
 
-    private static PassScope Scope() => PassScope.Of(Version) with { Locale = UiLocale.En };
+    private static PassScope Scope() => PassScope.Of(Version) with { Locales = [UiLocale.En] };
 
     private async Task<PrerenderHarness> StartAsync()
     {

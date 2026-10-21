@@ -1,6 +1,7 @@
 using LoDb.Api.Modules.Admin.Prerender.Options;
 using LoDb.Api.Modules.Admin.Prerender.Pages;
 using LoDb.Api.Modules.Admin.Prerender.Passes;
+using LoDb.Api.Modules.Admin.Prerender.Passes.Planning;
 using LoDb.Api.Modules.Admin.Prerender.Telemetry;
 using LoDb.Domain.Languages;
 using LoDb.Domain.Versions;
@@ -33,6 +34,7 @@ namespace LoDb.Api.Modules.Admin.Prerender.Promotion;
 /// </remarks>
 internal sealed class VersionEnqueuer(
     IDbContextFactory<LoDbDbContext> contexts,
+    ExpectedPages expected,
     IOptions<PrerenderOptions> options,
     TimeProvider clock,
     ILogger<VersionEnqueuer> logger)
@@ -74,14 +76,15 @@ internal sealed class VersionEnqueuer(
         }
 
         var active = await db.PrerenderPasses.SingleOrDefaultAsync(static p => p.IsActive, token);
-        if (active is not null && PassScopeJson.Read(active.Scope).PageType is not null)
+        if (active is not null && !PassScopeJson.Read(active.Scope).HasEveryPageType)
         {
             return UnitEnqueue.Deferred(active.Id);
         }
 
         var pass = active ?? db.PrerenderPasses.Add(NewPass(version)).Entity;
         var first = active is null ? 0 : await FirstPriorityAsync(db, active.Id, token);
-        var units = RowsOf(UnitPlanner.Ahead(version, missing, first));
+        var planned = await ExpectedAsync(UnitPlanner.Ahead(version, missing, first), token);
+        var units = RowsOf(planned);
         pass.Units.AddRange(units);
         await db.SaveChangesAsync(token);
         return UnitEnqueue.Added(pass.Id, units.Count);
@@ -131,6 +134,19 @@ internal sealed class VersionEnqueuer(
         return [.. UiLocales.All.Where(locale => !codes.Contains(UiLocales.Code(locale)))];
     }
 
+    // The pages a former unit of the version over every type listed: the passes it joins or
+    // opens render every type.
+    private async Task<List<PlannedUnit>> ExpectedAsync(
+        IReadOnlyList<PlannedUnit> planned,
+        CancellationToken token)
+    {
+        var version = planned[0].Version.Value;
+        var pages = await expected.ReadAsync(TypeMask.All, [version], token);
+        return pages.TryGetValue(version, out var count)
+            ? [.. planned.Select(unit => unit with { PagesExpected = count })]
+            : [.. planned];
+    }
+
     private List<PrerenderUnit> RowsOf(IReadOnlyList<PlannedUnit> planned)
     {
         var now = clock.GetUtcNow();
@@ -166,7 +182,7 @@ internal sealed class VersionEnqueuer(
         {
             var hasEnded = State is PrerenderUnitState.Completed or PrerenderUnitState.Failed;
             var isServed = PassEpoch == servedEpoch && hasEnded;
-            return (PassIsActive || isServed) && PassScopeJson.Read(ScopeJson).PageType is null;
+            return (PassIsActive || isServed) && PassScopeJson.Read(ScopeJson).HasEveryPageType;
         }
     }
 }

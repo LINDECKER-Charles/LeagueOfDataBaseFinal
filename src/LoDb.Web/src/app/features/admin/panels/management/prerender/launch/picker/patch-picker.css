@@ -1,0 +1,266 @@
+/*
+ * The list of patches of the launch dialog (§ 3.3): a bar of filters, the tools, then a
+ * treegrid of rows laid out as a grid of columns, under the sticky heads of those columns.
+ * Under 640px (§ 3.2, « Téléphone ») the status filter becomes a select, the tools fold under
+ * « Outils », and the pages and status columns leave with their heads: the strip and « n/21 »
+ * stay.
+ */
+:host {
+  display: block;
+}
+
+.picker-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.picker-filter {
+  flex: 1 1 12rem;
+  min-inline-size: 0;
+}
+
+.picker-statuses {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* « Afficher : », « Cocher : »: a filter and a tool read alike, and do opposite things. */
+.picker-group-label {
+  margin-inline-end: 0.5rem;
+  color: var(--color-text-dim);
+  font-size: 0.8rem;
+}
+
+.picker-tool {
+  min-block-size: 2.25rem;
+  padding-inline: 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--color-gold) 28%, transparent);
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+}
+
+.picker-statuses .picker-tool + .picker-tool {
+  margin-inline-start: -1px;
+}
+
+.picker-tool[aria-pressed='true'],
+.picker-tool[aria-expanded='true'] {
+  border-color: var(--color-hex);
+  background: color-mix(in srgb, var(--color-hex) 10%, transparent);
+  color: var(--color-gold-bright);
+}
+
+.picker-tool:focus-visible,
+.picker-row:focus-visible,
+.picker-star:focus-visible {
+  outline: 2px solid var(--color-hex);
+  outline-offset: -2px;
+}
+
+.picker-status-select,
+.picker-tools-toggle {
+  display: none;
+}
+
+.picker-more {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-block-start: 0.75rem;
+}
+
+.picker-grid {
+  border-block-start: 1px solid color-mix(in srgb, var(--color-gold) 16%, transparent);
+}
+
+.picker-row {
+  display: grid;
+  align-items: center;
+  gap: 0.75rem;
+  min-block-size: 2.5rem;
+  padding-inline: 0.5rem;
+  border-block-end: 1px solid color-mix(in srgb, var(--color-gold) 10%, transparent);
+  cursor: pointer;
+  user-select: none;
+}
+
+.picker-season {
+  grid-template-columns: 1.5rem minmax(7rem, 12rem) minmax(8rem, 1fr) minmax(6rem, 14rem);
+  background: color-mix(in srgb, var(--color-gold) 4%, transparent);
+}
+
+.picker-patch,
+.picker-head {
+  grid-template-columns: 1.5rem 6rem minmax(6rem, 1fr) 5.5rem 11rem 3.5rem;
+}
+
+/* The heads of the columns, stuck to the top of the dialog's scrolling body (its padding). */
+.picker-head {
+  position: sticky;
+  inset-block-start: -1.4rem;
+  z-index: 1;
+  min-block-size: 2rem;
+  background: var(--color-panel);
+  color: var(--color-text-dim);
+  font-family: var(--font-beaufort);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: default;
+}
+
+.picker-head-pages {
+  text-align: end;
+}
+
+.picker-head-priority {
+  text-align: end;
+}
+
+.picker-patch:hover,
+.picker-season:hover {
+  background: color-mix(in srgb, var(--color-gold) 6%, transparent);
+}
+
+.picker-patch[aria-selected='true'] {
+  background: color-mix(in srgb, var(--color-hex) 7%, transparent);
+}
+
+.picker-season-name {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: var(--font-beaufort);
+  color: var(--color-gold-bright);
+  letter-spacing: 0.06em;
+}
+
+.picker-chevron {
+  inline-size: 0.8rem;
+  color: var(--color-text-dim);
+}
+
+.picker-season-count {
+  font-size: 0.8rem;
+  color: var(--color-text-dim);
+}
+
+/* The tick of a row: drawn, since the state lives on the row as aria-selected. */
+.picker-box {
+  display: grid;
+  place-items: center;
+  inline-size: 1rem;
+  block-size: 1rem;
+  border: 1px solid color-mix(in srgb, var(--color-gold) 45%, transparent);
+}
+
+.picker-patch[aria-selected='true'] .picker-box {
+  border-color: var(--color-hex);
+  background: var(--color-hex);
+}
+
+.picker-patch[aria-selected='true'] .picker-box::after {
+  content: '';
+  inline-size: 0.3rem;
+  block-size: 0.55rem;
+  margin-block-start: -0.1rem;
+  border: solid var(--color-hextech-black);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.picker-coverage {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-inline-size: 0;
+}
+
+.picker-coverage lodb-cell-strip {
+  flex: 1;
+}
+
+.picker-hint {
+  margin-block: -0.25rem 0.5rem;
+  color: var(--color-gold);
+}
+
+.picker-pages {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
+}
+
+.picker-star {
+  min-inline-size: 2.75rem;
+  min-block-size: 2.25rem;
+  color: var(--color-text-dim);
+  font-size: 0.85rem;
+}
+
+.picker-star[aria-pressed='true'] {
+  color: var(--color-gold-bright);
+}
+
+.picker-star:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+@media (width < 40rem) {
+  .picker-statuses,
+  .picker-pages,
+  .picker-status,
+  .picker-head-pages,
+  .picker-head-status,
+  .picker-hint,
+  .picker-keys {
+    display: none;
+  }
+
+  .picker-status-select,
+  .picker-tools-toggle {
+    display: block;
+  }
+
+  .picker-more[data-open='false'] {
+    display: none;
+  }
+
+  /* The season keeps its name on one line; its count wraps instead. */
+  .picker-season {
+    grid-template-columns: 1.5rem auto minmax(0, 1fr);
+  }
+
+  .picker-season-name {
+    white-space: nowrap;
+  }
+
+  .picker-season-count {
+    text-align: end;
+  }
+
+  .picker-season-strip {
+    display: none;
+  }
+
+  .picker-patch,
+  .picker-head {
+    grid-template-columns: 1.5rem 5.5rem minmax(4rem, 1fr) 3rem;
+  }
+
+  .picker-star {
+    min-block-size: 2.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .picker-row {
+    transition: background-color 0.12s ease;
+  }
+}

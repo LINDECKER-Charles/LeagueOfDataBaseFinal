@@ -72,5 +72,9 @@ public sealed class PageWritingTests(
     }
 
     private static PassScope Scope(PatchVersion version) =>
-        PassScope.Of(version) with { Locale = UiLocale.En, PageType = ResourceType.Items };
+        PassScope.Of(version) with
+        {
+            Locales = [UiLocale.En],
+            PageTypes = [ResourceType.Items],
+        };
 }

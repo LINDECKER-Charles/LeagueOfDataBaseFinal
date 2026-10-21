@@ -6052,6 +6052,217 @@
         }
       }
     },
+    "/api/admin/prerender/patches": {
+      "get": {
+        "tags": [
+          "AdminPrerender"
+        ],
+        "summary": "The older patches and what one epoch of the store holds of each.",
+        "operationId": "readAdminPrerenderPatches",
+        "parameters": [
+          {
+            "name": "epoch",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrerenderPatchesReport"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/prerender/passes/{id}/progress": {
+      "get": {
+        "tags": [
+          "AdminPrerender"
+        ],
+        "summary": "The progress of a pass, whole or since a time, for the live monitor.",
+        "operationId": "readAdminPrerenderPassProgress",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "since",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrerenderPassProgress"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/prerender/passes/{id}/versions/{version}": {
+      "get": {
+        "tags": [
+          "AdminPrerender"
+        ],
+        "summary": "The units of one version of a pass, a row per locale.",
+        "operationId": "readAdminPrerenderPassVersion",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "version",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrerenderVersionUnits"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/scaleway/bill": {
       "get": {
         "tags": [
@@ -10970,36 +11181,38 @@
               "null",
               "integer"
             ],
-            "description": "The epoch written: the served one (the default) to fill it, a newer one to replace it.\nAn older one is retired and refused.",
+            "description": "The epoch written: the served one by default, to fill it; a newer one to fill or to\nreplace it. An older one is retired and refused.",
             "format": "int32"
           },
-          "oldest": {
+          "versions": {
             "type": [
               "null",
-              "string"
+              "array"
             ],
-            "description": "The oldest version rendered, included (`14.1.1`)."
+            "items": {
+              "type": "string"
+            },
+            "description": "The older patches rendered, as Data Dragon spells them; null for every one of them. A\nversion that is not an older patch is left out and named back. At most 1,000."
           },
-          "newest": {
+          "locales": {
             "type": [
               "null",
-              "string"
+              "array"
             ],
-            "description": "The newest version rendered, included."
+            "items": {
+              "type": "string"
+            },
+            "description": "The locales rendered, as the URLs spell them (fr, zh-hans…); null for all 21."
           },
-          "pageType": {
+          "pageTypes": {
             "type": [
               "null",
-              "string"
+              "array"
             ],
-            "description": "The one type of page rendered: champions, items, runes or summoners."
-          },
-          "locale": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "description": "The one locale rendered, as in the URLs (fr, zh-Hans…)."
+            "items": {
+              "type": "string"
+            },
+            "description": "The types of page rendered (champions, items, runes, summoners); null for all four."
           },
           "priority": {
             "type": [
@@ -11009,10 +11222,14 @@
             "items": {
               "type": "string"
             },
-            "description": "The versions to render first, in this order: the most asked for, which the operator\nreads from the edge's log. At most 100."
+            "description": "The versions rendered first, in this order: the most asked for. At most 100."
+          },
+          "skipComplete": {
+            "type": "boolean",
+            "description": "Whether each (version, locale) the epoch already holds for every type asked (the latest\ncompleted unit over each of them failed no page) is left out."
           }
         },
-        "description": "A pass to launch: the epoch it writes and its perimeter, every field optional. Empty, it\nfills the served epoch with every page of every older patch, newest first."
+        "description": "A pass to launch: the epoch it writes and its perimeter, as explicit lists. Every field is\noptional: empty, it fills the served epoch with every page of every older patch, newest\nfirst."
       },
       "PerkView": {
         "required": [
@@ -11182,6 +11399,105 @@
         },
         "description": "The front builds copied to the store, every hashed file of each, and what keeping them\ncosts each month."
       },
+      "PrerenderEnginePulse": {
+        "required": [
+          "isWorkerEnabled",
+          "waiting"
+        ],
+        "type": "object",
+        "properties": {
+          "observedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "When this instance last ran the engine; null when it never did.",
+            "format": "date-time"
+          },
+          "isWorkerEnabled": {
+            "type": "boolean",
+            "description": "Whether this instance runs its background tasks (LoDb:Workers:Enabled)."
+          },
+          "ssrUnreachableSince": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Since when the SSR is out of reach for the pass; null while it answers.",
+            "format": "date-time"
+          },
+          "waiting": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PrerenderWaitView"
+            },
+            "description": "The versions of this pass whose units wait."
+          }
+        },
+        "description": "What the instance answering sees of the engine: none of it is stored, so another instance\nsees nothing (ObservedAt null)."
+      },
+      "PrerenderEpochCoverage": {
+        "required": [
+          "pinnedVersions",
+          "expectedUnits",
+          "completeUnits",
+          "cleanUnits",
+          "failedUnits",
+          "gapUnits",
+          "failedPages",
+          "completeVersions",
+          "gapVersions"
+        ],
+        "type": "object",
+        "properties": {
+          "pinnedVersions": {
+            "type": "integer",
+            "description": "The older patches Data Dragon lists now.",
+            "format": "int32"
+          },
+          "expectedUnits": {
+            "type": "integer",
+            "description": "Their (version, locale): PinnedVersions times the site's 21 locales.",
+            "format": "int32"
+          },
+          "completeUnits": {
+            "type": "integer",
+            "description": "(version, locale) covered over every type of page (c or w).",
+            "format": "int32"
+          },
+          "cleanUnits": {
+            "type": "integer",
+            "description": "Those of CompleteUnits holding every type (c).",
+            "format": "int32"
+          },
+          "failedUnits": {
+            "type": "integer",
+            "description": "(version, locale) whose unit failed for good (f): the SSR serves them.",
+            "format": "int32"
+          },
+          "gapUnits": {
+            "type": "integer",
+            "description": "(version, locale) with a gap, absent (-) or partial (p): what keeps the epoch from being\nready, ExpectedUnits − CompleteUnits − FailedUnits.",
+            "format": "int32"
+          },
+          "failedPages": {
+            "type": "integer",
+            "description": "Pages failed in the c and w cells, which the SSR serves once switched.",
+            "format": "int64"
+          },
+          "completeVersions": {
+            "type": "integer",
+            "description": "Older patches complete (c or w) in all 21 locales.",
+            "format": "int32"
+          },
+          "gapVersions": {
+            "type": "integer",
+            "description": "Older patches with a gap in one locale at least.",
+            "format": "int32"
+          }
+        },
+        "description": "How much of the older patches an epoch holds, (version, locale) by (version, locale)."
+      },
       "PrerenderEpochVolume": {
         "required": [
           "epoch",
@@ -11217,15 +11533,169 @@
             "type": "number",
             "description": "The bytes in GB times the One Zone price, to four decimals.",
             "format": "double"
+          },
+          "coverage": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "How much of the older patches it holds, (version, locale) by (version, locale); null for\na retired epoch.",
+                "$ref": "#/components/schemas/PrerenderEpochCoverage"
+              }
+            ]
           }
         },
         "description": "The pages of one epoch of the store, and what keeping them costs each month."
+      },
+      "PrerenderEstimateBasis": {
+        "required": [
+          "configuredRendersPerMinute",
+          "pricePerGbMonthOneZone",
+          "currency"
+        ],
+        "type": "object",
+        "properties": {
+          "typeShares": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "The share of each type in a version's pages, from the catalog of the newest older patch\na unit completed (its catalog is stored); null when none did.",
+                "$ref": "#/components/schemas/PrerenderTypeShares"
+              }
+            ]
+          },
+          "bytesPerPage": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "Mean bytes of a written page over the completed units of the served epoch.",
+            "format": "int64"
+          },
+          "measuredPagesPerMinute": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "description": "Pages per minute of the latest pass that ran 10 minutes or more; null if none. The\nclient bounds it by ConfiguredRendersPerMinute: the ceiling may have been lowered since.",
+            "format": "double"
+          },
+          "configuredRendersPerMinute": {
+            "type": "integer",
+            "description": "The pass's ceiling, LoDb:Prerender:RendersPerMinute.",
+            "format": "int32"
+          },
+          "pricePerGbMonthOneZone": {
+            "type": "number",
+            "format": "double"
+          },
+          "currency": {
+            "type": "string",
+            "description": "ISO 4217 code of the price."
+          }
+        },
+        "description": "What the admin estimates a pass with, all measured here."
+      },
+      "PrerenderPassProgress": {
+        "required": [
+          "generatedAt",
+          "pass",
+          "locales",
+          "isComplete",
+          "versions",
+          "running",
+          "next",
+          "recent",
+          "failures",
+          "unitsWithFailures",
+          "pulse"
+        ],
+        "type": "object",
+        "properties": {
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "pass": {
+            "$ref": "#/components/schemas/PrerenderPassView"
+          },
+          "locales": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The locales the pass has units in, in the site's order: the order of each Cells."
+          },
+          "isComplete": {
+            "type": "boolean",
+            "description": "Whether Versions holds every version of the pass; false when it holds only those with a\nunit changed since the `since` asked for."
+          },
+          "versions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PrerenderVersionProgress"
+            },
+            "description": "The pass's versions, in the order the worker reaches them."
+          },
+          "scopeVersions": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "description": "The older patches the pass's scope lists, in the order sent, when IsComplete and the\nscope lists some; null otherwise (every older patch, or an incremental read). The list\nviews carry only their count (PrerenderScopeView)."
+          },
+          "running": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PrerenderUnitView"
+            },
+            "description": "The units running now; one in practice (left running by a pause, see z)."
+          },
+          "next": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PrerenderUnitKey"
+            },
+            "description": "The next pending units, in the order the worker takes them, without the versions this\ninstance sees waiting (Pulse.Waiting); 5 at most."
+          },
+          "recent": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PrerenderUnitView"
+            },
+            "description": "The units that ended last, completed or failed, newest first; 12 at most."
+          },
+          "failures": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PrerenderUnitView"
+            },
+            "description": "The units failed or with failed pages, newest first; 20 at most."
+          },
+          "unitsWithFailures": {
+            "type": "integer",
+            "description": "Every unit failed or with failed pages.",
+            "format": "int32"
+          },
+          "pulse": {
+            "$ref": "#/components/schemas/PrerenderEnginePulse"
+          }
+        },
+        "description": "The progress of a pass, sized to be read every few seconds: its counters, each version's\ncells, what runs, what comes next, what just ended or failed, and the engine's own signals."
       },
       "PrerenderPassStarted": {
         "required": [
           "id",
           "epoch",
-          "units"
+          "units",
+          "skippedUnits",
+          "ignoredVersions"
         ],
         "type": "object",
         "properties": {
@@ -11239,8 +11709,20 @@
           },
           "units": {
             "type": "integer",
-            "description": "Its units, one per (version, locale) of its scope among the older patches: none when\nthe scope matches no older patch.",
+            "description": "Its units, one per (version, locale) of its scope among the older patches.",
             "format": "int32"
+          },
+          "skippedUnits": {
+            "type": "integer",
+            "description": "Units left out, already held in the epoch (`skipComplete`).",
+            "format": "int32"
+          },
+          "ignoredVersions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Versions asked for that are not older patches, left out."
           }
         },
         "description": "The pass just opened, running at once: the worker takes it at its next tick."
@@ -11347,11 +11829,158 @@
               "null",
               "string"
             ],
-            "description": "When it should end at its pace, the units not listed yet counted at the mean of the\nlisted ones; null unless it runs with a known pace and some units listed.",
+            "description": "When it should end at its pace, once its pages left are processed; null unless it runs\nwith a known pace and some units listed.",
             "format": "date-time"
+          },
+          "runningSince": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Since when it runs, from its launch or its last resume; null unless running. A resume\nwrites no unit: without it, a pass resumed after a long pause would look stalled.",
+            "format": "date-time"
+          },
+          "pausedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Since when it is paused; null unless paused.",
+            "format": "date-time"
+          },
+          "pauseReason": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Why the pass paused itself (the store or the SSR refusing it), as the engine says it;\nnull for a pause of an administrator, and once it runs again."
+          },
+          "pagesLeft": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "Pages still to process: those of the listed units not processed yet, plus each unit not\nlisted yet at its version's expected pages, else at the mean of the listed ones. Null\nbefore any unit is listed.",
+            "format": "int64"
           }
         },
         "description": "A pass of the pre-rendering, its progress, its pace and when it should end."
+      },
+      "PrerenderPatchesReport": {
+        "required": [
+          "generatedAt",
+          "epoch",
+          "servedEpoch",
+          "locales",
+          "patches",
+          "coverage",
+          "estimates"
+        ],
+        "type": "object",
+        "properties": {
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "epoch": {
+            "type": "integer",
+            "description": "The epoch the coverage is read in.",
+            "format": "int32"
+          },
+          "servedEpoch": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "latestVersion": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The latest version, which the SSR serves and no pass renders; null before any."
+          },
+          "locales": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The site's locales, in the order of each patch's cells."
+          },
+          "patches": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PrerenderPatchRow"
+            },
+            "description": "Every older patch, newest first."
+          },
+          "coverage": {
+            "$ref": "#/components/schemas/PrerenderEpochCoverage"
+          },
+          "estimates": {
+            "$ref": "#/components/schemas/PrerenderEstimateBasis"
+          }
+        },
+        "description": "The older patches and what one epoch holds of each: the admin's coverage view."
+      },
+      "PrerenderPatchRow": {
+        "required": [
+          "version",
+          "cells",
+          "types",
+          "completeLocales",
+          "pages",
+          "bytes",
+          "failedPages"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "cells": {
+            "type": "string",
+            "description": "One character per locale of Locales: c, w, p, f or - (absent)."
+          },
+          "types": {
+            "type": "string",
+            "description": "One hexadecimal character per locale of Locales: the mask of the types held (bit 0\nchampions, 1 items, 2 runes, 3 summoners); f holds all four, 0 none."
+          },
+          "completeLocales": {
+            "type": "integer",
+            "description": "Locales whose cell is c or w.",
+            "format": "int32"
+          },
+          "pages": {
+            "type": "integer",
+            "description": "Pages stored in the epoch for it, all locales.",
+            "format": "int64"
+          },
+          "bytes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "failedPages": {
+            "type": "integer",
+            "description": "Pages failed by the latest completed units, served by the SSR.",
+            "format": "int64"
+          },
+          "pagesPerLocale": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "Pages of one locale, as a completed unit over every type listed them, in any pass of any\nepoch (the most of them); null when none did.",
+            "format": "int32"
+          },
+          "lastEndedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "When a unit of the epoch last ended for it; null when none did.",
+            "format": "date-time"
+          }
+        },
+        "description": "One older patch in an epoch."
       },
       "PrerenderReport": {
         "required": [
@@ -11386,7 +12015,7 @@
               "null",
               "integer"
             ],
-            "description": "A newer epoch a pass over every older patch completed: set\n`LODB_ARCHIVE_SERVE_EPOCH` to it and redeploy to serve it. Null when none.",
+            "description": "A newer epoch ready to serve: set `LODB_ARCHIVE_SERVE_EPOCH` to it and redeploy to\nserve it. Null when none.",
             "format": "int32"
           },
           "current": {
@@ -11409,53 +12038,93 @@
           },
           "storage": {
             "$ref": "#/components/schemas/PrerenderStorageView"
+          },
+          "storeBucket": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The page store's bucket, a name and never a secret, for the retirement's variables;\nnull while the store is not configured."
           }
         },
         "description": "The pre-rendering of the catalogue as the admin shows it: whether it may run, the epoch\nnginx serves, the active pass, the history of the passes and what the store holds."
       },
       "PrerenderScopeView": {
         "required": [
-          "priority"
+          "priority",
+          "skipComplete"
         ],
         "type": "object",
         "properties": {
+          "versionCount": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "How many older patches the pass lists; null when it takes every one.",
+            "format": "int32"
+          },
+          "newestListed": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The newest version of the list; null when it takes every one."
+          },
+          "oldestListed": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The oldest version of the list; null when it takes every one."
+          },
           "oldest": {
             "type": [
               "null",
               "string"
             ],
-            "description": "The oldest version rendered, included."
+            "description": "The oldest version of a range, for a pass launched before the lists."
           },
           "newest": {
             "type": [
               "null",
               "string"
             ],
-            "description": "The newest version rendered, included."
+            "description": "The newest version of a range, for a pass launched before the lists."
           },
-          "pageType": {
+          "locales": {
             "type": [
               "null",
-              "string"
+              "array"
             ],
-            "description": "The one type of page rendered: champions, items, runes or summoners."
+            "items": {
+              "type": "string"
+            },
+            "description": "The locales rendered, in the site's order; null for all 21."
           },
-          "locale": {
+          "pageTypes": {
             "type": [
               "null",
-              "string"
+              "array"
             ],
-            "description": "The one locale rendered, as in the URLs (fr, zh-Hans…)."
+            "items": {
+              "type": "string"
+            },
+            "description": "The types of page rendered; null for all four."
           },
           "priority": {
             "type": "array",
             "items": {
               "type": "string"
             },
-            "description": "The versions rendered first, in this order."
+            "description": "The versions rendered first, in this order (100 at most)."
+          },
+          "skipComplete": {
+            "type": "boolean",
+            "description": "Whether the units already held in the epoch were left out."
           }
         },
-        "description": "The perimeter of a pass, spelled as the URLs spell it; a field left null is not restricted."
+        "description": "The perimeter of a pass, spelled as the URLs spell it, sized for lists: the versions are\ncounted, not listed (the full list comes with a complete read of the pass's progress); a\nlist left null is not restricted."
       },
       "PrerenderStorageView": {
         "required": [
@@ -11525,6 +12194,34 @@
         },
         "description": "What the page store holds, read from the counters the passes keep as they write (the\nwriter key cannot list), and what storing it is estimated to cost each month."
       },
+      "PrerenderTypeShares": {
+        "required": [
+          "champions",
+          "items",
+          "runes",
+          "summoners"
+        ],
+        "type": "object",
+        "properties": {
+          "champions": {
+            "type": "number",
+            "format": "double"
+          },
+          "items": {
+            "type": "number",
+            "format": "double"
+          },
+          "runes": {
+            "type": "number",
+            "format": "double"
+          },
+          "summoners": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "description": "Shares from 0 to 1, summing to 1, to four decimals."
+      },
       "PrerenderUnitCounts": {
         "required": [
           "total",
@@ -11558,6 +12255,181 @@
         },
         "description": "The units of a pass, one per (version, locale), by state."
       },
+      "PrerenderUnitKey": {
+        "required": [
+          "version",
+          "locale"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "locale": {
+            "type": "string"
+          }
+        },
+        "description": "A (version, locale) of a pass."
+      },
+      "PrerenderUnitView": {
+        "required": [
+          "version",
+          "locale",
+          "state",
+          "cursor",
+          "pagesTotal",
+          "pagesWritten",
+          "pagesSkipped",
+          "pagesFailed",
+          "bytesWritten",
+          "updatedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "locale": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "description": "pending, running, completed or failed."
+          },
+          "cursor": {
+            "type": "integer",
+            "description": "Index of the next page to render.",
+            "format": "int32"
+          },
+          "pagesTotal": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pagesWritten": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pagesSkipped": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pagesFailed": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "bytesWritten": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "startedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "When the worker first started it; null while pending.",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "endedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "When it ended, completed or failed; null while it has not.",
+            "format": "date-time"
+          },
+          "failure": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Why its last page failed, or why it failed; null when nothing failed."
+          }
+        },
+        "description": "One unit of a pass, where the worker left it."
+      },
+      "PrerenderVersionProgress": {
+        "required": [
+          "version",
+          "rank",
+          "cells",
+          "pagesTotal",
+          "pagesWritten",
+          "pagesSkipped",
+          "pagesFailed",
+          "bytesWritten",
+          "updatedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "rank": {
+            "type": "integer",
+            "description": "The lowest priority of its units: where the worker reaches it.",
+            "format": "int32"
+          },
+          "cells": {
+            "type": "string",
+            "description": "One character per locale of Locales: . pending, r running, z stopped (running in a\npaused pass), c completed, w completed with failed pages, f failed, i interrupted\n(running in a pass no longer active), _ no unit."
+          },
+          "pagesTotal": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "pagesWritten": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "pagesSkipped": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "pagesFailed": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "bytesWritten": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "updatedAt": {
+            "type": "string",
+            "description": "When one of its units last changed.",
+            "format": "date-time"
+          }
+        },
+        "description": "One version of a pass: a cell per locale, and its pages so far."
+      },
+      "PrerenderVersionUnits": {
+        "required": [
+          "passId",
+          "version",
+          "units"
+        ],
+        "type": "object",
+        "properties": {
+          "passId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "version": {
+            "type": "string"
+          },
+          "units": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PrerenderUnitView"
+            },
+            "description": "Its units, in the site's order of the locales; empty when the pass has none."
+          }
+        },
+        "description": "The units of one version in a pass, a row per locale."
+      },
       "PrerenderVersionVolume": {
         "required": [
           "version",
@@ -11585,6 +12457,34 @@
           }
         },
         "description": "The pages of one older patch in the served epoch."
+      },
+      "PrerenderWaitView": {
+        "required": [
+          "version",
+          "reason",
+          "since",
+          "givesUpAt"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string",
+            "description": "catalog-pending, not-pinned or settling."
+          },
+          "since": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "givesUpAt": {
+            "type": "string",
+            "description": "When its units fail if it still waits: UnitWaits.Longest after Since.",
+            "format": "date-time"
+          }
+        },
+        "description": "A version whose units wait, and until when they may."
       },
       "ProblemDetails": {
         "type": "object",

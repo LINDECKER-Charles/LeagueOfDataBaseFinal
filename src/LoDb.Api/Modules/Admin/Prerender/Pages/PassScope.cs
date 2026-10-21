@@ -5,43 +5,61 @@ using LoDb.Domain.Versions;
 namespace LoDb.Api.Modules.Admin.Prerender.Pages;
 
 /// <summary>
-/// The perimeter a pass was launched over: a range of older patches, one type of page, one
-/// locale, each left open for all of them, and the versions to render first.
+/// The perimeter a pass was launched over: explicit lists of older patches, locales and types
+/// of page, each left null for all of them, the versions to render first, and whether the
+/// units already complete in its epoch were left out.
 /// </summary>
 /// <remarks>
-/// Stored as JSON in <c>prerender_pass.scope</c> (<see cref="PassScopeJson"/>). The units hold
-/// the versions and locales the pass renders; the scope keeps the type of page each of them
-/// renders, and what the operator asked for.
+/// Stored as JSON in <c>prerender_pass.scope</c> (<see cref="PassScopeJson"/>). A pass stored
+/// before the lists (October 2026) may hold a range instead: <see cref="Oldest"/> and
+/// <see cref="Newest"/> are read, never written by the admin.
 /// </remarks>
 internal sealed record PassScope
 {
     /// <summary>Every older patch, every page, every locale, newest first.</summary>
     public static PassScope Everything { get; } = new();
 
-    /// <summary>The oldest version rendered, included; null for no lower bound.</summary>
+    /// <summary>The older patches rendered; null for every one of them.</summary>
+    public IReadOnlyList<PatchVersion>? Versions { get; init; }
+
+    /// <summary>The oldest version of a range stored before the lists; null otherwise.</summary>
     public PatchVersion? Oldest { get; init; }
 
-    /// <summary>The newest version rendered, included; null for no upper bound.</summary>
+    /// <summary>The newest version of a range stored before the lists; null otherwise.</summary>
     public PatchVersion? Newest { get; init; }
 
-    /// <summary>The one type of page rendered, its list and its entities; null for all.</summary>
-    public ResourceType? PageType { get; init; }
+    /// <summary>The locales rendered, in the site's order; null for all of them.</summary>
+    public IReadOnlyList<UiLocale>? Locales { get; init; }
 
-    /// <summary>The one locale rendered; null for all of them.</summary>
-    public UiLocale? Locale { get; init; }
+    /// <summary>The types of page rendered, their lists and their entities; null for all.</summary>
+    public IReadOnlyList<ResourceType>? PageTypes { get; init; }
 
     /// <summary>
-    /// The versions to render first, in this order: the most requested ones, which the operator
-    /// reads from the edge's log. The rest follow, newest first.
+    /// The versions to render first, in this order; the rest follow, newest first.
     /// </summary>
     public IReadOnlyList<PatchVersion> Priority { get; init; } = [];
 
+    /// <summary>Whether the units already complete in the pass's epoch were left out.</summary>
+    public bool SkipComplete { get; init; }
+
+    /// <summary>Whether it renders every type of page: a promotion may then join it.</summary>
+    public bool HasEveryPageType => PageTypes is null;
+
+    /// <summary>Whether nothing restricts it: its epoch is then whole once it completes.</summary>
+    public bool IsWhole =>
+        Versions is null
+        && Oldest is null
+        && Newest is null
+        && Locales is null
+        && PageTypes is null;
+
     /// <summary>A scope of exactly one version, as a promotion opens.</summary>
-    public static PassScope Of(PatchVersion version) =>
-        new() { Oldest = version, Newest = version };
+    public static PassScope Of(PatchVersion version) => new() { Versions = [version] };
 
     public bool Admits(PatchVersion version) =>
-        (Oldest is null || version >= Oldest) && (Newest is null || version <= Newest);
+        (Versions is null || Versions.Contains(version))
+        && (Oldest is null || version >= Oldest)
+        && (Newest is null || version <= Newest);
 
-    public bool Admits(UiLocale locale) => Locale is null || Locale == locale;
+    public bool Admits(UiLocale locale) => Locales is null || Locales.Contains(locale);
 }

@@ -1379,6 +1379,15 @@ namespace LoDb.Infrastructure.Persistence.Migrations
                         .HasDefaultValue(0L)
                         .HasColumnName("pages_written");
 
+                    b.Property<string>("PauseReason")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("pause_reason");
+
+                    b.Property<DateTimeOffset?>("PausedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("paused_at");
+
                     b.Property<DateTimeOffset?>("RunningSince")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("running_since");
@@ -1449,6 +1458,19 @@ namespace LoDb.Infrastructure.Persistence.Migrations
                         .HasDefaultValue(0)
                         .HasColumnName("cursor");
 
+                    b.Property<DateTimeOffset?>("EndedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ended_at");
+
+                    b.Property<string>("Failure")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("failure");
+
+                    b.Property<int?>("PagesExpected")
+                        .HasColumnType("integer")
+                        .HasColumnName("pages_expected");
+
                     b.Property<int>("PagesFailed")
                         .HasColumnType("integer")
                         .HasDefaultValue(0)
@@ -1474,6 +1496,10 @@ namespace LoDb.Infrastructure.Persistence.Migrations
                         .HasDefaultValue(0)
                         .HasColumnName("priority");
 
+                    b.Property<DateTimeOffset?>("StartedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("started_at");
+
                     b.Property<string>("State")
                         .IsRequired()
                         .HasMaxLength(16)
@@ -1488,6 +1514,10 @@ namespace LoDb.Infrastructure.Persistence.Migrations
 
                     b.HasKey("PassId", "Version", "Locale")
                         .HasName("pk_prerender_unit");
+
+                    b.HasIndex("PassId", "EndedAt")
+                        .HasDatabaseName("ix_prerender_unit_ended")
+                        .HasFilter("ended_at IS NOT NULL");
 
                     b.HasIndex("PassId", "State", "Priority")
                         .HasDatabaseName("ix_prerender_unit_next");

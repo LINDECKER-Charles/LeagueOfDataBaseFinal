@@ -72,6 +72,24 @@ describe('admin layout', () => {
     expect(apply).toHaveBeenLastCalledWith(expect.objectContaining({ title: 'Messages' }));
   });
 
+  it('follows a document title that changes, its h1 left as it is', () => {
+    const fixture = render(PageHead, {
+      eyebrow: 'Gestion',
+      title: 'Précalcul du catalogue',
+      documentTitle: '71 % · Précalcul du catalogue',
+    });
+    TestBed.tick();
+
+    fixture.componentRef.setInput('documentTitle', '72 % · Précalcul du catalogue');
+    fixture.detectChanges();
+    TestBed.tick();
+
+    expect(apply).toHaveBeenLastCalledWith(
+      expect.objectContaining({ title: '72 % · Précalcul du catalogue' }),
+    );
+    expect(root(fixture).querySelector('h1')?.textContent?.trim()).toBe('Précalcul du catalogue');
+  });
+
   it('heads a card with its title and what it counts, and frames a bare table', () => {
     const fixture = render(AdminCard, { heading: 'Pages', chip: 'vues' });
 

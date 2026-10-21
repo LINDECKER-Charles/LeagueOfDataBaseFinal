@@ -36,6 +36,9 @@ internal sealed class CatalogPages(ICatalogReader reader, IOptions<CatalogOption
             : [];
     }
 
+    public async Task<PatchVersion?> LatestVersionAsync(CancellationToken cancellationToken) =>
+        (await reader.GetVersionsAsync(cancellationToken)).Latest;
+
     public async Task<DateTimeOffset?> PinnedFromAsync(
         PatchVersion version,
         CancellationToken cancellationToken)

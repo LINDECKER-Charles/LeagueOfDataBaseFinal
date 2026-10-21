@@ -21,6 +21,19 @@ internal sealed class SsrOutage(
 {
     private readonly Lock _gate = new();
     private long? _since;
+    private DateTimeOffset? _sinceAt;
+
+    /// <summary>Since when the SSR is out of reach (wall clock); null while it answers.</summary>
+    public DateTimeOffset? Since
+    {
+        get
+        {
+            lock (_gate)
+            {
+                return _sinceAt;
+            }
+        }
+    }
 
     /// <summary>The SSR could not be reached: starts an outage, unless one runs.</summary>
     public void Begin()
@@ -32,7 +45,7 @@ internal sealed class SsrOutage(
                 return;
             }
 
-            _since = clock.GetTimestamp();
+            (_since, _sinceAt) = (clock.GetTimestamp(), clock.GetUtcNow());
         }
 
         PrerenderLog.SsrUnreachable(logger, options.Value.SsrBaseUrl ?? string.Empty);
@@ -49,7 +62,7 @@ internal sealed class SsrOutage(
                 return;
             }
 
-            (since, _since) = (started, null);
+            (since, _since, _sinceAt) = (started, null, null);
         }
 
         var seconds = (long)clock.GetElapsedTime(since).TotalSeconds;

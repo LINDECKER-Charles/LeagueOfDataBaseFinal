@@ -12,6 +12,12 @@ internal interface IPrerenderCatalog
     Task<IReadOnlyList<PatchVersion>> PinnedVersionsAsync(CancellationToken cancellationToken);
 
     /// <summary>
+    /// The latest version, which the SSR serves and no pass renders; null before the first
+    /// promotion.
+    /// </summary>
+    Task<PatchVersion?> LatestVersionAsync(CancellationToken cancellationToken);
+
+    /// <summary>
     /// From when every server renders <paramref name="version"/> as an older patch: the API
     /// and the SSR each keep the latest version a while, so a version that just left the latest
     /// rank still renders as the latest one for some minutes after its promotion. Null while it

@@ -75,7 +75,7 @@ public sealed class PageConcurrencyTests(PostgresContainerFixture postgres)
             unit.BytesWritten);
     }
 
-    private static PassScope Scope() => PassScope.Of(Version) with { Locale = UiLocale.En };
+    private static PassScope Scope() => PassScope.Of(Version) with { Locales = [UiLocale.En] };
 
     private async Task<PrerenderHarness> StartAsync(int maxInFlight)
     {

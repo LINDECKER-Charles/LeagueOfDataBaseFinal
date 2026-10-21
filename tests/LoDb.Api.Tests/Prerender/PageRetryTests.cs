@@ -198,7 +198,7 @@ public sealed class PageRetryTests(PostgresContainerFixture postgres)
         Assert.Contains(TimeSpan.FromSeconds(10), harness.Clock.Waits);
     }
 
-    private static PassScope Scope() => PassScope.Of(Version) with { Locale = UiLocale.En };
+    private static PassScope Scope() => PassScope.Of(Version) with { Locales = [UiLocale.En] };
 
     private static MetricCollector<long> Pages(PrerenderHarness harness) =>
         new(harness.Get<IMeterFactory>(), PrerenderMetrics.MeterName, "lodb.prerender.pages");

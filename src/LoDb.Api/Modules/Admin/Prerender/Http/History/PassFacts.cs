@@ -12,5 +12,13 @@ internal sealed record PassFacts
 
     public string? AuthorName { get; init; }
 
+    /// <summary>
+    /// The pages its pending units should list, summed over those that know theirs.
+    /// </summary>
+    public long ExpectedPages { get; init; }
+
+    /// <summary>Its pending units that do not know how many pages they should list.</summary>
+    public int UnexpectedUnits { get; init; }
+
     public int UnitsIn(PrerenderUnitState state) => Units.GetValueOrDefault(state);
 }
