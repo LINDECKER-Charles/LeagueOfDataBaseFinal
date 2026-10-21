@@ -115,6 +115,21 @@ describe('PatchPicker', () => {
     expect(page(fixture).querySelectorAll('[tabindex="0"]')).toHaveLength(1);
   });
 
+  it('names its columns in a head row, outside the rows a key moves through', async () => {
+    const fixture = await open();
+    const heads = [...page(fixture).querySelectorAll('[data-picker-head] [role="columnheader"]')];
+
+    expect(heads.map((head) => head.textContent?.trim())).toEqual([
+      'admin.prerender.launcher.patches.columns.select',
+      'admin.prerender.launcher.patches.columns.version',
+      'admin.prerender.launcher.patches.columns.coverage',
+      'admin.prerender.launcher.patches.columns.pages',
+      'admin.prerender.launcher.patches.columns.status',
+      'admin.prerender.launcher.patches.columns.priority',
+    ]);
+    expect(page(fixture).querySelector('[data-picker-head]')?.hasAttribute('tabindex')).toBe(false);
+  });
+
   it('ticks a row on a click, a range on a Shift click', async () => {
     const fixture = await open();
 

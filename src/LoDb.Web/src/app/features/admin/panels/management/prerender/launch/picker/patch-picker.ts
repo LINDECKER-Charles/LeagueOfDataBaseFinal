@@ -33,6 +33,8 @@ type PickerTool = 'all' | 'none_selected' | 'invert' | 'uncovered' | 'partials';
 
 const STATUS_FILTERS: readonly StatusFilter[] = ['all', 'complete', 'partial', 'absent', 'failed'];
 const TOOLS: readonly PickerTool[] = ['all', 'none_selected', 'invert', 'uncovered', 'partials'];
+// The heads of the columns of a patch's row, each a key of `launcher.patches.columns`.
+const COLUMNS = ['version', 'coverage', 'pages', 'status', 'priority'] as const;
 const PATCHES = 'prerender.launcher.patches';
 const SEASONS = 'prerender.common.seasons';
 // PassRequestReader.MaxPriorityVersions: past it, ☆ is disabled.
@@ -49,7 +51,7 @@ const STATUS_TONES: Readonly<Record<PatchStatus, Tone>> = {
 
 /**
  * Step 1 of the launch (§ 3.3): the older patches by season, as a treegrid held in row mode
- * (§ 3.3.4), with a text and a status filter, a range by its bounds, the tools, and the whole
+ * (§ 3.3.4) under a row of column heads that stays in view, with a text and a status filter, a range by its bounds, the tools, and the whole
  * keyboard of § 3.3.5. It holds no selection of its own: each gesture becomes an action of
  * `selectionAfter`, sent to the dialog, which hands the selection back.
  */
@@ -75,6 +77,7 @@ export class PatchPicker {
 
   protected readonly statuses = STATUS_FILTERS;
   protected readonly tools = TOOLS;
+  protected readonly columns = COLUMNS;
   protected readonly query = signal('');
   protected readonly status = signal<StatusFilter>('all');
   protected readonly isToolsOpen = signal(false);

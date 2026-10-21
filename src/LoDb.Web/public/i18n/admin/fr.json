@@ -1039,6 +1039,7 @@
         "season_row": "{season}, {count, plural, one {# patch} other {# patchs}}, {selected, plural, one {# sélectionné} other {# sélectionnés}}",
         "season_select": "Sélectionner toute la saison {season}",
         "columns": {
+          "select": "Cocher",
           "version": "Version",
           "coverage": "Couverture",
           "pages": "Pages",

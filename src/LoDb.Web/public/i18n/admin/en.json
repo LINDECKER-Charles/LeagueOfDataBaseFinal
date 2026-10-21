@@ -1039,6 +1039,7 @@
         "season_row": "{season}, {count, plural, one {# patch} other {# patches}}, {selected} selected",
         "season_select": "Select the whole season {season}",
         "columns": {
+          "select": "Tick",
           "version": "Version",
           "coverage": "Coverage",
           "pages": "Pages",

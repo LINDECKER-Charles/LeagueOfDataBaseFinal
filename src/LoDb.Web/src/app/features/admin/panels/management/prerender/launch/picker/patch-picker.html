@@ -129,6 +129,18 @@
     aria-labelledby="launch-patches-title"
     aria-describedby="launch-patches-keys"
   >
+    <div class="picker-row picker-head" role="row" data-picker-head>
+      <div role="columnheader">
+        <span class="sr-only">{{
+          'admin.prerender.launcher.patches.columns.select' | adminText
+        }}</span>
+      </div>
+      @for (column of columns; track column) {
+        <div role="columnheader" [class]="'picker-head-' + column">
+          {{ 'admin.prerender.launcher.patches.columns.' + column | adminText }}
+        </div>
+      }
+    </div>
     @for (line of rows().lines; track line.key) {
       @if (line.kind === 'season') {
         <div

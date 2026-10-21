@@ -1,8 +1,9 @@
 /*
  * The list of patches of the launch dialog (§ 3.3): a bar of filters, the tools, then a
- * treegrid of rows laid out as a grid of columns. Under 640px (§ 3.2, « Téléphone ») the
- * status filter becomes a select, the tools fold under « Outils », and the pages and status
- * columns leave: the strip and « n/21 » stay.
+ * treegrid of rows laid out as a grid of columns, under the sticky heads of those columns.
+ * Under 640px (§ 3.2, « Téléphone ») the status filter becomes a select, the tools fold under
+ * « Outils », and the pages and status columns leave with their heads: the strip and « n/21 »
+ * stay.
  */
 :host {
   display: block;
@@ -85,8 +86,32 @@
   background: color-mix(in srgb, var(--color-gold) 4%, transparent);
 }
 
-.picker-patch {
+.picker-patch,
+.picker-head {
   grid-template-columns: 1.5rem 6rem minmax(6rem, 1fr) 5.5rem 11rem 3.5rem;
+}
+
+/* The heads of the columns, stuck to the top of the dialog's scrolling body (its padding). */
+.picker-head {
+  position: sticky;
+  inset-block-start: -1.4rem;
+  z-index: 1;
+  min-block-size: 2rem;
+  background: var(--color-panel);
+  color: var(--color-text-dim);
+  font-family: var(--font-beaufort);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: default;
+}
+
+.picker-head-pages {
+  text-align: end;
+}
+
+.picker-head-priority {
+  text-align: end;
 }
 
 .picker-patch:hover,
@@ -184,6 +209,8 @@
   .picker-statuses,
   .picker-pages,
   .picker-status,
+  .picker-head-pages,
+  .picker-head-status,
   .picker-keys {
     display: none;
   }
@@ -214,7 +241,8 @@
     display: none;
   }
 
-  .picker-patch {
+  .picker-patch,
+  .picker-head {
     grid-template-columns: 1.5rem 5.5rem minmax(4rem, 1fr) 3rem;
   }
 

@@ -685,6 +685,13 @@ la saison). **Ligne de patch** :
 | Statut | badge (`lodbBadge`) de `patchStatusOf(row)` : complet (good), complet avec échecs (warn), partiel (warn), absent (muted), en échec (bad) | ✓ | — |
 | Priorité | bouton ☆ / ★ et son rang (« ★ 1 ») | ✓ | ✓ |
 
+**Ligne d'en-tête** : au-dessus des lignes, une rangée `role="row"` de `role="columnheader"`
+(« Cocher », lu seulement, puis « Version », « Couverture », « Pages », « Statut », « Priorité »,
+clés `launcher.patches.columns.*`), sur la grille d'une ligne de patch : sans elle, « 2 158 » et
+l'étoile n'ont de nom ni à l'écran ni pour un lecteur d'écran. Elle reste collée en haut du corps
+de la modale pendant le défilement (`position: sticky`) ; sur téléphone, « Pages » et « Statut »
+partent avec leurs colonnes. Aucune touche ne s'y arrête : le parcours ne connaît que les lignes.
+
 `patchStatusOf(row)` (F1) : `complete` si toutes les cellules valent `c` ; `complete_with_failures`
 si toutes valent `c` ou `w` avec au moins un `w` ; `failed` si aucune n'est `c`/`w` et au moins
 une `f` ; `absent` si toutes valent `-` ; `partial` sinon.
@@ -789,6 +796,10 @@ correspond au filtre. » et un bouton « Effacer le filtre ».
 ```html
 <div role="treegrid" aria-multiselectable="true" aria-labelledby="launch-patches-title"
      aria-describedby="launch-patches-keys">
+  <div role="row" data-picker-head>          <!-- collée en haut, jamais un arrêt de focus -->
+    <div role="columnheader"><span class="sr-only">Cocher</span></div>
+    <div role="columnheader">Version</div> … <div role="columnheader">Priorité</div>
+  </div>
   <div role="row" aria-level="1" aria-expanded="true" tabindex="-1" data-season="16"
        aria-label="16.x · 2026, 19 patchs, 11 sélectionnés">
     <div role="gridcell"><input type="checkbox" tabindex="-1" [indeterminate]="…"
@@ -3442,6 +3453,7 @@ de lot suit la même règle, et chaque spécification de composant vérifie au m
 | `done` | Passe n°{id} lancée sur l'epoch {epoch} : {units, plural, one {# unité} other {# unités}}{skipped, plural, =0 {} one {, # déjà complète ignorée} other {, # déjà complètes ignorées}}. | Pass #{id} launched on epoch {epoch}: {units, plural, one {# unit} other {# units}}{skipped, plural, =0 {} one {, # already complete left out} other {, # already complete left out}}. |
 | `done_ignored` | {count, plural, one {# version ignorée, absente} other {# versions ignorées, absentes}} des anciens patchs : {versions}. | {count, plural, one {# version left out, not} other {# versions left out, not}} among the older patches: {versions}. |
 | `season_count` | {count, plural, one {# patch} other {# patchs}} · {selected, plural, =0 {aucun sélectionné} one {# sélectionné} other {# sélectionnés}} | {count, plural, one {# patch} other {# patches}} · {selected, plural, =0 {none selected} other {# selected}} |
+| `patches.columns.select` | Cocher | Tick |
 
 **`coverage`** (F4)
 
