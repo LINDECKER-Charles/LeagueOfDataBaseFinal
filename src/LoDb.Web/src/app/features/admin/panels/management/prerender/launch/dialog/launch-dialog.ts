@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  Injector,
+  afterNextRender,
+  computed,
+  inject,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Button } from '../../../../../../../ui/controls/button';
 import { DialogFrame } from '../../../../../../../ui/overlays/dialog-frame';
@@ -86,6 +94,8 @@ export class LaunchDialog {
   protected readonly loginPath = ADMIN_PATHS.login;
 
   private readonly texts = injectAdminText();
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef).nativeElement;
+  private readonly injector = inject(Injector);
 
   protected readonly footer = computed(() => {
     const estimate = this.store.estimate();
@@ -122,14 +132,33 @@ export class LaunchDialog {
 
   protected next(): void {
     this.store.goTo((this.store.step() + 1) as LaunchStep);
+    this.focusForward();
   }
 
   protected back(): void {
     this.store.goTo((this.store.step() - 1) as LaunchStep);
+    this.focusForward();
   }
 
   /** The units the skip switch leaves out; null while the coverage loads. */
   protected skipped(): number | null {
     return this.store.estimate()?.skipped ?? null;
+  }
+
+  // The footer button just pressed gives way to the next step's (« Lancer », « Annuler »): the
+  // focus goes to the forward button, or the dialog while it is disabled, never the page.
+  private focusForward(): void {
+    afterNextRender(
+      () => {
+        const forward = this.host.querySelector<HTMLButtonElement>('[data-launch], [data-next]');
+        const target = forward && !forward.disabled ? forward : this.dialogContainer();
+        target?.focus();
+      },
+      { injector: this.injector },
+    );
+  }
+
+  private dialogContainer(): HTMLElement | null {
+    return this.host.closest<HTMLElement>('.cdk-dialog-container');
   }
 }

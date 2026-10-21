@@ -112,6 +112,20 @@ describe('LaunchDialog', () => {
     );
   });
 
+  it('keeps the focus on the forward button when the footer changes its buttons', async () => {
+    const { fixture } = await open({ ...HEADER, origin: 'coverage', versions: ['16.18.1'] });
+    button(fixture, '[data-next]').focus();
+
+    await press(fixture, '[data-next]');
+    expect(current(fixture)).toBe('3');
+    expect(document.activeElement).toBe(button(fixture, '[data-launch]'));
+
+    await press(fixture, '[data-back]');
+    await press(fixture, '[data-back]');
+    expect(current(fixture)).toBe('1');
+    expect(document.activeElement).toBe(button(fixture, '[data-next]'));
+  });
+
   it('blocks the perimeter without a locale', async () => {
     const { fixture } = await open({ ...HEADER, origin: 'coverage', versions: ['16.18.1'] });
     expect(current(fixture)).toBe('2');
