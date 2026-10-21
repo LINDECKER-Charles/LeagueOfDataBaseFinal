@@ -1,6 +1,7 @@
 import type { EnvironmentProviders, Provider } from '@angular/core';
 import type { PrerenderReport } from '../../../../../core/api/generated/models/prerender-report';
 import { configureAdminTestBed } from '../../../testing/admin-test-bed';
+import { prerenderDemand } from '../../../testing/fixtures/prerender-demand';
 import { prerenderPatches } from '../../../testing/fixtures/prerender-patches';
 import { prerenderReport } from '../../../testing/fixtures/prerender-report';
 import { scalewayBillReport } from '../../../testing/fixtures/scaleway-bill-report';
@@ -28,10 +29,13 @@ const PRERENDER = '/api/admin/prerender';
 const PATCHES = `${PRERENDER}/patches`;
 // The Scaleway bill of the « Stockage et coûts » tab: every tab renders at once.
 const BILL = '/api/admin/scaleway/bill';
+// The automatic queue, which reads itself under the key figures.
+const DEMAND = `${PRERENDER}/demand`;
 
 /**
  * Opens `/admin/prerender` in a spec and answers what it reads on opening: the report, then
- * `calls` (the progress of a pass), the coverage of the served epoch and the bill.
+ * `calls` (the progress of a pass), the coverage of the served epoch, the bill and the
+ * automatic queue.
  */
 export function openPrerender(opening: PrerenderOpening = {}): Promise<PanelVisit> {
   const report = opening.report ?? prerenderReport();
@@ -45,5 +49,6 @@ export function openPrerender(opening: PrerenderOpening = {}): Promise<PanelVisi
     ...(opening.calls ?? []),
     { path: PATCHES, body: prerenderPatches() },
     { path: BILL, body: scalewayBillReport() },
+    { path: DEMAND, body: prerenderDemand() },
   ]);
 }

@@ -1335,6 +1335,37 @@
       "retire_no_bucket": "Le nom du bucket n'est pas configuré sur cet hôte : remplacez <bucket>.",
       "retire_staging": "Au staging : sans objet, la règle d'expiration du bucket efface toute page.",
       "close": "Fermer"
+    },
+    "demand": {
+      "title": "File automatique des pages refusées",
+      "lede": "Chaque page d'ancien patch que le SSR refuse à un visiteur (503) entre dans cette file, puis se précalcule d'elle-même dans l'epoch servie, les plus demandées d'abord : aucune passe à lancer.",
+      "states": {
+        "active": "active",
+        "off": "coupée",
+        "dormant": "en veille",
+        "blind": "sans relevé"
+      },
+      "why": {
+        "off": "Coupée par LoDb__Prerender__Demand__Enabled=false : rien n'y entre, rien ne s'y calcule.",
+        "dormant": "En veille tant que le stockage n'est pas configuré sur cet hôte.",
+        "blind": "Le SSR des visiteurs n'est pas relevé (LoDb__Prerender__Demand__RefusedPagesUrl vide) : la file finit ce qu'elle tient, rien de neuf n'y entre."
+      },
+      "figures": {
+        "pending": "En attente",
+        "hour": "Écrites (1 h)",
+        "day": "Écrites (24 h)",
+        "day_sub": "dans l'epoch {epoch}",
+        "failed": "En échec",
+        "skipped": "{count, plural, one {# page ignorée} other {# pages ignorées}} (déjà stockées ou jamais stockables)"
+      },
+      "share": "Pendant une passe manuelle, la file prend {share} % des rendus du SSR de précalcul ; sans passe, elle les prend tous.",
+      "top": {
+        "title": "Les plus demandées en attente",
+        "empty": "Aucune page en attente.",
+        "demand": "{count, plural, one {# refus} other {# refus}}",
+        "last": "dernier le {at} UTC",
+        "attempts": "{count, plural, one {# essai raté} other {# essais ratés}}"
+      }
     }
   },
   "scaleway_bill": {

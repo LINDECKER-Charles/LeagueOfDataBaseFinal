@@ -28,6 +28,7 @@ import { PRERENDER_CADENCE } from './common/scope/prerender-cadence';
 import { CostsTab } from './costs/costs-tab';
 import { SwitchDialog, type SwitchData } from './costs/switch/switch-dialog';
 import { CoverageTab } from './coverage/coverage-tab';
+import { DemandBlock } from './demand/demand-block';
 import { injectAdminDialogs } from './dialogs/inject-admin-dialogs';
 import { LaunchOpener } from './launch/dialog/launch-opener';
 import { LiveMonitor } from './monitor/live-monitor';
@@ -66,7 +67,8 @@ const PHONE = '(max-width: 639.98px)';
  * `/admin/prerender`: the pre-rendering of the older patches into the object store (§ 2).
  * Its head launches a pass and says how fresh the page is; bands say what needs doing; then
  * the live monitor of the active pass, the recap of one just ended, or what to do without
- * one; the key figures; and three tabs: coverage, storage and costs, history. The page alone
+ * one; the key figures; the automatic queue of the refused pages; and three tabs: coverage,
+ * storage and costs, history. The page alone
  * opens the launch dialog and the detail of a pass: every other block hands it a preset.
  */
 @Component({
@@ -75,6 +77,7 @@ const PHONE = '(max-width: 639.98px)';
     AdminTextPipe,
     CostsTab,
     CoverageTab,
+    DemandBlock,
     IdleCard,
     LaunchCta,
     LiveMonitor,

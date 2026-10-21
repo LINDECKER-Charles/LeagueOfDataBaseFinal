@@ -1335,6 +1335,37 @@
       "retire_no_bucket": "The bucket's name is not configured on this host: replace <bucket>.",
       "retire_staging": "On staging: not needed, the bucket's expiry rule deletes every page.",
       "close": "Close"
+    },
+    "demand": {
+      "title": "Automatic queue of refused pages",
+      "lede": "Every older-patch page the SSR refuses a visitor (503) enters this queue, then is pre-rendered on its own into the served epoch, the most requested first: no pass to launch.",
+      "states": {
+        "active": "active",
+        "off": "switched off",
+        "dormant": "dormant",
+        "blind": "not reading"
+      },
+      "why": {
+        "off": "Switched off by LoDb__Prerender__Demand__Enabled=false: nothing enters, nothing renders.",
+        "dormant": "Dormant until the store is configured on this host.",
+        "blind": "The visitors' SSR is not read (LoDb__Prerender__Demand__RefusedPagesUrl empty): the queue finishes what it holds, nothing new enters."
+      },
+      "figures": {
+        "pending": "Pending",
+        "hour": "Written (1 h)",
+        "day": "Written (24 h)",
+        "day_sub": "into epoch {epoch}",
+        "failed": "Failed",
+        "skipped": "{count, plural, one {# page skipped} other {# pages skipped}} (already stored or never stored)"
+      },
+      "share": "During a manual pass, the queue takes {share}% of the pre-render SSR's renders; without a pass, it takes them all.",
+      "top": {
+        "title": "Most requested pending pages",
+        "empty": "No pending page.",
+        "demand": "{count, plural, one {# refusal} other {# refusals}}",
+        "last": "last on {at} UTC",
+        "attempts": "{count, plural, one {# failed try} other {# failed tries}}"
+      }
     }
   },
   "scaleway_bill": {
