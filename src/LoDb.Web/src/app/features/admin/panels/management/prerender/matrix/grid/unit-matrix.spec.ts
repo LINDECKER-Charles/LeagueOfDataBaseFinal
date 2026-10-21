@@ -2,6 +2,7 @@ import { type ComponentFixture, TestBed } from '@angular/core/testing';
 import { configureAdminTestBed } from '../../../../../testing/admin-test-bed';
 import { type MatrixVersion, UnitMatrix } from './unit-matrix';
 
+const VIEW_KEY = 'lodb.admin.prerender.matrix-view';
 const LOCALES = ['de', 'fr', 'zh-hans'];
 const VERSIONS: MatrixVersion[] = [
   { version: '16.18.1', cells: 'crz', rank: 0 },
@@ -34,9 +35,11 @@ function button(fixture: ComponentFixture<UnitMatrix>, label: string): HTMLButto
 
 describe('UnitMatrix', () => {
   beforeEach(() => {
-    localStorage.removeItem('lodb.admin.prerender.matrix-view');
+    localStorage.removeItem(VIEW_KEY);
     configureAdminTestBed();
   });
+  // Spec files of a worker share one page: a view left in storage would reach the next file.
+  afterEach(() => localStorage.removeItem(VIEW_KEY));
 
   it('heads a column per locale, short codes for Chinese', () => {
     const heads = [...page(render()).querySelectorAll('.matrix-head')].map((head) =>
@@ -126,7 +129,7 @@ describe('UnitMatrix', () => {
 
     expect(page(fixture).querySelector('lodb-matrix-table table')).not.toBeNull();
     expect(page(fixture).querySelector('.matrix-frame')).toBeNull();
-    expect(localStorage.getItem('lodb.admin.prerender.matrix-view')).toBe('table');
+    expect(localStorage.getItem(VIEW_KEY)).toBe('table');
     expect(page(render()).querySelector('lodb-matrix-table')).not.toBeNull();
   });
 });
