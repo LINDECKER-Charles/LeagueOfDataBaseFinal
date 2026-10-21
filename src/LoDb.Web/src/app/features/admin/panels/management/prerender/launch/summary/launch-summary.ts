@@ -42,7 +42,7 @@ const DEFAULT_PAGES = 500;
   imports: [AdminTextPipe, Kpi],
   template: `
     <p class="text-gold-bright" data-summary-scope>{{ scope() }}</p>
-    <div class="kpi-grid mt-4">
+    <div class="kpi-grid summary-tiles mt-4">
       @for (tile of tiles(); track tile.key) {
         <lodb-kpi
           [label]="tile.label"
@@ -87,6 +87,12 @@ const DEFAULT_PAGES = 500;
           <li>{{ 'admin.' + message.key | adminText: message.params }}</li>
         }
       </ul>
+    }
+  `,
+  // Five tiles in a row of the dialog: the page's 11rem leaves the fifth alone, its figure cut.
+  styles: `
+    .kpi-grid.summary-tiles {
+      grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

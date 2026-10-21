@@ -987,9 +987,13 @@ Notations : `V` les versions cochées ; `L` les langues choisies ; `T` les types
 | Pages | `round(Σ_v unités(v) × ppl(v) × share(T))` | — |
 | Octets par page | `estimates.bytesPerPage ?? 39 000` | moyenne des unités terminées de l'epoch servie ; 39 000 = « 39 Ko en gzip » mesurés sur 41 554 pages de prod (spécification, § 1, « Constat ») |
 | Volume | `pages × octets par page` | — |
-| Rythme | `min(estimates.measuredPagesPerMinute, estimates.configuredRendersPerMinute)`, ou le plafond seul sans mesure | une passe mesurée sous un plafond plus haut que l'actuel (`LoDb:Prerender:RendersPerMinute` abaissé depuis, 120 par défaut, 30 au staging, `Options/PrerenderOptions.cs`) ne promet pas un rythme que le plafond interdit ; « au plafond configuré » est dit quand c'est lui qui borne |
+| Rythme | `min(estimates.measuredPagesPerMinute, estimates.configuredRendersPerMinute)`, ou le plafond seul sans mesure | une passe mesurée sous un plafond plus haut que l'actuel (`LoDb:Prerender:RendersPerMinute` abaissé depuis, 120 par défaut, 30 au staging, `Options/PrerenderOptions.cs`) ne promet pas un rythme que le plafond interdit ; « au plafond configuré » est dit quand c'est lui qui borne ; sans mesure, la sous-ligne dit pourquoi : « aucune passe de plus de 10 min pour mesurer un rythme » (le rythme n'est retenu qu'au-delà de 600 s actives, `EstimateBasisReader.MeasuredSeconds`), jamais « aucune passe mesurée » quand des passes courtes ont tourné |
 | Durée | `pages / rythme` minutes, écrite par `duration()` (`admin/format/duration.ts`) | — |
 | Coût ajouté | `octetsAjoutés / 10⁹ × prix`, où `octetsAjoutés` ne compte que les (v, l) rendues dont la cellule n'a encore **aucune** page stockée (`-`, ou `p`/`f` à `pages = 0`) : refaire une unité stockée remplace ses pages (`StorageCensus` garde le maximum) — pour une epoch nouvelle, toutes les unités | `estimates.pricePerGbMonthOneZone`, `currency` ; montant écrit par `monthlyCost` (`management/backups/monthly-cost.ts`) |
+
+Les cinq tuiles tiennent sur une ligne de la modale (`repeat(auto-fit, minmax(9rem, 1fr))`,
+au lieu des 11rem de la page) ; la tuile Coût dit « + 0,01 € » et porte « par mois, au prix One
+Zone (…) » en sous-ligne, pour que son chiffre ne se coupe pas.
 
 Qualité de l'estimation, dite sous les tuiles : « Pages par unité mesurées sur des passes
 précédentes » (toutes les versions ont `pagesPerLocale`), « …mesurées pour 31 patchs sur 38 ;
@@ -3452,11 +3456,11 @@ de lot suit la même règle, et chaque spécification de composant vérifie au m
 | `summary.volume_sub` | ≈ {perPage} par page | ≈ {perPage} a page |
 | `summary.duration` | Durée | Duration |
 | `summary.duration_measured` | au dernier rythme mesuré ({pace, plural, one {# page} other {# pages}}/min) | at the last pace measured ({pace, plural, one {# page} other {# pages}}/min) |
-| `summary.duration_ceiling` | au plafond configuré ({pace} rendus/min) : aucune passe mesurée | at the configured ceiling ({pace} renders/min): no pass measured |
+| `summary.duration_ceiling` | au plafond configuré ({pace} rendus/min) : aucune passe de plus de 10 min pour mesurer un rythme | at the configured ceiling ({pace} renders/min): no pass over 10 min to measure a pace |
 | `summary.duration_capped` | au plafond configuré ({pace} rendus/min), plus bas que le dernier rythme mesuré | at the configured ceiling ({pace} renders/min), below the last pace measured |
 | `summary.cost` | Coût ajouté | Added cost |
-| `summary.cost_value` | + {cost} / mois | + {cost} / month |
-| `summary.cost_sub` | au prix One Zone ({price} / Go / mois) | at the One Zone price ({price} / GB / month) |
+| `summary.cost_value` | + {cost} | + {cost} |
+| `summary.cost_sub` | par mois, au prix One Zone ({price} / Go / mois) | a month, at the One Zone price ({price} / GB / month) |
 | `summary.order` | Ordre : {first} d'abord, puis du plus récent au plus ancien. | Order: {first} first, then newest to oldest. |
 | `summary.order_default` | Ordre : du plus récent au plus ancien. | Order: newest to oldest. |
 | `summary.quality_measured` | Pages par unité mesurées sur des passes précédentes. | Pages per unit measured on earlier passes. |
