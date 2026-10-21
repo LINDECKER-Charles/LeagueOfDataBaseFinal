@@ -1,10 +1,10 @@
 // Boots the built nginx image in front of the stub's page store (lib/upstream-stub.conf) and
 // checks lot 3 of ADR 0011: a past patch's page comes from the store, then from the cache, with
 // its own headers and none of S3's; every failure of the store, a query and a path a pass never
-// writes reach the SSR server, which the store never sees; the rate holds across both; a bundle
-// the SSR server no longer has comes from the store, under the same rate. Switched off, nginx
-// never asks the store; with a store whose name does not resolve, or whose certificate no
-// authority signed, it starts and falls back. Needs Docker and the image's tag in
+// writes reach the SSR server, which the store never sees, and so does the latest patch pinned
+// in the path; the rate holds across both; a bundle the SSR server no longer has comes from the
+// store, under the same rate. Switched off, nginx never asks the store; a store it cannot trust
+// or find is nginx-pages-store-unreachable.test.mjs's. Needs Docker and the image's tag in
 // LODB_NGINX_IMAGE (tools/nginx/README.md); skipped without it.
 import assert from 'node:assert/strict';
 import { after, before, describe, test } from 'node:test';
@@ -385,28 +385,4 @@ describe('nginx image with the page store switched off',
         assert.equal(gone.headers['content-security-policy'], STORED_BUNDLE.policy);
         assert.deepEqual(await stack.storeRequests(), []);
       });
-  });
-
-describe('nginx image with a page store it cannot trust or find',
-  { skip: IMAGE ? false : 'LODB_NGINX_IMAGE is not set' }, () => {
-    const stores = {
-      // The stub's TLS port, under a certificate that no authority signed.
-      untrusted: { LODB_PAGES_STORE_SCHEME: 'https', LODB_PAGES_STORE_PORT: '9443' },
-      // As on a stack without network or DNS: nginx must start all the same.
-      unresolved: { LODB_PAGES_STORE_HOST: 'lodb-pages-store.invalid' },
-    };
-
-    for (const [store, settings] of Object.entries(stores)) {
-      test(`starts and renders the pages with the SSR server: ${store} store`, async () => {
-        const stack = await startStack(IMAGE, { ...STORE, ...settings });
-        try {
-          const answer = await send(stack.port, STORED, aClient());
-          assert.equal(answer.body.toString(), RENDERED.body);
-          assert.equal(answer.headers['x-lodb-source'], 'ssr');
-          assert.deepEqual(await stack.storeRequests(), []);
-        } finally {
-          await stack.stop();
-        }
-      });
-    }
   });
