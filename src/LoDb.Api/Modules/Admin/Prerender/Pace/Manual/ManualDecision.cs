@@ -11,7 +11,9 @@ namespace LoDb.Api.Modules.Admin.Prerender.Pace.Manual;
 /// <remarks>
 /// The brake engages at once when the visitors' latest-patch lane refuses one of them, and
 /// after <see cref="UnsafeDecisionsToBrake"/> decisions in a row (3 minutes) on a host busy at
-/// <see cref="BrakeHostBusy"/> or more, steal included, or without the visitors' load to read.
+/// <see cref="BrakeHostBusy"/> or more, steal included, on a red signal of what the visitors
+/// wait on (their SSR's event loop or pressure, the API's throttling), or without the
+/// visitors' load to read.
 /// The refusals of the older patches' lane are not a sign of load: that lane refuses past its
 /// budget whatever the host does.
 /// </remarks>
@@ -72,16 +74,19 @@ internal static class ManualDecision
         {
             PaceReason.HostCpu => board.HostBusy,
             PaceReason.VisitorsRefused => board.VisitorsRefused,
+            PaceReason.VisitorsSsr or PaceReason.ApiCpu => board.VisitorsHurt?.Value,
             _ => null,
         };
         var level = memory.State == PaceState.Held ? SignalLevel.Red : SignalLevel.Green;
         return new SignalReading(level, memory.Reason, value);
     }
 
+    // A visitors' red signal counts as a hot host: under 90 % of the VPS, two renderers and
+    // the API's share of their pages can still slow the visitors' SSR or throttle the API.
     private static PaceReason? UnsafeReasonOf(PaceBoard board) =>
         board.VisitorsRefused is null || board.HostBusy is null ? PaceReason.SignalMissing
         : board.HostBusy >= BrakeHostBusy ? PaceReason.HostCpu
-        : null;
+        : board.VisitorsHurt?.Reason;
 
     // Extended at each braking decision; the streak starts again once the hold is over.
     private static PaceMemory Braked(PaceMemory memory, PaceReason reason, DateTimeOffset at) =>

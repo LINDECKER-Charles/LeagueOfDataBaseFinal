@@ -75,10 +75,14 @@ internal sealed class PaceRig : IDisposable
         new PaceSetting(PaceChoice.Manual, target) { UpdatedAt = Clock.GetUtcNow() });
 
     /// <summary>Moves the clock on, then decides on the manual brake's two readings.</summary>
-    public void DecideManual(int seconds, double? hostBusy, long? visitorsRefused)
+    public void DecideManual(
+        int seconds,
+        double? hostBusy,
+        long? visitorsRefused,
+        SignalReading? visitorsHurt = null)
     {
         Clock.Advance(TimeSpan.FromSeconds(seconds));
-        var board = new PaceBoard(SignalReading.Green, hostBusy, visitorsRefused);
+        var board = new PaceBoard(SignalReading.Green, hostBusy, visitorsRefused, visitorsHurt);
         Regulator.Decide(new PaceEvaluation(board, Clock.GetUtcNow(), Ceiling));
     }
 

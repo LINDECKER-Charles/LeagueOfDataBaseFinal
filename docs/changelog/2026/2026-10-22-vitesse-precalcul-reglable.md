@@ -22,7 +22,8 @@ des anciens patchs resteront lentes à la première visite jusqu'à la fin de ce
 ## Technique
 
 - Mode manuel du rythme (`prerender_pace_setting`, `GET`/`PUT /api/admin/prerender/speed`),
-  frein d'urgence (refus du dernier patch, VPS ≥ 90 % pendant 3 min, mesure manquante),
+  frein d'urgence (refus du dernier patch ; pendant 3 min : VPS ≥ 90 %, SSR des visiteurs
+  ralenti ou API bridée, mesure manquante),
   coupe-circuit `fixed` inchangé.
 - `web-ssr-prerender` en répliques (`LODB_PRERENDER_RENDERERS`, 2 en prod), rendus répartis par
   l'API sur leurs adresses ; pages en vol au rythme (`LODB_PRERENDER_PAGES_IN_FLIGHT`).

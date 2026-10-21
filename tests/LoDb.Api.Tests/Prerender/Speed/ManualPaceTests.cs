@@ -89,6 +89,25 @@ public sealed class ManualPaceTests
     }
 
     [Fact]
+    public void VisitorsSlowedOrApiThrottledBrakesAfterThreeMinutesUnderTheHostThreshold()
+    {
+        using var rig = new PaceRig();
+        rig.Manual(Target);
+        rig.Regulator.Begin(PassId);
+        var throttled = new SignalReading(SignalLevel.Red, PaceReason.ApiCpu, 0.25);
+        for (var decision = 1; decision < ManualDecision.UnsafeDecisionsToBrake; decision++)
+        {
+            rig.DecideManual(30, Quiet, Calm, throttled);
+        }
+
+        var beforeBrake = rig.Regulator.Allowance();
+        rig.DecideManual(30, Quiet, Calm, throttled);
+
+        Assert.Equal((Target, 0), (beforeBrake, rig.Regulator.Allowance()));
+        Assert.Equal(PaceReason.ApiCpu, rig.Regulator.Snapshot()!.Reason);
+    }
+
+    [Fact]
     public void CoolerDecisionStartsTheHotStreakAgain()
     {
         using var rig = new PaceRig();

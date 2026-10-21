@@ -750,7 +750,9 @@ poste : 2 moteurs y tiennent environ 1 000 à 1 200 pages/min.
 - **Frein d'urgence** du mode manuel (`ManualDecision`), lu à chaque décision (30 s) :
   - un visiteur du **dernier patch** refusé par le SSR des visiteurs (voie `current`, refus pour
     le serveur ou la voie, jamais la part d'un client) : retenue immédiate ;
-  - 6 décisions de suite (3 min) avec le VPS à **90 %** ou plus (vol compris), ou sans lecture
+  - 6 décisions de suite (3 min) avec le VPS à **90 %** ou plus (vol compris), avec un signal
+    rouge de ce qu'attendent les visiteurs (boucle d'événements p99 ≥ 250 ms ou pression CPU
+    ≥ 15 % de leur SSR, API bridée ≥ 20 % : les bandes rouges du régulateur), ou sans lecture
     du SSR des visiteurs ou de `/proc/stat` : retenue ;
   - une retenue arrête tout nouveau rendu 5 min après sa dernière décision de freinage, puis la
     cible reprend. Les `503` des anciens patchs (voie `pinned`, 160 à 380 par minute en prod

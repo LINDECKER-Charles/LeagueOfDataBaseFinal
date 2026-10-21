@@ -779,7 +779,8 @@ redéploiement : une nouvelle cible tout de suite par l'instance qui répond, un
 mode à la décision suivante (30 s au plus) par celle qui écrit la passe. Le mode manuel tient
 la cible quelle que soit la charge, sauf **frein d'urgence** : plus aucun rendu pendant 5 min dès
 qu'un visiteur du dernier patch est refusé, ou après 3 min au-delà de 90 % de CPU sur le VPS
-(steal compris) ou sans mesure du SSR des visiteurs. Les refus de la voie des anciens patchs
+(steal compris), avec un signal rouge côté visiteurs (boucle d'événements ou pression CPU de
+leur SSR, bridage de l'API) ou sans mesure du SSR des visiteurs. Les refus de la voie des anciens patchs
 ne freinent pas : elle refuse au-delà de son budget quoi que fasse l'hôte. Le coupe-circuit
 `LODB_PRERENDER_PACE_MODE=fixed` passe avant tout réglage (le pupitre le dit et refuse, `409`).
 À côté, le pupitre montre le CPU du VPS (steal compté occupé), celui des moteurs, du SSR des

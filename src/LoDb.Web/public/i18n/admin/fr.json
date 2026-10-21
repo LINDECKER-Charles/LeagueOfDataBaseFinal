@@ -1358,7 +1358,7 @@
         "range": "de {min} à {max}",
         "unit": "pages/min"
       },
-      "brake": "Frein d'urgence : plus aucun rendu pendant {hold} min dès qu'un visiteur du dernier patch est refusé, ou après {minutes} min au-delà de {busy} % de CPU sur le VPS (vol de l'hébergeur compris) ou sans mesure des visiteurs. La passe reprend ensuite à la vitesse choisie.",
+      "brake": "Frein d'urgence : plus aucun rendu pendant {hold} min dès qu'un visiteur du dernier patch est refusé, ou après {minutes} min au-delà de {busy} % de CPU sur le VPS (vol de l'hébergeur compris), avec le SSR des visiteurs ralenti ou l'API bridée, ou sans mesure des visiteurs. La passe reprend ensuite à la vitesse choisie.",
       "apply": "Appliquer",
       "applied": "Réglé le {at} UTC ; appliqué en moins de 30 s par l'instance qui écrit la passe.",
       "never_set": "Jamais réglé : adaptatif par défaut.",

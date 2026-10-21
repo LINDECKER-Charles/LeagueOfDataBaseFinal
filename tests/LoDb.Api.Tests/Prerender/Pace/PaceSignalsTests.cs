@@ -151,6 +151,29 @@ public sealed class PaceSignalsTests
         Assert.Equal(0.56, PaceBoard.Of(busy).HostBusy);
     }
 
+    [Fact]
+    public void VisitorsRedSignalIsKeptBesideAWorseRankedHostOne()
+    {
+        var calm = Readings(new HostShares(0.2, 0.05, 0.2));
+        var slowed = calm with
+        {
+            Host = new HostShares(0.7, 0.05, 0.2),
+            Visitors = new SsrSignals(0.3, 0.001, new LaneDelta(2, 0.2, 0)),
+        };
+        var throttled = calm with { ApiThrottled = 0.25 };
+        var amber = calm with { ApiThrottled = 0.06 };
+
+        var board = PaceBoard.Of(slowed);
+
+        Assert.Equal(PaceReason.HostCpu, board.Worst.Reason);
+        Assert.Equal(
+            new SignalReading(SignalLevel.Red, PaceReason.VisitorsSsr, 0.3),
+            board.VisitorsHurt);
+        Assert.Equal(PaceReason.ApiCpu, PaceBoard.Of(throttled).VisitorsHurt?.Reason);
+        Assert.Null(PaceBoard.Of(amber).VisitorsHurt);
+        Assert.Null(PaceBoard.Of(calm).VisitorsHurt);
+    }
+
     private static PaceReadings Readings(HostShares host) => new()
     {
         Host = host,
