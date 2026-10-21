@@ -1,9 +1,14 @@
-import { provideHttpClient } from '@angular/common/http';
+import {
+  HttpClient,
+  provideHttpClient,
+  withInterceptors,
+  ɵwithHttpTransferCache as withHttpTransferCache,
+} from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { ApplicationRef, PLATFORM_ID, TransferState, makeStateKey } from '@angular/core';
+import { ApplicationRef, PLATFORM_ID } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
-import { BYPASS_TRANSFER_CACHE } from '../../http/interceptors/bypass-transfer-cache';
+import { bypassTransferCacheInterceptor } from '../../http/interceptors/bypass-transfer-cache-interceptor';
 import { catalogMetaOf } from '../../testing/catalog-meta-of';
 import type { CatalogMeta } from '../generated/models/catalog-meta';
 import { API_BASE_URL } from '../api-base-url';
@@ -11,6 +16,7 @@ import { ApiMeta } from './api-meta';
 
 const ORIGIN = 'http://api:8080';
 const META_URL = `${ORIGIN}/api/meta`;
+const I18N_URL = '/i18n/en.json';
 const META = catalogMetaOf({
   versions: ['16.19.1', '16.18.1'],
   languages: ['en_US', 'fr_FR', 'zh_CN'],
@@ -24,11 +30,13 @@ const META = catalogMetaOf({
 // The document a page rendered weeks ago embeds: a patch has been promoted since.
 const NEWER = { ...META, latest: '16.20.1', versions: ['16.20.1', ...META.versions] };
 
+// The app's HTTP stack: its bypass interceptor, then Angular's transfer cache.
 function setUp(platform = 'browser'): HttpTestingController {
   TestBed.configureTestingModule({
     providers: [
-      provideHttpClient(),
+      provideHttpClient(withInterceptors([bypassTransferCacheInterceptor])),
       provideHttpClientTesting(),
+      withHttpTransferCache({}),
       { provide: API_BASE_URL, useValue: ORIGIN },
       { provide: PLATFORM_ID, useValue: platform },
     ],
@@ -36,9 +44,17 @@ function setUp(platform = 'browser'): HttpTestingController {
   return TestBed.inject(HttpTestingController);
 }
 
-// A server-rendered page hands the browser its state; the shells start with none.
-function embedPageState(): void {
-  TestBed.inject(TransferState).set(makeStateKey<string>('page'), 'rendered');
+// The server render stores what it read in the page's `ng-state`: `ngServerMode` is a
+// build-time flag of the server bundle, read when the request runs.
+async function renderOnServer(http: HttpTestingController, url: string, body: object) {
+  Reflect.set(globalThis, 'ngServerMode', true);
+  try {
+    const read = firstValueFrom(TestBed.inject(HttpClient).get(url));
+    http.expectOne(url).flush(body);
+    await read;
+  } finally {
+    Reflect.deleteProperty(globalThis, 'ngServerMode');
+  }
 }
 
 // Every reader so far answered, and the app has had its chance to ask once more.
@@ -119,20 +135,21 @@ describe('ApiMeta', () => {
 describe('ApiMeta on a server-rendered page', () => {
   let http: HttpTestingController;
 
+  beforeEach(async () => {
+    http = setUp();
+    await renderOnServer(http, META_URL, META);
+  });
+
   afterEach(() => http.verify());
 
   it('reads the embedded document first, then publishes the newer one once stable', async () => {
-    http = setUp();
-    embedPageState();
     const meta = TestBed.inject(ApiMeta);
     const seen = follow(meta);
 
-    // Answered by the transfer cache in the browser: the page's own copy.
-    http.expectOne(META_URL).flush(META);
+    // Answered by the page, before anything reaches the network.
     expect(seen).toEqual([META]);
-
     const refresh = await vi.waitFor(() => http.expectOne(META_URL));
-    expect(refresh.request.context.get(BYPASS_TRANSFER_CACHE)).toBe(true);
+    expect(refresh.request.transferCache).toBe(false);
     refresh.flush(NEWER);
 
     expect(seen).toEqual([META, NEWER]);
@@ -142,11 +159,8 @@ describe('ApiMeta on a server-rendered page', () => {
   });
 
   it('publishes nothing more when the network answers the same document', async () => {
-    http = setUp();
-    embedPageState();
     const seen = follow(TestBed.inject(ApiMeta));
 
-    http.expectOne(META_URL).flush(META);
     (await vi.waitFor(() => http.expectOne(META_URL))).flush(structuredClone(META));
     await settled();
 
@@ -155,12 +169,9 @@ describe('ApiMeta on a server-rendered page', () => {
   });
 
   it('keeps the embedded document when the refresh fails, and asks no more', async () => {
-    http = setUp();
-    embedPageState();
     const meta = TestBed.inject(ApiMeta);
     const seen = follow(meta);
 
-    http.expectOne(META_URL).flush(META);
     const refresh = await vi.waitFor(() => http.expectOne(META_URL));
     refresh.flush(null, { status: 503, statusText: 'Unavailable' });
     await settled();
@@ -169,10 +180,27 @@ describe('ApiMeta on a server-rendered page', () => {
     expect(await firstValueFrom(meta.meta())).toEqual(META);
     http.expectNone(META_URL);
   });
+});
+
+describe('ApiMeta on a page that embeds no document', () => {
+  let http: HttpTestingController;
+
+  afterEach(() => http.verify());
+
+  it('asks once on a prerendered page, whose state holds other answers', async () => {
+    http = setUp();
+    await renderOnServer(http, I18N_URL, {});
+    const seen = follow(TestBed.inject(ApiMeta));
+
+    http.expectOne(META_URL).flush(NEWER);
+    await settled();
+
+    http.expectNone(META_URL);
+    expect(seen).toEqual([NEWER]);
+  });
 
   it('asks once on the server, which renders what it read', async () => {
     http = setUp('server');
-    embedPageState();
     const seen = follow(TestBed.inject(ApiMeta));
 
     http.expectOne(META_URL).flush(META);

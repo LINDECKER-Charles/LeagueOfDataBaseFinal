@@ -1,13 +1,13 @@
 import { isPlatformBrowser } from '@angular/common';
-import { ApplicationRef, PLATFORM_ID, TransferState, inject } from '@angular/core';
+import { ApplicationRef, PLATFORM_ID, inject } from '@angular/core';
 import {
   EMPTY,
   type MonoTypeOperatorFunction,
-  type Observable,
+  Observable,
   catchError,
   concat,
+  defer,
   filter,
-  from,
   of,
   switchMap,
 } from 'rxjs';
@@ -28,29 +28,41 @@ function revalidated<T>(embedded: T, fresh$: Observable<T>): Observable<T> {
   );
 }
 
+// The transfer cache replays the page's `ng-state` within the subscription, while the
+// network always answers later: only an answer given at once comes from the page. A page
+// that embeds none (a prerendered one, a shell) thus asks the network once, not twice.
+function revalidatedIfEmbedded<T>(source: Observable<T>, fresh$: Observable<T>): Observable<T> {
+  return new Observable<T>((subscriber) => {
+    let isSubscribing = true;
+    const subscription = source
+      .pipe(switchMap((first) => (isSubscribing ? revalidated(first, fresh$) : of(first))))
+      .subscribe(subscriber);
+    isSubscribing = false;
+    return subscription;
+  });
+}
+
 /**
  * Stale while revalidate, for an answer the HTTP transfer cache may take from the page's
  * `ng-state`. The source's first answer passes as it is, so hydration renders what the
- * server rendered and nothing is asked before the first paint; once the application is
- * stable, `refetch` asks once more and its answer follows only when it differs. A page kept
- * for months (an old patch, pre-rendered or archived) would otherwise hold its render-time
- * answer for the whole visit. A failed refetch keeps that answer, and nothing asks again.
- * The server, and a page that embeds nothing (the desktop and Android shells start empty),
- * never refetch.
+ * server rendered and nothing is asked before the first paint; when the page gave that
+ * answer, `refetch` asks once more once the application is stable, and its answer follows
+ * only when it differs. A page kept for months (an old patch, pre-rendered or archived)
+ * would otherwise hold its render-time answer for the whole visit. A failed refetch keeps
+ * that answer, and nothing asks again. The server never refetches.
  */
 export function injectEmbeddedRevalidation(): <T>(
   refetch: () => Observable<T>,
 ) => MonoTypeOperatorFunction<T> {
   const appRef = inject(ApplicationRef);
   const isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
-  // Read once, at startup: the state is still the page's, before any reader removes a key.
-  const mayBeEmbedded = isBrowser && !inject(TransferState).isEmpty;
   return <T>(refetch: () => Observable<T>) =>
     (source: Observable<T>) => {
-      if (!mayBeEmbedded) {
+      if (!isBrowser) {
         return source;
       }
-      const fresh$ = from(appRef.whenStable()).pipe(switchMap(refetch));
-      return source.pipe(switchMap((embedded) => revalidated(embedded, fresh$)));
+      // Asked when the page has answered: stable then means hydrated, not merely booting.
+      const fresh$ = defer(() => appRef.whenStable()).pipe(switchMap(refetch));
+      return revalidatedIfEmbedded(source, fresh$);
     };
 }

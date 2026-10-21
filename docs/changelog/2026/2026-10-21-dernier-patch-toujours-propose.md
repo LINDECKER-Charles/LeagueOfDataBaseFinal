@@ -25,7 +25,10 @@ pas proposé, et un lien sans version menait au patch d'avant.
 - `ApiMeta` : l'hydratation lit le `/api/meta` que la page embarque (cache de transfert HTTP),
   puis, une fois l'application stable dans le navigateur, le relit une fois sur le réseau et
   publie le document s'il diffère (`injectEmbeddedRevalidation`). Un échec garde le document
-  embarqué, sans nouvelle tentative. Serveur et coquilles desktop/Android (état vide) : inchangés.
+  embarqué, sans nouvelle tentative. Seule une réponse donnée par la page (le cache de
+  transfert répond dans l'abonnement, le réseau jamais) est relue : une page pré-rendue sans
+  meta embarquée, le serveur et les coquilles desktop/Android ne demandent `/api/meta` qu'une
+  fois.
 - Le client généré ne prend pas l'option `transferCache` d'HttpClient : le jeton
   `BYPASS_TRANSFER_CACHE` (contexte HTTP) et `bypassTransferCacheInterceptor` la posent.
 - Les copies déjà gardées (stockage, cache `lodb_archive`) portent les bundles du build qui les
