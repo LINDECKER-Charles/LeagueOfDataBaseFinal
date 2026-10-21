@@ -28,6 +28,8 @@ internal static class PrerenderHttpRegistration
         services.TryAddScoped<PrerenderJournal>();
         services.TryAddScoped<PrerenderDesk>();
         services.TryAddScoped<PassMonitor>();
+        services.TryAddScoped<ProgressQueries>();
+        services.TryAddSingleton<PulseReader>();
         services.TryAddScoped<PatchCoverageReader>();
         services.TryAddSingleton<EstimateBasisReader>();
         services.TryAddSingleton<CoverageCache>();

@@ -43,12 +43,12 @@ internal static class PassProgress
 
     /// <summary>
     /// Pages still to process: those of the listed units not processed yet, plus each pending
-    /// unit at the mean of the listed ones, rounded up; null before any unit is listed.
+    /// unit at the pages its version is expected to list, else at the mean of the listed ones,
+    /// rounded up; null before any unit is listed.
     /// </summary>
     /// <remarks>
-    /// TODO(B2): count each pending unit at its version's expected pages
-    /// (<c>prerender_unit.pages_expected</c>), the mean only for those without: the first units
-    /// of a pass are its biggest, so their mean overstates the rest for days.
+    /// A pass goes from the newest patch to the oldest, its put-first versions ahead: its first
+    /// units are its biggest, so their mean would overstate the rest for days.
     /// </remarks>
     public static long? PagesLeft(PassFacts facts)
     {
@@ -61,8 +61,8 @@ internal static class PassProgress
             return null;
         }
 
-        var unlisted = (long)Math.Ceiling((decimal)pending * pass.PagesTotal / listed);
-        return Math.Max(0, pass.PagesTotal - Processed(pass)) + unlisted;
+        var unknown = (long)Math.Ceiling((decimal)facts.UnexpectedUnits * pass.PagesTotal / listed);
+        return Math.Max(0, pass.PagesTotal - Processed(pass)) + facts.ExpectedPages + unknown;
     }
 
     /// <summary>

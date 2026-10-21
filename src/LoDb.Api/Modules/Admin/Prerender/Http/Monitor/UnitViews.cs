@@ -20,24 +20,10 @@ internal static class UnitViews
             PagesSkipped = unit.PagesSkipped,
             PagesFailed = unit.PagesFailed,
             BytesWritten = unit.BytesWritten,
+            StartedAt = unit.StartedAt,
             UpdatedAt = unit.UpdatedAt,
-            // TODO(B2): StartedAt, EndedAt and Failure from the columns of the
-            // PrerenderDiagnostics migration.
+            EndedAt = unit.EndedAt,
+            Failure = unit.Failure,
         };
-    }
-
-    /// <summary>Whether the unit ended, completed or failed.</summary>
-    public static bool HasEnded(PrerenderUnit unit)
-    {
-        ArgumentNullException.ThrowIfNull(unit);
-        return unit.State is PrerenderUnitState.Completed or PrerenderUnitState.Failed;
-    }
-
-    /// <summary>Whether the unit failed, or completed with failed pages.</summary>
-    public static bool HasFailures(PrerenderUnit unit)
-    {
-        ArgumentNullException.ThrowIfNull(unit);
-        return unit.State == PrerenderUnitState.Failed
-            || (unit.State == PrerenderUnitState.Completed && unit.PagesFailed > 0);
     }
 }

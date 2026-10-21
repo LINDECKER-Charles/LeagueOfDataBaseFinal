@@ -5,7 +5,7 @@ using LoDb.Domain.Languages;
 using LoDb.Domain.Versions;
 using LoDb.Infrastructure.Persistence.Prerender;
 
-namespace LoDb.Api.Tests.Prerender;
+namespace LoDb.Api.Tests.Prerender.Monitoring;
 
 /// <summary>
 /// What an epoch holds of each (version, locale), folded from the units of its passes: each

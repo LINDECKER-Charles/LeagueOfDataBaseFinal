@@ -15,8 +15,8 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 namespace LoDb.Api.Tests.Admin;
 
 /// <summary>
-/// The epoch ready to serve, judged by its coverage whatever the passes that filled it, and
-/// the coverage of each epoch not retired in the report.
+/// The epoch ready to serve, judged by its coverage whatever the passes that filled it, the
+/// coverage of each epoch not retired in the report, and what is left of the active pass.
 /// </summary>
 /// <remarks>
 /// A host per test, served epoch 2, on a catalog of two older patches; the passes written
@@ -122,6 +122,41 @@ public sealed class AdminPrerenderReadinessTests(PostgresContainerFixture postgr
         Assert.Equal(42, epochs[2].GetProperty("coverage").GetProperty("gapUnits").GetInt32());
         Assert.Equal(JsonValueKind.Null, epochs[1].GetProperty("coverage").ValueKind);
         Assert.Equal(JsonValueKind.Null, report.GetProperty("readyEpoch").ValueKind);
+    }
+
+    // The newest patch listed 1,140 pages a locale; the older one's units, not reached yet,
+    // expect 500 each, as a former pass measured: not the 1,140 of the listed units' mean.
+    [Fact]
+    public async Task PagesLeftCountEachUnitToComeAtItsVersionsPages()
+    {
+        using var admin = await AdminBrowser.OpenAsync(App);
+        var done = EveryLocale(Newer)[0];
+        (done.PagesTotal, done.PagesWritten) = (1_140, 1_140);
+        var current = EveryLocale(Newer)[1];
+        (current.State, current.PagesTotal, current.PagesWritten, current.EndedAt) =
+            (PrerenderUnitState.Running, 1_140, 140, null);
+        List<PrerenderUnit> next = [.. EveryLocale(Older).Take(2)];
+        next.ForEach(static unit =>
+            (unit.State, unit.PagesTotal, unit.PagesWritten, unit.EndedAt, unit.PagesExpected) =
+                (PrerenderUnitState.Pending, 0, 0, null, 500));
+        await using (var db = App.Database())
+        {
+            db.PrerenderPasses.Add(new PrerenderPass
+            {
+                Epoch = 2,
+                State = PrerenderPassState.Running,
+                CreatedAt = Now,
+                RunningSince = Now,
+                PagesTotal = 2_280,
+                PagesWritten = 1_280,
+                Units = [done, current, .. next],
+            });
+            await db.SaveChangesAsync(Cancellation);
+        }
+
+        var report = await ReadAsync(admin);
+
+        Assert.Equal(2_000, report.GetProperty("current").GetProperty("pagesLeft").GetInt64());
     }
 
     private static JsonElement CoverageOf(JsonElement report, int epoch) =>

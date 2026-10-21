@@ -87,6 +87,7 @@ internal static class PrerenderRegistration
         services.TryAddSingleton<PageRunner>();
         services.TryAddSingleton<UnitRunner>();
         services.TryAddSingleton<PrerenderEngine>();
+        services.TryAddSingleton<EnginePulse>();
         services.TryAddSingleton<UnitWaits>();
     }
 

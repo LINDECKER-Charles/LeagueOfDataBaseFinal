@@ -34,8 +34,8 @@ internal static class PassViews
             Units = UnitsOf(facts),
             PagesPerMinute = PassProgress.Shown(rate),
             EstimatedEndAt = PassProgress.EstimatedEnd(facts, rate, now),
-            // TODO(B2): PausedAt and PauseReason from prerender_pass.paused_at and
-            // pause_reason, once the PrerenderDiagnostics migration adds them.
+            PausedAt = pass.PausedAt,
+            PauseReason = pass.PauseReason,
             PagesLeft = PassProgress.PagesLeft(facts),
         };
     }

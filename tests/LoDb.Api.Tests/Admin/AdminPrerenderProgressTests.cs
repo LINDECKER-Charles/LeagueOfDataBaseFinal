@@ -1,10 +1,17 @@
 using System.Globalization;
 using System.Net;
 using System.Text.Json;
+using LoDb.Api.Modules.Admin.Prerender.Pages;
+using LoDb.Api.Modules.Admin.Prerender.Passes;
+using LoDb.Api.Modules.Admin.Prerender.Units;
+using LoDb.Api.Modules.Admin.Prerender.Units.Waits;
 using LoDb.Api.Tests.Accounts.Support;
 using LoDb.Api.Tests.Audit.Support;
+using LoDb.Domain.Languages;
+using LoDb.Domain.Versions;
 using LoDb.Infrastructure.Persistence.Prerender;
 using LoDb.Testing;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LoDb.Api.Tests.Admin;
 
@@ -63,8 +70,19 @@ public sealed class AdminPrerenderProgressTests(PostgresContainerFixture postgre
         Assert.Equal([Running + " en"], Keys(progress.GetProperty("running")));
         Assert.Equal([Running + " fr"], Keys(progress.GetProperty("next")));
         Assert.Equal([Done + " fr", Done + " en"], Keys(progress.GetProperty("recent")));
-        Assert.Equal([Done + " fr"], Keys(progress.GetProperty("failures")));
+        var failure = Assert.Single(progress.GetProperty("failures").EnumerateArray());
+        Assert.Equal(
+            ("16.18.1", "fr", "The SSR answered 500, not a page to store."),
+            (ApiJson.Text(failure, "version"), ApiJson.Text(failure, "locale"),
+                ApiJson.Text(failure, "failure")));
+        Assert.Equal(
+            Now.AddMinutes(-15),
+            failure.GetProperty("endedAt").GetDateTimeOffset(),
+            TimeSpan.FromMilliseconds(1));
         Assert.Equal(1, progress.GetProperty("unitsWithFailures").GetInt32());
+        var running = progress.GetProperty("running")[0];
+        Assert.Equal(JsonValueKind.Null, running.GetProperty("endedAt").ValueKind);
+        Assert.Equal(JsonValueKind.String, running.GetProperty("startedAt").ValueKind);
         var pulse = progress.GetProperty("pulse");
         Assert.False(pulse.GetProperty("isWorkerEnabled").GetBoolean());
         Assert.Equal(JsonValueKind.Null, pulse.GetProperty("observedAt").ValueKind);
@@ -102,6 +120,36 @@ public sealed class AdminPrerenderProgressTests(PostgresContainerFixture postgre
         var progress = await ReadAsync(admin, id, since: null);
 
         Assert.Equal(cells, ApiJson.Text(progress.GetProperty("versions")[1], "cells"));
+    }
+
+    // The worker takes a waiting version later: what comes next leaves it out, and the pulse
+    // says why it waits and until when.
+    [Fact]
+    public async Task VersionWaitingOnThisInstanceIsLeftOutOfWhatComesNext()
+    {
+        using var admin = await AdminBrowser.OpenAsync(App);
+        var id = await SeedAsync(PrerenderPassState.Running);
+        var since = App.Clock.GetUtcNow();
+        App.Services.GetRequiredService<UnitWaits>().TryBegin(
+            new ClaimedUnit
+            {
+                Pass = new RunningPass(id, 1, PassScope.Everything),
+                Version = PatchVersion.Parse(Running),
+                Locale = UiLocale.Fr,
+            },
+            UnitWaitReason.CatalogPending);
+
+        var progress = await ReadAsync(admin, id, since: null);
+
+        Assert.Empty(progress.GetProperty("next").EnumerateArray());
+        var wait = Assert.Single(progress.GetProperty("pulse").GetProperty("waiting")
+            .EnumerateArray());
+        Assert.Equal((Running, "catalog-pending"), (ApiJson.Text(wait, "version"),
+            ApiJson.Text(wait, "reason")));
+        Assert.Equal(
+            wait.GetProperty("since").GetDateTimeOffset() + UnitWaits.Longest,
+            wait.GetProperty("givesUpAt").GetDateTimeOffset());
+        Assert.Equal(since, wait.GetProperty("since").GetDateTimeOffset(), TimeSpan.FromSeconds(1));
     }
 
     [Fact]
@@ -165,6 +213,7 @@ public sealed class AdminPrerenderProgressTests(PostgresContainerFixture postgre
             ],
         };
         pass.Units[1].PagesFailed = 2;
+        pass.Units[1].Failure = "The SSR answered 500, not a page to store.";
         foreach (var (unit, rank) in pass.Units.Select(static (unit, rank) => (unit, rank)))
         {
             unit.Priority = rank;
@@ -187,7 +236,9 @@ public sealed class AdminPrerenderProgressTests(PostgresContainerFixture postgre
             State = state,
             PagesTotal = state == PrerenderUnitState.Pending ? 0 : 500,
             PagesWritten = state == PrerenderUnitState.Completed ? 498 : 0,
+            StartedAt = state == PrerenderUnitState.Pending ? null : at.AddMinutes(-5),
             UpdatedAt = at,
+            EndedAt = state == PrerenderUnitState.Completed ? at : null,
         };
     }
 }

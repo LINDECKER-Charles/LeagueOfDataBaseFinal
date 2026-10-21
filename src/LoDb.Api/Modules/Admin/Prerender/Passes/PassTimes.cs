@@ -38,5 +38,6 @@ internal static class PassTimes
         pass.FinishedAt = to is PrerenderPassState.Completed or PrerenderPassState.Cancelled
             ? now
             : null;
+        pass.PausedAt = to == PrerenderPassState.Paused ? now : null;
     }
 }
