@@ -1,6 +1,7 @@
 using LoDb.Api.Modules.Admin.Prerender.Demand.Queue;
 using LoDb.Api.Modules.Admin.Prerender.Demand.Telemetry;
 using LoDb.Api.Modules.Admin.Prerender.Options;
+using LoDb.Api.Modules.Admin.Prerender.Pace;
 using LoDb.Infrastructure.Locks;
 using Microsoft.Extensions.Options;
 
@@ -14,7 +15,9 @@ namespace LoDb.Api.Modules.Admin.Prerender.Demand.Drain;
 /// <para>
 /// One instance drains at a time, under an advisory lock of its own: a manual pass runs beside
 /// it, under its own, and both share the pass SSR's renders (<see cref="Sharing.RenderSlots"/>)
-/// and its pace. Dormant while the queue is switched off or the store is not configured
+/// and its pace. While it has pages, the queue drives the <see cref="PaceRegulator"/> too:
+/// alone, it renders at the pace the regulator or the operator sets, the host and the visitors
+/// watched, never at the fixed pace no signal watches. Dormant while the queue is switched off or the store is not configured
 /// (<see cref="DemandActivation"/>).
 /// </para>
 /// <para>
@@ -28,6 +31,7 @@ internal sealed class DemandDrain(
     DemandQueue queue,
     DemandPageRunner pages,
     DemandMetrics metrics,
+    PaceRegulator regulator,
     IOptions<PrerenderOptions> options,
     TimeProvider clock,
     ILogger<DemandDrain> logger)
@@ -35,7 +39,7 @@ internal sealed class DemandDrain(
     /// <summary>The advisory lock of whoever drains the queue.</summary>
     public const string LockName = "prerender:demand";
 
-    /// <summary>Pages a batch takes: some minutes of renders at the pass's floor.</summary>
+    /// <summary>Pages a batch takes: under a minute of renders at the pass's floor.</summary>
     public const int BatchSize = 20;
 
     private const string NoReason = "none.";
@@ -73,8 +77,21 @@ internal sealed class DemandDrain(
 
     private async Task DrainAsync(int epoch, CancellationToken cancellationToken)
     {
+        try
+        {
+            await DrainBatchesAsync(epoch, cancellationToken);
+        }
+        finally
+        {
+            regulator.EndQueue();
+        }
+    }
+
+    private async Task DrainBatchesAsync(int epoch, CancellationToken cancellationToken)
+    {
         while (await queue.NextAsync(BatchSize, cancellationToken) is { Count: > 0 } rows)
         {
+            regulator.BeginQueue();
             var started = clock.GetTimestamp();
             var tally = await RunBatchAsync(rows, epoch, cancellationToken);
             Log(tally, epoch, (long)clock.GetElapsedTime(started).TotalMilliseconds);
