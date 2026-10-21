@@ -10,10 +10,12 @@ import { fileURLToPath } from 'node:url';
 // The pass renders on its own SSR (web-ssr-prerender, ADR 0011), never on the visitors':
 // - the API's regulator moves the pace between Pace__MinRendersPerMinute and
 //   Pace__MaxRendersPerMinute, and keeps MaxInFlight pages in flight;
-// - the pass SSR's lane admits LODB_PRERENDER_RENDERS_PER_MINUTE renders a minute and
-//   LODB_PRERENDER_MAX_IN_FLIGHT at once: its budget is the ceiling, so that the SSR itself
-//   caps the pass even if the regulator misbehaves, and a ceiling raised on a host is raised
-//   on both sides;
+// - each renderer's lane (a replica of web-ssr-prerender) admits
+//   LODB_PRERENDER_RENDERS_PER_MINUTE renders a minute and LODB_PRERENDER_MAX_IN_FLIGHT at
+//   once: its budget is the manual maximum the admin may set (LODB_PRERENDER_MANUAL_MAX), or
+//   the adaptive ceiling where it is higher, so that the renderers themselves cap the pass
+//   even if the API misbehaves; the pages the API keeps in flight at that maximum fit the
+//   renderers' slots;
 // - RendersPerMinute is the fixed pace (kill switch, `prerender unit`), which the lane would
 //   refuse above the ceiling.
 // Both sides read the same lines.
@@ -35,6 +37,8 @@ const HOST_ADDITIONS = 'LODB_EDGE_CIDR=172.18.0.0/16\nLODB_STACK_SUBNET=10.231.2
 const RAISED = 'LODB_PRERENDER_PACE_MAX=300\nLODB_PRERENDER_RENDERS_PER_MINUTE=240\n'
   + 'LODB_PRERENDER_MAX_IN_FLIGHT=3\n';
 const PASS_ALIAS = 'lodb-web-ssr-prerender';
+// The time each page in flight is given by the API's window (InFlightWidth.cs).
+const SECONDS_PER_PAGE_IN_FLIGHT = 1.5;
 // The SSR's own defaults, which an empty LODB_PRERENDER_* leaves in place.
 const SSR_LIMITS = readFileSync(
   join(ROOT, 'src/LoDb.Web/src/server/admission/read-render-limits.ts'), 'utf8');
@@ -76,6 +80,10 @@ function paceOf(stack, extra) {
       fixed: env.LoDb__Prerender__RendersPerMinute,
       maxInFlight: env.LoDb__Prerender__MaxInFlight,
     },
+    renderers: {
+      count: env.LoDb__Prerender__Renderers,
+      manualMax: env.LoDb__Prerender__Pace__ManualMaxRendersPerMinute,
+    },
     lane: {
       perMinute: lane.LODB_PRERENDER_RENDERS_PER_MINUTE || SSR_DEFAULTS.perMinute,
       maxInFlight: lane.LODB_PRERENDER_MAX_IN_FLIGHT || SSR_DEFAULTS.maxInFlight,
@@ -95,9 +103,15 @@ describe("the pass's pace through Compose", { skip: !hasCompose && 'no docker co
   });
 
   for (const stack of Object.keys(STACKS)) {
-    it(`gives the pass SSR's lane the API's ceiling and pages in flight on ${stack}`, () => {
-      const { api, lane } = paceOf(stack);
-      assert.deepEqual({ perMinute: api.max, maxInFlight: api.maxInFlight }, lane);
+    it(`gives the renderers' lane the manual maximum and the ceiling on ${stack}`, () => {
+      const { api, renderers, lane } = paceOf(stack);
+      // The local overlay widens the lane to its ceiling, above the manual maximum.
+      assert.ok(Number(renderers.manualMax) <= Number(lane.perMinute),
+        'the lane would refuse the manual maximum');
+      assert.ok(Number(api.max) <= Number(lane.perMinute), 'the lane would refuse the ceiling');
+      const widest = Math.ceil(Number(renderers.manualMax) * SECONDS_PER_PAGE_IN_FLIGHT / 60);
+      assert.ok(widest <= Number(renderers.count) * Number(lane.maxInFlight),
+        'the pages in flight at the manual maximum fit the renderers');
     });
 
     it(`keeps the floor, the fixed pace and the ceiling in order on ${stack}`, () => {
@@ -115,14 +129,20 @@ describe("the pass's pace through Compose", { skip: !hasCompose && 'no docker co
       { min: '10', max: '30', step: '10', fixed: '30', maxInFlight: '1' });
   });
 
-  it('gives prod a floor of 30, a ceiling of 240 and the SSR default pages in flight', () => {
+  it('gives prod a floor of 30, a ceiling of 240 and 24 pages in flight', () => {
     assert.deepEqual(paceOf('prod').api,
-      { min: '30', max: '240', step: undefined, fixed: '120', maxInFlight: '2' });
+      { min: '30', max: '240', step: undefined, fixed: '120', maxInFlight: '24' });
+  });
+
+  it('gives prod two renderers of 15 slots each, at a manual maximum of 900', () => {
+    const { renderers, lane } = paceOf('prod');
+    assert.deepEqual({ ...renderers, lane },
+      { count: '2', manualMax: '900', lane: { perMinute: '900', maxInFlight: '15' } });
   });
 
   it('gives a local stack a wide range, to watch the regulator climb', () => {
     assert.deepEqual(paceOf('dev').api,
-      { min: '120', max: '1200', step: '120', fixed: '120', maxInFlight: '2' });
+      { min: '120', max: '1200', step: '120', fixed: '120', maxInFlight: '24' });
   });
 
   for (const stack of Object.keys(STACKS)) {
@@ -147,9 +167,13 @@ describe("the pass's pace through Compose", { skip: !hasCompose && 'no docker co
         max: '300',
         step: isProd ? undefined : '10',
         fixed: '240',
-        maxInFlight: '3',
+        // Prod's pages in flight are LODB_PRERENDER_PAGES_IN_FLIGHT's, staging's one line.
+        maxInFlight: isProd ? '24' : '3',
       });
-      assert.deepEqual(lane, { perMinute: '300', maxInFlight: '3' });
+      // Prod's lane is the manual maximum's; staging's follows its ceiling.
+      assert.deepEqual(lane, isProd
+        ? { perMinute: '900', maxInFlight: '15' }
+        : { perMinute: '300', maxInFlight: '3' });
       // The visitors' lane still follows the pass lines, unused since the pass left it.
       assert.deepEqual(visitorsLane, { perMinute: '240', maxInFlight: '3' });
     });
