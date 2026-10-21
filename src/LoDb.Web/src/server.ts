@@ -21,6 +21,8 @@ import { readBuildFiles } from './server/assets/read-build-files';
 import { staticFolder } from './server/assets/static-folder';
 import { encodedDocument } from './server/compression/encoded-document';
 import { createLogger } from './server/create-logger';
+import { noteRefusedPage } from './server/demand/note-refused-page';
+import { RefusedPages } from './server/demand/refused-pages';
 import { CGROUP_FOLDER } from './server/load/cgroup-cpu';
 import { EventLoopWindow } from './server/load/event-loop-window';
 import { ServerLoad } from './server/load/server-load';
@@ -88,6 +90,8 @@ const requestContext: SsrRequestContext = {
 const buildListing = listening ? readBuildListing(browserDistFolder) : null;
 const renderCounts = new RenderCounts();
 const renderAdmission = new RenderAdmission(settings.renderLimits, renderCounts);
+// The older patches' pages refused to visitors, which the API reads to pre-render them.
+const refusedPages = new RefusedPages();
 const metrics = new SsrMetrics(renderCounts, renderAdmission);
 const eventLoopWindow = new EventLoopWindow();
 const serverLoad = new ServerLoad(renderCounts, {
@@ -205,6 +209,7 @@ app.use((request, response, next) => {
       response.set(buildMark(lane, buildListing?.build ?? null));
       await writeResponseToNodeResponse(sent, response);
     })
+    .then(() => noteRefusedPage(refusedPages, admitted, response))
     .catch(next);
 });
 
@@ -221,10 +226,15 @@ if (listening) {
   new AdmissionSummary(renderCounts, logger).start();
   unexpectedScripts.start();
   // Never routed by nginx nor published: the host's collector reads it over its own network,
-  // the API's pre-render regulator its load (`/load`) over the stack's.
+  // the API's pre-render regulator its load (`/load`) and its queue the refused pages
+  // (`/refused`) over the stack's.
   eventLoopWindow.start();
   serveMetrics(
-    { registry: metrics.registry, load: () => serverLoad.report() },
+    {
+      registry: metrics.registry,
+      load: () => serverLoad.report(),
+      refused: (after) => refusedPages.report(after),
+    },
     settings.metricsPort,
     logger,
   );
