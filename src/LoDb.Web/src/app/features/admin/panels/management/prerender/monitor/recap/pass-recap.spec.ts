@@ -82,6 +82,8 @@ function buttonReading(fixture: ComponentFixture<Host>, label: string): HTMLButt
 
 describe('PassRecap', () => {
   beforeEach(() => localStorage.removeItem(DISMISSED_KEY));
+  // Spec files of a worker share one page: a dismissal left in storage would reach the next file.
+  afterEach(() => localStorage.removeItem(DISMISSED_KEY));
 
   it('sums up a completed pass, and relaunches what failed with its figures', async () => {
     const fixture = open(COMPLETED);
