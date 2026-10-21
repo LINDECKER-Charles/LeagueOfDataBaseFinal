@@ -28,8 +28,10 @@ const OBSERVABILITY_SUBNET = '172.19.0.0/16';
 // git and docker answer as on a host whose checkout, shared networks and Engine 25+ are in
 // place; OBSERVABILITY_SUBNET in the environment moves that network onto another subnet, and
 // MISSING_NETWORK names a shared network the host lacks. `compose config api` states the
-// pass's pace as prod resolves it (the floor, ceiling and fixed pace of the .env examples,
-// the step left to the code); PACE_MIN, PACE_MAX, PACE_STEP and PACE_FIXED replace each one.
+// pass's pace as prod resolves it (the floor, ceiling, fixed pace and manual maximum of the
+// .env examples, the step left to the code), and `compose config web-ssr-prerender` its
+// renderers' lane; PACE_MIN, PACE_MAX, PACE_STEP, PACE_FIXED, PACE_MANUAL and PACE_LANE
+// replace each one.
 const STUBS = [
   'git() { :; }',
   'docker() {',
@@ -49,7 +51,11 @@ const STUBS = [
   '      echo "      LoDb__Prerender__Pace__MaxRendersPerMinute: \\"${PACE_MAX:-240}\\""',
   '      [ -z "${PACE_STEP:-}" ] ||',
   '        echo "      LoDb__Prerender__Pace__StepRendersPerMinute: \\"$PACE_STEP\\""',
-  '      echo "      LoDb__Prerender__RendersPerMinute: \\"${PACE_FIXED:-120}\\"" ;;',
+  '      echo "      LoDb__Prerender__RendersPerMinute: \\"${PACE_FIXED:-120}\\""',
+  '      echo "      LoDb__Prerender__Pace__ManualMaxRendersPerMinute:"'
+    + ' "\\"${PACE_MANUAL:-900}\\"" ;;',
+  '    "compose config web-ssr-prerender")',
+  '      echo "      LODB_PRERENDER_RENDERS_PER_MINUTE: \\"${PACE_LANE:-900}\\"" ;;',
   '    *) echo "unexpected: docker $*" >&2; return 1 ;;',
   '  esac',
   '}',
@@ -245,6 +251,10 @@ describe("_deploy.yml, the pre-rendering pass's pace", () => {
       /step \(30\).*ceiling \(20\)/],
     ['a fixed pace above the ceiling', { PACE_FIXED: '241' }, /fixed pace \(241\).*ceiling/],
     ['a setting that is no whole number', { PACE_MAX: 'fast' }, /whole numbers \(got 'fast'\)/],
+    ['a ceiling above the renderers\' lane', { PACE_MAX: '1000', PACE_MANUAL: '1000' },
+      /ceiling \(1000\).*lane \(900\)/],
+    ['a manual maximum above the renderers\' lane', { PACE_MANUAL: '1200' },
+      /manual maximum \(1200\).*lane \(900\)/],
   ]) {
     it(`stops the deploy before any container changes for ${refusal}`, () => {
       const run = deploy(host(), { ...PROD, ...pace }, dotenvFor(PROD));
