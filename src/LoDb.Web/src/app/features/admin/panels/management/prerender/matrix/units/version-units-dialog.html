@@ -27,7 +27,7 @@
                   <span class="font-mono">{{ unit.locale }}</span>
                   <span class="cell-sub">{{ languageOf(unit.locale) }}</span>
                 </th>
-                <td>
+                <td class="whitespace-nowrap">
                   <span [lodbBadge]="toneOf(unit.state)">
                     {{ 'admin.prerender.states.' + unit.state | adminText }}
                   </span>
@@ -40,11 +40,11 @@
                   />
                   <span class="cell-sub num">{{ progressOf(unit) }}</span>
                 </td>
-                <td class="num">
+                <td class="num whitespace-nowrap">
                   {{ unit.pagesWritten | figure }} · {{ unit.pagesSkipped | figure }} ·
                   {{ unit.pagesFailed | figure }}
                 </td>
-                <td class="num">{{ unit.bytesWritten | decimalBytes }}</td>
+                <td class="num whitespace-nowrap">{{ unit.bytesWritten | decimalBytes }}</td>
                 <td>{{ unit.startedAt | stamp: 'minute' }}</td>
                 <td>{{ unit.endedAt ?? unit.updatedAt | stamp: 'minute' }}</td>
                 <td>
