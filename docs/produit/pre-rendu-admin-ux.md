@@ -1001,8 +1001,9 @@ Notations : `V` les versions cochées ; `L` les langues choisies ; `T` les types
 | Coût ajouté | `octetsAjoutés / 10⁹ × prix`, où `octetsAjoutés = round(Σ_(v,l) rendues ppl(v) × share(T ∖ tenus(v, l))) × octets par page` : chaque cellule lue **seule**, par son masque de types (`types`, § 3.4) — une `-` ou une `f` sans type tenu ajoute toute sa part, une `p` ou une `w` les types choisis qui lui manquent, une `c` rien ; refaire une page stockée la remplace (`StorageCensus` garde le maximum). Jamais par le total de la ligne : une langue en échec d'un patch dont d'autres langues sont stockées ajoute bien ses pages — pour une epoch nouvelle, toutes les unités | `estimates.pricePerGbMonthOneZone`, `currency` ; montant écrit par `monthlyCost` (`management/backups/monthly-cost.ts`) |
 
 Les cinq tuiles tiennent sur une ligne de la modale (`repeat(auto-fit, minmax(9rem, 1fr))`,
-au lieu des 11rem de la page) ; la tuile Coût dit « + 0,01 € » et porte « par mois, au prix One
-Zone (…) » en sous-ligne, pour que son chiffre ne se coupe pas.
+au lieu des 11rem de la page), leurs chiffres en 1.35rem au lieu des 1.9rem d'une tuile de page
+(projetés dans `lodb-kpi`, `value` nul) ; la tuile Coût dit « + 0,01 € » et porte « par mois,
+au prix One Zone (…) » en sous-ligne, pour que son chiffre ne se coupe pas.
 
 Qualité de l'estimation, dite sous les tuiles : « Pages par unité mesurées sur des passes
 précédentes » (toutes les versions ont `pagesPerLocale`), « …mesurées pour 31 patchs sur 38 ;

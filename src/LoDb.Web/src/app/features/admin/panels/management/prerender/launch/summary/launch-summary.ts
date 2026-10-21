@@ -44,12 +44,10 @@ const DEFAULT_PAGES = 500;
     <p class="text-gold-bright" data-summary-scope>{{ scope() }}</p>
     <div class="kpi-grid summary-tiles mt-4">
       @for (tile of tiles(); track tile.key) {
-        <lodb-kpi
-          [label]="tile.label"
-          [value]="tile.value"
-          [sub]="tile.sub"
-          [attr.data-tile]="tile.key"
-        />
+        <!-- The figure set smaller than a page's: five tiles share the dialog's width. -->
+        <lodb-kpi [label]="tile.label" [value]="null" [sub]="tile.sub" [attr.data-tile]="tile.key">
+          <span class="summary-value" data-tile-value>{{ tile.value }}</span>
+        </lodb-kpi>
       }
     </div>
     <p class="readout-text mt-3" data-quality>{{ quality() }}</p>
@@ -93,6 +91,14 @@ const DEFAULT_PAGES = 500;
   styles: `
     .kpi-grid.summary-tiles {
       grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    }
+    .summary-value {
+      display: block;
+      margin-block-start: 0.375rem;
+      font-family: var(--font-beaufort);
+      font-size: 1.35rem;
+      line-height: 1.1;
+      color: var(--color-gold-bright);
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
