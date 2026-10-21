@@ -437,11 +437,34 @@ jobs:
             # service's environment: compose.yaml's private ranges, which hold the shared
             # networks' subnets, would then stay. Read from the resolved configuration, before
             # any container changes; only the networks are printed.
-            trusted="$(docker compose config api web-ssr \
+            trusted="$(docker compose config api web-ssr web-ssr-prerender \
               | sed -nE 's/^ +(LoDb__Hosting__KnownProxyNetworks__[0-9]+|LODB_STACK_NETWORKS): //p' \
               | tr -d "\"'" | sort -u | xargs)"
             [ "$trusted" = "$STACK_SUBNET" ] \
-              || fail "The API or the renderer would trust '$trusted', not $STACK_SUBNET alone."
+              || fail "The API or a renderer would trust '$trusted', not $STACK_SUBNET alone."
+
+            # The pre-rendering pass's pace (configuration.md § 4.10), read from the resolved
+            # configuration like the networks above. The API refuses to start on a floor, a
+            # step or a fixed pace above the ceiling, and the pass renderer's lane (whose
+            # budget is the ceiling) would refuse the fixed pace: stopped here, before any
+            # container changes, instead of an API that does not come up mid-deploy.
+            api_config="$(docker compose config api)"
+            pace_value() {
+              sed -nE "s/^ +LoDb__Prerender__$1: //p" <<< "$api_config" | tr -d "\"'" | head -n 1
+            }
+            pace_min="$(pace_value Pace__MinRendersPerMinute)"
+            pace_max="$(pace_value Pace__MaxRendersPerMinute)"
+            # Set by the staging and local overlays only; the code's default (PaceOptions) else.
+            pace_step="$(pace_value Pace__StepRendersPerMinute)"
+            pace_step="${pace_step:-30}"
+            pace_fixed="$(pace_value RendersPerMinute)"
+            for pace in "$pace_min" "$pace_max" "$pace_step" "$pace_fixed"; do
+              [[ "$pace" =~ ^[0-9]+$ ]] \
+                || fail "The pass's pace settings must be whole numbers (got '$pace')."
+            done
+            (( pace_min <= pace_max && pace_step <= pace_max && pace_fixed <= pace_max )) \
+              || fail "The pass's floor ($pace_min), step ($pace_step) and fixed pace" \
+                "($pace_fixed) must not exceed its ceiling ($pace_max)."
 
             # ── Pull, then migrations before the traffic switch ────────────────────────
             # Logged in with this run's token for the pull only: the packages may be private,
@@ -513,14 +536,25 @@ jobs:
 
             # --wait: the job fails if a probe does not turn healthy. --remove-orphans
             # retires the containers of the legacy stack (php, go-fetcher, go-api, mailer).
+            # Two phases: the visitors' services first, then the pre-rendering pass's renderer.
+            # The page waits for the former alone, and a renderer that does not come up can
+            # neither keep it on nor fail the deploy: the site does not need it.
+            mapfile -t served < <(docker compose config --services | grep -vx web-ssr-prerender)
+            [ "${#served[@]}" -gt 0 ] || fail "No service to start: check the compose files."
             maintenance_on
-            docker compose up -d --no-build --remove-orphans --wait --wait-timeout 180
+            docker compose up -d --no-build --remove-orphans --wait --wait-timeout 180 \
+              "${served[@]}"
             [ "$(subnets_of "$stack_network")" = "$STACK_SUBNET" ] \
               || fail "$stack_network is not on $STACK_SUBNET, the subnet the API trusts."
             # The new stack is healthy: the pages are its own again, before the smoke tests
             # below ask for them.
             maintenance end
             trap - EXIT
+            # The pass's renderer, now that the site serves. It waits on the API's health and
+            # replaces the previous revision's container (the same image tag, a new digest).
+            docker compose up -d --no-build --wait --wait-timeout 180 web-ssr-prerender \
+              || echo "::warning title=Prerender SSR::web-ssr-prerender did not turn healthy;" \
+                "the site is served, the pre-rendering pass waits for its renderer."
 
             # ── Front bundles of the previous builds ───────────────────────────────────
             # web-ssr publishes its hashed bundles into the front-builds volume at start, and
@@ -575,6 +609,12 @@ jobs:
             # A page rendered by the SSR server, then the API subdomain.
             fetch "$canonical" /en/
             fetch "$api_host" /healthz
+            # The pass's renderer, a warning only: the site does not depend on it.
+            pass_ssr_health="$(docker inspect --format '{{.State.Health.Status}}' \
+              "$(docker compose ps -q web-ssr-prerender)" 2>/dev/null || true)"
+            [ "$pass_ssr_health" = healthy ] \
+              || echo "::warning title=Prerender SSR::web-ssr-prerender is" \
+                "'${pass_ssr_health:-absent}', not healthy: the pass waits, the site is served."
             # The same page without the edge's header: nginx refuses it.
             refused="$(docker compose exec -T nginx wget -qO /dev/null \
               --header "Host: $canonical" http://127.0.0.1:8080/en/ 2>&1 || true)"
