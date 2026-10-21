@@ -1,6 +1,7 @@
 import type { PrerenderPassProgress } from '../../../../../../core/api/generated/models/prerender-pass-progress';
 import type { PrerenderVersionProgress } from '../../../../../../core/api/generated/models/prerender-version-progress';
 import { type ActivityEvent, activityEvents } from './activity/activity-events';
+import { type WrittenAt, writtenAtOf } from './now/written-at';
 import { type Eta, etaOf } from './progress/eta-of';
 import { PaceSamples } from './progress/pace-samples';
 import { progressSegments } from './progress/progress-segments';
@@ -19,6 +20,8 @@ export interface MonitorState {
   readonly shownShare: number;
   /** The end, at the mean pace and the current one, with its hysteresis. */
   readonly eta: Eta;
+  /** When the pass last wrote a page: what a stall is measured from. */
+  readonly written: WrittenAt;
   /** Date.now() when the answer came: with generatedAt, the server's clock. */
   readonly receivedAt: number;
   /** Date.now() when the last complete answer came, to read whole again past 10 minutes. */
@@ -36,6 +39,7 @@ interface Seed {
   readonly shownShare: number;
   readonly isCurrentShown: boolean;
   readonly completeAt: number;
+  readonly written: WrittenAt | undefined;
 }
 
 // Every version seen: a complete answer replaces them, an incremental one updates or adds
@@ -80,6 +84,7 @@ function stateOf(seed: Seed, response: PrerenderPassProgress, receivedAt: number
     seen: activity.seen,
     shownShare: Math.max(seed.shownShare, progressSegments(response.pass).share),
     eta,
+    written: writtenAtOf(seed.written, response),
     receivedAt,
     completeAt: response.isComplete ? receivedAt : seed.completeAt,
   };
@@ -94,6 +99,7 @@ function first(response: PrerenderPassProgress, receivedAt: number): MonitorStat
     shownShare: 0,
     isCurrentShown: false,
     completeAt: 0,
+    written: undefined,
   };
   return stateOf(seed, response, receivedAt);
 }
@@ -108,8 +114,8 @@ function next(last: MonitorState, response: PrerenderPassProgress, receivedAt: n
  * (a complete answer replaces them), the scope list kept from the last complete answer, a
  * sample of the pace, the new lines of the feed, the share on screen (never back for one
  * pass: it waits for the figure to catch up when the total grows) and the end with its
- * hysteresis. Another pass than the last starts over. `receivedAt` is Date.now() at the
- * answer.
+ * hysteresis, and when it last wrote a page. Another pass than the last starts over.
+ * `receivedAt` is Date.now() at the answer.
  */
 export function mergeProgress(
   last: MonitorState | undefined,

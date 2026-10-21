@@ -101,6 +101,16 @@ describe('LiveMonitor', () => {
     );
   });
 
+  it('says when the unit running fails in numbers, with its reason and a way to pause', async () => {
+    const monitor = MonitorHarness.open();
+    const unit = { ...BASE.running[0], pagesWritten: 6, pagesSkipped: 0, pagesFailed: 8 };
+    await monitor.read(prerenderProgress({ running: [{ ...unit, failure: REASON }] }));
+
+    expect(monitor.text('[data-failing-line]')).toBe('admin.prerender.live.failing');
+    expect(monitor.text('[data-failing-reason]')).toBe(REASON);
+    expect(monitor.page.querySelector('[data-failing-pause]')).not.toBeNull();
+  });
+
   it('keeps the figures through a 502, then says it is live again', async () => {
     vi.useFakeTimers({ toFake: ['Date'] });
     const monitor = MonitorHarness.open();

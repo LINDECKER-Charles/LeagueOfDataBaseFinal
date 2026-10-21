@@ -374,7 +374,8 @@ Règles du téléphone (sous `sm`, 640 px ; `(max-width: 639.98px)` comme
 | En cours | `current.state === 'running'` | `LiveMonitor` complet, lu toutes les 5 s |
 | En pause par un administrateur | `paused`, `pauseReason === null` | moniteur : badge « en pause depuis… », rythme « à l'arrêt », fin « suspendue », « Reprendra par » au lieu d'« En ce moment » (l'unité restée `running` en base est rendue arrêtée, code `z`, § 4.4, § 4.5), bouton « Reprendre » (or), lecture toutes les 30 s |
 | En pause d'elle-même | `paused`, `pauseReason !== null` | idem + bande rouge en tête du moniteur avec la raison ; « Reprendre… » ouvre un dialogue d'avertissement |
-| Bloquée | en cours, aucune activité depuis 3 min (`stallOf`, § 4.5) | bande dorée dans le moniteur : « Aucune page depuis 4 min » + cause probable |
+| Bloquée | en cours, aucune page écrite depuis 3 min (`stallOf`, § 4.5) | bande dorée dans le moniteur : « Aucune page écrite depuis 4 min » + cause probable |
+| Unité en échec en masse | en cours, un cinquième au moins des pages de l'unité en cours en échec, sur 10 pages au moins (`failingUnitOf`, § 4.5) | bande rouge dans le moniteur : unité, pages en échec, dernière raison, « Détail du patch », « Mettre en pause » |
 | Démarrage | en cours, ouverte il y a moins de 90 s, aucune unité commencée | ligne « En attente de la tâche de fond : elle prend une passe à son prochain tour (30 s au plus) » (`PrerenderWorker.Period`) |
 | Epoch prête | `report.readyEpoch !== null` : plus aucun manque (§ 6.5) | bande verte : la variable copiable + « Comment basculer ? » (§ 5.5) ; si des cellules `f` restent : « 12 unités en échec définitif passeront par le SSR » (et les pages en échec des cellules `w`) |
 | Epoch presque prête | une epoch `standby` non écrite, avec des manques, `(attendues − manques) / attendues ≥ 90 %` | bande verte : ce qui manque + « Compléter l'epoch N » (modale préremplie) |
@@ -1244,11 +1245,24 @@ et `aria-label` « 12 langues complètes sur 21 ».
   n'avance pas. » (`Workers/ConventionalWorkers.cs`).
 - **Aucune unité en cours** et rien de ce qui précède : « Aucune unité en cours. »
 
-**Blocage** (`stallOf(progress, serverNow)`, F3, pur) : seulement si la passe est `running`
-(jamais en pause : une unité `z` n'avance pas par construction).
-Dernière activité = le plus récent de `running[].updatedAt`, `recent[0].updatedAt`,
-`pass.createdAt`. Si `serverNow − dernière activité ≥ 180 s`, la bande « Aucune page depuis
-4 min » s'affiche avec la première cause vraie, dans cet ordre :
+**Unité en échec en masse** (`failingUnitOf(progress)`, F3, pur) : la liste des échecs attend
+la fin d'une unité, et une page en échec réécrit son unité comme une page écrite ; sans cette
+bande, un stockage qui refuse chaque page resterait invisible jusqu'à la fin de l'unité. Quand
+l'unité en cours a traité 10 pages au moins et qu'un cinquième au moins d'entre elles sont en
+échec, une bande rouge (`FailingBand`) s'affiche en tête du moniteur : « 16.18.1 · fr échoue :
+8 pages en échec sur 14 (57 %). Dernière raison : » puis `unit.failure` en anglais, « Détail du
+patch » et « Mettre en pause » (avec son dialogue de conséquences, § 4.7). Jamais en pause.
+
+**Blocage** (`stallOf(progress, serverNow, writtenAt)`, F3, pur) : seulement si la passe est
+`running` (jamais en pause : une unité `z` n'avance pas par construction).
+Dernière activité = le plus récent de la dernière page écrite, de `pass.createdAt` et de
+`pass.runningSince` (la dernière reprise : une reprise n'écrit aucune unité). La dernière page
+écrite (`writtenAtOf`, `MonitorState.written`) est l'instant de la réponse qui a vu
+`pagesWritten + pagesSkipped` grandir ; avant la première croissance vue, le plus récent de
+`running[].updatedAt`, `recent[0].updatedAt` et `pass.createdAt` de la première réponse. Une
+page en échec n'est pas une activité : elle réécrit pourtant `updatedAt`. Si `serverNow −
+dernière activité ≥ 180 s`, la bande « Aucune page écrite depuis 4 min » s'affiche avec la
+première cause vraie, dans cet ordre :
 
 | Cause | Condition | Texte |
 |---|---|---|
@@ -2714,9 +2728,12 @@ prerender/                                                         [6 + dossiers
 │   │   ├── pace-samples.ts                    PaceSamples               160
 │   │   ├── eta-of.ts                          etaOf                     70
 │   │   └── server-now.ts                      serverNow                 20   (tous + spec)
-│   ├── now/                                                           [3]
+│   ├── now/                                                           [9]
 │   │   ├── now-block.ts                       NowBlock                  180  (en cours / « Reprendra par »)
-│   │   └── stall-of.ts (+ spec)               stallOf                   70
+│   │   ├── stall-of.ts (+ spec)               stallOf                   70
+│   │   ├── written-at.ts (+ spec)             writtenAtOf               45
+│   │   ├── failing-unit-of.ts (+ spec)        failingUnitOf             45
+│   │   └── failing-band.ts                    FailingBand               70
 │   ├── activity/                                                      [4]
 │   │   ├── activity-events.ts (+ spec)        activityEvents            150
 │   │   ├── activity-feed.ts                   ActivityFeed              140
@@ -2981,7 +2998,9 @@ ouvrir `PassDetailDialog`.
 | `PaceSamples` | F3 | ajout ; même `at` ignoré ; remise à zéro (autre passe, baisse) ; rythme instantané sur 2 min ; < 20 s → `null` ; trou > 2 min coupe la courbe ; plafond 360 |
 | `progressSegments` | F3 | estimation (`pending > 0`) ; exacte ; `pagesLeft` nul → unités |
 | `etaOf` | F3 | moyen seul ; écart > 15 % → deux lignes ; entre 5 et 15 % → état précédent gardé ; < 5 % → une ligne ; rythme récent inconnu (< 5 min) ; en pause |
-| `stallOf` | F3 | pas en cours ; en pause avec une unité `z` → aucun blocage ; démarrage < 90 s ; chaque cause dans l'ordre ; < 180 s |
+| `stallOf` | F3 | pas en cours ; en pause avec une unité `z` → aucun blocage ; démarrage < 90 s ; chaque cause dans l'ordre ; < 180 s ; pages en échec sans page écrite → bloquée ; reprise récente → rien |
+| `writtenAtOf` | F3 | première réponse ; une page écrite déplace l'instant ; des pages en échec ne le déplacent pas |
+| `failingUnitOf` | F3 | unité saine ; moins de 10 pages ; un cinquième en échec ; passe en pause |
 | `serverNow` | F3 | décalage client / serveur |
 | `activityEvents` | F3 | première lecture ; unité vue une fois ; version jointe ; total réévalué (> 1 %, avec et sans version jointe ; ≤ 1 % : rien) ; chaque changement d'état ; pause d'elle-même |
 | `consequencesOf` | F3 | pause avec et sans unité en cours, avec et sans promotions ; reprise d'elle-même ; annulation avec couverture |

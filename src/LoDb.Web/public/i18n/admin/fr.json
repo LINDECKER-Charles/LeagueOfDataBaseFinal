@@ -905,7 +905,7 @@
         "worker_off": "La tâche de fond est coupée sur cette instance (LoDb:Workers:Enabled=false) : la passe n'avance pas."
       },
       "stall": {
-        "title": "Aucune page depuis {duration}",
+        "title": "Aucune page écrite depuis {duration}",
         "ssr": "Le SSR est injoignable : la passe reprendra seule à son retour.",
         "worker_off": "La tâche de fond est coupée sur cette instance.",
         "waiting": "Toutes les unités restantes attendent un catalogue.",
@@ -914,6 +914,7 @@
       },
       "paused_itself": "La passe s'est mise en pause d'elle-même : {reason}",
       "paused_itself_hint": "Corrigez la configuration du stockage ou du SSR (clé, politique, hôte public), puis reprenez.",
+      "failing": "{version} · {locale} échoue : {failed, plural, one {# page en échec} other {# pages en échec}} sur {processed} ({share}). Dernière raison :",
       "feed": {
         "title": "Activité",
         "done": "{version} · {locale} terminée · {pages, plural, one {# page} other {# pages}} · en {duration}",

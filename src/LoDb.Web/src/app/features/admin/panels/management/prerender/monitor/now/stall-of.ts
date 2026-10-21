@@ -16,13 +16,12 @@ const STALLED_MS = 180_000;
 // The engine beats at each round: older than this, no instance here writes the pass.
 const PULSE_STALE_MS = 120_000;
 
-function lastActivity(progress: PrerenderPassProgress): number {
-  const stamps = [
-    ...progress.running.map((unit) => unit.updatedAt),
-    progress.recent[0]?.updatedAt,
-    progress.pass.createdAt,
-  ];
-  return Math.max(...stamps.filter((at) => at !== undefined).map((at) => Date.parse(at)));
+// The latest of the last page written, the opening and the last resume: a resume writes no
+// unit, and a pass resumed after a long pause is not stalled for it.
+function lastActivity(progress: PrerenderPassProgress, writtenAt: number): number {
+  const { createdAt, runningSince } = progress.pass;
+  const stamps = [writtenAt, Date.parse(createdAt), runningSince ? Date.parse(runningSince) : 0];
+  return Math.max(...stamps);
 }
 
 function causeOf(progress: PrerenderPassProgress, serverNow: number): StallCause {
@@ -42,10 +41,16 @@ function causeOf(progress: PrerenderPassProgress, serverNow: number): StallCause
 
 /**
  * Whether a running pass is stuck (§ 4.5): opened less than 90 seconds ago with no unit
- * started, it waits for the worker; with no page for 3 minutes, it is stalled, and the first
- * true cause says why. Never for a paused pass: a stopped unit does not move by design.
+ * started, it waits for the worker; with no page written for 3 minutes since the last one
+ * (`writtenAt`, `writtenAtOf`), the opening or the last resume, it is stalled, and the first
+ * true cause says why. Failed pages are no activity. Never for a paused pass: a stopped unit
+ * does not move by design.
  */
-export function stallOf(progress: PrerenderPassProgress, serverNow: number): Stall | null {
+export function stallOf(
+  progress: PrerenderPassProgress,
+  serverNow: number,
+  writtenAt: number,
+): Stall | null {
   const { pass } = progress;
   if (pass.state !== RUNNING) {
     return null;
@@ -55,7 +60,7 @@ export function stallOf(progress: PrerenderPassProgress, serverNow: number): Sta
   if (isUntouched && serverNow - Date.parse(pass.createdAt) < STARTING_MS) {
     return { kind: 'starting' };
   }
-  const idle = serverNow - lastActivity(progress);
+  const idle = serverNow - lastActivity(progress, writtenAt);
   if (idle < STALLED_MS) {
     return null;
   }

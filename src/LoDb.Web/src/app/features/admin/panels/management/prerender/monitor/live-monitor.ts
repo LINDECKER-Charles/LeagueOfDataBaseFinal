@@ -38,6 +38,8 @@ import { injectPassActions } from './actions/inject-pass-actions';
 import { PassActionsBar } from './actions/pass-actions-bar';
 import { injectPassProgress } from './inject-pass-progress';
 import { type MonitorState, mergeProgress } from './merge-progress';
+import { FailingBand } from './now/failing-band';
+import { failingUnitOf } from './now/failing-unit-of';
 import { NowBlock } from './now/now-block';
 import { stallOf } from './now/stall-of';
 import { ProgressBlock } from './progress/progress-block';
@@ -73,8 +75,8 @@ function placeholderOf(pass: PrerenderPassView, generatedAt: string): PrerenderP
 
 /**
  * The live monitor of the active pass (§ 4): its state, how fresh the reads are, who opened
- * it and over what; a band when it paused itself or stalls; its progress, pace and end; the
- * unit running and what comes next; the activity, the failures and the matrix of its units;
+ * it and over what; a band when it paused itself, stalls or its unit fails in numbers; its
+ * progress, pace and end; the unit running and what comes next; the activity, the failures and the matrix of its units;
  * pause, resume and cancel, each saying its consequences first. It reads the pass's progress
  * itself, every 5 seconds while it runs; once the pass ends it says so (`ended`). It never
  * opens the launch: a relaunch leaves as a preset (`launch`).
@@ -87,6 +89,7 @@ function placeholderOf(pass: PrerenderPassView, generatedAt: string): PrerenderP
     AdminTextPipe,
     Badge,
     Button,
+    FailingBand,
     FailuresList,
     LiveBadge,
     NowBlock,
@@ -168,7 +171,11 @@ export class LiveMonitor {
   });
   protected readonly stall = computed(() => {
     const state = this.state();
-    return state ? stallOf(state.progress, this.serverNow()) : null;
+    return state ? stallOf(state.progress, this.serverNow(), state.written.at) : null;
+  });
+  protected readonly failing = computed(() => {
+    const state = this.state();
+    return state ? failingUnitOf(state.progress) : null;
   });
   protected readonly stallTitle = computed(() => {
     const stall = this.stall();

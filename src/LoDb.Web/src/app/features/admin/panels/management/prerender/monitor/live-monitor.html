@@ -47,6 +47,15 @@
     }
   }
 
+  @if (failing(); as failing) {
+    <lodb-failing-band
+      [failing]="failing"
+      [busy]="actions.busy()"
+      (opened)="openVersion($event)"
+      (paused)="pause()"
+    />
+  }
+
   <lodb-progress-block [state]="shown()" [serverNow]="serverNow()" />
 
   @if (state(); as live) {

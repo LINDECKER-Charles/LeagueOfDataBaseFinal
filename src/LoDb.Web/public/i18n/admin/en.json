@@ -905,7 +905,7 @@
         "worker_off": "The background task is off on this instance (LoDb:Workers:Enabled=false): the pass does not move."
       },
       "stall": {
-        "title": "No page for {duration}",
+        "title": "No page written for {duration}",
         "ssr": "The SSR is out of reach: the pass resumes by itself once it is back.",
         "worker_off": "The background task is off on this instance.",
         "waiting": "Every unit left waits for a catalog.",
@@ -914,6 +914,7 @@
       },
       "paused_itself": "The pass paused itself: {reason}",
       "paused_itself_hint": "Fix the store's or the SSR's settings (key, policy, public host), then resume.",
+      "failing": "{version} · {locale} is failing: {failed, plural, one {# page failed} other {# pages failed}} out of {processed} ({share}). Last reason:",
       "feed": {
         "title": "Activity",
         "done": "{version} · {locale} completed · {pages, plural, one {# page} other {# pages}} · in {duration}",
