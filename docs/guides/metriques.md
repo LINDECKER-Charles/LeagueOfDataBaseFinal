@@ -12,7 +12,7 @@ Logs et requêtes LogsQL : [`observabilite.md`](observabilite.md) et [`logging.m
 | Processus | Point de collecte | Réglage |
 |---|---|---|
 | API (`api`) | `GET /metrics` sur le port **9464**, seule route de ce port | `LoDb:Hosting:MetricsPort` |
-| SSR (`web-ssr`) | `GET /metrics` sur le port **9464**, serveur HTTP séparé du site (404 pour tout le reste) | `LODB_METRICS_PORT` |
+| SSR (`web-ssr`) | `GET /metrics` sur le port **9464**, serveur HTTP séparé du site ; `GET /load` sur le même port : la charge du SSR en JSON, lue par le régulateur de la passe de l'API, **pas un point Prometheus** (404 pour tout le reste) | `LODB_METRICS_PORT` |
 | SSR de la passe de précalcul (`web-ssr-prerender`) | comme `web-ssr`, même port **9464** ; ses séries portent `service="web-ssr-prerender"` | `LODB_METRICS_PORT` |
 
 - Le port 9464 n'est **jamais publié** (`compose*.yaml`) ni **routé par nginx**. Sur le
@@ -158,6 +158,19 @@ Le couloir `prerender` est celui de la passe de précalcul de l'API, reconnue à
 les raisons des autres couloirs (`capacity`, `lane_capacity`, `lane_rate`, jamais `client_*`).
 Ses requêtes n'écrivent pas de ligne `http.request.served`, sauf ses erreurs serveur (5xx) :
 la passe en compterait des millions. Une requête qui somme `lodb_ssr_renders_total` sans filtre `lane` inclut la passe.
+
+Depuis le SSR dédié à la passe (ADR 0011, amendement du 2026-10-21), les séries
+`lodb_ssr_*{lane="prerender"}` viennent de `service="web-ssr-prerender"` ; le couloir
+`prerender` de `web-ssr` reste à 0.
+
+`GET /load` (même port 9464) n'est pas un point de collecte : du JSON sans effet de bord que
+le régulateur de la passe lit toutes les 30 s sur chaque SSR. Il donne `cpuSeconds`,
+`eventLoopDelayP99Seconds` (la dernière fenêtre close de 30 s, tenue par un moniteur à part ;
+`null` avant la première), `cpuPressureSomeAvg10` et `cpuThrottledSeconds` (cgroup du
+conteneur, `null` hors cgroup v2) et, par couloir, `renders`, `renderSeconds` et `refused`
+cumulés (refus `capacity`, `lane_capacity`, `lane_rate`, jamais `client_*`). Il ne lit jamais
+le registre : `prom-client` remet à zéro son histogramme du retard de la boucle à chaque
+collecte, et un second lecteur de `/metrics` tronquerait `nodejs_eventloop_lag_p99_seconds`.
 
 ## Exemples
 
