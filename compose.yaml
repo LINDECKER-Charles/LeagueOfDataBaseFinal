@@ -49,10 +49,6 @@ x-ssr-environment: &ssr-environment
   LODB_ALLOWED_HOSTS: ${LODB_ALLOWED_HOSTS:-localhost,127.0.0.1}
   # Set by nginx (snippets/proxy-headers.conf); Angular ignores them unless listed.
   LODB_TRUST_PROXY_HEADERS: x-forwarded-proto,x-forwarded-host,x-forwarded-for
-  # Peers the site's port answers besides the loopback (src/server/security/network-gate.ts):
-  # the private ranges, as the API's KnownProxyNetworks. A served host names its stack's
-  # subnet alone (compose.deploy.yaml).
-  LODB_STACK_NETWORKS: 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
   # A render's wait on the API (src/server/rendering), and the query a catalogue page
   # keeps (src/server/routing): empty keeps the defaults.
   LODB_RENDER_DEADLINE_SECONDS: ${LODB_RENDER_DEADLINE_SECONDS:-}
@@ -207,6 +203,11 @@ services:
       - /tmp:size=16m
     environment:
       <<: *ssr-environment
+      # Peers the site's port answers besides the loopback (src/server/security/network-gate.ts):
+      # the private ranges, as the API's KnownProxyNetworks. A served host names its stack's
+      # subnet alone (compose.deploy.yaml). Kept out of x-ssr-environment: the deploy job reads
+      # every LODB_STACK_NETWORKS of the resolved configuration, extension fields included.
+      LODB_STACK_NETWORKS: 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
       # Render admission (src/server/admission): empty keeps the defaults sized for the host.
       LODB_RENDER_MAX_IN_FLIGHT: ${LODB_RENDER_MAX_IN_FLIGHT:-}
       LODB_PINNED_RENDER_MAX_IN_FLIGHT: ${LODB_PINNED_RENDER_MAX_IN_FLIGHT:-}
@@ -264,6 +265,8 @@ services:
       - /tmp:size=16m
     environment:
       <<: *ssr-environment
+      # As web-ssr: the private ranges here, the stack's subnet alone on a served host.
+      LODB_STACK_NETWORKS: 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
       # The lane's budget is the regulator's ceiling, so the renderer caps the pass even if
       # the API misbehaves (one line feeds both). The reserve keeps one of the 4 renders free
       # of the pass, so its lane holds 3 in flight at most.
