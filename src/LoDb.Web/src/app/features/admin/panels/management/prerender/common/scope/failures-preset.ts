@@ -5,12 +5,14 @@ import type { LaunchPreset } from './launch-preset';
 /** The relaunch of what a pass left undone, and what it renders again. */
 export interface FailuresPreset {
   readonly preset: LaunchPreset;
-  /** Cells kept: what the relaunch renders again. */
+  /** Cells kept: what the relaunch renders again, `failed` and `gaps` together. */
   readonly units: number;
+  /** Of them, the units failed or with failed pages (f, w). */
+  readonly failed: number;
+  /** Of them, the units a cancelled pass never rendered whole (., i, z). */
+  readonly gaps: number;
   /** ≈ pages of those units. */
   readonly pages: number;
-  /** Whether gaps (., i, z) are among them: the label says « et les manques ». */
-  readonly hasGaps: boolean;
 }
 
 // The cells of a pass (PrerenderVersionProgress.cells): f failed, w completed with failed
@@ -76,6 +78,7 @@ export function failuresPreset(
     return null;
   }
   const units = kept.reduce((sum, version) => sum + count(version.cells, codes), 0);
+  const failed = kept.reduce((sum, version) => sum + count(version.cells, FAILED), 0);
   const pages = kept.reduce(
     (sum, version) => sum + count(version.cells, codes) * pagesPerUnit(version, passMean),
     0,
@@ -87,7 +90,8 @@ export function failuresPreset(
       servedEpoch,
     ),
     units,
+    failed,
+    gaps: units - failed,
     pages: Math.round(pages),
-    hasGaps: kept.some((version) => count(version.cells, GAPS) > 0) && codes !== FAILED,
   };
 }

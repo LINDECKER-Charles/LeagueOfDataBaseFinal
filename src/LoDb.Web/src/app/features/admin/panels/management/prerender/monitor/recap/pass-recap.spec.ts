@@ -122,11 +122,43 @@ describe('PassRecap', () => {
     expect((fixture.nativeElement as HTMLElement).querySelector('[data-relaunch]')).toBeNull();
   });
 
-  it('completes the epoch of a cancelled pass, without reading its progress', async () => {
+  it('finishes a cancelled pass first, then offers to complete its epoch', async () => {
     const fixture = open(CANCELLED);
+    const http = { http: TestBed.inject(HttpTestingController) };
+    // Cancelled with 16.20.1 cut short in fr and never reached past it.
+    const cut = [
+      { ...VERSIONS[0], version: '16.20.1', cells: 'c'.repeat(6) + 'i' + '.'.repeat(14) },
+    ];
+    (await sent(http, PROGRESS)).flush(
+      prerenderProgress({ isComplete: true, pass: CANCELLED, versions: cut }),
+    );
     await settle(fixture);
 
-    TestBed.inject(HttpTestingController).expectNone(() => true);
+    expect(button(fixture, '[data-relaunch]').textContent?.trim()).toBe(
+      'admin.prerender.live.recap.finish',
+    );
+    button(fixture, '[data-relaunch]').click();
+    expect(fixture.componentInstance.presets[0]).toMatchObject({
+      origin: 'failures',
+      versions: ['16.20.1'],
+      skipComplete: true,
+      fromPass: 12,
+    });
+    // The epoch's other gaps come second: a ghost, not the primary action.
+    expect(button(fixture, '[data-complete]').classList).toContain('hx-btn-ghost');
+    expect(button(fixture, '[data-relaunch]').classList).not.toContain('hx-btn-ghost');
+  });
+
+  it('completes the epoch of a cancelled pass that left nothing undone', async () => {
+    const fixture = open(CANCELLED);
+    const http = { http: TestBed.inject(HttpTestingController) };
+    const clean = [{ ...VERSIONS[0], cells: 'c'.repeat(21) }];
+    (await sent(http, PROGRESS)).flush(
+      prerenderProgress({ isComplete: true, pass: CANCELLED, versions: clean }),
+    );
+    await settle(fixture);
+
+    expect((fixture.nativeElement as HTMLElement).querySelector('[data-relaunch]')).toBeNull();
     button(fixture, '[data-complete]').click();
     expect(fixture.componentInstance.presets).toEqual([
       {

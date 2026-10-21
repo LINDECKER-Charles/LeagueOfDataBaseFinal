@@ -63,7 +63,7 @@ describe('failuresPreset', () => {
     expect(preset?.units).toBe(2);
     // One unit of 16.18.1 (3 000 / 3) and one of 15.2.1 (1 000 / 3, its f counted listed).
     expect(preset?.pages).toBe(1_333);
-    expect(preset?.hasGaps).toBe(false);
+    expect([preset?.failed, preset?.gaps]).toEqual([2, 0]);
   });
 
   it('takes the gaps of a cancelled pass too, at the mean of the pass when never listed', () => {
@@ -79,7 +79,7 @@ describe('failuresPreset', () => {
     );
 
     expect(preset?.units).toBe(7);
-    expect(preset?.hasGaps).toBe(true);
+    expect([preset?.failed, preset?.gaps]).toEqual([0, 7]);
     // i: 3 000 over 3 listed; z and its two dots: 3 × 1 000, its z alone listed; the three
     // dots of 15.2.1, never listed, at the mean of the pass: 4 000 over 4 listed.
     expect(preset?.pages).toBe(7_000);

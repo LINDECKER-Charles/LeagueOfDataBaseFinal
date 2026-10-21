@@ -785,7 +785,8 @@
       },
       "retry": {
         "units": "Relaunch {units, plural, one {# unit} other {# units}} (≈ {pages, plural, one {# page} other {# pages}})",
-        "units_gaps": "Relaunch {units, plural, one {# unit} other {# units}} and the gaps (≈ {pages, plural, one {# page} other {# pages}})",
+        "gaps": "Finish {gaps, plural, one {# unit not rendered} other {# units not rendered}} (≈ {pages, plural, one {# page} other {# pages}})",
+        "units_gaps": "Relaunch {failed} failed and {gaps} not rendered (≈ {pages, plural, one {# page} other {# pages}})",
         "later": "available once the pass ends"
       },
       "close": "Close"
@@ -966,7 +967,7 @@
         "cancel_left": "{units, plural, one {# unit to come will not be rendered} other {# units to come will not be rendered}}.",
         "cancel_kept": "What is written stays in the store: {pages, plural, one {# page} other {# pages}}, {size}.",
         "cancel_partial": "Epoch {epoch} stays partial ({share} covered) until a pass completes it.",
-        "cancel_later": "To finish later: launch a pass on epoch {epoch}, leaving out what is complete.",
+        "cancel_later": "To finish it later: « Finish this pass » in its recap, or « Relaunch » in its detail (History).",
         "cancel_confirm": "Cancel pass #{id}",
         "cancel_keep": "Keep the pass"
       },
@@ -974,6 +975,7 @@
         "completed": "Pass #{id} completed",
         "cancelled": "Pass #{id} cancelled",
         "summary": "{units, plural, one {# unit} other {# units}} · {written, plural, one {# page} other {# pages}} written · {failed} failed · {duration} running · {size}",
+        "finish": "Finish this pass ({units, plural, one {# unit} other {# units}}, ≈ {pages, plural, one {# page} other {# pages}})",
         "complete": "Complete epoch {epoch}",
         "detail": "See the detail",
         "dismiss": "Dismiss"

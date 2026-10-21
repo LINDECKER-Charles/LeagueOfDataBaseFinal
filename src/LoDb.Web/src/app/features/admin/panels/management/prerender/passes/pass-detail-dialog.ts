@@ -25,6 +25,7 @@ import { injectAdminText } from '../../../../shared/inject-admin-text';
 import { Badge } from '../../../../widgets/badge';
 import { failuresPreset } from '../common/scope/failures-preset';
 import type { LaunchPreset } from '../common/scope/launch-preset';
+import { retryLabel } from '../common/scope/retry-label';
 import { scopeSummary } from '../common/scope/scope-summary';
 import { injectAdminDialogs } from '../dialogs/inject-admin-dialogs';
 import { decimalBytes } from '../format/decimal-bytes';
@@ -47,7 +48,6 @@ export type PassDetailResult = LaunchPreset | 'follow' | undefined;
 
 const DETAIL = 'prerender.passes.detail';
 const LIVE = 'prerender.live';
-const RETRY = 'prerender.common.retry';
 const ENDED = ['completed', 'cancelled'];
 
 /**
@@ -142,11 +142,7 @@ export class PassDetailDialog {
   });
   protected readonly failuresLabel = computed(() => {
     const failures = this.failures();
-    if (!failures) {
-      return '';
-    }
-    const key = failures.hasGaps ? 'units_gaps' : 'units';
-    return this.texts.text(`${RETRY}.${key}`, { units: failures.units, pages: failures.pages });
+    return failures ? retryLabel(failures, this.texts) : '';
   });
   protected readonly relaunch = computed(() => {
     const progress = this.progress.value();

@@ -8,10 +8,10 @@ import { injectAdminText } from '../../../../../shared/inject-admin-text';
 import { Badge, type Tone } from '../../../../../widgets/badge';
 import { failuresPreset } from '../../common/scope/failures-preset';
 import type { LaunchPreset } from '../../common/scope/launch-preset';
+import { retryLabel } from '../../common/scope/retry-label';
 import { prerenderTone } from '../../prerender-tone';
 
 const FAILURES = 'prerender.live.failures';
-const RETRY = 'prerender.common.retry';
 const ACTIVE = ['running', 'paused'];
 const FAILED = 'failed';
 const LIST_ID = 'prerender-failures-list';
@@ -52,11 +52,7 @@ export class FailuresList {
   });
   protected readonly relaunchLabel = computed(() => {
     const relaunch = this.relaunch();
-    if (!relaunch) {
-      return '';
-    }
-    const key = relaunch.hasGaps ? 'units_gaps' : 'units';
-    return this.texts.text(`${RETRY}.${key}`, { units: relaunch.units, pages: relaunch.pages });
+    return relaunch ? retryLabel(relaunch, this.texts) : '';
   });
   protected readonly isActive = computed(() => ACTIVE.includes(this.progress().pass.state));
   protected readonly others = computed(() =>

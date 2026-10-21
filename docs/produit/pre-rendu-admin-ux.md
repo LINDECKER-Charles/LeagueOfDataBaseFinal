@@ -518,10 +518,12 @@ qui a un **manque**, une cellule `-` ou `p` (§ 6.5). Les cellules `f` (échec d
 besoin de la couverture pour proposer « Compléter ».
 
 `failuresPreset` (F1) rend aussi ce qu'il va refaire, pour que le bouton le chiffre : `units`
-(cellules retenues) et `pages` (≈ pour chaque version, `pagesTotal / unités listées` × cellules
-retenues). Libellé : « Relancer 17 unités (≈ 19 000 pages) », ou « Relancer 17 unités et les
-manques (≈ 21 000 pages) » quand des `.`, `i` ou `z` sont inclus — partout où le préréglage est
-proposé, pas seulement dans le détail.
+(cellules retenues), dont `failed` (`f`, `w`) et `gaps` (`.`, `i`, `z` d'une passe annulée), et
+`pages` (≈ pour chaque version, `pagesTotal / unités listées` × cellules retenues). Libellé
+(`retryLabel`, F1, partout où le préréglage est proposé) : « Relancer 17 unités (≈ 19 000
+pages) » pour des échecs seuls ; « Finir 4 unités non rendues (≈ 4 316 pages) » quand rien n'a
+échoué (ces unités ne sont pas des manques à part : ce sont elles que la passe n'a pas rendues) ;
+« Relancer 2 en échec et 4 non rendues (≈ 6 500 pages) » pour les deux.
 
 Seul le panneau (F4) ouvre la modale : le moniteur et le récapitulatif de fin (F3) émettent un
 `LaunchPreset` par une sortie `launch`, que le panneau passe à `LaunchOpener.open`. F3 ne dépend
@@ -1393,8 +1395,8 @@ première page. » — [Laisser en pause] [Reprendre quand même].
 │   58.98 GB.                                                       │
 │ • L'epoch 2 restera partielle (71.4 % couverte) jusqu'à une passe │
 │   qui la complète.                                                │
-│ • Pour finir plus tard : lancez une passe sur l'epoch 2 en        │
-│   ignorant ce qui est déjà complet.                               │
+│ • Pour la finir plus tard : « Finir cette passe » dans son        │
+│   récapitulatif, ou « Relancer » dans son détail (Historique).    │
 │                        [Garder la passe] [Annuler la passe n°12]  │
 └───────────────────────────────────────────────────────────────────┘
 ```
@@ -1420,10 +1422,14 @@ a fini il y a moins de 24 h, `PassRecap` (F3) remplace le moniteur :
 └────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-Annulée : titre « Passe n°12 annulée », et « Compléter l'epoch 2 » (préréglage `complete-epoch`,
-`versions: 'incomplete'`) à la place du bouton de relance. Pour ce bouton, `PassRecap` lit une
-fois la progression complète de la passe (§ 6.7) et en tire `failuresPreset` et son libellé
-chiffré ; sans unité à refaire, le bouton n'apparaît pas. Les deux boutons émettent par la sortie `launch` ; « Voir le détail » par la
+Annulée : titre « Passe n°12 annulée » ; l'action principale finit **cette** passe, « Finir
+cette passe (4 unités, ≈ 4 316 pages) » (préréglage `failures` : ses unités en échec, jamais
+atteintes ou coupées, `live.recap.finish`), puis, en bouton fantôme, « Compléter l'epoch 2 »
+(préréglage `complete-epoch`, `versions: 'incomplete'`), qui prend tous les manques de l'epoch,
+parfois des milliers d'unités ; sans unité laissée, « Compléter l'epoch 2 » redevient principal.
+Pour ces boutons, `PassRecap` lit une fois la progression complète de la passe (§ 6.7), terminée
+ou annulée, et en tire `failuresPreset` et son libellé chiffré ; sans unité à refaire, le bouton
+de relance n'apparaît pas. Les deux boutons émettent par la sortie `launch` ; « Voir le détail » par la
 sortie `detail`. « Masquer » mémorise l'identifiant de la passe dans `localStorage`
 (`lodb.admin.prerender.recap-dismissed`, sous `try/catch`) et laisse la place à l'`IdleCard` ;
 « Voir le détail » ouvre le dialogue de l'historique (§ 5.4).
@@ -1569,7 +1575,7 @@ lien « Suivre » qui ramène au moniteur. Une ligne s'ouvre au clic, à Entrée
 │            13 860 sautées · 270 en échec │ 83.14 GB │ 5 j 2 h actives │ 231 pages/min     │
 │ MATRICE    (UnitMatrix, mode pass, lecture complète unique de …/progress)                 │
 │ ÉCHECS     (FailuresList, sans « relancer » ici)                                          │
-│        [Relancer 17 unités et les manques (≈ 21 000 pages)] [Relancer ce périmètre]       │
+│        [Relancer 2 en échec et 15 non rendues (≈ 21 000 pages)] [Relancer ce périmètre]   │
 └───────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -1583,7 +1589,8 @@ lien « Suivre » qui ramène au moniteur. Une ligne s'ouvre au clic, à Entrée
   versions du périmètre (`null` → `'all'` ; plage → les anciens patchs de la plage selon le
   rapport de couverture), langues, types, priorités, epoch de la passe si elle n'est pas retirée,
   sinon l'epoch servie ; `skipComplete: false`.
-- **Relancer N unités et les manques (≈ P pages)** : préréglage `failures` — versions dont une
+- **Relancer N unités (≈ P pages)**, « Finir N unités non rendues », « Relancer N en échec et M
+  non rendues » (`retryLabel`) : préréglage `failures` — versions dont une
   cellule de la passe n'est pas `c` ; `skipComplete: true` ; libellé chiffré (§ 3.1).
 - La liste complète des versions du périmètre (« Voir la liste », « Relancer ce périmètre »)
   vient de `scopeVersions` de la lecture complète de la progression (§ 6.7) : les vues de liste
@@ -2698,12 +2705,13 @@ prerender/                                                         [6 + dossiers
 │   │   ├── patch-status-of.ts                 patchStatusOf             35
 │   │   ├── is-held.ts                         isHeld                    30
 │   │   └── locale-name.ts                     localeName                25
-│   └── scope/                                                         [8]
+│   └── scope/                                                         [10]
 │       ├── launch-preset.ts                   LaunchPreset (type)       35   (pas de spec)
 │       ├── prerender-cadence.ts               PRERENDER_CADENCE         35   (pas de spec)
 │       ├── inject-patches.ts                  injectPatches             40   (+ spec)
 │       ├── scope-summary.ts                   scopeSummary              75
-│       └── failures-preset.ts                 failuresPreset (+ FailuresPreset) 70
+│       ├── failures-preset.ts                 failuresPreset (+ FailuresPreset) 70
+│       └── retry-label.ts (+ spec)            retryLabel                25
 ├── live/                                                                                 F1
 │   ├── poll/                                                          [5]
 │   │   ├── inject-live-poll.ts                injectLivePoll            170
@@ -2966,8 +2974,10 @@ export interface FailuresPreset {
   readonly units: number;
   /** ≈ pages of those units. */
   readonly pages: number;
-  /** Whether gaps (., i, z) are among them: the label says « et les manques ». */
-  readonly hasGaps: boolean;
+  /** Of them, the units failed or with failed pages (f, w). */
+  readonly failed: number;
+  /** Of them, the units a cancelled pass never rendered whole (., i, z). */
+  readonly gaps: number;
 }
 export function failuresPreset(
   pass: PrerenderPassView,
@@ -3020,7 +3030,8 @@ ouvrir `PassDetailDialog`.
 | `versionTokens` | F1 | lignes, virgules, TSV de LogsQL (le compte ignoré), JSON, doublons, `1.5.` en bord |
 | `scopeSummary` | F1 | entier ; compte et bornes (`versionCount`, `newestListed`, `oldestListed`) ; une version ; plage d'avant les listes ; langue et type uniques (lus de l'ancien stockage par l'API) ; priorités ; `skipComplete` |
 | `relativeTime` | F1 | passé, futur, < 1 s |
-| `failuresPreset` | F1 | versions dont une cellule n'est pas `c` ; langues et types de la passe ; epoch, servie si la sienne est retirée ; `skipComplete` ; `units` et `pages` comptés ; `hasGaps` avec `.`/`i`/`z` ; `null` sans rien à refaire |
+| `failuresPreset` | F1 | versions dont une cellule n'est pas `c` ; langues et types de la passe ; epoch, servie si la sienne est retirée ; `skipComplete` ; `units`, `failed`, `gaps` et `pages` comptés ; `null` sans rien à refaire |
+| `retryLabel` | F1 | échecs seuls ; non rendues seules (« Finir ») ; les deux |
 | `pollDelay` | F1 | 0 échec ; 1, 2, 3 ; plafond 60 s ; base 60 s plafonnée à 300 s |
 | `freshnessOf` | F1 | `live`, `late`, `lost`, `hidden`, jamais lu |
 | `stackedSegments` | F1 | parts qui somment à 1 ; segment minuscule relevé au minimum ; total nul |
@@ -3158,11 +3169,12 @@ de lot suit la même règle, et chaque spécification de composant vérifie au m
 | `copy.copied` | Copié | Copied |
 | `copy.error` | Copiez à la main : | Copy it by hand: |
 | `retry.units` | Relancer {units, plural, one {# unité} other {# unités}} (≈ {pages, plural, one {# page} other {# pages}}) | Relaunch {units, plural, one {# unit} other {# units}} (≈ {pages, plural, one {# page} other {# pages}}) |
-| `retry.units_gaps` | Relancer {units, plural, one {# unité} other {# unités}} et les manques (≈ {pages, plural, one {# page} other {# pages}}) | Relaunch {units, plural, one {# unit} other {# units}} and the gaps (≈ {pages, plural, one {# page} other {# pages}}) |
+| `retry.units_gaps` | Relancer {failed} en échec et {gaps, plural, one {# non rendue} other {# non rendues}} (≈ {pages, plural, one {# page} other {# pages}}) | Relaunch {failed} failed and {gaps} not rendered (≈ {pages, plural, one {# page} other {# pages}}) |
 | `retry.later` | disponible quand la passe sera finie | available once the pass ends |
 | `close` | Fermer | Close |
 | `live.compact_late` | En retard · {ago} | Late · {ago} |
 | `live.compact_lost` | Hors ligne · {ago} | Offline · {ago} |
+| `retry.gaps` | Finir {gaps, plural, one {# unité non rendue} other {# unités non rendues}} (≈ {pages, plural, one {# page} other {# pages}}) | Finish {gaps, plural, one {# unit not rendered} other {# units not rendered}} (≈ {pages, plural, one {# page} other {# pages}}) |
 
 **`overview`** (F4)
 
@@ -3310,7 +3322,7 @@ de lot suit la même règle, et chaque spécification de composant vérifie au m
 | `confirm.cancel_left` | {units, plural, one {# unité à venir ne sera pas rendue} other {# unités à venir ne seront pas rendues}}. | {units, plural, one {# unit to come will not be rendered} other {# units to come will not be rendered}}. |
 | `confirm.cancel_kept` | Ce qui est écrit reste dans le stockage : {pages, plural, one {# page} other {# pages}}, {size}. | What is written stays in the store: {pages, plural, one {# page} other {# pages}}, {size}. |
 | `confirm.cancel_partial` | L'epoch {epoch} restera partielle ({share} couverte) jusqu'à une passe qui la complète. | Epoch {epoch} stays partial ({share} covered) until a pass completes it. |
-| `confirm.cancel_later` | Pour finir plus tard : lancez une passe sur l'epoch {epoch} en ignorant ce qui est déjà complet. | To finish later: launch a pass on epoch {epoch}, leaving out what is complete. |
+| `confirm.cancel_later` | Pour la finir plus tard : « Finir cette passe » dans son récapitulatif, ou « Relancer » dans son détail (Historique). | To finish it later: « Finish this pass » in its recap, or « Relaunch » in its detail (History). |
 | `confirm.cancel_confirm` | Annuler la passe n°{id} | Cancel pass #{id} |
 | `confirm.cancel_keep` | Garder la passe | Keep the pass |
 | `recap.completed` | Passe n°{id} terminée | Pass #{id} completed |
@@ -3325,6 +3337,7 @@ de lot suit la même règle, et chaque spécification de composant vérifie au m
 | `folds.failures` | Échecs ({count}) | Failures ({count}) |
 | `folds.matrix` | Matrice ({count, plural, one {# patch} other {# patchs}}) | Matrix ({count, plural, one {# patch} other {# patches}}) |
 | `units_paused` | Unités : {completed} / {total} — {running} en pause · {pending} à venir · {failed} en échec | Units: {completed} / {total} — {running} paused · {pending} to come · {failed} failed |
+| `recap.finish` | Finir cette passe ({units, plural, one {# unité} other {# unités}}, ≈ {pages, plural, one {# page} other {# pages}}) | Finish this pass ({units, plural, one {# unit} other {# units}}, ≈ {pages, plural, one {# page} other {# pages}}) |
 
 **`launcher`** (F2)
 
@@ -3911,7 +3924,7 @@ Fusions dans feat/refonte-ecran-pre-rendu : api → front-socle → front-modale
   4. mettre en pause (« Reprendra par », cellule arrêtée), reprendre, annuler, en lisant chaque
      dialogue ;
   5. onglet Couverture : la sélection → « Pré-rendre la sélection » ; « Compléter les manques » ;
-  6. historique : détail, « Relancer N unités et les manques » ;
+  6. historique : détail, « Relancer N en échec et M non rendues » ;
   7. tout refaire au clavier seul dans la modale (dont Maj+↓ puis Maj+↑), et à 360 px (outils du
      navigateur) ;
   8. VoiceOver sur la liste des patchs : niveaux, sélection, compteur annoncé.

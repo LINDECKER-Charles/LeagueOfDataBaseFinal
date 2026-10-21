@@ -785,7 +785,8 @@
       },
       "retry": {
         "units": "Relancer {units, plural, one {# unité} other {# unités}} (≈ {pages, plural, one {# page} other {# pages}})",
-        "units_gaps": "Relancer {units, plural, one {# unité} other {# unités}} et les manques (≈ {pages, plural, one {# page} other {# pages}})",
+        "gaps": "Finir {gaps, plural, one {# unité non rendue} other {# unités non rendues}} (≈ {pages, plural, one {# page} other {# pages}})",
+        "units_gaps": "Relancer {failed} en échec et {gaps, plural, one {# non rendue} other {# non rendues}} (≈ {pages, plural, one {# page} other {# pages}})",
         "later": "disponible quand la passe sera finie"
       },
       "close": "Fermer"
@@ -966,7 +967,7 @@
         "cancel_left": "{units, plural, one {# unité à venir ne sera pas rendue} other {# unités à venir ne seront pas rendues}}.",
         "cancel_kept": "Ce qui est écrit reste dans le stockage : {pages, plural, one {# page} other {# pages}}, {size}.",
         "cancel_partial": "L'epoch {epoch} restera partielle ({share} couverte) jusqu'à une passe qui la complète.",
-        "cancel_later": "Pour finir plus tard : lancez une passe sur l'epoch {epoch} en ignorant ce qui est déjà complet.",
+        "cancel_later": "Pour la finir plus tard : « Finir cette passe » dans son récapitulatif, ou « Relancer » dans son détail (Historique).",
         "cancel_confirm": "Annuler la passe n°{id}",
         "cancel_keep": "Garder la passe"
       },
@@ -974,6 +975,7 @@
         "completed": "Passe n°{id} terminée",
         "cancelled": "Passe n°{id} annulée",
         "summary": "{units, plural, one {# unité} other {# unités}} · {written, plural, one {# page} other {# pages}} écrites · {failed} en échec · {duration} de marche · {size}",
+        "finish": "Finir cette passe ({units, plural, one {# unité} other {# unités}}, ≈ {pages, plural, one {# page} other {# pages}})",
         "complete": "Compléter l'epoch {epoch}",
         "detail": "Voir le détail",
         "dismiss": "Masquer"

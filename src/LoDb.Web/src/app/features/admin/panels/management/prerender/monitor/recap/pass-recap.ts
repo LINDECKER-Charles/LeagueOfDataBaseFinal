@@ -8,7 +8,7 @@ import {
   input,
   output,
 } from '@angular/core';
-import { type Observable, map, of } from 'rxjs';
+import { map } from 'rxjs';
 import { API_BASE_URL } from '../../../../../../../core/api/api-base-url';
 import { readAdminPrerenderPassProgress } from '../../../../../../../core/api/generated/fn/admin-prerender/read-admin-prerender-pass-progress';
 import type { PrerenderPassProgress } from '../../../../../../../core/api/generated/models/prerender-pass-progress';
@@ -22,6 +22,7 @@ import { injectAdminText } from '../../../../../shared/inject-admin-text';
 import { type BarSegment, StackedBar } from '../../bars/stacked-bar';
 import { failuresPreset } from '../../common/scope/failures-preset';
 import type { LaunchPreset } from '../../common/scope/launch-preset';
+import { retryLabel } from '../../common/scope/retry-label';
 import { decimalBytes } from '../../format/decimal-bytes';
 import { injectLivePoll } from '../../live/poll/inject-live-poll';
 import { progressSegments } from '../progress/progress-segments';
@@ -33,9 +34,10 @@ const DISMISSED_KEY = 'lodb.admin.prerender.recap-dismissed';
 
 /**
  * The end of a pass (§ 4.8), in the place of the monitor: completed or cancelled, its units,
- * pages written and failed, running time and volume, its final bar. Completed, it reads its
- * whole progress once to offer « Relancer 17 unités (≈ 19 000 pages) » when something is to
- * render again; cancelled, « Compléter l'epoch 2 ». « Voir le détail » opens it in the
+ * pages written and failed, running time and volume, its final bar. It reads its whole
+ * progress once to offer, completed, « Relancer 17 unités (≈ 19 000 pages) » when something is
+ * to render again; cancelled, « Finir cette passe (4 unités, ≈ 4 316 pages) », what it left,
+ * before « Compléter l'epoch 2 », which takes every gap of the epoch. « Voir le détail » opens it in the
  * history; « Masquer » remembers the pass in this browser and gives the place back.
  */
 @Component({
@@ -58,9 +60,12 @@ export class PassRecap {
   private readonly rootUrl = inject(API_BASE_URL);
   private readonly storage = inject(DOCUMENT).defaultView?.localStorage;
 
-  // Read once, whole, for a completed pass only: a cancelled one completes its epoch.
-  private readonly progress = injectLivePoll<PrerenderPassProgress | null>({
-    load: () => this.load(),
+  // Read once, whole: what the pass left undone, failed or never reached.
+  private readonly progress = injectLivePoll<PrerenderPassProgress>({
+    load: () =>
+      readAdminPrerenderPassProgress(this.http, this.rootUrl, { id: this.pass().id }).pipe(
+        map((response) => response.body),
+      ),
     every: () => null,
   });
 
@@ -95,16 +100,15 @@ export class PassRecap {
     const progress = this.progress.value();
     return progress ? failuresPreset(this.pass(), progress.versions, this.servedEpoch()) : null;
   });
+  // Cancelled, the pass is finished first: what it left, then its epoch's other gaps.
   protected readonly relaunchLabel = computed(() => {
     const relaunch = this.relaunch();
     if (!relaunch) {
       return '';
     }
-    const key = relaunch.hasGaps ? 'units_gaps' : 'units';
-    return this.texts.text(`prerender.common.retry.${key}`, {
-      units: relaunch.units,
-      pages: relaunch.pages,
-    });
+    return this.isCompleted()
+      ? retryLabel(relaunch, this.texts)
+      : this.texts.text(`${RECAP}.finish`, { units: relaunch.units, pages: relaunch.pages });
   });
 
   protected complete(): void {
@@ -128,14 +132,5 @@ export class PassRecap {
       // Private browsing or storage refused: dismissed for this page only.
     }
     this.dismissed.emit(id);
-  }
-
-  private load(): Observable<PrerenderPassProgress | null> {
-    if (!this.isCompleted()) {
-      return of(null);
-    }
-    return readAdminPrerenderPassProgress(this.http, this.rootUrl, { id: this.pass().id }).pipe(
-      map((response) => response.body),
-    );
   }
 }

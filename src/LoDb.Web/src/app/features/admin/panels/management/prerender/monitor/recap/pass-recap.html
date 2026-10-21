@@ -1,5 +1,12 @@
 <lodb-admin-card [heading]="title()" [attr.data-recap]="pass().state">
-  <button lodbCardHead lodbButton="ghost" lodbButtonSize="small" type="button" (click)="dismiss()">
+  <button
+    lodbCardHead
+    lodbButton="ghost"
+    lodbButtonSize="small"
+    type="button"
+    data-recap-dismiss
+    (click)="dismiss()"
+  >
     {{ 'admin.prerender.live.recap.dismiss' | adminText }}
   </button>
 
@@ -7,21 +14,20 @@
   <lodb-stacked-bar size="hero" [segments]="segments()" [label]="summary()" />
 
   <div class="mt-5 flex flex-wrap items-center gap-3">
-    @if (isCompleted()) {
-      @if (relaunch(); as relaunch) {
-        <button
-          lodbButton="primary"
-          lodbButtonSize="small"
-          type="button"
-          data-relaunch
-          (click)="launch.emit(relaunch.preset)"
-        >
-          {{ relaunchLabel() }}
-        </button>
-      }
-    } @else {
+    @if (relaunch(); as relaunch) {
       <button
         lodbButton="primary"
+        lodbButtonSize="small"
+        type="button"
+        data-relaunch
+        (click)="launch.emit(relaunch.preset)"
+      >
+        {{ relaunchLabel() }}
+      </button>
+    }
+    @if (!isCompleted()) {
+      <button
+        [lodbButton]="relaunch() ? 'ghost' : 'primary'"
         lodbButtonSize="small"
         type="button"
         data-complete
