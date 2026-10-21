@@ -11,6 +11,7 @@ using LoDb.Infrastructure.Persistence.Contact;
 using LoDb.Infrastructure.Persistence.Ddragon;
 using LoDb.Infrastructure.Persistence.Outbox;
 using LoDb.Infrastructure.Persistence.Prerender;
+using LoDb.Infrastructure.Persistence.Prerender.Demand;
 using LoDb.Infrastructure.Persistence.Prerender.Pace;
 using LoDb.Infrastructure.Persistence.PublicApi;
 using LoDb.Infrastructure.Persistence.Scheduling;
@@ -82,6 +83,7 @@ public sealed class LoDbDbContext(DbContextOptions<LoDbDbContext> options)
 
     public DbSet<PrerenderBuild> PrerenderBuilds => Set<PrerenderBuild>();
 
+    public DbSet<PrerenderDemandPage> PrerenderDemand => Set<PrerenderDemandPage>();
     public DbSet<PrerenderPaceSetting> PrerenderPaceSettings => Set<PrerenderPaceSetting>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -143,6 +143,8 @@ export type { PlanCount } from './models/plan-count';
 export type { PlatformPolicy } from './models/platform-policy';
 export type { PreferredVersionRequest } from './models/preferred-version-request';
 export type { PrerenderBuildVolume } from './models/prerender-build-volume';
+export type { PrerenderDemandPage } from './models/prerender-demand-page';
+export type { PrerenderDemandReport } from './models/prerender-demand-report';
 export type { PrerenderEnginePulse } from './models/prerender-engine-pulse';
 export type { PrerenderEpochCoverage } from './models/prerender-epoch-coverage';
 export type { PrerenderEpochVolume } from './models/prerender-epoch-volume';

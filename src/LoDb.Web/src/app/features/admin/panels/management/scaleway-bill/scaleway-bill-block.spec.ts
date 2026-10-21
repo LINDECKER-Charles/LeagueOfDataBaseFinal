@@ -7,6 +7,7 @@ import type { ScalewayProjectBill } from '../../../../../core/api/generated/mode
 import { configureAdminTestBed } from '../../../testing/admin-test-bed';
 import { press } from '../../../testing/dom/press';
 import { backupReport } from '../../../testing/fixtures/backup-report';
+import { prerenderDemand } from '../../../testing/fixtures/prerender-demand';
 import { prerenderPatches } from '../../../testing/fixtures/prerender-patches';
 import { prerenderReport } from '../../../testing/fixtures/prerender-report';
 import { scalewayBillReport } from '../../../testing/fixtures/scaleway-bill-report';
@@ -45,8 +46,12 @@ const PAGES: BilledPanel = {
   url: '/admin/prerender',
   // No pass runs: the panel does not read itself again meanwhile.
   report: { path: '/api/admin/prerender', body: prerenderReport({ current: null }) },
-  // The coverage of the served epoch: the « Couverture » tab renders at once.
-  before: [{ path: '/api/admin/prerender/patches', body: prerenderPatches() }],
+  // The coverage of the served epoch (the « Couverture » tab renders at once), and the
+  // automatic queue under the key figures.
+  before: [
+    { path: '/api/admin/prerender/patches', body: prerenderPatches() },
+    { path: '/api/admin/prerender/demand', body: prerenderDemand() },
+  ],
 };
 
 function texts(root: ParentNode, selector: string): string[] {

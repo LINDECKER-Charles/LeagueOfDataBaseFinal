@@ -106,6 +106,9 @@ Logs et requêtes LogsQL : [`observabilite.md`](observabilite.md) et [`logging.m
 | `lodb_prerender_pace_renders_per_minute` | jauge | — | non : seulement pendant que le moteur de cette instance écrit une passe | `LoDb.Prerender` (instrument `lodb.prerender.pace.renders_per_minute`), le droit du régulateur : rendus que la passe peut démarrer par minute, 0 en retenue, le plancher quand aucune décision ne l'a renouvelé depuis 90 s, le rythme fixe en mode `fixed` |
 | `lodb_prerender_pace_limit` | jauge | `reason` (`none`, `warming_up`, `ceiling`, `host_cpu`, `host_cpu_sustained`, `host_steal`, `visitors_ssr`, `visitors_refused`, `api_cpu`, `pass_latency`, `pass_ssr_pressure`, `signal_missing`, `fixed`) | non : idem | `LoDb.Prerender`, 1 pour la raison qui borne le rythme, 0 pour les autres |
 | `lodb_prerender_pace_changes_total` | compteur | `change` (`increased`, `decreased`, `held`, `released`), `reason` (idem) | non | `LoDb.Prerender`, une incrémentation par mouvement du régulateur : quelques-unes par heure |
+| `lodb_prerender_demand_pages_total` | compteur | `outcome` (`written`, `skipped` : déjà écrite par une passe ou rendu qui ne se stocke pas ; `refused` : `503` du SSR de la passe attendu ; `failed` : essai raté) | non | `LoDb.Prerender` (instrument `lodb.prerender.demand.pages`), une incrémentation par page de la file automatique ; la ligne `prerender.demand.drained` de chaque lot en donne le détail |
+| `lodb_prerender_demand_captured_total` | compteur | `result` (`queued` : page du catalogue ajoutée ou recomptée ; `rejected` : hors du catalogue ; `deferred` : catalogue de sa version pas encore stocké) | non | `LoDb.Prerender` (instrument `lodb.prerender.demand.captured`), par page refusée relevée sur le SSR des visiteurs |
+| `lodb_prerender_demand_pending` | jauge | — | non : au premier relevé ou lot de l'instance | `LoDb.Prerender` (instrument `lodb.prerender.demand.pending`), les pages en attente au dernier compte de la file, jamais une requête au scrape |
 
 `lodb_job_period_seconds` et `lodb_job_last_success_seconds` se lisent ensemble : une tâche
 est en retard quand `time() - lodb_job_last_success_seconds > 3 * lodb_job_period_seconds`
@@ -127,6 +130,14 @@ par changement d'état, jamais par évaluation ni par page : `prerender.pace.slo
 (Warning) puis `prerender.pace.signal_restored`, une fois par panne de source (`HostCpu`,
 `ApiCgroup`, `VisitorsSsr`, `PassSsr`), et `prerender.pace.tick_failed` (Error) sur un tour
 de la tâche en échec.
+
+La file automatique ([`pre-rendu-catalogue-cdn.md`](../produit/pre-rendu-catalogue-cdn.md),
+lot 2) écrit `prerender.demand.collected` par relevé du SSR qui apporte des pages,
+`prerender.demand.drained` par lot rendu, `prerender.demand.stopped` (Warning) quand un lot
+s'arrête (SSR injoignable, réglage refusé), `prerender.demand.unreadable` (Warning) puis
+`prerender.demand.readable` une fois par panne du relevé, et
+`prerender.demand.collect_failed` ou `prerender.demand.tick_failed` (Error) sur un tour en
+échec. Aucune ligne ne porte de chemin : le pupitre liste les pages les plus demandées.
 
 ## API — métriques du framework
 
