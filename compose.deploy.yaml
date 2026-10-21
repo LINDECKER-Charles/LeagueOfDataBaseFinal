@@ -129,6 +129,11 @@ services:
       LoDb__Prerender__AutoEnqueueOnPromotion:
       # The pass renders each page for the canonical host: its links and canonical carry it.
       LoDb__Prerender__PublicHost: ${LODB_CANONICAL_HOST:?LODB_CANONICAL_HOST is required}
+      # Two renderers on a host, a core each at most, and a manual pace of 900 renders a
+      # minute at most: some 2 cores at 0.13 s of CPU a page, the brake past 90 % of the
+      # VPS (configuration.md § 4.10). The same lines feed web-ssr-prerender below.
+      LoDb__Prerender__Renderers: ${LODB_PRERENDER_RENDERERS:-2}
+      LoDb__Prerender__Pace__ManualMaxRendersPerMinute: ${LODB_PRERENDER_MANUAL_MAX:-900}
       # The Scaleway bill of the admin panels (configuration.md § 4.9): the organization and
       # the projects of the backups and of the pages, read with the key below.
       LoDb__ScalewayBilling__OrganizationId:
@@ -249,6 +254,7 @@ services:
       # As web-ssr: the public hosts of CADDY_DOMAINS, and the stack's subnet alone.
       LODB_ALLOWED_HOSTS: ${LODB_ALLOWED_HOSTS:?LODB_ALLOWED_HOSTS is required (the public hosts)}
       LODB_STACK_NETWORKS: ${LODB_STACK_SUBNET:?LODB_STACK_SUBNET is required (set by the deploy job)}
+      LODB_PRERENDER_RENDERS_PER_MINUTE: ${LODB_PRERENDER_MANUAL_MAX:-900}
     # Scraped like web-ssr (the `service` label tells them apart), and read by the API's
     # regulator on the same metrics port (/load), over `observability` too; never published.
     networks:
@@ -262,8 +268,10 @@ services:
         limits:
           # As web-ssr: its peak is the renderer's, the V8 heap capped by NODE_OPTIONS.
           memory: 704m
-          cpus: "1.0"
+          # Per replica; the API's LoDb__Prerender__Pace__RendererCpus reads the same line.
+          cpus: ${LODB_PRERENDER_RENDERER_CPUS:-1.0}
           pids: 256
+      replicas: ${LODB_PRERENDER_RENDERERS:-2}
 
   nginx:
     image: ${REGISTRY:?REGISTRY is required (ghcr.io/<owner>/lodb)}/nginx:${IMAGE_TAG:?IMAGE_TAG is required}

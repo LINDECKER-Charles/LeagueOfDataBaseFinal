@@ -16,7 +16,15 @@ internal sealed class HostWindow
 {
     private readonly SampleRing<HostCpuSample> _samples = new(PaceTiming.LongWindowSamples + 1);
 
-    public void Add(HostCpuSample sample) => _samples.Add(sample);
+    /// <summary>The CPUs of the latest sample; null before any, or when unknown.</summary>
+    public int? Cpus { get; private set; }
+
+    public void Add(HostCpuSample sample)
+    {
+        ArgumentNullException.ThrowIfNull(sample);
+        _samples.Add(sample);
+        Cpus = sample.Cpus > 0 ? sample.Cpus : null;
+    }
 
     public HostShares Shares()
     {

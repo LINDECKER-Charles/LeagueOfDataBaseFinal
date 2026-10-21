@@ -248,9 +248,10 @@ création d'une base, sur un volume vide.
 | `LODB_PAGES_STORE_BUCKET` | `lodb-pages-staging` | `lodb-pages-prod` | avec le précédent | Bucket que nginx lit, le même que `LoDb__Prerender__Bucket` (§ 4.2). Défaut `none` : aucun (une valeur vide est refusée par nginx). |
 | `LODB_PAGES_STORE_SCHEME`, `LODB_PAGES_STORE_HOST`, `LODB_PAGES_STORE_PORT` | ➖ | ➖ | ➖ | Adresse du stockage pour nginx : `https`, `s3.fr-par.scw.cloud`, `443`. Le stockage simulé de la stack locale les remplace (§ 7). nginx lit sans clé, depuis l'adresse de l'hôte, la seule que la politique du bucket admette. |
 | `LODB_ARCHIVE_SERVE_EPOCH` | `1` | `1` | ➖ | Epoch que nginx lit dans le stockage (`pages/<epoch>/…`), aussi transmise à l'API (`LoDb__Prerender__ServedEpoch`) pour le panneau d'administration. Changée à la main, puis redéploiement : voir « Changer l'epoch servie » (§ 4.8). Distincte de `LODB_ARCHIVE_EPOCH`, le compteur des clés du cache de nginx. |
-| `LODB_PRERENDER_RENDERS_PER_MINUTE`, `LODB_PRERENDER_RENDER_BURST`, `LODB_PRERENDER_MAX_IN_FLIGHT`, `LODB_PRERENDER_VISITOR_RESERVE` | ➖ (§ 4.5) | ➖ | ➖ | Voie `prerender` du SSR des visiteurs : rendus par minute (`120`) et d'affilée (`10`), rendus simultanés de la passe (`2`, strictement sous `LODB_RENDER_MAX_IN_FLIGHT`), rendus toujours laissés aux visiteurs (`4`). Inutilisée depuis que la passe a son propre SSR (§ 4.10), gardée telle quelle. Deux de ces lignes servent ailleurs : `LODB_PRERENDER_RENDERS_PER_MINUTE` est aussi le **rythme fixe** de la passe (`LoDb__Prerender__RendersPerMinute`, § 4.3 : interrupteur `LODB_PRERENDER_PACE_MODE=fixed` et commande `prerender unit`), jamais au-dessus de `LODB_PRERENDER_PACE_MAX` ; `LODB_PRERENDER_MAX_IN_FLIGHT` donne les pages en vol de la passe (`LoDb__Prerender__MaxInFlight`) et la voie du SSR de la passe, sous ses `4` rendus simultanés (`3` au plus). `LODB_PRERENDER_RENDER_BURST` règle aussi la rafale de la voie du SSR de la passe. |
+| `LODB_PRERENDER_RENDERS_PER_MINUTE`, `LODB_PRERENDER_RENDER_BURST`, `LODB_PRERENDER_MAX_IN_FLIGHT`, `LODB_PRERENDER_VISITOR_RESERVE` | ➖ (§ 4.5) | ➖ | ➖ | Voie `prerender` du SSR des visiteurs : rendus par minute (`120`) et d'affilée (`10`), rendus simultanés de la passe (`2`, strictement sous `LODB_RENDER_MAX_IN_FLIGHT`), rendus toujours laissés aux visiteurs (`4`). Inutilisée depuis que la passe a son propre SSR (§ 4.10), gardée telle quelle. Deux de ces lignes servent ailleurs : `LODB_PRERENDER_RENDERS_PER_MINUTE` est aussi le **rythme fixe** de la passe (`LoDb__Prerender__RendersPerMinute`, § 4.3 : interrupteur `LODB_PRERENDER_PACE_MODE=fixed` et commande `prerender unit`), jamais au-dessus de `LODB_PRERENDER_PACE_MAX` ; `LODB_PRERENDER_RENDER_BURST` règle aussi la rafale de la voie des moteurs de la passe. `LODB_PRERENDER_MAX_IN_FLIGHT` ne donne plus les pages en vol de la passe (`LODB_PRERENDER_PAGES_IN_FLIGHT`, § 4.10) ni la voie de ses moteurs (`15`, fixe), sauf au staging qui la pose à `1`. |
 | `LODB_PRERENDER_PACE_MODE` | ➖ | ➖ | ➖ | Rythme de la passe de précalcul (§ 4.10) : `adaptive` (défaut), il suit le CPU libre de l'hôte entre le plancher et le plafond ci-dessous ; `fixed`, il reste à `LODB_PRERENDER_RENDERS_PER_MINUTE` sans rien mesurer. L'interrupteur, appliqué par un redéploiement de l'API ; le levier immédiat reste la pause au pupitre. |
-| `LODB_PRERENDER_PACE_MIN`, `LODB_PRERENDER_PACE_MAX` | ➖ (§ 4.5) | ➖ | ➖ | Plancher (`30`) et plafond (`240`) du rythme adaptatif, en rendus par minute. Le plafond est aussi le budget de la voie `prerender` du SSR de la passe (`web-ssr-prerender`) : le SSR borne la passe même si l'API se trompe. L'API refuse de démarrer, et le job de déployer, sur un plancher, un pas ou un rythme fixe au-dessus du plafond. Monter le plafond à `300` après une semaine sans alerte ni ralentissement mesuré (§ 4.10). |
+| `LODB_PRERENDER_MANUAL_MAX`, `LODB_PRERENDER_RENDERERS`, `LODB_PRERENDER_RENDERER_CPUS`, `LODB_PRERENDER_PAGES_IN_FLIGHT` | ➖ (§ 4.5) | ➖ | ➖ | Vitesse réglable de la passe (§ 4.10) : maximum du mode manuel (`900` sur un hôte, `600` en local, le plafond `30` au staging), aussi budget de la voie de **chaque** moteur ; moteurs de précalcul, répliques de `web-ssr-prerender` (`2` sur un hôte, `1` au staging et en local) ; quota de chacun (`1.0`) ; pages en vol au plus (`24`). |
+| `LODB_PRERENDER_PACE_MIN`, `LODB_PRERENDER_PACE_MAX` | ➖ (§ 4.5) | ➖ | ➖ | Plancher (`30`) et plafond (`240`) du rythme adaptatif, en rendus par minute. Le plafond reste sous `LODB_PRERENDER_MANUAL_MAX`, budget de la voie des moteurs de la passe (`web-ssr-prerender`) : le moteur borne la passe même si l'API se trompe. L'API refuse de démarrer, et le job de déployer, sur un plancher, un pas ou un rythme fixe au-dessus du plafond. Monter le plafond à `300` après une semaine sans alerte ni ralentissement mesuré (§ 4.10). |
 | `LODB_FRONT_BUILDS_RETENTION_DAYS` | `400` | `400` | ➖ | Lu par le job de déploiement : un bundle du volume `front-builds` qu'aucun build n'a livré depuis ce nombre de jours (`400`) est supprimé, `395` au moins (le job refuse en deçà). Jamais sous la durée de vie d'une page en cache (un an pour un ancien patch, son `s-maxage`, puis sa copie périmée servie le temps de son nouveau rendu) : un onglet ou une page gardée nommerait un bundle disparu. La copie des builds dans le stockage objet (ADR 0011) ne couvre pas les pages rendues par le SSR, que le cache des anciens patchs garde aussi (inactivité `90d`) : un filet de plus, pas une raison de baisser cette durée. Mesuré : 16 Mo en 9 jours, moins de 1 Go par an. |
 | `LODB_ADMIN_LOGIN` | 🔁 `ADMIN_LOGIN` | idem | ➖ | Administrateur racine, tenu par le job à chaque déploiement (`api admin root`) : compte de ce nom, rôle admin, TOTP enrôlé depuis le lien d'invitation que `api admin mfa-invite --email …` affiche sur l'hôte (15 min ; `api admin mfa-reset` retire un TOTP perdu). Absent : aucun, seulement `api admin create`. |
 | `LODB_ADMIN_PASSWORD` 🔒 | 🔁 `ADMIN_PASSWORD` | idem | avec le précédent | Son mot de passe, 12 caractères au moins, sans apostrophe ni guillemet. Changé ici, il est réappliqué au déploiement suivant (sessions fermées). Reste dans le `.env` : le job le passe à la commande par son entrée. |
@@ -766,7 +767,42 @@ Signaux, seuils et règles : [spécification](../produit/pre-rendu-catalogue-cdn
 | `LODB_PRERENDER_PACE_MIN` | `10` | `30` | plancher, et rythme de départ de chaque passe |
 | `LODB_PRERENDER_PACE_MAX` | `30` | `240` | plafond, et budget de la voie du SSR de la passe |
 | `LODB_PRERENDER_RENDERS_PER_MINUTE` | `30` | `120` | rythme fixe : mode `fixed`, commande `prerender unit` |
-| `LODB_PRERENDER_MAX_IN_FLIGHT` | `1` | `2` | pages en vol, de la passe et de la voie de son SSR |
+| `LODB_PRERENDER_MANUAL_MAX` | `30` (le plafond) | `900` | maximum du mode manuel, et budget de la voie de chaque moteur |
+| `LODB_PRERENDER_RENDERERS` | `1` | `2` | moteurs (répliques de `web-ssr-prerender`), lus aussi par l'API |
+| `LODB_PRERENDER_RENDERER_CPUS` | `0.25` (fixe) | `1.0` | quota de chaque moteur, et sa capacité au pupitre |
+| `LODB_PRERENDER_PAGES_IN_FLIGHT` | `1` (`LODB_PRERENDER_MAX_IN_FLIGHT`) | `24` | pages en vol au plus ; la fenêtre suit le rythme (1,5 s par page) |
+
+**Vitesse réglable** (décision du 2026-10-22). Au pupitre, bloc « Vitesse du précalcul » :
+**adaptatif** (le régulateur ci-dessus) ou **manuel**, une cible en pages par minute, de 1 à
+`LODB_PRERENDER_MANUAL_MAX`, gardée en base (`prerender_pace_setting`) et appliquée sans
+redéploiement : une nouvelle cible tout de suite par l'instance qui répond, un changement de
+mode à la décision suivante (30 s au plus) par celle qui écrit la passe. Le mode manuel tient
+la cible quelle que soit la charge, sauf **frein d'urgence** : plus aucun rendu pendant 5 min dès
+qu'un visiteur du dernier patch est refusé, ou après 3 min au-delà de 90 % de CPU sur le VPS
+(steal compris), avec un signal rouge côté visiteurs (boucle d'événements ou pression CPU de
+leur SSR, bridage de l'API) ou sans mesure du SSR des visiteurs. Les refus de la voie des anciens patchs
+ne freinent pas : elle refuse au-delà de son budget quoi que fasse l'hôte. Le coupe-circuit
+`LODB_PRERENDER_PACE_MODE=fixed` passe avant tout réglage (le pupitre le dit et refuse, `409`).
+À côté, le pupitre montre le CPU du VPS (steal compté occupé), celui des moteurs, du SSR des
+visiteurs et de l'API, lus toutes les 30 s ; le CPU prévu pour la vitesse choisie (pages/min ×
+0,1 s de CPU par page pour les moteurs, mesurée sur 10 min dès 60 pages, + 0,03 s pour l'API et
+Postgres), la marge restante, la capacité des moteurs, la fin de la passe active et du
+catalogue à ce rythme, le stockage ajouté (€/mois) et la part du VPS prise (aucun coût en plus :
+le VPS est payé).
+
+**Plusieurs moteurs.** Chaque réplique de `web-ssr-prerender` est un thread Node, un cœur au
+plus. L'API résout leur nom commun (`lodb-web-ssr-prerender`, toutes les 30 s) et envoie chaque
+rendu à l'adresse la moins occupée ; elle lit la charge de chacune (`/load`) pour le pupitre et
+le régulateur (la plus sous pression). Avec un seul moteur, rien ne change. Passer de 2 à 3 :
+`LODB_PRERENDER_RENDERERS=3` dans `ENV_PROD`, puis un déploiement ; `LODB_PRERENDER_MANUAL_MAX`
+suit (environ 450 pages/min par cœur sur ce VPS).
+
+**Mettre la passe en pause pour un déploiement**, depuis l'hôte :
+`docker compose exec -T api dotnet LoDb.Api.dll prerender pause`, puis
+`prerender resume` une fois le déploiement fini. Une ligne de synthèse chacune ; code `0`
+quand c'est fait ou qu'il n'y a rien à faire, `1` sur un refus (pré-calcul non configuré, passe
+qui a bougé, pause choisie au pupitre que `resume` ne lève qu'avec `--any`), `2` sur un argument
+inconnu.
 
 **Couper la régulation.** Le levier immédiat est la pause de la passe au pupitre : plus aucune
 page ne part, celles en vol finissent. Pour garder la passe à un rythme fixe : la ligne
@@ -787,9 +823,9 @@ dans `ENV_PROD`, puis un déploiement. Le pas et le plancher ne changent pas.
   version, contre 39 ou 100 pour `1024`) :
   `docker compose exec -T web-ssr-prerender cat /sys/fs/cgroup/cpu.weight`.
 
-**Ce qui le montre** : le relevé « Rythme » du pupitre (droit du moment et sa raison), les
+**Ce qui le montre** : le bloc « Vitesse du précalcul » et le relevé « Rythme » du pupitre (droit du moment et sa raison), les
 métriques `lodb_prerender_pace_*` ([`metriques.md`](metriques.md)) et les lignes
-`prerender.pace.*` de l'API, une par changement d'état. Le SSR de la passe tombé n'arrête que
+`prerender.pace.*` de l'API, une par changement d'état (`prerender.pace.setting_applied` à chaque réglage). Le SSR de la passe tombé n'arrête que
 la passe, qui l'attend (`prerender.ssr.unreachable`) ; le déploiement ne l'attend pas pour
 rendre le site.
 

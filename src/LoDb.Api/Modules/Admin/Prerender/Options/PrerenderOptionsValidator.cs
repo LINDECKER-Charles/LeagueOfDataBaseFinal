@@ -17,8 +17,12 @@ internal sealed class PrerenderOptionsValidator : IValidateOptions<PrerenderOpti
 {
     private const string RootPath = "/";
 
-    // Over the SSR's whole render capacity on any host this stack runs on: a bound on a typo.
-    private const int MaxPagesInFlight = 16;
+    // Pages in flight are rendered, then uploaded: at the manual maximum of a few renderers,
+    // some 20 of them overlap. Twice that is a bound on a typo.
+    private const int MaxPagesInFlight = 40;
+
+    // Each renderer is a core of the host at most: past the VPS's own cores, a typo.
+    private const int MaxRenderers = 8;
 
     public ValidateOptionsResult Validate(string? name, PrerenderOptions options)
     {
@@ -44,6 +48,10 @@ internal sealed class PrerenderOptionsValidator : IValidateOptions<PrerenderOpti
             failures,
             options.MaxInFlight is < 1 or > MaxPagesInFlight,
             $"MaxInFlight must be between 1 and {MaxPagesInFlight}.");
+        AddIf(
+            failures,
+            options.Renderers is < 1 or > MaxRenderers,
+            $"Renderers must be between 1 and {MaxRenderers}.");
         failures.AddRange(PaceOptionsRules.FailuresOf(options));
         return failures.Count == 0
             ? ValidateOptionsResult.Success

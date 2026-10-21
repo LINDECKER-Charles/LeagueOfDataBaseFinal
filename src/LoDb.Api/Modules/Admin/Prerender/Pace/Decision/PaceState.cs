@@ -23,4 +23,10 @@ internal enum PaceState
 
     /// <summary>The regulation is off: the fixed pace, whatever the load.</summary>
     Fixed,
+
+    /// <summary>
+    /// The operator's target from the admin, whatever the load but for the emergency brake,
+    /// which holds the pass (<see cref="Held"/>).
+    /// </summary>
+    Manual,
 }

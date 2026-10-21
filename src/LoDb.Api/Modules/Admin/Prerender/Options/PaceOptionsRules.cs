@@ -5,11 +5,15 @@ namespace LoDb.Api.Modules.Admin.Prerender.Options;
 /// <summary>
 /// What <see cref="PrerenderOptionsValidator"/> refuses of the pace: a floor, a step or a fixed
 /// pace above the ceiling (the pass's SSR lane would refuse the renders over its budget), a
-/// load URL that is not one, a CPU list that does not parse.
+/// manual maximum out of bounds, a renderer quota that is not one, a load URL that is not
+/// one, a CPU list that does not parse.
 /// </summary>
 internal static class PaceOptionsRules
 {
     private const string RootPath = "/";
+
+    // A renderer is one Node thread: past a few cores, a quota says nothing of its capacity.
+    private const double MostRendererCpus = 8;
 
     /// <summary>Each rule <paramref name="options"/> breaks, as a message.</summary>
     public static IEnumerable<string> FailuresOf(PrerenderOptions options) =>
@@ -33,6 +37,16 @@ internal static class PaceOptionsRules
         {
             yield return "Pace:StepRendersPerMinute must be between 1 and"
                 + " Pace:MaxRendersPerMinute.";
+        }
+
+        if (pace.ManualMaxRendersPerMinute < 1 || pace.ManualMaxRendersPerMinute > most)
+        {
+            yield return $"Pace:ManualMaxRendersPerMinute must be between 1 and {most}.";
+        }
+
+        if (pace.RendererCpus is not (> 0 and <= MostRendererCpus))
+        {
+            yield return $"Pace:RendererCpus must be over 0 and at most {MostRendererCpus}.";
         }
 
         if (options.RendersPerMinute > pace.MaxRendersPerMinute)

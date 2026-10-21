@@ -83,7 +83,8 @@
     "rate_limited": "Trop de requêtes. Patientez avant de réessayer.",
     "invalid": "La saisie est invalide.",
     "network": "L'API est injoignable.",
-    "generic": "L'action a échoué."
+    "generic": "L'action a échoué.",
+    "prerender_pace_fixed": "Le rythme est fixé par l'environnement : la vitesse ne se règle pas ici."
   },
   "actions": {
     "cancel": "Annuler",
@@ -678,7 +679,8 @@
     "done": {
       "pause": "Passe n°{id} mise en pause.",
       "resume": "Passe n°{id} reprise.",
-      "cancel": "Passe n°{id} annulée."
+      "cancel": "Passe n°{id} annulée.",
+      "speed": "Vitesse enregistrée : appliquée en moins de 30 s."
     },
     "common": {
       "cells": {
@@ -880,7 +882,8 @@
           "steady": "stable à {rate} p/min : {reason}",
           "slowed": "ralenti à {rate} p/min : {reason}",
           "held": "en retenue jusqu'à {at} UTC : {reason}",
-          "fixed": "rythme fixe : {rate} p/min (régulation coupée)"
+          "fixed": "rythme fixe : {rate} p/min (régulation coupée)",
+          "manual": "manuel : {rate} p/min"
         },
         "reasons": {
           "warming-up": "mesure en cours",
@@ -895,7 +898,8 @@
           "pass-latency": "rendus de la passe ralentis",
           "pass-ssr-pressure": "le VPS reprend le CPU de la passe",
           "signal-missing": "une mesure manque",
-          "fixed": "régulation coupée"
+          "fixed": "régulation coupée",
+          "manual": "réglage manuel"
         }
       },
       "eta": {
@@ -1335,6 +1339,58 @@
       "retire_no_bucket": "Le nom du bucket n'est pas configuré sur cet hôte : remplacez <bucket>.",
       "retire_staging": "Au staging : sans objet, la règle d'expiration du bucket efface toute page.",
       "close": "Fermer"
+    },
+    "speed": {
+      "title": "Vitesse du précalcul",
+      "lede": "Combien de pages les moteurs de précalcul rendent par minute. Les visiteurs passent toujours avant : les moteurs ne prennent que le CPU qu'ils laissent.",
+      "loading": "Lecture de la vitesse…",
+      "dormant": "Le précalcul n'est pas configuré sur cet hôte : le réglage attend.",
+      "fixed": "Le rythme est fixé par l'environnement (LODB_PRERENDER_PACE_MODE=fixed) : ce réglage ne s'applique qu'une fois ce coupe-circuit levé.",
+      "mode": {
+        "label": "Mode",
+        "adaptive": "Adaptatif",
+        "adaptive_hint": "Le régulateur suit le CPU que le VPS et les visiteurs laissent libre, entre {min} et {max} pages/min.",
+        "manual": "Manuel",
+        "manual_hint": "Les moteurs tiennent la vitesse choisie quelle que soit la charge, sauf frein d'urgence."
+      },
+      "rate": {
+        "label": "Pages par minute",
+        "range": "de {min} à {max}",
+        "unit": "pages/min"
+      },
+      "brake": "Frein d'urgence : plus aucun rendu pendant {hold} min dès qu'un visiteur du dernier patch est refusé, ou après {minutes} min au-delà de {busy} % de CPU sur le VPS (vol de l'hébergeur compris), avec le SSR des visiteurs ralenti ou l'API bridée, ou sans mesure des visiteurs. La passe reprend ensuite à la vitesse choisie.",
+      "apply": "Appliquer",
+      "applied": "Réglé le {at} UTC ; appliqué en moins de 30 s par l'instance qui écrit la passe.",
+      "never_set": "Jamais réglé : adaptatif par défaut.",
+      "now": {
+        "title": "Ressources maintenant",
+        "unread": "Pas encore de mesure : la première arrive 30 s après le démarrage de l'API.",
+        "host": "VPS",
+        "host_value": "{busy} occupé, dont {steal} repris par l'hébergeur · {free} cœurs libres sur {cpus}",
+        "renderers": "Moteurs de précalcul",
+        "renderers_value": "{count, plural, one {# moteur} other {# moteurs}} · {cores} cœur · {pace} pages/min",
+        "visitors": "SSR des visiteurs",
+        "visitors_value": "{cores} cœur · {refused} refus sur le dernier patch · {older} pages anciennes refusées/min",
+        "api": "API",
+        "api_value": "{cores} cœur"
+      },
+      "forecast": {
+        "title": "À {pace} pages/min",
+        "cpu": "CPU prévu",
+        "cpu_value": "{total} cœur : moteurs {renderers} + API et Postgres {stack}",
+        "host": "VPS ensuite",
+        "host_value": "≈ {busy} occupé · marge {margin} cœur",
+        "capacity": "Capacité des moteurs",
+        "capacity_value": "{capacity} pages/min au mieux : {renderers} × {cpus} cœur à {cost} s de CPU par page ({measured})",
+        "measured": "mesuré ici",
+        "estimated": "mesuré en prod le 21/10",
+        "pass": "Passe en cours",
+        "pass_value": "fin dans ≈ {eta} · {pages} pages restantes",
+        "catalogue": "Tout le catalogue",
+        "catalogue_value": "≈ {eta} pour ≈ {pages} pages manquantes dans l'epoch servie",
+        "cost": "Coût",
+        "cost_value": "+ {euros} / mois de stockage pour ces pages · VPS déjà payé : aucun surcoût, la passe prend {share} de son CPU"
+      }
     }
   },
   "scaleway_bill": {

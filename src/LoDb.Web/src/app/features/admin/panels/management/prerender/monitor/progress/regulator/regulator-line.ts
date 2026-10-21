@@ -17,6 +17,7 @@ const STATES: ReadonlySet<string> = new Set([
   'slowed',
   'held',
   'fixed',
+  'manual',
 ]);
 const REASON_KEYS: ReadonlySet<string> = new Set([
   'warming-up',
@@ -32,6 +33,7 @@ const REASON_KEYS: ReadonlySet<string> = new Set([
   'pass-ssr-pressure',
   'signal-missing',
   'fixed',
+  'manual',
 ]);
 
 function reasonOf(pace: PrerenderPaceView, cpu: string | null, texts: AdminText): string | null {
@@ -67,6 +69,8 @@ export function regulatorLine(pace: PrerenderPaceView, texts: AdminText): string
       return withCpu(say('climbing', { rate }), cpu, texts);
     case 'fixed':
       return say('fixed', { rate });
+    case 'manual':
+      return say('manual', { rate });
     default:
       return reasoned(pace, cpu, texts);
   }

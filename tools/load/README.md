@@ -51,7 +51,9 @@ LODB_MAIL_PORT=18125 docker compose -p lodb-dev-e1 -f compose.yaml \
   postgres 0,5 / 1024 / 256, nginx 0,25 / 2048 / 256. Le test vérifie qu'ils suivent ceux de
   `compose.deploy.yaml` dès que celui-ci en pose. Le SSR de la passe (`web-ssr-prerender`)
   reçoit ceux de la prod, 1,0 / 128 / 256 : un banc avec une passe en cours mesure ce que les
-  visiteurs reçoivent à côté d'elle.
+  visiteurs reçoivent à côté d'elle. Sa voie a le budget de `compose.yaml`
+  (`LODB_PRERENDER_MANUAL_MAX`, 600), et `LODB_PRERENDER_RENDERERS=2` en lance deux, comme un
+  hôte.
 - Le rythme adaptatif de la passe y reprend les bornes de `compose.yaml` (plancher 30,
   plafond 240, pas du code), celles de l'hôte. Une preuve du régulateur sur ce poste (qui a 14
   CPU, quand l'hôte en a 4) pose son propre calque : il épingle les conteneurs sur des

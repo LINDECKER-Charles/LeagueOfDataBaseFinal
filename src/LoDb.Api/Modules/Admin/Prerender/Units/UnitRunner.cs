@@ -1,5 +1,6 @@
 using System.Globalization;
 using LoDb.Api.Modules.Admin.Prerender.Options;
+using LoDb.Api.Modules.Admin.Prerender.Pace;
 using LoDb.Api.Modules.Admin.Prerender.Pages;
 using LoDb.Api.Modules.Admin.Prerender.Passes;
 using LoDb.Api.Modules.Admin.Prerender.Telemetry;
@@ -19,8 +20,8 @@ namespace LoDb.Api.Modules.Admin.Prerender.Units;
 /// <para>
 /// The catalog of the version is loaded once for all its pages, here and by the API the SSR
 /// calls: the pass goes (version, locale) after (version, locale) for that reason. Within a
-/// unit, <see cref="PrerenderOptions.MaxInFlight"/> pages are rendered at once
-/// (<see cref="PageWindow"/>).
+/// unit, as many pages are rendered at once as the pace needs, up to
+/// <see cref="PrerenderOptions.MaxInFlight"/> (<see cref="PageWindow"/>).
 /// </para>
 /// <para>
 /// A unit waits while its catalog is not stored, and while some server may still hold its
@@ -34,6 +35,7 @@ internal sealed class UnitRunner(
     PageRunner pages,
     PassControl control,
     UnitWaits waits,
+    PaceRegulator regulator,
     IOptions<PrerenderOptions> options,
     TimeProvider clock,
     ILogger<UnitRunner> logger)
@@ -74,7 +76,10 @@ internal sealed class UnitRunner(
 
     private async Task<UnitEnd> WalkAsync(UnitWalk walk, CancellationToken cancellationToken)
     {
-        var window = new PageWindow(walk.Unit.Cursor, walk.Paths.Count, options.Value.MaxInFlight);
+        var window = new PageWindow(
+            walk.Unit.Cursor,
+            walk.Paths.Count,
+            () => InFlightWidth.Of(regulator.Allowance(), options.Value.MaxInFlight));
         PageResult? stop;
         try
         {

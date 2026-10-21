@@ -4,15 +4,20 @@ using LoDb.Api.Modules.Admin.Prerender.Writing;
 namespace LoDb.Api.Modules.Admin.Prerender.Units;
 
 /// <summary>
-/// The pages of a unit in flight together, <see cref="PrerenderOptions.MaxInFlight"/> at most,
-/// and the cursor they leave behind them: the first page that did not end.
+/// The pages of a unit in flight together, as many as the pace needs
+/// (<see cref="InFlightWidth"/>), <see cref="PrerenderOptions.MaxInFlight"/> at most, and the
+/// cursor they leave behind them: the first page that did not end.
 /// </summary>
 /// <remarks>
 /// Pages end out of order. One is saved only once every page before it ended, with them: a
 /// restart renders again the few that ended past a page still in flight, and counts none
 /// twice.
 /// </remarks>
-internal sealed class PageWindow(int cursor, int count, int width)
+/// <param name="cursor">The first page not saved yet.</param>
+/// <param name="count">The pages of the unit.</param>
+/// <param name="width">The pages in flight at most, read again at each fill: the pace moves.
+/// </param>
+internal sealed class PageWindow(int cursor, int count, Func<int> width)
 {
     private readonly Dictionary<Task<PageResult>, int> _inFlight = [];
     private readonly SortedDictionary<int, PageResult> _ended = [];
@@ -25,7 +30,8 @@ internal sealed class PageWindow(int cursor, int count, int width)
     public void Fill(Func<int, Task<PageResult>> start)
     {
         ArgumentNullException.ThrowIfNull(start);
-        for (; _inFlight.Count < width && _next < count; _next++)
+        var most = width();
+        for (; _inFlight.Count < most && _next < count; _next++)
         {
             _inFlight.Add(start(_next), _next);
         }
