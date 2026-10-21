@@ -25,6 +25,7 @@ const VERSIONS = [
   '16.12.1',
 ];
 const ANNIE = 'champions/Annie';
+const VERSION_NUMBER = /\d+\.\d+/;
 
 let context: PageContext;
 let canonical: CanonicalLink | null | undefined;
@@ -122,9 +123,16 @@ describe('PreviousPatches, at the latest patch', () => {
   it('links a pinned page to its canonical at the latest patch', async () => {
     const block = await render('16.14.1', '/en/16.14.1/champions/Annie', AT_LATEST);
 
-    expect(block.querySelector('p')?.textContent).toContain('In the latest patch');
     expect(latestLinkOf(block)?.getAttribute('href')).toBe(`/en/${ANNIE}`);
-    expect(latestLinkOf(block)?.textContent?.trim()).toBe(LATEST);
+    expect(latestLinkOf(block)?.textContent).toContain('In the latest patch');
+  });
+
+  // A stored page keeps its HTML past the next patch: a number would name a stale latest.
+  it('names no version, the short URL following the latest one', async () => {
+    const block = await render('16.14.1', '/en/16.14.1/champions/Annie', AT_LATEST);
+
+    expect(block.querySelector('p')?.textContent).not.toMatch(VERSION_NUMBER);
+    expect(latestLinkOf(block)?.querySelector('[aria-hidden="true"]')?.textContent).toBe('→');
   });
 
   it('links it from the oldest version listed, which has no previous patch', async () => {

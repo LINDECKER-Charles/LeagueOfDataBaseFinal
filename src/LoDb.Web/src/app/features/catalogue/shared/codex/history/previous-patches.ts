@@ -21,17 +21,19 @@ const PREVIOUS_PATCH_COUNT = 6;
  * A version the latest one links to its short URL; the regional variant is carried on.
  * A pinned page also links the entry at the latest patch, the page its canonical names, so
  * that crawlers coming in by an old URL reach the page the sitemap lists: only when the API
- * places the entity there, a retired one having no such page.
+ * places the entity there, a retired one having no such page. That link never names the
+ * latest version: a pinned page is stored once rendered (ADR 0011), and a number would go
+ * stale at the next patch while the short URL keeps following it.
  */
 @Component({
   selector: 'lodb-previous-patches',
   imports: [RouterLink, TranslocoPipe],
-  template: `@if (latest(); as latest) {
-      <p class="mb-5 flex flex-wrap items-center gap-2">
-        {{ 'detail.history.latest' | transloco }}
-        <a class="hx-chip nav-link px-3 py-1.5 hover:text-hex" [routerLink]="latest.url">{{
-          latest.version
-        }}</a>
+  template: `@if (latestUrl(); as latestUrl) {
+      <p class="mb-5">
+        <a class="hx-chip nav-link gap-2 px-3 py-1.5 hover:text-hex" [routerLink]="latestUrl"
+          >{{ 'detail.history.latest' | transloco }}
+          <span class="inline-block rtl:-scale-x-100" aria-hidden="true">→</span></a
+        >
       </p>
     }
     @if (links().length > 0) {
@@ -77,13 +79,13 @@ export class PreviousPatches {
     });
   });
 
-  protected readonly latest = computed(() => {
+  protected readonly latestUrl = computed(() => {
     const version = this.meta()?.latest;
     const context = this.context();
     const canonical = this.canonical();
     if (!version || !context.pinned || canonical?.version !== null) {
       return null;
     }
-    return { version, url: this.linkTo({ ...context, version, pinned: false }, canonical.path) };
+    return this.linkTo({ ...context, version, pinned: false }, canonical.path);
   });
 }

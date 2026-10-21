@@ -9,6 +9,7 @@
 #                 cache zones that LODB_* variables tune
 #   server.d/     *.conf included INSIDE the site's server block (seo, legacy redirects…)
 #   snippets/     files included by a server block or a location (guards, headers, caches…)
+#   njs/          scripts of the njs module that the base image ships (nginx.conf)
 #   maintenance/  the page answered while a deploy replaces the stack (server.d/maintenance.conf)
 #
 # Every image this file names is pinned by digest, its tag kept for the reader: a moved tag
@@ -105,6 +106,8 @@ COPY docker/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY docker/nginx/sites/     /etc/nginx/templates/sites/
 COPY docker/nginx/server.d/  /etc/nginx/templates/server.d/
 COPY docker/nginx/snippets/  /etc/nginx/templates/snippets/
+# The njs scripts (sites/site.conf): read as they are, never templates.
+COPY docker/nginx/njs/       /etc/nginx/njs/
 # The maintenance page and its files, with the site's own faces: nginx serves it while the SSR
 # server, which serves those faces otherwise, is being replaced. Not templates: envsubst never
 # reads them.

@@ -185,8 +185,9 @@ page ou ne répond pas. Chaque réponse le dit dans l'en-tête **`X-LoDb-Source`
 | `store` | le stockage objet, lu à l'instant | `MISS` (ou `EXPIRED`) |
 | `ssr` | un rendu du SSR, le repli | `MISS`, ou la réponse de délestage (`503`) |
 
-Le stockage ne renvoie jamais d'erreur au visiteur : un objet absent, une `403` (politique du
-bucket, adresse du VPS changée), une `429` de Scaleway ou un délai dépassé repassent par le SSR.
+Le stockage ne renvoie jamais d'erreur au visiteur : un objet absent (`404`), une `403`
+(politique du bucket, adresse du VPS changée), une `429` de Scaleway ou un délai dépassé
+repassent par le SSR.
 **Seule la part de `ssr` le montre** : une fois une passe complète, elle doit rester proche de
 zéro, hors des pages avec query (`?page=N`) et des versions pas encore écrites.
 

@@ -13,6 +13,7 @@ import { routes } from './app.routes';
 import { provideNavigationBeacon } from './core/analytics/provide-navigation-beacon';
 import { API_BASE_URL } from './core/api/api-base-url';
 import { authInterceptor } from './core/auth/auth-interceptor';
+import { bypassTransferCacheInterceptor } from './core/http/interceptors/bypass-transfer-cache-interceptor';
 import { provideAuth } from './core/auth/provide-auth';
 import { clientHeaderInterceptor } from './core/http/interceptors/client-header-interceptor';
 import { serverApiTimeoutInterceptor } from './core/http/interceptors/server-api-timeout-interceptor';
@@ -34,7 +35,8 @@ import { PAYMENTS_ENABLED } from '../environments/payments-enabled';
  * makes fetch the HttpClient backend and turns incremental hydration on with
  * `provideClientHydration()`: `withFetch()` and `withIncrementalHydration()` are deprecated
  * there. The transfer cache defaults fit as they are: GET and HEAD only, never a request
- * carrying credentials, never a response setting a cookie.
+ * carrying credentials, never a response setting a cookie. A request marked
+ * `BYPASS_TRANSFER_CACHE` skips it (`/api/meta` read again once hydrated, `ApiMeta`).
  *
  * Router: the resolvers read `locale` and `version` from their parent routes; a navigation
  * that fails renders its 500, 502 or 503 page in place (core/routing/failure), and one whose
@@ -73,6 +75,7 @@ export const appConfig: ApplicationConfig = {
         updateInterceptor,
         serverApiTimeoutInterceptor,
         traceContextInterceptor,
+        bypassTransferCacheInterceptor,
       ]),
     ),
     provideClientHydration(),
