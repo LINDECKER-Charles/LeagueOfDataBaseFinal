@@ -610,8 +610,10 @@ jobs:
             fetch "$canonical" /en/
             fetch "$api_host" /healthz
             # The pass's renderer, a warning only: the site does not depend on it.
+            # Every replica of it (LODB_PRERENDER_RENDERERS): one line once all agree.
+            mapfile -t pass_ssrs < <(docker compose ps -q web-ssr-prerender)
             pass_ssr_health="$(docker inspect --format '{{.State.Health.Status}}' \
-              "$(docker compose ps -q web-ssr-prerender)" 2>/dev/null || true)"
+              "${pass_ssrs[@]}" 2>/dev/null | sort -u | paste -sd, - || true)"
             [ "$pass_ssr_health" = healthy ] \
               || echo "::warning title=Prerender SSR::web-ssr-prerender is" \
                 "'${pass_ssr_health:-absent}', not healthy: the pass waits, the site is served."

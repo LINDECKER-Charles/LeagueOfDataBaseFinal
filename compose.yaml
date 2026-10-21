@@ -129,11 +129,19 @@ services:
       LoDb__Prerender__Pace__VisitorsLoadUrl: http://lodb-web-ssr:9464/load
       LoDb__Prerender__Pace__PassLoadUrl: http://lodb-web-ssr-prerender:9464/load
       # The fixed pace (kill switch, and the `prerender unit` command, which never adapts),
-      # never above the ceiling, and the pages in flight, which the pass SSR's lane admits
-      # from the same line. The defaults are the SSR's own; never empty, which the API would
-      # refuse to bind.
+      # never above the ceiling. Never empty, which the API would refuse to bind.
       LoDb__Prerender__RendersPerMinute: ${LODB_PRERENDER_RENDERS_PER_MINUTE:-120}
-      LoDb__Prerender__MaxInFlight: ${LODB_PRERENDER_MAX_IN_FLIGHT:-2}
+      # The pages in flight follow the pace (1.5 s each), this many at most: the renderers'
+      # lanes admit them (web-ssr-prerender below). Its own line, not the SSRs'
+      # LODB_PRERENDER_MAX_IN_FLIGHT: above their slots, it would stop them at start.
+      LoDb__Prerender__MaxInFlight: ${LODB_PRERENDER_PAGES_IN_FLIGHT:-24}
+      # The manual pace the admin sets (docs/guides/configuration.md § 4.10): its hard
+      # maximum, which also feeds each renderer's lane below, at the ceiling or above. The
+      # renderers (web-ssr-prerender's replicas, same line) and the quota of each, which the
+      # admin's resources view takes as their capacity.
+      LoDb__Prerender__Pace__ManualMaxRendersPerMinute: ${LODB_PRERENDER_MANUAL_MAX:-600}
+      LoDb__Prerender__Renderers: ${LODB_PRERENDER_RENDERERS:-1}
+      LoDb__Prerender__Pace__RendererCpus: ${LODB_PRERENDER_RENDERER_CPUS:-1.0}
     <<: *hardening
     # The runtime's diagnostics sockets and any temporary file of the API or its libraries.
     tmpfs: &dotnet-tmpfs
@@ -267,21 +275,27 @@ services:
       <<: *ssr-environment
       # As web-ssr: the private ranges here, the stack's subnet alone on a served host.
       LODB_STACK_NETWORKS: 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
-      # The lane's budget is the regulator's ceiling, so the renderer caps the pass even if
-      # the API misbehaves (one line feeds both). The reserve keeps one of the 4 renders free
-      # of the pass, so its lane holds 3 in flight at most.
-      LODB_RENDER_MAX_IN_FLIGHT: "4"
+      # The lane's budget is the manual pace's hard maximum, so each renderer caps the pass
+      # even if the API misbehaves (one line feeds both). 15 renders in flight: a unit's first
+      # pages wait on its catalog together, and a refusal would cost them 30 s; the quota and
+      # the API's pacer bound the CPU, not this. The reserve keeps one of the 16 free.
+      LODB_RENDER_MAX_IN_FLIGHT: "16"
       LODB_PRERENDER_VISITOR_RESERVE: "1"
-      LODB_PRERENDER_RENDERS_PER_MINUTE: ${LODB_PRERENDER_PACE_MAX:-240}
+      LODB_PRERENDER_RENDERS_PER_MINUTE: ${LODB_PRERENDER_MANUAL_MAX:-600}
       LODB_PRERENDER_RENDER_BURST: ${LODB_PRERENDER_RENDER_BURST:-}
-      LODB_PRERENDER_MAX_IN_FLIGHT: ${LODB_PRERENDER_MAX_IN_FLIGHT:-}
+      LODB_PRERENDER_MAX_IN_FLIGHT: "15"
       # No LODB_FRONT_BUILDS_DIR and no volume: the bundles' volume keeps a single writer
       # (web-ssr). This server serves its own image's /build/ to the pass.
     networks:
       default:
         # The only name it answers to. Never `lodb-web-ssr`: Docker's DNS would then spread
-        # nginx's traffic over both servers.
+        # nginx's traffic over both servers. Every replica shares it: the API resolves it and
+        # spreads its renders over their addresses.
         aliases: [lodb-web-ssr-prerender]
+    # Several renderers render several pages at once, a Node thread each: the API's
+    # LoDb__Prerender__Renderers reads the same line.
+    deploy:
+      replicas: ${LODB_PRERENDER_RENDERERS:-1}
     depends_on:
       api:
         condition: service_healthy
