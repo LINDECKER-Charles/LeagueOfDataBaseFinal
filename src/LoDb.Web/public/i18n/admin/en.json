@@ -1083,6 +1083,12 @@
         "complete": "Complete epoch {epoch}",
         "detail": "See the detail",
         "dismiss": "Dismiss"
+      },
+      "matrix_title": "Matrix",
+      "folds": {
+        "activity": "Activity ({count})",
+        "failures": "Failures ({count})",
+        "matrix": "Matrix ({count, plural, one {# patch} other {# patches}})"
       }
     },
     "launcher": {

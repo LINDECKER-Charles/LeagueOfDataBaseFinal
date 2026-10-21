@@ -1,0 +1,81 @@
+@if (count() > 0) {
+  <div class="flex flex-wrap items-center gap-3">
+    <p class="m-0 me-auto text-[0.88rem] text-gold" data-failures-summary>
+      ⚠ {{ 'admin.prerender.live.failures.summary' | adminText: { count: count() } }}
+    </p>
+    <button
+      lodbButton="ghost"
+      lodbButtonSize="small"
+      type="button"
+      [attr.aria-expanded]="isOpen()"
+      [attr.aria-controls]="listId"
+      (click)="isOpen.set(!isOpen())"
+    >
+      {{
+        (isOpen() ? 'admin.prerender.live.failures.hide' : 'admin.prerender.live.failures.show')
+          | adminText
+      }}
+    </button>
+    @if (relaunch()) {
+      <button
+        lodbButton="primary"
+        lodbButtonSize="small"
+        type="button"
+        data-relaunch
+        [disabled]="isActive()"
+        [attr.aria-describedby]="isActive() ? laterId : null"
+        (click)="emitRelaunch()"
+      >
+        {{ relaunchLabel() }}
+      </button>
+    }
+  </div>
+  @if (relaunch() && isActive()) {
+    <p class="readout-text text-end" [id]="laterId">
+      {{ 'admin.prerender.common.retry.later' | adminText }}
+    </p>
+  }
+
+  @if (isOpen()) {
+    <ul class="flex flex-col gap-2" [id]="listId" data-failures>
+      @for (unit of progress().failures; track unit.version + unit.locale) {
+        <li
+          class="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-gold/16 pb-2"
+          [attr.data-failure-unit]="unit.version + '|' + unit.locale"
+        >
+          <span class="font-mono text-[0.85rem] text-gold-bright">
+            {{ unit.version }} · {{ unit.locale }}
+          </span>
+          <span [lodbBadge]="toneOf(unit)">
+            {{ 'admin.prerender.states.' + unit.state | adminText }}
+          </span>
+          <span class="text-[0.8rem] text-text-muted">{{ pagesOf(unit) }}</span>
+          <button
+            class="ms-auto"
+            lodbButton="ghost"
+            lodbButtonSize="small"
+            type="button"
+            (click)="opened.emit(unit.version)"
+          >
+            {{ 'admin.prerender.live.failures.detail' | adminText }}
+          </button>
+          @if (unit.failure; as reason) {
+            <span
+              class="w-full truncate font-mono text-[0.72rem] text-text-dim"
+              lang="en"
+              dir="ltr"
+              [title]="reason"
+              data-reason
+              >{{ reason }}</span
+            >
+          }
+        </li>
+      }
+    </ul>
+    @if (others() > 0) {
+      <p class="readout-text" data-failures-more>
+        {{ 'admin.prerender.live.failures.more' | adminText: { count: others() } }}
+      </p>
+    }
+  }
+}

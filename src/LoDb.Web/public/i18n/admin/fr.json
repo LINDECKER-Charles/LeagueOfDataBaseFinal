@@ -1083,6 +1083,12 @@
         "complete": "Compléter l'epoch {epoch}",
         "detail": "Voir le détail",
         "dismiss": "Masquer"
+      },
+      "matrix_title": "Matrice",
+      "folds": {
+        "activity": "Activité ({count})",
+        "failures": "Échecs ({count})",
+        "matrix": "Matrice ({count, plural, one {# patch} other {# patchs}})"
       }
     },
     "launcher": {

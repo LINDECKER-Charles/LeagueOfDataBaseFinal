@@ -1,0 +1,70 @@
+<h3 class="readout-label">
+  {{
+    (isPaused() ? 'admin.prerender.live.now.resumes_with' : 'admin.prerender.live.now.title')
+      | adminText
+  }}
+</h3>
+
+@if (isWorkerOff()) {
+  <p class="now-band now-band--bad" role="status" data-worker-off>
+    {{ 'admin.prerender.live.now.worker_off' | adminText }}
+  </p>
+}
+@if (ssrDown(); as line) {
+  <p class="now-band now-band--gold" role="status" data-ssr-down>{{ line }}</p>
+}
+
+@for (now of units(); track now.unit.version + now.unit.locale) {
+  <div
+    class="flex flex-col gap-1.5"
+    [attr.data-now-unit]="now.unit.version + '|' + now.unit.locale"
+  >
+    <div class="flex flex-wrap items-baseline justify-between gap-2">
+      <span class="font-mono text-[0.9rem] text-gold-bright" data-now-line>{{ now.line }}</span>
+      <button
+        lodbButton="ghost"
+        lodbButtonSize="small"
+        type="button"
+        (click)="opened.emit(now.unit.version)"
+      >
+        {{ 'admin.prerender.live.now.detail' | adminText }}
+      </button>
+    </div>
+    <lodb-stacked-bar
+      size="thin"
+      [segments]="now.segments"
+      [label]="now.pages"
+      [isMuted]="isPaused()"
+    />
+    <p class="readout-text" data-now-pages>{{ now.pages }}</p>
+    @if (now.since; as since) {
+      <p class="readout-text" data-now-since>{{ since }}</p>
+    }
+  </div>
+} @empty {
+  <p class="readout-text" data-now-none>{{ 'admin.prerender.live.now.none' | adminText }}</p>
+}
+
+@if (next().length > 0) {
+  <div class="flex flex-wrap items-center gap-1.5 text-[0.8rem]" data-now-next>
+    <span class="text-text-dim">{{ 'admin.prerender.live.now.next' | adminText }}</span>
+    @for (chip of next(); track chip.key.version + chip.key.locale) {
+      <span class="now-chip font-mono" [class.now-chip--waiting]="chip.isWaiting">
+        {{ keyLabel(chip.key) }}
+        @if (chip.isWaiting) {
+          · {{ 'admin.prerender.live.now.waiting_chip' | adminText }}
+        }
+      </span>
+    }
+  </div>
+}
+
+@for (wait of waits(); track $index) {
+  <p class="readout-text" data-now-wait>⏳ {{ wait }}</p>
+}
+
+@if (isRemote()) {
+  <p class="readout-text italic" data-now-remote>
+    {{ 'admin.prerender.live.now.remote' | adminText }}
+  </p>
+}

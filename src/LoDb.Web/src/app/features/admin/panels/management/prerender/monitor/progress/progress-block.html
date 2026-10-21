@@ -1,0 +1,64 @@
+<div class="flex flex-wrap items-end justify-between gap-x-6 gap-y-1">
+  <span class="progress-share" data-share>{{ shown() }}</span>
+  <span
+    class="font-mono text-[0.9rem] text-text-muted"
+    [attr.title]="figures().isEstimate ? ('admin.prerender.live.estimate_note' | adminText) : null"
+    [attr.aria-describedby]="figures().isEstimate ? noteId : null"
+    data-pages
+    >{{ pages() }}</span
+  >
+  @if (figures().isEstimate) {
+    <span class="sr-only" [id]="noteId">{{
+      'admin.prerender.live.estimate_note' | adminText
+    }}</span>
+  }
+</div>
+
+<div>
+  <lodb-stacked-bar
+    size="hero"
+    [segments]="segments()"
+    [label]="barLabel()"
+    [isMuted]="isPaused()"
+  />
+  <lodb-legend [items]="legend()" />
+  <p class="readout-text mt-2" data-units>{{ units() }}</p>
+</div>
+
+<div class="readouts">
+  <div class="readout" data-readout="pace">
+    <span class="readout-label">{{ 'admin.prerender.live.pace.label' | adminText }}</span>
+    <span class="readout-value">
+      {{ pace().value }}
+      @if (!isPaused() && curve().values.length > 1) {
+        <span class="pace-curve">
+          <lodb-sparkline [values]="curve().values" [gaps]="curve().gaps" />
+        </span>
+      }
+    </span>
+    @for (line of pace().lines; track $index) {
+      <p class="readout-text">{{ line }}</p>
+    }
+  </div>
+  <div class="readout" data-readout="end">
+    <span class="readout-label">{{ 'admin.prerender.live.eta.label' | adminText }}</span>
+    <span class="readout-value" title="UTC">{{ eta().value }}</span>
+    @for (line of eta().lines; track $index) {
+      <p class="readout-text">{{ line }}</p>
+    }
+  </div>
+  <div class="readout" data-readout="active">
+    <span class="readout-label">{{ 'admin.prerender.live.active.label' | adminText }}</span>
+    <span class="readout-value">{{ active() }}</span>
+    <p class="readout-text">{{ 'admin.prerender.live.active.sub' | adminText }}</p>
+  </div>
+  <div class="readout" data-readout="volume">
+    <span class="readout-label">{{ 'admin.prerender.live.volume.label' | adminText }}</span>
+    <span class="readout-value">{{ volume() }}</span>
+    @if (perPage(); as size) {
+      <p class="readout-text">
+        {{ 'admin.prerender.live.volume.sub' | adminText: { size: size } }}
+      </p>
+    }
+  </div>
+</div>
