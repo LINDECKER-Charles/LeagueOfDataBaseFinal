@@ -13,6 +13,7 @@ import { injectQuery } from '../../../shared/inject-query';
 import { injectPanel } from '../../../state/inject-panel';
 import { PanelState } from '../../../state/panel-state';
 import { Kpi } from '../../../widgets/kpi';
+import { ScalewayBillBlock } from '../scaleway-bill/scaleway-bill-block';
 import { SegmentBar, type Segment } from '../../../widgets/segment-bar';
 import { BackupDatabaseCard } from './backup-database-card';
 import { backupNights } from './backup-nights';
@@ -36,8 +37,9 @@ const RETENTION = 'retention';
 /**
  * `/admin/backups`: whether the nightly off-host backups of the host went through. The key
  * figures (the databases up to date, the last success, the size of the repository and what it
- * is estimated to cost a month), a card per database, a square per night of the window, then
- * every step the backup container reported, newest first. Read only: infra-vps runs them.
+ * is estimated to cost a month), what Scaleway really bills for it (loaded on its own), a card
+ * per database, a square per night of the window, then every step the backup container
+ * reported, newest first. Read only: infra-vps runs them.
  */
 @Component({
   selector: 'lodb-backups-panel',
@@ -52,6 +54,7 @@ const RETENTION = 'retention';
     Kpi,
     PageHead,
     PanelState,
+    ScalewayBillBlock,
     SegmentBar,
     Sparkline,
     StampPipe,

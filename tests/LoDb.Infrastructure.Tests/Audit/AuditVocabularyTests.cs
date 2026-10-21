@@ -4,7 +4,8 @@ namespace LoDb.Infrastructure.Tests.Audit;
 
 /// <summary>
 /// The closed sets of the journal: the 24 actions of the legacy stack under their legacy
-/// names, with stable numbers, and the stored spelling of every other value.
+/// names, then those of the new stack, with stable numbers, and the stored spelling of every
+/// other value.
 /// </summary>
 public sealed class AuditVocabularyTests
 {
@@ -20,17 +21,26 @@ public sealed class AuditVocabularyTests
         "admin.analytics_rollup", "admin.logs_purge",
     ];
 
+    // The actions the new stack added, numbered after the legacy ones, in their order.
+    private static readonly string[] NewActions =
+    [
+        "admin.prerender_start", "admin.prerender_pause", "admin.prerender_resume",
+        "admin.prerender_cancel",
+    ];
+
+    private static readonly string[] AllActions = [.. LegacyActions, .. NewActions];
+
     [Fact]
-    public void ActionsAreTheLegacyOnesUnderTheirLegacyNames() =>
+    public void ActionsAreTheLegacyOnesUnderTheirLegacyNamesThenTheNewOnes() =>
         Assert.Equal(
-            LegacyActions,
+            AllActions,
             Enum.GetValues<AuditAction>().Select(static action => AuditVocabulary.ToText(action)));
 
     // The numbers are the event ids of the log mirror: dashboards and alerts may use them.
     [Fact]
-    public void ActionNumbersRunFromOneInTheLegacyOrder() =>
+    public void ActionNumbersRunFromOneInTheLegacyOrderThenTheNewOrder() =>
         Assert.Equal(
-            Enumerable.Range(1, LegacyActions.Length),
+            Enumerable.Range(1, AllActions.Length),
             Enum.GetValues<AuditAction>().Select(static action => (int)action));
 
     [Fact]
@@ -57,7 +67,7 @@ public sealed class AuditVocabularyTests
             ["user", "admin", "anonymous"],
             Enum.GetValues<AuditActorType>().Select(static value => AuditVocabulary.ToText(value)));
         Assert.Equal(
-            ["user", "build", "apikey", "api_client"],
+            ["user", "build", "apikey", "api_client", "prerender_pass"],
             Enum.GetValues<AuditTargetType>()
                 .Select(static value => AuditVocabulary.ToText(value)));
     }
@@ -66,7 +76,7 @@ public sealed class AuditVocabularyTests
     public void ValuesOutsideTheSetsAreRefused()
     {
         Assert.Throws<ArgumentOutOfRangeException>(
-            () => AuditVocabulary.ToText((AuditAction)(LegacyActions.Length + 1)));
+            () => AuditVocabulary.ToText((AuditAction)(AllActions.Length + 1)));
         Assert.Throws<ArgumentOutOfRangeException>(
             () => AuditVocabulary.ParseAction("user.impersonate"));
         Assert.Throws<ArgumentOutOfRangeException>(

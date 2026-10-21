@@ -1,0 +1,79 @@
+@let heading = 'admin.prerender.title' | adminText;
+<lodb-page-head
+  [eyebrow]="'admin.eyebrows.management' | adminText"
+  [title]="heading"
+  [subtitle]="'admin.prerender.lede' | adminText"
+  [documentTitle]="heading ? documentTitle() : ''"
+>
+  <lodb-launch-cta
+    [lock]="lock()"
+    [poll]="report"
+    [every]="reportEvery()"
+    (launch)="launchFromHead()"
+    (refresh)="refresh()"
+    (follow)="follow()"
+  />
+</lodb-page-head>
+
+<lodb-panel-state [panel]="quiet" shape="cards" />
+@if (report.value(); as data) {
+  @if (bands(); as state) {
+    <lodb-prerender-bands
+      [state]="state"
+      (switchTo)="openSwitch($event)"
+      (complete)="completeEpoch($event)"
+    />
+  }
+
+  <div class="mb-[1.15rem]">
+    @if (data.current; as current) {
+      <lodb-live-monitor
+        [pass]="current"
+        [report]="data"
+        (launch)="openLaunch($event)"
+        (changed)="report.reload()"
+        (ended)="onEnded()"
+      />
+    } @else if (recent(); as pass) {
+      <lodb-pass-recap
+        [pass]="pass"
+        [servedEpoch]="data.servedEpoch"
+        (launch)="openLaunch($event)"
+        (detail)="openDetail($event)"
+        (dismissed)="dismiss($event)"
+      />
+    } @else {
+      <lodb-idle-card
+        [report]="data"
+        [lock]="lock()"
+        (launch)="openLaunch($event)"
+        (detail)="openDetail($event)"
+      />
+    }
+  </div>
+
+  <lodb-prerender-kpis [report]="data" />
+
+  <lodb-tabs class="mt-6" [label]="'admin.prerender.overview.tabs.label' | adminText">
+    <lodb-tab
+      key="prerender-coverage"
+      [label]="'admin.prerender.overview.tabs.coverage' | adminText"
+    >
+      <lodb-coverage-tab [report]="data" [lock]="lock()" (launch)="openLaunch($event)" />
+    </lodb-tab>
+    <lodb-tab
+      key="prerender-costs"
+      [label]="
+        (isPhone()
+          ? 'admin.prerender.overview.tabs.costs_short'
+          : 'admin.prerender.overview.tabs.costs'
+        ) | adminText
+      "
+    >
+      <lodb-costs-tab [report]="data" [lock]="lock()" (launch)="openLaunch($event)" />
+    </lodb-tab>
+    <lodb-tab key="prerender-history" [label]="'admin.prerender.overview.tabs.history' | adminText">
+      <lodb-passes-tab [report]="data" (detail)="openDetail($event)" (follow)="follow()" />
+    </lodb-tab>
+  </lodb-tabs>
+}

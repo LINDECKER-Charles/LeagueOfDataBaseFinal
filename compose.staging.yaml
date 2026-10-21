@@ -17,6 +17,12 @@ services:
       LoDb__Ingestion__SyncConcurrency: ${LoDb__Ingestion__SyncConcurrency:-1}
       LoDb__Ingestion__LanguageConcurrency: ${LoDb__Ingestion__LanguageConcurrency:-1}
       LoDb__Egress__FetchConcurrency: ${LoDb__Egress__FetchConcurrency:-1}
+      # Staging stays almost empty (ADR 0011): no pass starts when a patch is promoted, an
+      # operator launches small ones, and its bucket forgets every page after 14 days.
+      LoDb__Prerender__AutoEnqueueOnPromotion: ${LoDb__Prerender__AutoEnqueueOnPromotion:-false}
+      # The pass keeps to the staging's prerender lane (web-ssr below), from the same lines.
+      LoDb__Prerender__RendersPerMinute: ${LODB_PRERENDER_RENDERS_PER_MINUTE:-30}
+      LoDb__Prerender__MaxInFlight: ${LODB_PRERENDER_MAX_IN_FLIGHT:-1}
     cpu_shares: 128
     deploy:
       resources:
@@ -41,6 +47,12 @@ services:
       LODB_PINNED_RENDER_MAX_IN_FLIGHT: ${LODB_PINNED_RENDER_MAX_IN_FLIGHT:-1}
       LODB_PINNED_RENDERS_PER_MINUTE: ${LODB_PINNED_RENDERS_PER_MINUTE:-10}
       LODB_PINNED_RENDER_BURST: ${LODB_PINNED_RENDER_BURST:-5}
+      # The pre-rendering pass's lane: one render at a time, and one of the three left to the
+      # visitors whatever the pass does.
+      LODB_PRERENDER_RENDERS_PER_MINUTE: ${LODB_PRERENDER_RENDERS_PER_MINUTE:-30}
+      LODB_PRERENDER_RENDER_BURST: ${LODB_PRERENDER_RENDER_BURST:-5}
+      LODB_PRERENDER_MAX_IN_FLIGHT: ${LODB_PRERENDER_MAX_IN_FLIGHT:-1}
+      LODB_PRERENDER_VISITOR_RESERVE: ${LODB_PRERENDER_VISITOR_RESERVE:-1}
     cpu_shares: 128
     deploy:
       resources:

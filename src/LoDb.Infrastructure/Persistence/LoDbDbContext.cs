@@ -10,6 +10,7 @@ using LoDb.Infrastructure.Persistence.Builds;
 using LoDb.Infrastructure.Persistence.Contact;
 using LoDb.Infrastructure.Persistence.Ddragon;
 using LoDb.Infrastructure.Persistence.Outbox;
+using LoDb.Infrastructure.Persistence.Prerender;
 using LoDb.Infrastructure.Persistence.PublicApi;
 using LoDb.Infrastructure.Persistence.Scheduling;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
@@ -73,6 +74,12 @@ public sealed class LoDbDbContext(DbContextOptions<LoDbDbContext> options)
     public DbSet<ClientPolicyEntry> ClientPolicies => Set<ClientPolicyEntry>();
 
     public DbSet<BackupRun> BackupRuns => Set<BackupRun>();
+
+    public DbSet<PrerenderPass> PrerenderPasses => Set<PrerenderPass>();
+
+    public DbSet<PrerenderUnit> PrerenderUnits => Set<PrerenderUnit>();
+
+    public DbSet<PrerenderBuild> PrerenderBuilds => Set<PrerenderBuild>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

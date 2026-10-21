@@ -1,0 +1,109 @@
+/*
+ * The cell states of the matrix (§ 4.4), one code per (version, locale): their fills, the
+ * running halo, the folded-season dots. Apart from unit-matrix.css so that neither sheet
+ * outgrows the component style budget.
+ */
+.cell {
+  position: relative;
+  flex: none;
+  inline-size: var(--cell);
+  block-size: var(--cell);
+  box-sizing: border-box;
+}
+
+.cell[data-c] {
+  cursor: pointer;
+}
+
+/* To come, or absent: a frame of 3:1 at least on the panel (WCAG 1.4.11), the share left of
+ * the pass being what tells how far it is. */
+.cell[data-c='.'],
+.cell[data-c='-'] {
+  border: 1px solid color-mix(in srgb, var(--color-text-dim) 70%, transparent);
+  background: var(--color-track);
+}
+
+.cell[data-c='c'],
+.cell[data-c='w'] {
+  background: var(--color-good);
+}
+
+/* Completed with failed pages: a red corner, at the end of the line. */
+.cell[data-c='w']::after {
+  content: '';
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  border-block-start: calc(var(--cell) / 2) solid var(--color-bad);
+  border-inline-start: calc(var(--cell) / 2) solid transparent;
+}
+
+.cell[data-c='f'] {
+  background: linear-gradient(
+    to top right,
+    var(--color-bad) 42%,
+    var(--color-hextech-black) 42% 58%,
+    var(--color-bad) 58%
+  );
+}
+
+/* Running, or stopped by a pause: filled from the bottom as far as the unit went. */
+.cell[data-c='r'],
+.cell[data-c='z'] {
+  border: 1px solid var(--color-hex-bright);
+  background: linear-gradient(
+    to top,
+    var(--color-hex) calc(var(--fill, 0) * 1%),
+    transparent calc(var(--fill, 0) * 1%)
+  );
+}
+
+.cell[data-c='r'] {
+  animation: cell-halo 1.6s ease-in-out infinite;
+}
+
+.cell[data-c='z'] {
+  filter: saturate(0.35);
+}
+
+.cell[data-c='i'] {
+  background: repeating-linear-gradient(45deg, var(--color-gold) 0 2px, transparent 2px 4px);
+}
+
+.cell[data-c='p'] {
+  background: linear-gradient(to top, var(--color-gold) 50%, transparent 50%);
+  border: 1px solid color-mix(in srgb, var(--color-gold) 50%, transparent);
+}
+
+/* A folded season: the share complete per locale, a dot when one runs or failed. */
+.cell--season[data-running]::before,
+.cell--season[data-failed]::after {
+  content: '';
+  position: absolute;
+  inset-block-end: 1px;
+  inline-size: 3px;
+  block-size: 3px;
+  border-radius: 50%;
+}
+
+.cell--season[data-running]::before {
+  inset-inline-start: 1px;
+  background: var(--color-hex);
+}
+
+.cell--season[data-failed]::after {
+  inset-inline-end: 1px;
+  background: var(--color-bad);
+}
+
+@keyframes cell-halo {
+  50% {
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-hex) 35%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cell[data-c='r'] {
+    animation: none;
+  }
+}

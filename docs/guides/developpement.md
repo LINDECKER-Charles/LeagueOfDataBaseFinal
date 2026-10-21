@@ -99,6 +99,7 @@ reconstruisent.
 | `web-ssr` | serveur SSR Angular (4000 dans le réseau) | 18082 | `LODB_SSR_PORT` |
 | `postgres` | PostgreSQL 17, base `lodb` (utilisateur et mot de passe `lodb` en dev) | 15432 | `LODB_PG_PORT` |
 | `mailpit` | interface des e-mails de dev | 18025 | `LODB_MAIL_PORT` |
+| `pages-store` | stockage objet simulé des pages pré-rendues (moto, l'API S3 en mémoire ; 5000 dans le réseau, alias `lodb-pages-store`), bucket `lodb-pages-dev` ([`configuration.md`](configuration.md), § 7) | aucun | — |
 
 Vérifier la stack :
 

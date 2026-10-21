@@ -117,6 +117,19 @@ services:
       LoDb__Ingestion__ColdImagesPerMinute:
       LoDb__Ingestion__MaxWaitingIngestions:
       LoDb__Ingestion__SlotWait:
+      # The object store of the pre-rendered pages (ADR 0011, configuration.md § 4.8): the pass
+      # stays dormant while the bucket or the writer's key (secrets below) is missing.
+      LoDb__Prerender__Endpoint:
+      LoDb__Prerender__Region:
+      LoDb__Prerender__Bucket:
+      LoDb__Prerender__AutoEnqueueOnPromotion:
+      # The pass renders each page for the canonical host: its links and canonical carry it.
+      LoDb__Prerender__PublicHost: ${LODB_CANONICAL_HOST:?LODB_CANONICAL_HOST is required}
+      # The Scaleway bill of the admin panels (configuration.md § 4.9): the organization and
+      # the projects of the backups and of the pages, read with the key below.
+      LoDb__ScalewayBilling__OrganizationId:
+      LoDb__ScalewayBilling__BackupsProjectId:
+      LoDb__ScalewayBilling__PagesProjectId:
     secrets:
       - source: data-protection
         target: data-protection.pfx
@@ -134,6 +147,13 @@ services:
       # on staging, where the pull then stays dormant.
       - LoDb__Audience__Username
       - LoDb__Audience__Password
+      # The key of the store's writer application (lodb-pages-writer-<env>): object writes
+      # only, on its environment's project. Empty, the pass stays dormant.
+      - LoDb__Prerender__AccessKey
+      - LoDb__Prerender__SecretKey
+      # The key of the billing reader (lodb-facturation-lecture): BillingReadOnly on the
+      # organization, nothing else. Empty, the admin panels say the bill is not configured.
+      - LoDb__ScalewayBilling__SecretKey
     labels:
       # Raised by the deploy job when a secret file changes. The API reads its files at
       # start-up only, and Compose recreates a service whose definition changed, not one
@@ -234,9 +254,11 @@ services:
       # (APP_REVISION, the commit SHA baked by _build.yml), so a promoted build never
       # serves the previous one's pages.
       LODB_REVISION: !reset null
-      # The bounds per client address and the cache sizes come from compose.yaml, which reads
-      # them from the host's .env with the image's defaults. Never as value-less keys here,
-      # unlike the API's settings: a key without a value drops the image's ENV default.
+      # The bounds per client address, the cache sizes and the object store (LODB_PAGES_STORE_*,
+      # LODB_ARCHIVE_SERVE_EPOCH) come from compose.yaml, which reads them from the host's .env
+      # with the image's defaults. Never as value-less keys here, unlike the API's settings: a
+      # key without a value drops the image's ENV default. nginx holds no key of the store: it
+      # reads anonymously, from the host's address (the bucket policy).
     volumes:
       # Host folder of the Android files, latest.json and assetlinks.json
       # (server.d/android-latest.conf, assetlinks.conf): empty, both URLs answer 404.
@@ -264,12 +286,15 @@ services:
       resources:
         limits:
           # Not the 2 x peak rule (19 MiB of processes): the shared memory of the cache keys
-          # (32 MiB each for the latest and the past patches' pages, 8 MiB for the bundles)
-          # and of the rate zones is charged here, and so is the kernel's page cache of the
-          # cached pages and blobs it serves, which fills whatever the limit leaves. Too
+          # (32 MiB for the latest patch's pages, 64 MiB for the past patches', 8 MiB for the
+          # bundles) and of the rate zones is charged here, and so is the kernel's page cache
+          # of the cached pages and blobs it serves, which fills whatever the limit leaves. Too
           # tight, every cache HIT reads the disk again. Its tmpfs (compose.yaml, 64 MiB at
-          # most, a few hundred KiB in use) counts here as well.
-          memory: 256m
+          # most, a few hundred KiB in use) counts here as well. Doubled for the past patches'
+          # hot cache in front of the object store (ADR 0011), its TLS sessions and the gunzip
+          # of a page for a client without gzip: to be measured after a week of the store
+          # (container_memory_working_set_bytes, as above).
+          memory: 512m
           cpus: "0.25"
           pids: 256
 
@@ -355,3 +380,9 @@ secrets:
     file: ./.deploy/secrets/LoDb__Audience__Password
   LoDb__Database__BackupRole__Password:
     file: ./.deploy/secrets/LoDb__Database__BackupRole__Password
+  LoDb__Prerender__AccessKey:
+    file: ./.deploy/secrets/LoDb__Prerender__AccessKey
+  LoDb__Prerender__SecretKey:
+    file: ./.deploy/secrets/LoDb__Prerender__SecretKey
+  LoDb__ScalewayBilling__SecretKey:
+    file: ./.deploy/secrets/LoDb__ScalewayBilling__SecretKey

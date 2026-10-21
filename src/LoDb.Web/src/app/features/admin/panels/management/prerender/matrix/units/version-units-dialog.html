@@ -1,0 +1,89 @@
+<lodb-dialog
+  [heading]="title()"
+  [headingId]="headingId"
+  [closeLabel]="'admin.prerender.common.close' | adminText"
+>
+  @if (units.value(); as read) {
+    @if (read.units.length === 0) {
+      <p class="text-text-dim" data-units-empty>
+        {{ 'admin.prerender.common.units.empty' | adminText }}
+      </p>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="hx-table hx-table--flush admin-tbl">
+          <thead>
+            <tr>
+              @for (column of columns; track column) {
+                <th scope="col">
+                  {{ 'admin.prerender.common.units.columns.' + column | adminText }}
+                </th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (unit of read.units; track unit.locale) {
+              <tr [attr.data-locale]="unit.locale">
+                <th scope="row">
+                  <span class="font-mono">{{ unit.locale }}</span>
+                  <span class="cell-sub">{{ languageOf(unit.locale) }}</span>
+                </th>
+                <td class="whitespace-nowrap">
+                  <span [lodbBadge]="toneOf(unit.state)">
+                    {{ 'admin.prerender.states.' + unit.state | adminText }}
+                  </span>
+                </td>
+                <td class="min-w-32">
+                  <lodb-stacked-bar
+                    size="thin"
+                    [segments]="segmentsOf(unit)"
+                    [label]="progressOf(unit)"
+                  />
+                  <span class="cell-sub num">{{ progressOf(unit) }}</span>
+                </td>
+                <td class="num whitespace-nowrap">
+                  {{ unit.pagesWritten | figure }} · {{ unit.pagesSkipped | figure }} ·
+                  {{ unit.pagesFailed | figure }}
+                </td>
+                <td class="num whitespace-nowrap">{{ unit.bytesWritten | decimalBytes }}</td>
+                <td>{{ unit.startedAt | stamp: 'minute' }}</td>
+                <td>{{ unit.endedAt ?? unit.updatedAt | stamp: 'minute' }}</td>
+                <td>
+                  @if (unit.failure; as failure) {
+                    <span
+                      class="cell-sub font-mono"
+                      lang="en"
+                      dir="ltr"
+                      data-failure
+                      [title]="failure"
+                      >{{ failure }}</span
+                    >
+                  } @else {
+                    —
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  } @else if (units.failure()) {
+    <p class="text-danger-light" role="alert">
+      {{ 'admin.prerender.common.units.error' | adminText: { reason: reason() } }}
+      <button
+        class="ms-2"
+        lodbButton="ghost"
+        lodbButtonSize="small"
+        type="button"
+        data-retry
+        (click)="units.reload()"
+      >
+        {{ 'admin.prerender.common.live.retry' | adminText }}
+      </button>
+    </p>
+  } @else {
+    <p class="text-text-dim" aria-busy="true">
+      {{ 'admin.prerender.common.units.loading' | adminText }}
+    </p>
+  }
+</lodb-dialog>

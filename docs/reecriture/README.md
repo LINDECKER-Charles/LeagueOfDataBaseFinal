@@ -41,6 +41,7 @@ Bloodborne Legendary Run (Angular + Capacitor + mises à jour Android).
 | [0008](adr/0008-mises-a-jour-integrees.md) | Mises à jour intégrées : **Velopack** (desktop), **live update signé du front** + **Play In-App Updates** (Android) |
 | [0009](adr/0009-identite-authentification-sessions.md) | **ASP.NET Core Identity** : cookie (web) + jetons (apps), migration transparente des hash, plus de session serveur |
 | [0010](adr/0010-observabilite-tests-ci.md) | **OpenTelemetry** + logs JSON + `/metrics` ; Testcontainers, fixtures Data Dragon, Playwright ; un seul contrat OpenAPI |
+| [0011](adr/0011-catalogue-pre-rendu-et-cdn.md) | **Catalogue pré-rendu** : pages des anciens patchs calculées une fois dans un stockage objet Scaleway, servies par nginx avec le SSR en repli ; **Cloudflare** devant le site (2026-10-20) |
 
 Plan d'exécution et bascule : [`plan-migration.md`](plan-migration.md). Découpage en chantiers,
 conventions et ordre d'exécution : [`plan-implementation.md`](plan-implementation.md).

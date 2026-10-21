@@ -15,7 +15,7 @@ sans signal : il ralentit la CI et casse deux fois pour la même raison.
 | Couche | Projet | Ce qu'elle prouve | Ce qu'elle ne fait pas |
 |---|---|---|---|
 | Unitaire .NET | `LoDb.Domain.Tests`, parties pures d'`Infrastructure`/`Ingestion` | règles, calculs, formats, cas limites | I/O, hôte HTTP |
-| Intégration .NET | `LoDb.Infrastructure.Tests`, `LoDb.Ingestion.Tests` | SQL et migrations sur un vrai Postgres, Data Dragon rejoué | contrat HTTP |
+| Intégration .NET | `LoDb.Infrastructure.Tests`, `LoDb.Ingestion.Tests` | SQL et migrations sur un vrai Postgres, Data Dragon rejoué, stockage S3 simulé (MinIO) | contrat HTTP |
 | API | `LoDb.Api.Tests` | contrat HTTP (codes, corps, en-têtes), sécurité (auth, XSRF/`Origin`, limites), câblage d'un module | une règle pure déjà testée plus bas |
 | Composants | Vitest (`*.spec.ts` à côté du code) | rendu, état, services, SSR sans navigateur | mise en page réelle, contraste, service worker |
 | Outils | `node --test` (`tools/<outil>/test`), image nginx (`tools/nginx/test`) | scripts, configuration nginx (routage, cache, en-têtes) | parcours utilisateur |
@@ -69,6 +69,16 @@ Dix lignes qui passent par la même branche ne prouvent rien de plus qu'une.
   propres données (noms uniques, assertions sur ses seules lignes). Les modules dont l'hôte
   porte des doublures le partagent par `SharedApp<TApp>` (`Accounts/Support`) ; leurs cas à
   hôte propre vivent dans `<Module>/OwnHost/`.
+- **Un stockage S3 simulé par classe qui en a besoin** : `PageStoreContainerFixture`
+  (`tests/LoDb.Testing`, en `IClassFixture`) démarre MinIO et crée le seau `lodb-pages-test`
+  avec le `mc` de l'image ; ses `Settings` pointent `LoDb:Prerender` dessus. Image
+  `pgsty/minio`, le fork communautaire (MinIO ne publie plus ses images depuis 2025),
+  épinglée par digest et lancée en conteneur Testcontainers générique : aucun paquet MinIO
+  dans la solution. Données en tmpfs ; chaque test écrit sous des clés à lui. MinIO ne connaît
+  pas la classe One Zone : les réglages la font correspondre à `REDUCED_REDUNDANCY`. C'est un
+  simulateur de test et de développement, jamais une dépendance de production (ADR 0004) : ce
+  que fait Scaleway lui-même (classes, lecture anonyme, métadonnées rendues) se vérifie contre
+  le vrai seau (`tools/prerender`), pas en CI.
 - **`LoDb.Parity`** est un outil de la bascule, hors de `LoDb.slnx` : ni `dotnet test
   LoDb.slnx` ni la CI ne le lancent ([`pieges.md`](../architecture/pieges.md)).
 

@@ -179,6 +179,9 @@ mis en fichiers :
   (`N` = `0` ou `1`) ;
 - `LoDb__Analytics__VisitorKey`, `LoDb__Audit__IdentifierKey` ;
 - `LoDb__Audience__Username`, `LoDb__Audience__Password` (prod seulement, § 4.6) ;
+- `LoDb__Prerender__AccessKey`, `LoDb__Prerender__SecretKey` (clé de l'application d'écriture
+  du stockage des pages pré-rendues, § 4.8) ;
+- `LoDb__ScalewayBilling__SecretKey` (clé de lecture de la facturation Scaleway, § 4.9) ;
 - `LoDb__Database__BackupRole__Password` (prod seulement, monté dans `migrate` seul, § 4.7).
 
 Un secret ne vient **jamais** de `ENV_*` : `LODB_APP_DB_PASSWORD`, le mot de passe du rôle
@@ -216,7 +219,7 @@ création d'une base, sur un volume vide.
 | `REGISTRY` | `ghcr.io/lindecker-charles/lodb` | idem | ✅ | Registre des images. |
 | `IMAGE_TAG` ⚙️ | `staging` | `prod` | ✅ | Tag déployé : dernier build de `dev`, ou images promues. |
 | `CADDY_DOMAINS` | `test.league-of-data-base.com` 🔁 | `league-of-data-base.com, league-of-data-base.fr` 🔁 | ✅ | Label `caddy_0` du site ; DNS pointé d'abord. |
-| `API_CADDY_DOMAINS` | `api.test.league-of-data-base.com` 🔁 | `api.league-of-data-base.com, api.league-of-data-base.fr` 🔁 | ✅ | Label `caddy_1` ; chaque hôte commence par `api.`. |
+| `API_CADDY_DOMAINS` | `api.test.league-of-data-base.com` 🔁 | `api.league-of-data-base.com` 🔁 | ✅ | Label `caddy_1` ; chaque hôte commence par `api.`. |
 | `LODB_CANONICAL_HOST` | `test.league-of-data-base.com` | `league-of-data-base.com` | ✅ | Hôte canonique : cible des 301 (`www.`, `.fr`), origine des liens d'e-mail, des sitemaps et des `share_url` de `/v1`. |
 | `LODB_ALLOWED_HOSTS` | `test.league-of-data-base.com` | `league-of-data-base.com` | ✅ | Hôtes que le SSR accepte (virgules) ; les autres reçoivent un 400. |
 | `LODB_PUBLIC_API_ORIGIN` | `https://api.test.league-of-data-base.com` | `https://api.league-of-data-base.com` | ✅ | Origine de `/v1` documentée par `/developers`. |
@@ -238,10 +241,15 @@ création d'une base, sur un volume vide.
 | `LODB_QUERY_MAX_PARAMS`, `LODB_QUERY_MAX_PARAM_LENGTH` | ➖ | ➖ | ➖ | Paramètres gardés par l'URL d'une liste ou d'une fiche (`16`, de `200` caractères au plus) ; les autres sont retirés par une `301`. |
 | `LODB_HTML_GZIP_LEVEL` | ➖ | ➖ | ➖ | Niveau gzip (`6`, de `1` à `9`) auquel le SSR compresse une page, une fois par rendu ; nginx garde la copie compressée. |
 | `LODB_API_META_TTL_SECONDS` | ➖ | ➖ | ➖ | Durée (`60`, le `max-age` de l'API) pendant laquelle le SSR réutilise sa copie de `/api/meta` pour tous les rendus ; quand l'API ne répond pas, il sert la dernière. |
-| `LODB_PAGES_RATE`, `LODB_PAGES_BURST`, `LODB_API_READS_*`, `LODB_LEGACY_*`, `LODB_SITEMAPS_*`, `LODB_READYZ_*`, `LODB_RATE_LIMITED_RETRY_AFTER`, `LODB_MAX_BODY_SIZE`, `LODB_WEBHOOK_MAX_BODY_SIZE`, `LODB_PAGE_CACHE_SIZE`, `LODB_PAGE_CACHE_KEYS_SIZE`, `LODB_PAGE_CACHE_INACTIVE`, `LODB_ARCHIVE_CACHE_SIZE`, `LODB_ARCHIVE_CACHE_KEYS_SIZE`, `LODB_ARCHIVE_CACHE_INACTIVE`, `LODB_ASSETS_CACHE_SIZE`, `LODB_ASSETS_CACHE_KEYS_SIZE`, `LODB_ASSETS_CACHE_INACTIVE` | ➖ | ➖ | ➖ | Bornes de nginx, par adresse : débit (`_RATE`) et rafale (`_BURST`) des pages (`20r/s`, `100`), des lectures publiques de l'API (`10r/s`, `40`), de l'ancien site (`2r/s`, `10`), de `/sitemaps/` (`1r/s`, `20`) et de `/readyz` (`1r/s`, `5`), au-delà `429` avec `Retry-After` (`10`) ; corps de requête (`128k`, `1m` pour `/webhooks/`) ; cache des pages du dernier patch (`2g`, clés `32m`, inactivité `24h`), des anciens patchs (`6g`, clés `32m`, inactivité `7d`) et des bundles de `/build/` (`1g`, clés `8m`, inactivité `30d`), soit ≈ 9 Go de disque au plus. Absents ou vides : ces défauts, ceux de `docker/nginx/Dockerfile`, que `compose.yaml` reprend (`tools/nginx` vérifie l'accord). |
+| `LODB_PAGES_RATE`, `LODB_PAGES_BURST`, `LODB_API_READS_*`, `LODB_LEGACY_*`, `LODB_SITEMAPS_*`, `LODB_READYZ_*`, `LODB_RATE_LIMITED_RETRY_AFTER`, `LODB_MAX_BODY_SIZE`, `LODB_WEBHOOK_MAX_BODY_SIZE`, `LODB_PAGE_CACHE_SIZE`, `LODB_PAGE_CACHE_KEYS_SIZE`, `LODB_PAGE_CACHE_INACTIVE`, `LODB_ARCHIVE_CACHE_SIZE`, `LODB_ARCHIVE_CACHE_KEYS_SIZE`, `LODB_ARCHIVE_CACHE_INACTIVE`, `LODB_ASSETS_CACHE_SIZE`, `LODB_ASSETS_CACHE_KEYS_SIZE`, `LODB_ASSETS_CACHE_INACTIVE` | ➖ | ➖ | ➖ | Bornes de nginx, par adresse : débit (`_RATE`) et rafale (`_BURST`) des pages (`20r/s`, `100`), des lectures publiques de l'API (`10r/s`, `40`), de l'ancien site (`2r/s`, `10`), de `/sitemaps/` (`1r/s`, `20`) et de `/readyz` (`1r/s`, `5`), au-delà `429` avec `Retry-After` (`10`) ; corps de requête (`128k`, `1m` pour `/webhooks/`) ; cache des pages du dernier patch (`2g`, clés `32m`, inactivité `24h`), des anciens patchs (`20g`, clés `64m`, inactivité `90d` : la copie chaude du stockage objet, § 4.8) et des bundles de `/build/` (`1g`, clés `8m`, inactivité `30d`), soit ≈ 23 Go de disque au plus. Absents ou vides : ces défauts, ceux de `docker/nginx/Dockerfile`, que `compose.yaml` reprend (`tools/nginx` vérifie l'accord). |
 | `LODB_ARCHIVE_EPOCH` | ➖ | ➖ | ➖ | Première partie de la clé du cache des anciens patchs (`3`), leur seule purge : voir « Monter l'epoch des anciens patchs » ci-dessous. |
-| `LODB_ARCHIVE_CACHE_MIN_USES` | ➖ | ➖ | ➖ | Demandes d'une page d'ancien patch avant que nginx la garde (`2`) : un rendu demandé une fois n'atteint pas le disque. En deçà, chaque URL distincte tient quand même une clé jusqu'à son inactivité, quelle que soit la réponse (`301`, `503` de délestage) : un balayage évince les pages les moins récemment demandées dès qu'il dépasse la zone des clés (`LODB_ARCHIVE_CACHE_KEYS_SIZE`, ≈ 8 000 clés par Mo). À `1`, seules les réponses gardées tiennent une clé. |
-| `LODB_FRONT_BUILDS_RETENTION_DAYS` | ➖ | ➖ | ➖ | Lu par le job de déploiement : un bundle du volume `front-builds` qu'aucun build n'a livré depuis ce nombre de jours (`30`) est supprimé, `15` au moins (le job refuse en deçà). Jamais sous la durée de vie d'une page en cache (deux semaines pour un ancien patch : une semaine de `s-maxage`, puis une dernière copie périmée servie avant 7 jours d'inactivité) : un onglet ou une page gardée nommerait un bundle disparu. |
+| `LODB_ARCHIVE_CACHE_MIN_USES` | ➖ | ➖ | ➖ | Demandes d'une page d'ancien patch avant que nginx la garde (`1` : dès la première, sa copie venant du stockage objet plutôt que d'un rendu, § 4.8). Au-dessus, chaque URL distincte tient quand même une clé jusqu'à son inactivité, quelle que soit la réponse (`301`, `503` de délestage) : un balayage évince les pages les moins récemment demandées dès qu'il dépasse la zone des clés (`LODB_ARCHIVE_CACHE_KEYS_SIZE`, ≈ 8 000 clés par Mo). À `1`, seules les réponses gardées tiennent une clé. |
+| `LODB_PAGES_STORE_ENABLED` | `0`, puis `1` | `0`, puis `1` | ➖ | `1` : nginx cherche une page d'ancien patch dans le stockage objet avant de la faire rendre par le SSR, qui reste le repli (§ 4.8). À poser une fois `scaleway-bucket.sh verifier` passé sur l'hôte. `0`, le défaut et celui d'une stack locale sans stockage : tout passe par le SSR. |
+| `LODB_PAGES_STORE_BUCKET` | `lodb-pages-staging` | `lodb-pages-prod` | avec le précédent | Bucket que nginx lit, le même que `LoDb__Prerender__Bucket` (§ 4.2). Défaut `none` : aucun (une valeur vide est refusée par nginx). |
+| `LODB_PAGES_STORE_SCHEME`, `LODB_PAGES_STORE_HOST`, `LODB_PAGES_STORE_PORT` | ➖ | ➖ | ➖ | Adresse du stockage pour nginx : `https`, `s3.fr-par.scw.cloud`, `443`. Le stockage simulé de la stack locale les remplace (§ 7). nginx lit sans clé, depuis l'adresse de l'hôte, la seule que la politique du bucket admette. |
+| `LODB_ARCHIVE_SERVE_EPOCH` | `1` | `1` | ➖ | Epoch que nginx lit dans le stockage (`pages/<epoch>/…`), aussi transmise à l'API (`LoDb__Prerender__ServedEpoch`) pour le panneau d'administration. Changée à la main, puis redéploiement : voir « Changer l'epoch servie » (§ 4.8). Distincte de `LODB_ARCHIVE_EPOCH`, le compteur des clés du cache de nginx. |
+| `LODB_PRERENDER_RENDERS_PER_MINUTE`, `LODB_PRERENDER_RENDER_BURST`, `LODB_PRERENDER_MAX_IN_FLIGHT`, `LODB_PRERENDER_VISITOR_RESERVE` | ➖ (§ 4.5) | ➖ | ➖ | Voie de rendu de la passe de précalcul du SSR : rendus par minute (`120`) et d'affilée (`10`), rendus simultanés de la passe (`2`, strictement sous `LODB_RENDER_MAX_IN_FLIGHT`), et rendus toujours laissés aux visiteurs (`4`) : la passe n'entre que si `total + 1` reste sous `LODB_RENDER_MAX_IN_FLIGHT` moins cette réserve. Sans part par client : l'API est le seul client de cette voie. Elle règle la passe sur les mêmes lignes : le rythme et les rendus simultanés lui parviennent aussi (`LoDb__Prerender__RendersPerMinute`, `LoDb__Prerender__MaxInFlight`, § 4.3), si bien qu'un budget relevé ici l'est des deux côtés, et que la passe ne demande jamais plus que la voie n'admet (sinon, chaque refus la fait attendre son `Retry-After`). Un `LODB_RENDER_MAX_IN_FLIGHT` abaissé sous `3` ramène la voie sous `2` à l'insu de l'API : poser alors `LODB_PRERENDER_MAX_IN_FLIGHT`. |
+| `LODB_FRONT_BUILDS_RETENTION_DAYS` | `400` | `400` | ➖ | Lu par le job de déploiement : un bundle du volume `front-builds` qu'aucun build n'a livré depuis ce nombre de jours (`400`) est supprimé, `395` au moins (le job refuse en deçà). Jamais sous la durée de vie d'une page en cache (un an pour un ancien patch, son `s-maxage`, puis sa copie périmée servie le temps de son nouveau rendu) : un onglet ou une page gardée nommerait un bundle disparu. La copie des builds dans le stockage objet (ADR 0011) ne couvre pas les pages rendues par le SSR, que le cache des anciens patchs garde aussi (inactivité `90d`) : un filet de plus, pas une raison de baisser cette durée. Mesuré : 16 Mo en 9 jours, moins de 1 Go par an. |
 | `LODB_ADMIN_LOGIN` | 🔁 `ADMIN_LOGIN` | idem | ➖ | Administrateur racine, tenu par le job à chaque déploiement (`api admin root`) : compte de ce nom, rôle admin, TOTP enrôlé depuis le lien d'invitation que `api admin mfa-invite --email …` affiche sur l'hôte (15 min ; `api admin mfa-reset` retire un TOTP perdu). Absent : aucun, seulement `api admin create`. |
 | `LODB_ADMIN_PASSWORD` 🔒 | 🔁 `ADMIN_PASSWORD` | idem | avec le précédent | Son mot de passe, 12 caractères au moins, sans apostrophe ni guillemet. Changé ici, il est réappliqué au déploiement suivant (sessions fermées). Reste dans le `.env` : le job le passe à la commande par son entrée. |
 | `LODB_ADMIN_EMAIL` | ➖ | ➖ | ➖ | Son e-mail, qui identifie le compte ; défaut `<login>@<LODB_CANONICAL_HOST>`. |
@@ -254,26 +262,91 @@ gardées par nginx à travers les déploiements, avec le chrome, la CSP et les b
 qui les a rendues. Monter `LODB_ARCHIVE_EPOCH` (`3` → `4`…) dans `ENV_STAGING` / `ENV_PROD`
 quand le chrome (en-tête, pied, puce de release), la CSP ou le contrat `/api` changent de
 façon visible, et **après tout correctif de sécurité du front** ; le déploiement suivant
-recrée nginx sur des clés neuves, les anciennes s'éteignent en 7 jours. Pour un correctif
-de sécurité, retirer aussi le chunk vulnérable, du volume des bundles et du cache de nginx,
-une fois le build corrigé en service (le build vulnérable le republierait dans l'heure) :
+recrée nginx sur des clés neuves, les anciennes s'éteignent après 90 jours sans demande
+(`LODB_ARCHIVE_CACHE_INACTIVE`), ou plus tôt quand le cache est plein.
 
-```bash
-docker compose exec -T web-ssr rm -f /srv/front-builds/<chunk>.js
-docker compose exec -T nginx sh -c \
-  "grep -rlax 'KEY: /build/<chunk>.js' /var/cache/nginx/assets | xargs -r rm -f"
-```
+Cette epoch ne vide que le cache de nginx. Une fois qu'il lit le stockage
+(`LODB_PAGES_STORE_ENABLED=1`, § 4.8), la requête suivante reprend la page de l'epoch servie,
+rendue avec l'ancien chrome, l'ancienne CSP et les anciens bundles. Un changement visible du
+chrome, de la CSP ou du contrat `/api` passe alors par une passe sur une epoch neuve, puis la
+bascule de `LODB_ARCHIVE_SERVE_EPOCH` une fois l'epoch complète (« Changer l'epoch servie »,
+§ 4.8), qui change aussi les clés du cache. D'ici là, `/api` doit rester compatible avec les
+bundles de l'epoch servie, qui s'y hydratent ; sinon, basculer tout de suite, comme pour un
+correctif de sécurité.
 
-Le volume `front-builds` est le seul endroit où le serveur SSR écrit, et ce qu'il y écrit
-survit aux déploiements. Après un correctif du **serveur SSR lui-même** (exécution de code
-dans le conteneur `web-ssr`), monter l'epoch comme ci-dessus, puis, une fois le build corrigé
-en service, vider ce volume et le cache des bundles de nginx en entier : le build corrigé y
-republie les siens dans l'heure, et `/build/` sert ceux de son image entre-temps.
+**Correctif de sécurité du front.** Le déployer avec `LODB_ARCHIVE_EPOCH` monté et, si une
+passe a déjà écrit au stockage, `LODB_ARCHIVE_SERVE_EPOCH` sur une epoch neuve, dont on lance
+la passe (§ 4.8) : les pages de l'epoch servie nomment le chunk vulnérable. Une fois le build
+corrigé en service (le build vulnérable republierait son chunk dans l'heure), retirer ce
+chunk, dans cet ordre :
 
-```bash
-docker compose exec -T web-ssr find /srv/front-builds -mindepth 1 -delete
-docker compose exec -T nginx find /var/cache/nginx/assets -mindepth 1 -delete
-```
+1. du volume des bundles :
+
+   ```bash
+   docker compose exec -T web-ssr rm -f /srv/front-builds/<chunk>.js
+   ```
+
+2. du stockage, dans le bucket de chaque environnement dont une passe a copié le build, même
+   avec `LODB_PAGES_STORE_ENABLED=0` (nginx le lira une fois allumé). Sur une `404` du SSR,
+   nginx y cherche le bundle (`build/<nom>`) et le garde de nouveau un an ; `build/` n'a
+   aucune règle de cycle de vie et la clé d'écriture ne supprime rien. Depuis le poste, avec
+   la clé temporaire de l'opérateur
+   ([`tools/prerender/README.md`](../../tools/prerender/README.md), § 1 et 4), puis de même
+   pour un fichier `build/media/<nom>` en cause :
+
+   ```bash
+   AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID@<projet lodb-pages-prod>" docker run --rm \
+     -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e AWS_DEFAULT_REGION=fr-par \
+     amazon/aws-cli:2.36.50@sha256:c240dd63cdbab17197486d55460675ef2b94c9cc372dedae34dee53ccd30657c \
+     s3api delete-object --endpoint-url https://s3.fr-par.scw.cloud \
+     --bucket lodb-pages-prod --key build/<chunk>.js
+   ```
+
+3. du cache des bundles de nginx, en dernier : plus tôt, une requête l'y remettrait depuis le
+   stockage.
+
+   ```bash
+   docker compose exec -T nginx sh -c \
+     "grep -rlax 'KEY: /build/<chunk>.js' /var/cache/nginx/assets | xargs -r rm -f"
+   ```
+
+**Compromission du serveur SSR** (exécution de code dans le conteneur `web-ssr`). Le volume
+`front-builds` est le seul endroit où il écrit, et ce qu'il y écrit survit aux déploiements.
+La passe lui a aussi pris de quoi remplir le stockage : les bundles de ses builds, sous
+`build/`, jamais réécrits ni effacés, et les pages des epochs qu'elle écrivait. Annuler la
+passe en cours (panneau d'administration), puis déployer le build corrigé avec
+`LODB_ARCHIVE_EPOCH` monté et, si une passe a déjà écrit au stockage,
+`LODB_ARCHIVE_SERVE_EPOCH` sur une epoch neuve (§ 4.8). Une fois ce build en service, dans
+cet ordre :
+
+1. vider le volume : le build corrigé y republie les siens dans l'heure, et `/build/` sert
+   ceux de son image entre-temps ;
+
+   ```bash
+   docker compose exec -T web-ssr find /srv/front-builds -mindepth 1 -delete
+   ```
+
+2. vider `build/` dans le bucket de l'environnement, avec la commande du point 2 ci-dessus,
+   `s3 rm --recursive s3://lodb-pages-prod/build/` à la place de `s3api delete-object …` ;
+3. vider le cache des bundles de nginx, après le stockage pour la même raison :
+
+   ```bash
+   docker compose exec -T nginx find /var/cache/nginx/assets -mindepth 1 -delete
+   ```
+
+4. oublier les builds copiés, en base puis dans l'API, qui les garde en mémoire jusqu'à son
+   redémarrage : sinon, la passe suivante les tiendrait pour stockés et ne recopierait pas
+   leurs bundles ;
+
+   ```bash
+   docker compose exec -T postgres sh -c \
+     'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "DELETE FROM prerender_build"'
+   docker compose restart api
+   ```
+
+5. lancer la passe de l'epoch neuve (panneau), puis retirer les epochs que le serveur
+   compromis a pu écrire ([`tools/prerender/README.md`](../../tools/prerender/README.md),
+   § 4).
 
 Chaque environnement a son propre service `postgres` dans son projet, comme avant.
 `CONTACT_RECIPIENT` et `PUBLIC_API_BASE_URL` n'ont d'effet qu'en local : sur un
@@ -311,6 +384,13 @@ même nom.
 | `LoDb__Catalog__ColdLoadConcurrency`, `ColdLoadsPerSecond`, `ColdLoadBurst`, `PublicColdLoadsPerSecond`, `InternalColdLoadWait`, `MaxPendingLoads` | ➖ | Chargement d'un catalogue absent de la mémoire : `2` à la fois, `3` par seconde (rafale `6`), dont `1` pour les appels publics, refusés sans attente ; le SSR attend `2` s au plus, derrière `16` autres. Refus : `503` + `Retry-After`. |
 | `LoDb__Catalog__WarmUp__MaxStreams`, `MaxStreamsPerClient`, `StreamLifetime`, `PerClientPerHour` | ➖ | Loader de changement de patch : `8` flux ouverts, `2` par client, `120` s chacun, `20` démarrages par heure et par client (`429` au-delà). |
 | `LoDb__Ingestion__ColdDatasetsPerMinute`, `ColdImagesPerMinute`, `MaxWaitingIngestions`, `SlotWait` | ➖ | Ingestion à froid pour un visiteur : `6` couples (version, langue) et `1500` images par minute, `32` ingestions en attente d'un emplacement, `3` s d'attente au plus. Au-delà : catalogue « en attente », images en placeholders. |
+| `LoDb__Prerender__Endpoint`, `LoDb__Prerender__Region` | avec le stockage | Point d'accès S3 du stockage des pages pré-rendues et sa région (`https://s3.fr-par.scw.cloud`, `fr-par`, § 4.8). En `https` seulement hors d'une stack locale. |
+| `LoDb__Prerender__AllowInsecureEndpoint` | dev seulement | `true` autorise un `Endpoint` en `http`, celui du stockage simulé de `compose.override.yaml` (§ 7). **Jamais posé sur un hôte** : absent, un point d'accès en `http` est refusé au démarrage. |
+| `LoDb__Prerender__Bucket` | avec le stockage | Bucket de l'environnement : `lodb-pages-staging`, `lodb-pages-prod`. Absent : la passe reste en sommeil. |
+| `LoDb__Prerender__AccessKey`, `LoDb__Prerender__SecretKey` 🔒 | avec le stockage | Clé API de l'application `lodb-pages-writer-<env>` : écriture d'objets seule, sur le projet de l'environnement seul ([`tools/prerender/README.md`](../../tools/prerender/README.md)). Absente : la passe reste en sommeil, nginx sert par le SSR. |
+| `LoDb__Prerender__AutoEnqueueOnPromotion` | ➖ | `false` tant que la passe complète de la prod n'est pas terminée : l'opérateur la lance à la main ; à `true`, le rapprochement (toutes les 30 min) ouvrirait de lui-même, sans promotion, une passe pour le patch précédent, et celle de l'opérateur répondrait `409`. Puis `true` en prod : un patch qui quitte le dernier rang rejoint la passe en cours, ou en ouvre une sur l'epoch servie. `false` sur le staging (son calque, § 4.5), qui reste presque vide. |
+| `LoDb__ScalewayBilling__SecretKey` 🔒 | ➖ | Clé secrète de l'application `lodb-facturation-lecture` (§ 4.9), une par environnement. Absente : les panneaux « Sauvegardes » et « Précalcul du catalogue » disent que la facture n'est pas configurée. |
+| `LoDb__ScalewayBilling__OrganizationId`, `BackupsProjectId`, `PagesProjectId` | avec la clé | Organisation, projet du bucket des sauvegardes et projet des pages de l'environnement, en UUID (§ 4.9). Requis une fois la clé posée ; un id qui n'est pas un UUID est refusé au démarrage, clé posée ou non. |
 | `LoDb__Database__AppRole__StatementTimeout`, `ConnectionLimit` | ➖ | Transmis à `migrate` seulement, qui les pose sur le rôle de l'API (§ 4.3) : `00:00:15` (une requête plus longue est annulée par le serveur) et `50` sessions (`-1` : sans limite ; sous les 60 du serveur, moins les 3 réservées aux superutilisateurs). Pris en compte au déploiement suivant, par les nouvelles connexions. |
 | `LoDb__Database__BackupRole__Password` 🔒 ⚙️ | prod, à l'activation des sauvegardes | Mot de passe de `lodb_sauvegarde`, le rôle des sauvegardes hors hôte (§ 4.7) : la même valeur que `SAUVEGARDE_LODB_MOT_DE_PASSE` d'`infra-vps` (`openssl rand -hex 32`). Fichier monté dans `migrate` seul, qui le pose sur le rôle. Posé, le job exige 16 caractères au moins parmi lettres, chiffres, `-` et `_` (le format d'`infra-vps`). Absent : un rôle neuf n'a pas de mot de passe, personne ne s'y connecte ; un rôle existant garde le sien. |
 
@@ -322,6 +402,13 @@ le service y pose `LoDb__Database__Password`, lu dans `/run/secrets` ; pour l'AP
 `LoDb__Accounts__SiteOrigin`, `LoDb__Seo__CanonicalOrigin` et `LoDb__PublicApi__SiteOrigin`
 (`https://` + `LODB_CANONICAL_HOST`), `LoDb__PublicApi__Reference__BaseUrl`
 (`LODB_PUBLIC_API_ORIGIN`), `LoDb__DataProtection__CertificatePath`,
+`LoDb__Prerender__SsrBaseUrl` (`http://lodb-web-ssr:4000` : la passe demande ses pages au SSR
+directement, jamais à nginx), `LoDb__Prerender__PublicHost` (`LODB_CANONICAL_HOST` : l'hôte
+pour lequel chaque page est rendue), `LoDb__Prerender__ServedEpoch`
+(`LODB_ARCHIVE_SERVE_EPOCH`), `LoDb__Prerender__RendersPerMinute` et
+`LoDb__Prerender__MaxInFlight` (`LODB_PRERENDER_RENDERS_PER_MINUTE` et
+`LODB_PRERENDER_MAX_IN_FLIGHT`, les lignes de la voie du SSR, `120` et `2` à défaut, `30` et
+`1` au staging : le rythme de la passe et ses pages en vol),
 `LoDb__Hosting__KnownProxyNetworks__0` (`LODB_STACK_SUBNET` seul), `AllowedHosts` (les hôtes de
 `CADDY_DOMAINS` et `API_CADDY_DOMAINS`, puis `lodb-api`, `localhost` et `127.0.0.1` : tout autre
 `Host` reçoit un `400`, le port des métriques excepté), `LoDb__Storage__Root` (`/srv/storage`, volume
@@ -362,7 +449,7 @@ processus (`pids`).
 | `web-ssr` | `1.0` | `1024` | `256` | `704m` |
 | `api` | `1.25` | `1024` | `512` | `1152m` |
 | `postgres` | `0.5` | `1024` | `256` | `512m` |
-| `nginx` | `0.25` | `2048` | `256` | `256m` |
+| `nginx` | `0.25` | `2048` | `256` | `512m` |
 | `migrate` | — | — | `256` | `128m` |
 
 Les quotas totalisent 3 des 4 vCPU de l'hôte : sous une charge qui les dépasse, la stack
@@ -412,6 +499,7 @@ Pour en changer un sur un hôte, l'ajouter sous `services.api.environment` de
 | `LoDb:SecurityReports` | `MaxBodyBytes` (65536 : corps d'un envoi de rapports CSP, 413 au-delà, compté), `PerClientPerMinute` (30 envois par adresse et par minute, 429 au-delà), `PerMinute` (600 envois par minute, tous clients confondus, refusés avant d'être lus au-delà) |
 | `LoDb:Telemetry` | `TraceSampleRatio` (`0.05`, de `0` à `1` : part des traces enregistrées et exportées quand `OTEL_EXPORTER_OTLP_ENDPOINT` est posé, choisie par l'identifiant de trace, jamais par le drapeau `sampled` d'un `traceparent` reçu) |
 | `LoDb:PublicApi` | `KeyCacheLifetime` (1 min), `TrendsLifetime` (5 min), `MeteringInterval` (1 s) |
+| `LoDb:Prerender` | `RequestTimeout` (30 s, de 5 min au plus : chaque requête au stockage des pages), `OneZoneStorageClass` (`ONEZONE_IA`, la classe des pages ; une autre exige `AllowInsecureEndpoint`, le stockage de développement seul), `PricePerGbMonthOneZone` et `PricePerGbMonthMultiAz` (§ 4.8) |
 | `LoDb:Audience` | `Host`, `WebsiteId` (posés par `compose.umami.yaml`), `Username`, `Password` (secrets) : sans l'un d'eux, le tirage dort ; `PullPeriod` (1 h), `RefreshDays` (2 : aujourd'hui et hier, réécrits à chaque tirage), `PageSize` (500 chemins par requête), `MaxPages` (40 requêtes par jour au plus), `RequestTimeout` (30 s), `MaxResponseBytes` (4 Mio) ; `TrendsSwitchDate` (aucune : `/v1/trends` lit la mesure maison ; posée, Umami à partir de ce jour), `ClipFactor` (3) et `ClipWindowDays` (28) : le jour d'une entité compte au plus 3 fois la médiane de ses jours des 28 derniers (Umami collecte sans authentification) |
 
 </details>
@@ -448,11 +536,15 @@ quotas se revoient avec ceux de la prod :
 | `cpus` : `api`, `web-ssr`, `postgres`, `nginx` | `0.25`, `0.25`, `0.15`, `0.1` | § 4.3 |
 | `LODB_RENDER_MAX_IN_FLIGHT`, `LODB_PINNED_RENDER_MAX_IN_FLIGHT` | `3`, `1` | `8`, `3` |
 | `LODB_PINNED_RENDERS_PER_MINUTE`, `LODB_PINNED_RENDER_BURST` | `10`, `5` | `60`, `10` |
+| `LODB_PRERENDER_RENDERS_PER_MINUTE`, `LODB_PRERENDER_RENDER_BURST`, `LODB_PRERENDER_MAX_IN_FLIGHT`, `LODB_PRERENDER_VISITOR_RESERVE` | `30`, `5`, `1`, `1` | `120`, `10`, `2`, `4` |
+| `LoDb__Prerender__AutoEnqueueOnPromotion` | `false` | `false` jusqu'à la fin de la passe complète, puis `true` (`.env.prod.example`) |
 | `LoDb__Ingestion__SyncConcurrency`, `LoDb__Ingestion__LanguageConcurrency`, `LoDb__Egress__FetchConcurrency` | `1`, `1`, `1` | `4`, `4`, `16` |
 | Sonde de santé de l'API au démarrage | toutes les 10 s pendant 60 s | toutes les 2 s pendant 20 s |
 
 Le couloir épinglé reste strictement sous le total des rendus, sinon le SSR refuse de
 démarrer ; la part d'un client (`2` rendus, `6` épinglés par minute) tient dans ces totaux.
+L'API règle la passe sur la voie `prerender` du calque : `30` rendus par minute, `1` page en
+vol, lus sur les mêmes lignes que le SSR (§ 4.1).
 Un nouveau patch met plus longtemps à arriver sur le staging.
 
 **Identifiant sur les pages (facultatif).** Avec `LODB_STAGING_BASIC_AUTH_USER` et
@@ -524,6 +616,118 @@ Chaque nuit, le conteneur de sauvegarde d'`infra-vps` s'y connecte comme `lodb_s
 `backup_run`, que la page `/admin/backups` affiche. Activation, changement du mot de passe et
 retrait : [`sauvegardes.md`](sauvegardes.md).
 
+### 4.8 Stockage des pages pré-rendues (Scaleway)
+
+Les pages des anciens patchs sont rendues une fois par une passe de l'API, puis gardées dans un
+bucket Scaleway Object Storage ([ADR 0011](../reecriture/adr/0011-catalogue-pre-rendu-et-cdn.md)) ;
+nginx les y lit avant de les demander au SSR, qui reste le repli. Mise en place, vérification
+depuis l'hôte, retrait d'une epoch et reprise après une politique fautive :
+[`tools/prerender/README.md`](../../tools/prerender/README.md).
+
+| | Staging | Prod |
+|---|---|---|
+| Projet Scaleway et bucket (`fr-par`, privé, sans versionnage) | `lodb-pages-staging` | `lodb-pages-prod` |
+| Application d'écriture (`ObjectStorageObjectsWrite`, son projet seul) | `lodb-pages-writer-staging` | `lodb-pages-writer-prod` |
+| Cycle de vie | `expire-pages` : toute page effacée après 14 jours | une règle `retire-pages-<N>` par epoch retirée |
+| Passe lancée à la promotion d'un patch | non : passes manuelles, sur peu de versions | oui |
+
+Clés des objets : `pages/{epoch}/{locale}/{version}/{ressource}[/{id}-{slug}]`, `build/{nom}`
+et `build/media/{nom}` : tout le jeu de fichiers hachés de chaque build stocké, copié avant la
+première de ses pages (les modules chargés à la demande ne sont nommés que dans le
+JavaScript). L'epoch `0` est réservée aux sondes de `scaleway-bucket.sh verifier`. Chaque page
+porte ses en-têtes : `Content-Type`, `Content-Encoding: gzip` et `Cache-Control` comme en-têtes
+de l'objet, la CSP, la CSP en rapport seul, `Reporting-Endpoints`, `Link` et le build qui l'a
+rendue (`lodb-build`) en métadonnées (`x-amz-meta-*`, 2 Ko au plus).
+L'API écrit avec sa clé (`LoDb__Prerender__*`, § 4.2) ; nginx lit sans clé, depuis l'adresse de
+l'hôte, que la politique du bucket est seule à admettre.
+
+**Mise en service, par environnement** : le script et sa vérification depuis l'hôte (README,
+§ 1 et 2) ; puis, dans `ENV_*`, le bucket et la clé de l'application d'écriture, et un
+déploiement : la passe se lance depuis l'administration ; enfin `LODB_PAGES_STORE_ENABLED=1` et
+un déploiement : nginx lit le stockage. La facturation du stockage suit le volume, pas le
+nombre d'objets (README, § 5).
+
+**Changer l'epoch servie.** Une passe écrit une epoch pendant que nginx sert la précédente.
+Quand l'administration la montre prête, poser `LODB_ARCHIVE_SERVE_EPOCH=<N>` dans `ENV_*`
+et redéployer : nginx lit `pages/<N>/` (la clé de son cache comprend l'epoch servie, ses copies
+de l'ancienne ne servent plus) et le panneau affiche `<N>`. Une epoch est prête quand elle n'a
+plus aucun manque : chaque (ancien patch, langue) y est terminé sur tous les types de pages, ou
+en échec définitif (version inconnue de Data Dragon, catalogue jamais arrivé), et ces unités
+comme les pages en échec des unités terminées seront servies par le SSR ; plusieurs passes
+ciblées peuvent la remplir. Le dialogue de bascule de l'administration donne la variable à
+poser. Retirer ensuite l'ancienne (README, § 4) : le retrait se prépare depuis la ligne de
+l'epoch retirée, une fois la bascule déployée. Un changement visible du chrome, de la CSP ou du contrat `/api` attend ainsi que
+sa passe soit complète (§ 4.1). Après un **correctif de sécurité du front** ou une
+**compromission du serveur SSR**, basculer tout de suite sur une epoch neuve, avant qu'elle
+soit écrite : les pages pas encore écrites repassent par le SSR, borné par sa voie épinglée, le
+temps de la passe. Le reste, retrait des bundles du stockage compris, est décrit avec
+`LODB_ARCHIVE_EPOCH` (« Monter l'epoch des anciens patchs », § 4.1).
+
+Deux epochs à ne pas confondre : `LODB_ARCHIVE_EPOCH` numérote les clés du cache de nginx,
+`LODB_ARCHIVE_SERVE_EPOCH` le préfixe des pages dans le stockage.
+
+**Ce que coûte le stockage.** Le panneau « Précalcul du catalogue » (`GET /api/admin/prerender`)
+montre ce que le stockage contient, epoch par epoch (servie, en écriture, en attente de bascule,
+retirée), les builds copiés et, pour l'epoch servie, chaque version : pages et octets, tirés des
+compteurs que la passe tient en écrivant (la clé d'écriture ne liste pas). Le coût mensuel
+estimé multiplie ces octets, en Go de 10⁹ octets, par le prix de leur classe, arrondi à quatre
+décimales :
+
+| Réglage | Défaut | Classe |
+|---|---|---|
+| `LoDb__Prerender__PricePerGbMonthOneZone` | `0.00803` | Standard One Zone, celle des pages : 0,000011 € par Go et par heure (tarif du 1ᵉʳ juin 2026), sur 730 heures |
+| `LoDb__Prerender__PricePerGbMonthMultiAz` | `0.01606` | Standard Multi-AZ, celle des bundles : le double |
+
+Prix hors TVA, en euros, région `fr-par` ; un prix négatif est refusé au démarrage. Les deux
+clés ne sont pas transmises par `compose.deploy.yaml` : les hôtes gardent les défauts, et suivre
+un changement de tarif demande d'y ajouter la clé sans valeur, sous `api.environment`, puis de
+la poser dans `ENV_*`. L'estimation laisse de côté la sortie (75 Go par mois gratuits, puis
+0,01 € par Go), suivie dans Grafana. Une epoch retirée coûte jusqu'à son effacement par le
+cycle de vie (9 jours au moins pour 4 millions d'objets), que l'API ne voit pas : sa ligne
+garde son coût, mais le total la laisse de côté, pour ne pas surestimer la facture une fois
+l'epoch effacée. Sur le staging, dont les pages expirent après 14 jours, les compteurs disent
+ce qui a été écrit, pas ce qui reste.
+
+### 4.9 Facture Scaleway dans l'administration
+
+À côté des coûts estimés, les panneaux « Sauvegardes » et « Précalcul du catalogue » montrent
+ce que Scaleway facture vraiment pour l'Object Storage de leur projet
+(`GET /api/admin/scaleway/bill`) : le mois en cours, les cinq précédents et leurs lignes
+(stockage, sortie, requêtes, déductions de l'essai gratuit et des paliers gratuits, en
+négatif). Les montants sont hors TVA ; Scaleway ne les découpe que par projet, pas par
+bucket : la facture d'un projet est celle de tous ses buckets.
+
+| | Staging | Prod |
+|---|---|---|
+| Application IAM (`BillingReadOnly`, sur l'organisation, rien d'autre) | `lodb-facturation-lecture` | `lodb-facturation-lecture` |
+| Clé (`LoDb__ScalewayBilling__SecretKey` 🔒) | celle du staging | celle de la prod |
+| `LoDb__ScalewayBilling__BackupsProjectId` | projet du bucket `sauvegardes-vps` | le même |
+| `LoDb__ScalewayBilling__PagesProjectId` | projet `lodb-pages-staging` | projet `lodb-pages-prod` |
+
+L'organisation (`LoDb__ScalewayBilling__OrganizationId`) est la même partout. Les ids se
+lisent dans la console Scaleway (paramètres de l'organisation, puis de chaque projet) ; ils
+ne sont pas secrets mais restent hors du dépôt, dans `ENV_*`. La clé ne lit que la
+facturation : l'API IAM, l'API Account et les buckets lui répondent 403.
+
+**Lecture.** Rien n'est lu au démarrage ni en tâche de fond : l'API interroge
+`https://api.scaleway.com/billing/v2beta1/consumptions` (catégorie « Object Storage », par
+organisation, chaque page de chaque mois) quand un panneau demande la facture, puis la garde
+une heure en mémoire, ou jusqu'au changement de mois (UTC) ; les panneaux qui la demandent en
+même temps partagent une lecture. Les six mois sont demandés ensemble et une lecture abandonne
+au bout de 20 s (10 s par requête), avant que le panneau ne cesse d'attendre (30 s). Une
+lecture qui échoue, quelle qu'en soit la raison (refus, erreur, réponse sans la liste,
+délai dépassé), garde la dernière facture lue, marquée périmée avec l'heure de sa lecture, et
+la suivante attend 5 minutes ; une ligne `admin.scaleway_bill.unavailable` le signale,
+`admin.scaleway_bill.read` chaque lecture réussie. Un redémarrage de l'API relit. Le panneau
+date la facture de sa lecture : le champ `updated_at` de Scaleway donne l'heure de la
+requête, pas celle des montants, que Scaleway met à jour avec quelques heures de retard. La
+clé part dans l'en-tête `X-Auth-Token` de chaque requête, jamais dans une URL ni un journal ;
+le client ne suit aucune redirection.
+
+**Mise en service, par environnement** : dans `ENV_*`, la clé de l'environnement et les trois
+ids (`.env.*.example`), puis un déploiement. En local, la facture reste éteinte
+(`compose.override.yaml` ne pose pas la clé).
+
 ## 5. Fichiers et volumes de l'hôte
 
 | Chemin, dans `$STAGING_PATH` ou `$PROD_PATH` | Écrit par | Rôle |
@@ -545,7 +749,7 @@ Volumes du projet (`lodb-staging_…`, `lodb-prod_…`) :
 | `pgdata` | **repris** de l'ancienne stack | La base, mise à jour par `migrate` (une base Doctrine est d'abord marquée à `Baseline`). |
 | `ddragon` | nouveau, vide au premier déploiement | Blobs Data Dragon, remplis par l'ingestion. |
 | `pages-cache` | nouveau | Cache des pages de nginx. |
-| `archive-cache` | nouveau | Cache des pages des anciens patchs de nginx, clé sans révision : il survit aux déploiements (`LODB_ARCHIVE_EPOCH`). |
+| `archive-cache` | nouveau | Cache des pages des anciens patchs de nginx, clé sans révision : il survit aux déploiements (`LODB_ARCHIVE_EPOCH`). Copie chaude du stockage objet (§ 4.8), 20 Go au plus. |
 | `assets-cache` | nouveau | Cache des bundles de `/build/` de nginx, clé = nom du fichier : un déploiement le trouve chaud. |
 | `seo-cache`, `legacy-cache` | nouveaux | Caches de nginx des fichiers pour les robots (sitemaps, `robots.txt`, `llms.txt`) et des 301 de l'ancien site, clé préfixée par la révision : un déploiement repart de zéro, les entrées précédentes s'éteignent (7 jours, 1 heure). |
 | `nginx-temp` | nouveau | Fichiers temporaires de nginx : corps de requête et réponses plus grands que ses tampons, que le client n'a pas encore lus. Chacun est supprimé dès son ouverture : le volume ne contient que ce qui sert. |
@@ -688,8 +892,14 @@ volumes conservés).
 ## 7. En local
 
 Aucun `.env` n'est nécessaire : `compose.yaml` donne une valeur par défaut à tout, et
-`compose.override.yaml` ajoute `ASPNETCORE_ENVIRONMENT=Development` et Mailpit
-(`LoDb__Mail__Host=mailpit`, e-mails sur http://localhost:18025). L'API s'y connecte aussi
+`compose.override.yaml` ajoute `ASPNETCORE_ENVIRONMENT=Development`, Mailpit
+(`LoDb__Mail__Host=mailpit`, e-mails sur http://localhost:18025) et le stockage simulé des
+pages pré-rendues (`pages-store`, alias `lodb-pages-store`, sans port publié : moto, l'API S3
+en mémoire, sans vérification de signature). Il y crée le bucket `lodb-pages-dev`, lisible par
+tous sous `pages/` et `build/`, à chaque démarrage : un redémarrage le vide. L'API y écrit
+avec la clé fixe `lodb-dev` (`LoDb__Prerender__*`, dont `AllowInsecureEndpoint=true`, propre
+à ce calque, pour son point d'accès en `http`), nginx l'y lit (`LODB_PAGES_STORE_*`), et
+aucune passe ne part d'elle-même. L'API s'y connecte aussi
 comme `lodb_app`, mot de passe `lodb-app` (`migrate` le pose), et `migrate` comme `lodb`/`lodb` :
 `psql` sur le port publié (15432) se connecte avec l'un ou l'autre. Un `.env` racine ne sert
 qu'à surcharger un port ou une variable ; ne jamais y copier `.env.staging` ni `.env.prod`.

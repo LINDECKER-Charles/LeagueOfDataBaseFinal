@@ -15,7 +15,7 @@ import { PageResponse } from '../../routing/response/page-response';
  *
  * A failed catalogue still lets the page render, Transloco falling back to the whole `en`
  * catalogue or the keys showing raw, but the server response is then never stored: the proxy
- * would serve it for minutes, a week for a pinned version, where the legacy site always
+ * would serve it for minutes, a year for a pinned version, where the legacy site always
  * rendered its texts. Transloco retries the load; a failed attempt is enough to keep the
  * response out of caches. Nothing is kept here: a failure is requested again.
  */

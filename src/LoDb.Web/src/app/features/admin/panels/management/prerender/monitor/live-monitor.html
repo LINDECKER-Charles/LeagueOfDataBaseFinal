@@ -1,0 +1,162 @@
+@let pass = current();
+<lodb-admin-card id="prerender-monitor" tabindex="-1" [heading]="title()">
+  <lodb-live-badge lodbCardHead [poll]="monitor" [every]="every()" />
+
+  @if (isPaused() && pass.pauseReason) {
+    <div class="monitor-band monitor-band--bad" role="alert" data-paused-itself>
+      <div class="min-w-0 flex-1">
+        <p class="m-0">
+          {{ 'admin.prerender.live.paused_itself' | adminText: { reason: pass.pauseReason } }}
+        </p>
+        <p class="m-0 mt-1 text-[0.82rem]">
+          {{ 'admin.prerender.live.paused_itself_hint' | adminText }}
+        </p>
+      </div>
+      <button
+        lodbButton="gold"
+        lodbButtonSize="small"
+        type="button"
+        [disabled]="actions.busy()"
+        (click)="resume()"
+      >
+        {{ 'admin.prerender.live.actions.resume_itself' | adminText }}
+      </button>
+    </div>
+  }
+
+  <p class="monitor-head" data-pass-head>
+    <span [lodbBadge]="tone()" data-pass-state>{{
+      'admin.prerender.states.' + pass.state | adminText
+    }}</span>
+    @if (pausedSince(); as since) {
+      <span class="text-gold" data-paused-since>{{ since }}</span>
+    }
+    <span data-pass-origin>{{ origin() }} · {{ scope() }}</span>
+  </p>
+
+  @if (stall(); as stall) {
+    @if (stall.kind === 'stalled') {
+      <div class="monitor-band monitor-band--gold" data-stall>
+        <p class="m-0">
+          <b class="font-normal text-gold-bright">{{ stallTitle() }}</b> ·
+          {{ 'admin.prerender.live.stall.' + stall.cause | adminText }}
+        </p>
+      </div>
+    } @else {
+      <p class="readout-text" data-starting>{{ 'admin.prerender.live.starting' | adminText }}</p>
+    }
+  }
+
+  @if (failing(); as failing) {
+    <lodb-failing-band
+      [failing]="failing"
+      [busy]="actions.busy()"
+      (opened)="openVersion($event)"
+      (paused)="pause()"
+    />
+  }
+
+  <lodb-monitor-status [progress]="state()?.progress" [stall]="stall()" [failing]="failing()" />
+
+  <lodb-progress-block [state]="shown()" [serverNow]="serverNow()" />
+
+  @if (state(); as live) {
+    <div class="monitor-rule"></div>
+    <div class="admin-grid admin-grid--2">
+      <lodb-now-block
+        [progress]="live.progress"
+        [serverNow]="serverNow()"
+        (opened)="openVersion($event)"
+      />
+      <section class="min-w-0">
+        @if (isPhone()) {
+          <button
+            type="button"
+            class="monitor-fold"
+            [attr.aria-expanded]="isOpen('activity')"
+            (click)="flip('activity')"
+          >
+            {{ 'admin.prerender.live.folds.activity' | adminText: { count: live.events.length } }}
+          </button>
+        }
+        @if (isOpen('activity')) {
+          <lodb-activity-feed [events]="live.events" [serverNow]="serverNow()" />
+        }
+      </section>
+    </div>
+
+    @if (live.progress.unitsWithFailures > 0) {
+      <div class="monitor-rule"></div>
+      @if (isPhone()) {
+        <button
+          type="button"
+          class="monitor-fold"
+          [attr.aria-expanded]="isOpen('failures')"
+          (click)="flip('failures')"
+        >
+          {{
+            'admin.prerender.live.folds.failures'
+              | adminText: { count: live.progress.unitsWithFailures }
+          }}
+        </button>
+      }
+      @if (isOpen('failures')) {
+        <lodb-failures-list
+          [progress]="live.progress"
+          [servedEpoch]="report().servedEpoch"
+          (launch)="launch.emit($event)"
+          (opened)="openVersion($event)"
+        />
+      }
+    }
+
+    <div class="monitor-rule"></div>
+    @if (isPhone()) {
+      <button
+        type="button"
+        class="monitor-fold"
+        [attr.aria-expanded]="isOpen('matrix')"
+        (click)="flip('matrix')"
+      >
+        {{
+          'admin.prerender.live.folds.matrix' | adminText: { count: live.progress.versions.length }
+        }}
+      </button>
+    } @else {
+      <h3 class="readout-label mb-2">{{ 'admin.prerender.live.matrix_title' | adminText }}</h3>
+    }
+    @if (isOpen('matrix')) {
+      <div class="monitor-matrix" [class.monitor-matrix--paused]="isPaused()">
+        <lodb-unit-matrix
+          mode="pass"
+          [locales]="live.progress.locales"
+          [versions]="live.progress.versions"
+          [running]="running()"
+          [details]="details()"
+          (opened)="openVersion($event)"
+        />
+      </div>
+    }
+  }
+
+  <div class="monitor-rule"></div>
+  <div class="monitor-actions">
+    @let outcome = actions.outcome();
+    <!-- Always there, its text alone changing: a status inserted with its text is not read. -->
+    <p
+      class="monitor-outcome"
+      role="status"
+      [class.monitor-outcome--bad]="outcome?.tone === 'alert'"
+      data-action-outcome
+    >
+      {{ outcome?.text }}
+    </p>
+    <lodb-pass-actions-bar
+      [pass]="pass"
+      [busy]="actions.busy()"
+      (paused)="pause()"
+      (resumed)="resume()"
+      (cancelled)="cancel()"
+    />
+  </div>
+</lodb-admin-card>

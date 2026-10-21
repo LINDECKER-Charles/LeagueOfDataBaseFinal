@@ -1,6 +1,7 @@
 import { Directionality } from '@angular/cdk/bidi';
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { type ComponentFixture, TestBed } from '@angular/core/testing';
+import { tabFade } from './tab-fade';
 import { tabIndexAfter } from './tab-index-after';
 import { tabMoveForKey } from './tab-move-for-key';
 import { Tab } from './tab';
@@ -30,6 +31,30 @@ describe('tabIndexAfter', () => {
     ['last', 0, 3],
   ] as const)('moves %s from %i to %i in four tabs', (move, index, expected) => {
     expect(tabIndexAfter(move, index, 4)).toBe(expected);
+  });
+});
+
+describe('tabFade', () => {
+  // Three tabs of 120px in a strip of 328px: the third goes past the end.
+  const strip = { scrollWidth: 360, clientWidth: 328 };
+
+  it('fades nothing while every tab fits', () => {
+    expect(tabFade({ offset: 0, scrollWidth: 300, clientWidth: 328 }, false)).toBeNull();
+  });
+
+  it('fades the end past which a tab hides, then the start once scrolled away', () => {
+    expect(tabFade({ ...strip, offset: 0 }, false)).toBe(
+      'linear-gradient(to right, transparent, #000 0px, #000 calc(100% - 2rem), transparent)',
+    );
+    expect(tabFade({ ...strip, offset: 32 }, false)).toBe(
+      'linear-gradient(to right, transparent, #000 2rem, #000 calc(100% - 0px), transparent)',
+    );
+  });
+
+  it('runs along a right-to-left strip, scrolled toward negative offsets', () => {
+    expect(tabFade({ ...strip, offset: -32 }, true)).toBe(
+      'linear-gradient(to left, transparent, #000 2rem, #000 calc(100% - 0px), transparent)',
+    );
   });
 });
 

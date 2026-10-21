@@ -31,6 +31,32 @@ const CATALOGUES: Readonly<Record<string, Translation>> = {
       title: ['Activité — ', ['arg', 'name']],
       lede_orphan: 'Compte supprimé · actions effectuées par ce compte ou le ciblant.',
     },
+    prerender: {
+      states: { running: 'en cours', paused: 'en pause', served: 'servie', retired: 'retirée' },
+      page_types: { items: 'objets' },
+      overview: {
+        cta: {
+          launch: 'Lancer une passe',
+          locked_active: ['Une passe est en cours (n°', ['arg', 'id'], ') : une seule à la fois.'],
+        },
+        kpis: {
+          cost_sub_retired: [
+            '+ ',
+            ['arg', 'retired'],
+            " pour les epochs retirées, jusqu'à leur suppression ; hors sortie",
+          ],
+        },
+      },
+    },
+    scaleway_bill: {
+      stale: [
+        "Scaleway n'a pas répondu à la dernière lecture : montants lus le ",
+        ['arg', 'date'],
+        '.',
+      ],
+      fetched: ['Relevé chez Scaleway le ', ['arg', 'date'], '.'],
+      units: { gigabyte_hour: 'Go·h' },
+    },
   },
   'admin/en': {
     actions: { refresh: 'Refresh' },
@@ -56,6 +82,28 @@ const CATALOGUES: Readonly<Record<string, Translation>> = {
     activity: {
       title: ['Activity — ', ['arg', 'name']],
       lede_orphan: 'Deleted account · actions made by this account or targeting it.',
+    },
+    prerender: {
+      states: { running: 'running', paused: 'paused', served: 'served', retired: 'retired' },
+      page_types: { items: 'items' },
+      overview: {
+        cta: {
+          launch: 'Launch a pass',
+          locked_active: ['A pass is running (#', ['arg', 'id'], '): one at a time.'],
+        },
+        kpis: {
+          cost_sub_retired: [
+            '+ ',
+            ['arg', 'retired'],
+            ' for the retired epochs, until deleted; egress left out',
+          ],
+        },
+      },
+    },
+    scaleway_bill: {
+      stale: ['Scaleway did not answer the last reading: amounts read on ', ['arg', 'date'], '.'],
+      fetched: ['Read from Scaleway on ', ['arg', 'date'], '.'],
+      units: { gigabyte_hour: 'GB·h' },
     },
   },
 };

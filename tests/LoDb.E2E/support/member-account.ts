@@ -32,7 +32,9 @@ const PSQL = 'exec psql -X -q -t -A -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$
 export function createMember(purpose: string, { verified }: MemberOptions): TestAccount {
   const { email, username, password } = createAdmin(purpose);
   const variables = ['-v', `email=${email}`, '-v', `verified=${verified}`];
-  const withdrawn = execInStack('postgres', ['sh', '-c', PSQL, 'psql', ...variables], DEMOTE);
+  const withdrawn = execInStack('postgres', ['sh', '-c', PSQL, 'psql', ...variables], {
+    input: DEMOTE,
+  });
   if (withdrawn.trim() !== '1') {
     throw new Error(`the database did not make ${email} a member: ${withdrawn}`);
   }

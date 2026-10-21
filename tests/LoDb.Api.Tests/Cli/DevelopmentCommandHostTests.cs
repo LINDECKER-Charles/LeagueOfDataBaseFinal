@@ -97,6 +97,7 @@ public sealed class DevelopmentCommandHostTests(PostgresContainerFixture postgre
     [InlineData("audit import")]
     [InlineData("catalog export")]
     [InlineData("client-policy publish")]
+    [InlineData("prerender unit")]
     public async Task CommandWithOptionsBuildsItsHost(string command)
     {
         Assert.Equal(CliExitCodes.Usage, await RunAsync(command.Split(' '), "--unknown"));

@@ -62,6 +62,22 @@ describe('AdminCommand', () => {
     expect(notices.current()).toEqual({ tone: 'alert', text: 'admin.errors.self_moderation' });
   });
 
+  it('answers how it went without the band, for a panel that says it where it acted', async () => {
+    const { command, http, notices } = setUp();
+
+    const attempt = command.attempt(banUser, { id: 4 }, { key: 'users.done.ban' });
+    http.expectOne(BAN_URL).flush(JSON.stringify({ code: 'self-moderation' }), {
+      status: HttpStatusCode.Conflict,
+      statusText: 'Conflict',
+    });
+
+    await expect(attempt).resolves.toEqual({
+      body: null,
+      notice: { tone: 'alert', text: 'admin.errors.self_moderation' },
+    });
+    expect(notices.current()).toBeNull();
+  });
+
   it('reads a lost session and an unknown refusal', async () => {
     const { command, http, notices } = setUp();
 

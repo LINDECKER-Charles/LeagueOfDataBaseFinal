@@ -51,6 +51,12 @@ LoDb d'abord : déployé avant, `infra-vps` trouverait un rôle sans mot de pass
 déploiement échouerait. La première passe part après 2 h UTC (`infra-vps` documente comment la
 lancer sans attendre) ; `/admin/backups` en montre alors les étapes.
 
+À côté du coût estimé du dépôt, `/admin/backups` montre ce que Scaleway facture vraiment pour
+l'Object Storage du projet du bucket, tous ses buckets ensemble : le mois en cours, le
+précédent, l'historique sur six mois et les lignes du mois, hors TVA. Il faut pour cela la clé
+de lecture de la facturation ([`configuration.md`](configuration.md) § 4.9) ; sans elle, le
+panneau le dit en une ligne.
+
 ## Changer le mot de passe
 
 Les deux secrets ensemble, puis le déploiement de la prod, puis celui d'`infra-vps`. Entre les

@@ -15,7 +15,10 @@
     du 2026-10-14 ») ;
   - le 2026-10-16, une ancienne URL du site qui nomme une version mène à l'URL courte quand
     l'entité existe au dernier patch, et à la liste nue pour une liste (voir § « Amendement
-    du 2026-10-16 »).
+    du 2026-10-16 ») ;
+  - le 2026-10-20, les pages des anciens patchs sont pré-rendues dans un stockage objet ;
+    `lodb_archive` devient un cache chaud devant lui, la classe `archived` est gardée un an,
+    et un CDN se place devant le site (voir § « Amendement du 2026-10-20 »).
 
 ## Contexte
 
@@ -317,3 +320,39 @@ de 10.13.1).
   nulle part (503 avec `Retry-After`, comme une page froide) : elle ne sait pas encore si
   l'entité existe toujours.
 - La locale (`?lang=`) se choisit comme avant ; une 301 reste gardée une heure.
+
+## Amendement du 2026-10-20 — catalogue pré-rendu et CDN
+
+Le budget des rendus épinglés reste saturé (142 467 réponses 503 par jour au 2026-10-20) et
+`lodb_archive` ne sert que 2,5 % de `HIT` : les robots ne redemandent presque jamais une
+page dans la semaine. L'[ADR 0011](0011-catalogue-pre-rendu-et-cdn.md) calcule une fois
+chaque page d'ancien patch dans un stockage objet. Pour cette ADR :
+
+- **Alternative « Prérendu de tout le catalogue »** : toujours écartée au build. Le précalcul
+  tourne à côté du site, dans une voie d'admission `prerender` du SSR, au fil des patchs ;
+  le mode de rendu des routes ne change pas.
+- **`lodb_archive` devient un cache chaud** devant le stockage (amende la ligne de la table
+  du 2026-10-10) :
+
+  | Zone nginx | Périmètre | Clé | Taille, inactivité |
+  |---|---|---|---|
+  | `lodb_archive` | `^/{locale}/[0-9]` | `LODB_ARCHIVE_EPOCH` **.** epoch servie + URL | 20 Go, 90 j, gardée à la 1ʳᵉ demande |
+
+  Une page absente du cache est cherchée dans le stockage (epoch servie,
+  `LODB_ARCHIVE_SERVE_EPOCH`), puis rendue par le SSR en repli. Changer d'epoch servie
+  change la clé. « Gardée à la 2ᵉ demande » ne protégeait que d'un balayage qui rendait ; un
+  raté coûte désormais une lecture du stockage.
+- **Classe `archived`** : `s-maxage` d'**un an** au lieu d'une semaine. Une page d'ancien
+  patch ne change qu'avec une epoch ; le compromis des deux semaines de chrome périmé
+  disparaît, la montée de `LODB_ARCHIVE_EPOCH` reste la purge d'urgence du cache nginx.
+- **Bundles** : un bundle que ni l'image ni `front-builds` ne connaissent (404 du SSR) est
+  cherché sous `build/` dans le stockage, où le précalcul a copié tout le jeu haché de chaque
+  build dont une page est stockée.
+- **En-têtes** : la CSP générée au rendu voyage avec la page, en métadonnées de l'objet,
+  et nginx la repose ; les en-têtes constants restent à l'edge. `X-LoDb-Source:
+  cache|store|ssr` dit d'où vient une page épinglée. Le SSR ne lit toujours aucun cookie et
+  ne détient aucun secret ; l'en-tête du précalcul est effacé par nginx côté public.
+- **CDN** : Cloudflare se place devant `league-of-data-base.com`, `www`, `test` et le `.fr`,
+  et garde les pages aux durées de l'origine (`s-maxage`). `/` n'y est jamais gardé : sa 302
+  dépend d'`Accept-Language` et du cookie, que Cloudflare ne distingue pas. La grammaire
+  d'URL, les canoniques et les sitemaps ne changent pas.

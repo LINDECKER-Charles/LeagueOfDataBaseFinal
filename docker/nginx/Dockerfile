@@ -9,6 +9,7 @@
 #                 cache zones that LODB_* variables tune
 #   server.d/     *.conf included INSIDE the site's server block (seo, legacy redirects…)
 #   snippets/     files included by a server block or a location (guards, headers, caches…)
+#   njs/          scripts of the njs module that the base image ships (nginx.conf)
 #   maintenance/  the page answered while a deploy replaces the stack (server.d/maintenance.conf)
 #
 # Every image this file names is pinned by digest, its tag kept for the reader: a moved tag
@@ -35,6 +36,9 @@ LABEL org.opencontainers.image.title="lodb-nginx" \
 # asks the edge for no header (sites/site.conf). LODB_REVISION, first part of the page
 # cache's key, defaults to the image's revision (compose.yaml sets it); LODB_ARCHIVE_EPOCH,
 # first part of the past patches' cache key, is raised by hand (docs/guides/configuration.md).
+# LODB_PAGES_STORE_* name the object store of the pre-rendered pages (ADR 0011), off by
+# default (`none` stands for no bucket: an empty value is refused like any other), and
+# LODB_ARCHIVE_SERVE_EPOCH the prefix of its keys that nginx reads.
 # The others bound each client and the caches (sites/site.conf): a rate in requests per
 # second or minute (r/s, r/m), a burst in requests admitted at once past the rate, sizes in
 # nginx units (k, m, g), durations in s, m, h, d.
@@ -70,10 +74,16 @@ ENV APP_REVISION=${APP_REVISION} \
     LODB_ASSETS_CACHE_KEYS_SIZE=8m \
     LODB_ASSETS_CACHE_INACTIVE=30d \
     LODB_ARCHIVE_EPOCH=3 \
-    LODB_ARCHIVE_CACHE_SIZE=6g \
-    LODB_ARCHIVE_CACHE_KEYS_SIZE=32m \
-    LODB_ARCHIVE_CACHE_INACTIVE=7d \
-    LODB_ARCHIVE_CACHE_MIN_USES=2
+    LODB_ARCHIVE_CACHE_SIZE=20g \
+    LODB_ARCHIVE_CACHE_KEYS_SIZE=64m \
+    LODB_ARCHIVE_CACHE_INACTIVE=90d \
+    LODB_ARCHIVE_CACHE_MIN_USES=1 \
+    LODB_PAGES_STORE_ENABLED=0 \
+    LODB_PAGES_STORE_SCHEME=https \
+    LODB_PAGES_STORE_HOST=s3.fr-par.scw.cloud \
+    LODB_PAGES_STORE_PORT=443 \
+    LODB_PAGES_STORE_BUCKET=none \
+    LODB_ARCHIVE_SERVE_EPOCH=1
 
 # The distribution's security fixes published since the base image was built: _build.yml
 # rebuilds this stage without its cache, so that each build takes those of the day, before
@@ -83,7 +93,10 @@ ENV APP_REVISION=${APP_REVISION} \
 # temp/ the temporary files (nginx.conf); created here so that the volumes mounted on them
 # (compose.yaml) start owned by `nginx`. temp/ stays empty: nginx makes its folders there at
 # start, and refuses to start when no volume makes it writable.
+# The CA bundle checks the object store's certificate (proxy_ssl_verify, ADR 0011): a base
+# image without it fails the build rather than every read of the store.
 RUN apk upgrade --no-cache \
+ && test -s /etc/ssl/certs/ca-certificates.crt \
  && rm -f /etc/nginx/conf.d/default.conf \
  && cd /var/cache/nginx \
  && mkdir -p pages archive assets seo legacy temp \
@@ -93,6 +106,8 @@ COPY docker/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY docker/nginx/sites/     /etc/nginx/templates/sites/
 COPY docker/nginx/server.d/  /etc/nginx/templates/server.d/
 COPY docker/nginx/snippets/  /etc/nginx/templates/snippets/
+# The njs scripts (sites/site.conf): read as they are, never templates.
+COPY docker/nginx/njs/       /etc/nginx/njs/
 # The maintenance page and its files, with the site's own faces: nginx serves it while the SSR
 # server, which serves those faces otherwise, is being replaced. Not templates: envsubst never
 # reads them.

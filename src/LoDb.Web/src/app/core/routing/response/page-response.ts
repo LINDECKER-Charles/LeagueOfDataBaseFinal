@@ -24,7 +24,7 @@ export class PageResponse {
   /**
    * Keeps this response out of every cache, whatever a resolver sets afterwards: a render
    * missing part of itself, such as a catalogue that failed to load, must not be served to
-   * every visitor and crawler for minutes, or a week for a pinned version.
+   * every visitor and crawler for minutes, or a year for a pinned version.
    */
   forbidStorage(): void {
     this.isStorable = false;

@@ -22,4 +22,15 @@ export interface RenderLimits {
   readonly currentPerClientBurst: number;
   /** Clients whose renders the admission remembers; the least recently seen is forgotten. */
   readonly trackedClients: number;
+  /** Renders of the pre-render pass started per minute, on average. */
+  readonly prerenderPerMinute: number;
+  /** Renders of the pre-render pass a quiet server starts at once. */
+  readonly prerenderBurst: number;
+  /** Renders of the pre-render pass running at once. */
+  readonly prerenderMaxInFlight: number;
+  /**
+   * Slots the pre-render pass always leaves free for the visitors: it starts a render only
+   * while the renders running, that one included, stay within `maxInFlight` minus these.
+   */
+  readonly prerenderVisitorReserve: number;
 }

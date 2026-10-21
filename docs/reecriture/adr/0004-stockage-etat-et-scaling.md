@@ -4,6 +4,9 @@
 - **Révise** l'invariant « Postgres = données utilisateur uniquement » : le **manifeste
   d'images**, les **analytics** et l'**audit** y entrent. Les **contenus** Data Dragon
   (JSON, images) restent hors base.
+- **Amendement** : le 2026-10-20, nginx sert aussi des pages et des bundles depuis un
+  stockage objet, adressé par chemin et à part d'`IBlobStore` ; MinIO pour les tests et le
+  développement seulement (voir § « Amendement du 2026-10-20 »).
 
 ## Contexte
 
@@ -89,3 +92,29 @@ ressource n'a jamais été tentée. Une erreur transitoire n'y est jamais écrit
   sauvegardes et supervision de la base passent au niveau « service essentiel ».
 - **−** Migration des analytics existants : les agrégats journaliers sont repris, les
   événements bruts ne le sont pas (ils contiennent IP et UA et arrivent à expiration).
+
+## Amendement du 2026-10-20 — le stockage objet des pages pré-rendues
+
+Le catalogue pré-rendu ([ADR 0011](0011-catalogue-pre-rendu-et-cdn.md)) range chaque page
+d'ancien patch, et les bundles de son build, dans un stockage objet Scaleway (`fr-par`), un
+par environnement.
+
+- **nginx ne sert plus seulement `/cdn/blobs/`** : il lit aussi `pages/{epoch}/…` pour les
+  versions épinglées et `build/…` pour un bundle que le SSR ne connaît plus, depuis ce
+  stockage, avec le SSR en repli. Du volume `storage`, nginx n'expose toujours que `blobs/`.
+- **Un stockage à part d'`IBlobStore`** : `IPageStore`, adressé par chemin (le chemin
+  canonique de la page sous une epoch), pas par contenu. Une page n'est pas un contenu Data
+  Dragon : elle se recalcule, ne se partage pas entre pages et se retire par epoch entière.
+  `IBlobStore` et le volume `storage` ne changent pas.
+- **Atomicité** : un `PUT` est atomique pour un objet, comme le `File.Move` des blobs ; un
+  bundle s'écrit avec `If-None-Match: *` et ne se remplace jamais.
+- **Postgres** reçoit l'état de la passe : `prerender_pass` (une seule active, index unique
+  partiel), `prerender_unit` (compteurs de pages et d'octets, curseur), `prerender_build`.
+  Le stockage n'est jamais listé pour compter.
+- **MinIO** sert aux tests (Testcontainers, conteneur générique épinglé par empreinte) et à
+  la pile de développement (`pages-store`) seulement. Le rejet de MinIO en production
+  (§ « Alternatives écartées ») tient toujours : le stockage de prod est un service géré, et
+  son comportement réel (lecture anonyme par adresse, métadonnées rendues) est prouvé par la
+  sonde du script, pas par la CI.
+- **Chemin vers N instances** : inchangé. Le stockage des pages est déjà partagé ; seul
+  `lodb_archive`, devenu cache chaud, reste propre à chaque nginx.

@@ -75,8 +75,9 @@ describe('nginx environment through Compose',
 
     test('reads the defaults of the image', () => {
       assert.equal(defaults.get('LODB_PAGES_RATE'), '20r/s');
-      assert.equal(defaults.get('LODB_ARCHIVE_CACHE_MIN_USES'), '2');
+      assert.equal(defaults.get('LODB_ARCHIVE_CACHE_MIN_USES'), '1');
       assert.equal(defaults.get('LODB_EDGE_SECRET'), '', 'no header asked by default');
+      assert.equal(defaults.get('LODB_PAGES_STORE_ENABLED'), '0', 'no store asked by default');
       assert.ok(!defaults.has(REVISION), `${REVISION} is the image's revision`);
       assert.ok(defaults.size >= 16, `${defaults.size} defaults read`);
     });
