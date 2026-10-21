@@ -59,4 +59,29 @@ public sealed class DemandPruneTests(PostgresContainerFixture postgres)
         Assert.DoesNotContain(pages[0], kept);
         Assert.Contains(pages[^1], kept);
     }
+
+    [Fact]
+    public async Task FailedPageIsTriedAgainAfterADay()
+    {
+        await using var rig = await DemandRig.StartAsync(
+            postgres,
+            new Dictionary<string, string?> { [$"{DemandOptions.SectionName}:MaxAttempts"] = "1" });
+        var path = DemandRig.PathOf("runes");
+        rig.Harness.Ssr.Answer(path, static () => Support.FakeSsr.Status(
+            System.Net.HttpStatusCode.BadGateway));
+        rig.Refused.Refuse(path);
+        await rig.CollectAsync();
+        await rig.DrainAsync();
+        var pruner = rig.Harness.Get<DemandPruner>();
+        Assert.Equal(0, await pruner.PruneAsync(Token));
+
+        rig.Harness.Clock.Advance(DemandPruner.FailedRest + TimeSpan.FromMinutes(1));
+        Assert.Equal(1, await pruner.PruneAsync(Token));
+        await rig.DrainAsync();
+
+        var row = await rig.RowAsync(path);
+        Assert.Equal(
+            (Infrastructure.Persistence.Prerender.Demand.PrerenderDemandState.Done, 0),
+            (row!.State, row.Attempts));
+    }
 }

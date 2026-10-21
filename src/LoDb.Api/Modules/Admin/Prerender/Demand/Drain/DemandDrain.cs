@@ -18,8 +18,8 @@ namespace LoDb.Api.Modules.Admin.Prerender.Demand.Drain;
 /// (<see cref="DemandActivation"/>).
 /// </para>
 /// <para>
-/// At its first drain, and whenever the served epoch changed, the pages a stopped worker left
-/// rendering and those ended in another epoch go back to pending.
+/// At its first drain, after a drain that failed, and whenever the served epoch changed, the
+/// pages a stopped worker left rendering and those ended in another epoch go back to pending.
 /// </para>
 /// </remarks>
 internal sealed class DemandDrain(
@@ -63,7 +63,11 @@ internal sealed class DemandDrain(
             _revivedEpoch = epoch;
         }
 
+        // Cleared only by a drain that ended well: one that threw may have left pages
+        // rendering, which the next one puts back.
+        _revivedEpoch = null;
         await DrainAsync(epoch, cancellationToken);
+        _revivedEpoch = epoch;
     }
 
     private async Task DrainAsync(int epoch, CancellationToken cancellationToken)
