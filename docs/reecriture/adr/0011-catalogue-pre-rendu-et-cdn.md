@@ -115,7 +115,8 @@ visiteur ─► Cloudflare ── en cache ────────────�
   sans lister le stockage.
 - À la promotion d'un patch, les unités (une par langue) du patch devenu épinglé
   rejoignent la passe active ou en ouvrent une, en prod seulement
-  (`LoDb__Prerender__AutoEnqueueOnPromotion`). Le staging reste presque vide : des passes
+  (`LoDb__Prerender__AutoEnqueueOnPromotion`, faux en prod tant que la passe complète, lancée
+  à la main, n'est pas terminée). Le staging reste presque vide : des passes
   manuelles sur un petit périmètre.
 - Un panneau d'administration pilote la passe sous `/api/admin/prerender` ; chaque action
   est auditée. Il montre l'epoch servie et, quand une passe est complète, la consigne de

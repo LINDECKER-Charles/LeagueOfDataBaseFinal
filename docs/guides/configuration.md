@@ -388,7 +388,7 @@ même nom.
 | `LoDb__Prerender__AllowInsecureEndpoint` | dev seulement | `true` autorise un `Endpoint` en `http`, celui du stockage simulé de `compose.override.yaml` (§ 7). **Jamais posé sur un hôte** : absent, un point d'accès en `http` est refusé au démarrage. |
 | `LoDb__Prerender__Bucket` | avec le stockage | Bucket de l'environnement : `lodb-pages-staging`, `lodb-pages-prod`. Absent : la passe reste en sommeil. |
 | `LoDb__Prerender__AccessKey`, `LoDb__Prerender__SecretKey` 🔒 | avec le stockage | Clé API de l'application `lodb-pages-writer-<env>` : écriture d'objets seule, sur le projet de l'environnement seul ([`tools/prerender/README.md`](../../tools/prerender/README.md)). Absente : la passe reste en sommeil, nginx sert par le SSR. |
-| `LoDb__Prerender__AutoEnqueueOnPromotion` | ➖ | `true` en prod : un patch qui quitte le dernier rang rejoint la passe en cours, ou en ouvre une sur l'epoch servie. `false` sur le staging (son calque, § 4.5), qui reste presque vide. |
+| `LoDb__Prerender__AutoEnqueueOnPromotion` | ➖ | `false` tant que la passe complète de la prod n'est pas terminée : l'opérateur la lance à la main, et aucun patch promu n'en ouvre une de lui-même sur une epoch vide. Puis `true` en prod : un patch qui quitte le dernier rang rejoint la passe en cours, ou en ouvre une sur l'epoch servie. `false` sur le staging (son calque, § 4.5), qui reste presque vide. |
 | `LoDb__ScalewayBilling__SecretKey` 🔒 | ➖ | Clé secrète de l'application `lodb-facturation-lecture` (§ 4.9), une par environnement. Absente : les panneaux « Sauvegardes » et « Précalcul du catalogue » disent que la facture n'est pas configurée. |
 | `LoDb__ScalewayBilling__OrganizationId`, `BackupsProjectId`, `PagesProjectId` | avec la clé | Organisation, projet du bucket des sauvegardes et projet des pages de l'environnement, en UUID (§ 4.9). Requis une fois la clé posée ; un id qui n'est pas un UUID est refusé au démarrage, clé posée ou non. |
 | `LoDb__Database__AppRole__StatementTimeout`, `ConnectionLimit` | ➖ | Transmis à `migrate` seulement, qui les pose sur le rôle de l'API (§ 4.3) : `00:00:15` (une requête plus longue est annulée par le serveur) et `50` sessions (`-1` : sans limite ; sous les 60 du serveur, moins les 3 réservées aux superutilisateurs). Pris en compte au déploiement suivant, par les nouvelles connexions. |
@@ -537,7 +537,7 @@ quotas se revoient avec ceux de la prod :
 | `LODB_RENDER_MAX_IN_FLIGHT`, `LODB_PINNED_RENDER_MAX_IN_FLIGHT` | `3`, `1` | `8`, `3` |
 | `LODB_PINNED_RENDERS_PER_MINUTE`, `LODB_PINNED_RENDER_BURST` | `10`, `5` | `60`, `10` |
 | `LODB_PRERENDER_RENDERS_PER_MINUTE`, `LODB_PRERENDER_RENDER_BURST`, `LODB_PRERENDER_MAX_IN_FLIGHT`, `LODB_PRERENDER_VISITOR_RESERVE` | `30`, `5`, `1`, `1` | `120`, `10`, `2`, `4` |
-| `LoDb__Prerender__AutoEnqueueOnPromotion` | `false` | `true` (`.env.prod.example`) |
+| `LoDb__Prerender__AutoEnqueueOnPromotion` | `false` | `false` jusqu'à la fin de la passe complète, puis `true` (`.env.prod.example`) |
 | `LoDb__Ingestion__SyncConcurrency`, `LoDb__Ingestion__LanguageConcurrency`, `LoDb__Egress__FetchConcurrency` | `1`, `1`, `1` | `4`, `4`, `16` |
 | Sonde de santé de l'API au démarrage | toutes les 10 s pendant 60 s | toutes les 2 s pendant 20 s |
 
