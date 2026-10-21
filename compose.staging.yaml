@@ -29,6 +29,10 @@ services:
       LoDb__Prerender__Pace__StepRendersPerMinute: ${LoDb__Prerender__Pace__StepRendersPerMinute:-10}
       LoDb__Prerender__RendersPerMinute: ${LODB_PRERENDER_RENDERS_PER_MINUTE:-30}
       LoDb__Prerender__MaxInFlight: ${LODB_PRERENDER_MAX_IN_FLIGHT:-1}
+      # One renderer at a quarter of a core, and a manual pace no faster than its lane.
+      LoDb__Prerender__Renderers: ${LODB_PRERENDER_RENDERERS:-1}
+      LoDb__Prerender__Pace__ManualMaxRendersPerMinute: ${LODB_PRERENDER_PACE_MAX:-30}
+      LoDb__Prerender__Pace__RendererCpus: "0.25"
     cpu_shares: 128
     deploy:
       resources:
@@ -77,6 +81,7 @@ services:
       LODB_PRERENDER_MAX_IN_FLIGHT: ${LODB_PRERENDER_MAX_IN_FLIGHT:-1}
     cpu_shares: 64
     deploy:
+      replicas: ${LODB_PRERENDER_RENDERERS:-1}
       resources:
         limits:
           cpus: "0.25"

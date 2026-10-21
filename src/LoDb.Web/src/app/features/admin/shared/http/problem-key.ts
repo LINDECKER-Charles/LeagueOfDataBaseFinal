@@ -12,6 +12,7 @@ const PROBLEM_KEYS: Readonly<Record<string, string>> = {
   'prerender-pass-active': 'errors.prerender_active',
   'prerender-pass-state': 'errors.prerender_state',
   'prerender-dormant': 'errors.prerender_dormant',
+  'prerender-pace-fixed': 'errors.prerender_pace_fixed',
   'authentication-required': 'errors.session',
   'mfa-required': 'errors.session',
   forbidden: 'errors.session',

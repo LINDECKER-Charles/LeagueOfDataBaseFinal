@@ -1,6 +1,7 @@
 using LoDb.Api.Modules.Admin.Prerender.Options;
 using LoDb.Api.Modules.Admin.Prerender.Pace;
 using LoDb.Api.Modules.Admin.Prerender.Pace.Decision;
+using LoDb.Api.Modules.Admin.Prerender.Pace.Manual;
 using LoDb.Api.Modules.Admin.Prerender.Pace.Signals;
 using LoDb.Api.Modules.Admin.Prerender.Pace.Telemetry;
 using LoDb.Api.Modules.Admin.Prerender.Pace.Windows;
@@ -116,8 +117,10 @@ public sealed class RenderPacerTests(PostgresContainerFixture postgres)
     {
         var options = new PrerenderOptions { RendersPerMinute = PaceRig.FixedPace };
         using var meters = new ServiceCollection().AddMetrics().BuildServiceProvider();
+        var wrapped = Microsoft.Extensions.Options.Options.Create(options);
         var regulator = new PaceRegulator(
-            Microsoft.Extensions.Options.Options.Create(options),
+            wrapped,
+            new PaceSettings(wrapped, NullLogger<PaceSettings>.Instance),
             clock,
             new PaceMetrics(meters.GetRequiredService<System.Diagnostics.Metrics.IMeterFactory>()),
             NullLogger<PaceRegulator>.Instance);
