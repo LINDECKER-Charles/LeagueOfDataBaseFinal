@@ -855,7 +855,7 @@ tabulation.
 | Touche | Sur une ligne de patch | Sur une ligne de saison |
 |---|---|---|
 | ↓ / ↑ | ligne visible suivante / précédente (saisons comprises, patchs des saisons pliées sautés) | idem |
-| Maj + ↓ / ↑ | déplace le focus **et** `extend` jusqu'à la nouvelle ligne | déplace le focus seulement |
+| Maj + ↓ / ↑ | focus sur le patch suivant / précédent, **par-dessus** une ligne de saison, **et** `extend` jusqu'à lui : la plage suit le focus d'une saison ouverte à l'autre, en grandissant comme en rétrécissant ; sans patch plus loin, le focus seul bouge | idem (focus et `extend` sur le premier patch dans ce sens) |
 | Espace | `toggle` | `season` |
 | Maj + Espace | `extend` jusqu'à cette ligne | — |
 | Entrée | `toggle` (indulgent) | plie / déplie |

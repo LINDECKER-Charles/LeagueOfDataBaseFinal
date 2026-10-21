@@ -42,15 +42,30 @@ function lineAt(rows: PickerRows, line: PickerLine, by: number): PickerLine {
   return rows.lines[to] ?? line;
 }
 
-// ↑ ↓: the next line; with Shift on a patch, the range reaches it too.
+// The first patch past `line` going `by` (1 or -1), over the season heads; null at the end.
+function patchPast(rows: PickerRows, line: PickerLine, by: number): PatchLine | null {
+  const at = rows.lines.findIndex((other) => other.key === line.key);
+  for (let index = at + by; index >= 0 && index < rows.lines.length; index += by) {
+    const next = rows.lines[index];
+    if (next.kind === 'patch') {
+      return next;
+    }
+  }
+  return null;
+}
+
+// ↑ ↓: the next line. With Shift, the next patch, over a season's head, and the range reaches
+// it: the range follows the focus across seasons, growing or shrinking, from any line.
 function step(by: number): Handler {
   return (key, line, rows) => {
-    const next = lineAt(rows, line, by);
-    const reaches = key.shiftKey && line.kind === 'patch' && next.kind === 'patch';
-    const action: SelectionAction | undefined = reaches
-      ? { kind: 'extend', version: next.key, rows: rows.order }
-      : undefined;
-    return { focus: next.key, action };
+    const target = key.shiftKey ? patchPast(rows, line, by) : null;
+    if (target) {
+      return {
+        focus: target.key,
+        action: { kind: 'extend', version: target.key, rows: rows.order },
+      };
+    }
+    return { focus: lineAt(rows, line, by).key, action: undefined };
   };
 }
 

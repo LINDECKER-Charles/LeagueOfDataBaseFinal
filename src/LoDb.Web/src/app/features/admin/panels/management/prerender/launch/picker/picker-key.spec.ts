@@ -53,13 +53,39 @@ describe('pickerActionOf', () => {
     expect(press('ArrowDown', 'season:15')).toEqual({ focus: 'season:15', action: undefined });
   });
 
-  it('extends the range with Shift and an arrow on a patch, not on a season', () => {
+  it('extends the range with Shift and an arrow to the next patch, from any line', () => {
     expect(press('ArrowDown', '16.12.1', { shiftKey: true })).toEqual({
       focus: '16.11.1',
       action: { kind: 'extend', version: '16.11.1', rows: LIST.order },
     });
-    expect(press('ArrowUp', '16.12.1', { shiftKey: true })?.action).toBeUndefined();
-    expect(press('ArrowUp', 'season:15', { shiftKey: true })?.action).toBeUndefined();
+    // No patch above the first one: the focus moves, nothing is ticked.
+    expect(press('ArrowUp', '16.12.1', { shiftKey: true })).toEqual({
+      focus: 'season:16',
+      action: undefined,
+    });
+    expect(press('ArrowUp', 'season:15', { shiftKey: true })).toEqual({
+      focus: '16.2.1',
+      action: { kind: 'extend', version: '16.2.1', rows: LIST.order },
+    });
+    // Season 15 is folded: no patch below the last one of 16.
+    expect(press('ArrowDown', '16.2.1', { shiftKey: true })?.action).toBeUndefined();
+  });
+
+  it('keeps the range on the focus across an open season, growing then shrinking', () => {
+    const open = pickerRows(ROWS, { query: '', status: 'all', open: new Set(['16', '15']) }, NONE);
+    const shift = (name: string, on: string) => {
+      const from = open.lines.find((candidate) => candidate.key === on);
+      return from ? pickerActionOf(key(name, { shiftKey: true }), from, open) : null;
+    };
+
+    expect(shift('ArrowDown', '16.2.1')).toEqual({
+      focus: '15.24.1',
+      action: { kind: 'extend', version: '15.24.1', rows: open.order },
+    });
+    expect(shift('ArrowUp', '15.24.1')).toEqual({
+      focus: '16.2.1',
+      action: { kind: 'extend', version: '16.2.1', rows: open.order },
+    });
   });
 
   it('ticks a patch, a season, or extends with Space', () => {
