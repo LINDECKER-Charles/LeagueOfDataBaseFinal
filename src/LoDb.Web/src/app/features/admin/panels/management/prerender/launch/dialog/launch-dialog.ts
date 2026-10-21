@@ -59,9 +59,10 @@ const LAUNCHER = 'prerender.launcher';
   ],
   templateUrl: './launch-dialog.html',
   styles: `
+    /* Sticks to the panel's padding edge, not its content edge: no row shows beneath it. */
     .launch-foot {
       position: sticky;
-      inset-block-end: 0;
+      inset-block-end: -1.4rem;
       z-index: 1;
       margin-block: 1.5rem -1.4rem;
       margin-inline: -1.4rem;
