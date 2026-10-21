@@ -70,7 +70,7 @@ function keyOf(version: string, locale: string): string {
   selector: 'lodb-unit-matrix',
   imports: [AdminTextPipe, MatrixTable],
   templateUrl: './unit-matrix.html',
-  styleUrl: './unit-matrix.css',
+  styleUrls: ['./unit-matrix.css', '../cells/cell-states.css'],
   host: { class: 'block min-w-0' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
