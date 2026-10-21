@@ -138,11 +138,23 @@
   }
 
   <div class="monitor-rule"></div>
-  <lodb-pass-actions-bar
-    [pass]="pass"
-    [busy]="actions.busy()"
-    (paused)="pause()"
-    (resumed)="resume()"
-    (cancelled)="cancel()"
-  />
+  <div class="monitor-actions">
+    @let outcome = actions.outcome();
+    <!-- Always there, its text alone changing: a status inserted with its text is not read. -->
+    <p
+      class="monitor-outcome"
+      role="status"
+      [class.monitor-outcome--bad]="outcome?.tone === 'alert'"
+      data-action-outcome
+    >
+      {{ outcome?.text }}
+    </p>
+    <lodb-pass-actions-bar
+      [pass]="pass"
+      [busy]="actions.busy()"
+      (paused)="pause()"
+      (resumed)="resume()"
+      (cancelled)="cancel()"
+    />
+  </div>
 </lodb-admin-card>

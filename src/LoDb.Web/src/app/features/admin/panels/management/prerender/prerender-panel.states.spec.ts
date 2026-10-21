@@ -4,6 +4,8 @@ import type { PrerenderEpochCoverage } from '../../../../../core/api/generated/m
 import type { PrerenderPassView } from '../../../../../core/api/generated/models/prerender-pass-view';
 import type { PrerenderReport } from '../../../../../core/api/generated/models/prerender-report';
 import { Seo } from '../../../../../core/seo/seo';
+import { AdminNotices } from '../../../layout/admin-notices';
+import { PRERENDER_CADENCE } from './common/scope/prerender-cadence';
 import { configureAdminTestBed } from '../../../testing/admin-test-bed';
 import type { AdminVisit } from '../../../testing/admin-visit';
 import { press } from '../../../testing/dom/press';
@@ -145,6 +147,38 @@ describe('PrerenderPanel, its states', () => {
     expect(visit.page.querySelector('lodb-pass-recap')).toBeNull();
     expect(visit.page.querySelector('lodb-idle-card')).not.toBeNull();
     expect(localStorage.getItem(DISMISSED_KEY)).toBe('12');
+  });
+
+  it('takes away the band of a launch once its pass is seen ending', async () => {
+    const launched = new AdminNotices();
+    launched.post({ tone: 'notice', text: "Passe n°12 lancée sur l'epoch 2 : 4 unités." });
+    // The monitor reads its progress again at once: the second answer ends the pass.
+    const cadence = {
+      progressRunningMs: 50,
+      progressPausedMs: 30_000,
+      reportActiveMs: 60_000,
+      reportIdleMs: 120_000,
+      reportHiddenMs: 300_000,
+      versionMs: 10_000,
+    };
+    const visit = await openPrerender({
+      report: RUNNING,
+      calls: [PROGRESS],
+      providers: [
+        { provide: AdminNotices, useValue: launched },
+        { provide: PRERENDER_CADENCE, useValue: cadence },
+      ],
+    });
+    expect(launched.current()).not.toBeNull();
+
+    const completed = prerenderProgress({ pass: { ...PASS, state: 'completed' } });
+    (await sent(visit, PROGRESS.path)).flush(completed);
+    for (let step = 0; launched.current() !== null && step < 100; step++) {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      visit.harness.detectChanges();
+    }
+
+    expect(launched.current()).toBeNull();
   });
 
   it('remembers a recap dismissed in this browser', async () => {

@@ -210,7 +210,10 @@ epoch, le cas échéant. Servi par § 2.4 (bandes) et § 5.5.
 | 5 | Onglets « Couverture », « Stockage et coûts », « Historique » | `lodb-tabs` existant (`src/app/ui/tabs/tabs.ts`) + trois onglets (F4) | dès le premier rapport |
 
 La bande des notices d'action (`NoticesOutlet`, `admin/layout/notices-outlet.ts`) reste au-dessus
-de tout, posée par le cadre de l'admin : elle dit « Passe n°12 lancée… » ou un refus.
+de tout, posée par le cadre de l'admin : elle dit « Passe n°12 lancée… » ou un refus du
+lancement. Elle s'efface quand le moniteur voit la passe finir (`ended`) : « Passe n°2 lancée »
+au-dessus de « Passe n°2 terminée » se contredirait. La pause, la reprise et l'annulation ne
+l'utilisent pas : l'admin a cliqué au bas du moniteur, souvent bien plus bas (§ 4.7).
 
 L'ancienne tuile « Passe active » disparaît : le moniteur la remplace. Les anciennes règles
 `admin.rules.current_pass` et `admin.rules.launch` disparaissent avec les sections qu'elles
@@ -1369,7 +1372,9 @@ sera finie ».
 `PassActionsBar` (F3) : selon l'état, « Mettre en pause » (fantôme) et « Annuler la passe… »
 (danger) en cours ; « Reprendre » (or) et « Annuler la passe… » en pause. Les appels restent ceux
 d'aujourd'hui (`injectPassActions`, déplacé dans `monitor/`, même comportement : relecture après
-chaque action, refus compris). Chaque dialogue passe par `ConfirmDialog` (F1) : titre, phrases de
+chaque action, refus compris). Leur résultat, succès ou refus (un `409` : la passe a bougé
+entre-temps), se dit **à côté des boutons**, dans une ligne `role="status"` toujours présente dont
+seul le texte change (`AdminCommand.attempt`), jamais dans la bande en haut de page, hors de vue. Chaque dialogue passe par `ConfirmDialog` (F1) : titre, phrases de
 conséquence, bouton de confirmation, bouton qui ne fait rien **et qui a le focus à l'ouverture**
 (Entrée ne confirme jamais par mégarde). Les phrases viennent de `consequencesOf(kind, context)`
 (F3, pur), avec les chiffres de la dernière progression.

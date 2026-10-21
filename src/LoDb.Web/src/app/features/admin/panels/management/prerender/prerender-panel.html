@@ -32,7 +32,7 @@
         [report]="data"
         (launch)="openLaunch($event)"
         (changed)="report.reload()"
-        (ended)="refresh()"
+        (ended)="onEnded()"
       />
     } @else if (recent(); as pass) {
       <lodb-pass-recap

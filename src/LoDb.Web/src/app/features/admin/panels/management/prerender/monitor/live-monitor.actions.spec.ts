@@ -29,6 +29,17 @@ async function answer(monitor: MonitorHarness, action: string, choice: string): 
   return words;
 }
 
+// How the last move went, said beside the buttons pressed rather than at the top of the page.
+function outcome(monitor: MonitorHarness): string {
+  return monitor.text('[data-action-outcome]');
+}
+
+// The outcome is written once its words are translated, a few turns after the answer.
+async function said(monitor: MonitorHarness): Promise<string> {
+  await monitor.until(() => outcome(monitor) !== '');
+  return outcome(monitor);
+}
+
 async function openPaused(pass: PrerenderPassView): Promise<MonitorHarness> {
   const monitor = MonitorHarness.open(pass);
   await monitor.read(prerenderProgress({ isComplete: true, pass }));
@@ -48,7 +59,25 @@ describe('LiveMonitor actions', () => {
     (await sent(monitor, `${PASSES}/12/pause`, 'POST')).flush('');
     await monitor.read(BASE);
 
-    expect(notice()).toBe('notice: admin.prerender.done.pause');
+    expect(await said(monitor)).toBe('admin.prerender.done.pause');
+    expect(notice()).toBe('');
+    expect(monitor.host.changes).toBe(1);
+  });
+
+  it('says a refusal beside the buttons, then shows where the pass is now', async () => {
+    const monitor = MonitorHarness.open();
+    await monitor.read();
+
+    await answer(monitor, '[data-action="pause"]', '[data-confirm]');
+    (await sent(monitor, `${PASSES}/12/pause`, 'POST')).flush(
+      { type: 'about:blank', code: 'prerender-pass-state' },
+      { status: 409, statusText: 'Conflict' },
+    );
+    await monitor.settle();
+
+    await said(monitor);
+    expect(monitor.page.querySelector('.monitor-outcome--bad')).not.toBeNull();
+    expect(notice()).toBe('');
     expect(monitor.host.changes).toBe(1);
   });
 
@@ -71,7 +100,8 @@ describe('LiveMonitor actions', () => {
     (await sent(monitor, `${PASSES}/12/cancel`, 'POST')).flush('');
     await monitor.settle();
 
-    expect(notice()).toBe('notice: admin.prerender.done.cancel');
+    expect(await said(monitor)).toBe('admin.prerender.done.cancel');
+    expect(notice()).toBe('');
   });
 
   it('resumes a pause of an administrator at once', async () => {
@@ -81,7 +111,8 @@ describe('LiveMonitor actions', () => {
     (await sent(monitor, `${PASSES}/12/resume`, 'POST')).flush('');
     await monitor.settle();
 
-    expect(notice()).toBe('notice: admin.prerender.done.resume');
+    expect(await said(monitor)).toBe('admin.prerender.done.resume');
+    expect(notice()).toBe('');
   });
 
   it('warns before resuming a pass that paused itself', async () => {
@@ -92,7 +123,8 @@ describe('LiveMonitor actions', () => {
     (await sent(monitor, `${PASSES}/12/resume`, 'POST')).flush('');
     await monitor.settle();
 
-    expect(notice()).toBe('notice: admin.prerender.done.resume');
+    expect(await said(monitor)).toBe('admin.prerender.done.resume');
+    expect(notice()).toBe('');
   });
 
   it('opens the units of a version from the unit running', async () => {

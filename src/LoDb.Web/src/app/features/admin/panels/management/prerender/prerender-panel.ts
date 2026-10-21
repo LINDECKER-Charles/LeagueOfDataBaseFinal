@@ -14,6 +14,7 @@ import {
 } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import type { PrerenderReport } from '../../../../../core/api/generated/models/prerender-report';
+import { AdminNotices } from '../../../layout/admin-notices';
 import { PageHead } from '../../../layout/page-head';
 import { AdminTextPipe } from '../../../shared/admin-text-pipe';
 import { injectAdminText } from '../../../shared/inject-admin-text';
@@ -92,6 +93,7 @@ export class PrerenderPanel {
   private readonly cadence = inject(PRERENDER_CADENCE);
   private readonly document = inject(DOCUMENT);
   private readonly injector = inject(Injector);
+  private readonly notices = inject(AdminNotices);
   private readonly coverage = viewChild(CoverageTab);
   // Once a pass starts, the focus goes to its monitor as soon as the report shows it.
   private readonly isFocusDue = signal(false);
@@ -153,6 +155,15 @@ export class PrerenderPanel {
   protected refresh(): void {
     this.report.reload();
     this.coverage()?.reload();
+  }
+
+  /**
+   * A pass seen ending: the band of its launch (« Passe n°2 lancée… ») would contradict the
+   * recap that takes the monitor's place, so it goes; the page reads everything again.
+   */
+  protected onEnded(): void {
+    this.notices.clear();
+    this.refresh();
   }
 
   protected openSwitch(target: number): void {
