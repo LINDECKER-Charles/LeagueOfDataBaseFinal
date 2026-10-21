@@ -219,7 +219,7 @@ création d'une base, sur un volume vide.
 | `REGISTRY` | `ghcr.io/lindecker-charles/lodb` | idem | ✅ | Registre des images. |
 | `IMAGE_TAG` ⚙️ | `staging` | `prod` | ✅ | Tag déployé : dernier build de `dev`, ou images promues. |
 | `CADDY_DOMAINS` | `test.league-of-data-base.com` 🔁 | `league-of-data-base.com, league-of-data-base.fr` 🔁 | ✅ | Label `caddy_0` du site ; DNS pointé d'abord. |
-| `API_CADDY_DOMAINS` | `api.test.league-of-data-base.com` 🔁 | `api.league-of-data-base.com, api.league-of-data-base.fr` 🔁 | ✅ | Label `caddy_1` ; chaque hôte commence par `api.`. |
+| `API_CADDY_DOMAINS` | `api.test.league-of-data-base.com` 🔁 | `api.league-of-data-base.com` 🔁 | ✅ | Label `caddy_1` ; chaque hôte commence par `api.`. |
 | `LODB_CANONICAL_HOST` | `test.league-of-data-base.com` | `league-of-data-base.com` | ✅ | Hôte canonique : cible des 301 (`www.`, `.fr`), origine des liens d'e-mail, des sitemaps et des `share_url` de `/v1`. |
 | `LODB_ALLOWED_HOSTS` | `test.league-of-data-base.com` | `league-of-data-base.com` | ✅ | Hôtes que le SSR accepte (virgules) ; les autres reçoivent un 400. |
 | `LODB_PUBLIC_API_ORIGIN` | `https://api.test.league-of-data-base.com` | `https://api.league-of-data-base.com` | ✅ | Origine de `/v1` documentée par `/developers`. |
