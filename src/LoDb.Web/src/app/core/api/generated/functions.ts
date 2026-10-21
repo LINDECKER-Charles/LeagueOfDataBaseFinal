@@ -193,6 +193,8 @@ export type { ReadAdminPrerenderPassProgress$Params as ReadAdminPrerenderPassPro
 export { readAdminPrerenderPassProgress as readAdminPrerenderPassProgress } from './fn/admin-prerender/read-admin-prerender-pass-progress';
 export type { ReadAdminPrerenderPassVersion$Params as ReadAdminPrerenderPassVersion$Params } from './fn/admin-prerender/read-admin-prerender-pass-version';
 export { readAdminPrerenderPassVersion as readAdminPrerenderPassVersion } from './fn/admin-prerender/read-admin-prerender-pass-version';
+export type { ReadAdminPrerenderDemand$Params as ReadAdminPrerenderDemand$Params } from './fn/admin-prerender/read-admin-prerender-demand';
+export { readAdminPrerenderDemand as readAdminPrerenderDemand } from './fn/admin-prerender/read-admin-prerender-demand';
 export type { ReadAdminScalewayBill$Params as ReadAdminScalewayBill$Params } from './fn/admin-scaleway/read-admin-scaleway-bill';
 export { readAdminScalewayBill as readAdminScalewayBill } from './fn/admin-scaleway/read-admin-scaleway-bill';
 export type { PublishClientPolicy$Params as PublishClientPolicy$Params } from './fn/admin-client-policy/publish-client-policy';

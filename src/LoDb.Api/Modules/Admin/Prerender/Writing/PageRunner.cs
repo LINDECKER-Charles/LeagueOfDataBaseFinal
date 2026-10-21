@@ -1,4 +1,5 @@
 using LoDb.Api.Modules.Admin.Prerender.Builds;
+using LoDb.Api.Modules.Admin.Prerender.Demand.Sharing;
 using LoDb.Api.Modules.Admin.Prerender.Pace.Windows;
 using LoDb.Api.Modules.Admin.Prerender.Rendering;
 using LoDb.Api.Modules.Admin.Prerender.Telemetry;
@@ -28,9 +29,14 @@ namespace LoDb.Api.Modules.Admin.Prerender.Writing;
 /// again every 10 s, uncounted. An answer that refuses the pass itself ends the page
 /// unfinished, and the pass pauses.
 /// </para>
+/// <para>
+/// Each render holds one of the SSR's slots, which the automatic queue shares
+/// (<see cref="RenderSlots"/>), from its turn at the pacer to its answer.
+/// </para>
 /// </remarks>
 internal sealed class PageRunner(
     SsrClient ssr,
+    RenderSlots slots,
     RenderPacer pacer,
     SsrOutage outage,
     BuildCopier builds,
@@ -99,19 +105,24 @@ internal sealed class PageRunner(
 
     private async Task<Attempt> TryOnceAsync(PageJob job, CancellationToken cancellationToken)
     {
-        if (!await pacer.WaitTurnAsync(cancellationToken))
-        {
-            return Attempt.Held;
-        }
-
         RenderedPage page;
-        try
+        using (await slots.EnterAsync(RenderClaimant.Pass, cancellationToken))
         {
-            page = await TimedRenderAsync(job, cancellationToken);
-        }
-        catch (SsrUnavailableException exception)
-        {
-            return exception.IsUnreachable ? Attempt.Outage : Attempt.Failed(exception.Message);
+            if (!await pacer.WaitTurnAsync(cancellationToken))
+            {
+                return Attempt.Held;
+            }
+
+            try
+            {
+                page = await TimedRenderAsync(job, cancellationToken);
+            }
+            catch (SsrUnavailableException exception)
+            {
+                return exception.IsUnreachable
+                    ? Attempt.Outage
+                    : Attempt.Failed(exception.Message);
+            }
         }
 
         return RenderVerdicts.Of(page) switch

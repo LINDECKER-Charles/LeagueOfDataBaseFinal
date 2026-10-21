@@ -1,6 +1,7 @@
 using System.Net;
 using LoDb.Api.Modules.Admin.Prerender.Builds;
 using LoDb.Api.Modules.Admin.Prerender.Coverage;
+using LoDb.Api.Modules.Admin.Prerender.Demand;
 using LoDb.Api.Modules.Admin.Prerender.Options;
 using LoDb.Api.Modules.Admin.Prerender.Pace;
 using LoDb.Api.Modules.Admin.Prerender.Pages;
@@ -20,8 +21,8 @@ namespace LoDb.Api.Modules.Admin.Prerender;
 
 /// <summary>
 /// Registrations of the pre-rendering of the catalogue (ADR 0011): its settings, the page
-/// store, the <c>prerender-ssr</c> client, the pass's services, the regulator of its pace
-/// and its share of each promotion.
+/// store, the <c>prerender-ssr</c> client, the pass's services, the regulator of its pace,
+/// its share of each promotion and the automatic queue of the refused pages.
 /// </summary>
 /// <remarks>
 /// Neither I/O nor throw, with an empty configuration as well (the OpenAPI generation builds
@@ -57,6 +58,7 @@ internal static class PrerenderRegistration
         AddPromotion(services);
         AddSsrClient(services);
         services.AddPrerenderPace();
+        services.AddPrerenderDemand(configuration);
         return services;
     }
 

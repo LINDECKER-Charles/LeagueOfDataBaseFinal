@@ -14,6 +14,7 @@ import { cancelAdminPrerenderPass } from '../fn/admin-prerender/cancel-admin-pre
 import { CancelAdminPrerenderPass$Params } from '../fn/admin-prerender/cancel-admin-prerender-pass';
 import { pauseAdminPrerenderPass } from '../fn/admin-prerender/pause-admin-prerender-pass';
 import { PauseAdminPrerenderPass$Params } from '../fn/admin-prerender/pause-admin-prerender-pass';
+import { PrerenderDemandReport } from '../models/prerender-demand-report';
 import { PrerenderPassProgress } from '../models/prerender-pass-progress';
 import { PrerenderPassStarted } from '../models/prerender-pass-started';
 import { PrerenderPatchesReport } from '../models/prerender-patches-report';
@@ -21,6 +22,8 @@ import { PrerenderReport } from '../models/prerender-report';
 import { PrerenderVersionUnits } from '../models/prerender-version-units';
 import { readAdminPrerender } from '../fn/admin-prerender/read-admin-prerender';
 import { ReadAdminPrerender$Params } from '../fn/admin-prerender/read-admin-prerender';
+import { readAdminPrerenderDemand } from '../fn/admin-prerender/read-admin-prerender-demand';
+import { ReadAdminPrerenderDemand$Params } from '../fn/admin-prerender/read-admin-prerender-demand';
 import { readAdminPrerenderPassProgress } from '../fn/admin-prerender/read-admin-prerender-pass-progress';
 import { ReadAdminPrerenderPassProgress$Params } from '../fn/admin-prerender/read-admin-prerender-pass-progress';
 import { readAdminPrerenderPassVersion } from '../fn/admin-prerender/read-admin-prerender-pass-version';
@@ -315,6 +318,41 @@ export class AdminPrerenderService extends BaseService {
     const resp = this.readAdminPrerenderPassVersion$Response(params, context);
     return resp.pipe(
       map((r: StrictHttpResponse<PrerenderVersionUnits>): PrerenderVersionUnits => r.body)
+    );
+  }
+
+  /** Path part for operation `readAdminPrerenderDemand()` */
+  static readonly ReadAdminPrerenderDemandPath = '/api/admin/prerender/demand';
+
+  /**
+   * The automatic queue of the pages the SSR refused to visitors.
+   *
+   *
+   *
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `readAdminPrerenderDemand()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  readAdminPrerenderDemand$Response(params?: ReadAdminPrerenderDemand$Params, context?: HttpContext): Observable<StrictHttpResponse<PrerenderDemandReport>> {
+    const obs = readAdminPrerenderDemand(this.http, this.rootUrl, params, context);
+    return obs;
+  }
+
+  /**
+   * The automatic queue of the pages the SSR refused to visitors.
+   *
+   *
+   *
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `readAdminPrerenderDemand$Response()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  readAdminPrerenderDemand(params?: ReadAdminPrerenderDemand$Params, context?: HttpContext): Observable<PrerenderDemandReport> {
+    const resp = this.readAdminPrerenderDemand$Response(params, context);
+    return resp.pipe(
+      map((r: StrictHttpResponse<PrerenderDemandReport>): PrerenderDemandReport => r.body)
     );
   }
 

@@ -1,0 +1,122 @@
+using LoDb.Api.Modules.Admin.Prerender.Demand.Queue;
+using LoDb.Api.Modules.Admin.Prerender.Demand.Telemetry;
+using LoDb.Api.Modules.Admin.Prerender.Options;
+using LoDb.Infrastructure.Locks;
+using Microsoft.Extensions.Options;
+
+namespace LoDb.Api.Modules.Admin.Prerender.Demand.Drain;
+
+/// <summary>
+/// The automatic queue at work: batch after batch of its most requested pending pages, written
+/// into the served epoch, until none is left or a page stops it; one summary line per batch.
+/// </summary>
+/// <remarks>
+/// <para>
+/// One instance drains at a time, under an advisory lock of its own: a manual pass runs beside
+/// it, under its own, and both share the pass SSR's renders (<see cref="Sharing.RenderSlots"/>)
+/// and its pace. Dormant while the queue is switched off or the store is not configured
+/// (<see cref="DemandActivation"/>).
+/// </para>
+/// <para>
+/// At its first drain, and whenever the served epoch changed, the pages a stopped worker left
+/// rendering and those ended in another epoch go back to pending.
+/// </para>
+/// </remarks>
+internal sealed class DemandDrain(
+    DemandActivation activation,
+    IDistributedLock locks,
+    DemandQueue queue,
+    DemandPageRunner pages,
+    DemandMetrics metrics,
+    IOptions<PrerenderOptions> options,
+    TimeProvider clock,
+    ILogger<DemandDrain> logger)
+{
+    /// <summary>The advisory lock of whoever drains the queue.</summary>
+    public const string LockName = "prerender:demand";
+
+    /// <summary>Pages a batch takes: some minutes of renders at the pass's floor.</summary>
+    public const int BatchSize = 20;
+
+    private const string NoReason = "none.";
+
+    private int? _revivedEpoch;
+
+    /// <summary>Drains the queue, unless it is off or another instance drains it.</summary>
+    public async Task RunAsync(CancellationToken cancellationToken)
+    {
+        if (!activation.IsActive)
+        {
+            return;
+        }
+
+        await using var held = await locks.TryAcquireAsync(LockName, cancellationToken);
+        if (held is null)
+        {
+            return;
+        }
+
+        var epoch = options.Value.ServedEpoch;
+        if (_revivedEpoch != epoch)
+        {
+            await queue.ReviveAsync(epoch, cancellationToken);
+            _revivedEpoch = epoch;
+        }
+
+        await DrainAsync(epoch, cancellationToken);
+    }
+
+    private async Task DrainAsync(int epoch, CancellationToken cancellationToken)
+    {
+        while (await queue.NextAsync(BatchSize, cancellationToken) is { Count: > 0 } rows)
+        {
+            var started = clock.GetTimestamp();
+            var tally = await RunBatchAsync(rows, epoch, cancellationToken);
+            Log(tally, epoch, (long)clock.GetElapsedTime(started).TotalMilliseconds);
+            metrics.Pending(await queue.PendingAsync(cancellationToken));
+            if (tally.StoppedBy is { } reason)
+            {
+                DemandLog.Stopped(logger, reason);
+                return;
+            }
+        }
+
+        metrics.Pending(await queue.PendingAsync(cancellationToken));
+    }
+
+    // As many pages at once as the pass's SSR admits: the slots hold the queue to its share.
+    private async Task<DemandTally> RunBatchAsync(
+        IReadOnlyList<DemandRow> rows,
+        int epoch,
+        CancellationToken cancellationToken)
+    {
+        var tally = new DemandTally();
+        var parallel = new ParallelOptions
+        {
+            MaxDegreeOfParallelism = options.Value.MaxInFlight,
+            CancellationToken = cancellationToken,
+        };
+        await Parallel.ForEachAsync(rows, parallel, async (row, token) =>
+        {
+            if (!tally.IsStopped && await pages.RunAsync(row, epoch, token) is { } end)
+            {
+                tally.Add(end);
+            }
+        });
+        return tally;
+    }
+
+    private void Log(DemandTally tally, int epoch, long durationMs) =>
+        DemandLog.Drained(
+            logger,
+            tally.Pages,
+            epoch,
+            tally.Written,
+            tally.Skipped,
+            tally.Failed,
+            tally.Deferred,
+            tally.Bytes,
+            tally.Refusals,
+            durationMs,
+            tally.LastReason ?? NoReason);
+}
