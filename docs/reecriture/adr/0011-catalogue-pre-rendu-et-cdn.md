@@ -127,7 +127,8 @@ visiteur ─► Cloudflare ── en cache ────────────�
 - Pour une page épinglée sans query, nginx cherche `pages/{epoch servie}{chemin}` dans le
   stockage, derrière `lodb_archive`, devenu un **cache chaud** (gardé à la 1ʳᵉ demande,
   20 Go, 90 jours d'inactivité). Une page absente répond `404 NoSuchKey` à une lecture
-  anonyme depuis l'adresse du VPS (la politique l'y autorise, S3 sait donc dire l'absence) ;
+  anonyme depuis l'adresse du VPS (Scaleway le dit à une lecture que la politique admet, sans
+  `s3:ListBucket`, là où AWS répondrait 403 ; mesuré le 21 octobre 2026) ;
   la `403` ne vient que d'une politique qui refuse ou d'une adresse changée. nginx traite les
   deux, comme une 429, une 5xx ou un délai dépassé, par le chemin actuel vers le SSR, à
   l'identique.

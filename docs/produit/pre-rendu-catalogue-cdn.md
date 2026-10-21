@@ -259,11 +259,10 @@ révise renvoient vers elle par un amendement daté :
   seulement** (`curl -4`, ou depuis un conteneur du réseau de la pile) : l'hôte joint aussi
   Scaleway en IPv6, d'où la politique répondrait 403 alors que les conteneurs, en IPv4,
   passent. Elle doit montrer, depuis le VPS, une 200 avec les en-têtes, les métadonnées et
-  le corps gzip intacts (une clé absente y répond `404 NoSuchKey`, pas 403 : la politique
-  laisse passer l'adresse du VPS, S3 dit donc l'absence). L'opérateur vérifie ensuite la 403
-  par un `GET` de la même clé depuis son poste (la commande est dans
-  `tools/prerender/README.md`). Le lot 3 ne part pas
-  en prod sans elles.
+  le corps gzip intacts (une clé absente y répond `404 NoSuchKey`, pas 403 : Scaleway le
+  dit à une lecture que la politique admet, sans `s3:ListBucket`, mesuré le 21 octobre 2026).
+  L'opérateur vérifie ensuite la 403 par un `GET` de la même clé depuis son poste (la
+  commande est dans `tools/prerender/README.md`). Le lot 3 ne part pas en prod sans elles.
 - Les variables, validées au démarrage :
   - API (options `LoDb`) : `LoDb__Prerender__Endpoint` (`https://s3.fr-par.scw.cloud`),
     `__Region`, `__Bucket`, `__AccessKey` et `__SecretKey` (secrets), `__PublicHost`
