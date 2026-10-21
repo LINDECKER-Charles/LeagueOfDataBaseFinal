@@ -22,8 +22,10 @@ internal sealed class RendererAddresses(
     public static readonly TimeSpan Refresh = TimeSpan.FromSeconds(30);
 
     private readonly SemaphoreSlim _resolving = new(1, 1);
-    private IReadOnlyList<IPAddress> _addresses = [];
-    private long? _resolvedAt;
+
+    // The addresses and when they were resolved, swapped as one reference: every page in
+    // flight reads it outside the semaphore, where a long? would tear.
+    private Resolution? _resolution;
 
     /// <summary>The renderers' addresses now; empty when the pass asks the name itself.</summary>
     public async Task<IReadOnlyList<IPAddress>> CurrentAsync(CancellationToken cancellationToken)
@@ -33,20 +35,15 @@ internal sealed class RendererAddresses(
             return [];
         }
 
-        if (IsFresh())
+        if (FreshOrNull() is { } fresh)
         {
-            return Volatile.Read(ref _addresses);
+            return fresh.Addresses;
         }
 
         await _resolving.WaitAsync(cancellationToken);
         try
         {
-            if (!IsFresh())
-            {
-                await ResolveAsync(host, cancellationToken);
-            }
-
-            return _addresses;
+            return (FreshOrNull() ?? await ResolveAsync(host, cancellationToken)).Addresses;
         }
         finally
         {
@@ -54,21 +51,24 @@ internal sealed class RendererAddresses(
         }
     }
 
-    private async Task ResolveAsync(string host, CancellationToken cancellationToken)
-    {
-        var resolved = await dns.ResolveAsync(host, cancellationToken);
-        if (resolved.Count > 0)
-        {
-            Volatile.Write(ref _addresses, resolved);
-        }
-
-        _resolvedAt = clock.GetTimestamp();
-    }
-
     public void Dispose() => _resolving.Dispose();
 
-    private bool IsFresh() =>
-        _resolvedAt is { } at && clock.GetElapsedTime(at) < Refresh;
+    private async Task<Resolution> ResolveAsync(string host, CancellationToken cancellationToken)
+    {
+        var resolved = await dns.ResolveAsync(host, cancellationToken);
+        var known = Volatile.Read(ref _resolution)?.Addresses ?? [];
+        var resolution = new Resolution(
+            resolved.Count > 0 ? resolved : known,
+            clock.GetTimestamp());
+        Volatile.Write(ref _resolution, resolution);
+        return resolution;
+    }
+
+    private Resolution? FreshOrNull() =>
+        Volatile.Read(ref _resolution) is { } resolution
+            && clock.GetElapsedTime(resolution.At) < Refresh
+            ? resolution
+            : null;
 
     // An address already needs no resolution, nor any spread.
     private static string? HostOf(PrerenderOptions options) =>
@@ -76,4 +76,6 @@ internal sealed class RendererAddresses(
             && url.HostNameType == UriHostNameType.Dns
             ? url.Host
             : null;
+
+    private sealed record Resolution(IReadOnlyList<IPAddress> Addresses, long At);
 }
