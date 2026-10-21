@@ -1151,7 +1151,7 @@ moniteur, un pli « Ordre de passage » (bouton) trie plutôt par `rank`.
 
 | Code | Mode | État | Rendu (jetons) | Forme (sans couleur) |
 |---|---|---|---|---|
-| `.` | pass | à venir | contour `--color-track`, fond transparent | carré vide |
+| `.` | pass | à venir | contour `--color-text-dim` à 70 % (3:1 au moins sur le panneau, WCAG 1.4.11), fond `--color-track` | carré vide |
 | `r` | pass | en cours | contour `--color-hex-bright`, remplissage `--color-hex` de bas en haut à `cursor / pagesTotal` (pris dans `running`) ; halo qui pulse, coupé sous `prefers-reduced-motion` | carré à demi plein |
 | `c` | les deux | terminée (sans échec) | plein `--color-good` | carré plein |
 | `w` | les deux | terminée avec des pages en échec | plein `--color-good` + coin `--color-bad` (triangle en haut, côté fin de ligne) | carré plein à coin |
@@ -1159,7 +1159,7 @@ moniteur, un pli « Ordre de passage » (bouton) trie plutôt par `rank`.
 | `z` | pass | arrêtée (unité restée `running` en base dans une passe **en pause** : `PassControl` ne touche que la ligne de la passe, et `UnitRunner.StopAsync` rend `Interrupted` sans écrire l'unité) | comme `r`, remplissage à `cursor / pagesTotal`, **sans halo** et désaturé ; la reprise la reprend d'abord (`UnitQueue.NextAsync`) | carré à demi plein, sans halo |
 | `i` | pass | interrompue (unité « en cours » d'une passe annulée ou finie) | hachures `--color-gold` | carré rayé |
 | `p` | coverage | partielle (des pages, ou des types manquent) | moitié basse `--color-gold` | carré à moitié |
-| `-` | coverage | absente | contour `--color-track` | carré vide |
+| `-` | coverage | absente | contour `--color-text-dim` à 70 %, fond `--color-track` | carré vide |
 | `_` | pass | hors périmètre (la langue n'a pas d'unité pour cette version) | rien | espace |
 
 **Taille** : `clamp(9px, (100cqi − 5.5rem) / 21 − 2px, 16px)` (requête de conteneur sur le cadre
