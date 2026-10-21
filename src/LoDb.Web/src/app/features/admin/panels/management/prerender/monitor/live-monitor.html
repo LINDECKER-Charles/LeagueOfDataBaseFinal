@@ -36,7 +36,7 @@
 
   @if (stall(); as stall) {
     @if (stall.kind === 'stalled') {
-      <div class="monitor-band monitor-band--gold" role="status" data-stall>
+      <div class="monitor-band monitor-band--gold" data-stall>
         <p class="m-0">
           <b class="font-normal text-gold-bright">{{ stallTitle() }}</b> ·
           {{ 'admin.prerender.live.stall.' + stall.cause | adminText }}
@@ -55,6 +55,8 @@
       (paused)="pause()"
     />
   }
+
+  <lodb-monitor-status [progress]="state()?.progress" [stall]="stall()" [failing]="failing()" />
 
   <lodb-progress-block [state]="shown()" [serverNow]="serverNow()" />
 

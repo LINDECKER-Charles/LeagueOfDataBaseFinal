@@ -32,6 +32,7 @@ import { UnitMatrix } from '../matrix/grid/unit-matrix';
 import { VersionUnitsDialog } from '../matrix/units/version-units-dialog';
 import { prerenderTone } from '../prerender-tone';
 import { ActivityFeed } from './activity/activity-feed';
+import { MonitorStatus } from './alarm/monitor-status';
 import { FailuresList } from './activity/failures-list';
 import { type ConsequenceKind, consequencesOf } from './actions/consequences-of';
 import { injectPassActions } from './actions/inject-pass-actions';
@@ -92,6 +93,7 @@ function placeholderOf(pass: PrerenderPassView, generatedAt: string): PrerenderP
     FailingBand,
     FailuresList,
     LiveBadge,
+    MonitorStatus,
     NowBlock,
     PassActionsBar,
     ProgressBlock,

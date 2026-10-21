@@ -6,12 +6,12 @@
 </h3>
 
 @if (isWorkerOff()) {
-  <p class="now-band now-band--bad" role="status" data-worker-off>
+  <p class="now-band now-band--bad" data-worker-off>
     {{ 'admin.prerender.live.now.worker_off' | adminText }}
   </p>
 }
 @if (ssrDown(); as line) {
-  <p class="now-band now-band--gold" role="status" data-ssr-down>{{ line }}</p>
+  <p class="now-band now-band--gold" data-ssr-down>{{ line }}</p>
 }
 
 @for (now of units(); track now.unit.version + now.unit.locale) {

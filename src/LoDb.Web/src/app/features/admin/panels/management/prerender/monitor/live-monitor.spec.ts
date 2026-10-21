@@ -111,6 +111,17 @@ describe('LiveMonitor', () => {
     expect(monitor.text('[data-failing-line]')).toBe('admin.prerender.live.failing');
     expect(monitor.text('[data-failing-reason]')).toBe(REASON);
     expect(monitor.page.querySelector('[data-failing-pause]')).not.toBeNull();
+    // Said once by the status always there, not by the band inserted with its text.
+    expect(monitor.text('[data-monitor-status]')).toBe(`admin.prerender.live.failing ${REASON}`);
+    expect(monitor.page.querySelector('[data-failing][role]')).toBeNull();
+  });
+
+  it('keeps one status, always there and empty while all is well', async () => {
+    const monitor = MonitorHarness.open();
+    await monitor.read();
+
+    expect(monitor.page.querySelectorAll('[role="status"][data-monitor-status]')).toHaveLength(1);
+    expect(monitor.text('[data-monitor-status]')).toBe('');
   });
 
   it('keeps the figures through a 502, then says it is live again', async () => {

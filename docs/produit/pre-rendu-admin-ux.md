@@ -1328,6 +1328,15 @@ première cause vraie, dans cet ordre :
 | `remote` | `pulse.observedAt` nul ou vieux de plus de 2 min | « Aucune instance visible n'écrit la passe : une autre instance tient peut-être le verrou, ou l'API vient de redémarrer (la tâche reprend toutes les 30 s). » |
 | `unknown` | sinon | « Cause inconnue : voir le journal de l'API (`prerender.*`). » |
 
+**Ce qu'entend un lecteur d'écran** (`MonitorStatus`, `alarmOf`, F3) : les bandes (unité en
+échec en masse, blocage) et les bandes de « En ce moment » (tâche coupée, SSR injoignable)
+apparaissent dans un `@if` déjà remplies ; une région `role="status"` insérée avec son texte
+n'est souvent pas annoncée (NVDA, JAWS). Elles ne portent donc aucun rôle : un seul
+`<p role="status">` du moniteur, toujours présent, change de texte quand ce qui va mal change,
+dans l'ordre unité en échec, blocage, tâche coupée, SSR injoignable. `alarmOf` ne retient rien
+qui bouge chaque seconde (une durée, un compteur) : c'est dit une fois, quand ça commence. La
+bande de pause automatique garde `role="alert"`.
+
 **Démarrage** : passe ouverte il y a moins de 90 s sans unité commencée → ligne neutre « En
 attente de la tâche de fond : elle prend une passe à son prochain tour (30 s au plus). »
 (`Workers/Prerender/PrerenderWorker.cs`, `Period`), pas de bande de blocage.
@@ -2800,6 +2809,9 @@ prerender/                                                         [6 + dossiers
 │   │   ├── written-at.ts (+ spec)             writtenAtOf               45
 │   │   ├── failing-unit-of.ts (+ spec)        failingUnitOf             45
 │   │   └── failing-band.ts                    FailingBand               70
+│   ├── alarm/                                                         [3]
+│   │   ├── alarm-of.ts (+ spec)               alarmOf (+ Alarm)          40
+│   │   └── monitor-status.ts                  MonitorStatus             75
 │   ├── activity/                                                      [4]
 │   │   ├── activity-events.ts (+ spec)        activityEvents            150
 │   │   ├── activity-feed.ts                   ActivityFeed              140
