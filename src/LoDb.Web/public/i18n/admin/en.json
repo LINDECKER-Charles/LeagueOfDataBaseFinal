@@ -895,7 +895,8 @@
         "units": "Relaunch {units, plural, one {# unit} other {# units}} (≈ {pages, plural, one {# page} other {# pages}})",
         "units_gaps": "Relaunch {units, plural, one {# unit} other {# units}} and the gaps (≈ {pages, plural, one {# page} other {# pages}})",
         "later": "available once the pass ends"
-      }
+      },
+      "close": "Close"
     },
     "overview": {
       "cta": {

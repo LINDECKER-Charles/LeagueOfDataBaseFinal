@@ -1,0 +1,161 @@
+<div class="matrix-tools">
+  <div
+    class="matrix-views"
+    role="group"
+    [attr.aria-label]="'admin.prerender.common.matrix.views' | adminText"
+  >
+    <button
+      type="button"
+      class="matrix-tool"
+      [attr.aria-pressed]="view() === 'matrix'"
+      (click)="setView('matrix')"
+    >
+      {{ 'admin.prerender.common.matrix.view_matrix' | adminText }}
+    </button>
+    <button
+      type="button"
+      class="matrix-tool"
+      [attr.aria-pressed]="view() === 'table'"
+      (click)="setView('table')"
+    >
+      {{ 'admin.prerender.common.matrix.view_table' | adminText }}
+    </button>
+  </div>
+  @if (mode() === 'pass') {
+    <button
+      type="button"
+      class="matrix-tool"
+      [attr.aria-pressed]="byRank()"
+      (click)="byRank.set(!byRank())"
+    >
+      {{ 'admin.prerender.common.matrix.by_rank' | adminText }}
+    </button>
+  }
+  @if (view() === 'matrix' && !byRank()) {
+    <button type="button" class="matrix-tool" (click)="foldAll(true)">
+      {{ 'admin.prerender.common.matrix.expand_all' | adminText }}
+    </button>
+    <button type="button" class="matrix-tool" (click)="foldAll(false)">
+      {{ 'admin.prerender.common.matrix.collapse_all' | adminText }}
+    </button>
+  }
+  @if (view() === 'matrix') {
+    <ul class="matrix-legend" aria-hidden="true">
+      @for (entry of legend(); track entry.code) {
+        <li>
+          <span class="cell" [attr.data-c]="entry.code" [style.--fill]="entry.fill"></span>
+          {{ 'admin.prerender.common.cells.' + entry.state | adminText }}
+        </li>
+      }
+    </ul>
+  }
+</div>
+
+@if (view() === 'table') {
+  <lodb-matrix-table [seasons]="seasons()" [mode]="mode()" (opened)="opened.emit($event)" />
+} @else {
+  <div
+    #frame
+    class="matrix-frame"
+    role="group"
+    [attr.aria-label]="
+      'admin.prerender.common.matrix.label'
+        | adminText: { versions: versions().length, locales: locales().length }
+    "
+    (pointerover)="hover($event, frame)"
+    (pointerleave)="tooltip.set(null)"
+    (click)="click($event)"
+    (keydown.escape)="tooltip.set(null)"
+  >
+    <div class="matrix-line">
+      <span class="matrix-label"></span>
+      <span class="matrix-cells" aria-hidden="true">
+        @for (locale of locales(); track locale) {
+          <span class="matrix-head">{{ short(locale) }}</span>
+        }
+      </span>
+    </div>
+    @for (season of seasons(); track season.key) {
+      <p class="sr-only">{{ seasonSummary(season) }}</p>
+      <div class="matrix-line matrix-line--season">
+        @if (season.isRanked) {
+          <span class="matrix-label matrix-season">{{ seasonLabel(season) }}</span>
+        } @else {
+          <button
+            type="button"
+            class="matrix-label matrix-season"
+            [attr.aria-expanded]="season.isOpen"
+            (click)="fold(season)"
+          >
+            <span class="matrix-chevron" aria-hidden="true">{{ season.isOpen ? '▾' : '▸' }}</span>
+            {{ seasonLabel(season) }}
+          </button>
+        }
+        @if (!season.isOpen) {
+          <span class="matrix-cells" aria-hidden="true">
+            @for (column of season.columns; track $index) {
+              <span
+                class="cell cell--season"
+                [style.background]="heat(column.share)"
+                [attr.data-running]="column.isRunning || null"
+                [attr.data-failed]="column.hasFailed || null"
+              ></span>
+            }
+          </span>
+        }
+        <span class="matrix-counts" aria-hidden="true">{{ seasonCounts(season) }}</span>
+      </div>
+      @if (season.isOpen) {
+        @for (row of season.rows; track row.version.version) {
+          <div class="matrix-line">
+            @if (mode() === 'pass') {
+              <button
+                type="button"
+                class="matrix-label matrix-version"
+                [attr.aria-label]="versionLabel(row)"
+                (click)="opened.emit(row.version.version)"
+              >
+                {{ row.version.version }}
+              </button>
+            } @else {
+              <button
+                type="button"
+                class="matrix-label matrix-version"
+                [attr.aria-pressed]="selected().has(row.version.version)"
+                [attr.aria-label]="
+                  'admin.prerender.coverage.row_select'
+                    | adminText: { version: row.version.version }
+                "
+                (click)="toggled.emit(row.version.version)"
+              >
+                <span class="matrix-box" aria-hidden="true"></span>
+                {{ row.version.version }}
+              </button>
+            }
+            <span class="matrix-cells" aria-hidden="true">
+              @for (code of row.codes; track $index) {
+                <span
+                  class="cell"
+                  [attr.data-c]="code"
+                  [attr.data-v]="row.version.version"
+                  [attr.data-l]="locales()[$index]"
+                  [style.--fill]="fillOf(row, $index)"
+                ></span>
+              }
+            </span>
+          </div>
+        }
+      }
+    }
+    @if (tooltip(); as tip) {
+      <div
+        class="matrix-tooltip"
+        aria-hidden="true"
+        [style.inset-inline-start.px]="tip.start"
+        [style.inset-block-start.px]="tip.top"
+      >
+        {{ tip.text }}
+      </div>
+    }
+  </div>
+}

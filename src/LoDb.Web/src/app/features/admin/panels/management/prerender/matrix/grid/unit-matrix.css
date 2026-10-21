@@ -1,0 +1,280 @@
+/*
+ * The matrix of the pre-rendering (§ 4.4): a label column of 5.5rem, then one column per
+ * locale, cells of 9 to 16px sized on the frame (a container query), 2px apart. When even 9px
+ * do not fit, the frame scrolls, never the page. Tokens only; logical properties throughout.
+ */
+.matrix-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-block-end: 0.75rem;
+}
+
+.matrix-views {
+  display: inline-flex;
+  border: 1px solid color-mix(in srgb, var(--color-gold) 28%, transparent);
+}
+
+.matrix-tool {
+  padding-block: 0.3rem;
+  padding-inline: 0.65rem;
+  border: 1px solid transparent;
+  background: none;
+  color: var(--color-text-muted);
+  font-family: var(--font-beaufort);
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.matrix-tool:hover,
+.matrix-tool[aria-pressed='true'] {
+  color: var(--color-gold-bright);
+}
+
+.matrix-tool[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--color-gold) 10%, transparent);
+}
+
+.matrix-tool:focus-visible,
+.matrix-label:focus-visible {
+  outline: 1px solid var(--color-hex);
+  outline-offset: 1px;
+}
+
+.matrix-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.9rem;
+  margin: 0;
+  margin-inline-start: auto;
+  padding: 0;
+  list-style: none;
+  color: var(--color-text-dim);
+  font-size: 0.72rem;
+}
+
+.matrix-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.matrix-legend .cell {
+  --cell: 10px;
+
+  cursor: default;
+  animation: none;
+}
+
+.matrix-frame {
+  --cell: clamp(9px, (100cqi - 5.5rem) / 21 - 2px, 16px);
+
+  position: relative;
+  container-type: inline-size;
+  overflow-x: auto;
+  padding-block-end: 0.5rem;
+}
+
+.matrix-line {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-block-size: calc(var(--cell) + 2px);
+  inline-size: max-content;
+  min-inline-size: 100%;
+}
+
+.matrix-line--season {
+  margin-block-start: 0.35rem;
+}
+
+.matrix-label {
+  flex: none;
+  inline-size: 5.5rem;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  text-align: start;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+button.matrix-label {
+  cursor: pointer;
+}
+
+button.matrix-label:hover {
+  color: var(--color-hex);
+}
+
+.matrix-season {
+  color: var(--color-gold-bright);
+  font-family: var(--font-beaufort);
+  letter-spacing: 0.06em;
+}
+
+.matrix-chevron {
+  display: inline-block;
+  inline-size: 0.7rem;
+}
+
+.matrix-box {
+  display: inline-block;
+  inline-size: 0.6rem;
+  block-size: 0.6rem;
+  margin-inline-end: 0.25rem;
+  border: 1px solid var(--color-text-dim);
+  vertical-align: middle;
+}
+
+.matrix-version[aria-pressed='true'] .matrix-box {
+  border-color: var(--color-hex);
+  background: var(--color-hex);
+}
+
+.matrix-cells {
+  display: flex;
+  flex: none;
+  gap: 2px;
+}
+
+.matrix-head {
+  inline-size: var(--cell);
+  overflow: hidden;
+  color: var(--color-text-dim);
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  text-align: center;
+}
+
+.matrix-counts {
+  flex: none;
+  margin-inline-start: auto;
+  color: var(--color-text-dim);
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.cell {
+  position: relative;
+  flex: none;
+  inline-size: var(--cell);
+  block-size: var(--cell);
+  box-sizing: border-box;
+}
+
+.cell[data-c] {
+  cursor: pointer;
+}
+
+.cell[data-c='.'],
+.cell[data-c='-'] {
+  border: 1px solid var(--color-track);
+}
+
+.cell[data-c='c'],
+.cell[data-c='w'] {
+  background: var(--color-good);
+}
+
+/* Completed with failed pages: a red corner, at the end of the line. */
+.cell[data-c='w']::after {
+  content: '';
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  border-block-start: calc(var(--cell) / 2) solid var(--color-bad);
+  border-inline-start: calc(var(--cell) / 2) solid transparent;
+}
+
+.cell[data-c='f'] {
+  background: linear-gradient(
+    to top right,
+    var(--color-bad) 42%,
+    var(--color-hextech-black) 42% 58%,
+    var(--color-bad) 58%
+  );
+}
+
+/* Running, or stopped by a pause: filled from the bottom as far as the unit went. */
+.cell[data-c='r'],
+.cell[data-c='z'] {
+  border: 1px solid var(--color-hex-bright);
+  background: linear-gradient(
+    to top,
+    var(--color-hex) calc(var(--fill, 0) * 1%),
+    transparent calc(var(--fill, 0) * 1%)
+  );
+}
+
+.cell[data-c='r'] {
+  animation: cell-halo 1.6s ease-in-out infinite;
+}
+
+.cell[data-c='z'] {
+  filter: saturate(0.35);
+}
+
+.cell[data-c='i'] {
+  background: repeating-linear-gradient(45deg, var(--color-gold) 0 2px, transparent 2px 4px);
+}
+
+.cell[data-c='p'] {
+  background: linear-gradient(to top, var(--color-gold) 50%, transparent 50%);
+  border: 1px solid color-mix(in srgb, var(--color-gold) 50%, transparent);
+}
+
+/* A folded season: the share complete per locale, a dot when one runs or failed. */
+.cell--season[data-running]::before,
+.cell--season[data-failed]::after {
+  content: '';
+  position: absolute;
+  inset-block-end: 1px;
+  inline-size: 3px;
+  block-size: 3px;
+  border-radius: 50%;
+}
+
+.cell--season[data-running]::before {
+  inset-inline-start: 1px;
+  background: var(--color-hex);
+}
+
+.cell--season[data-failed]::after {
+  inset-inline-end: 1px;
+  background: var(--color-bad);
+}
+
+.matrix-tooltip {
+  position: absolute;
+  z-index: 5;
+  max-inline-size: 22rem;
+  margin-block-start: 0.25rem;
+  padding-block: 0.4rem;
+  padding-inline: 0.6rem;
+  border: 1px solid color-mix(in srgb, var(--color-gold) 28%, transparent);
+  background: var(--color-panel-raised);
+  color: var(--color-text);
+  font-size: 0.75rem;
+  white-space: pre-line;
+  pointer-events: none;
+}
+
+@keyframes cell-halo {
+  50% {
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-hex) 35%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cell[data-c='r'] {
+    animation: none;
+  }
+}

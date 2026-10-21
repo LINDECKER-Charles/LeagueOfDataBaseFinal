@@ -895,7 +895,8 @@
         "units": "Relancer {units, plural, one {# unité} other {# unités}} (≈ {pages, plural, one {# page} other {# pages}})",
         "units_gaps": "Relancer {units, plural, one {# unité} other {# unités}} et les manques (≈ {pages, plural, one {# page} other {# pages}})",
         "later": "disponible quand la passe sera finie"
-      }
+      },
+      "close": "Fermer"
     },
     "overview": {
       "cta": {
