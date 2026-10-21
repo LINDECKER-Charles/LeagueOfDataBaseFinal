@@ -754,9 +754,13 @@ sans passe ni clic.
   chaque page : version encore tenue pour la dernière par un cache (attente), catalogue non
   stocké (attente), page écrite entre-temps par une passe (`skipped`). Un refus du SSR de la
   passe est attendu selon son `Retry-After` ; un échec qui peut passer compte un essai et
-  laisse la page pour un lot ultérieur (5 min au moins), en échec définitif au 3ᵉ ; un SSR
-  injoignable ou un réglage qui refuserait toutes les pages arrête le lot jusqu'au tour
-  suivant. Une ligne de synthèse par lot (`prerender.demand.drained`), jamais par page.
+  laisse la page pour un lot ultérieur (5 min au moins), en échec définitif au 3ᵉ. Un `200`
+  sans la marque `archived` compte aussi un essai, au lieu d'être ignoré comme dans une
+  passe : une page de la file ouvre souvent son (version, langue), et un rendu sur un
+  catalogue encore froid revient d'une classe plus courte (relevé sur la pile locale, les
+  listes d'un patch tout juste ingéré). Une redirection ou une `404` sont ignorées pour de
+  bon. Un SSR injoignable ou un réglage qui refuserait toutes les pages arrête le lot jusqu'au
+  tour suivant ; un tour en erreur remet au suivant les pages qu'il laissait en rendu. Une ligne de synthèse par lot (`prerender.demand.drained`), jamais par page.
 - **Partage avec une passe.** Une seule enveloppe pour le SSR de la passe : le rythme de
   `RenderPacer` (chaque rendu, de la file ou de la passe, y prend son tour) et ses places en
   vol, `MaxInFlight`, la borne de la voie du SSR (`RenderSlots`). Pendant qu'une passe rend
@@ -766,7 +770,9 @@ sans passe ni clic.
   l'ordre des demandes : ni l'une ni l'autre n'attend indéfiniment.
 - **Bornes.** Toutes les heures (`prerender.demand.prune`) : les pages qu'aucun visiteur ne
   s'est vu refuser depuis 30 jours partent, quel que soit leur état (sauf en rendu), puis les
-  pages `pending` les moins demandées au-delà de 100 000. Index partiels : `pending` par
+  pages `pending` les moins demandées au-delà de 100 000 ; une page en échec définitif
+  depuis un jour repasse `pending` (toujours refusée aux visiteurs, elle ne serait jamais
+  élaguée). Index partiels : `pending` par
   demande décroissante (lots et top 10 du pupitre), date d'écriture (dernière heure, dernier
   jour).
 - **Epoch.** La file écrit l'epoch servie (`LoDb__Prerender__ServedEpoch`). Une page `done`,
