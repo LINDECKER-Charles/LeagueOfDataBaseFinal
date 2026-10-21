@@ -47,14 +47,12 @@ export interface LaunchEstimate {
 const DEFAULT_BYTES_PER_PAGE = 39_000;
 const BYTES_PER_GB = 1e9;
 const SECONDS_PER_MINUTE = 60;
-// A cell whose row may still have no page stored: absent, or partial or failed at 0 pages.
-const ABSENT = '-';
-const EMPTY_WHEN_UNSTORED = 'pf';
 
 interface Tally {
   units: number;
   rerendered: number;
   pages: number;
+  /** Pages the epoch does not store yet, already weighed by the share of their types. */
   addedPages: number;
 }
 
@@ -75,13 +73,19 @@ function isHeldIn(draft: LaunchDraft, row: PrerenderPatchRow, at: number): boole
   return draft.epochKind !== 'new' && mask !== undefined && isHeld(mask, draft.pageTypes);
 }
 
-// Whether rendering the (row, locale at `at`) adds pages the epoch does not store yet.
-function isUnstored(draft: LaunchDraft, row: PrerenderPatchRow, at: number): boolean {
-  const cell = row.cells[at];
-  if (draft.epochKind === 'new' || cell === undefined || cell === ABSENT) {
-    return true;
+// The share of a version's pages that rendering a (version, locale) adds to the epoch: the
+// types chosen its cell does not hold yet, by its `mask`. A cell is read alone: a failed or
+// partial one adds its missing types even when other locales of the patch store pages.
+function addedShare(
+  draft: LaunchDraft,
+  mask: string | undefined,
+  basis: PrerenderEstimateBasis,
+): number {
+  if (draft.epochKind === 'new' || mask === undefined) {
+    return shareOf(draft.pageTypes, basis);
   }
-  return EMPTY_WHEN_UNSTORED.includes(cell) && row.pages === 0;
+  const missing = draft.pageTypes.filter((type) => !isHeld(mask, [type]));
+  return missing.length === 0 ? 0 : shareOf(missing, basis);
 }
 
 function tallyRow(draft: LaunchDraft, row: PrerenderPatchRow, report: PrerenderPatchesReport) {
@@ -97,7 +101,7 @@ function tallyRow(draft: LaunchDraft, row: PrerenderPatchRow, report: PrerenderP
     tally.units += 1;
     tally.rerendered += isHeldAlready ? 1 : 0;
     tally.pages += perUnit;
-    tally.addedPages += isUnstored(draft, row, at) ? perUnit : 0;
+    tally.addedPages += perUnit * addedShare(draft, row.types[at], report.estimates);
   }
   return tally;
 }
@@ -140,7 +144,8 @@ function guessesOf(rows: readonly PrerenderPatchRow[], report: PrerenderPatchesR
  * units (a locale already holding every type chosen is left out when `skipComplete` asks),
  * pages (each unit at its patch's pages a locale, times the share of the types), volume,
  * duration at the pace measured but never above the configured ceiling, and the cost of the
- * units with no page stored yet: rendering a stored unit again replaces its pages.
+ * pages not stored yet, cell by cell, by the types each holds: rendering a stored page again
+ * replaces it.
  */
 export function launchEstimate(draft: LaunchDraft, report: PrerenderPatchesReport): LaunchEstimate {
   const rows = report.patches.filter((row) => draft.selection.selected.has(row.version));
@@ -149,7 +154,7 @@ export function launchEstimate(draft: LaunchDraft, report: PrerenderPatchesRepor
   const tally = tallyOf(draft, rows, report);
   const bytesPerPage = estimates.bytesPerPage ?? DEFAULT_BYTES_PER_PAGE;
   const pages = Math.round(tally.pages * share);
-  const addedBytes = Math.round(tally.addedPages * share) * bytesPerPage;
+  const addedBytes = Math.round(tally.addedPages) * bytesPerPage;
   const pace = paceOf(estimates);
   const guesses = guessesOf(rows, report);
   return {

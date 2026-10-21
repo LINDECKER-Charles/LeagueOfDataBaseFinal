@@ -6,6 +6,7 @@ import { launchEstimate } from './launch-estimate';
 
 const PATCHES = prerenderPatches();
 const ALL_TYPES = ['champions', 'items', 'runes', 'summoners'];
+const SHARES = PATCHES.estimates.typeShares ?? { champions: 0, items: 0, runes: 0, summoners: 0 };
 // 16.18.1 in the fixture: ar, cs, de, el and es hold every type; en completed with failed
 // pages, holding all but the items (mask d); fr partial, holding the items only (mask 2); hu
 // failed for good; the 13 others absent.
@@ -74,19 +75,21 @@ describe('launchEstimate', () => {
     });
   });
 
-  it('costs only the units with no page stored yet in the served epoch', () => {
-    // 16.18.1 stores pages: only its 13 absent locales add some; f and p keep theirs.
+  it('costs only the pages not stored yet, cell by cell, by the types each holds', () => {
+    const { champions, items, runes, summoners } = SHARES;
+    // ar, cs, de, el, es hold all four: nothing added. en holds all but the items, fr the
+    // items only: each adds the others; hu failed and the 13 absent hold none: whole.
+    const added = Math.round(1_140 * (items + (champions + runes + summoners) + 1 + 13));
     const served = launchEstimate(draft({ skipComplete: false }), PATCHES);
-    expect(served.addedBytes).toBe(13 * 1_140 * 39_000);
-    expect(served.addedCost).toBeCloseTo(((13 * 1_140 * 39_000) / 1e9) * 0.00803);
+    expect(served.addedBytes).toBe(added * 39_000);
+    expect(served.addedCost).toBeCloseTo(((added * 39_000) / 1e9) * 0.00803);
+  });
 
-    // A partial or failed cell of a patch with nothing stored adds its pages too.
-    const empty = prerenderPatches({
-      patches: [{ ...PATCHES.patches[1], pages: 0 }],
-    });
-    expect(launchEstimate(draft({ skipComplete: false }), empty).addedBytes).toBe(
-      15 * 1_140 * 39_000,
-    );
+  it('adds the pages of a failed locale, though its patch stores others', () => {
+    // 16.18.1 stores 6 140 pages, none of them in hu, failed for good.
+    const failed = launchEstimate(draft({ skipComplete: false, locales: ['hu'] }), PATCHES);
+
+    expect(failed.addedBytes).toBe(1_140 * 39_000);
   });
 
   it('counts every unit of a new epoch as new, none held', () => {
