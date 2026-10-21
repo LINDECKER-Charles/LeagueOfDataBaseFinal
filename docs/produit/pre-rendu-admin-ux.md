@@ -1152,7 +1152,7 @@ entrée `gaps` (indices de coupure) sans changer son rendu sans coupure. Décora
 - au rythme moyen : `pass.estimatedEndAt` du serveur ;
 - au rythme actuel : `serverNow + pagesLeft / rythmeRécent` ;
 - affichage : la date absolue (`stamp(…, 'minute')`, en UTC comme tout l'admin,
-  `admin/format/stamp.ts`, « UTC » en `title`), « dans 2 j 3 h » (`duration`), et une seconde
+  `admin/format/stamp.ts`, sous le libellé « Fin estimée (UTC) »), « dans 2 j 3 h » (`duration`), et une seconde
   ligne « au rythme actuel : dans 1 j 22 h » avec **hystérésis** : elle apparaît quand les deux
   estimations diffèrent de plus de 15 %, disparaît quand l'écart retombe sous 5 %, et garde son
   état entre les deux (`etaOf` reçoit l'état précédent ; il est tenu par `MonitorState`) ;
@@ -3146,8 +3146,8 @@ de lot suit la même règle, et chaque spécification de composant vérifie au m
 | `units.columns.progress` | Avancement | Progress |
 | `units.columns.pages` | Écrites · sautées · en échec | Written · skipped · failed |
 | `units.columns.volume` | Volume | Volume |
-| `units.columns.started` | Début | Started |
-| `units.columns.ended` | Dernier changement | Last change |
+| `units.columns.started` | Début (UTC) | Started (UTC) |
+| `units.columns.ended` | Dernier changement (UTC) | Last change (UTC) |
 | `units.columns.failure` | Raison | Reason |
 | `copy.copy` | Copier | Copy |
 | `copy.copied` | Copié | Copied |
@@ -3178,7 +3178,7 @@ de lot suit la même règle, et chaque spécification de composant vérifie au m
 | `bands.nearly_cta` | Compléter l'epoch {epoch} | Complete epoch {epoch} |
 | `idle.title` | Aucune passe en cours | No pass running |
 | `idle.lede` | Le stockage ne reçoit rien. Les patchs promus {promotions, select, on {ouvrent une passe d'eux-mêmes} other {n'ouvrent pas de passe d'eux-mêmes}}. | The store receives nothing. Promoted patches {promotions, select, on {open a pass by themselves} other {do not open a pass by themselves}}. |
-| `idle.last` | Dernière passe : n°{id}, {state} le {date} · {units, plural, one {# unité} other {# unités}} · {pages, plural, one {# page} other {# pages}} | Last pass: #{id}, {state} on {date} · {units, plural, one {# unit} other {# units}} · {pages, plural, one {# page} other {# pages}} |
+| `idle.last` | Dernière passe : n°{id}, {state} le {date} UTC · {units, plural, one {# unité} other {# unités}} · {pages, plural, one {# page} other {# pages}} | Last pass: #{id}, {state} on {date} UTC · {units, plural, one {# unit} other {# units}} · {pages, plural, one {# page} other {# pages}} |
 | `idle.detail` | Détail | Detail |
 | `idle.never` | Aucune passe lancée jusqu'ici. | No pass launched yet. |
 | `idle.gaps` | L'epoch servie couvre {share} des anciens patchs : {versions, plural, one {# patch a des manques} other {# patchs ont des manques}}. | The served epoch covers {share} of the older patches: {versions, plural, one {# patch has gaps} other {# patches have gaps}}. |
@@ -3211,8 +3211,8 @@ de lot suit la même règle, et chaque spécification de composant vérifie au m
 | Clé | fr | en |
 |---|---|---|
 | `title` | Passe n°{id} · epoch {epoch} | Pass #{id} · epoch {epoch} |
-| `origin` | lancée le {date} par {author} | launched on {date} by {author} |
-| `origin_auto` | ouverte le {date} par une promotion ou la ligne de commande | opened on {date} by a promotion or the command line |
+| `origin` | lancée le {date} UTC par {author} | launched on {date} UTC by {author} |
+| `origin_auto` | ouverte le {date} UTC par une promotion ou la ligne de commande | opened on {date} UTC by a promotion or the command line |
 | `paused_since` | en pause depuis {duration} | paused for {duration} |
 | `progress_label` | {share} : {written, plural, one {# page} other {# pages}} écrites, {skipped} sautées, {failed} en échec, {left} restantes | {share}: {written, plural, one {# page} other {# pages}} written, {skipped} skipped, {failed} failed, {left} left |
 | `pages_estimated` | {done} / ≈ {total, plural, one {# page} other {# pages}} | {done} / ≈ {total, plural, one {# page} other {# pages}} |
@@ -3230,7 +3230,7 @@ de lot suit la même règle, et chaque spécification de composant vérifie au m
 | `pace.average` | moyenne {pace, plural, one {# page} other {# pages}}/min | average {pace, plural, one {# page} other {# pages}}/min |
 | `pace.measuring` | mesure en cours… | measuring… |
 | `pace.stopped` | à l'arrêt | stopped |
-| `eta.label` | Fin estimée | Estimated end |
+| `eta.label` | Fin estimée (UTC) | Estimated end (UTC) |
 | `eta.average` | {in} (rythme moyen) | {in} (average pace) |
 | `eta.now` | au rythme actuel : {in} | at the current pace: {in} |
 | `eta.unknown` | inconnue tant que le rythme n'est pas mesuré | unknown until the pace is measured |
@@ -3249,7 +3249,7 @@ de lot suit la même règle, et chaque spécification de composant vérifie au m
 | `now.resumes_with` | Reprendra par | Resumes with |
 | `now.stopped` | {version} · {locale} ({language}), arrêtée à {done} / {total} pages ({share}) | {version} · {locale} ({language}), stopped at {done} / {total} pages ({share}) |
 | `now.waiting_chip` | en attente | waiting |
-| `now.wait` | {version} attend : {reason}, depuis {duration} ; ses unités échouent à {at} s'il n'arrive pas. | {version} waits: {reason}, for {duration}; its units fail at {at} if it does not come. |
+| `now.wait` | {version} attend : {reason}, depuis {duration} ; ses unités échouent à {at} UTC s'il n'arrive pas. | {version} waits: {reason}, for {duration}; its units fail at {at} UTC if it does not come. |
 | `now.reasons.catalog-pending` | son catalogue n'est pas encore stocké | its catalog is not stored yet |
 | `now.reasons.not-pinned` | l'API ne le compte pas encore parmi les anciens patchs | the API does not count it among the older patches yet |
 | `now.reasons.settling` | il vient de quitter le dernier rang et les caches le servent encore comme dernier patch | it just left the latest rank and the caches still serve it as the latest patch |
@@ -3264,7 +3264,7 @@ de lot suit la même règle, et chaque spécification de composant vérifie au m
 | `stall.unknown` | Cause inconnue : voir le journal de l'API (prerender.*). | Unknown cause: see the API's log (prerender.*). |
 | `paused_itself` | La passe s'est mise en pause d'elle-même : {reason} | The pass paused itself: {reason} |
 | `paused_itself_hint` | Corrigez la configuration du stockage ou du SSR (clé, politique, hôte public), puis reprenez. | Fix the store's or the SSR's settings (key, policy, public host), then resume. |
-| `feed.title` | Activité | Activity |
+| `feed.title` | Activité (UTC) | Activity (UTC) |
 | `feed.done` | {version} · {locale} terminée · {pages, plural, one {# page} other {# pages}} · en {duration} | {version} · {locale} completed · {pages, plural, one {# page} other {# pages}} · in {duration} |
 | `feed.done_failures` | {version} · {locale} terminée, {failed, plural, one {# page en échec} other {# pages en échec}} | {version} · {locale} completed, {failed, plural, one {# failed page} other {# failed pages}} |
 | `feed.failed` | {version} · {locale} en échec | {version} · {locale} failed |
@@ -3531,13 +3531,13 @@ de lot suit la même règle, et chaque spécification de composant vérifie au m
 
 | Clé | fr | en |
 |---|---|---|
-| `columns.pass` · `epoch` · `state` · `scope` · `progress` · `volume` · `active` · `author` · `started` · `finished` | Passe · Epoch · État · Périmètre · Progression · Volume · Durée active · Par · Lancée · Fin | Pass · Epoch · State · Perimeter · Progress · Volume · Running time · By · Launched · Ended |
+| `columns.pass` · `epoch` · `state` · `scope` · `progress` · `volume` · `active` · `author` · `started` · `finished` | Passe · Epoch · État · Périmètre · Progression · Volume · Durée active · Par · Lancée (UTC) · Fin (UTC) | Pass · Epoch · State · Perimeter · Progress · Volume · Running time · By · Launched (UTC) · Ended (UTC) |
 | `automatic` | promotion ou CLI | promotion or CLI |
 | `empty` | Aucune passe lancée. | No pass launched. |
 | `pages` | {done} / {total} | {done} / {total} |
 | `follow` | Suivre | Follow |
 | `detail.title` | Passe n°{id} · epoch {epoch} | Pass #{id} · epoch {epoch} |
-| `detail.ended` | finie le {date} | ended on {date} |
+| `detail.ended` | finie le {date} UTC | ended on {date} UTC |
 | `detail.scope` | Périmètre | Perimeter |
 | `detail.show_versions` | Voir la liste | Show the list |
 | `detail.hide_versions` | Masquer la liste | Hide the list |
@@ -3663,7 +3663,11 @@ manuelle au staging** avant fusion (§ 8.5).
 - **Champs** : 16 px au moins (le filtre, la zone de collage, les sélecteurs De / à).
 - **Chiffres** : `figure` (`admin/format/figure.ts`) pour les nombres (espace des milliers, point
   décimal), `decimalBytes` pour les volumes (Go de 10⁹), `monthlyCost` pour les euros, `stamp`
-  pour les instants (UTC), `duration` pour les durées.
+  pour les instants (UTC), `duration` pour les durées. Un instant en UTC le dit à l'écran, jamais
+  dans un seul `title` : à Paris, « 01:51 » se lirait comme une heure passée. Le libellé le porte
+  (« Fin estimée (UTC) », « Activité (UTC) », les colonnes « Lancée (UTC) », « Début (UTC) »,
+  « Dernière écriture (UTC) »), sinon la phrase (« lancée le 21/10/2026 01:36 UTC par … »,
+  « finie le … UTC », « échouent à 09:12 UTC »).
 - **Couleurs** : jetons seulement, jamais une teinte en dur ; `--color-good`, `--color-bad`,
   `--color-gold`, `--color-hex`, `--color-hex-bright`, `--color-track`, `--color-text-dim`.
 

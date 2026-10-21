@@ -42,7 +42,7 @@
   </div>
   <div class="readout" data-readout="end">
     <span class="readout-label">{{ 'admin.prerender.live.eta.label' | adminText }}</span>
-    <span class="readout-value" title="UTC">{{ eta().value }}</span>
+    <span class="readout-value">{{ eta().value }}</span>
     @for (line of eta().lines; track $index) {
       <p class="readout-text">{{ line }}</p>
     }

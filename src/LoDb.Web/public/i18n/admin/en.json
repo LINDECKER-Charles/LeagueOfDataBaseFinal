@@ -773,8 +773,8 @@
           "progress": "Progress",
           "pages": "Written · skipped · failed",
           "volume": "Volume",
-          "started": "Started",
-          "ended": "Last change",
+          "started": "Started (UTC)",
+          "ended": "Last change (UTC)",
           "failure": "Reason"
         }
       },
@@ -811,7 +811,7 @@
       "idle": {
         "title": "No pass running",
         "lede": "The store receives nothing. Promoted patches {promotions, select, on {open a pass by themselves} other {do not open a pass by themselves}}.",
-        "last": "Last pass: #{id}, {state} on {date} · {units, plural, one {# unit} other {# units}} · {pages, plural, one {# page} other {# pages}}",
+        "last": "Last pass: #{id}, {state} on {date} UTC · {units, plural, one {# unit} other {# units}} · {pages, plural, one {# page} other {# pages}}",
         "detail": "Detail",
         "never": "No pass launched yet.",
         "gaps": "The served epoch covers {share} of the older patches: {versions, plural, one {# patch has gaps} other {# patches have gaps}}.",
@@ -847,8 +847,8 @@
     },
     "live": {
       "title": "Pass #{id} · epoch {epoch}",
-      "origin": "launched on {date} by {author}",
-      "origin_auto": "opened on {date} by a promotion or the command line",
+      "origin": "launched on {date} UTC by {author}",
+      "origin_auto": "opened on {date} UTC by a promotion or the command line",
       "paused_since": "paused for {duration}",
       "progress_label": "{share}: {written, plural, one {# page} other {# pages}} written, {skipped} skipped, {failed} failed, {left} left",
       "pages_estimated": "{done} / ≈ {total, plural, one {# page} other {# pages}}",
@@ -871,7 +871,7 @@
         "stopped": "stopped"
       },
       "eta": {
-        "label": "Estimated end",
+        "label": "Estimated end (UTC)",
         "average": "{in} (average pace)",
         "now": "at the current pace: {in}",
         "unknown": "unknown until the pace is measured",
@@ -896,7 +896,7 @@
         "resumes_with": "Resumes with",
         "stopped": "{version} · {locale} ({language}), stopped at {done} / {total} pages ({share})",
         "waiting_chip": "waiting",
-        "wait": "{version} waits: {reason}, for {duration}; its units fail at {at} if it does not come.",
+        "wait": "{version} waits: {reason}, for {duration}; its units fail at {at} UTC if it does not come.",
         "reasons": {
           "catalog-pending": "its catalog is not stored yet",
           "not-pinned": "the API does not count it among the older patches yet",
@@ -918,7 +918,7 @@
       "paused_itself_hint": "Fix the store's or the SSR's settings (key, policy, public host), then resume.",
       "failing": "{version} · {locale} is failing: {failed, plural, one {# page failed} other {# pages failed}} out of {processed} ({share}). Last reason:",
       "feed": {
-        "title": "Activity",
+        "title": "Activity (UTC)",
         "done": "{version} · {locale} completed · {pages, plural, one {# page} other {# pages}} · in {duration}",
         "done_failures": "{version} · {locale} completed, {failed, plural, one {# failed page} other {# failed pages}}",
         "failed": "{version} · {locale} failed",
@@ -1207,7 +1207,7 @@
         "pages": "Pages",
         "volume": "Volume",
         "failed": "Failures",
-        "last": "Last written"
+        "last": "Last written (UTC)"
       },
       "season_select": "Select season {season}",
       "row_select": "Select {version}",
@@ -1260,8 +1260,8 @@
         "volume": "Volume",
         "active": "Running time",
         "author": "By",
-        "started": "Launched",
-        "finished": "Ended"
+        "started": "Launched (UTC)",
+        "finished": "Ended (UTC)"
       },
       "automatic": "promotion or CLI",
       "empty": "No pass launched.",
@@ -1271,7 +1271,7 @@
       "follow": "Follow",
       "detail": {
         "title": "Pass #{id} · epoch {epoch}",
-        "ended": "ended on {date}",
+        "ended": "ended on {date} UTC",
         "scope": "Perimeter",
         "show_versions": "Show the list",
         "hide_versions": "Hide the list",

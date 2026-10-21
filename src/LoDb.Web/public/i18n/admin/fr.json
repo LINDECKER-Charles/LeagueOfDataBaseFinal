@@ -773,8 +773,8 @@
           "progress": "Avancement",
           "pages": "Écrites · sautées · en échec",
           "volume": "Volume",
-          "started": "Début",
-          "ended": "Dernier changement",
+          "started": "Début (UTC)",
+          "ended": "Dernier changement (UTC)",
           "failure": "Raison"
         }
       },
@@ -811,7 +811,7 @@
       "idle": {
         "title": "Aucune passe en cours",
         "lede": "Le stockage ne reçoit rien. Les patchs promus {promotions, select, on {ouvrent une passe d'eux-mêmes} other {n'ouvrent pas de passe d'eux-mêmes}}.",
-        "last": "Dernière passe : n°{id}, {state} le {date} · {units, plural, one {# unité} other {# unités}} · {pages, plural, one {# page} other {# pages}}",
+        "last": "Dernière passe : n°{id}, {state} le {date} UTC · {units, plural, one {# unité} other {# unités}} · {pages, plural, one {# page} other {# pages}}",
         "detail": "Détail",
         "never": "Aucune passe lancée jusqu'ici.",
         "gaps": "L'epoch servie couvre {share} des anciens patchs : {versions, plural, one {# patch a des manques} other {# patchs ont des manques}}.",
@@ -847,8 +847,8 @@
     },
     "live": {
       "title": "Passe n°{id} · epoch {epoch}",
-      "origin": "lancée le {date} par {author}",
-      "origin_auto": "ouverte le {date} par une promotion ou la ligne de commande",
+      "origin": "lancée le {date} UTC par {author}",
+      "origin_auto": "ouverte le {date} UTC par une promotion ou la ligne de commande",
       "paused_since": "en pause depuis {duration}",
       "progress_label": "{share} : {written, plural, one {# page} other {# pages}} écrites, {skipped} sautées, {failed} en échec, {left} restantes",
       "pages_estimated": "{done} / ≈ {total, plural, one {# page} other {# pages}}",
@@ -871,7 +871,7 @@
         "stopped": "à l'arrêt"
       },
       "eta": {
-        "label": "Fin estimée",
+        "label": "Fin estimée (UTC)",
         "average": "{in} (rythme moyen)",
         "now": "au rythme actuel : {in}",
         "unknown": "inconnue tant que le rythme n'est pas mesuré",
@@ -896,7 +896,7 @@
         "resumes_with": "Reprendra par",
         "stopped": "{version} · {locale} ({language}), arrêtée à {done} / {total} pages ({share})",
         "waiting_chip": "en attente",
-        "wait": "{version} attend : {reason}, depuis {duration} ; ses unités échouent à {at} s'il n'arrive pas.",
+        "wait": "{version} attend : {reason}, depuis {duration} ; ses unités échouent à {at} UTC s'il n'arrive pas.",
         "reasons": {
           "catalog-pending": "son catalogue n'est pas encore stocké",
           "not-pinned": "l'API ne le compte pas encore parmi les anciens patchs",
@@ -918,7 +918,7 @@
       "paused_itself_hint": "Corrigez la configuration du stockage ou du SSR (clé, politique, hôte public), puis reprenez.",
       "failing": "{version} · {locale} échoue : {failed, plural, one {# page en échec} other {# pages en échec}} sur {processed} ({share}). Dernière raison :",
       "feed": {
-        "title": "Activité",
+        "title": "Activité (UTC)",
         "done": "{version} · {locale} terminée · {pages, plural, one {# page} other {# pages}} · en {duration}",
         "done_failures": "{version} · {locale} terminée, {failed, plural, one {# page en échec} other {# pages en échec}}",
         "failed": "{version} · {locale} en échec",
@@ -1207,7 +1207,7 @@
         "pages": "Pages",
         "volume": "Volume",
         "failed": "Échecs",
-        "last": "Dernière écriture"
+        "last": "Dernière écriture (UTC)"
       },
       "season_select": "Sélectionner la saison {season}",
       "row_select": "Sélectionner {version}",
@@ -1260,8 +1260,8 @@
         "volume": "Volume",
         "active": "Durée active",
         "author": "Par",
-        "started": "Lancée",
-        "finished": "Fin"
+        "started": "Lancée (UTC)",
+        "finished": "Fin (UTC)"
       },
       "automatic": "promotion ou CLI",
       "empty": "Aucune passe lancée.",
@@ -1271,7 +1271,7 @@
       "follow": "Suivre",
       "detail": {
         "title": "Passe n°{id} · epoch {epoch}",
-        "ended": "finie le {date}",
+        "ended": "finie le {date} UTC",
         "scope": "Périmètre",
         "show_versions": "Voir la liste",
         "hide_versions": "Masquer la liste",
