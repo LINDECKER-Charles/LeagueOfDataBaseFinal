@@ -70,6 +70,16 @@
   } @else if (units.failure()) {
     <p class="text-danger-light" role="alert">
       {{ 'admin.prerender.common.units.error' | adminText: { reason: reason() } }}
+      <button
+        class="ms-2"
+        lodbButton="ghost"
+        lodbButtonSize="small"
+        type="button"
+        data-retry
+        (click)="units.reload()"
+      >
+        {{ 'admin.prerender.common.live.retry' | adminText }}
+      </button>
     </p>
   } @else {
     <p class="text-text-dim" aria-busy="true">

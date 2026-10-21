@@ -28,6 +28,9 @@ export interface LivePoll<T> extends Panel<T> {
 }
 
 const SESSION = 'session';
+// A read once (`every` null) that failed before any answer tries again from this cadence,
+// backing off: 10 s, 20 s, 40 s, then a minute.
+const RETRY_MS = 5_000;
 
 /** The state of the reads, and the reads themselves: one in flight at most. */
 class LiveReads<T> {
@@ -85,7 +88,13 @@ class LiveReads<T> {
       return this.openedAt;
     }
     const base = this.isHidden() ? (this.options.hiddenEvery?.() ?? null) : this.options.every();
-    return base === null ? null : settled + pollDelay(this.failures(), base);
+    if (base === null) {
+      // Without any answer yet, a read once must not end on a transient failure (a 502 of a
+      // redeployment): nothing would ever be shown, and no reload offered.
+      const isUnanswered = this.lastSuccessAt() === null && this.failures() > 0;
+      return isUnanswered ? settled + pollDelay(this.failures(), RETRY_MS) : null;
+    }
+    return settled + pollDelay(this.failures(), base);
   }
 
   private succeed(value: T): void {
@@ -120,7 +129,8 @@ class LiveReads<T> {
 
 /**
  * Reads a source over and over (§ 2.5), from the injection context of a component: at once,
- * then `every()` after each answer, never two reads in flight. A failure keeps the last value
+ * then `every()` after each answer, never two reads in flight; `every()` null reads once,
+ * trying again, backing off, until a first answer comes. A failure keeps the last value
  * on screen and backs off (`pollDelay`); a 401 or a 403 stops until `reload`. While the tab
  * is hidden the reads slow down to `hiddenEvery()`, or wait for it to show, then read at once
  * if the last answer is older than the cadence. Timers are plain `setTimeout`s, cleared with

@@ -159,5 +159,9 @@ describe('PassDetailDialog', () => {
 
     expect(page(fixture).querySelector('[data-detail-error]')).not.toBeNull();
     expect(page(fixture).classList).toContain('admin-overlay');
+
+    // A read once tries again at once on demand, not only after its back-off.
+    page(fixture).querySelector<HTMLButtonElement>('[data-retry]')?.click();
+    await sent(api, '/api/admin/prerender/passes/11/progress');
   });
 });

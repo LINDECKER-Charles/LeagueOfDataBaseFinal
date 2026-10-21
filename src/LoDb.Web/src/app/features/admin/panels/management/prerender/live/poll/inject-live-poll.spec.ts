@@ -162,6 +162,23 @@ describe('injectLivePoll', () => {
     expect(host.poll.lastSuccessAt()).toBe(Date.now());
   });
 
+  it('tries a read once again after a failure, until a first answer comes', async () => {
+    const fixture = await open();
+    const host = fixture.componentInstance;
+    host.every.set(null);
+
+    await fail(fixture, 502);
+    await wait(fixture, 10_000 - 1);
+    expect(host.reads).toHaveLength(1);
+    await wait(fixture, 1);
+    expect(host.reads).toHaveLength(2);
+
+    await answer(fixture, 1);
+    await wait(fixture, 600_000);
+    expect(host.reads).toHaveLength(2);
+    expect(host.poll.nextAttemptAt()).toBeNull();
+  });
+
   it('stops on a 401 until reloaded', async () => {
     const fixture = await open();
     const host = fixture.componentInstance;

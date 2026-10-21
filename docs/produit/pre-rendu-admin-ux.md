@@ -421,6 +421,12 @@ passe.
 (base 5 s) : 10, 20, 40, 60, 60… ; pour le rapport (base 60 s) : 120, 240, 300… Pas d'aléa : un
 seul onglet par opérateur, des tests déterministes.
 
+**Lectures uniques** (`every` nul : le récapitulatif, le détail d'une passe, le détail d'une
+version avant sa première réponse) : un échec avant toute réponse ne les arrête pas, sans quoi
+une `502` pendant un redéploiement ferait disparaître pour de bon « Relancer N unités » ou le
+détail. Elles réessaient sur une base de 5 s, avec le même recul (10, 20, 40, 60 s…) jusqu'à
+la première réponse, et leurs dialogues offrent « Réessayer maintenant » à côté de l'erreur.
+
 **Incrémental.** La progression d'une passe de ~400 versions × 21 langues (8 400 unités, ~8 450
 chargements de catalogue d'après la spécification, lot 2, « Ordre ») tient en ~70 Ko de JSON
 brut (~10 Ko gzip, nginx compresse `application/json`, `docker/nginx/nginx.conf`) ; une lecture

@@ -6,6 +6,7 @@ import { API_BASE_URL } from '../../../../../../../core/api/api-base-url';
 import { readAdminPrerenderPassVersion } from '../../../../../../../core/api/generated/fn/admin-prerender/read-admin-prerender-pass-version';
 import type { PrerenderUnitView } from '../../../../../../../core/api/generated/models/prerender-unit-view';
 import type { PrerenderVersionUnits } from '../../../../../../../core/api/generated/models/prerender-version-units';
+import { Button } from '../../../../../../../ui/controls/button';
 import { DialogFrame } from '../../../../../../../ui/overlays/dialog-frame';
 import { figure } from '../../../../../format/figure';
 import { FigurePipe } from '../../../../../format/figure-pipe';
@@ -39,7 +40,16 @@ const COLUMNS = ['locale', 'state', 'progress', 'pages', 'volume', 'started', 'e
  */
 @Component({
   selector: 'lodb-version-units-dialog',
-  imports: [AdminTextPipe, Badge, DecimalBytesPipe, DialogFrame, FigurePipe, StackedBar, StampPipe],
+  imports: [
+    AdminTextPipe,
+    Badge,
+    Button,
+    DecimalBytesPipe,
+    DialogFrame,
+    FigurePipe,
+    StackedBar,
+    StampPipe,
+  ],
   templateUrl: './version-units-dialog.html',
   host: { class: 'admin-overlay block' },
   changeDetection: ChangeDetectionStrategy.OnPush,

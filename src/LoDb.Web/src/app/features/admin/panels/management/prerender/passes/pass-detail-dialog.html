@@ -84,6 +84,16 @@
     } @else if (progress.failure()) {
       <p class="m-0 text-bad" role="alert" data-detail-error>
         {{ 'admin.prerender.passes.detail.error' | adminText: { reason: reason() } }}
+        <button
+          class="ms-2"
+          lodbButton="ghost"
+          lodbButtonSize="small"
+          type="button"
+          data-retry
+          (click)="progress.reload()"
+        >
+          {{ 'admin.prerender.common.live.retry' | adminText }}
+        </button>
       </p>
     } @else {
       <p class="m-0 text-text-dim" role="status" data-detail-loading>
