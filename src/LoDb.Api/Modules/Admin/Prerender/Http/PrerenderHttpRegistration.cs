@@ -29,6 +29,8 @@ internal static class PrerenderHttpRegistration
         services.TryAddScoped<PrerenderDesk>();
         services.TryAddScoped<PassMonitor>();
         services.TryAddScoped<PatchCoverageReader>();
+        services.TryAddSingleton<EstimateBasisReader>();
+        services.TryAddSingleton<CoverageCache>();
         return services;
     }
 }

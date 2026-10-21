@@ -104,13 +104,12 @@ public sealed class PassLifecycleTests(PostgresContainerFixture postgres)
     public async Task SecondPassIsRefusedWhileOneIsActive()
     {
         await using var harness = await StartAsync();
-        var launcher = harness.Get<PassLauncher>();
         var first = await harness.LaunchAsync(Scope());
         await harness.Get<PassControl>().PauseAsync(first, Token);
 
-        var refused = await launcher.StartAsync(new PassLaunch { Epoch = 2 }, Token);
+        var refused = await harness.OpenAsync(new PassLaunch { Epoch = 2 });
         await harness.Get<PassControl>().CancelAsync(first, Token);
-        var second = await launcher.StartAsync(new PassLaunch { Epoch = 2 }, Token);
+        var second = await harness.OpenAsync(new PassLaunch { Epoch = 2 });
 
         Assert.Null(refused);
         Assert.NotNull(second);

@@ -16,8 +16,13 @@ internal sealed class FakeCatalog : IPrerenderCatalog
         "champions", "items", "runes", "summoners", "champions/Aatrox", "items/1036-long-sword",
     ];
 
+    private int _pinnedReads;
+
     /// <summary>The pinned versions, newest first.</summary>
     public List<PatchVersion> Pinned { get; } = [];
+
+    /// <summary>The latest version; none by default.</summary>
+    public PatchVersion? Latest { get; set; }
 
     /// <summary>What a version answers, when not <see cref="SixPages"/>.</summary>
     public Dictionary<PatchVersion, VersionPageList> Pages { get; } = [];
@@ -36,9 +41,24 @@ internal sealed class FakeCatalog : IPrerenderCatalog
     /// <summary>The versions whose ingestion was waited for, in order.</summary>
     public ConcurrentQueue<PatchVersion> Ingested { get; } = [];
 
+    /// <summary>
+    /// The versions whose pages were read, in order: a read of a version not stored queues its
+    /// ingestion.
+    /// </summary>
+    public ConcurrentQueue<PatchVersion> PageReads { get; } = [];
+
+    /// <summary>How many times the older patches were read.</summary>
+    public int PinnedReads => _pinnedReads;
+
     public Task<IReadOnlyList<PatchVersion>> PinnedVersionsAsync(
-        CancellationToken cancellationToken) =>
-        Task.FromResult<IReadOnlyList<PatchVersion>>([.. Pinned]);
+        CancellationToken cancellationToken)
+    {
+        Interlocked.Increment(ref _pinnedReads);
+        return Task.FromResult<IReadOnlyList<PatchVersion>>([.. Pinned]);
+    }
+
+    public Task<PatchVersion?> LatestVersionAsync(CancellationToken cancellationToken) =>
+        Task.FromResult(Latest);
 
     public Task<DateTimeOffset?> PinnedFromAsync(
         PatchVersion version,
@@ -51,6 +71,7 @@ internal sealed class FakeCatalog : IPrerenderCatalog
         PatchVersion version,
         CancellationToken cancellationToken)
     {
+        PageReads.Enqueue(version);
         if (PendingReads.TryGetValue(version, out var left) && left > 0)
         {
             PendingReads[version] = left - 1;

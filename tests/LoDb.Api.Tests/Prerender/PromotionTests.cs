@@ -70,6 +70,37 @@ public sealed class PromotionTests(PostgresContainerFixture postgres)
             pass.Units.Select(static unit => unit.Locale).Order(StringComparer.Ordinal));
     }
 
+    // A former pass over every type, of another epoch, measured the patch's pages.
+    [Fact]
+    public async Task UnitsAddedExpectThePagesAFormerUnitOfThePatchListed()
+    {
+        await using var harness = await StartAsync(isAutomatic: true);
+        await using (var db = harness.Database.CreateContext())
+        {
+            var now = DateTimeOffset.UtcNow;
+            var former = new PrerenderPass
+            {
+                Epoch = 2,
+                State = PrerenderPassState.Completed,
+                CreatedAt = now,
+                FinishedAt = now,
+            };
+            var unit = PassLauncher.RowOf(new PlannedUnit(Left, UiLocale.Fr, 0), now);
+            (unit.State, unit.PagesTotal) = (PrerenderUnitState.Completed, 1_140);
+            former.Units.Add(unit);
+            db.PrerenderPasses.Add(former);
+            await db.SaveChangesAsync(Token);
+        }
+
+        await Listener(harness).OnPromotedAsync(Latest, Token);
+
+        await using var reader = harness.Database.CreateContext();
+        var added = await reader.PrerenderUnits.Where(static row => row.Pass!.Epoch == 1)
+            .ToListAsync(Token);
+        Assert.Equal(UiLocales.All.Count, added.Count);
+        Assert.All(added, static row => Assert.Equal(1_140, row.PagesExpected));
+    }
+
     [Fact]
     public async Task PatchIsRenderedOnlyOnceNoServerHoldsItForTheLatestOne()
     {

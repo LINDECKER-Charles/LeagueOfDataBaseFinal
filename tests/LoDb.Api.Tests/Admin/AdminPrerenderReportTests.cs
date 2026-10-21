@@ -53,7 +53,9 @@ public sealed class AdminPrerenderReportTests(PostgresContainerFixture postgres)
         var report = await ReadAsync(admin);
 
         Assert.Equal(2, report.GetProperty("servedEpoch").GetInt32());
-        Assert.Equal(3, report.GetProperty("readyEpoch").GetInt32());
+        // Epoch 3 holds one unit of a version this host's Data Dragon does not list: no older
+        // patch to judge it by, so it is not ready (AdminPrerenderReadinessTests).
+        Assert.Equal(JsonValueKind.Null, report.GetProperty("readyEpoch").ValueKind);
         Assert.False(report.GetProperty("isConfigured").GetBoolean());
         Assert.Equal(
             [2, 3, 2, 1],

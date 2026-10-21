@@ -5,6 +5,7 @@ using LoDb.Api.Modules.Admin.Prerender.Http.Views;
 using LoDb.Api.Modules.Admin.Prerender.Options;
 using LoDb.Api.Modules.Admin.Prerender.Pages;
 using LoDb.Api.Modules.Admin.Prerender.Passes;
+using LoDb.Api.Modules.Admin.Prerender.Passes.Planning;
 using LoDb.Infrastructure.Audit;
 using LoDb.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -23,7 +24,7 @@ namespace LoDb.Api.Modules.Admin.Prerender.Http;
 /// </remarks>
 internal sealed class PrerenderDesk(
     LoDbDbContext db,
-    IPrerenderCatalog catalog,
+    PassPlanning planning,
     PassLauncher launcher,
     PassControl control,
     PrerenderActivation activation,
@@ -51,9 +52,12 @@ internal sealed class PrerenderDesk(
 
     /// <summary>
     /// Opens the pass <paramref name="request"/> asks for; refused while the pre-rendering is
-    /// not configured here, while another pass is active, or when its perimeter holds no older
-    /// patch.
+    /// not configured here, while another pass is active, or when it has nothing to render.
     /// </summary>
+    /// <remarks>
+    /// In this order: the request read whole, the host and the active pass checked before the
+    /// cost of planning, then the plan, refused when empty before any row is written.
+    /// </remarks>
     public async Task<(PrerenderPassStarted? Started, AccountProblem? Problem)> StartAsync(
         PassRequest request,
         CancellationToken cancellationToken)
@@ -72,15 +76,15 @@ internal sealed class PrerenderDesk(
             return (null, refusal);
         }
 
-        var ignored = await IgnoredAsync(launch.Scope, cancellationToken);
-        if (ignored is null)
+        var plan = await planning.PlanAsync(launch, cancellationToken);
+        if (plan.Units.Count == 0)
         {
-            return (null, NonePinned());
+            return (null, Empty(plan));
         }
 
-        var id = await launcher.StartAsync(launch, cancellationToken);
+        var id = await launcher.StartAsync(launch, plan, cancellationToken);
         return id is { } passId
-            ? (await StartedAsync(passId, launch, ignored, cancellationToken), null)
+            ? (await StartedAsync(passId, launch, plan, cancellationToken), null)
             : (null, PrerenderProblems.Conflict(PrerenderProblems.PassActive));
     }
 
@@ -133,45 +137,36 @@ internal sealed class PrerenderDesk(
         return isTaken ? PrerenderProblems.Conflict(PrerenderProblems.PassActive) : null;
     }
 
-    // The versions asked for that are not older patches, in the order sent; null when the
-    // scope admits no older patch at all.
-    // TODO(B1): PassPlanning.PlanAsync, which also leaves out what skipComplete finds held
-    // (scope: nothing-to-render) and hands its plan to the launcher.
-    private async Task<IReadOnlyList<string>?> IgnoredAsync(
-        PassScope scope,
-        CancellationToken cancellationToken)
-    {
-        var pinned = await catalog.PinnedVersionsAsync(cancellationToken);
-        if (!pinned.Any(scope.Admits))
-        {
-            return null;
-        }
-
-        return [.. (scope.Versions ?? []).Except(pinned).Select(static version => version.Value)];
-    }
-
-    private static AccountProblem NonePinned()
+    // Nothing skipped: no version asked for, or none at all, is an older patch. Else every
+    // unit asked for is complete already.
+    private static AccountProblem Empty(PassPlan plan)
     {
         var errors = new FieldErrors();
-        errors.Add(PassRequestReader.VersionsField, PassRequestReader.NonePinned);
+        if (plan.Skipped == 0)
+        {
+            errors.Add(PassRequestReader.VersionsField, PassRequestReader.NonePinned);
+        }
+        else
+        {
+            errors.Add(PassRequestReader.ScopeField, PassRequestReader.NothingToRender);
+        }
+
         return errors.ToProblem();
     }
 
     private async Task<PrerenderPassStarted> StartedAsync(
         long id,
         PassLaunch launch,
-        IReadOnlyList<string> ignored,
+        PassPlan plan,
         CancellationToken cancellationToken)
     {
         var started = new PrerenderPassStarted
         {
             Id = id,
             Epoch = launch.Epoch,
-            Units = await db.PrerenderUnits.CountAsync(
-                unit => unit.PassId == id,
-                cancellationToken),
-            SkippedUnits = 0,
-            IgnoredVersions = ignored,
+            Units = plan.Units.Count,
+            SkippedUnits = plan.Skipped,
+            IgnoredVersions = plan.Ignored,
         };
         await audit.RecordAsync(StartLine(started, launch.Scope), cancellationToken);
         return started;

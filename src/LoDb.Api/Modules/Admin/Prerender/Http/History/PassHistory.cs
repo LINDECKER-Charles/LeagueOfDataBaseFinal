@@ -1,4 +1,3 @@
-using LoDb.Api.Modules.Admin.Prerender.Pages;
 using LoDb.Infrastructure.Persistence;
 using LoDb.Infrastructure.Persistence.Prerender;
 using Microsoft.EntityFrameworkCore;
@@ -7,7 +6,7 @@ namespace LoDb.Api.Modules.Admin.Prerender.Http.History;
 
 /// <summary>
 /// Reads the passes the admin shows, newest first, with their units by state and the names of
-/// their authors, and the newer epoch a complete pass made ready to serve.
+/// their authors, and the epochs passes wrote above the served one.
 /// </summary>
 internal sealed class PassHistory(LoDbDbContext db)
 {
@@ -40,24 +39,18 @@ internal sealed class PassHistory(LoDbDbContext db)
     }
 
     /// <summary>
-    /// The newest epoch above <paramref name="servedEpoch"/> that a pass over every older patch
-    /// completed and none writes now: the one to serve next. Null when none.
+    /// The epochs some pass writes or wrote above <paramref name="servedEpoch"/>: the one the
+    /// active pass writes, the complete ones awaiting the switch, the leftovers of cancelled
+    /// passes.
     /// </summary>
-    public async Task<int?> ReadyEpochAsync(
+    public async Task<IReadOnlyList<int>> EpochsAboveAsync(
         int servedEpoch,
-        int? writingEpoch,
-        CancellationToken cancellationToken)
-    {
-        var completed = await db.PrerenderPasses.AsNoTracking()
-            .Where(pass => pass.Epoch > servedEpoch
-                && pass.State == PrerenderPassState.Completed)
-            .Select(static pass => new { pass.Epoch, pass.Scope })
+        CancellationToken cancellationToken) =>
+        await db.PrerenderPasses.AsNoTracking()
+            .Where(pass => pass.Epoch > servedEpoch)
+            .Select(static pass => pass.Epoch)
+            .Distinct()
             .ToListAsync(cancellationToken);
-        return completed
-            .Where(pass => pass.Epoch != writingEpoch && PassScopeJson.Read(pass.Scope).IsWhole)
-            .Select(static pass => (int?)pass.Epoch)
-            .Max();
-    }
 
     private async Task<IReadOnlyList<PassFacts>> FactsOfAsync(
         List<PrerenderPass> passes,

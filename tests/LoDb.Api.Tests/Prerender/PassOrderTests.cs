@@ -1,5 +1,6 @@
 using LoDb.Api.Modules.Admin.Prerender.Pages;
 using LoDb.Api.Modules.Admin.Prerender.Passes;
+using LoDb.Api.Modules.Admin.Prerender.Passes.Planning;
 using LoDb.Api.Tests.Prerender.Support;
 using LoDb.Domain.Catalog;
 using LoDb.Domain.Languages;
@@ -127,5 +128,88 @@ public sealed class PassOrderTests(PostgresContainerFixture postgres)
             static unit => Assert.Equal(PrerenderUnitState.Completed, unit.State));
     }
 
+    // Epoch 1 holds 16.18.1 in French over the items alone, 16.19.1 in English over every type.
+    [Fact]
+    public async Task SkippingWhatIsCompleteHeedsTheTypesAndKeepsTheRanksContiguous()
+    {
+        await using var harness = await PrerenderHarness.StartAsync(postgres);
+        harness.Catalog.Pinned.AddRange([Newest, Middle]);
+        await SeedAsync(harness, [ResourceType.Items], Unit(Middle, "fr", pages: 300));
+        await SeedAsync(harness, null, Unit(Newest, "en", pages: 1_140));
+        var bilingual = new PassScope { Locales = [UiLocale.En, UiLocale.Fr], SkipComplete = true };
+
+        var items = await PlanAsync(harness, bilingual with { PageTypes = [ResourceType.Items] });
+        var every = await PlanAsync(harness, bilingual);
+
+        // 16.18.1 measured over the items alone, by the French unit.
+        Assert.Equal(
+            [
+                new PlannedUnit(Newest, UiLocale.Fr, 0),
+                new PlannedUnit(Middle, UiLocale.En, 1) { PagesExpected = 300 },
+            ],
+            items.Units);
+        Assert.Equal(2, items.Skipped);
+        Assert.Equal(
+            [(Newest, UiLocale.Fr, 0), (Middle, UiLocale.En, 1), (Middle, UiLocale.Fr, 2)],
+            every.Units.Select(static unit => (unit.Version, unit.Locale, unit.Priority)));
+        Assert.Equal(1, every.Skipped);
+    }
+
+    // The pages a unit should list come from a former unit over the same types, any epoch.
+    [Fact]
+    public async Task ExpectedPagesComeFromAFormerPassOverTheSameTypes()
+    {
+        await using var harness = await PrerenderHarness.StartAsync(postgres);
+        harness.Catalog.Pinned.AddRange([Newest, Middle]);
+        await SeedAsync(harness, [ResourceType.Items], Unit(Newest, "fr", pages: 300));
+        await SeedAsync(harness, null, Unit(Middle, "fr", pages: 1_140), epoch: 2);
+
+        var plan = await PlanAsync(harness, new PassScope { Locales = [UiLocale.En] });
+        var passId = await harness.LaunchAsync(new PassScope { Locales = [UiLocale.En] });
+
+        Assert.Equal([null, 1_140], plan.Units.Select(static unit => unit.PagesExpected));
+        Assert.Equal(
+            [null, 1_140],
+            (await harness.PassAsync(passId)).Units
+                .OrderBy(static unit => unit.Priority)
+                .Select(static unit => unit.PagesExpected));
+    }
+
     private static string Quoted(UiLocale locale) => $"\"{UiLocales.Code(locale)}\"";
+
+    private static Task<PassPlan> PlanAsync(PrerenderHarness harness, PassScope scope) =>
+        harness.Get<PassPlanning>().PlanAsync(
+            new PassLaunch { Epoch = 1, Scope = scope },
+            TestContext.Current.CancellationToken);
+
+    // A completed pass over the types given, with one unit.
+    private static async Task SeedAsync(
+        PrerenderHarness harness,
+        IReadOnlyList<ResourceType>? types,
+        PrerenderUnit unit,
+        int epoch = 1)
+    {
+        var now = harness.Clock.GetUtcNow();
+        await using var db = harness.Database.CreateContext();
+        db.PrerenderPasses.Add(new PrerenderPass
+        {
+            Epoch = epoch,
+            State = PrerenderPassState.Completed,
+            Scope = PassScopeJson.Write(new PassScope { PageTypes = types }),
+            CreatedAt = now,
+            FinishedAt = now,
+            Units = [unit],
+        });
+        await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+    }
+
+    private static PrerenderUnit Unit(PatchVersion version, string locale, int pages) => new()
+    {
+        Version = version.Value,
+        Locale = locale,
+        State = PrerenderUnitState.Completed,
+        PagesTotal = pages,
+        PagesWritten = pages,
+        Cursor = pages,
+    };
 }
