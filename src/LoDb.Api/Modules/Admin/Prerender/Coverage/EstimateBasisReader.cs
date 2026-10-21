@@ -53,7 +53,9 @@ internal sealed class EstimateBasisReader(
             TypeShares = await TypeSharesAsync(db, pinned, cancellationToken),
             BytesPerPage = await BytesPerPageAsync(db, cancellationToken),
             MeasuredPagesPerMinute = await MeasuredPaceAsync(db, cancellationToken),
-            ConfiguredRendersPerMinute = options.Value.RendersPerMinute,
+            ConfiguredRendersPerMinute = options.Value.Pace.IsAdaptive
+                ? options.Value.Pace.MaxRendersPerMinute
+                : options.Value.RendersPerMinute,
             PricePerGbMonthOneZone = prices.Value.PricePerGbMonthOneZone,
             Currency = PrerenderPriceOptions.Euro,
         };

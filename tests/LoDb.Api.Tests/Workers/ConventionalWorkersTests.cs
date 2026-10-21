@@ -52,6 +52,7 @@ public sealed class ConventionalWorkersTests
             typeof(PatchWatchJob),
             typeof(VersionIngestionWorker),
             typeof(EmailOutboxWorker),
+            typeof(PrerenderPaceWorker),
             typeof(PrerenderReconcileJob),
             typeof(PrerenderWorker),
             typeof(CspReportSummaryWorker),

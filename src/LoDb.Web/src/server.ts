@@ -21,6 +21,9 @@ import { readBuildFiles } from './server/assets/read-build-files';
 import { staticFolder } from './server/assets/static-folder';
 import { encodedDocument } from './server/compression/encoded-document';
 import { createLogger } from './server/create-logger';
+import { CGROUP_FOLDER } from './server/load/cgroup-cpu';
+import { EventLoopWindow } from './server/load/event-loop-window';
+import { ServerLoad } from './server/load/server-load';
 import { failureHandler } from './server/failure-handler';
 import { isHashedAsset } from './server/hashed-asset';
 import { serveMetrics } from './server/metrics/serve-metrics';
@@ -86,6 +89,12 @@ const buildListing = listening ? readBuildListing(browserDistFolder) : null;
 const renderCounts = new RenderCounts();
 const renderAdmission = new RenderAdmission(settings.renderLimits, renderCounts);
 const metrics = new SsrMetrics(renderCounts, renderAdmission);
+const eventLoopWindow = new EventLoopWindow();
+const serverLoad = new ServerLoad(renderCounts, {
+  durations: metrics.durations,
+  eventLoopP99Seconds: () => eventLoopWindow.p99Seconds(),
+  cgroupFolder: CGROUP_FOLDER,
+});
 const unexpectedScripts = new UnexpectedScripts(logger);
 // Under `ng serve`, the dev server adds scripts of its own that no hash would admit, and holds
 // the templates in its memory: its pages go without a policy.
@@ -211,8 +220,14 @@ if (listening) {
   applyServerTimeouts(server);
   new AdmissionSummary(renderCounts, logger).start();
   unexpectedScripts.start();
-  // Never routed by nginx nor published: the host's collector reads it over its own network.
-  serveMetrics(metrics.registry, settings.metricsPort, logger);
+  // Never routed by nginx nor published: the host's collector reads it over its own network,
+  // the API's pre-render regulator its load (`/load`) over the stack's.
+  eventLoopWindow.start();
+  serveMetrics(
+    { registry: metrics.registry, load: () => serverLoad.report() },
+    settings.metricsPort,
+    logger,
+  );
   // In the background: this build's bundles are served from its own folder meanwhile.
   if (settings.frontBuildsFolder !== null) {
     new FrontBuildsPublication(browserDistFolder, settings.frontBuildsFolder, logger).start();

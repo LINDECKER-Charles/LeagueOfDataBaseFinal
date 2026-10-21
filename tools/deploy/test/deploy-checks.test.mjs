@@ -27,7 +27,9 @@ const EDGE_SUBNET = '172.18.0.0/16';
 const OBSERVABILITY_SUBNET = '172.19.0.0/16';
 // git and docker answer as on a host whose checkout, shared networks and Engine 25+ are in
 // place; OBSERVABILITY_SUBNET in the environment moves that network onto another subnet, and
-// MISSING_NETWORK names a shared network the host lacks.
+// MISSING_NETWORK names a shared network the host lacks. `compose config api` states the
+// pass's pace as prod resolves it (the floor, ceiling and fixed pace of the .env examples,
+// the step left to the code); PACE_MIN, PACE_MAX, PACE_STEP and PACE_FIXED replace each one.
 const STUBS = [
   'git() { :; }',
   'docker() {',
@@ -40,7 +42,14 @@ const STUBS = [
   `      echo "\${OBSERVABILITY_SUBNET:-${OBSERVABILITY_SUBNET}}" ;;`,
   '    "network ls --format "*) printf "edge\\nobservability\\n" ;;',
   '    "version --format "*) echo 1.47 ;;',
-  '    "compose config api web-ssr") echo "      LODB_STACK_NETWORKS: $STACK_SUBNET" ;;',
+  '    "compose config api web-ssr web-ssr-prerender")',
+  '      echo "      LODB_STACK_NETWORKS: $STACK_SUBNET" ;;',
+  '    "compose config api")',
+  '      echo "      LoDb__Prerender__Pace__MinRendersPerMinute: \\"${PACE_MIN:-30}\\""',
+  '      echo "      LoDb__Prerender__Pace__MaxRendersPerMinute: \\"${PACE_MAX:-240}\\""',
+  '      [ -z "${PACE_STEP:-}" ] ||',
+  '        echo "      LoDb__Prerender__Pace__StepRendersPerMinute: \\"$PACE_STEP\\""',
+  '      echo "      LoDb__Prerender__RendersPerMinute: \\"${PACE_FIXED:-120}\\"" ;;',
   '    *) echo "unexpected: docker $*" >&2; return 1 ;;',
   '  esac',
   '}',
@@ -220,6 +229,58 @@ describe('_deploy.yml, the dotenv against the target', () => {
       assert.equal(existsSync(join(dir, '.deploy', 'incoming.env')), false);
     });
   }
+});
+
+describe("_deploy.yml, the pre-rendering pass's pace", () => {
+  it('accepts the pace of the .env examples, the step left to the code', () => {
+    const run = deploy(host(), PROD, dotenvFor(PROD));
+
+    assert.equal(run.status, 0, run.stderr);
+  });
+
+  for (const [refusal, pace, message] of [
+    ['a floor above the ceiling', { PACE_MIN: '300' }, /floor \(300\).*ceiling \(240\)/],
+    ['a step above the ceiling', { PACE_STEP: '241' }, /step \(241\).*ceiling \(240\)/],
+    ['the code\'s own step above a low ceiling', { PACE_MIN: '5', PACE_MAX: '20' },
+      /step \(30\).*ceiling \(20\)/],
+    ['a fixed pace above the ceiling', { PACE_FIXED: '241' }, /fixed pace \(241\).*ceiling/],
+    ['a setting that is no whole number', { PACE_MAX: 'fast' }, /whole numbers \(got 'fast'\)/],
+  ]) {
+    it(`stops the deploy before any container changes for ${refusal}`, () => {
+      const run = deploy(host(), { ...PROD, ...pace }, dotenvFor(PROD));
+
+      assert.notEqual(run.status, 0);
+      assert.match(run.stderr, message);
+    });
+  }
+
+  it('accepts a floor, a step and a fixed pace at the ceiling', () => {
+    const pace = { PACE_MIN: '240', PACE_MAX: '240', PACE_STEP: '240', PACE_FIXED: '240' };
+
+    const run = deploy(host(), { ...PROD, ...pace }, dotenvFor(PROD));
+
+    assert.equal(run.status, 0, run.stderr);
+  });
+});
+
+describe("_deploy.yml, the pass's renderer in the deploy", () => {
+  const workflow = readFileSync(WORKFLOW, 'utf8');
+  const lineOf = (text) => workflow.split(/\r?\n/).findIndex((line) => line.includes(text));
+
+  it("checks the trusted networks of the pass's renderer as of the site's", () => {
+    assert.match(workflow, /docker compose config api web-ssr web-ssr-prerender/);
+  });
+
+  it('starts the site first, ends the maintenance page, then starts the renderer', () => {
+    const served = lineOf('"${served[@]}"');
+    const filter = lineOf('grep -vx web-ssr-prerender');
+    const end = lineOf('maintenance end');
+    const pass = lineOf('--wait-timeout 180 web-ssr-prerender');
+    assert.ok(filter > 0 && filter < served, 'the services but the renderer');
+    assert.ok(served > 0 && served < end, 'the maintenance page ends after the site is up');
+    assert.ok(end < pass, 'the renderer starts once the page is off');
+    assert.match(workflow.split(/\r?\n/)[pass + 1], /::warning title=Prerender SSR::/);
+  });
 });
 
 describe("_deploy.yml, the edge's secret", () => {

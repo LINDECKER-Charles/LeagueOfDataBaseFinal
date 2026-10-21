@@ -53,7 +53,12 @@ bash tools/deploy/maintenance.sh end .deploy/maintenance     # the site again, w
 
 The job turns the page on right before the first step that stops a container (`up`, or the
 `down` of a stack network moved to its subnet) and off once the new stack passes its probes,
-before the smoke tests ask for its pages. `compose.deploy.yaml` mounts the folder read-only in
+before the smoke tests ask for its pages. The probes are those of the visitors' services
+alone: the job starts in two phases, `up --wait` over `docker compose config --services`
+minus `web-ssr-prerender`, then (the page already off) `up --wait` of the pre-rendering
+pass's renderer on its own. A renderer that does not turn healthy is a `::warning`, never a
+failed deploy nor a page left on: the site does not depend on it, and the pass waits for it
+(`prerender.ssr.unreachable`). `compose.deploy.yaml` mounts the folder read-only in
 nginx (`/srv/maintenance`), which answers every page with the page of `docker/nginx/maintenance`
 while the switch is there (`server.d/maintenance.conf`).
 
@@ -69,6 +74,16 @@ the job says so (`::error` "Maintenance page left on"), and `rm .deploy/maintena
 turns it off once the stack serves again. Both files are replaced by a rename, mode 644 in a
 folder of mode 755: nginx reads them as its own user.
 
+## Pace of the pre-rendering pass
+
+Before the pull, from the resolved `docker compose config api` (the `.env` just written, the
+overlays of the target), the job stops the deploy when the pass's floor
+(`LoDb__Prerender__Pace__MinRendersPerMinute`), step (`__StepRendersPerMinute`, the code's 30
+when no overlay sets it) or fixed pace (`LoDb__Prerender__RendersPerMinute`) is above its
+ceiling (`__MaxRendersPerMinute`), or one is no whole number. The API refuses the first two
+at start-up, and the renderer's lane, whose budget is the ceiling, would refuse the third:
+caught here, it stops before any container changes instead of an API that does not come up.
+
 ## Tests
 
 ```sh
@@ -80,7 +95,8 @@ node --test tools/deploy/test/*.test.mjs
 the host's `sauvegardes` network), and `split-env-compose.test.mjs` checks the script's values
 against Compose's own reading of the same dotenv (all three skipped without Docker).
 `deploy-checks.test.mjs` runs the remote script of `_deploy.yml`, up to the pull, in a folder
-shaped like a host's, `git` and `docker` stubbed; `maintenance.test.mjs` turns the maintenance
+shaped like a host's, `git` and `docker` stubbed (the pace check included), and reads the
+workflow for the order of the two-phase `up`; `maintenance.test.mjs` turns the maintenance
 switch in a folder shaped like the host's. The scripts need bash 4.4 or later
 (`inherit_errexit`): macOS's own bash 3.2 fails them. On a local stack,
 `stack-check/check-secret-files.sh` proves that Postgres, migrate and the API read their

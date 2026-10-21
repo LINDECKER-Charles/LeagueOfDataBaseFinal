@@ -97,6 +97,7 @@ reconstruisent.
 | `nginx` | point d'entrée : site, sous-domaine `api.`, `/cdn/blobs/` (8080 dans le réseau) | 18080 | `LODB_HTTP_PORT` |
 | `api` | `LoDb.Api` (8080 dans le réseau ; métriques sur 9464, jamais publié) | 18081 | `LODB_API_PORT` |
 | `web-ssr` | serveur SSR Angular (4000 dans le réseau) | 18082 | `LODB_SSR_PORT` |
+| `web-ssr-prerender` | le même SSR, pour la passe de précalcul seule (4000 et métriques 9464 dans le réseau, alias `lodb-web-ssr-prerender`), sans quota en local | aucun | — |
 | `postgres` | PostgreSQL 17, base `lodb` (utilisateur et mot de passe `lodb` en dev) | 15432 | `LODB_PG_PORT` |
 | `mailpit` | interface des e-mails de dev | 18025 | `LODB_MAIL_PORT` |
 | `pages-store` | stockage objet simulé des pages pré-rendues (moto, l'API S3 en mémoire ; 5000 dans le réseau, alias `lodb-pages-store`), bucket `lodb-pages-dev` ([`configuration.md`](configuration.md), § 7) | aucun | — |

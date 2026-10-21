@@ -121,8 +121,12 @@ internal sealed class UnitRunner(
 
         return stop;
 
-        Task<PageResult> Start(int index) =>
-            pages.RunAsync(new PageJob(walk.Unit, walk.Paths[index]), cancellationToken);
+        Task<PageResult> Start(int index) => pages.RunAsync(
+            new PageJob(walk.Unit, walk.Paths[index])
+            {
+                IsOpening = index - walk.Unit.Cursor < options.Value.MaxInFlight,
+            },
+            cancellationToken);
     }
 
     // The pass was paused or cancelled, or it cannot go on as configured: then it pauses, so

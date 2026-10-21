@@ -49,6 +49,11 @@ services:
       LoDb__Prerender__SecretKey: lodb-dev
       LoDb__Prerender__PublicHost: localhost
       LoDb__Prerender__AutoEnqueueOnPromotion: "false"
+      # A wide adaptive range, to watch the regulator climb in a few minutes: its signals are
+      # the Docker VM's, not a host's. The step is the floor.
+      LoDb__Prerender__Pace__MinRendersPerMinute: "120"
+      LoDb__Prerender__Pace__MaxRendersPerMinute: "1200"
+      LoDb__Prerender__Pace__StepRendersPerMinute: "120"
 
   web-ssr:
     ports:
@@ -74,6 +79,13 @@ services:
       LODB_PRERENDER_RENDER_BURST: "1000"
       LODB_PRERENDER_MAX_IN_FLIGHT: "8"
       LODB_PRERENDER_VISITOR_RESERVE: "4"
+
+  # The pass's renderer, without quota or weight locally. Its lane is lifted to the top of
+  # the regulator's range above; no host port, neither 4000 nor 9464: the API reaches it on
+  # the stack's network.
+  web-ssr-prerender:
+    environment:
+      LODB_PRERENDER_RENDERS_PER_MINUTE: "1200"
 
   nginx:
     ports:

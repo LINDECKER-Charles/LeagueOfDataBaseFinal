@@ -3,6 +3,7 @@ import { collectDefaultMetrics, Counter, Gauge, Histogram, Registry } from 'prom
 import type { RenderAdmission } from '../admission/render-admission';
 import type { RenderCounts } from '../admission/render-counts';
 import type { RenderLane } from '../admission/render-lane';
+import { RenderDurations } from '../load/render-durations';
 import type { NormalizedRedirectReason } from './normalized-redirect-reason';
 import { statusClassOf } from './status-class-of';
 
@@ -60,6 +61,9 @@ function rendersInFlight(admission: InFlight): Gauge<'lane'> {
 export class SsrMetrics {
   readonly registry = new Registry();
 
+  /** The renders' cumulative durations, from the same timer, for `GET /load`. */
+  readonly durations = new RenderDurations();
+
   private readonly renderDuration = new Histogram({
     name: 'lodb_ssr_render_duration_seconds',
     help: 'Time from the admission of a render to the end of its response.',
@@ -102,7 +106,9 @@ export class SsrMetrics {
   /** Times a render of `lane` until its response ends, under the status class it got. */
   timeRender(lane: RenderLane, response: ServerResponse): void {
     const stop = this.renderDuration.startTimer({ lane });
-    response.once('close', () => stop({ status_class: statusClassOf(response) }));
+    response.once('close', () => {
+      this.durations.add(lane, stop({ status_class: statusClassOf(response) }));
+    });
   }
 
   /** Counts a connection the network gate turned away (`networkGate`). */

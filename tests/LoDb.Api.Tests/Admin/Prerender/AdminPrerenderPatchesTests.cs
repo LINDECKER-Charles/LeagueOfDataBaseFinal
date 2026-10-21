@@ -90,7 +90,8 @@ public sealed class AdminPrerenderPatchesTests(PostgresContainerFixture postgres
             (coverage.GetProperty("pinnedVersions").GetInt32(),
                 coverage.GetProperty("expectedUnits").GetInt32()));
         var estimates = report.GetProperty("estimates");
-        Assert.Equal(120, estimates.GetProperty("configuredRendersPerMinute").GetInt32());
+        // The ceiling of the adaptive pace, not the fixed pace.
+        Assert.Equal(240, estimates.GetProperty("configuredRendersPerMinute").GetInt32());
         Assert.Equal("EUR", ApiJson.Text(estimates, "currency"));
     }
 

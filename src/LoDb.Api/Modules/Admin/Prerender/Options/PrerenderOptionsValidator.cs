@@ -5,7 +5,8 @@ namespace LoDb.Api.Modules.Admin.Prerender.Options;
 /// <summary>
 /// Refuses at startup a pass that would render for something other than a bare host, ask the
 /// SSR through anything but a base URL, write epoch 0, or keep no pace or no bound on its pages
-/// in flight. Missing settings are not refused: the pass then stays dormant.
+/// in flight, or whose adaptive pace does not hold together (<see cref="PaceOptionsRules"/>).
+/// Missing settings are not refused: the pass then stays dormant.
 /// </summary>
 /// <remarks>
 /// The SSR is reached over plain http on purpose: the stack network carries it, and the SSR
@@ -15,10 +16,6 @@ namespace LoDb.Api.Modules.Admin.Prerender.Options;
 internal sealed class PrerenderOptionsValidator : IValidateOptions<PrerenderOptions>
 {
     private const string RootPath = "/";
-
-    // A hundred renders a second: more than a rented fleet of renderers would sustain, and a
-    // bound on a typo that would make the pass spend the lane's burst and wait each refusal.
-    private const int MaxRendersPerMinute = 6000;
 
     // Over the SSR's whole render capacity on any host this stack runs on: a bound on a typo.
     private const int MaxPagesInFlight = 16;
@@ -41,12 +38,13 @@ internal sealed class PrerenderOptionsValidator : IValidateOptions<PrerenderOpti
             "ServedEpoch must be 1 or more: epoch 0 is reserved for the store probes.");
         AddIf(
             failures,
-            options.RendersPerMinute is < 1 or > MaxRendersPerMinute,
-            $"RendersPerMinute must be between 1 and {MaxRendersPerMinute}.");
+            options.RendersPerMinute is < 1 or > PrerenderOptions.MostRendersPerMinute,
+            $"RendersPerMinute must be between 1 and {PrerenderOptions.MostRendersPerMinute}.");
         AddIf(
             failures,
             options.MaxInFlight is < 1 or > MaxPagesInFlight,
             $"MaxInFlight must be between 1 and {MaxPagesInFlight}.");
+        failures.AddRange(PaceOptionsRules.FailuresOf(options));
         return failures.Count == 0
             ? ValidateOptionsResult.Success
             : ValidateOptionsResult.Fail(failures);

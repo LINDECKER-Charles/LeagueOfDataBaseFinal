@@ -1,3 +1,4 @@
+import type { PrerenderPaceView } from '../../../../core/api/generated/models/prerender-pace-view';
 import type { PrerenderPassProgress } from '../../../../core/api/generated/models/prerender-pass-progress';
 import type { PrerenderUnitView } from '../../../../core/api/generated/models/prerender-unit-view';
 
@@ -132,6 +133,7 @@ const PROGRESS: PrerenderPassProgress = {
     observedAt: '2026-10-21T08:42:03+00:00',
     isWorkerEnabled: true,
     ssrUnreachableSince: null,
+    pace: null,
     waiting: [
       {
         version: '16.3.1',
@@ -153,4 +155,25 @@ export function prerenderProgress(
   changes: Partial<PrerenderPassProgress> = {},
 ): PrerenderPassProgress {
   return { ...PROGRESS, ...changes };
+}
+
+/**
+ * The pace of an adaptive pass on prod (floor 30, ceiling 240 renders a minute), the VPS at
+ * 37 %, in the state the regulator is in; `changes` replaces fields of it.
+ */
+export function prerenderPace(
+  state: string,
+  changes: Partial<PrerenderPaceView> = {},
+): PrerenderPaceView {
+  return {
+    mode: 'adaptive',
+    state,
+    rendersPerMinute: 90,
+    minRendersPerMinute: 30,
+    maxRendersPerMinute: 240,
+    reason: null,
+    hostCpu: 0.37,
+    since: '2026-10-21T08:40:00+00:00',
+    ...changes,
+  };
 }

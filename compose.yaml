@@ -32,6 +32,46 @@ x-hardening: &hardening
   security_opt: [no-new-privileges:true]
   cap_drop: [ALL]
 
+# The two SSR servers (web-ssr for the visitors, web-ssr-prerender for the pre-rendering
+# pass, ADR 0011) are the same image and share their build and the settings below. What
+# differs is kept in each service: lanes, volumes, aliases and, on a host, CPU weights.
+x-web-ssr-build: &web-ssr-build
+  context: .
+  dockerfile: docker/web-ssr/Dockerfile
+  args:
+    APP_REVISION: ${APP_REVISION:-dev}
+
+x-ssr-environment: &ssr-environment
+  PORT: "4000"
+  # The API's project alias, never the short name `api` (see api's aliases).
+  LODB_API_ORIGIN: http://lodb-api:8080
+  # Hosts the renders accept (Host or trusted X-Forwarded-Host); others get a 400.
+  LODB_ALLOWED_HOSTS: ${LODB_ALLOWED_HOSTS:-localhost,127.0.0.1}
+  # Set by nginx (snippets/proxy-headers.conf); Angular ignores them unless listed.
+  LODB_TRUST_PROXY_HEADERS: x-forwarded-proto,x-forwarded-host,x-forwarded-for
+  # A render's wait on the API (src/server/rendering), and the query a catalogue page
+  # keeps (src/server/routing): empty keeps the defaults.
+  LODB_RENDER_DEADLINE_SECONDS: ${LODB_RENDER_DEADLINE_SECONDS:-}
+  LODB_RENDER_API_TIMEOUT_SECONDS: ${LODB_RENDER_API_TIMEOUT_SECONDS:-}
+  LODB_QUERY_MAX_PARAMS: ${LODB_QUERY_MAX_PARAMS:-}
+  LODB_QUERY_MAX_PARAM_LENGTH: ${LODB_QUERY_MAX_PARAM_LENGTH:-}
+  # gzip level of a rendered page, compressed once per render: empty keeps the default.
+  LODB_HTML_GZIP_LEVEL: ${LODB_HTML_GZIP_LEVEL:-}
+  # How long every render reuses the process's copy of /api/meta: empty keeps the default.
+  LODB_API_META_TTL_SECONDS: ${LODB_API_META_TTL_SECONDS:-}
+  # Heap ceiling under the container's memory limit (704 MiB when served): V8 collects
+  # harder before the kernel kills the renderer. The young generation adds 192 MiB, so the
+  # whole heap stops at 448 MiB and leaves room for code and buffers.
+  NODE_OPTIONS: --max-old-space-size=256
+
+x-ssr-healthcheck-test: &ssr-healthcheck-test
+  - CMD
+  - node
+  - -e
+  - >-
+    fetch('http://127.0.0.1:4000/healthz').then((r) => process.exit(r.ok ? 0 : 1),
+    () => process.exit(1))
+
 services:
   api:
     build: &api-build
@@ -66,17 +106,32 @@ services:
       LoDb__PublicApi__Reference__BaseUrl: ${PUBLIC_API_BASE_URL:-https://api.league-of-data-base.com}
       # Empty: traces stay local (log correlation) until infra-vps exposes a collector.
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
-      # The pre-rendering pass (ADR 0011) asks the SSR server directly, never nginx, which
-      # would clear its header, bound it per address and fill its own cache. Dormant until
-      # the store's bucket and writer key are set (compose.deploy.yaml).
-      LoDb__Prerender__SsrBaseUrl: http://lodb-web-ssr:4000
+      # The pre-rendering pass (ADR 0011) asks its own SSR server directly, never nginx, which
+      # would clear its header, bound it per address and fill its own cache. Never the
+      # visitors' web-ssr: a render in flight there slows them from the first one (measured
+      # 2026-10-21), so the pass has web-ssr-prerender, at the lowest CPU weight of a host.
+      # Dormant until the store's bucket and writer key are set (compose.deploy.yaml).
+      LoDb__Prerender__SsrBaseUrl: http://lodb-web-ssr-prerender:4000
       # The epoch nginx serves (LODB_ARCHIVE_SERVE_EPOCH below): one line feeds both, so the
       # admin panel shows what is served.
       LoDb__Prerender__ServedEpoch: ${LODB_ARCHIVE_SERVE_EPOCH:-1}
-      # The pass's pace and pages in flight: the SSR's prerender lane (web-ssr below), from the
-      # same lines, so that the pass never asks more than the lane admits and a budget raised
-      # on a host is raised on both sides. The defaults are the SSR's own; never empty, which
-      # the API would refuse to bind.
+      # The pass's pace follows the host's free CPU between a floor and a ceiling
+      # (docs/guides/configuration.md § 4.10); `fixed` is the kill switch, applied by
+      # redeploying the API. The ceiling is also the budget of the pass SSR's lane
+      # (web-ssr-prerender below), from the same line: that lane caps the pass even if the
+      # regulator misbehaves. Never empty, which the API would refuse to bind. The step
+      # (30) is the code's default and set by the local and staging overlays only.
+      LoDb__Prerender__Pace__Mode: ${LODB_PRERENDER_PACE_MODE:-adaptive}
+      LoDb__Prerender__Pace__MinRendersPerMinute: ${LODB_PRERENDER_PACE_MIN:-30}
+      LoDb__Prerender__Pace__MaxRendersPerMinute: ${LODB_PRERENDER_PACE_MAX:-240}
+      # What the regulator reads of both SSRs (their metrics port, never published): the
+      # visitors' SSR to hold back for them, the pass's own to hold back when it struggles.
+      LoDb__Prerender__Pace__VisitorsLoadUrl: http://lodb-web-ssr:9464/load
+      LoDb__Prerender__Pace__PassLoadUrl: http://lodb-web-ssr-prerender:9464/load
+      # The fixed pace (kill switch, and the `prerender unit` command, which never adapts),
+      # never above the ceiling, and the pages in flight, which the pass SSR's lane admits
+      # from the same line. The defaults are the SSR's own; never empty, which the API would
+      # refuse to bind.
       LoDb__Prerender__RendersPerMinute: ${LODB_PRERENDER_RENDERS_PER_MINUTE:-120}
       LoDb__Prerender__MaxInFlight: ${LODB_PRERENDER_MAX_IN_FLIGHT:-2}
     <<: *hardening
@@ -139,11 +194,7 @@ services:
     logging: *default-logging
 
   web-ssr:
-    build:
-      context: .
-      dockerfile: docker/web-ssr/Dockerfile
-      args:
-        APP_REVISION: ${APP_REVISION:-dev}
+    build: *web-ssr-build
     # Node ignores SIGTERM as PID 1: tini forwards it, so a stop takes no 10 s timeout.
     init: true
     <<: *hardening
@@ -151,16 +202,11 @@ services:
     tmpfs:
       - /tmp:size=16m
     environment:
-      PORT: "4000"
-      # The API's project alias, never the short name `api` (see api's aliases).
-      LODB_API_ORIGIN: http://lodb-api:8080
-      # Hosts the renders accept (Host or trusted X-Forwarded-Host); others get a 400.
-      LODB_ALLOWED_HOSTS: ${LODB_ALLOWED_HOSTS:-localhost,127.0.0.1}
-      # Set by nginx (snippets/proxy-headers.conf); Angular ignores them unless listed.
-      LODB_TRUST_PROXY_HEADERS: x-forwarded-proto,x-forwarded-host,x-forwarded-for
+      <<: *ssr-environment
       # Peers the site's port answers besides the loopback (src/server/security/network-gate.ts):
       # the private ranges, as the API's KnownProxyNetworks. A served host names its stack's
-      # subnet alone (compose.deploy.yaml).
+      # subnet alone (compose.deploy.yaml). Kept out of x-ssr-environment: the deploy job reads
+      # every LODB_STACK_NETWORKS of the resolved configuration, extension fields included.
       LODB_STACK_NETWORKS: 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
       # Render admission (src/server/admission): empty keeps the defaults sized for the host.
       LODB_RENDER_MAX_IN_FLIGHT: ${LODB_RENDER_MAX_IN_FLIGHT:-}
@@ -175,29 +221,17 @@ services:
       LODB_CURRENT_RENDER_PER_CLIENT_BURST: ${LODB_CURRENT_RENDER_PER_CLIENT_BURST:-}
       LODB_RENDER_TRACKED_CLIENTS: ${LODB_RENDER_TRACKED_CLIENTS:-}
       # The pre-rendering pass's own lane (ADR 0011): renders per minute and at once, in flight
-      # at most, and the renders kept free for visitors. Empty keeps the defaults.
+      # at most, and the renders kept free for visitors. Empty keeps the defaults. Unused since
+      # the pass has its own SSR (web-ssr-prerender): kept so that the lane still refuses a
+      # caller that would reach this server, and never re-opened to the pass.
       LODB_PRERENDER_RENDERS_PER_MINUTE: ${LODB_PRERENDER_RENDERS_PER_MINUTE:-}
       LODB_PRERENDER_RENDER_BURST: ${LODB_PRERENDER_RENDER_BURST:-}
       LODB_PRERENDER_MAX_IN_FLIGHT: ${LODB_PRERENDER_MAX_IN_FLIGHT:-}
       LODB_PRERENDER_VISITOR_RESERVE: ${LODB_PRERENDER_VISITOR_RESERVE:-}
-      # A render's wait on the API (src/server/rendering), and the query a catalogue page
-      # keeps (src/server/routing): empty keeps the defaults.
-      LODB_RENDER_DEADLINE_SECONDS: ${LODB_RENDER_DEADLINE_SECONDS:-}
-      LODB_RENDER_API_TIMEOUT_SECONDS: ${LODB_RENDER_API_TIMEOUT_SECONDS:-}
-      LODB_QUERY_MAX_PARAMS: ${LODB_QUERY_MAX_PARAMS:-}
-      LODB_QUERY_MAX_PARAM_LENGTH: ${LODB_QUERY_MAX_PARAM_LENGTH:-}
       # Its hashed bundles are published there at start, then dated again hourly; /build/
       # serves the previous builds' from there: a tab or a cached page that names one still
       # loads it after a deploy.
       LODB_FRONT_BUILDS_DIR: /srv/front-builds
-      # gzip level of a rendered page, compressed once per render: empty keeps the default.
-      LODB_HTML_GZIP_LEVEL: ${LODB_HTML_GZIP_LEVEL:-}
-      # How long every render reuses the process's copy of /api/meta: empty keeps the default.
-      LODB_API_META_TTL_SECONDS: ${LODB_API_META_TTL_SECONDS:-}
-      # Heap ceiling under the container's memory limit (512 MiB when served): V8 collects
-      # harder before the kernel kills the renderer. The young generation adds 192 MiB, so the
-      # whole heap stops at 448 MiB and leaves room for code and buffers.
-      NODE_OPTIONS: --max-old-space-size=256
     volumes:
       # Bundles of the builds served lately; the deploy job purges those no build shipped for
       # 30 days (.github/workflows/_deploy.yml).
@@ -212,17 +246,54 @@ services:
     restart: unless-stopped
     logging: *default-logging
     healthcheck:
-      test:
-        - CMD
-        - node
-        - -e
-        - >-
-          fetch('http://127.0.0.1:4000/healthz').then((r) => process.exit(r.ok ? 0 : 1),
-          () => process.exit(1))
+      test: *ssr-healthcheck-test
       interval: 15s
       timeout: 5s
       retries: 5
       start_period: 10s
+
+  # The pre-rendering pass's own renderer (ADR 0011): the same image as web-ssr, reached by
+  # the API alone. The visitors' web-ssr is slowed from the first render in flight, so the
+  # pass never uses it; on a host this one weighs the least of the stack (compose.deploy.yaml)
+  # and the kernel only gives it the CPU nobody else asks for. nginx never depends on it nor
+  # routes to it: a broken pass renderer cannot take the site down.
+  web-ssr-prerender:
+    build: *web-ssr-build
+    init: true
+    <<: *hardening
+    tmpfs:
+      - /tmp:size=16m
+    environment:
+      <<: *ssr-environment
+      # As web-ssr: the private ranges here, the stack's subnet alone on a served host.
+      LODB_STACK_NETWORKS: 10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+      # The lane's budget is the regulator's ceiling, so the renderer caps the pass even if
+      # the API misbehaves (one line feeds both). The reserve keeps one of the 4 renders free
+      # of the pass, so its lane holds 3 in flight at most.
+      LODB_RENDER_MAX_IN_FLIGHT: "4"
+      LODB_PRERENDER_VISITOR_RESERVE: "1"
+      LODB_PRERENDER_RENDERS_PER_MINUTE: ${LODB_PRERENDER_PACE_MAX:-240}
+      LODB_PRERENDER_RENDER_BURST: ${LODB_PRERENDER_RENDER_BURST:-}
+      LODB_PRERENDER_MAX_IN_FLIGHT: ${LODB_PRERENDER_MAX_IN_FLIGHT:-}
+      # No LODB_FRONT_BUILDS_DIR and no volume: the bundles' volume keeps a single writer
+      # (web-ssr). This server serves its own image's /build/ to the pass.
+    networks:
+      default:
+        # The only name it answers to. Never `lodb-web-ssr`: Docker's DNS would then spread
+        # nginx's traffic over both servers.
+        aliases: [lodb-web-ssr-prerender]
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+    logging: *default-logging
+    healthcheck:
+      test: *ssr-healthcheck-test
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+      start_interval: 5s
 
   nginx:
     build:

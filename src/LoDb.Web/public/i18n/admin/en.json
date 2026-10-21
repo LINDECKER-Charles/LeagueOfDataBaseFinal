@@ -871,7 +871,32 @@
         "value": "{pace, plural, one {# page} other {# pages}}/min",
         "average": "average {pace, plural, one {# page} other {# pages}}/min",
         "measuring": "measuring…",
-        "stopped": "stopped"
+        "stopped": "stopped",
+        "regulator": {
+          "starting": "careful start: {rate} p/min",
+          "climbing": "adaptive: up to {rate} p/min",
+          "ceiling": "at the ceiling: {rate} p/min",
+          "cpu": "VPS CPU at {cpu}",
+          "steady": "holding at {rate} p/min: {reason}",
+          "slowed": "slowed to {rate} p/min: {reason}",
+          "held": "held until {at} UTC: {reason}",
+          "fixed": "fixed pace: {rate} p/min (regulation off)"
+        },
+        "reasons": {
+          "warming-up": "measuring",
+          "ceiling": "ceiling reached",
+          "host-cpu": "VPS CPU at {cpu}",
+          "host-cpu-busy": "VPS CPU busy",
+          "host-cpu-sustained": "VPS CPU sustained over 30 min",
+          "host-steal": "the hosting provider takes CPU back",
+          "visitors-ssr": "visitors active",
+          "visitors-refused": "visitors are being refused",
+          "api-cpu": "API under load",
+          "pass-latency": "pass renders slowed",
+          "pass-ssr-pressure": "the VPS takes the pass's CPU back",
+          "signal-missing": "a measure is missing",
+          "fixed": "regulation off"
+        }
       },
       "eta": {
         "label": "Estimated end (UTC)",
@@ -915,7 +940,8 @@
         "worker_off": "The background task is off on this instance.",
         "waiting": "Every unit left waits for a catalog.",
         "remote": "No visible instance writes the pass: another may hold the lock, or the API just restarted (the task retries every 30 s).",
-        "unknown": "Unknown cause: see the API's log (prerender.*)."
+        "unknown": "Unknown cause: see the API's log (prerender.*).",
+        "held": "The regulator holds the pass back to leave the CPU to the site and the host; it resumes on its own at the floor."
       },
       "paused_itself": "The pass paused itself: {reason}",
       "paused_itself_hint": "Fix the store's or the SSR's settings (key, policy, public host), then resume.",

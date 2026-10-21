@@ -4,7 +4,8 @@ namespace LoDb.Api.Modules.Admin.Prerender.Options;
 
 /// <summary>
 /// The pre-rendering pass (<c>LoDb:Prerender</c>, ADR 0011): where it asks the SSR for its
-/// pages, for which public host, at what pace, and which epoch nginx serves.
+/// pages, for which public host, at what pace (fixed, or adaptive: <see cref="Pace"/>), and
+/// which epoch nginx serves.
 /// </summary>
 /// <remarks>
 /// The same section holds the page store's own keys (<see cref="PageStoreOptions"/>). The pass
@@ -16,8 +17,14 @@ internal sealed class PrerenderOptions
 {
     public const string SectionName = PageStoreOptions.SectionName;
 
-    /// <summary>The SSR's own budget of its <c>prerender</c> lane in production.</summary>
+    /// <summary>The fixed pace in production (<see cref="RendersPerMinute"/>).</summary>
     public const int DefaultRendersPerMinute = 120;
+
+    /// <summary>
+    /// A hundred renders a second: more than a rented fleet of renderers would sustain, and a
+    /// bound on a typo that would make the pass spend the lane's burst and wait each refusal.
+    /// </summary>
+    public const int MostRendersPerMinute = 6000;
 
     /// <summary>
     /// Pages of a unit in flight at once by default: one, until the hosts set the SSR's lane
@@ -37,8 +44,11 @@ internal sealed class PrerenderOptions
     public string? PublicHost { get; set; }
 
     /// <summary>
-    /// The SSR server on the stack network (<c>http://lodb-web-ssr:4000</c>), never nginx,
-    /// which would clear the pass's header, bound it per address and fill its own cache.
+    /// The pass's own SSR server on the stack network
+    /// (<c>http://lodb-web-ssr-prerender:4000</c>), at the host's lowest CPU weight: never the
+    /// visitors' <c>lodb-web-ssr</c>, which the pass slows from its first render in flight, and
+    /// never nginx, which would clear the pass's header, bound it per address and fill its own
+    /// cache.
     /// </summary>
     public string? SsrBaseUrl { get; set; }
 
@@ -55,8 +65,10 @@ internal sealed class PrerenderOptions
     public bool AutoEnqueueOnPromotion { get; set; }
 
     /// <summary>
-    /// Renders the pass starts per minute: the SSR's <c>LODB_PRERENDER_RENDERS_PER_MINUTE</c>,
-    /// so that the pass keeps within the lane's budget rather than spend its burst and wait
+    /// The fixed pace: the renders the pass starts per minute when the regulation is off
+    /// (<see cref="PaceMode.Fixed"/>) or when no regulator drives it (the command line). At
+    /// most the ceiling (<see cref="PaceOptions.MaxRendersPerMinute"/>), the budget of the
+    /// pass's SSR lane, so that the pass keeps within it rather than spend its burst and wait
     /// out each refusal's <c>Retry-After</c>.
     /// </summary>
     public int RendersPerMinute { get; set; } = DefaultRendersPerMinute;
@@ -67,6 +79,9 @@ internal sealed class PrerenderOptions
     /// render, then on the store and the database: alone, the pass would never reach its pace.
     /// </summary>
     public int MaxInFlight { get; set; } = DefaultMaxInFlight;
+
+    /// <summary>The adaptive pace (<c>LoDb:Prerender:Pace</c>).</summary>
+    public PaceOptions Pace { get; set; } = new();
 
     /// <summary>Whether the pass knows where to render and for which host.</summary>
     public bool IsConfigured =>

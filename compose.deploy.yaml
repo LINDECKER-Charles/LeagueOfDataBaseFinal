@@ -29,8 +29,12 @@
 # now collected and alerted on (ConteneurCpuBride, infra-vps), and an unbounded stack did
 # worse: on 2026-10-10 a crawl took the shared host's vCPUs until the provider throttled the
 # whole machine, the other projects included. Under such a load the stack now sheds (503
-# with Retry-After) within its own quotas, which add up to 3 of the host's 4 vCPUs. nginx
-# weighs twice the others: it answers from its cache while they are saturated. The staging
+# with Retry-After) within its own quotas, which add up to 3 of the host's 4 vCPUs (the
+# visitors' services: nginx, web-ssr, api, postgres). The pre-rendering pass's own renderer
+# (web-ssr-prerender) adds none to that sum: its weight is the lowest of the host, so the
+# kernel only gives it the CPU nobody else asks for, and its quota bounds it should the
+# pass's regulator break. nginx weighs twice the others: it answers from its cache while
+# they are saturated. The staging
 # stack, on the same host, takes far less (compose.staging.yaml). Recalibrate after 7 days of
 #   rate(container_cpu_cfs_throttled_seconds_total{stack=~"lodb-(staging|prod)"}[5m])
 # read against the latency of the same days.
@@ -229,6 +233,35 @@ services:
           # Peak 338 MiB (lot 2 milestone). The V8 heap stays capped by NODE_OPTIONS.
           memory: 704m
           # The renderer is one Node thread: past a core, only its GC would gain.
+          cpus: "1.0"
+          pids: 256
+
+  # The pre-rendering pass's renderer (ADR 0011): the same image as web-ssr, no new build in
+  # CI, reached by the API alone (compose.yaml). The weight is an eighth of the visitors'
+  # services: under contention the kernel gives it next to nothing, and it runs on idle CPU
+  # (the measurements of 2026-10-21 show the visitors slowed from the first render of a
+  # shared renderer). The quota is the hard bound should the regulator break; the pass's
+  # own pace is bounded by the ceiling, which feeds its lane (compose.yaml).
+  web-ssr-prerender:
+    image: ${REGISTRY:?REGISTRY is required (ghcr.io/<owner>/lodb)}/web-ssr:${IMAGE_TAG:?IMAGE_TAG is required}
+    build: !reset null
+    environment:
+      # As web-ssr: the public hosts of CADDY_DOMAINS, and the stack's subnet alone.
+      LODB_ALLOWED_HOSTS: ${LODB_ALLOWED_HOSTS:?LODB_ALLOWED_HOSTS is required (the public hosts)}
+      LODB_STACK_NETWORKS: ${LODB_STACK_SUBNET:?LODB_STACK_SUBNET is required (set by the deploy job)}
+    # Scraped like web-ssr (the `service` label tells them apart), and read by the API's
+    # regulator on the same metrics port (/load), over `observability` too; never published.
+    networks:
+      observability: {}
+    cpu_shares: 128
+    labels:
+      prometheus.scrape: "true"
+      prometheus.port: "9464"
+    deploy:
+      resources:
+        limits:
+          # As web-ssr: its peak is the renderer's, the V8 heap capped by NODE_OPTIONS.
+          memory: 704m
           cpus: "1.0"
           pids: 256
 

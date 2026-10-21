@@ -1,7 +1,7 @@
 import type { PrerenderPassProgress } from '../../../../../../../core/api/generated/models/prerender-pass-progress';
 
 /** The likely cause of a pass that renders nothing, each a `live.stall.*` key. */
-export type StallCause = 'ssr' | 'worker_off' | 'waiting' | 'remote' | 'unknown';
+export type StallCause = 'ssr' | 'held' | 'worker_off' | 'waiting' | 'remote' | 'unknown';
 
 /** A running pass that does not move: just opened, or stalled for a cause. */
 export type Stall =
@@ -28,6 +28,9 @@ function causeOf(progress: PrerenderPassProgress, serverNow: number): StallCause
   const { pulse, running } = progress;
   if (pulse.ssrUnreachableSince) {
     return 'ssr';
+  }
+  if (pulse.pace?.state === 'held') {
+    return 'held';
   }
   if (!pulse.isWorkerEnabled) {
     return 'worker_off';
