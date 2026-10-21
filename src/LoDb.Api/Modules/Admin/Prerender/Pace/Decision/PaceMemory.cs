@@ -26,6 +26,15 @@ internal sealed record PaceMemory
     /// <summary>Green decisions in a row.</summary>
     public int GreenStreak { get; init; }
 
+    /// <summary>
+    /// Whether the operator's manual target drives this drain (<c>ManualDecision</c>), the
+    /// brake's hold included.
+    /// </summary>
+    public bool IsManual { get; init; }
+
+    /// <summary>Manual decisions in a row on a hot host or without the visitors' load.</summary>
+    public int UnsafeStreak { get; init; }
+
     /// <summary>A drain from <paramref name="at"/>, at <paramref name="floor"/>.</summary>
     public static PaceMemory Start(DateTimeOffset at, int floor) => new()
     {
@@ -40,6 +49,15 @@ internal sealed record PaceMemory
     /// <summary>A drain at the fixed <paramref name="pace"/>, which no decision moves.</summary>
     public static PaceMemory Fixed(DateTimeOffset at, int pace) =>
         Start(at, pace) with { State = PaceState.Fixed, Reason = PaceReason.Fixed };
+
+    /// <summary>A drain at the operator's <paramref name="target"/> from the admin.</summary>
+    public static PaceMemory Manual(DateTimeOffset at, int target) =>
+        Start(at, target) with
+        {
+            State = PaceState.Manual,
+            Reason = PaceReason.Manual,
+            IsManual = true,
+        };
 
     /// <summary>
     /// In <paramref name="state"/> for <paramref name="reason"/>: since <paramref name="at"/>,

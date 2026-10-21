@@ -3,7 +3,8 @@ using LoDb.Api.Modules.Admin.Prerender.Pace.Readings;
 namespace LoDb.Api.Tests.Prerender.Pace;
 
 /// <summary>
-/// The host's <c>/proc/stat</c> (guest time never counted twice, a set of CPUs for the bench),
+/// The host's <c>/proc/stat</c> (guest time never counted twice, its CPUs counted, a set of CPUs
+/// for the bench),
 /// the API's <c>cpu.stat</c>, and the CPU lists the bench sets.
 /// </summary>
 public sealed class PaceReadingsTests
@@ -19,11 +20,11 @@ public sealed class PaceReadingsTests
         """;
 
     [Fact]
-    public void AggregateLineCountsEveryCpuWithoutTheGuestTime()
+    public void AggregateLineCountsEveryCpuWithoutTheGuestTimeAndTheirNumber()
     {
         var sample = ProcStatReader.Parse(ProcStat, cpus: null);
 
-        Assert.Equal(new HostCpuSample(8000, 100, 10000), sample);
+        Assert.Equal(new HostCpuSample(8000, 100, 10000, Cpus: 4), sample);
     }
 
     [Fact]
@@ -31,7 +32,7 @@ public sealed class PaceReadingsTests
     {
         var sample = ProcStatReader.Parse(ProcStat, CpuSet.Parse("0,2-3"));
 
-        Assert.Equal(new HostCpuSample(6000, 80, 7510), sample);
+        Assert.Equal(new HostCpuSample(6000, 80, 7510, Cpus: 3), sample);
     }
 
     [Theory]

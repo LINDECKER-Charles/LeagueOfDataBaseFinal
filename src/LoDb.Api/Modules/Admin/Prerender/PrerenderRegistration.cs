@@ -9,6 +9,7 @@ using LoDb.Api.Modules.Admin.Prerender.Passes;
 using LoDb.Api.Modules.Admin.Prerender.Passes.Planning;
 using LoDb.Api.Modules.Admin.Prerender.Promotion;
 using LoDb.Api.Modules.Admin.Prerender.Rendering;
+using LoDb.Api.Modules.Admin.Prerender.Rendering.Renderers;
 using LoDb.Api.Modules.Admin.Prerender.Telemetry;
 using LoDb.Api.Modules.Admin.Prerender.Units;
 using LoDb.Api.Modules.Admin.Prerender.Writing;
@@ -97,8 +98,13 @@ internal static class PrerenderRegistration
 
     // Toward the SSR alone, on the stack network: no redirect followed (a 301 is a page the
     // pass skips), no cookie, bodies left gzip as the store keeps them, and no log line per
-    // request, four million of them in a pass.
-    private static void AddSsrClient(IServiceCollection services) =>
+    // request, four million of them in a pass. Spread over the renderers when several.
+    private static void AddSsrClient(IServiceCollection services)
+    {
+        services.TryAddSingleton<IRendererDns, RendererDns>();
+        services.TryAddSingleton<RendererAddresses>();
+        services.TryAddSingleton<RendererSlots>();
+        services.TryAddTransient<RendererSpreadHandler>();
         services.AddHttpClient(SsrClient.ClientName)
             .ConfigureHttpClient(static (provider, client) =>
                 Configure(client, provider.GetRequiredService<IOptions<PrerenderOptions>>().Value))
@@ -108,7 +114,9 @@ internal static class PrerenderRegistration
                 UseCookies = false,
                 AutomaticDecompression = DecompressionMethods.None,
             })
+            .AddHttpMessageHandler<RendererSpreadHandler>()
             .RemoveAllLoggers();
+    }
 
     // The pass renders each page as a visitor of the public host would get it: the SSR trusts
     // these two proxy headers for the origin of the canonical and hreflang links. The Host is

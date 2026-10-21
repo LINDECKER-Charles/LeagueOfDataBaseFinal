@@ -41,17 +41,23 @@ internal sealed class PulseReader(
         };
     }
 
-    private PrerenderPaceView? PaceOf(long passId)
-    {
-        if (regulator.Snapshot() is not { } pace || pace.PassId != passId)
-        {
-            return null;
-        }
+    /// <summary>
+    /// The pace in force while this instance drains a pass, whichever; else null.
+    /// </summary>
+    public PrerenderPaceView? Pace() =>
+        regulator.Snapshot() is { } pace ? ViewOf(pace) : null;
 
+    private PrerenderPaceView? PaceOf(long passId) =>
+        regulator.Snapshot() is { } pace && pace.PassId == passId ? ViewOf(pace) : null;
+
+    private PrerenderPaceView ViewOf(PaceSnapshot pace)
+    {
         var bounds = options.Value.Pace;
         return new PrerenderPaceView
         {
-            Mode = pace.Mode == PaceMode.Fixed ? "fixed" : "adaptive",
+            Mode = pace.Mode == PaceMode.Fixed ? "fixed"
+                : pace.IsManual ? "manual"
+                : "adaptive",
             State = PaceTags.TokenOf(pace.State),
             RendersPerMinute = pace.RendersPerMinute,
             MinRendersPerMinute = bounds.MinRendersPerMinute,

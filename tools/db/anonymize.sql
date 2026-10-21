@@ -100,6 +100,7 @@ BEGIN
           'prerender_demand.locale', 'prerender_demand.page_type', 'prerender_demand.path',
           'prerender_demand.reason', 'prerender_demand.ssr_instance', 'prerender_demand.state',
           'prerender_demand.version',
+          'prerender_pace_setting.mode',
           'prerender_pass.pause_reason', 'prerender_pass.scope',
           'prerender_pass.state',
           'prerender_unit.failure', 'prerender_unit.locale', 'prerender_unit.state',

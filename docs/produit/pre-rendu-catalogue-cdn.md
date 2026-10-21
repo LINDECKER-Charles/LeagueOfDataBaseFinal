@@ -801,6 +801,87 @@ continue de refuser des pages déjà écrites : leur demande s'additionne, elles
 recalculent pas (`done` dans l'epoch servie). La file prépare le terrain du lot 3 : les pages
 qu'il servira d'abord sont celles que les visiteurs demandent.
 
+#### Vitesse réglable (décision du 2026-10-22)
+
+**Constat, mesuré le 2026-10-21.** La première unité de prod (16.14.1 en anglais, 901 pages)
+a pris 33 minutes, 27 pages par minute : à ce rythme, les quelque 8 450 unités du catalogue
+(4 à 9 millions de pages) demandaient plus de 150 jours. Ce n'était ni le CPU ni le rendu :
+
+| Mesure (prod, VictoriaMetrics, 17:31-18:04Z puis 21:20-21:30Z) | Valeur |
+|---|---|
+| Rendu d'une page par le moteur, durée | 0,10 à 0,14 s |
+| CPU du moteur par page | 0,09 à 0,14 s (0,13 cœur à 84 pages/min) |
+| CPU de l'API et de Postgres par page | environ 0,03 s, dans le bruit des visiteurs |
+| CPU du VPS pendant la passe | 33 à 45 % occupé, dont 15 % de steal |
+| Rythme accordé par le régulateur | 30 pages/min (plancher), puis 75 à 84 |
+
+Le temps d'une page (2,2 s à 27 pages/min) était l'**espacement du régulateur** : parti du
+plancher, il ne montait pas tant que le VPS dépassait 50 % (vol compris) ou qu'une mesure du
+SSR des visiteurs passait à l'orange ; au mieux, son plafond de 240 donnait 12 à 26 jours.
+Derrière lui, deux bornes dures : **un moteur est un thread Node, un cœur au plus**
+(≈ 600 pages/min sur ce VPS à 0,1 s de CPU par page), et 2 pages en vol.
+
+Banc local (emplacement `lodb-dev-e2`, quotas de la prod, rendus directs des moteurs sur
+16.14.1) : un moteur plafonne à **1 cœur** (2 363 pages/min sur ce poste, 0,025 s de CPU par
+page, p50 407 ms à 16 en vol, quelques `503` au-delà de ses 15 rendus simultanés) ; deux
+moteurs font **4 557 pages/min** (× 1,93), chacun à 100 % de son cœur, p50 205 ms ; l'API reste
+sous 0,1 cœur et Postgres sous 2 %. Le CPU d'une page du VPS est 3,5 à 4 fois celui de ce
+poste : 2 moteurs y tiennent environ 1 000 à 1 200 pages/min.
+
+**Ce qui change.**
+
+- **Mode manuel**, réglé en direct au pupitre (bloc « Vitesse du précalcul ») : une cible en
+  pages par minute, de 1 à `LODB_PRERENDER_MANUAL_MAX` (900 sur un hôte), gardée dans
+  `prerender_pace_setting` (une ligne, migration additive). Le mode adaptatif reste le défaut ;
+  `LODB_PRERENDER_PACE_MODE=fixed` reste le coupe-circuit et passe avant tout réglage.
+  Une nouvelle cible s'applique tout de suite sur l'instance qui répond ; l'échantillonneur
+  relit le réglage toutes les 30 s, et l'instance qui écrit la passe change de mode à sa
+  décision suivante.
+- **Frein d'urgence** du mode manuel (`ManualDecision`), lu à chaque décision (30 s) :
+  - un visiteur du **dernier patch** refusé par le SSR des visiteurs (voie `current`, refus pour
+    le serveur ou la voie, jamais la part d'un client) : retenue immédiate ;
+  - 6 décisions de suite (3 min) avec le VPS à **90 %** ou plus (vol compris), avec un signal
+    rouge de ce qu'attendent les visiteurs (boucle d'événements p99 ≥ 250 ms ou pression CPU
+    ≥ 15 % de leur SSR, API bridée ≥ 20 % : les bandes rouges du régulateur), ou sans lecture
+    du SSR des visiteurs ou de `/proc/stat` : retenue ;
+  - une retenue arrête tout nouveau rendu 5 min après sa dernière décision de freinage, puis la
+    cible reprend. Les `503` des anciens patchs (voie `pinned`, 160 à 380 par minute en prod
+    pendant les crawls) ne freinent pas : cette voie refuse au-delà de son budget, quoi que
+    fasse l'hôte. Une allocation qu'aucune décision n'a renouvelée depuis 90 s retombe au
+    plancher, le mode manuel compris (le frein ne lit plus rien).
+- **Plusieurs moteurs** : `web-ssr-prerender` passe en répliques (`LODB_PRERENDER_RENDERERS`,
+  2 sur un hôte, 1 au staging et en local), chacune un cœur au plus, au poids le plus bas.
+  L'API résout leur nom commun toutes les 30 s et envoie chaque rendu à l'adresse la moins
+  occupée (`RendererSpreadHandler`), le `Host` public inchangé ; elle lit `/load` de chacune
+  (le régulateur prend la plus sous pression). Chaque voie admet 15 rendus simultanés : les
+  premières pages d'une unité attendent son catalogue ensemble, et un refus leur coûterait
+  30 s. Son budget par minute est `LODB_PRERENDER_MANUAL_MAX`.
+- **Pages en vol au rythme** : la fenêtre d'une unité suit l'allocation, 1,5 s par page
+  (`InFlightWidth`), jusqu'à `LODB_PRERENDER_PAGES_IN_FLIGHT` (24) : à 900 pages/min, 23 pages
+  rendues, téléversées et comptées à la fois ; au plancher, une. Une fenêtre fixe plus large
+  ne ferait qu'attendre le cadenceur, et une pause l'attendrait.
+- **Un cache des réponses du catalogue dans le moteur** n'est pas fait : l'API ne coûte
+  qu'environ 0,03 s de CPU par page et le moteur reste la borne.
+
+**Ressources et coût, à côté du réglage.** Lu toutes les 30 s par l'échantillonneur, qu'une
+passe tourne ou non (`GET /api/admin/prerender/speed`) : CPU du VPS (steal compté occupé) et
+cœurs libres, CPU des moteurs et leurs rendus par minute, CPU du SSR des visiteurs et ses refus
+(dernier patch, anciens patchs), CPU de l'API. Pour la vitesse regardée : CPU prévu
+(pages/min × 0,1 s de CPU par page pour les moteurs, mesuré sur 10 min dès 60 pages, + 0,03 s
+pour l'API et Postgres), occupation du VPS ensuite et marge, avertissement au-delà du seuil du
+frein, capacité des moteurs (moteurs × quota × 60 / CPU par page), fin de la passe active
+(`pagesLeft`) et du reste du catalogue (unités manquantes de l'epoch servie × pages par
+unité), stockage ajouté (pages × octets par page × prix One Zone) et part du VPS prise : le VPS
+étant payé, la vitesse ne coûte rien de plus que ce stockage.
+
+**Commande d'exploitation** : `prerender pause` met la passe en cours en pause avec une raison
+à elle, `prerender resume` ne reprend que cette pause (`--any` : toute pause), une ligne de
+synthèse chacune, codes `0` (fait, ou rien à faire), `1`, `2`.
+
+**Débit attendu.** À 900 pages/min, 4,2 millions de pages en 3 jours et 6 heures, 9 millions
+en 7 jours ; à 600, 5 à 10 jours. Le frein, les crawls et le steal en retirent une part : la
+fin réelle se lit au pupitre.
+
 ### Lot 3 — nginx sert les anciens patchs depuis le stockage
 
 Dans la location des versions épinglées (`sites/site.conf`), derrière

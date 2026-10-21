@@ -1379,6 +1379,41 @@ namespace LoDb.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("LoDb.Infrastructure.Persistence.Prerender.Pace.PrerenderPaceSetting", b =>
+                {
+                    b.Property<short>("Id")
+                        .HasColumnType("smallint")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Mode")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("mode");
+
+                    b.Property<int>("RendersPerMinute")
+                        .HasColumnType("integer")
+                        .HasColumnName("renders_per_minute");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.HasKey("Id")
+                        .HasName("pk_prerender_pace_setting");
+
+                    b.ToTable("prerender_pace_setting", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_prerender_pace_setting_mode", "mode IN ('adaptive', 'manual')");
+
+                            t.HasCheckConstraint("ck_prerender_pace_setting_rate", "renders_per_minute > 0");
+
+                            t.HasCheckConstraint("ck_prerender_pace_setting_singleton", "id = 1");
+                        });
+                });
+
             modelBuilder.Entity("LoDb.Infrastructure.Persistence.Prerender.PrerenderBuild", b =>
                 {
                     b.Property<string>("Hash")

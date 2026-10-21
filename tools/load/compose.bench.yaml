@@ -94,12 +94,12 @@ services:
   # what the visitors get beside it: the lowest weight, a core at most.
   web-ssr-prerender:
     environment:
-      LODB_PRERENDER_RENDERS_PER_MINUTE: ${LODB_PRERENDER_PACE_MAX:-240}
+      LODB_PRERENDER_RENDERS_PER_MINUTE: ${LODB_PRERENDER_MANUAL_MAX:-600}
     cpu_shares: 128
     deploy:
       resources:
         limits:
-          cpus: "1.0"
+          cpus: ${LODB_PRERENDER_RENDERER_CPUS:-1.0}
           memory: 704m
           pids: 256
 

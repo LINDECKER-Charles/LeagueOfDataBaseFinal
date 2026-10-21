@@ -50,6 +50,7 @@ import {
   type PassDetailResult,
 } from './passes/pass-detail-dialog';
 import { PassesTab } from './passes/passes-tab';
+import { SpeedBlock } from './speed/speed-block';
 
 /** What the title of the document follows. */
 interface TitleSource {
@@ -87,6 +88,7 @@ const PHONE = '(max-width: 639.98px)';
     PassesTab,
     PrerenderBands,
     PrerenderKpis,
+    SpeedBlock,
     Tab,
     Tabs,
   ],

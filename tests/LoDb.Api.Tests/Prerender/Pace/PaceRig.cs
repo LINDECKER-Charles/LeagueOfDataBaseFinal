@@ -2,6 +2,8 @@ using System.Diagnostics.Metrics;
 using LoDb.Api.Modules.Admin.Prerender.Options;
 using LoDb.Api.Modules.Admin.Prerender.Pace;
 using LoDb.Api.Modules.Admin.Prerender.Pace.Decision;
+using LoDb.Api.Modules.Admin.Prerender.Pace.Manual;
+using LoDb.Api.Modules.Admin.Prerender.Pace.Resources;
 using LoDb.Api.Modules.Admin.Prerender.Pace.Signals;
 using LoDb.Api.Modules.Admin.Prerender.Pace.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,6 +22,8 @@ internal sealed class PaceRig : IDisposable
     public const int Ceiling = 240;
     public const int FixedPace = 120;
 
+    private ResourceBoard? _resources;
+
     private readonly ServiceProvider _meters = new ServiceCollection().AddMetrics()
         .BuildServiceProvider();
 
@@ -37,8 +41,11 @@ internal sealed class PaceRig : IDisposable
                 PassLoadUrl = "http://lodb-web-ssr-prerender:9464/load",
             },
         };
+        var options = Microsoft.Extensions.Options.Options.Create(Options);
+        Settings = new PaceSettings(options, new FakeLogger<PaceSettings>(Logs));
         Regulator = new PaceRegulator(
-            Microsoft.Extensions.Options.Options.Create(Options),
+            options,
+            Settings,
             Clock,
             new PaceMetrics(Meters),
             new FakeLogger<PaceRegulator>(Logs));
@@ -54,6 +61,30 @@ internal sealed class PaceRig : IDisposable
     public IMeterFactory Meters => _meters.GetRequiredService<IMeterFactory>();
 
     public PaceRegulator Regulator { get; }
+
+    /// <summary>The resources the sampler notes.</summary>
+    public ResourceBoard Resources => _resources ??= new ResourceBoard(Clock);
+
+    /// <summary>
+    /// The operator's setting the regulator reads: adaptive until a test sets it.
+    /// </summary>
+    public PaceSettings Settings { get; }
+
+    /// <summary>Sets the manual mode at <paramref name="target"/> renders a minute.</summary>
+    public void Manual(int target) => Settings.Apply(
+        new PaceSetting(PaceChoice.Manual, target) { UpdatedAt = Clock.GetUtcNow() });
+
+    /// <summary>Moves the clock on, then decides on the manual brake's two readings.</summary>
+    public void DecideManual(
+        int seconds,
+        double? hostBusy,
+        long? visitorsRefused,
+        SignalReading? visitorsHurt = null)
+    {
+        Clock.Advance(TimeSpan.FromSeconds(seconds));
+        var board = new PaceBoard(SignalReading.Green, hostBusy, visitorsRefused, visitorsHurt);
+        Regulator.Decide(new PaceEvaluation(board, Clock.GetUtcNow(), Ceiling));
+    }
 
     /// <summary>The event names logged so far, in order.</summary>
     public IReadOnlyList<string> EventNames =>

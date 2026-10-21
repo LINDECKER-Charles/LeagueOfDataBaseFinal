@@ -1,6 +1,7 @@
 using LoDb.Api.Modules.Admin.Prerender.Demand.Sharing;
 using LoDb.Api.Modules.Admin.Prerender.Options;
 using LoDb.Api.Modules.Admin.Prerender.Pace;
+using LoDb.Api.Modules.Admin.Prerender.Pace.Manual;
 using LoDb.Api.Modules.Admin.Prerender.Pace.Telemetry;
 using LoDb.Api.Tests.Prerender.Support;
 using LoDb.Infrastructure.Persistence.Prerender.Demand;
@@ -96,6 +97,7 @@ public sealed class QueuePaceTests(PostgresContainerFixture postgres)
         using var meters = new ServiceCollection().AddMetrics().BuildServiceProvider();
         var regulator = new PaceRegulator(
             options,
+            new PaceSettings(options, NullLogger<PaceSettings>.Instance),
             clock,
             new PaceMetrics(meters.GetRequiredService<System.Diagnostics.Metrics.IMeterFactory>()),
             NullLogger<PaceRegulator>.Instance);
