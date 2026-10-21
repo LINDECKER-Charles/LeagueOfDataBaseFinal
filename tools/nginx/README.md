@@ -58,11 +58,14 @@ store then from the cache (`X-LoDb-Source`: `store`, `cache`), with its policy, 
 policy, reporting endpoints and `Link` posed again from the metadata (an object without its
 policy gets a strict one, and any stored page the type of a page), the `archived` class's
 one-year `Cache-Control`, none of the store's own headers (`x-amz-*`, `x-amzn-*`, CORS, as the
-local stack's simulated store sends them), and decompressed for a client without gzip; the
-store gets the key with its own `Host` and none of the client's headers; each of its failures
-falls back to the SSR server (`ssr`) within the store's timeouts; a query, another method or a
-path no pass writes never reaches it; a client's rate holds on both ways, with the `429` and
-`Retry-After` of every page, while the store's own `429` falls back. A bundle the SSR server no
+local stack's simulated store sends them, nor the validators and ranges S3 states of the
+compressed object: a `HEAD` gets the headers of a `GET`, a conditional request on the store's
+`ETag` or `Last-Modified` and a `Range` get the whole page), and decompressed for a client
+without gzip; the store gets the key with its own `Host` and none of the client's headers; each
+of its failures falls back to the SSR server (`ssr`) within the store's timeouts; a query,
+another method or a path no pass writes never reaches it; a client's rate holds on both ways,
+with the `429` and `Retry-After` of every page, while the store's own `429` falls back. A bundle
+the SSR server no
 longer has (its `404`, and only that) comes from the store's `build/`, then from the bundles'
 cache under its name, without the store's own headers; a name neither has is a plain `404`,
 whatever the store answered, and past the pages' rate a client gets their `429` without the

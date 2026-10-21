@@ -86,8 +86,12 @@ const SILENT_STORE_LIMIT_MS = 10_000;
 // A client address of its own for each use: the burst of one never runs into another's.
 let lastClient = 0;
 const aClient = () => ({ forwardedFor: `203.0.113.${(lastClient += 1)}` });
-// What a store adds of its own (snippets/pages-store/answer.conf), S3's and the local stack's.
-const STORE_HEADER = /^(?:x-amzn?-|access-control-)/;
+// What a store adds of its own (snippets/pages-store/answer.conf), S3's and the local stack's,
+// the validators and ranges it states of its object included.
+const STORE_HEADER = /^(?:x-amzn?-|access-control-|etag$|last-modified$|accept-ranges$)/;
+// The validators the store states of an object, as its headers name them, and the conditional
+// request a client holding each one sends.
+const VALIDATORS = { etag: 'if-none-match', 'last-modified': 'if-modified-since' };
 const storeHeadersOf = (answer) => Object.keys(answer.headers).filter((name) =>
   STORE_HEADER.test(name));
 const sourceOf = (answer) =>
@@ -100,6 +104,18 @@ describe('nginx image in front of the page store',
     const keysOf = async () => {
       const { stdout } = await stack.exec('grep', '-rah', '^KEY: ', '/var/cache/nginx/archive');
       return stdout.split('\n').filter(Boolean);
+    };
+    // What a client would send, holding the validators the store gives a page's object, read
+    // from the store itself (busybox's wget prints the headers it got).
+    const conditionalHeadersOf = async (path) => {
+      const object = `http://${STORE.LODB_PAGES_STORE_HOST}:${STORE.LODB_PAGES_STORE_PORT}`
+        + `${OBJECTS}${path}`;
+      const { stderr } = await stack.exec('wget', '-S', '-O', '/dev/null', object);
+      return Object.entries(VALIDATORS).map(([validator, condition]) => {
+        const value = new RegExp(`^\\s*${validator}: (.+)$`, 'im').exec(stderr)?.[1].trim();
+        assert.ok(value, validator);
+        return { [condition]: value };
+      });
     };
 
     before(async () => {
@@ -135,6 +151,37 @@ describe('nginx image in front of the page store',
         }
         assert.deepEqual(await stack.storeRequests(), [`GET ${OBJECTS}${STORED}`]);
         assert.ok((await keysOf()).includes(`KEY: 4.5|http://localhost${STORED}`));
+      });
+
+    test('answers a HEAD and a conditional request with the page, under no validator of S3',
+      async () => {
+        const path = STORED.replace('/en/', '/de/');
+        const head = await get(path, { ...aClient(), method: 'HEAD' });
+        const conditional = [];
+        for (const headers of await conditionalHeadersOf(path)) {
+          conditional.push([await get(path, { ...aClient(), headers }),
+            await get(path, { ...aClient(), encoding: 'gzip', headers })]);
+        }
+        // Never a range of the compressed bytes, which are not the page.
+        const ranged = await get(path, { ...aClient(), encoding: 'gzip',
+          headers: { range: 'bytes=0-3' } });
+
+        assert.equal(head.status, 200);
+        assert.equal(head.body.length, 0);
+        assert.deepEqual(sourceOf(head), ['MISS', 'store']);
+        assert.equal(head.headers['content-type'], STORED_HEADERS['content-type']);
+        assert.equal(head.headers['cache-control'], STORED_HEADERS['cache-control']);
+        for (const [plain, compressed] of conditional) {
+          assert.deepEqual([plain, compressed].map(sourceOf), [['HIT', 'cache'], ['HIT', 'cache']]);
+          assert.deepEqual([plain.status, compressed.status], [200, 200]);
+          assert.equal(plain.body.toString(), stack.storedPage);
+          assert.equal(gunzipSync(compressed.body).toString(), stack.storedPage);
+        }
+        assert.equal(ranged.status, 200);
+        assert.equal(gunzipSync(ranged.body).toString(), stack.storedPage);
+        for (const answer of [head, ...conditional.flat(), ranged]) {
+          assert.deepEqual(storeHeadersOf(answer), []);
+        }
       });
 
     test('sends the store a page\'s key with its own Host and none of the client\'s headers',

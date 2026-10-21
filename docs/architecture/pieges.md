@@ -586,7 +586,11 @@ stockage objet, puis lues par nginx
   passe s'ajoute là, et se repose dans `archive-cache.conf`, sinon elle sort chez le client.
   Une réponse du stockage, reconnue à sa métadonnée `lodb-build`, reçoit de nginx le type
   `text/html`, la `Cache-Control` de la classe `archived` et, si son objet n'a pas de CSP, une
-  politique stricte : jamais aucune.
+  politique stricte : jamais aucune. `ETag`, `Last-Modified` et `Accept-Ranges` décrivent
+  l'objet gzip, pas la réponse (un client sans gzip reçoit d'autres octets) : masqués aussi,
+  voulu. Une requête conditionnelle reçoit donc la page en `200`, jamais un `304`, et un `Range`
+  la page entière ; les bundles hachés de `/build/`, servis sous le même fichier, perdent aussi
+  ceux du SSR (immuables, jamais revalidés). Ne pas les « rétablir ».
 - **Clé du stockage tirée d'une `map` stricte, jamais de l'URI brute.** `$lodb_store_page`
   (`sites/site.conf`) se construit sur `$lodb_request_path`, le chemin tel qu'envoyé, par une
   expression qui ne laisse passer que les 4 listes et les fiches d'une version, en `GET` ou

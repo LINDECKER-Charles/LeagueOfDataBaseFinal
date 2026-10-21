@@ -500,7 +500,9 @@ Dans la location des versions épinglées (`sites/site.conf`), derrière
     et se répète dans chaque location.
 - **Avec une query**, le chemin actuel.
 - **En-têtes** :
-  - `proxy_hide_header` des `x-amz-*` ;
+  - `proxy_hide_header` des `x-amz-*`, et d'`ETag`, `Last-Modified` et `Accept-Ranges`, qui
+    décrivent l'objet gzip et non la réponse : une requête conditionnelle reçoit la page, jamais
+    un `304` sur l'empreinte d'un autre corps, et un `Range` la page entière ;
   - les en-têtes du § 3 reposés depuis `$upstream_http_x_amz_meta_*`, y compris sur une
     copie servie par le cache (`HIT`) ;
   - la `Cache-Control` de la classe `archived`, posée par nginx
@@ -738,7 +740,9 @@ Selon `docs/guides/tests.md`, au plus près de la couche qui porte le comporteme
   argument ni en sortie, politique sans l'opérateur refusée, retrait de l'epoch servie
   refusé.
 - **nginx (`tools/nginx`, stockage simulé par un stub)** :
-  - une page trouvée est servie avec ses en-têtes reposés, aussi depuis le cache ;
+  - une page trouvée est servie avec ses en-têtes reposés, aussi depuis le cache, sans aucun
+    en-tête du stockage (`x-amz-*`, `ETag`, `Last-Modified`, `Accept-Ranges`) : un `HEAD`, une
+    requête conditionnelle sur les validateurs du stockage ou un `Range` reçoivent la page ;
   - une 403, une 404, une 429, une 5xx ou un délai dépassé du stockage mènent au SSR ; la
     429 du stockage reste distincte de celle de `limit_req` ;
   - une query, un chemin hors grammaire ou une méthode autre que `GET` et `HEAD` (un
