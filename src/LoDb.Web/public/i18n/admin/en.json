@@ -806,7 +806,7 @@
         "ready_failed_pages": "{pages, plural, one {# failed page stays} other {# failed pages stay}} served by the SSR.",
         "ready_failed_units": "{units, plural, one {# unit failed for good goes} other {# units failed for good go}} through the SSR.",
         "ready_how": "How to switch?",
-        "nearly": "Epoch {epoch} covers {share} of the older patches: {missing, plural, one {# unit is} other {# units are}} missing before it can be served.",
+        "nearly": "Epoch {epoch} covers {share} of the older patches' units: {missing, plural, one {# unit is} other {# units are}} missing before it can be served.",
         "nearly_cta": "Complete epoch {epoch}"
       },
       "idle": {
@@ -815,7 +815,7 @@
         "last": "Last pass: #{id}, {state} on {date} UTC · {units, plural, one {# unit} other {# units}} · {pages, plural, one {# page} other {# pages}}",
         "detail": "Detail",
         "never": "No pass launched yet.",
-        "gaps": "The served epoch covers {share} of the older patches: {versions, plural, one {# patch has gaps} other {# patches have gaps}}.",
+        "gaps": "The served epoch covers {share} of the older patches' units: {versions, plural, one {# patch has gaps} other {# patches have gaps}}.",
         "gaps_cta": "Complete them",
         "whole": "The served epoch covers every older patch."
       },
@@ -824,7 +824,7 @@
         "served_sub": "LODB_ARCHIVE_SERVE_EPOCH, changed by a redeploy",
         "served_ready": "epoch {epoch} is ready",
         "coverage": "Served coverage",
-        "coverage_sub": "{complete} / {total, plural, one {# patch} other {# patches}} complete",
+        "coverage_sub": "of the units · {complete} / {total, plural, one {# patch} other {# patches}} complete",
         "coverage_none": "no older patch",
         "stored": "Stored",
         "stored_sub": "{pages, plural, one {# page} other {# pages}}, retired epochs left out",
@@ -952,7 +952,7 @@
       },
       "confirm": {
         "pause_title": "Pause pass #{id}?",
-        "pause_current": "{version} · {locale} stops after the pages in flight, at {done} / {total}.",
+        "pause_current": "{version} · {locale} stops once the pages under way are written, at {done} / {total}.",
         "pause_resume": "The pass will resume exactly there, unit and page.",
         "pause_promotions": "While paused, a promoted patch joins the pass but waits for it to resume.",
         "pause_slot": "It keeps the only active slot: no other pass can start before it resumes or is cancelled.",
@@ -1116,7 +1116,7 @@
         "title": "Summary",
         "scope": "Epoch {epoch} ({kind, select, served {served} standby {standby} other {new}}) · {perimeter}",
         "units": "Units",
-        "units_sub": "{versions, plural, one {# patch} other {# patches}} × {locales, plural, one {# locale} other {# locales}}{skipped, plural, =0 {} other {, # left out}}",
+        "units_sub": "{versions, plural, one {# patch} other {# patches}} × {locales, plural, one {# locale} other {# locales}}{skipped, plural, =0 {} other {, # already complete, left out}}",
         "pages": "Pages",
         "pages_sub": "≈ {perUnit} a unit",
         "volume": "Volume",

@@ -287,7 +287,7 @@ Sans passe active, la zone 3 devient (carte `IdleCard`) :
 ┌ AUCUNE PASSE EN COURS ─────────────────────────────────────────────────────────────────────┐
 │ Le stockage ne reçoit rien. Les patchs promus ouvrent une passe d'eux-mêmes.                │
 │ Dernière passe : n°11, terminée le 17/10/2026 22:14 · 4 452 unités · 2 146 000 pages [Détail]│
-│ L'epoch servie couvre 97.4 % des anciens patchs : 11 patchs ont des manques. [Les compléter] │
+│ L'epoch servie couvre 97.4 % des unités des anciens patchs : 11 patchs ont des manques. [Les compléter] │
 │                                                                   [▶ Lancer une passe]      │
 └────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -981,7 +981,7 @@ Notations : `V` les versions cochées ; `L` les langues choisies ; `T` les types
 | Chiffre | Formule | Données |
 |---|---|---|
 | Unités | `Σ_v card{ l ∈ L : ¬(skip ∧ held(v, l)) }` | masques `types` |
-| Unités ignorées | `card(V) × card(L) − unités` | — |
+| Unités ignorées | `card(V) × card(L) − unités`, dites « 4 déjà complètes, ignorées » dans la tuile Unités (jamais « 4 ignorées » sans raison) | — |
 | Pages par unité de `v` | `ppl(v) = pagesPerLocaleOf(v, patches)` (F2, pur), dans cet ordre : (1) `row.pagesPerLocale`, mesuré pour `v` ; (2) la médiane des patchs mesurés de **sa saison**, s'il y en a 3 au moins ; (3) la mesure du patch mesuré **le plus proche** dans l'ordre des versions (à égalité, le plus ancien) ; (4) 500 | `pagesPerLocale` : `PagesTotal` maximal d'une unité terminée sur tous les types, dans **n'importe quelle** passe (§ 6.6). Les mesures viennent surtout des patchs récents (≈ 1 140 pages par unité, lot 2, « Nouveau patch ») alors qu'un ancien patch en a ≈ 300 à 500 (496 en moyenne sur 402 patchs, spécification, § 1, « Constat ») : une médiane globale surestimerait de ×2 à ×3 une passe sur les anciens patchs, d'où la saison puis le voisin. 500 ne sert que sans aucune mesure |
 | Part des types | `share(T) = 1` si tous ; sinon `Σ_{t∈T} estimates.typeShares[t]`, ou `card(T) / 4` sans `typeShares` | `typeShares` (§ 6.6) |
 | Pages | `round(Σ_v unités(v) × ppl(v) × share(T))` | — |
@@ -1368,7 +1368,8 @@ conséquence, bouton de confirmation, bouton qui ne fait rien **et qui a le focu
 
 ```
 ┌ METTRE LA PASSE N°12 EN PAUSE ? ─────────────────────────────── ✕ ┐
-│ • 16.18.1 · fr s'arrête après les pages en vol, à 312 / 1 140.    │
+│ • 16.18.1 · fr s'arrête une fois les pages en cours écrites, à    │
+│   312 / 1 140.                                                    │
 │ • La passe reprendra exactement là, unité et page.                │
 │ • Pendant la pause, un patch promu rejoint la passe mais attend   │
 │   la reprise.                                                     │
@@ -1461,7 +1462,8 @@ Activation automatique aux flèches, comme partout. Le premier est sélectionné
 ### 5.2 Couverture
 
 `CoverageTab` (F4, `prerender/coverage/`) lit `GET …/patches?epoch=` (via `injectPatches`, F1).
-La tuile « Couverture servie » et la carte sans passe, elles, lisent la couverture du rapport
+La tuile « Couverture servie » (une part d'**unités** ; sa sous-ligne le dit, « des unités · 391 /
+402 patchs complets », les deux mesures n'étant pas la même) et la carte sans passe, elles, lisent la couverture du rapport
 (`report.storage.epochs[…].coverage`, § 6.5) : elles ne dépendent pas de cette lecture.
 
 ```
@@ -3191,21 +3193,21 @@ de lot suit la même règle, et chaque spécification de composant vérifie au m
 | `bands.ready_failed_pages` | {pages, plural, one {# page en échec y restera servie} other {# pages en échec y resteront servies}} par le SSR. | {pages, plural, one {# failed page stays} other {# failed pages stay}} served by the SSR. |
 | `bands.ready_failed_units` | {units, plural, one {# unité en échec définitif passera} other {# unités en échec définitif passeront}} par le SSR. | {units, plural, one {# unit failed for good goes} other {# units failed for good go}} through the SSR. |
 | `bands.ready_how` | Comment basculer ? | How to switch? |
-| `bands.nearly` | L'epoch {epoch} couvre {share} des anciens patchs : {missing, plural, one {# unité manque} other {# unités manquent}} avant de pouvoir la servir. | Epoch {epoch} covers {share} of the older patches: {missing, plural, one {# unit is} other {# units are}} missing before it can be served. |
+| `bands.nearly` | L'epoch {epoch} couvre {share} des unités des anciens patchs : {missing, plural, one {# unité manque} other {# unités manquent}} avant de pouvoir la servir. | Epoch {epoch} covers {share} of the older patches' units: {missing, plural, one {# unit is} other {# units are}} missing before it can be served. |
 | `bands.nearly_cta` | Compléter l'epoch {epoch} | Complete epoch {epoch} |
 | `idle.title` | Aucune passe en cours | No pass running |
 | `idle.lede` | Le stockage ne reçoit rien. Les patchs promus {promotions, select, on {ouvrent une passe d'eux-mêmes} other {n'ouvrent pas de passe d'eux-mêmes}}. | The store receives nothing. Promoted patches {promotions, select, on {open a pass by themselves} other {do not open a pass by themselves}}. |
 | `idle.last` | Dernière passe : n°{id}, {state} le {date} UTC · {units, plural, one {# unité} other {# unités}} · {pages, plural, one {# page} other {# pages}} | Last pass: #{id}, {state} on {date} UTC · {units, plural, one {# unit} other {# units}} · {pages, plural, one {# page} other {# pages}} |
 | `idle.detail` | Détail | Detail |
 | `idle.never` | Aucune passe lancée jusqu'ici. | No pass launched yet. |
-| `idle.gaps` | L'epoch servie couvre {share} des anciens patchs : {versions, plural, one {# patch a des manques} other {# patchs ont des manques}}. | The served epoch covers {share} of the older patches: {versions, plural, one {# patch has gaps} other {# patches have gaps}}. |
+| `idle.gaps` | L'epoch servie couvre {share} des unités des anciens patchs : {versions, plural, one {# patch a des manques} other {# patchs ont des manques}}. | The served epoch covers {share} of the older patches' units: {versions, plural, one {# patch has gaps} other {# patches have gaps}}. |
 | `idle.gaps_cta` | Les compléter | Complete them |
 | `idle.whole` | L'epoch servie couvre tous les anciens patchs. | The served epoch covers every older patch. |
 | `kpis.served` | Epoch servie | Served epoch |
 | `kpis.served_sub` | LODB_ARCHIVE_SERVE_EPOCH, changée par un redéploiement | LODB_ARCHIVE_SERVE_EPOCH, changed by a redeploy |
 | `kpis.served_ready` | l'epoch {epoch} est prête | epoch {epoch} is ready |
 | `kpis.coverage` | Couverture servie | Served coverage |
-| `kpis.coverage_sub` | {complete} / {total, plural, one {# patch} other {# patchs}} complets | {complete} / {total, plural, one {# patch} other {# patches}} complete |
+| `kpis.coverage_sub` | des unités · {complete} / {total, plural, one {# patch} other {# patchs}} complets | of the units · {complete} / {total, plural, one {# patch} other {# patches}} complete |
 | `kpis.coverage_none` | aucun ancien patch | no older patch |
 | `kpis.stored` | Stocké | Stored |
 | `kpis.stored_sub` | {pages, plural, one {# page} other {# pages}}, epochs retirées exclues | {pages, plural, one {# page} other {# pages}}, retired epochs left out |
@@ -3307,7 +3309,7 @@ de lot suit la même règle, et chaque spécification de composant vérifie au m
 | `actions.resume_itself` | Reprendre… | Resume… |
 | `actions.cancel` | Annuler la passe… | Cancel the pass… |
 | `confirm.pause_title` | Mettre la passe n°{id} en pause ? | Pause pass #{id}? |
-| `confirm.pause_current` | {version} · {locale} s'arrête après les pages en vol, à {done} / {total}. | {version} · {locale} stops after the pages in flight, at {done} / {total}. |
+| `confirm.pause_current` | {version} · {locale} s'arrête une fois les pages en cours écrites, à {done} / {total}. | {version} · {locale} stops once the pages under way are written, at {done} / {total}. |
 | `confirm.pause_resume` | La passe reprendra exactement là, unité et page. | The pass will resume exactly there, unit and page. |
 | `confirm.pause_promotions` | Pendant la pause, un patch promu rejoint la passe mais attend la reprise. | While paused, a promoted patch joins the pass but waits for it to resume. |
 | `confirm.pause_slot` | Elle garde la seule place active : aucune autre passe ne peut être lancée avant sa reprise ou son annulation. | It keeps the only active slot: no other pass can start before it resumes or is cancelled. |
@@ -3443,7 +3445,7 @@ de lot suit la même règle, et chaque spécification de composant vérifie au m
 | `summary.title` | Récapitulatif | Summary |
 | `summary.scope` | Epoch {epoch} ({kind, select, served {servie} standby {en attente} other {nouvelle}}) · {perimeter} | Epoch {epoch} ({kind, select, served {served} standby {standby} other {new}}) · {perimeter} |
 | `summary.units` | Unités | Units |
-| `summary.units_sub` | {versions, plural, one {# patch} other {# patchs}} × {locales, plural, one {# langue} other {# langues}}{skipped, plural, =0 {} other {, # ignorées}} | {versions, plural, one {# patch} other {# patches}} × {locales, plural, one {# locale} other {# locales}}{skipped, plural, =0 {} other {, # left out}} |
+| `summary.units_sub` | {versions, plural, one {# patch} other {# patchs}} × {locales, plural, one {# langue} other {# langues}}{skipped, plural, =0 {} one {, # déjà complète, ignorée} other {, # déjà complètes, ignorées}} | {versions, plural, one {# patch} other {# patches}} × {locales, plural, one {# locale} other {# locales}}{skipped, plural, =0 {} other {, # already complete, left out}} |
 | `summary.pages` | Pages | Pages |
 | `summary.pages_sub` | ≈ {perUnit} par unité | ≈ {perUnit} a unit |
 | `summary.volume` | Volume | Volume |
@@ -3681,8 +3683,10 @@ manuelle au staging** avant fusion (§ 8.5).
   la barre et la matrice suivent la direction.
 - **Champs** : 16 px au moins (le filtre, la zone de collage, les sélecteurs De / à).
 - **Chiffres** : `figure` (`admin/format/figure.ts`) pour les nombres (espace des milliers, point
-  décimal), `decimalBytes` pour les volumes (Go de 10⁹), `monthlyCost` pour les euros, `stamp`
-  pour les instants (UTC), `duration` pour les durées. Un instant en UTC le dit à l'écran, jamais
+  décimal ; une part non nulle ne s'écrit jamais « 0 % », ni une part incomplète « 100 % » :
+  « < 0.1 % couverte » après 2 643 pages, jamais « 0 % couverte » ; « > 99.9 % » en haut),
+  `decimalBytes` pour les volumes (Go de 10⁹), `monthlyCost` pour les euros, `stamp` pour les
+  instants (UTC), `duration` pour les durées. Un instant en UTC le dit à l'écran, jamais
   dans un seul `title` : à Paris, « 01:51 » se lirait comme une heure passée. Le libellé le porte
   (« Fin estimée (UTC) », « Activité (UTC) », les colonnes « Lancée (UTC) », « Début (UTC) »,
   « Dernière écriture (UTC) »), sinon la phrase (« lancée le 21/10/2026 01:36 UTC par … »,

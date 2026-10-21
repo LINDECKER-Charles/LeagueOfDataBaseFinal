@@ -48,6 +48,9 @@ describe('figure', () => {
     expect(figure(0.4567, 'share')).toBe('45.7 %');
     // As the legacy `round(1)`: a decimal that carries nothing is left out.
     expect(figure(1, 'share')).toBe('100 %');
+    expect(figure(0, 'share')).toBe('0 %');
+    expect(figure(0.0002, 'share')).toBe('< 0.1 %');
+    expect(figure(0.9998, 'share')).toBe('> 99.9 %');
     expect(figure(0.4567, 'percent')).toBe('46 %');
     expect(figure(1, 'percent')).toBe('100 %');
   });

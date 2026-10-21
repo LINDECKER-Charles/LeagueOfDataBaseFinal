@@ -806,7 +806,7 @@
         "ready_failed_pages": "{pages, plural, one {# page en échec y restera servie} other {# pages en échec y resteront servies}} par le SSR.",
         "ready_failed_units": "{units, plural, one {# unité en échec définitif passera} other {# unités en échec définitif passeront}} par le SSR.",
         "ready_how": "Comment basculer ?",
-        "nearly": "L'epoch {epoch} couvre {share} des anciens patchs : {missing, plural, one {# unité manque} other {# unités manquent}} avant de pouvoir la servir.",
+        "nearly": "L'epoch {epoch} couvre {share} des unités des anciens patchs : {missing, plural, one {# unité manque} other {# unités manquent}} avant de pouvoir la servir.",
         "nearly_cta": "Compléter l'epoch {epoch}"
       },
       "idle": {
@@ -815,7 +815,7 @@
         "last": "Dernière passe : n°{id}, {state} le {date} UTC · {units, plural, one {# unité} other {# unités}} · {pages, plural, one {# page} other {# pages}}",
         "detail": "Détail",
         "never": "Aucune passe lancée jusqu'ici.",
-        "gaps": "L'epoch servie couvre {share} des anciens patchs : {versions, plural, one {# patch a des manques} other {# patchs ont des manques}}.",
+        "gaps": "L'epoch servie couvre {share} des unités des anciens patchs : {versions, plural, one {# patch a des manques} other {# patchs ont des manques}}.",
         "gaps_cta": "Les compléter",
         "whole": "L'epoch servie couvre tous les anciens patchs."
       },
@@ -824,7 +824,7 @@
         "served_sub": "LODB_ARCHIVE_SERVE_EPOCH, changée par un redéploiement",
         "served_ready": "l'epoch {epoch} est prête",
         "coverage": "Couverture servie",
-        "coverage_sub": "{complete} / {total, plural, one {# patch} other {# patchs}} complets",
+        "coverage_sub": "des unités · {complete} / {total, plural, one {# patch} other {# patchs}} complets",
         "coverage_none": "aucun ancien patch",
         "stored": "Stocké",
         "stored_sub": "{pages, plural, one {# page} other {# pages}}, epochs retirées exclues",
@@ -952,7 +952,7 @@
       },
       "confirm": {
         "pause_title": "Mettre la passe n°{id} en pause ?",
-        "pause_current": "{version} · {locale} s'arrête après les pages en vol, à {done} / {total}.",
+        "pause_current": "{version} · {locale} s'arrête une fois les pages en cours écrites, à {done} / {total}.",
         "pause_resume": "La passe reprendra exactement là, unité et page.",
         "pause_promotions": "Pendant la pause, un patch promu rejoint la passe mais attend la reprise.",
         "pause_slot": "Elle garde la seule place active : aucune autre passe ne peut être lancée avant sa reprise ou son annulation.",
@@ -1116,7 +1116,7 @@
         "title": "Récapitulatif",
         "scope": "Epoch {epoch} ({kind, select, served {servie} standby {en attente} other {nouvelle}}) · {perimeter}",
         "units": "Unités",
-        "units_sub": "{versions, plural, one {# patch} other {# patchs}} × {locales, plural, one {# langue} other {# langues}}{skipped, plural, =0 {} other {, # ignorées}}",
+        "units_sub": "{versions, plural, one {# patch} other {# patchs}} × {locales, plural, one {# langue} other {# langues}}{skipped, plural, =0 {} one {, # déjà complète, ignorée} other {, # déjà complètes, ignorées}}",
         "pages": "Pages",
         "pages_sub": "≈ {perUnit} par unité",
         "volume": "Volume",
