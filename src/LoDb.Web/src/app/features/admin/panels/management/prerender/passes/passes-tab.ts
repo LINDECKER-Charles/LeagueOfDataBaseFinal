@@ -13,7 +13,7 @@ import { FoldToggle } from '../../../../widgets/fold-toggle';
 import { type BarSegment, StackedBar } from '../bars/stacked-bar';
 import { scopeSummary } from '../common/scope/scope-summary';
 import { DecimalBytesPipe } from '../format/decimal-bytes-pipe';
-import { progressSegments } from '../monitor/progress/progress-segments';
+import { type ProgressFigures, progressSegments } from '../monitor/progress/progress-segments';
 import { prerenderTone } from '../prerender-tone';
 
 /** A row of the history, its texts ready. */
@@ -34,9 +34,9 @@ const SEGMENTS = 'prerender.live.segments';
 
 /**
  * The « Historique » tab (§ 5.4): the latest passes, the active one first with a way back to
- * its monitor. Each says its epoch, how it ended, over what, how far it went, its volume,
- * running time, who launched it (a promotion or the CLI has none), when it started and ended;
- * its number opens its detail.
+ * its monitor. Each says its epoch, how it ended, over what, how far it went (its figure is
+ * its bar's, as in the monitor), its volume, running time, who launched it (a promotion or
+ * the CLI has none), when it started and ended; its number opens its detail.
  */
 @Component({
   selector: 'lodb-passes-tab',
@@ -69,17 +69,14 @@ export class PassesTab {
   }
 
   private rowOf(pass: PrerenderPassView, isActive: boolean): PassRow {
-    const pages = this.texts.text(`${PASSES}.pages`, {
-      written: figure(pass.pagesWritten),
-      total: figure(pass.pagesTotal),
-    });
+    const figures = progressSegments(pass);
     return {
       pass,
       isActive,
       tone: prerenderTone(pass.state),
       scope: scopeSummary(pass.scope, this.texts),
-      pages,
-      segments: progressSegments(pass).parts.map((part) => ({
+      pages: this.pagesOf(figures),
+      segments: figures.parts.map((part) => ({
         ...part,
         label: this.texts.text(
           part.key === 'completed' ? 'prerender.states.completed' : `${SEGMENTS}.${part.key}`,
@@ -87,5 +84,16 @@ export class PassesTab {
       })),
       active: duration(pass.activeSeconds),
     };
+  }
+
+  // The figure of the bar beside it: processed over processed and left, « ≈ » while units
+  // are to come; in units before any listed its pages.
+  private pagesOf(figures: ProgressFigures): string {
+    const { done, total, isEstimate, isUnits } = figures;
+    const key = isUnits ? 'units' : isEstimate ? 'pages_estimated' : 'pages';
+    return this.texts.text(`${PASSES}.${key}`, {
+      done: figure(done),
+      total: isUnits ? total : figure(total),
+    });
   }
 }

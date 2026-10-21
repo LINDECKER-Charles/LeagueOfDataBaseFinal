@@ -77,6 +77,30 @@ describe('PassesTab', () => {
     expect(details).toEqual([2]);
   });
 
+  // Pass 1 was cancelled with 4 units never reached: 2 713 pages over ≈ 6 474, not 3 237.
+  it('gives the figure of its bar, estimated while units of the pass were never reached', () => {
+    const cut: PrerenderPassView = {
+      ...CANCELLED,
+      id: 1,
+      pagesTotal: 3_237,
+      pagesWritten: 2_713,
+      pagesSkipped: 0,
+      pagesFailed: 0,
+      pagesLeft: 3_761,
+      units: { total: 6, completed: 2, running: 0, pending: 4, failed: 0 },
+    };
+    const { fixture } = open(prerenderReport({ current: null, passes: [cut] }));
+
+    expect(cells(fixture, 1)[4]).toBe('admin.prerender.passes.pages_estimated');
+  });
+
+  it('counts units before any listed its pages', () => {
+    const fresh = { ...RUNNING, pagesLeft: null };
+    const { fixture } = open(prerenderReport({ current: fresh, passes: [fresh] }));
+
+    expect(cells(fixture, 3)[4]).toBe('admin.prerender.passes.units');
+  });
+
   it('folds the passes past ten', () => {
     const passes: PrerenderPassView[] = Array.from({ length: 12 }, (_, index) => ({
       ...CANCELLED,

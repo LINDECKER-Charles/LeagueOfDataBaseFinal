@@ -1508,7 +1508,7 @@ EPOCH LUE  [Servie · 2] [En attente · 3 (64.2 %)]
 | Epoch | nombre |
 | État | badge (`prerenderTone`) |
 | Périmètre | `scopeSummary` (F1) : « 212 patchs · 21 langues · tous types · 3 prioritaires », « 16.19.1 · fr · objets », « 14.1.1 → 14.24.1 · objets · fr » (passe d'avant les listes), « tous les anciens patchs » |
-| Progression | `StackedBar` mini (écrites / sautées / en échec / restantes) + « 2 131 870 / 2 146 000 » |
+| Progression | `StackedBar` mini (écrites / sautées / en échec / restantes) + le chiffre de la même barre (`progressSegments`, comme le moniteur) : traitées sur traitées + restantes, « 2 131 870 / 2 146 000 », « 2 713 / ≈ 6 474 » tant que des unités n'ont pas listé leurs pages (une passe annulée avant elles), en unités avant toute liste. Jamais `pagesTotal`, qui ne compte que les unités atteintes |
 | Volume | `decimalBytes` |
 | Durée active | `duration(activeSeconds)` |
 | Par | auteur, ou « promotion ou CLI » (texte existant) |
@@ -3486,7 +3486,7 @@ de lot suit la même règle, et chaque spécification de composant vérifie au m
 | `columns.pass` · `epoch` · `state` · `scope` · `progress` · `volume` · `active` · `author` · `started` · `finished` | Passe · Epoch · État · Périmètre · Progression · Volume · Durée active · Par · Lancée · Fin | Pass · Epoch · State · Perimeter · Progress · Volume · Running time · By · Launched · Ended |
 | `automatic` | promotion ou CLI | promotion or CLI |
 | `empty` | Aucune passe lancée. | No pass launched. |
-| `pages` | {written} / {total} | {written} / {total} |
+| `pages` | {done} / {total} | {done} / {total} |
 | `follow` | Suivre | Follow |
 | `detail.title` | Passe n°{id} · epoch {epoch} | Pass #{id} · epoch {epoch} |
 | `detail.ended` | finie le {date} | ended on {date} |
@@ -3505,6 +3505,8 @@ de lot suit la même règle, et chaque spécification de composant vérifie au m
 | `detail.locked` | Une passe est en cours : une seule à la fois. | A pass is running: one at a time. |
 | `detail.loading` | Chargement de la passe… | Loading the pass… |
 | `detail.error` | Passe indisponible ({reason}). | Pass unavailable ({reason}). |
+| `pages_estimated` | {done} / ≈ {total} | {done} / ≈ {total} |
+| `units` | {done} / {total, plural, one {# unité} other {# unités}} | {done} / {total, plural, one {# unit} other {# units}} |
 
 **`switch`** (F4)
 

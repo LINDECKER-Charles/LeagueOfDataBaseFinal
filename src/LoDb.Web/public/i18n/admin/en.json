@@ -1256,7 +1256,9 @@
       },
       "automatic": "promotion or CLI",
       "empty": "No pass launched.",
-      "pages": "{written} / {total}",
+      "pages": "{done} / {total}",
+      "pages_estimated": "{done} / ≈ {total}",
+      "units": "{done} / {total, plural, one {# unit} other {# units}}",
       "follow": "Follow",
       "detail": {
         "title": "Pass #{id} · epoch {epoch}",
