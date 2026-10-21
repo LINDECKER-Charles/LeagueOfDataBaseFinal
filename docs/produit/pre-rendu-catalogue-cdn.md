@@ -269,7 +269,8 @@ révise renvoient vers elle par un amendement daté :
     (`league-of-data-base.com`, `test.league-of-data-base.com` au staging), `__SsrBaseUrl`
     (`http://lodb-web-ssr:4000`), `__ServedEpoch` (`${LODB_ARCHIVE_SERVE_EPOCH}`),
     `__AutoEnqueueOnPromotion` (faux au staging ; faux en prod jusqu'à la fin de la passe
-    complète, puis vrai), `__AllowInsecureEndpoint` (développement). Vides, elles laissent la tâche en sommeil : `Add*` ne fait aucune I/O ;
+    complète, puis vrai), `__AllowInsecureEndpoint` (développement). Vides, elles laissent
+    la tâche en sommeil : `Add*` ne fait aucune I/O ;
   - nginx : `LODB_PAGES_STORE_ENABLED` (`0` par défaut : en local et en CI, rien ne change),
     `LODB_PAGES_STORE_SCHEME`, `_HOST`, `_PORT`, `_BUCKET`, et l'epoch servie
     (`LODB_ARCHIVE_SERVE_EPOCH`) ;
@@ -421,8 +422,10 @@ passe active, ou en ouvrent une sur l'epoch servie. L'avis de promotion
 (`IPromotionListener`) ne part qu'une fois, sur une seule instance, sans nouvel essai : un
 tour de rapprochement de la tâche (versions du catalogue face aux unités) rattrape un avis
 perdu. Les deux obéissent à `LoDb__Prerender__AutoEnqueueOnPromotion`, faux au staging et en
-prod tant que la passe complète (lancée à la main) n'est pas terminée, puis vrai en prod. En
-attendant, ses pages passent par le SSR et le cache local.
+prod tant que la passe complète (lancée à la main) n'est pas terminée, puis vrai en prod.
+Vrai trop tôt, le rapprochement ouvrirait de lui-même, sans promotion, une passe sur l'epoch
+servie pour le patch précédent dans la demi-heure qui suit le déploiement, et la passe de
+l'opérateur répondrait `409`. En attendant, ses pages passent par le SSR et le cache local.
 
 **Administration.** Un panneau « Précalcul du catalogue », sur le modèle de `backups/` :
 
