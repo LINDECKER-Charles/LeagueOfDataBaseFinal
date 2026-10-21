@@ -193,6 +193,8 @@ export type { ReadAdminPrerenderPassProgress$Params as ReadAdminPrerenderPassPro
 export { readAdminPrerenderPassProgress as readAdminPrerenderPassProgress } from './fn/admin-prerender/read-admin-prerender-pass-progress';
 export type { ReadAdminPrerenderPassVersion$Params as ReadAdminPrerenderPassVersion$Params } from './fn/admin-prerender/read-admin-prerender-pass-version';
 export { readAdminPrerenderPassVersion as readAdminPrerenderPassVersion } from './fn/admin-prerender/read-admin-prerender-pass-version';
+export type { ReadAdminPrerenderDemand$Params as ReadAdminPrerenderDemand$Params } from './fn/admin-prerender/read-admin-prerender-demand';
+export { readAdminPrerenderDemand as readAdminPrerenderDemand } from './fn/admin-prerender/read-admin-prerender-demand';
 export type { ReadAdminPrerenderSpeed$Params as ReadAdminPrerenderSpeed$Params } from './fn/admin-prerender/read-admin-prerender-speed';
 export { readAdminPrerenderSpeed as readAdminPrerenderSpeed } from './fn/admin-prerender/read-admin-prerender-speed';
 export type { SetAdminPrerenderSpeed$Params as SetAdminPrerenderSpeed$Params } from './fn/admin-prerender/set-admin-prerender-speed';

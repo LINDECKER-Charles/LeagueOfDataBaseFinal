@@ -711,6 +711,97 @@ Au staging puis en prod, en lecture seule : `/proc/stat` d'un conteneur égal à
 l'hôte, le poids réel du SSR de la passe (`cpu.weight`), une petite passe suivie, et les
 alertes `HoteCpu*`, `ConteneurCpu*` et `LodbSsrRefuseDesVisiteurs` muettes.
 
+#### File automatique des pages refusées (décision du 2026-10-21)
+
+**Constat.** Le premier jour de prod, le SSR des visiteurs refuse ~160 rendus d'anciens patchs
+par minute (`503`, budget de la voie `pinned`, ~60 admis), et la passe manuelle avance au
+rythme de ~27 pages par minute : le catalogue entier (~8 450 unités) demanderait des mois.
+Les pages que les visiteurs et les robots demandent vraiment attendent leur tour dans l'ordre
+des passes, pas dans celui de la demande.
+
+**Décision.** Les passes manuelles restent telles quelles. À côté, une **file automatique au
+niveau de la page** : chaque page d'ancien patch que le SSR des visiteurs refuse y entre, et
+une tâche de l'API la précalcule d'elle-même dans l'epoch servie, la plus demandée d'abord,
+sans passe ni clic.
+
+- **Relevé, côté SSR.** L'admission marque un rendu refusé (`SHED_MARKER`) ; pour un visiteur
+  (jamais un rendu de la passe), le chemin est normalisé en `/{locale}/{version}/{page}` comme
+  le routeur le lit (décodé, sans query, fragment ni barre finale, version au format de Data
+  Dragon, segments d'id et de slug seulement) et compté dans une table en mémoire
+  (`src/server/demand/refused-pages.ts`) : **50 000 chemins** au plus (~10 Mo), le dixième le
+  moins refusé part quand elle est pleine. Les comptes sont **cumulatifs** : `GET
+  /refused?after={curseur}` sur le port de métriques (9464, jamais publié ni routé) rend les
+  chemins changés après le curseur, 10 000 au plus par réponse, avec l'`instance` du serveur
+  (tirée au démarrage). Une lecture ne change rien : plusieurs lecteurs, une lecture refaite ou
+  un redémarrage de l'API ne comptent rien deux fois. Choix contre une lecture destructive,
+  qui perd ce qu'une réponse non reçue emportait.
+- **File, côté API.** Toutes les 30 s, `PrerenderDemandCollectWorker` lit ce qui a changé
+  depuis son curseur (en mémoire ; une nouvelle instance du SSR est relue depuis zéro) et
+  ajoute à `prerender_demand` (migration additive) l'**augmentation** de chaque compte : le
+  compte cumulatif moins le dernier gardé, sous la même instance du SSR ; le compte entier si
+  l'instance a changé ou si le compte a baissé (chemin évincé puis refusé de nouveau). Seules
+  entrent les pages qu'une passe rendrait : version parmi les anciens patchs, page listée par
+  le catalogue de la version, sous son chemin canonique (un slug qui n'est pas le canonique,
+  une page du dernier patch, une URL de fantaisie restent dehors). Une page d'une version dont
+  le catalogue n'est pas encore stocké est jugée à son prochain refus. Une page qu'une passe a
+  déjà écrite dans l'epoch servie (unité complète, ou curseur au-delà de la page) entre
+  `skipped`.
+- **Rendu.** `PrerenderDemandWorker`, sous un verrou consultatif à lui (`prerender:demand`),
+  prend les pages `pending` par lots de 20, la plus demandée d'abord, et les écrit par le
+  **chemin même de la passe** : `SsrClient` vers le SSR de la passe, verdicts de
+  `RenderVerdicts`, build copié d'abord (`BuildCopier`), objet de `PageObjects` à la clé
+  `pages/{epoch}/{locale}/{version}/{page}` avec ses métadonnées (CSP, `Link`, build). Avant
+  chaque page : version encore tenue pour la dernière par un cache (attente), catalogue non
+  stocké (attente), page écrite entre-temps par une passe (`skipped`). Un refus du SSR de la
+  passe est attendu selon son `Retry-After` ; un échec qui peut passer compte un essai et
+  laisse la page pour un lot ultérieur (5 min au moins), en échec définitif au 3ᵉ. Un `200`
+  sans la marque `archived` compte aussi un essai, au lieu d'être ignoré comme dans une
+  passe : une page de la file ouvre souvent son (version, langue), et un rendu sur un
+  catalogue encore froid revient d'une classe plus courte (relevé sur la pile locale, les
+  listes d'un patch tout juste ingéré). Une redirection ou une `404` sont ignorées pour de
+  bon. Un SSR injoignable ou un réglage qui refuserait toutes les pages arrête le lot jusqu'au
+  tour suivant ; un tour en erreur remet au suivant les pages qu'il laissait en rendu. Une ligne de synthèse par lot (`prerender.demand.drained`), jamais par page.
+- **Partage avec une passe.** Une seule enveloppe pour le SSR de la passe : le rythme de
+  `RenderPacer` (chaque rendu, de la file ou de la passe, y prend son tour) et ses places en
+  vol, `MaxInFlight`, la borne de la voie du SSR (`RenderSlots`). Pendant qu'une passe rend
+  (une de ses pages a pris une place dans la minute), la file tient au plus
+  **`QueueSharePercent` (50 %)** des places, une au moins ; la passe prend les autres et toutes
+  celles que la file laisse ; sans passe, la file les prend toutes. Les places se donnent dans
+  l'ordre des demandes : ni l'une ni l'autre n'attend indéfiniment.
+- **Rythme sans passe.** Tant qu'elle a des pages, la file pilote le régulateur comme une
+  passe (`PaceRegulator.BeginQueue`/`EndQueue`) : seule, elle part du plancher en adaptatif ou
+  de la cible de l'opérateur en manuel (« Vitesse réglable » plus bas), sous le même frein et
+  les mêmes signaux (hôte, API, visiteurs), jamais au rythme fixe que nul signal ne surveille.
+  Une passe qui démarre repart du plancher ; une file qui rejoint une passe garde son rythme ;
+  le rythme s'arrête quand ni l'une ni l'autre ne le pilote. En mode fixe, elle suit le rythme
+  fixe.
+- **Bornes.** Toutes les heures (`prerender.demand.prune`) : les pages qu'aucun visiteur ne
+  s'est vu refuser depuis 30 jours partent, quel que soit leur état (sauf en rendu), puis les
+  pages `pending` les moins demandées au-delà de 100 000 ; une page en échec définitif
+  depuis un jour repasse `pending` (toujours refusée aux visiteurs, elle ne serait jamais
+  élaguée). Index partiels : `pending` par
+  demande décroissante (lots et top 10 du pupitre), date d'écriture (dernière heure, dernier
+  jour).
+- **Epoch.** La file écrit l'epoch servie (`LoDb__Prerender__ServedEpoch`). Une page `done`,
+  `skipped` ou `failed` dans une autre epoch repasse `pending` au premier lot qui suit le
+  changement ; une page laissée `rendering` par un arrêt aussi.
+- **Interrupteur.** `LoDb__Prerender__Demand__Enabled` (vrai par défaut, au staging comme en
+  prod ; `LODB_PRERENDER_DEMAND_ENABLED=false` puis un déploiement le coupe). Sans stockage
+  configuré, la file dort comme la passe ; sans `RefusedPagesUrl`, elle finit ce qu'elle tient
+  et rien n'y entre.
+- **Pupitre.** Un bloc sous les chiffres clés de `/admin/prerender` : état (active, coupée, en
+  veille, sans relevé) et sa raison, pages en attente, écrites dans l'heure et le jour, en
+  échec et ignorées, la part de la file pendant une passe, et les dix pages en attente les
+  plus demandées (`GET /api/admin/prerender/demand`). Lecture seule.
+- **Mesure.** `lodb_prerender_demand_pages_total{outcome}`,
+  `lodb_prerender_demand_captured_total{result}` (`queued`, `rejected`, `deferred`) et la jauge
+  `lodb_prerender_demand_pending` ([`metriques.md`](../guides/metriques.md)).
+
+Tant que nginx ne sert pas le stockage (`LODB_PAGES_STORE_ENABLED=0`), le SSR des visiteurs
+continue de refuser des pages déjà écrites : leur demande s'additionne, elles ne se
+recalculent pas (`done` dans l'epoch servie). La file prépare le terrain du lot 3 : les pages
+qu'il servira d'abord sont celles que les visiteurs demandent.
+
 #### Vitesse réglable (décision du 2026-10-22)
 
 **Constat, mesuré le 2026-10-21.** La première unité de prod (16.14.1 en anglais, 901 pages)

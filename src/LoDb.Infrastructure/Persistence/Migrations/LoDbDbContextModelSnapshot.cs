@@ -1281,6 +1281,104 @@ namespace LoDb.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("LoDb.Infrastructure.Persistence.Prerender.Demand.PrerenderDemandPage", b =>
+                {
+                    b.Property<string>("Path")
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)")
+                        .HasColumnName("path");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("attempts");
+
+                    b.Property<long>("Demand")
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L)
+                        .HasColumnName("demand");
+
+                    b.Property<int?>("Epoch")
+                        .HasColumnType("integer")
+                        .HasColumnName("epoch");
+
+                    b.Property<DateTimeOffset>("FirstSeenAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("first_seen_at");
+
+                    b.Property<DateTimeOffset>("LastSeenAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_seen_at");
+
+                    b.Property<string>("Locale")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("locale");
+
+                    b.Property<string>("PageType")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("page_type");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("reason");
+
+                    b.Property<DateTimeOffset?>("RenderedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("rendered_at");
+
+                    b.Property<long>("SsrCount")
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L)
+                        .HasColumnName("ssr_count");
+
+                    b.Property<string>("SsrInstance")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("ssr_instance");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("state");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<string>("Version")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("version");
+
+                    b.HasKey("Path")
+                        .HasName("pk_prerender_demand");
+
+                    b.HasIndex("Demand")
+                        .IsDescending()
+                        .HasDatabaseName("ix_prerender_demand_next")
+                        .HasFilter("state = 'pending'");
+
+                    b.HasIndex("RenderedAt")
+                        .HasDatabaseName("ix_prerender_demand_rendered")
+                        .HasFilter("rendered_at IS NOT NULL");
+
+                    b.ToTable("prerender_demand", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_prerender_demand_counters", "demand >= 0 AND ssr_count >= 0 AND attempts >= 0");
+
+                            t.HasCheckConstraint("ck_prerender_demand_state", "state IN ('pending', 'rendering', 'done', 'failed', 'skipped')");
+                        });
+                });
+
             modelBuilder.Entity("LoDb.Infrastructure.Persistence.Prerender.Pace.PrerenderPaceSetting", b =>
                 {
                     b.Property<short>("Id")

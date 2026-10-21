@@ -5,6 +5,7 @@ import { monitorEventLoopDelay } from 'node:perf_hooks';
 import { Counter, Registry } from 'prom-client';
 import { RenderCounts } from '../admission/render-counts';
 import { createLogger } from '../create-logger';
+import { RefusedPages } from '../demand/refused-pages';
 import type { LoadReport } from '../load/load-report';
 import { serveMetrics } from './serve-metrics';
 import { SsrMetrics } from './ssr-metrics';
@@ -19,9 +20,18 @@ const REPORT: LoadReport = {
   lanes: { current: IDLE_LANE, pinned: IDLE_LANE, prerender: IDLE_LANE },
 };
 
+const REFUSED = new RefusedPages();
+REFUSED.record('/fr/15.13.1/champions');
+REFUSED.record('/fr/15.13.1/items');
+
 async function listen(registry: Registry): Promise<{ server: Server; origin: string }> {
   const logger = createLogger({ write: () => undefined });
-  const server = serveMetrics({ registry, load: async () => REPORT }, ANY_FREE_PORT, logger);
+  const endpoints = {
+    registry,
+    load: async () => REPORT,
+    refused: (after: number) => REFUSED.report(after),
+  };
+  const server = serveMetrics(endpoints, ANY_FREE_PORT, logger);
   await once(server, 'listening');
   return { server, origin: `http://127.0.0.1:${(server.address() as AddressInfo).port}` };
 }
@@ -67,6 +77,24 @@ describe('serveMetrics', () => {
     expect(await response.json()).toEqual(REPORT);
   });
 
+  it('answers the refused pages after the cursor as JSON, never stored', async () => {
+    const response = await fetch(`${origin}/refused?after=1`);
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-type')).toBe('application/json');
+    expect(response.headers.get('cache-control')).toBe('no-store');
+    expect(await response.json()).toEqual(REFUSED.report(1));
+  });
+
+  it.each(['', '?after=-4', '?after=abc', '?after=1.5'])(
+    'reads the refused pages from the start for a cursor %j that is not a count',
+    async (query) => {
+      const response = await fetch(`${origin}/refused${query}`);
+
+      expect((await response.json()).pages).toHaveLength(2);
+    },
+  );
+
   it.each([
     ['GET', '/'],
     ['GET', '/healthz'],
@@ -75,6 +103,7 @@ describe('serveMetrics', () => {
     ['GET', '/load/current'],
     ['POST', '/metrics'],
     ['POST', '/load'],
+    ['POST', '/refused'],
   ])('answers %s %s with a bare 404', async (method, path) => {
     const response = await fetch(`${origin}${path}`, { method });
 

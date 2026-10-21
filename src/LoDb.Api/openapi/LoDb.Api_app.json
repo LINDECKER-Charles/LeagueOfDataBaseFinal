@@ -6263,6 +6263,47 @@
         }
       }
     },
+    "/api/admin/prerender/demand": {
+      "get": {
+        "tags": [
+          "AdminPrerender"
+        ],
+        "summary": "The automatic queue of the pages the SSR refused to visitors.",
+        "operationId": "readAdminPrerenderDemand",
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrerenderDemandReport"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/prerender/speed": {
       "get": {
         "tags": [
@@ -11507,6 +11548,133 @@
           }
         },
         "description": "The front builds copied to the store, every hashed file of each, and what keeping them\ncosts each month."
+      },
+      "PrerenderDemandPage": {
+        "required": [
+          "path",
+          "version",
+          "locale",
+          "demand",
+          "attempts",
+          "lastSeenAt"
+        ],
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "The page on the site: `/fr/15.13.1/items/1036-long-sword`."
+          },
+          "version": {
+            "type": "string"
+          },
+          "locale": {
+            "type": "string",
+            "description": "The locale as the URLs spell it: `fr`, `zh-hans`."
+          },
+          "demand": {
+            "type": "integer",
+            "description": "Refusals of it the SSR counted since it entered the queue.",
+            "format": "int64"
+          },
+          "attempts": {
+            "type": "integer",
+            "description": "Failed tries so far.",
+            "format": "int32"
+          },
+          "lastSeenAt": {
+            "type": "string",
+            "description": "When a visitor was last refused it.",
+            "format": "date-time"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Why it waits, after a try or a check; null for a page not tried yet."
+          }
+        },
+        "description": "A pending page of the automatic queue, as the admin lists the most requested."
+      },
+      "PrerenderDemandReport": {
+        "required": [
+          "generatedAt",
+          "isEnabled",
+          "isActive",
+          "isCapturing",
+          "queueSharePercent",
+          "epoch",
+          "pending",
+          "done",
+          "failed",
+          "skipped",
+          "writtenLastHour",
+          "writtenLastDay",
+          "top"
+        ],
+        "type": "object",
+        "properties": {
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "isEnabled": {
+            "type": "boolean",
+            "description": "The kill switch, `LoDb:Prerender:Demand:Enabled`."
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Whether it renders: switched on and the store configured."
+          },
+          "isCapturing": {
+            "type": "boolean",
+            "description": "Whether it reads the SSR's refused pages: active, and their URL set."
+          },
+          "queueSharePercent": {
+            "type": "integer",
+            "description": "Its share of the pass SSR's renders while a manual pass runs, in percent.",
+            "format": "int32"
+          },
+          "epoch": {
+            "type": "integer",
+            "description": "The epoch it writes: the served one.",
+            "format": "int32"
+          },
+          "pending": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "done": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "failed": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "skipped": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "writtenLastHour": {
+            "type": "integer",
+            "description": "Pages it wrote in the last hour.",
+            "format": "int64"
+          },
+          "writtenLastDay": {
+            "type": "integer",
+            "description": "Pages it wrote in the last 24 hours.",
+            "format": "int64"
+          },
+          "top": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PrerenderDemandPage"
+            },
+            "description": "The ten most requested pending pages, the most requested first."
+          }
+        },
+        "description": "The automatic queue of the pre-rendering as the admin shows it: whether it runs, what it\nholds, what it wrote lately, and its most requested pending pages."
       },
       "PrerenderEnginePulse": {
         "required": [

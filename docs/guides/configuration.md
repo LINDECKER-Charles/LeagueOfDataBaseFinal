@@ -829,6 +829,33 @@ métriques `lodb_prerender_pace_*` ([`metriques.md`](metriques.md)) et les ligne
 la passe, qui l'attend (`prerender.ssr.unreachable`) ; le déploiement ne l'attend pas pour
 rendre le site.
 
+### 4.11 File automatique des pages refusées
+
+Chaque page d'ancien patch que le SSR des visiteurs refuse (`503`) entre dans
+`prerender_demand`, puis l'API la précalcule d'elle-même dans l'epoch servie, la plus demandée
+d'abord, sur le SSR de la passe et à son rythme (§ 4.10) ; sans passe en cours, elle pilote
+elle-même le régulateur : du plancher en adaptatif, à la cible de la vitesse manuelle sinon,
+sous le même frein. Elle dort sans stockage configuré,
+comme la passe. Règles : [spécification](../produit/pre-rendu-catalogue-cdn.md), lot 2,
+« File automatique des pages refusées ».
+
+| Réglage | Staging | Prod | Rôle |
+|---|---|---|---|
+| `LODB_PRERENDER_DEMAND_ENABLED` | `true` | `true` | `false` : l'interrupteur, rien n'entre ni ne se rend |
+| `LODB_PRERENDER_DEMAND_SHARE` | `50` | `50` | part (%) des places en vol du SSR de la passe pour la file pendant une passe manuelle ; toutes sans passe |
+| `LoDb__Prerender__Demand__RefusedPagesUrl` | fixé | fixé | `http://lodb-web-ssr:9464/refused` (`compose.yaml`) : le port de métriques du SSR des visiteurs, jamais publié |
+| `LoDb__Prerender__Demand__RetentionDays` | `30` | `30` | jours sans refus avant qu'une page quitte la table (code) |
+| `LoDb__Prerender__Demand__MaxPendingPages` | `100000` | `100000` | pages en attente gardées au plus, les plus demandées (code) |
+| `LoDb__Prerender__Demand__MaxAttempts` | `3` | `3` | essais ratés avant l'échec définitif d'une page (code) |
+
+**Couper la file.** `LODB_PRERENDER_DEMAND_ENABLED=false` dans `ENV_*`, puis un déploiement,
+qui recrée l'API : le relevé et le rendu s'arrêtent, la table reste. Le pupitre dit alors
+« coupée ». Les pages en vol finissent.
+
+**Ce qui la montre** : le bloc « File automatique des pages refusées » de `/admin/prerender`,
+les métriques `lodb_prerender_demand_*` ([`metriques.md`](metriques.md)) et les lignes
+`prerender.demand.*` de l'API, une par relevé qui apporte des pages et une par lot rendu.
+
 ## 5. Fichiers et volumes de l'hôte
 
 | Chemin, dans `$STAGING_PATH` ou `$PROD_PATH` | Écrit par | Rôle |

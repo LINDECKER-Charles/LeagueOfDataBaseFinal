@@ -1,0 +1,78 @@
+@if (report.value(); as data) {
+  <lodb-admin-card [heading]="'admin.prerender.demand.title' | adminText" data-demand>
+    @if (status(); as state) {
+      <span lodbCardHead [lodbBadge]="state.tone" data-demand-state>
+        {{ 'admin.prerender.demand.states.' + state.state | adminText }}
+      </span>
+    }
+    <div class="flex flex-col gap-4 text-[0.9rem] text-text-muted">
+      <p class="m-0">{{ 'admin.prerender.demand.lede' | adminText }}</p>
+      @if (status()?.why; as why) {
+        <p class="m-0 text-gold" data-demand-why>
+          {{ 'admin.prerender.demand.why.' + why | adminText }}
+        </p>
+      }
+      <div class="grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-x-6 gap-y-4">
+        <div data-demand-readout="pending">
+          <span class="readout-label">{{
+            'admin.prerender.demand.figures.pending' | adminText
+          }}</span>
+          <span class="readout-value">{{ count(data.pending) }}</span>
+        </div>
+        <div data-demand-readout="hour">
+          <span class="readout-label">{{ 'admin.prerender.demand.figures.hour' | adminText }}</span>
+          <span class="readout-value">{{ count(data.writtenLastHour) }}</span>
+        </div>
+        <div data-demand-readout="day">
+          <span class="readout-label">{{ 'admin.prerender.demand.figures.day' | adminText }}</span>
+          <span class="readout-value">{{ count(data.writtenLastDay) }}</span>
+          <p class="readout-text">
+            {{ 'admin.prerender.demand.figures.day_sub' | adminText: { epoch: data.epoch } }}
+          </p>
+        </div>
+        <div data-demand-readout="failed">
+          <span class="readout-label">{{
+            'admin.prerender.demand.figures.failed' | adminText
+          }}</span>
+          <span class="readout-value">{{ count(data.failed) }}</span>
+          <p class="readout-text">
+            {{ 'admin.prerender.demand.figures.skipped' | adminText: { count: data.skipped } }}
+          </p>
+        </div>
+      </div>
+      <p class="m-0" data-demand-share>
+        {{ 'admin.prerender.demand.share' | adminText: { share: data.queueSharePercent } }}
+      </p>
+      <h3 class="m-0 text-[0.95rem] text-gold-bright">
+        {{ 'admin.prerender.demand.top.title' | adminText }}
+      </h3>
+      @if (data.top.length > 0) {
+        <ol class="m-0 flex list-none flex-col gap-2 p-0" data-demand-top>
+          @for (page of data.top; track page.path) {
+            <li
+              class="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-gold/16 pb-2"
+              [attr.data-demand-page]="page.path"
+            >
+              <span class="min-w-0 break-all font-mono text-[0.85rem] text-gold-bright">
+                {{ page.path }}
+              </span>
+              <span class="ms-auto" data-demand-count>
+                {{ 'admin.prerender.demand.top.demand' | adminText: { count: page.demand } }}
+              </span>
+              <span class="text-[0.8rem]">
+                {{ 'admin.prerender.demand.top.last' | adminText: { at: seenAt(page) } }}
+              </span>
+              @if (page.attempts > 0) {
+                <span lodbBadge="warn" data-demand-attempts>
+                  {{ 'admin.prerender.demand.top.attempts' | adminText: { count: page.attempts } }}
+                </span>
+              }
+            </li>
+          }
+        </ol>
+      } @else {
+        <p class="m-0" data-demand-empty>{{ 'admin.prerender.demand.top.empty' | adminText }}</p>
+      }
+    </div>
+  </lodb-admin-card>
+}

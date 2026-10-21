@@ -7,15 +7,18 @@ using Microsoft.Extensions.Options;
 namespace LoDb.Api.Modules.Admin.Prerender.Pace;
 
 /// <summary>
-/// The pace of the pass on this instance: the renders a minute <c>RenderPacer</c> lets it
-/// start, set by the regulator's decisions while the engine drains a pass here (adaptive), or
-/// by the operator's target (manual, <see cref="PaceSettings"/>), the fixed pace otherwise.
+/// The pace of the pre-rendering on this instance: the renders a minute <c>RenderPacer</c> lets
+/// the pass and the automatic queue start together, set by the regulator's decisions while the
+/// engine drains a pass or the queue drains pages here (adaptive), or by the operator's target
+/// (manual, <see cref="PaceSettings"/>), the fixed pace otherwise.
 /// </summary>
 /// <remarks>
 /// <para>
-/// Driven only from <c>PrerenderEngine.RunAsync</c>, under the pass's lock: the command line
-/// drains a unit at the fixed pace, as does an instance whose background tasks are off. Held in
-/// memory, as the engine's pulse: each drain starts again at the floor, or at the target.
+/// Driven from <c>PrerenderEngine.RunAsync</c>, under the pass's lock, and from the queue's
+/// drain, under its own (<see cref="BeginQueue"/>): the command line drains a unit at the fixed
+/// pace, as does an instance whose background tasks are off. Held in memory, as the engine's
+/// pulse: each pass starts again at the floor, or at the target; the queue joins a pace already
+/// driven as it is, and the pace stops once neither drives it.
 /// </para>
 /// <para>
 /// A new target applies at once; a change of mode at the next decision, within 30 s.
@@ -26,6 +29,9 @@ namespace LoDb.Api.Modules.Admin.Prerender.Pace;
 /// </remarks>
 internal sealed class PaceRegulator
 {
+    // The pass id of a pace the queue drives alone.
+    private const long NoPass = 0;
+
     private readonly Lock _gate = new();
     private readonly IOptions<PrerenderOptions> _options;
     private readonly PaceSettings _settings;
@@ -34,6 +40,8 @@ internal sealed class PaceRegulator
     private readonly ILogger<PaceRegulator> _logger;
     private PaceMemory? _memory;
     private long _passId;
+    private bool _isPassDriving;
+    private bool _isQueueDriving;
     private long? _fixedPassId;
     private long _drive;
     private DateTimeOffset _decidedAt;
@@ -52,7 +60,7 @@ internal sealed class PaceRegulator
         metrics.Follow(Snapshot);
     }
 
-    /// <summary>Whether the engine drains a pass here now.</summary>
+    /// <summary>Whether the engine drains a pass, or the queue its pages, here now.</summary>
     public bool IsDriven
     {
         get
@@ -77,6 +85,7 @@ internal sealed class PaceRegulator
         {
             _memory = FirstMemory(now);
             (_passId, _decidedAt, _hostBusy) = (passId, now, null);
+            _isPassDriving = true;
             isNewFixedPass = !options.Pace.IsAdaptive && _fixedPassId != passId;
             _fixedPassId = options.Pace.IsAdaptive ? null : passId;
             Interlocked.Increment(ref _drive);
@@ -89,12 +98,48 @@ internal sealed class PaceRegulator
         }
     }
 
-    /// <summary>The engine stopped draining: the fixed pace applies again.</summary>
+    /// <summary>
+    /// The engine stopped draining: the fixed pace applies again, unless the queue drives.
+    /// </summary>
     public void End()
     {
         lock (_gate)
         {
-            _memory = null;
+            (_isPassDriving, _passId) = (false, NoPass);
+            _memory = _isQueueDriving ? _memory : null;
+        }
+    }
+
+    /// <summary>
+    /// The queue drains pages: from the floor, or the target, unless a pass already drives the
+    /// pace, which it then shares as it is. Called again, it changes nothing.
+    /// </summary>
+    public void BeginQueue()
+    {
+        var now = _clock.GetUtcNow();
+        lock (_gate)
+        {
+            _isQueueDriving = true;
+            if (_memory is not null)
+            {
+                return;
+            }
+
+            _memory = FirstMemory(now);
+            (_passId, _decidedAt, _hostBusy) = (NoPass, now, null);
+            Interlocked.Increment(ref _drive);
+        }
+    }
+
+    /// <summary>
+    /// The queue stopped draining: the fixed pace applies again, unless a pass drives.
+    /// </summary>
+    public void EndQueue()
+    {
+        lock (_gate)
+        {
+            _isQueueDriving = false;
+            _memory = _isPassDriving ? _memory : null;
         }
     }
 
@@ -133,7 +178,7 @@ internal sealed class PaceRegulator
             : evaluation.Board.Worst);
     }
 
-    /// <summary>The regulator now; null when no pass drains here.</summary>
+    /// <summary>The regulator now; null when neither a pass nor the queue drains here.</summary>
     public PaceSnapshot? Snapshot()
     {
         lock (_gate)
