@@ -558,8 +558,9 @@ rendus ralentissent, cette borne freine déjà la passe d'elle-même.
 | Une source illisible | — | — | — | — | orange | — |
 
 - La **base** du rendu de la passe est la plus basse de ses médianes d'une minute des
-  30 dernières minutes, 50 ms au moins. La médiane ignore le premier rendu d'une unité, qui
-  charge son catalogue.
+  30 dernières minutes, 50 ms au moins. La médiane ignore les premiers rendus d'une unité
+  (autant que de pages en vol), qui chargent son catalogue, et ne compte que les pages à
+  stocker, jamais un refus ni une redirection.
 - Trop peu de rendus dans la fenêtre ne disent rien : le signal est vert.
 - Le signal le plus grave l'emporte ; le pupitre et les journaux nomment celui-là.
 - D'où viennent les seuils : le VPS reste sous 50 % d'occupation 96 % du temps, la passe ne

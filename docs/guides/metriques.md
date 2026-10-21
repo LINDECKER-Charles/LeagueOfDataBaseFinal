@@ -103,6 +103,9 @@ Logs et requêtes LogsQL : [`observabilite.md`](observabilite.md) et [`logging.m
 | `lodb_publicapi_usage_dropped_total`, `…_flush_duration_seconds`, `…_flush_failures_total` | compteurs, histogramme | — | non | `LoDb.PublicApi` |
 | `lodb_client_policy_upgrade_required_total` | compteur | `platform` (`desktop`, `android`) | non | `LoDb.ClientPolicy`, réponses `426` |
 | `lodb_prerender_pages_total` | compteur | `outcome` (`written` : page écrite au stockage ; `skipped` : rendu qui ne se stocke pas, `301`, `404` ou classe autre qu'`archived` ; `refused` : `503` du SSR, la page est retentée après son `Retry-After` ; `failed` : page abandonnée après ses nouvelles tentatives) | non | `LoDb.Prerender` (instrument `lodb.prerender.pages`), une incrémentation par page de la passe de précalcul ; la ligne de synthèse par unité (version, langue) en donne le détail |
+| `lodb_prerender_pace_renders_per_minute` | jauge | — | non : seulement pendant que le moteur de cette instance écrit une passe | `LoDb.Prerender` (instrument `lodb.prerender.pace.renders_per_minute`), le droit du régulateur : rendus que la passe peut démarrer par minute, 0 en retenue, le plancher quand aucune décision ne l'a renouvelé depuis 90 s, le rythme fixe en mode `fixed` |
+| `lodb_prerender_pace_limit` | jauge | `reason` (`none`, `warming_up`, `ceiling`, `host_cpu`, `host_cpu_sustained`, `host_steal`, `visitors_ssr`, `visitors_refused`, `api_cpu`, `pass_latency`, `pass_ssr_pressure`, `signal_missing`, `fixed`) | non : idem | `LoDb.Prerender`, 1 pour la raison qui borne le rythme, 0 pour les autres |
+| `lodb_prerender_pace_changes_total` | compteur | `change` (`increased`, `decreased`, `held`, `released`), `reason` (idem) | non | `LoDb.Prerender`, une incrémentation par mouvement du régulateur : quelques-unes par heure |
 
 `lodb_job_period_seconds` et `lodb_job_last_success_seconds` se lisent ensemble : une tâche
 est en retard quand `time() - lodb_job_last_success_seconds > 3 * lodb_job_period_seconds`
@@ -113,6 +116,17 @@ n'incrémente pas `lodb_prerender_pages_total` : la passe retente la page toutes
 journaux le disent, une fois par panne : `prerender.ssr.unreachable` (Warning, avec l'adresse
 du SSR) quand elle commence, `prerender.ssr.reachable` (Information, durée de la panne) quand
 le SSR répond de nouveau. Un début de panne sans fin signale une passe bloquée.
+
+Les jauges du rythme n'existent que sur l'instance dont le moteur écrit une passe, et le temps
+qu'il l'écrit : une autre instance, ou celle-ci entre deux passes, n'en rapporte aucune, et une
+somme sur la stack donne le rythme de sa passe. Le régulateur
+([`pre-rendu-catalogue-cdn.md`](../produit/pre-rendu-catalogue-cdn.md), lot 2) écrit une ligne
+par changement d'état, jamais par évaluation ni par page : `prerender.pace.slowed`,
+`prerender.pace.held` (Warning), `prerender.pace.recovered`, `prerender.pace.ceiling_reached`,
+`prerender.pace.fixed` (une fois par passe à rythme fixe), `prerender.pace.signal_lost`
+(Warning) puis `prerender.pace.signal_restored`, une fois par panne de source (`HostCpu`,
+`ApiCgroup`, `VisitorsSsr`, `PassSsr`), et `prerender.pace.tick_failed` (Error) sur un tour
+de la tâche en échec.
 
 ## API — métriques du framework
 

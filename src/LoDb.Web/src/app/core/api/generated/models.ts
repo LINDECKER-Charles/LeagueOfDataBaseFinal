@@ -147,6 +147,7 @@ export type { PrerenderEnginePulse } from './models/prerender-engine-pulse';
 export type { PrerenderEpochCoverage } from './models/prerender-epoch-coverage';
 export type { PrerenderEpochVolume } from './models/prerender-epoch-volume';
 export type { PrerenderEstimateBasis } from './models/prerender-estimate-basis';
+export type { PrerenderPaceView } from './models/prerender-pace-view';
 export type { PrerenderPassProgress } from './models/prerender-pass-progress';
 export type { PrerenderPassStarted } from './models/prerender-pass-started';
 export type { PrerenderPassView } from './models/prerender-pass-view';

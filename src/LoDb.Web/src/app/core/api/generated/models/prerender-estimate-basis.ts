@@ -14,7 +14,8 @@ export interface PrerenderEstimateBasis {
   bytesPerPage?: (number | null);
 
   /**
-   * The pass's ceiling, LoDb:Prerender:RendersPerMinute.
+   * The pass's ceiling: LoDb:Prerender:Pace:MaxRendersPerMinute while the pace is adaptive,
+   * the fixed pace LoDb:Prerender:RendersPerMinute when the regulation is off.
    */
   configuredRendersPerMinute: number;
 
