@@ -79,6 +79,21 @@ describe('UnitMatrix', () => {
     expect(cell('de')?.style.getPropertyValue('--fill')).toBe('');
   });
 
+  it('names in its legend the states its cells show, and those only', () => {
+    const legend = (fixture: ComponentFixture<UnitMatrix>) =>
+      [...page(fixture).querySelectorAll('.matrix-legend .cell')].map((cell) =>
+        cell.getAttribute('data-c'),
+      );
+
+    expect(legend(render())).toEqual(['c', 'r', 'z', '.', 'f']);
+    // A cancelled pass: no unit runs, one was cut short.
+    expect(legend(render({ versions: [{ version: '16.20.1', cells: 'ci.' }] }))).toEqual([
+      'c',
+      '.',
+      'i',
+    ]);
+  });
+
   it('opens the detail of a version from a cell or from its head', () => {
     const fixture = render();
     const opened: string[] = [];

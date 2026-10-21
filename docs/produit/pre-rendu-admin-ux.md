@@ -1162,6 +1162,10 @@ moniteur, un pli « Ordre de passage » (bouton) trie plutôt par `rank`.
 | `-` | coverage | absente | contour `--color-text-dim` à 70 %, fond `--color-track` | carré vide |
 | `_` | pass | hors périmètre (la langue n'a pas d'unité pour cette version) | rien | espace |
 
+**Légende** : elle nomme les états que la grille montre, et eux seuls, dans l'ordre `c r z . w f i`
+(passe) ou `c w p f -` (couverture) : aucune cellule sans explication (une `i` d'une passe
+annulée, une `z` d'une passe en pause), aucun « en cours » quand rien ne tourne.
+
 **Taille** : `clamp(9px, (100cqi − 5.5rem) / 21 − 2px, 16px)` (requête de conteneur sur le cadre
 de la matrice) ; espacement 2 px. Si même 9 px ne tiennent pas (passe de 21 langues sur 320 px),
 le cadre défile horizontalement, jamais la page.

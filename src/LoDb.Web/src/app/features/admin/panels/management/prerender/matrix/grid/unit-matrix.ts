@@ -46,10 +46,11 @@ const TABLE = 'table';
 const SHORT: Readonly<Record<string, string>> = { 'zh-hans': 'zhs', 'zh-hant': 'zht' };
 const PERCENT = 100;
 const FILLED = 'rz';
-// The cells the legend names, a running one half filled: the grid itself is hidden from
-// assistive technology, and so is its legend (the table view says it all).
+// The cells the legend may name, in its order, a running one half filled: it names those the
+// grid shows, so that a cell never goes unexplained and no state shows that none has. The grid
+// itself is hidden from assistive technology, and so is its legend (the table view says it).
 const LEGEND: Readonly<Record<'pass' | 'coverage', readonly string[]>> = {
-  pass: ['c', 'r', '.', 'w', 'f'],
+  pass: ['c', 'r', 'z', '.', 'w', 'f', 'i'],
   coverage: ['c', 'w', 'p', 'f', '-'],
 };
 const HALF = 50;
@@ -94,13 +95,16 @@ export class UnitMatrix {
   protected readonly view = signal(this.storedView());
   protected readonly byRank = signal(false);
   protected readonly tooltip = signal<Tooltip | null>(null);
-  protected readonly legend = computed(() =>
-    LEGEND[this.mode()].map((code) => ({
-      code,
-      state: cellStateOf(code, this.mode()),
-      fill: FILLED.includes(code) ? HALF : null,
-    })),
-  );
+  protected readonly legend = computed(() => {
+    const shown = new Set(this.versions().flatMap((version) => [...version.cells]));
+    return LEGEND[this.mode()]
+      .filter((code) => shown.has(code))
+      .map((code) => ({
+        code,
+        state: cellStateOf(code, this.mode()),
+        fill: FILLED.includes(code) ? HALF : null,
+      }));
+  });
   protected readonly seasons = computed(() =>
     matrixRows(this.versions(), {
       mode: this.mode(),
