@@ -551,7 +551,24 @@ stockage objet, puis lues par nginx
   ne produit donc **aucune erreur** : seulement une part de `X-LoDb-Source: ssr` qui reste haute
   après une passe complète, puis le retour des 503 du budget épinglé. La passe, elle, continue
   d'écrire (sa clé ne dépend pas de l'adresse). Un `418` dans `pages.conf` n'est qu'une route
-  interne vers le SSR (chemin hors grammaire, query, méthode autre que `GET`/`HEAD`).
+  interne vers le SSR (chemin hors grammaire, query, méthode autre que `GET`/`HEAD`, dernier
+  patch épinglé dans le chemin).
+- **Le dernier patch épinglé (`/en/16.21.1/…`) ne passe jamais par le stockage.** Aucune passe
+  ne l'écrit et le SSR le redirige en `301` vers l'URL courte ; sans règle, nginx essuierait
+  d'abord une `404` de Scaleway (150 à 300 ms). nginx ne connaît le dernier patch par aucune
+  variable : une promotion le change entre deux déploiements. Il le lit donc à l'exécution :
+  le module njs de l'image de base relit `latest` de `GET /api/meta` toutes les 30 s
+  (`njs/latest-version.js`, `@lodb_latest_version` dans `pages.conf`, `js_periodic` sur un seul
+  worker, dès son démarrage) et le garde dans une zone partagée ; `$lodb_latest_pinned`
+  (`sites/site.conf`) compare la version du chemin, entière, par référence arrière. Voulu : tant
+  qu'aucune lecture n'a abouti (API injoignable au démarrage), la variable est vide et nginx
+  interroge le stockage comme avant ; une lecture qui échoue garde la dernière valeur, sans
+  ligne de log. Juste après une promotion, l'ancien dernier patch peut encore aller au SSR
+  jusqu'à 30 s, sans plus de mal qu'un rendu ; le SSR lui-même le redirige parfois plus
+  longtemps (sa copie de `/api/meta` vit quelques minutes). La lecture ne coûte qu'aux
+  requêtes que le stockage aurait reçues (second `if`, après celui de `$lodb_store_page`) :
+  jamais à une autre route, ni stockage coupé. L'API est jointe par son alias `lodb-api:8080`,
+  jamais à travers le site.
 - **Le 429 du stockage n'est pas celui de `limit_req`.** Scaleway freine en `429` ; la location
   du stockage refuse donc ses propres dépassements en `limit_req_status 420`, rendus au client
   en `429` avec `Retry-After` par `@lodb_rate_limited`, et un `429` du stockage mène au SSR.

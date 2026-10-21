@@ -44,6 +44,13 @@ const FAILING = {
 };
 // Answers with the headers nginx sent along with the key.
 const ECHOED = '/en/15.8.1/champions';
+// The latest patch, as the stub's API states it (/api/meta), pinned in the path: the SSR server
+// redirects it to the short URL, and no pass stores it. A patch that only starts like it does
+// not stand for it.
+const LATEST_PINNED = ['/en/15.10.1/champions/Ahri', '/zh-hant/15.10.1/items',
+  '/fr/15.10.1/runes/8005-press-the-attack'];
+const LATEST_REDIRECT = { status: 301, cacheControl: 'public, max-age=0, s-maxage=60' };
+const LATEST_LOOKALIKE = '/en/15.10.10/champions';
 // A page stored without its policy nor its type, and the policy nginx gives it instead.
 const UNLABELLED = '/en/15.9.1/champions';
 const FALLBACK_POLICY = "default-src 'self'; img-src 'self' data:; "
@@ -252,6 +259,22 @@ describe('nginx image in front of the page store',
         await get(FAILING.forbidden.replace('/en/', '/de/'), aClient());
         assert.deepEqual((await stack.storeRequests()).slice(before.length),
           [`GET ${OBJECTS}/de/15.3.1/champions`]);
+      });
+
+    test('leaves the latest patch pinned in the path to the SSR server, never asking the store',
+      async () => {
+        const before = await stack.storeRequests();
+        for (const path of LATEST_PINNED) {
+          const answer = await get(path, aClient());
+          assert.equal(answer.status, LATEST_REDIRECT.status, path);
+          assert.equal(answer.headers['cache-control'], LATEST_REDIRECT.cacheControl, path);
+          assert.deepEqual(sourceOf(answer), ['MISS', 'ssr'], path);
+        }
+        const lookalike = await get(LATEST_LOOKALIKE, aClient());
+
+        assert.equal(lookalike.body.toString(), RENDERED.body);
+        assert.deepEqual((await stack.storeRequests()).slice(before.length),
+          [`GET ${OBJECTS}${LATEST_LOOKALIKE}`]);
       });
 
     test('looks a bundle up in the store only when the SSR server has no such name', async () => {
