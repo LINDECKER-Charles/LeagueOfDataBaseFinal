@@ -64,7 +64,7 @@ Pas de Quartz.NET tant qu'aucun besoin de planification cron complexe n'apparaî
 | Rollups analytics et audit | quotidien, + jour courant en continu | rollup au déploiement seulement |
 | Rétention (audit 6 mois, événements bruts à IP/UA) | quotidien | jamais planifiée |
 | Expiration des crédits API (12 mois) | quotidien | contractuelle, jamais implémentée |
-| Effacement des comptes non vérifiés après 7 jours | horaire | jamais planifié |
+| Effacement des comptes non vérifiés après 7 jours *(Remplacé le 2026-10-22 : tâche retirée par f067fd70 ; les comptes non vérifiés sont conservés, ADR 0009)* | horaire | jamais planifié |
 | Outbox e-mail, plafond horaire par modèle (l'excédent attend) | continu | envoi synchrone dans la requête |
 
 ### Ingestion proactive
