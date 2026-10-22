@@ -186,6 +186,17 @@ public sealed class EntityStateSnapshot
     }
 
     /// <summary>
+    /// The newest version promoted before <paramref name="version"/>: the latest patch its
+    /// promotion replaced, whatever was listed between them without being promoted. Null
+    /// before any earlier promotion.
+    /// </summary>
+    public PatchVersion? PromotedBefore(PatchVersion version)
+    {
+        ArgumentNullException.ThrowIfNull(version);
+        return promotions.LastOrDefault(promotion => promotion.Version < version)?.Version;
+    }
+
+    /// <summary>
     /// The <c>lastmod</c> of the patch page of <paramref name="version"/>: the promotion
     /// that made the version an older one, else the generation's build when it is later (a
     /// rebuilt history). Null without a patch page.

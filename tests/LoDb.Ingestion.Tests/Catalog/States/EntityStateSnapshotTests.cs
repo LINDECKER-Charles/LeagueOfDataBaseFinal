@@ -107,6 +107,23 @@ public sealed class EntityStateSnapshotTests
         Assert.Equal(new StateIndexStamp(7, V("90.5.1")), Snapshot.Stamp);
     }
 
+    [Fact]
+    public void PromotionReplacedTheNewestVersionPromotedBeforeItWhateverWasListedBetween()
+    {
+        var skipped = EntityStateSnapshot.Of(
+            Snapshot.Generation!,
+            Snapshot.States,
+            [
+                new PromotedVersion(V("90.4.1"), BuiltAt.AddDays(10)),
+                new PromotedVersion(V("90.2.1"), BuiltAt.AddDays(2)),
+            ]);
+
+        Assert.Equal(V("90.2.1"), skipped.PromotedBefore(V("90.4.1")));
+        Assert.Equal(V("90.4.1"), skipped.PromotedBefore(V("90.5.1")));
+        Assert.Null(skipped.PromotedBefore(V("90.2.1")));
+        Assert.Null(EntityStateSnapshot.Empty.PromotedBefore(V("90.4.1")));
+    }
+
     private static PatchVersion V(string version) => PatchVersion.Parse(version);
 
     private static IndexedState State(IndexedEntity entity, string opener, string? last) =>
