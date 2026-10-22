@@ -10,8 +10,8 @@
 import assert from 'node:assert/strict';
 import { after, before, describe, test } from 'node:test';
 import { gunzipSync } from 'node:zlib';
-import { send, statusesOf } from '../lib/client.mjs';
-import { startStack } from '../lib/stack.mjs';
+import { send, statusesOf } from '../../lib/client.mjs';
+import { startStack } from '../../lib/stack.mjs';
 
 const IMAGE = process.env.LODB_NGINX_IMAGE;
 // The stub's store: bucket lodb-pages, its pages on epoch 5, over plain HTTP on its alias. A

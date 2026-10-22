@@ -17,7 +17,8 @@ cache and one for the temporary files, which a slow client's answer must reach r
 
 ```bash
 docker build -f docker/nginx/Dockerfile -t lodb-nginx:check .
-LODB_NGINX_IMAGE=lodb-nginx:check node --test tools/nginx/test/*.test.mjs
+LODB_NGINX_IMAGE=lodb-nginx:check node --test \
+  tools/nginx/test/*.test.mjs tools/nginx/test/*/*.test.mjs
 ```
 
 Without `LODB_NGINX_IMAGE` the image checks are skipped. `nginx-image.test.mjs` tightens the
@@ -47,8 +48,8 @@ switch is gone.
 crawlers (`$lodb_ai_crawler`, `nginx.conf`) get a `403` on both hosts, while a search engine and
 a visitor get their answer, each with the `X-Robots-Tag` noindex.
 
-`nginx-pages-store.test.mjs` boots the image in front of the stub's page store (lot 3 of
-ADR 0011): an S3 bucket read in path style on the alias `lodb-pages-store`, over plain HTTP on
+`pages-store/nginx-pages-store.test.mjs` boots the image in front of the stub's page store (lot
+3 of ADR 0011): an S3 bucket read in path style on the alias `lodb-pages-store`, over plain HTTP on
 `9000` and over TLS on `9443`, under a certificate no authority signed
 (`lib/self-signed-certificate.mjs`, the image has no `openssl`). The stub keeps a page
 compressed with its headers in metadata, answers `404` for a key it does not hold, and one
@@ -72,14 +73,14 @@ comes from the store's `build/`, then from the bundles' cache under its name, wi
 store's own headers; a name neither has is a plain `404`, whatever the store answered, and past
 the pages' rate a client gets their `429` without the store being asked. Switched off
 (`LODB_PAGES_STORE_ENABLED=0`, the image's default), nginx never asks the store.
-`nginx-pages-store-classes.test.mjs` boots it once more in front of the same stub for the
-classes: a stored page gets the `Cache-Control` of its object's class (`revisable` for an
+`pages-store/nginx-pages-store-classes.test.mjs` boots it once more in front of the same stub
+for the classes: a stored page gets the `Cache-Control` of its object's class (`revisable` for an
 object of that class, the `archived` class's year otherwise) and stays in the hot cache as long
 as its object says (an object living a second is read from the store again, `EXPIRED`, while a
 bundle is kept a year whatever its object says); a patch page (`/{locale}/{version}/changes`)
 comes from the store as any other page.
-`nginx-pages-store-unreachable.test.mjs` boots it twice more, in front of a store whose
-certificate it cannot verify, then one whose name does not resolve: each time it starts and
+`pages-store/nginx-pages-store-unreachable.test.mjs` boots it twice more, in front of a store
+whose certificate it cannot verify, then one whose name does not resolve: each time it starts and
 renders every page with the SSR server.
 
 `maintenance-page.test.mjs` and `maintenance-sources.test.mjs` need neither Docker nor the image:

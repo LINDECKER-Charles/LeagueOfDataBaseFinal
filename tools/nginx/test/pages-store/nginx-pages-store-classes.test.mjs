@@ -6,8 +6,8 @@
 // LODB_NGINX_IMAGE (tools/nginx/README.md); skipped without it.
 import assert from 'node:assert/strict';
 import { after, before, describe, test } from 'node:test';
-import { send } from '../lib/client.mjs';
-import { startStack } from '../lib/stack.mjs';
+import { send } from '../../lib/client.mjs';
+import { startStack } from '../../lib/stack.mjs';
 
 const IMAGE = process.env.LODB_NGINX_IMAGE;
 // The stub's store as nginx-pages-store.test.mjs uses it: bucket lodb-pages, its pages on

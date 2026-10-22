@@ -307,7 +307,7 @@ jobs:
         run: bash tools/routing/check-urls.sh
 
       - name: Test the nginx image
-        run: LODB_NGINX_IMAGE="$COMPOSE_PROJECT_NAME-nginx" node --test tools/nginx/test/*.test.mjs
+        run: LODB_NGINX_IMAGE="$COMPOSE_PROJECT_NAME-nginx" node --test tools/nginx/test/*.test.mjs tools/nginx/test/*/*.test.mjs
 
       - name: Install dependencies
         run: npm ci --prefix tests/LoDb.E2E
