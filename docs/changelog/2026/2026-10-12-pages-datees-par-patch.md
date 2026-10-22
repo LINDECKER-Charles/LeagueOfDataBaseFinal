@@ -7,13 +7,12 @@ summary: Le plan du site date chaque page du dernier patch de sa mise en ligne, 
 tags: [seo, patchs]
 ---
 
-> **Remplacé le 2026-10-22** par [`seo-une-page-par-etat`](../../produit/seo-une-page-par-etat.md) :
-> les sitemaps des anciens patchs sont datés à leur tour. Une page d'ouverture d'un état porte
-> la date de clôture de l'état, la page des changements d'un patch celle de la promotion qui
-> l'a fait passer (ou de la reconstruction de l'index), et chaque entrée de l'index la date la
-> plus récente de son fichier. `latest.xml` gagne la page des changements du dernier patch
-> quand il a changé quelque chose, datée par sa promotion. Aucune date de sortie n'est
-> devinée.
+> **Remplacé en partie le 2026-10-22** par [`seo-une-page-par-etat`](../../produit/seo-une-page-par-etat.md) :
+> les sitemaps des anciens patchs ne restent plus sans date. Une page d'ouverture d'un état
+> porte la date de clôture de l'état, la page des changements d'un patch celle de la
+> promotion qui l'a fait passer (ou de la reconstruction de l'index), et chaque entrée de
+> l'index la date la plus récente de son fichier. `latest.xml` reste daté par la promotion du
+> dernier patch, et gagne sa page des changements quand il a changé quelque chose.
 
 ## Ce qui change
 
