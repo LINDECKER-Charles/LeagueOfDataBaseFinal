@@ -6,9 +6,10 @@ name: Release Android
 # latest.json. They land on the GitHub Release android-vX.Y.Z of this repository, and the
 # AAB on the internal testing track of Play once the listing exists.
 #
-# Called after the deployment of prod, on the exact SHA deployed: the android-vX.Y.Z tag on
-# the SHA gives the version (versionCode X*1000000 + Y*1000 + Z); without one, nothing is
-# released. Can also be run by hand on a SHA. The caller grants contents: write.
+# Run by hand on the exact SHA deployed to prod (`gh workflow run`): no deployment calls it
+# yet, although workflow_call is ready for one. The android-vX.Y.Z tag on the SHA gives the
+# version (versionCode X*1000000 + Y*1000 + Z); without one, nothing is released. A caller
+# grants contents: write.
 #
 # build (no secret: npm and Gradle, unsigned outputs) -> sign (the keys, neither npm nor
 # Gradle) -> stage (pre-release: the bundles at their public URLs) -> gate (emulator: the

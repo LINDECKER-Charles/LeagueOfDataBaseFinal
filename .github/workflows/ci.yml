@@ -142,7 +142,7 @@ jobs:
       - name: Check the API contract
         run: npm --prefix src/LoDb.Web run api:check
 
-  # Translation completeness (L3.3): reported, never blocking.
+  # Translation completeness: reported, never blocking.
   i18n:
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
