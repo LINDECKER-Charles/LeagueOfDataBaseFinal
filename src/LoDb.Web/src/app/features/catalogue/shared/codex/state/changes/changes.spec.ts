@@ -40,6 +40,26 @@ describe('changeRowsOf', () => {
     expect(row).toEqual({ label: 'Description', isText: true, pieces: segments });
   });
 
+  it('writes a text the same in both versions of this language as its plain text', () => {
+    const segments = [{ kind: 'same', text: 'Heals allies.' }] as const;
+
+    const [row] = changeRowsOf(
+      [change({ field: 'plaintext', kind: 'text', segments: [...segments] })],
+      EN,
+    );
+
+    expect(row?.pieces).toEqual(segments);
+  });
+
+  it.each(['value', 'list', 'set', 'text'] as const)(
+    'shows a %s field that neither side holds in this language as its label alone',
+    (kind) => {
+      const [row] = changeRowsOf([change({ kind })], EN);
+
+      expect(row).toEqual({ label: 'Total cost', isText: kind === 'text', pieces: [] });
+    },
+  );
+
   it('shows a value struck out, an arrow, then the value after, in the locale', () => {
     const [row] = changeRowsOf([change({ before: values('3000'), after: values('3100.5') })], FR);
 

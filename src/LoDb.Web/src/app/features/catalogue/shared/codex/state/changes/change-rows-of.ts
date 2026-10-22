@@ -53,7 +53,15 @@ function setPieces(change: FieldChange, format: ValueFormat): Pieces {
   ];
 }
 
+// A field the index marks changed that neither side holds in this language: its label alone.
+function hasNoValue(change: FieldChange): boolean {
+  return change.before.length === 0 && change.after.length === 0 && change.segments.length === 0;
+}
+
 function piecesOf(change: FieldChange, format: ValueFormat): Pieces {
+  if (hasNoValue(change)) {
+    return [];
+  }
   switch (change.kind) {
     case 'text':
       return change.segments;
