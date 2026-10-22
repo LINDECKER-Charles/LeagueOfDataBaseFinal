@@ -22,6 +22,7 @@ import { audiencePageOf } from './core/analytics/audience/normalize/audience-pag
 import { API_BASE_URL } from './core/api/api-base-url';
 import { handleNavigationError } from './core/routing/failure/handle-navigation-error';
 import { catalogMetaOf } from './core/testing/catalog-meta-of';
+import { detailStateOf } from './core/testing/detail-state-of';
 import { provideTestTransloco } from './core/testing/provide-test-transloco';
 import { AccountPage } from './features/account/account-page';
 import { AdminPage } from './features/admin/admin-page';
@@ -66,7 +67,9 @@ function simulatedApi(requested: string[]): HttpInterceptorFn {
     const url = request.urlWithParams;
     requested.push(url);
     const path = DETAILS.exec(url)?.groups?.['path'];
-    const body = path ? { canonicalPath: path, profile: { name: path } } : META;
+    const body = path
+      ? { canonicalPath: path, profile: { name: path }, ...detailStateOf(path) }
+      : META;
     return of(new HttpResponse({ status: HttpStatusCode.Ok, url, body }));
   };
 }

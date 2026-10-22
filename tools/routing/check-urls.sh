@@ -9,7 +9,10 @@
 # nginx, for instance http://localhost:18180. The catalogue rows need a version ingested:
 # the script first waits for the patch watch to ingest one (LODB_ROUTING_WAIT seconds, 600
 # by default), then asks the API through the same nginx for the item 1036 in the latest
-# version and in the one before it, which ingests them on demand if needed.
+# version and in the one before it, which ingests them on demand if needed. A page of an older
+# version is expected in the class its entity's state gives it (docs/produit/
+# seo-une-page-par-etat.md, § 3.7): the data of the stack decide which rows apply, each said
+# as it runs.
 #
 # Needs curl and jq. Prints one line per check; exit code 1 when any check fails.
 set -euo pipefail
@@ -134,9 +137,24 @@ meta() {
   curl -sS --max-time 30 "$BASE/api/meta"
 }
 
-# The canonical path of an item for a version, asked in en_US (the language of /en/).
+# The item's detail for a version, asked in en_US (the language of /en/).
+item_details() {
+  curl -sS --max-time 300 "$BASE/api/catalog/$1/en_US/items/$ITEM"
+}
+
+# The canonical path of the item for a version.
 canonical_path() {
-  curl -sS --max-time 300 "$BASE/api/catalog/$1/en_US/items/$ITEM" | jq -er .canonicalPath
+  item_details "$1" | jq -er .canonicalPath
+}
+
+# The class of a pinned page of the item: frozen once its state is closed, revisable while it
+# is open or the API knows no state there.
+state_class() {
+  if [ "$(item_details "$1" | jq -r '.state.isOpen')" = false ]; then
+    echo archived
+  else
+    echo revisable
+  fi
 }
 
 # ── The catalogue must hold a version ────────────────────────────────────────────────
@@ -199,7 +217,26 @@ row /en/champions 200 latest - -
 settle "/fr/$older/runes"
 row "/fr/$older/runes" 200 archived - -
 row "/en/$item" 200 latest - -
-row "/en/$older/$older_item" 200 archived - -
+row "/en/$older/$older_item" 200 "$(state_class "$older")" - -
+
+# ── Pinned pages by the state of their entity: the item's history, as the API renders it ──
+history="$(item_details "$latest" | jq -c '.history')"
+# The opener of a closed state, under its canonical: frozen.
+frozen="$(jq -r 'map(select(.lastVersion != null))[0] // empty | "\(.link.version)/\(.link.path)"' <<<"$history")"
+# The opener of the open state, when older than the latest: revisable, its path unchanged since.
+revisable="$(jq -r --arg latest "$latest" \
+  'map(select(.lastVersion == null and .openerVersion != $latest))[0] // empty
+   | "\(.openerVersion)/\(.link.path)"' <<<"$history")"
+if [ -n "$frozen" ]; then
+  row "/en/$frozen" 200 archived - -
+else
+  echo "skip the item has no closed state: no frozen page to ask for"
+fi
+if [ -n "$revisable" ]; then
+  row "/en/$revisable" 200 revisable - -
+else
+  echo "skip the item's open state opened at the latest version: no revisable page to ask for"
+fi
 
 # ── Canonical redirects ──────────────────────────────────────────────────────────────
 row "/en/$latest/champions" 301 transient - /en/champions
