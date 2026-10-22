@@ -287,6 +287,12 @@ jobs:
       - name: Start the lodb-dev stack (waits for every probe)
         run: docker compose up -d --build --wait --wait-timeout 300
 
+      # A fresh stack indexes its latest patch alone: the en_US of the patches before it, then the
+      # states service again, give the URL grammar and the E2E closed and open states to check
+      # (docs/produit/seo-une-page-par-etat.md, § 8).
+      - name: Index the patches before the latest
+        run: bash tools/states/index-past-patches.sh
+
       - name: Setup Node
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
