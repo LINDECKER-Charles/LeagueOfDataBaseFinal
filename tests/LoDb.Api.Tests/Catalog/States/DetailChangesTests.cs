@@ -150,6 +150,21 @@ public sealed class DetailChangesTests(StateApiFixture api) : IDisposable
         Assert.Empty(required.Items("segments"));
     }
 
+    // Domination lost Predator after 8.7.1: only the catalog compared names it.
+    [Fact]
+    public async Task StateNamesItsFieldsAsItsBlockDoes()
+    {
+        var domination = new IndexedEntity(ResourceType.Runes, "8100");
+        await SeedAsync(domination);
+
+        var page = await api.GetJsonAsync(PathOf(domination, "fr_FR"));
+        var state = page.GetProperty("state").Items("changedFields");
+        var predator = state.Single(static field => KeyOf(field) == "runeName.8124");
+
+        Assert.Equal(SubjectsOf(page.GetProperty("changes").Items("fields")), SubjectsOf(state));
+        Assert.Equal("Prédateur", predator.GetProperty("subject").Text("name"));
+    }
+
     // Set against en_US, a text reads as a translation that did not change; a number does not
     // depend on the language.
     [Fact]
@@ -204,6 +219,11 @@ public sealed class DetailChangesTests(StateApiFixture api) : IDisposable
 
     private static IReadOnlyList<string> KeysOf(IReadOnlyList<JsonElement> fields) =>
         [.. fields.Select(KeyOf)];
+
+    // Each field with its subject, named or not, as the answer writes it.
+    private static IReadOnlyList<string> SubjectsOf(IReadOnlyList<JsonElement> fields) =>
+        [.. fields.Select(static field =>
+            $"{field.Text("field")} {field.GetProperty("subject").GetRawText()}")];
 
     private static Dictionary<string, JsonElement> FieldsOf(JsonElement page) =>
         page.GetProperty("changes").Items("fields").ToDictionary(KeyOf, StringComparer.Ordinal);

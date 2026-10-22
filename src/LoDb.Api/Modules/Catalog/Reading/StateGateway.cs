@@ -118,7 +118,7 @@ internal sealed partial class StateGateway(
         if (catalog is not null)
         {
             var changes = StateChanges.Of(held, opener.Entity, catalog);
-            return StateRead.Read(state with { Changes = changes });
+            return StateRead.Read(DetailStates.WithChanges(state, changes));
         }
 
         return opener.Standing.IsLatest

@@ -6,7 +6,8 @@ namespace LoDb.Api.Modules.Catalog.States.Details;
 
 /// <summary>
 /// The state fields of a detail, from where its page stands in the index: read from the index
-/// alone, but for the names of the subjects of its own changed fields.
+/// alone, but for the names of the subjects of its own changed fields, which the page's catalog
+/// gives, and on an opener the catalog compared to as well.
 /// </summary>
 internal static class DetailStates
 {
@@ -24,6 +25,31 @@ internal static class DetailStates
             Next = standing.State is { } held ? NextOf(view.SuccessorOf(held)) : null,
             PresentInLatest = standing.IsPresentInLatest,
             Changes = null,
+        };
+    }
+
+    /// <summary>
+    /// The fields of an opener's page once its state is compared: the state names its changed
+    /// fields as the block does, the catalog compared to naming what the state removed (a
+    /// skin, a rune), so the two lists of the page agree.
+    /// </summary>
+    public static DetailState WithChanges(DetailState detail, EntityChanges changes)
+    {
+        ArgumentNullException.ThrowIfNull(detail);
+        ArgumentNullException.ThrowIfNull(changes);
+        return detail with
+        {
+            State = detail.State is { } state
+                ? state with
+                {
+                    ChangedFields = [.. changes.Fields.Select(static field => new ChangedField
+                    {
+                        Field = field.Field,
+                        Subject = field.Subject,
+                    })],
+                }
+                : null,
+            Changes = changes,
         };
     }
 
