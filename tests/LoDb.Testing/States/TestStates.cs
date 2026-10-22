@@ -48,7 +48,9 @@ public static class TestStates
         };
     }
 
-    /// <summary>A state from <paramref name="opener"/> to <paramref name="last"/>, closed.</summary>
+    /// <summary>
+    /// A state from <paramref name="opener"/> to <paramref name="last"/>, closed.
+    /// </summary>
     public static IndexedState Closed(IndexedEntity entity, string opener, string last) =>
         Open(entity, opener) with { Last = PatchVersion.Parse(last), ClosedAt = BuiltAt };
 }
