@@ -115,6 +115,22 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   absente du dernier patch garde la règle du 2026-10-16 (sa page épinglée de la version
   nommée, 404 sans version) : l'ancien site la nommait par sa clé, que seul le catalogue du
   dernier patch traduit en id pour l'index (amendements du 2026-10-16 et du 2026-10-22).
+  L'index des sitemaps n'annonce, après les `latest.xml`, que les sitemaps des versions
+  couvertes passées dont le fichier n'est pas vide (~8 440 entrées au plus), lus dans la copie
+  de l'index sans catalogue ; une version pas encore couverte (index en retard), plus récente
+  que le dernier patch ou d'avant toute promotion répond 404, et `latest.xml` n'ajoute
+  `/{locale}/changes` que si l'index couvre le dernier patch et qu'il a changé quelque chose.
+  Une page figée (état clos) ne lie que des URL versionnées, sauf « Dans le dernier patch »,
+  qui devient une 404 si l'entité est retirée ensuite, et « Changé au patch X » mène à une 301
+  tant que X est le dernier patch : voulu. Une page révisable (état ouvert) ne nomme aucune
+  version qu'une promotion change (« depuis le patch X »). Le premier état d'une entité au
+  début de la couverture est `baseline` : ni résumé, ni pastille, ni bloc. Les blocs ne lisent
+  que la réponse de la fiche, jamais `/api/meta` (les specs des fiches ne la fournissent
+  plus). Une page de patch (`/{locale}/[{version}/]changes`) n'existe pas pour la
+  première version couverte ni hors de l'index : sur elle, la version mémorisée ou choisie dans
+  le sélecteur ne s'applique qu'entre `oldestChangesVersion` et le dernier patch
+  (`core/api/meta/has-changes-page.ts`, la règle de `/patches`), sinon la page reste sur le
+  dernier patch.
 - Une page qui oublie `Seo.apply` n'a ni canonique ni hreflang. Une clé `about.*`, `api.*`
   ou `seo.*` n'est traduite que si un ancêtre fournit son scope (`provideTranslocoScope`) ;
   sinon la clé brute sort dans le HTML, sans erreur. Le chrome (en-tête, pied de page) n'en
