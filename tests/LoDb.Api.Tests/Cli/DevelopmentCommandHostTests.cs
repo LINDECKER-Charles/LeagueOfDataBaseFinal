@@ -82,6 +82,13 @@ public sealed class DevelopmentCommandHostTests(PostgresContainerFixture postgre
         Assert.Equal(CliExitCodes.Failure, exitCode);
     }
 
+    // Nothing is promoted: the index has nothing to cover, and Data Dragon is never asked.
+    [Fact]
+    public async Task CatalogStatesBuildRuns()
+    {
+        Assert.Equal(CliExitCodes.Success, await RunAsync(["catalog", "states", "build"]));
+    }
+
     [Theory]
     [InlineData("migrate")]
     [InlineData("baseline mark-applied")]
@@ -96,6 +103,7 @@ public sealed class DevelopmentCommandHostTests(PostgresContainerFixture postgre
     [InlineData("admin root")]
     [InlineData("audit import")]
     [InlineData("catalog export")]
+    [InlineData("catalog states build")]
     [InlineData("client-policy publish")]
     [InlineData("prerender pause")]
     [InlineData("prerender resume")]

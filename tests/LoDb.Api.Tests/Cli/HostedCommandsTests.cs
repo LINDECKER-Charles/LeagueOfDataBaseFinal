@@ -15,7 +15,8 @@ public sealed class HostedCommandsTests
         {
             "admin create", "admin mfa-invite", "admin mfa-reset", "admin root",
             "analytics import", "audit import",
-            "baseline mark-applied", "catalog export", "client-policy publish", "ingest",
+            "baseline mark-applied", "catalog export", "catalog states build",
+            "client-policy publish", "ingest",
             "migrate", "prerender pause", "prerender resume", "prerender unit",
         };
 
