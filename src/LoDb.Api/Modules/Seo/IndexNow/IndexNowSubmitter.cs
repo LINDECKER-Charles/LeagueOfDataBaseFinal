@@ -23,6 +23,8 @@ internal sealed partial class IndexNowSubmitter(
     IOptions<SeoOptions> options,
     ILogger<IndexNowSubmitter> logger) : IPromotionListener
 {
+    public PromotionStage Stage => PromotionStage.Announce;
+
     public async Task OnPromotedAsync(PatchVersion version, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(version);

@@ -12,5 +12,8 @@ namespace LoDb.Ingestion.Pipeline.Versions;
 /// </remarks>
 public interface IPromotionListener
 {
+    /// <summary>When it runs among the listeners: by stage, then in registration order.</summary>
+    PromotionStage Stage { get; }
+
     Task OnPromotedAsync(PatchVersion version, CancellationToken cancellationToken);
 }

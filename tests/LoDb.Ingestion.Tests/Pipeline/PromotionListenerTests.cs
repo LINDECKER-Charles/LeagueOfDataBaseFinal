@@ -8,11 +8,15 @@ using Microsoft.Extensions.Logging;
 namespace LoDb.Ingestion.Tests.Pipeline;
 
 /// <summary>
-/// The run that promotes a version tells every listener once; a listener that throws is
-/// logged and leaves the version promoted, the other listeners told.
+/// The run that promotes a version tells every listener once, stage by stage; a listener that
+/// throws is logged and leaves the version promoted, the other listeners told.
 /// </summary>
 public sealed class PromotionListenerTests(PostgresContainerFixture postgres)
 {
+    private const PromotionStage StateIndex = PromotionStage.StateIndex;
+    private const PromotionStage Prerender = PromotionStage.Prerender;
+    private const PromotionStage Announce = PromotionStage.Announce;
+
     private static readonly PatchVersion Latest = DdragonFixtures.Latest;
 
     [Fact]
@@ -52,9 +56,27 @@ public sealed class PromotionListenerTests(PostgresContainerFixture postgres)
         Assert.IsType<HttpRequestException>(failure.Exception);
     }
 
+    [Fact]
+    public async Task ListenersRunByStageWhateverTheirRegistrationOrder()
+    {
+        await using var harness = await IngestionHarness.CreateAsync(postgres);
+        List<string> calls = [];
+        var instance = harness.StartInstance(services => services
+            .AddSingleton<IPromotionListener>(new OrderListener(Announce, "announce", calls))
+            .AddSingleton<IPromotionListener>(new OrderListener(Prerender, "first", calls))
+            .AddSingleton<IPromotionListener>(new OrderListener(StateIndex, "index", calls))
+            .AddSingleton<IPromotionListener>(new OrderListener(Prerender, "second", calls)));
+
+        await VersionIngestionTests.IngestAsync(instance, Latest);
+
+        Assert.Equal(["index", "first", "second", "announce"], calls);
+    }
+
     private sealed class RecordingListener : IPromotionListener
     {
         public List<PatchVersion> Promoted { get; } = [];
+
+        public PromotionStage Stage => PromotionStage.Announce;
 
         public Task OnPromotedAsync(PatchVersion version, CancellationToken cancellationToken)
         {
@@ -65,7 +87,21 @@ public sealed class PromotionListenerTests(PostgresContainerFixture postgres)
 
     private sealed class FailingListener : IPromotionListener
     {
+        public PromotionStage Stage => PromotionStage.StateIndex;
+
         public Task OnPromotedAsync(PatchVersion version, CancellationToken cancellationToken) =>
             throw new HttpRequestException("The endpoint is unreachable.");
+    }
+
+    private sealed class OrderListener(PromotionStage stage, string name, List<string> calls)
+        : IPromotionListener
+    {
+        public PromotionStage Stage => stage;
+
+        public Task OnPromotedAsync(PatchVersion version, CancellationToken cancellationToken)
+        {
+            calls.Add(name);
+            return Task.CompletedTask;
+        }
     }
 }

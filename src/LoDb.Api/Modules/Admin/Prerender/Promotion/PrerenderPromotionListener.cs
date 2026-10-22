@@ -18,6 +18,8 @@ internal sealed class PrerenderPromotionListener(
     PromotedVersions promoted,
     VersionEnqueuer enqueuer) : IPromotionListener
 {
+    public PromotionStage Stage => PromotionStage.Prerender;
+
     public async Task OnPromotedAsync(PatchVersion version, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(version);
