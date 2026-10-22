@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Net;
 using System.Xml.Linq;
 using LoDb.Api.Tests.Catalog;
+using LoDb.Api.Tests.Seo.States;
 using LoDb.Domain.Languages;
 using LoDb.Testing.States;
 

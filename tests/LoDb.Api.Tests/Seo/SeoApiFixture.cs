@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using LoDb.Api.Modules.Seo.IndexNow;
+using LoDb.Api.Tests.Seo.States;
 using LoDb.Ingestion.Catalog.States;
 using LoDb.Ingestion.Pipeline.Versions;
 using LoDb.Testing;

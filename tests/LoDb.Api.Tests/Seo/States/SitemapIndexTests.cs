@@ -5,7 +5,7 @@ using LoDb.Domain.Versions;
 using LoDb.Ingestion.Catalog.States.Snapshots;
 using LoDb.Testing.States;
 
-namespace LoDb.Api.Tests.Seo;
+namespace LoDb.Api.Tests.Seo.States;
 
 /// <summary>
 /// What the sitemap index and a past version's sitemap list, read in the index of states

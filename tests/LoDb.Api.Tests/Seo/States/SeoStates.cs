@@ -4,7 +4,7 @@ using LoDb.Domain.Versions;
 using LoDb.Ingestion.Catalog.States.Snapshots;
 using LoDb.Testing.States;
 
-namespace LoDb.Api.Tests.Seo;
+namespace LoDb.Api.Tests.Seo.States;
 
 /// <summary>
 /// The index of states the SEO tests read, over five recorded versions, one past version each

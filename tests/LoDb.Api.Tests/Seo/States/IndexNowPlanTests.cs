@@ -2,7 +2,7 @@ using LoDb.Api.Modules.Seo.IndexNow;
 using LoDb.Domain.Languages;
 using LoDb.Domain.Versions;
 
-namespace LoDb.Api.Tests.Seo;
+namespace LoDb.Api.Tests.Seo.States;
 
 /// <summary>
 /// What a promotion announces to IndexNow beyond the short URLs, read in the index of states
