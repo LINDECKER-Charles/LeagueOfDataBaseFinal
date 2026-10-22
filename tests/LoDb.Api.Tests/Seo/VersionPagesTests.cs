@@ -81,7 +81,7 @@ public sealed class VersionPagesTests(PostgresContainerFixture postgres) : IAsyn
         var pages = VersionPages.Of(catalog).ToList();
 
         Assert.Equal(
-            [.. SitePages.Lists, VersionPages.PatchChanges],
+            [.. SitePages.Lists, SitePages.Changes],
             pages.Take(SitePages.Lists.Count + 1));
         Assert.Equal(
             [.. VersionPages.ListedEntityPaths(catalog).Select(static path => path.Value)],

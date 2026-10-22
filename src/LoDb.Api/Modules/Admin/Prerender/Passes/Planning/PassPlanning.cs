@@ -1,6 +1,6 @@
 using LoDb.Api.Modules.Admin.Prerender.Coverage;
 using LoDb.Api.Modules.Admin.Prerender.Pages;
-using LoDb.Api.Modules.Seo.Pages;
+using LoDb.Api.Modules.Seo;
 using LoDb.Domain.Versions;
 
 namespace LoDb.Api.Modules.Admin.Prerender.Passes.Planning;
@@ -74,7 +74,7 @@ internal sealed class PassPlanning(
         {
             var openers = await catalog.OpenersAsync(version, cancellationToken);
             pages[version.Value] = UnitPages.Of(
-                [VersionPages.PatchChanges, .. openers],
+                [SitePages.Changes, .. openers],
                 scope,
                 openers).Count;
         }

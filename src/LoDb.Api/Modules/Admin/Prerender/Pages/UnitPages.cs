@@ -1,3 +1,4 @@
+using LoDb.Api.Modules.Seo;
 using LoDb.Api.Modules.Seo.Pages;
 
 namespace LoDb.Api.Modules.Admin.Prerender.Pages;
@@ -34,6 +35,6 @@ internal static class UnitPages
     }
 
     private static bool IsOpening(string page, IReadOnlySet<string> openers) =>
-        string.Equals(page, VersionPages.PatchChanges, StringComparison.Ordinal)
+        string.Equals(page, SitePages.Changes, StringComparison.Ordinal)
         || openers.Contains(page);
 }

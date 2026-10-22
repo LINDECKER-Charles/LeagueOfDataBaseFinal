@@ -1,5 +1,5 @@
 using LoDb.Api.Modules.Admin.Prerender.Pages;
-using LoDb.Api.Modules.Seo.Pages;
+using LoDb.Api.Modules.Seo;
 using LoDb.Domain.Catalog;
 using LoDb.Domain.Languages;
 using LoDb.Domain.Paths;
@@ -39,7 +39,7 @@ internal sealed record DemandPath
     /// <summary>The first segment of the page, as the queue's rows keep it.</summary>
     public string TypeName => Type is { } type
         ? CanonicalPath.SegmentOf(type)
-        : VersionPages.PatchChanges;
+        : SitePages.Changes;
 
     /// <summary>
     /// The parts of <paramref name="path"/>, written as <c>refusedPagePathOf</c> writes it;
@@ -73,7 +73,7 @@ internal sealed record DemandPath
     private static bool TryParseType(string[] segments, out ResourceType? type)
     {
         var first = segments[PageStart];
-        if (string.Equals(first, VersionPages.PatchChanges, StringComparison.Ordinal))
+        if (string.Equals(first, SitePages.Changes, StringComparison.Ordinal))
         {
             type = null;
             return segments.Length == ListSegments;

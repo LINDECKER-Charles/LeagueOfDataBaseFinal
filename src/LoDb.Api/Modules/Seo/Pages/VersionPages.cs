@@ -21,16 +21,11 @@ namespace LoDb.Api.Modules.Seo.Pages;
 /// cursor), so a change of it under a running pass would skip or repeat pages. The patch page
 /// stands after the lists whether the version has one or not (the oldest covered version, or
 /// one outside the index, answers a 404 the pass skips): the list never depends on the index.
+/// A page of no type, only a pass over every type renders it.
 /// </para>
 /// </remarks>
 internal static class VersionPages
 {
-    /// <summary>
-    /// The patch page below <c>/{locale}/{version}/</c>: what the version changed. A page of no
-    /// type: only a pass over every type renders it.
-    /// </summary>
-    public const string PatchChanges = "changes";
-
     /// <summary>
     /// The canonical path of every entity the lists of <paramref name="catalog"/> show, once
     /// each: debris and placeholder spells have no page (UP 10); the Classic twins do. The
@@ -44,6 +39,6 @@ internal static class VersionPages
     /// </summary>
     public static IEnumerable<string> Of(CatalogSnapshot catalog) =>
         SitePages.Lists
-            .Append(PatchChanges)
+            .Append(SitePages.Changes)
             .Concat(ListedEntityPaths(catalog).Select(static path => path.Value));
 }
