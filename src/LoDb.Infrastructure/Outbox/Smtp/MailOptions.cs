@@ -15,8 +15,11 @@ public sealed class MailOptions
 {
     public const string SectionName = "LoDb:Mail";
 
-    /// <summary>The legacy stack's <c>MAILER_FROM</c>.</summary>
-    public const string DefaultFrom = "LeagueOfDataBase <no-reply@leagueofdatabase.gg>";
+    /// <summary>
+    /// The sender the site uses: its domain's SPF and DKIM vouch for Hostinger's relay, which
+    /// the receiving servers check before accepting an e-mail.
+    /// </summary>
+    public const string DefaultFrom = "LeagueOfDataBase <contact@charles-lindecker.com>";
 
     private const int DefaultPort = 587;
     private const int DefaultTimeoutSeconds = 30;

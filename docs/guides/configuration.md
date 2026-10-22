@@ -368,7 +368,7 @@ même nom.
 | `LoDb__Mail__Port` | ➖ | `587` par défaut. |
 | `LoDb__Mail__Security` | ➖ | `Auto` par défaut ; `None`, `SslOnConnect`, `StartTls`, `StartTlsWhenAvailable`. |
 | `LoDb__Mail__Username`, `LoDb__Mail__Password` 🔒 | si le relais authentifie | Identifiants SMTP. |
-| `LoDb__Mail__From` | prod | `Nom <adresse>`, sur un domaine couvert par SPF, DKIM et DMARC. Défaut : `no-reply@leagueofdatabase.gg`, **un autre domaine** : toujours le définir. |
+| `LoDb__Mail__From` | prod | `Nom <adresse>`, sur un domaine couvert par SPF, DKIM et DMARC (§ 6.4). Défaut : `LeagueOfDataBase <contact@charles-lindecker.com>`, l'expéditeur de la prod. |
 | `LoDb__Billing__StripeSecretKey` 🔒 ⚙️ | prod | `sk_live_…` en prod, `sk_test_…` sur `staging`. Absente : dons et achats de crédits en 503. |
 | `LoDb__Billing__StripeWebhookSecret` 🔒 ⚙️ | prod | `whsec_…` de l'endpoint `/webhooks/stripe` de l'environnement. Absent : webhook en 503, alerte `billing.webhook.unconfigured`. |
 | `LoDb__Accounts__Google__ClientId` | ➖ | Client OAuth web. Absent : connexion Google coupée (`google-unavailable`). |
@@ -938,6 +938,10 @@ alors à la connexion (`Host key verification failed`).
 
 Mêmes identifiants que le `MAILER_DSN` de l'ancienne stack du même environnement (§ 4.4).
 Le domaine de `LoDb__Mail__From` doit autoriser le relais : SPF, DKIM et DMARC.
+`charles-lindecker.com` le fait pour le relais de Hostinger (SPF
+`include:_spf.mail.hostinger.com`, DKIM `hostingermail1`, DMARC `p=none`) ;
+`league-of-data-base.com` ne publie aucun de ces enregistrements : un e-mail envoyé en son nom
+serait refusé ou classé indésirable.
 
 ### 6.5 Stripe
 
