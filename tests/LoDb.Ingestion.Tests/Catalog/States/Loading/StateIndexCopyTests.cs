@@ -19,8 +19,8 @@ namespace LoDb.Ingestion.Tests.Catalog.States.Loading;
 
 /// <summary>
 /// The copy of the index a process holds: loaded once, checked by its stamp at most every
-/// versions' lifetime, at once after a write of its own, kept when the database fails, and
-/// unavailable only without a copy.
+/// versions' lifetime, at once after a write of its own, kept when the database or the load
+/// fails, unavailable only without a copy, and never stuck on a failed refresh.
 /// </summary>
 public sealed class StateIndexCopyTests(PostgresContainerFixture postgres)
 {
@@ -111,6 +111,38 @@ public sealed class StateIndexCopyTests(PostgresContainerFixture postgres)
             async () => await copy.GetAsync(Token));
     }
 
+    // A row the load cannot read, say: the failed refresh ends, the next read loads again.
+    [Fact]
+    public async Task LoadFailingOtherwiseThanByTheDatabaseIsTriedAgain()
+    {
+        await using var database = await postgres.CreateMigratedDatabaseAsync(Token);
+        var copy = CopyOver(new Contexts(database) { Faults = 1 }, TimeSpan.Zero);
+
+        await Assert.ThrowsAsync<StateIndexUnavailableException>(
+            async () => await copy.GetAsync(Token));
+        var loaded = await copy.GetAsync(Token);
+
+        Assert.Same(EntityStateSnapshot.Empty, loaded);
+    }
+
+    [Fact]
+    public async Task CheckFailingOtherwiseThanByTheDatabaseKeepsTheCopyThenChecksAgain()
+    {
+        await using var database = await postgres.CreateMigratedDatabaseAsync(Token);
+        var contexts = new Contexts(database);
+        var copy = CopyOver(contexts, TimeSpan.Zero);
+        var held = await copy.GetAsync(Token);
+
+        contexts.Faults = 1;
+        var kept = await copy.GetAsync(Token);
+        var checks = contexts.Created;
+        var again = await copy.GetAsync(Token);
+
+        Assert.Same(held, kept);
+        Assert.Same(held, again);
+        Assert.True(contexts.Created > checks, "the read after the failure checks again");
+    }
+
     private static async Task StoreAsync(StateIndexHarness index)
     {
         var datasets = await ReducedDatasets.ReadAsync();
@@ -129,7 +161,8 @@ public sealed class StateIndexCopyTests(PostgresContainerFixture postgres)
         TimeProvider.System,
         NullLogger<StateIndexCopy>.Instance);
 
-    // The test's database, or a server nobody listens on once broken.
+    // The test's database, or a server nobody listens on once broken; a fault fails the next
+    // context with no database involved.
     private sealed class Contexts(TestDatabase database) : IDbContextFactory<LoDbDbContext>
     {
         private static readonly NpgsqlDataSource Nowhere =
@@ -137,8 +170,19 @@ public sealed class StateIndexCopyTests(PostgresContainerFixture postgres)
 
         public bool IsBroken { get; set; }
 
+        public int Faults { get; set; }
+
+        public int Created { get; private set; }
+
         public LoDbDbContext CreateDbContext()
         {
+            Created++;
+            if (Faults > 0)
+            {
+                Faults--;
+                throw new InvalidDataException("A row of the index could not be read.");
+            }
+
             if (!IsBroken)
             {
                 return database.CreateContext();

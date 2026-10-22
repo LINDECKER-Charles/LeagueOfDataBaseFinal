@@ -19,9 +19,10 @@ namespace LoDb.Ingestion.Catalog.States.Loading;
 /// the copy, so that its next read checks at once.
 /// </para>
 /// <para>
-/// A database out of reach keeps the copy held, checked again a lifetime later. Without a
-/// copy, the read throws <see cref="StateIndexUnavailableException"/> (the API's 503), and
-/// the next one tries again; each failed load is one line and one count.
+/// A failed check or load, whatever failed it (a database out of reach, a row it cannot
+/// read), keeps the copy held, checked again a lifetime later. Without a copy, the read throws
+/// <see cref="StateIndexUnavailableException"/> (the API's 503), and the next one tries again;
+/// each failure is one line and one count.
 /// </para>
 /// </remarks>
 internal sealed class StateIndexCopy(
@@ -98,7 +99,8 @@ internal sealed class StateIndexCopy(
     }
 
     // Never cancelled by a reader: the readers that join it would all fail. The database's
-    // timeouts bound it.
+    // timeouts bound it. Every failure settles it: a refresh left faulted would stay the one
+    // reads join, and the copy would never be checked again.
     private async Task<EntityStateSnapshot?> RefreshAsync(EntityStateSnapshot? copy, long seen)
     {
         try
@@ -107,7 +109,7 @@ internal sealed class StateIndexCopy(
             var fresh = isCurrent ? copy : await LoadAsync().ConfigureAwait(false);
             return Settle(fresh, seen);
         }
-        catch (Exception exception) when (UnreachableDatabase.IsCause(exception))
+        catch (Exception exception)
         {
             metrics.RecordCopyFailed();
             StateIndexLog.CopyFailed(logger, copy is not null, exception);

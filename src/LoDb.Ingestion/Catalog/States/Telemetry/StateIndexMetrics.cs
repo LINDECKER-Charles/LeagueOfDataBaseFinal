@@ -71,7 +71,7 @@ internal sealed class StateIndexMetrics
         unavailable = meter.CreateCounter<long>(
             "lodb.states.unavailable",
             "{read}",
-            "Reads of the index answered unavailable: no copy held and no database.");
+            "Reads of the index answered unavailable: no copy held, and its load failed.");
     }
 
     public static string TriggerOf(StateIndexTrigger trigger) => trigger switch
