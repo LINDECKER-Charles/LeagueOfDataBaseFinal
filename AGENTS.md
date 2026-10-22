@@ -125,8 +125,9 @@ Détail : [`configuration.md`](docs/guides/configuration.md).
 - **Objets et sorts indexés par id, jamais par nom** (jumeaux homonymes de l'édition Classic).
 - **SSR** (ADR 0005) : **aucun cookie** lu, **aucun secret** détenu. Locale en préfixe
   d'URL ; l'id fait foi, le slug est décoratif (301 vers la canonique). La canonique des
-  fiches et les sitemaps suivent une seule règle, `CanonicalReferences` (`LoDb.Ingestion`), que
-  l'API transmet au SSR ; celle des listes est dans `catalogue-list-seo.ts`.
+  fiches suit une seule règle, calculée par l'API depuis l'index des états (`StateView`,
+  `LoDb.Ingestion`, règle par état et règle résiduelle) et transmise au SSR, jamais nulle ;
+  les sitemaps lisent le même index ; celle des listes est dans `catalogue-list-seo.ts`.
 - **Front** (ADR 0006) : uniquement le **client généré** depuis OpenAPI. Aucun
   `if (platform)` hors de `core/platform/`, aucun kit UI, pas de NgRx.
 - **Persistance** : migrations EF **additives** jusqu'au *contract* (runbook § 9, au plus

@@ -1,6 +1,7 @@
 using LoDb.Api.Modules.Catalog.Reading;
 using LoDb.Api.Modules.Catalog.Shared;
 using LoDb.Api.Modules.Catalog.States;
+using LoDb.Api.Modules.Catalog.States.Details;
 using LoDb.Domain.Catalog.Items;
 using LoDb.Domain.Editions;
 using LoDb.Domain.Text;
@@ -128,4 +129,19 @@ internal sealed record ItemDetails
     // plaintext alone, as on the legacy page, never that description a second time.
     private static ItemCard ProfileOf(Item item, CatalogSnapshot catalog, ImageSet images) =>
         ItemCard.Of(item, catalog, images) with { Summary = DdragonText.Clean(item.Plaintext) };
+
+    /// <summary>The same page with what the index of states tells of it.</summary>
+    public ItemDetails WithState(DetailState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        return this with
+        {
+            Canonical = state.Canonical,
+            State = state.State,
+            History = state.History,
+            Next = state.Next,
+            PresentInLatest = state.PresentInLatest,
+            Changes = state.Changes,
+        };
+    }
 }

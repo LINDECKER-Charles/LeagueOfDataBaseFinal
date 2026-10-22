@@ -1,6 +1,5 @@
 using LoDb.Api.Modules.Catalog.Reading;
-using LoDb.Domain.Paths;
-using LoDb.Domain.Versions;
+using LoDb.Api.Modules.Catalog.States.Details;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LoDb.Api.Modules.Catalog.Http;
@@ -13,7 +12,7 @@ namespace LoDb.Api.Modules.Catalog.Http;
 /// decorative and never checked (ADR 0005).
 /// </param>
 /// <param name="Gateway">Opens the catalog.</param>
-/// <param name="Canonicals">Locates the canonical page of the entity.</param>
+/// <param name="States">Reads where the page stands in the index of states.</param>
 /// <param name="Context">The call's, whose connection tells who asks.</param>
 /// <param name="CancellationToken">The request's.</param>
 internal sealed record DetailRequest(
@@ -21,16 +20,16 @@ internal sealed record DetailRequest(
     [FromRoute(Name = "lang")] string Lang,
     [FromRoute(Name = "id")] string Id,
     [FromServices] CatalogGateway Gateway,
-    [FromServices] CanonicalGateway Canonicals,
+    [FromServices] StateGateway States,
     HttpContext Context,
     CancellationToken CancellationToken)
 {
     public CatalogScope Scope => new(Version, Lang) { Caller = ColdCallers.Of(Context) };
 
     /// <summary>
-    /// Where the page of the entity <paramref name="path"/> names, in <paramref name="version"/>,
-    /// is canonical: read for the page's caller, as the page's catalog was.
+    /// The state fields of the page of <paramref name="entity"/>: read for the page's caller,
+    /// as the page's catalog was.
     /// </summary>
-    public Task<CanonicalRead> LocateCanonicalAsync(PatchVersion version, CanonicalPath path) =>
-        Canonicals.LocateAsync(version, path, Scope.Caller, CancellationToken);
+    public Task<StateRead> ReadStateAsync(DetailEntity entity) =>
+        States.ReadAsync(entity, Scope.Caller, CancellationToken);
 }

@@ -8748,7 +8748,7 @@
             "description": "The entity's path in that version."
           }
         },
-        "description": "The page search engines index for the entity of a detail (ADR 0005, amendment of\n2026-10-14), which the front writes as the canonical of a past version's page."
+        "description": "A page of an entity as the front links it, or writes it as the canonical of a page: its\nshort URL, or its page in a version (ADR 0005, amendment of 2026-10-22)."
       },
       "CatalogImage": {
         "required": [

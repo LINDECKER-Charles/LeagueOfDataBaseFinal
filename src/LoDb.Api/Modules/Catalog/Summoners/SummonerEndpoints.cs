@@ -1,5 +1,6 @@
 using LoDb.Api.Modules.Catalog.Http;
 using LoDb.Api.Modules.Catalog.Reading;
+using LoDb.Api.Modules.Catalog.States.Details;
 using LoDb.Domain.Catalog;
 using LoDb.Domain.Paths;
 using LoDb.Ingestion.Catalog;
@@ -63,12 +64,10 @@ internal static class SummonerEndpoints
             return CatalogProblem.UnknownEntity(Segment, request.Id);
         }
 
-        var canonical = await request.LocateCanonicalAsync(
-            context.Catalog.Version,
-            context.Catalog.PathOf(spell));
-        if (!canonical.IsLocated)
+        var state = await request.ReadStateAsync(DetailEntity.Of(spell, context.Catalog));
+        if (!state.IsRead)
         {
-            return canonical.Problem;
+            return state.Problem;
         }
 
         var images = await context.ResolveAsync(
@@ -76,8 +75,6 @@ internal static class SummonerEndpoints
             ColdDemand.Synchronous,
             request.CancellationToken);
         var details = SummonerDetails.Of(spell, context.Catalog, images);
-        return context.Answer(
-            details with { Canonical = canonical.Link ?? details.Canonical },
-            images);
+        return context.Answer(details.WithState(state.State), images);
     }
 }

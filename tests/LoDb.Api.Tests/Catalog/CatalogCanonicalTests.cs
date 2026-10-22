@@ -3,9 +3,10 @@ using System.Text.Json;
 namespace LoDb.Api.Tests.Catalog;
 
 /// <summary>
-/// The page a detail names for search engines (ADR 0005, amendment of 2026-10-14): the latest
-/// short URL of an entity the latest version holds. Where a dropped entity is indexed is
-/// <c>CanonicalReferencesTests</c>' and the sitemaps': the recording holds no image of the
+/// The page a detail names for search engines before the index of states is built: the
+/// residual rule of ADR 0005 (amendment of 2026-10-22), the latest short URL of an entity the
+/// latest version holds. The rule by state is <c>DetailCanonicalTests</c>', the residual page
+/// that is its own canonical <c>StateViewTests</c>': the recording holds no image of the
 /// versions that had one, which a detail resolves before answering.
 /// </summary>
 [Collection(CatalogApiGroup.Name)]

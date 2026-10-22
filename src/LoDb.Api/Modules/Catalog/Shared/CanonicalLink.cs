@@ -1,11 +1,11 @@
-using LoDb.Ingestion.Catalog.Canonicals;
 using LoDb.Ingestion.Catalog.Snapshots;
+using LoDb.Ingestion.Catalog.States.Canonicals;
 
 namespace LoDb.Api.Modules.Catalog.Shared;
 
 /// <summary>
-/// The page search engines index for the entity of a detail (ADR 0005, amendment of
-/// 2026-10-14), which the front writes as the canonical of a past version's page.
+/// A page of an entity as the front links it, or writes it as the canonical of a page: its
+/// short URL, or its page in a version (ADR 0005, amendment of 2026-10-22).
 /// </summary>
 internal sealed record CanonicalLink
 {
@@ -27,7 +27,9 @@ internal sealed record CanonicalLink
         return new CanonicalLink { Version = catalog.Version.Value, Path = path };
     }
 
-    public static CanonicalLink? Of(CanonicalPage? page) => page is null
-        ? null
-        : new CanonicalLink { Version = page.Version?.Value, Path = page.Path.Value };
+    public static CanonicalLink Of(CanonicalTarget target)
+    {
+        ArgumentNullException.ThrowIfNull(target);
+        return new CanonicalLink { Version = target.Version?.Value, Path = target.Path };
+    }
 }

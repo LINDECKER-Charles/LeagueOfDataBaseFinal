@@ -1,6 +1,7 @@
 using LoDb.Api.Modules.Catalog.Champions.Details;
 using LoDb.Api.Modules.Catalog.Http;
 using LoDb.Api.Modules.Catalog.Reading;
+using LoDb.Api.Modules.Catalog.States.Details;
 using LoDb.Api.Modules.ClientPolicy.Versions;
 using LoDb.Domain.Catalog.Champions;
 using LoDb.Ingestion.Catalog;
@@ -71,17 +72,15 @@ internal static class ChampionEndpoints
             return CatalogProblem.UnknownEntity(Segment, request.Id);
         }
 
-        var canonical = await request.LocateCanonicalAsync(
-            context.Catalog.Version,
-            context.Catalog.PathOf(champion));
-        if (!canonical.IsLocated)
+        var state = await request.ReadStateAsync(DetailEntity.Of(champion, context.Catalog));
+        if (!state.IsRead)
         {
-            return canonical.Problem;
+            return state.Problem;
         }
 
         var images = await ImagesOfAsync(context, champion, request.CancellationToken);
-        var page = ChampionDetails.Of(champion, context.Catalog, images);
-        var details = page with { Canonical = canonical.Link ?? page.Canonical };
+        var details = ChampionDetails.Of(champion, context.Catalog, images)
+            .WithState(state.State);
         // An app gets more than the web: no cache may hand one the other's page.
         request.Context.Response.Headers.Append(HeaderNames.Vary, ClientHeader.Name);
         return context.Answer(

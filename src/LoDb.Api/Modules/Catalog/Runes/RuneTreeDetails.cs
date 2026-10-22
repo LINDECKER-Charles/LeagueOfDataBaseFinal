@@ -1,6 +1,7 @@
 using LoDb.Api.Modules.Catalog.Reading;
 using LoDb.Api.Modules.Catalog.Shared;
 using LoDb.Api.Modules.Catalog.States;
+using LoDb.Api.Modules.Catalog.States.Details;
 using LoDb.Domain.Catalog.Runes;
 using LoDb.Domain.Derived.Runes;
 using LoDb.Ingestion.Catalog.Snapshots;
@@ -84,6 +85,21 @@ internal sealed record RuneTreeDetails
                 Runes = [.. slot.Runes.Select(rune => RuneEntry.Of(rune, images))],
             })],
             Neighbours = RuneList.NeighboursOf(tree, catalog),
+        };
+    }
+
+    /// <summary>The same page with what the index of states tells of it.</summary>
+    public RuneTreeDetails WithState(DetailState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        return this with
+        {
+            Canonical = state.Canonical,
+            State = state.State,
+            History = state.History,
+            Next = state.Next,
+            PresentInLatest = state.PresentInLatest,
+            Changes = state.Changes,
         };
     }
 }

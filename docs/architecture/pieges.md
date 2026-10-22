@@ -84,18 +84,29 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   qu'une montée de version peut déplacer.
 - Points d'accroche de `app.config.ts` : chaque propriétaire remplit son dossier
   (`core/auth`, `core/analytics`, `core/update`) sans toucher `app.config.ts` ni `app.html`.
-- **Historique des patchs** (`/{locale}/patches`) : quatre liens par version listée, des
-  centaines de versions. Balisage nu et `ViewEncapsulation.None` voulus (l'attribut
-  d'encapsulation pesait un tiers de la page) : ni attribut, ni classe, ni pipe par lien.
-  L'index des sitemaps n'annonce que le dernier patch (`LoDb__Seo__SitemapVersionWindow`,
-  `0`) ; le sitemap d'un ancien patch reste servi, mais ne liste que les fiches des entités
-  dont c'est la dernière version, souvent aucune : un `urlset` vide n'est pas une
-  régression. La fiche d'un ancien patch est canonique au dernier patch, sans hreflang ni
-  JSON-LD, ou `noindex, follow` avant la dernière version d'une entité retirée (ADR 0005,
-  amendement du 2026-10-14) : voulu. Les visiteurs atteignent les anciens patchs par cette
-  page et le bloc « Dans les patchs précédents » des fiches, qui ne chargent aucun catalogue.
-  Une ancienne URL du site qui nomme une version perd cette version dans sa 301 (URL courte,
-  liste nue) tant que l'entité existe au dernier patch : voulu (amendement du 2026-10-16).
+- **Historique des patchs** (`/{locale}/patches`) : par version listée, sa page de
+  changements quand elle en a une, puis ses quatre listes, des centaines de versions.
+  Balisage nu et `ViewEncapsulation.None` voulus (l'attribut d'encapsulation pesait un tiers
+  de la page) : ni attribut, ni classe, ni pipe par lien. Une fiche d'ancien patch est
+  indexée une fois par état (ADR 0005, amendement du 2026-10-22) : l'ouvreur d'un état clos
+  est sa propre canonique, les autres versions de l'état désignent l'ouvreur dans la même
+  langue, sans hreflang ni JSON-LD, et une version de l'état ouvert désigne l'URL courte :
+  voulu, « Autre page avec balise canonique correcte » monte dans la Search Console.
+  L'API décide la canonique (`StateView`) depuis l'index des états et le dernier patch du
+  lecteur de catalogues, jamais celui de l'index : une page à ce patch est toujours sa
+  propre canonique. Une version que l'index ne couvre pas encore (index en retard sur une
+  promotion) compte comme l'état ouvert ; hors de l'index (plus ancienne que sa couverture,
+  listée après le dernier patch, avant toute promotion), la règle résiduelle donne l'URL
+  courte si le dernier patch tient l'entité, sinon la page elle-même. Index illisible et pas
+  de copie en mémoire : la fiche répond 503 avec `Retry-After`. Le
+  `{version}.xml` d'un ancien patch ne liste que sa page de changements et les ouvreurs de
+  ses états clos : un `urlset` vide reste servi, mais l'index des sitemaps ne l'annonce
+  pas. Le bloc « Historique » se lit dans l'index seul ; l'ouvreur lit en plus le catalogue
+  de la dernière version de l'état précédent, dans sa langue : épinglé, il répond 503 tant
+  que ce catalogue n'est pas stocké, jamais rendu sans son bloc ; l'URL courte sort alors
+  sans le bloc. Une ancienne URL du site qui nomme une version perd cette version dans sa
+  301 (URL courte, liste nue) tant que l'entité existe au dernier patch : voulu (amendement
+  du 2026-10-16).
 - Une page qui oublie `Seo.apply` n'a ni canonique ni hreflang. Une clé `about.*`, `api.*`
   ou `seo.*` n'est traduite que si un ancêtre fournit son scope (`provideTranslocoScope`) ;
   sinon la clé brute sort dans le HTML, sans erreur. Le chrome (en-tête, pied de page) n'en

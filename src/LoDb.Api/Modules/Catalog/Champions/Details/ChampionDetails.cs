@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using LoDb.Api.Modules.Catalog.Reading;
 using LoDb.Api.Modules.Catalog.Shared;
 using LoDb.Api.Modules.Catalog.States;
+using LoDb.Api.Modules.Catalog.States.Details;
 using LoDb.Domain.Catalog.Champions;
 using LoDb.Domain.Derived.Champions;
 using LoDb.Domain.Text;
@@ -154,4 +155,19 @@ internal sealed record ChampionDetails
     /// <summary>The same page with every skin, for an app whose front reads them here.</summary>
     public ChampionDetails WithSkins(ChampionDetail champion, CatalogSnapshot catalog) =>
         this with { Skins = ChampionSkins.Of(champion, catalog).Skins };
+
+    /// <summary>The same page with what the index of states tells of it.</summary>
+    public ChampionDetails WithState(DetailState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        return this with
+        {
+            Canonical = state.Canonical,
+            State = state.State,
+            History = state.History,
+            Next = state.Next,
+            PresentInLatest = state.PresentInLatest,
+            Changes = state.Changes,
+        };
+    }
 }
