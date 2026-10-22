@@ -59,6 +59,9 @@ internal sealed class StateIndexUpdater(
         }
     }
 
+    public async Task<bool> HasCurrentAsync(CancellationToken cancellationToken) =>
+        await store.CurrentAsync(cancellationToken).ConfigureAwait(false) is not null;
+
     private async Task<StateIndexReport> LockedAsync(
         StateIndexRequest request,
         long started,

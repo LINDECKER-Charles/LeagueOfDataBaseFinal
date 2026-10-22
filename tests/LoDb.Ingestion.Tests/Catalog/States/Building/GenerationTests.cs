@@ -1,6 +1,8 @@
+using System.Net;
 using LoDb.Domain.Languages;
 using LoDb.Infrastructure.Persistence.States;
 using LoDb.Ingestion.Catalog.States.Updates;
+using LoDb.Ingestion.Egress.Errors;
 using LoDb.Ingestion.Normalization;
 using LoDb.Ingestion.Pipeline.Datasets;
 using LoDb.Ingestion.Tests.Ddragon;
@@ -13,11 +15,16 @@ namespace LoDb.Ingestion.Tests.Catalog.States.Building;
 /// <summary>
 /// The generations of the index: a promotion extends the current one version by version, a
 /// build catches up or does nothing, and a rebuild writes a new one that reads the same,
-/// closing dates included, before it takes the old one's place.
+/// closing dates included, before it takes the old one's place. A list of versions that
+/// cannot be read leaves the index as it is.
 /// </summary>
 public sealed class GenerationTests(PostgresContainerFixture postgres)
 {
+    private const string VersionList = "/api/versions.json";
+
     private static readonly string[] Versions = ["90.1.1", "90.2.1", "90.3.1", "90.4.1", "90.5.1"];
+
+    private static readonly StateIndexRequest Build = new() { Trigger = StateIndexTrigger.Build };
 
     private static CancellationToken Token => TestContext.Current.CancellationToken;
 
@@ -127,6 +134,32 @@ public sealed class GenerationTests(PostgresContainerFixture postgres)
         Assert.Equal([previous.Value, latest.Value], await index.CoverageAsync());
         var scope = new DatasetScope { Version = latest, Language = DdragonLanguage.EnUs };
         Assert.True(await index.Instance.Get<StoredDatasets>().ExistAsync(scope, Token));
+    }
+
+    // The build command runs in a process of its own, where no list is cached yet: the update
+    // fails without touching the index, which tells whether one is current all the same.
+    [Fact]
+    public async Task UnreadableVersionListFailsTheUpdateAndLeavesTheIndexAsItIs()
+    {
+        await using var index = await StateIndexHarness.CreateAsync(postgres, Versions);
+        await StoreHistoryAsync(index);
+        await index.PromoteAsync("90.3.1");
+        var command = index.StartInstance();
+        command.Upstream.FailNext(
+            static url => url.AbsolutePath == VersionList,
+            int.MaxValue,
+            HttpStatusCode.ServiceUnavailable);
+        var updater = command.Get<IStateIndexUpdater>();
+
+        await Assert.ThrowsAnyAsync<EgressException>(() => updater.UpdateAsync(Build, Token));
+        var hadNone = !await updater.HasCurrentAsync(Token);
+        await index.BuildAsync();
+        await index.PromoteAsync("90.5.1");
+        await Assert.ThrowsAnyAsync<EgressException>(() => updater.UpdateAsync(Build, Token));
+
+        Assert.True(hadNone);
+        Assert.True(await updater.HasCurrentAsync(Token));
+        Assert.Equal(Versions[..3], await index.CoverageAsync());
     }
 
     // Changes, a retirement, a return and an unchanged version, over five versions.

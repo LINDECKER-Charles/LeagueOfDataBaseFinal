@@ -27,4 +27,11 @@ public interface IStateIndexUpdater
     Task<StateIndexReport> UpdateAsync(
         StateIndexRequest request,
         CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Whether a generation of the compiled fingerprint scheme is current, however far behind
+    /// the latest version: the API then has an index to serve. None before the first build,
+    /// nor after a change of the scheme.
+    /// </summary>
+    Task<bool> HasCurrentAsync(CancellationToken cancellationToken);
 }
