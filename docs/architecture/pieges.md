@@ -104,9 +104,10 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   pas. Le bloc « Historique » se lit dans l'index seul ; l'ouvreur lit en plus le catalogue
   de la dernière version de l'état précédent, dans sa langue : épinglé, il répond 503 tant
   que ce catalogue n'est pas stocké, jamais rendu sans son bloc ; l'URL courte sort alors
-  sans le bloc. Une ancienne URL du site qui nomme une version perd cette version dans sa
-  301 (URL courte, liste nue) tant que l'entité existe au dernier patch : voulu (amendement
-  du 2026-10-16).
+  sans le bloc. Une ancienne URL du site qui nomme une version mène à la canonique de la page
+  qu'elle nommait : l'ouvreur de l'état clos, avec le slug de cette version, ou l'URL courte
+  de l'état ouvert ; sans version, une entité absente du dernier patch mène à l'ouvreur de
+  son dernier état (amendements du 2026-10-16 et du 2026-10-22).
 - Une page qui oublie `Seo.apply` n'a ni canonique ni hreflang. Une clé `about.*`, `api.*`
   ou `seo.*` n'est traduite que si un ancêtre fournit son scope (`provideTranslocoScope`) ;
   sinon la clé brute sort dans le HTML, sans erreur. Le chrome (en-tête, pied de page) n'en
@@ -232,8 +233,11 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   catalogue ouvert ; les images restantes restent en attente et les listes les confient à
   la file de fond. Un catalogue qui ne s'ouvre pas et un flux expiré finissent toujours
   `failed`, en gardant les comptes atteints.
-- Une URL de l'ancien site sur une version non stockée répond `302` vers la liste de la
-  version, sans rien ingérer : voulu (une entrée retirée du jeu ne devient pas une 404).
+- Une URL de l'ancien site qui nomme une version où l'index des états n'a pas l'entité, pour
+  une entité absente du dernier patch et une version non stockée, répond `302` vers la liste
+  de la version, sans rien ingérer : voulu (une entrée retirée du jeu ne devient pas une
+  404). Une entité que l'index connaît à cette version mène à sa canonique sans ouvrir aucun
+  catalogue que celui du dernier patch.
 - **E-mails** : le modèle d'un `EmailMessage` s'écrit avec `EmailModelKeys`, jamais en
   littéral (sinon `dead` dès le premier essai). L'outbox n'envoie rien sans
   `LoDb:Mail:Host` : voulu. En local, Mailpit sur http://localhost:18025.
