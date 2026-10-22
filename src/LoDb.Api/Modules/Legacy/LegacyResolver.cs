@@ -141,12 +141,22 @@ internal sealed partial class LegacyResolver(
 
         // Without a version, the latest catalog decided once read; before any promotion,
         // nothing tells yet whether the entry exists.
-        if (lookup.Version.Pinned is not { } pinned)
+        if (lookup.Version.Pinned is null)
         {
             return latest is null ? CatalogProblem.Pending() : UnknownEntity(lookup);
         }
 
-        var own = await OpenAsync(pinned, lookup.Demand, cancellationToken);
+        return await FromOwnCatalogAsync(lookup, latest, cancellationToken);
+    }
+
+    // The rule of 2026-10-16 for a name the latest catalog lacks: the catalog of the version
+    // named, if stored, keeps the entry's pinned page and slug.
+    private async Task<Results<LegacyRedirect, CatalogProblem>> FromOwnCatalogAsync(
+        EntityLookup lookup,
+        CatalogLoad? latest,
+        CancellationToken cancellationToken)
+    {
+        var own = await OpenAsync(lookup.Version.Pinned, lookup.Demand, cancellationToken);
         return own switch
         {
             { IsReady: true } => Find(own, lookup) is { } found
