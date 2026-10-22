@@ -18,56 +18,52 @@ public static class ChangeFields
     /// <summary>Every template, in the order of <see cref="ChangeField"/>.</summary>
     public static IReadOnlyList<FieldTemplate> All { get; } =
     [
-        Plain(ChangeField.Name, "name", FieldKind.Value, ValueKind.Text),
-        Plain(ChangeField.Description, "description", FieldKind.Text, ValueKind.Text),
-        Plain(ChangeField.Title, "title", FieldKind.Value, ValueKind.Text),
-        Plain(ChangeField.Lore, "lore", FieldKind.Text, ValueKind.Text),
-        Plain(ChangeField.Roles, "roles", FieldKind.List, ValueKind.Code),
-        Plain(ChangeField.Resource, "resource", FieldKind.Value, ValueKind.Text),
-        Of(ChangeField.Rating, "rating.*", ValueKind.Number, SubjectKind.Rating),
-        Of(ChangeField.Stat, "stat.*", ValueKind.Number, SubjectKind.Stat),
-        Of(ChangeField.StatPerLevel, "statPerLevel.*", ValueKind.Number, SubjectKind.Stat),
-        Plain(ChangeField.AllyTips, "allyTips", FieldKind.Text, ValueKind.Text),
-        Plain(ChangeField.EnemyTips, "enemyTips", FieldKind.Text, ValueKind.Text),
-        Plain(ChangeField.PassiveName, "passive.name", FieldKind.Value, ValueKind.Text),
-        Plain(
-            ChangeField.PassiveDescription,
-            "passive.description",
-            FieldKind.Text,
-            ValueKind.Text),
-        Of(ChangeField.SpellName, Spell + "name", ValueKind.Text, SubjectKind.SpellSlot),
-        SpellText(ChangeField.SpellDescription, Spell + "description"),
-        Of(ChangeField.SpellCooldown, Spell + "cooldown", ValueKind.Text, SubjectKind.SpellSlot),
-        Of(ChangeField.SpellCost, Spell + "cost", ValueKind.Text, SubjectKind.SpellSlot),
-        Of(ChangeField.SpellRange, Spell + "range", ValueKind.Text, SubjectKind.SpellSlot),
-        Of(ChangeField.SpellMaxRank, Spell + "maxRank", ValueKind.Number, SubjectKind.SpellSlot),
-        Of(ChangeField.SpellCharges, Spell + "charges", ValueKind.Number, SubjectKind.SpellSlot),
-        Plain(ChangeField.Skins, "skins", FieldKind.Set, ValueKind.Entity),
-        Of(ChangeField.SkinName, "skin.*.name", ValueKind.Text, SubjectKind.Skin),
-        Plain(ChangeField.Plaintext, "plaintext", FieldKind.Text, ValueKind.Text),
-        Plain(ChangeField.GoldTotal, "gold.total", FieldKind.Value, ValueKind.Number),
-        Plain(ChangeField.GoldBase, "gold.base", FieldKind.Value, ValueKind.Number),
-        Plain(ChangeField.GoldSell, "gold.sell", FieldKind.Value, ValueKind.Number),
-        Plain(ChangeField.Purchasable, "gold.purchasable", FieldKind.Value, ValueKind.Flag),
-        Plain(ChangeField.Recipe, "recipe", FieldKind.List, ValueKind.Entity),
-        Of(ChangeField.StatPercent, "statPercent.*", ValueKind.Percent, SubjectKind.Stat),
-        Plain(ChangeField.Maps, "maps", FieldKind.Set, ValueKind.Code),
-        Plain(ChangeField.Tags, "tags", FieldKind.Set, ValueKind.Code),
-        Plain(ChangeField.Depth, "depth", FieldKind.Value, ValueKind.Number),
-        Plain(ChangeField.Consumable, "consumable", FieldKind.Value, ValueKind.Flag),
-        Plain(ChangeField.RequiredChampion, "requiredChampion", FieldKind.Value, ValueKind.Entity),
-        Plain(ChangeField.RequiredAlly, "requiredAlly", FieldKind.Value, ValueKind.Entity),
+        Value(ChangeField.Name, "name", ValueKind.Text),
+        Text(ChangeField.Description, "description"),
+        Value(ChangeField.Title, "title", ValueKind.Text),
+        Text(ChangeField.Lore, "lore"),
+        List(ChangeField.Roles, "roles", ValueKind.Code),
+        Value(ChangeField.Resource, "resource", ValueKind.Text),
+        OnRating(ChangeField.Rating, "rating.*"),
+        OnStat(ChangeField.Stat, "stat.*", ValueKind.Number),
+        OnStat(ChangeField.StatPerLevel, "statPerLevel.*", ValueKind.Number),
+        Text(ChangeField.AllyTips, "allyTips"),
+        Text(ChangeField.EnemyTips, "enemyTips"),
+        Value(ChangeField.PassiveName, "passive.name", ValueKind.Text),
+        Text(ChangeField.PassiveDescription, "passive.description"),
+        OnSpell(ChangeField.SpellName, "name", ValueKind.Text),
+        SpellText(ChangeField.SpellDescription, "description"),
+        OnSpell(ChangeField.SpellCooldown, "cooldown", ValueKind.Text),
+        OnSpell(ChangeField.SpellCost, "cost", ValueKind.Text),
+        OnSpell(ChangeField.SpellRange, "range", ValueKind.Text),
+        OnSpell(ChangeField.SpellMaxRank, "maxRank", ValueKind.Number),
+        OnSpell(ChangeField.SpellCharges, "charges", ValueKind.Number),
+        Set(ChangeField.Skins, "skins", ValueKind.Entity),
+        OnSkin(ChangeField.SkinName, "skin.*.name"),
+        Text(ChangeField.Plaintext, "plaintext"),
+        Value(ChangeField.GoldTotal, "gold.total", ValueKind.Number),
+        Value(ChangeField.GoldBase, "gold.base", ValueKind.Number),
+        Value(ChangeField.GoldSell, "gold.sell", ValueKind.Number),
+        Value(ChangeField.Purchasable, "gold.purchasable", ValueKind.Flag),
+        List(ChangeField.Recipe, "recipe", ValueKind.Entity),
+        OnStat(ChangeField.StatPercent, "statPercent.*", ValueKind.Percent),
+        Set(ChangeField.Maps, "maps", ValueKind.Code),
+        Set(ChangeField.Tags, "tags", ValueKind.Code),
+        Value(ChangeField.Depth, "depth", ValueKind.Number),
+        Value(ChangeField.Consumable, "consumable", ValueKind.Flag),
+        Value(ChangeField.RequiredChampion, "requiredChampion", ValueKind.Entity),
+        Value(ChangeField.RequiredAlly, "requiredAlly", ValueKind.Entity),
         RuneRow(),
-        Of(ChangeField.RuneName, Rune + "name", ValueKind.Text, SubjectKind.Rune),
-        RuneText(ChangeField.RuneShortDesc, Rune + "shortDesc"),
-        RuneText(ChangeField.RuneLongDesc, Rune + "longDesc"),
-        Plain(ChangeField.Cooldown, "cooldown", FieldKind.List, ValueKind.Number),
-        Plain(ChangeField.Cost, "cost", FieldKind.List, ValueKind.Number),
-        Plain(ChangeField.CostType, "costType", FieldKind.Value, ValueKind.Text),
-        Plain(ChangeField.Range, "range", FieldKind.List, ValueKind.Range),
-        Plain(ChangeField.SummonerLevel, "summonerLevel", FieldKind.Value, ValueKind.Number),
-        Plain(ChangeField.Charges, "charges", FieldKind.Value, ValueKind.Number),
-        Plain(ChangeField.Modes, "modes", FieldKind.Set, ValueKind.Code),
+        OnRune(ChangeField.RuneName, "name", ValueKind.Text),
+        RuneText(ChangeField.RuneShortDesc, "shortDesc"),
+        RuneText(ChangeField.RuneLongDesc, "longDesc"),
+        List(ChangeField.Cooldown, "cooldown", ValueKind.Number),
+        List(ChangeField.Cost, "cost", ValueKind.Number),
+        Value(ChangeField.CostType, "costType", ValueKind.Text),
+        List(ChangeField.Range, "range", ValueKind.Range),
+        Value(ChangeField.SummonerLevel, "summonerLevel", ValueKind.Number),
+        Value(ChangeField.Charges, "charges", ValueKind.Number),
+        Set(ChangeField.Modes, "modes", ValueKind.Code),
     ];
 
     private static readonly FrozenDictionary<ChangeField, FieldTemplate> ByField =
@@ -83,36 +79,42 @@ public static class ChangeFields
     public static FieldTemplate? WithPattern(string pattern) =>
         ByPattern.GetValueOrDefault(pattern);
 
-    private static FieldTemplate Plain(
-        ChangeField field,
-        string pattern,
-        FieldKind kind,
-        ValueKind values) =>
-        new() { Field = field, Pattern = pattern, Kind = kind, Values = values };
+    private static FieldTemplate Value(ChangeField field, string pattern, ValueKind values) =>
+        new() { Field = field, Pattern = pattern, Kind = FieldKind.Value, Values = values };
+
+    private static FieldTemplate Text(ChangeField field, string pattern) =>
+        Value(field, pattern, ValueKind.Text) with { Kind = FieldKind.Text };
+
+    private static FieldTemplate List(ChangeField field, string pattern, ValueKind values) =>
+        Value(field, pattern, values) with { Kind = FieldKind.List };
+
+    private static FieldTemplate Set(ChangeField field, string pattern, ValueKind values) =>
+        Value(field, pattern, values) with { Kind = FieldKind.Set };
 
     // A template with a subject holds one value of the subject.
-    private static FieldTemplate Of(
-        ChangeField field,
-        string pattern,
-        ValueKind values,
-        SubjectKind subject) =>
-        new()
-        {
-            Field = field,
-            Pattern = pattern,
-            Kind = FieldKind.Value,
-            Values = values,
-            Subject = subject,
-        };
+    private static FieldTemplate OnRating(ChangeField field, string pattern) =>
+        Value(field, pattern, ValueKind.Number) with { Subject = SubjectKind.Rating };
 
-    private static FieldTemplate SpellText(ChangeField field, string pattern) =>
-        Of(field, pattern, ValueKind.Text, SubjectKind.SpellSlot) with { Kind = FieldKind.Text };
+    private static FieldTemplate OnStat(ChangeField field, string pattern, ValueKind values) =>
+        Value(field, pattern, values) with { Subject = SubjectKind.Stat };
 
-    private static FieldTemplate RuneText(ChangeField field, string pattern) =>
-        Of(field, pattern, ValueKind.Text, SubjectKind.Rune) with { Kind = FieldKind.Text };
+    private static FieldTemplate OnSpell(ChangeField field, string name, ValueKind values) =>
+        Value(field, Spell + name, values) with { Subject = SubjectKind.SpellSlot };
+
+    private static FieldTemplate SpellText(ChangeField field, string name) =>
+        OnSpell(field, name, ValueKind.Text) with { Kind = FieldKind.Text };
+
+    private static FieldTemplate OnSkin(ChangeField field, string pattern) =>
+        Value(field, pattern, ValueKind.Text) with { Subject = SubjectKind.Skin };
+
+    private static FieldTemplate OnRune(ChangeField field, string name, ValueKind values) =>
+        Value(field, Rune + name, values) with { Subject = SubjectKind.Rune };
+
+    private static FieldTemplate RuneText(ChangeField field, string name) =>
+        OnRune(field, name, ValueKind.Text) with { Kind = FieldKind.Text };
 
     // The runes of a row, in the order the page shows them.
     private static FieldTemplate RuneRow() =>
-        Of(ChangeField.RuneSlot, "slot.*", ValueKind.Entity, SubjectKind.RuneSlot)
-            with { Kind = FieldKind.List };
+        Value(ChangeField.RuneSlot, "slot.*", ValueKind.Entity)
+            with { Kind = FieldKind.List, Subject = SubjectKind.RuneSlot };
 }
