@@ -65,9 +65,9 @@ export class EntityStateBlocks {
   // The entity at the latest patch: the open state's canonical path, or the page's own, the
   // id deciding (a renamed entity answers its slug's 301 there).
   protected readonly latestUrl = computed(() => {
-    const { presentInLatest, canonical, canonicalPath } = this.details();
+    const { isPresentInLatest, canonical, canonicalPath } = this.details();
     const context = this.context();
-    if (!context.pinned || !presentInLatest) {
+    if (!context.pinned || !isPresentInLatest) {
       return null;
     }
     const path = canonical.version === null ? canonical.path : canonicalPath;

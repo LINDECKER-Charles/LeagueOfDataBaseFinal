@@ -56,7 +56,7 @@ async function render(
   url = `/en/${version}/${PATH}`,
 ): Promise<HTMLElement> {
   context = { locale: 'en', version, pinned: version !== LATEST, language: 'en_US' };
-  details = { ...detailStateOf(PATH), canonicalPath: PATH, presentInLatest: false, ...fields };
+  details = { ...detailStateOf(PATH), canonicalPath: PATH, isPresentInLatest: false, ...fields };
   TestBed.configureTestingModule({
     providers: [
       provideHttpClient(),
@@ -108,7 +108,7 @@ describe('EntityStateBlocks', () => {
       state: stateOf('11.5.1', '11.9.1', '11.5.1'),
       history: FROZEN_HISTORY,
       next: { kind: 'changed', version: '11.10.1', link: at('11.10.1') },
-      presentInLatest: true,
+      isPresentInLatest: true,
       changes: { kind: 'changed', comparedVersion: '10.1.1', fields: [] },
     });
     const links = linksOf(block);
@@ -186,7 +186,7 @@ describe('EntityStateBlocks', () => {
           link: at(null),
         },
       ],
-      presentInLatest: true,
+      isPresentInLatest: true,
     });
 
     const row = block.querySelector('ol li');
@@ -205,7 +205,7 @@ describe('EntityStateBlocks', () => {
   it('links the opener of the open state from the short URL, the regional variant kept', async () => {
     const block = await render(
       LATEST,
-      { state: stateOf('16.17.1', null, LATEST), presentInLatest: true },
+      { state: stateOf('16.17.1', null, LATEST), isPresentInLatest: true },
       `/en/${PATH}?lang=en_GB`,
     );
 
@@ -232,7 +232,7 @@ describe('EntityStateBlocks', () => {
   });
 
   it('says nothing of a page outside the index but where its entity is now', async () => {
-    const block = await render('3.6.14', { presentInLatest: true });
+    const block = await render('3.6.14', { isPresentInLatest: true });
 
     expect(linksOf(block)).toEqual([{ text: 'In the latest patch →', href: `/en/${PATH}` }]);
     expect(block.querySelector('h2')).toBeNull();

@@ -10,7 +10,7 @@ import type { RuneEntry } from '../../../../../core/api/generated/models/rune-en
  */
 export interface StatefulDetails extends Pick<
   ItemDetails,
-  'canonicalPath' | 'canonical' | 'state' | 'history' | 'next' | 'presentInLatest' | 'changes'
+  'canonicalPath' | 'canonical' | 'state' | 'history' | 'next' | 'isPresentInLatest' | 'changes'
 > {
   readonly abilities?: readonly Pick<ChampionAbility, 'slot' | 'name'>[];
   readonly skins?: readonly Pick<ChampionSkin, 'id' | 'name'>[] | null;

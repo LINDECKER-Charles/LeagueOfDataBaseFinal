@@ -46,7 +46,7 @@ internal sealed record RuneTreeDetails
     /// <summary>
     /// Whether the latest version holds the entity (« Dans le dernier patch »).
     /// </summary>
-    public required bool PresentInLatest { get; init; }
+    public required bool IsPresentInLatest { get; init; }
 
     /// <summary>
     /// What the page's state changed: on its opener, and on the short URL when the open state
@@ -76,7 +76,7 @@ internal sealed record RuneTreeDetails
             State = null,
             History = [],
             Next = null,
-            PresentInLatest = false,
+            IsPresentInLatest = false,
             Changes = null,
             Profile = profile,
             Slots = [.. tree.Slots.Select((slot, index) => new RuneRow
@@ -98,7 +98,7 @@ internal sealed record RuneTreeDetails
             State = state.State,
             History = state.History,
             Next = state.Next,
-            PresentInLatest = state.PresentInLatest,
+            IsPresentInLatest = state.IsPresentInLatest,
             Changes = state.Changes,
         };
     }

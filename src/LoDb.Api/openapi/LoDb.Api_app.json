@@ -9156,7 +9156,7 @@
           "state",
           "history",
           "next",
-          "presentInLatest",
+          "isPresentInLatest",
           "changes",
           "profile",
           "blurb",
@@ -9220,7 +9220,7 @@
               }
             ]
           },
-          "presentInLatest": {
+          "isPresentInLatest": {
             "type": "boolean",
             "description": "Whether the latest version holds the entity (« Dans le dernier patch »)."
           },
@@ -11008,7 +11008,7 @@
           "state",
           "history",
           "next",
-          "presentInLatest",
+          "isPresentInLatest",
           "changes",
           "profile",
           "description",
@@ -11067,7 +11067,7 @@
               }
             ]
           },
-          "presentInLatest": {
+          "isPresentInLatest": {
             "type": "boolean",
             "description": "Whether the latest version holds the entity (« Dans le dernier patch »)."
           },
@@ -14871,7 +14871,7 @@
           "state",
           "history",
           "next",
-          "presentInLatest",
+          "isPresentInLatest",
           "changes",
           "profile",
           "slots",
@@ -14928,7 +14928,7 @@
               }
             ]
           },
-          "presentInLatest": {
+          "isPresentInLatest": {
             "type": "boolean",
             "description": "Whether the latest version holds the entity (« Dans le dernier patch »)."
           },
@@ -15989,7 +15989,7 @@
           "state",
           "history",
           "next",
-          "presentInLatest",
+          "isPresentInLatest",
           "changes",
           "profile",
           "cost",
@@ -16048,7 +16048,7 @@
               }
             ]
           },
-          "presentInLatest": {
+          "isPresentInLatest": {
             "type": "boolean",
             "description": "Whether the latest version holds the entity (« Dans le dernier patch »)."
           },

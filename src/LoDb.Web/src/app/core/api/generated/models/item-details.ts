@@ -53,6 +53,11 @@ export interface ItemDetails {
    * The entity's states up to the page's, newest first; every state on the short URL.
    */
   history: Array<StateHistoryEntry>;
+
+  /**
+   * Whether the latest version holds the entity (« Dans le dernier patch »).
+   */
+  isPresentInLatest: boolean;
   language: string;
 
   /**
@@ -60,11 +65,6 @@ export interface ItemDetails {
    */
   neighbours: DetailNeighbours;
   next: (null | StateNext);
-
-  /**
-   * Whether the latest version holds the entity (« Dans le dernier patch »).
-   */
-  presentInLatest: boolean;
 
   /**
    * The facts of the list's card, the edition and its twin among them.

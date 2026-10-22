@@ -33,6 +33,11 @@ export interface RuneTreeDetails {
    * The entity's states up to the page's, newest first; every state on the short URL.
    */
   history: Array<StateHistoryEntry>;
+
+  /**
+   * Whether the latest version holds the entity (« Dans le dernier patch »).
+   */
+  isPresentInLatest: boolean;
   language: string;
 
   /**
@@ -40,11 +45,6 @@ export interface RuneTreeDetails {
    */
   neighbours: DetailNeighbours;
   next: (null | StateNext);
-
-  /**
-   * Whether the latest version holds the entity (« Dans le dernier patch »).
-   */
-  presentInLatest: boolean;
   profile: RuneTreeCard;
   slots: Array<RuneRow>;
   state: (null | EntityState);

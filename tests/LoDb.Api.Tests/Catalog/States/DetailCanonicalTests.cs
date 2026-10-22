@@ -57,7 +57,7 @@ public sealed class DetailCanonicalTests : IDisposable
         var ahri = await api.GetJsonAsync("/api/catalog/16.19.1/en_US/champions/Ahri");
 
         Assert.Equal((null, "champions/Ahri"), Link(ahri.GetProperty("canonical")));
-        Assert.True(ahri.GetProperty("presentInLatest").GetBoolean());
+        Assert.True(ahri.GetProperty("isPresentInLatest").GetBoolean());
     }
 
     [Fact]

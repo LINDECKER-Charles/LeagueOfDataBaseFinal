@@ -16,7 +16,7 @@ internal sealed record DetailState
 
     public required StateNext? Next { get; init; }
 
-    public required bool PresentInLatest { get; init; }
+    public required bool IsPresentInLatest { get; init; }
 
     public required EntityChanges? Changes { get; init; }
 }

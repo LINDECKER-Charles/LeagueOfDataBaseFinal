@@ -1,10 +1,4 @@
-import type { ItemDetails } from '../api/generated/models/item-details';
-
-/** The fields of the index's rule a detail of every resource carries. */
-export type DetailStateFields = Pick<
-  ItemDetails,
-  'canonical' | 'state' | 'history' | 'next' | 'presentInLatest' | 'changes'
->;
+import type { DetailStateFields } from './detail-state-fields';
 
 /**
  * What a spec of a detail leaves unsaid of its state: a page of the latest version, its own
@@ -16,7 +10,7 @@ export function detailStateOf(path: string): DetailStateFields {
     state: null,
     history: [],
     next: null,
-    presentInLatest: true,
+    isPresentInLatest: true,
     changes: null,
   };
 }

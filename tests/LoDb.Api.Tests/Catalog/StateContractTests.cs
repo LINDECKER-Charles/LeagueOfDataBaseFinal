@@ -24,7 +24,7 @@ public sealed class StateContractTests(CatalogApiFixture api)
         Assert.Equal(["baseline"], boots.Pluck("history", "kind"));
         Assert.True(boots.IsNull("next"));
         Assert.True(boots.IsNull("changes"));
-        Assert.True(boots.GetProperty("presentInLatest").GetBoolean());
+        Assert.True(boots.GetProperty("isPresentInLatest").GetBoolean());
     }
 
     [Fact]

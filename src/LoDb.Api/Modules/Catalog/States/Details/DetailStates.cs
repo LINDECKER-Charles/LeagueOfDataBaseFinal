@@ -23,7 +23,7 @@ internal static class DetailStates
             State = standing.State is null ? null : StateOf(view, standing, entity),
             History = [.. view.HistoryOf(standing).Select(state => EntryOf(view, state, entity))],
             Next = standing.State is { } held ? NextOf(view.SuccessorOf(held)) : null,
-            PresentInLatest = standing.IsPresentInLatest,
+            IsPresentInLatest = standing.IsPresentInLatest,
             Changes = null,
         };
     }

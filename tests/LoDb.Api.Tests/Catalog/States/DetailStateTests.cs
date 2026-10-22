@@ -79,7 +79,7 @@ public sealed class DetailStateTests : IDisposable
             (Latest, "champions/Teemo"),
             DetailCanonicalTests.Link(next.GetProperty("link")));
         Assert.Equal([Previous], teemo.Pluck("history", "openerVersion"));
-        Assert.True(teemo.GetProperty("presentInLatest").GetBoolean());
+        Assert.True(teemo.GetProperty("isPresentInLatest").GetBoolean());
     }
 
     // The opener of a new entity compares nothing: its block reads no other catalog.

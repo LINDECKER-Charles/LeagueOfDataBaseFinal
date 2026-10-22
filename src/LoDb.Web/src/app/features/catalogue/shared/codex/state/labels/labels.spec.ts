@@ -58,7 +58,7 @@ describe('fieldLabelOf', () => {
   it('names the subjects the API leaves unnamed from the page entity', () => {
     const names = subjectNamesOf({
       ...{ canonicalPath: 'champions/Ahri', canonical: { version: null, path: 'champions/Ahri' } },
-      ...{ state: null, history: [], next: null, presentInLatest: true, changes: null },
+      ...{ state: null, history: [], next: null, isPresentInLatest: true, changes: null },
       abilities: [{ slot: 'q', name: 'Orb of Deception' }],
       skins: [{ id: '103001', name: 'Dynasty Ahri' }],
       slots: [{ runes: [{ id: 8005, name: 'Press the Attack' }] }],

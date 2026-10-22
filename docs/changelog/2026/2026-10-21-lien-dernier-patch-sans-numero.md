@@ -10,7 +10,7 @@ tags: [catalogue]
 > **Remplacé le 2026-10-22** par [`une-page-par-etat-dans-google`](2026-10-22-une-page-par-etat-dans-google.md) :
 > `previous-patches.ts` n'existe plus ; le lien « Dans le dernier patch → », toujours sans
 > numéro et vers l'adresse courte, vit dans le bloc des états de la fiche, sa présence décidée
-> par l'API (`presentInLatest`), plus par `meta.latest`.
+> par l'API (`isPresentInLatest`), plus par `meta.latest`.
 
 ## Ce qui change
 

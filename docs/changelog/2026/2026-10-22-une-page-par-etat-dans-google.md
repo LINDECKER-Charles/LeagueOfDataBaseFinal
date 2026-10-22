@@ -54,7 +54,7 @@ août. Chaque contenu distinct a maintenant une page, et une seule.
   `catalog states build` (service `states`, avant la page de maintenance du déploiement),
   étendu à chaque promotion (étape `StateIndex`) et par la tâche `catalog.states.reconcile`.
 - API : `canonical` toujours présent (`StateView`), `state`, `history`, `next`,
-  `presentInLatest` et `changes` sur les quatre fiches ; `GET /api/catalog/{version}/{lang}/changes` ;
+  `isPresentInLatest` et `changes` sur les quatre fiches ; `GET /api/catalog/{version}/{lang}/changes` ;
   `CatalogMeta.oldestChangesVersion` et `newestChangesVersion` ; anciennes URL menées à la
   canonique de leur état.
   `CanonicalReferences`, `CanonicalReader` et `LoDb__Seo__SitemapVersionWindow` sont retirés.
