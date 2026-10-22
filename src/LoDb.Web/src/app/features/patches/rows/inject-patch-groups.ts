@@ -1,12 +1,12 @@
 import { type Signal, computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { RESOURCE_TYPE } from '../../../core/api/generated/models/resource-type-array';
+import { hasChangesPage } from '../../../core/api/meta/has-changes-page';
 import { PATCH_CHANGES_PATH } from '../../../core/routing/patch-changes-path';
 import { cataloguePath } from '../../../core/routing/url/catalogue-path';
 import type { PatchGroup } from '../data/patch-group';
 import type { PatchHistory } from '../data/patch-history';
 import type { PatchRow } from '../data/patch-row';
-import { hasChangesPage } from './has-changes-page';
 import { versionGroupsOf } from './version-groups-of';
 
 /**
