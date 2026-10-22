@@ -4,6 +4,7 @@ using LoDb.Api.Modules.Admin.Prerender.Demand.Queue;
 using LoDb.Api.Modules.Admin.Prerender.Demand.Validation;
 using LoDb.Api.Modules.Admin.Prerender.Pages;
 using LoDb.Api.Modules.Admin.Prerender.Passes;
+using LoDb.Api.Modules.Admin.Prerender.Rendering;
 using LoDb.Api.Modules.Admin.Prerender.Revision.Queue;
 using LoDb.Api.Modules.Admin.Prerender.Revision.Telemetry;
 using LoDb.Api.Modules.Admin.Prerender.Telemetry;
@@ -26,7 +27,9 @@ namespace LoDb.Api.Modules.Admin.Prerender.Revision.Drain;
 /// copy a pass stored. A refusal of the SSR is waited out as its Retry-After asks,
 /// <see cref="DemandPageRunner.MostRefusals"/> times at most; a pace that holds the renders,
 /// <see cref="DemandPageRunner.MostHolds"/> times: the page is then due again later. A failure
-/// that may not last counts a try, failed for good at <see cref="MaxAttempts"/>.
+/// that may not last counts a try, failed for good at <see cref="MaxAttempts"/>; so does a page
+/// the SSR marks revisable, which a closed state's never is but on an index that still holds
+/// the state open: written all the same, it is due again later.
 /// </remarks>
 internal sealed class RevisionPageRunner(
     IPrerenderCatalog catalog,
@@ -47,6 +50,9 @@ internal sealed class RevisionPageRunner(
     private const string NotPinned = "Its version is not an older patch.";
     private const string TooManyRefusals = "The SSR refused it again and again.";
     private const string HeldBack = "The pace held the renders back.";
+    private const string StillRevisable =
+        "The SSR rendered it revisable: the serving API still reads an index that holds its"
+        + " state open.";
 
     /// <summary>How the page ended; null when another worker took it first.</summary>
     public async Task<DemandEnd?> RunAsync(
@@ -105,7 +111,7 @@ internal sealed class RevisionPageRunner(
             var attempt = await writer.TryAsync(job, cancellationToken);
             if (attempt.End is { } end)
             {
-                return end with { Refusals = refusals };
+                return Settled(end, attempts) with { Refusals = refusals };
             }
 
             if (attempt.Failure is { } reason)
@@ -124,6 +130,18 @@ internal sealed class RevisionPageRunner(
 
             await WaitOutAsync(attempt, cancellationToken);
         }
+    }
+
+    // A page of a closed state comes back frozen; revisable, the try failed.
+    private static DemandEnd Settled(DemandEnd end, int attempts)
+    {
+        if (end.StoredClass != PrerenderHeaders.RevisableClass)
+        {
+            return end;
+        }
+
+        var isLast = attempts + 1 >= MaxAttempts;
+        return DemandEnd.Failed(StillRevisable, isLast) with { Bytes = end.Bytes };
     }
 
     private async Task WaitOutAsync(DemandTry attempt, CancellationToken cancellationToken)

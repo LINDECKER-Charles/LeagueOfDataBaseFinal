@@ -1,5 +1,6 @@
 using System.Net;
 using LoDb.Api.Modules.Admin.Prerender.Pages;
+using LoDb.Api.Modules.Admin.Prerender.Revision.Drain;
 using LoDb.Api.Modules.Admin.Prerender.Revision.Queue;
 using LoDb.Api.Tests.Prerender.Support;
 using LoDb.Domain.Catalog;
@@ -15,8 +16,8 @@ namespace LoDb.Api.Tests.Prerender.Revision;
 /// <summary>
 /// The drain of the queue of the closed states: a page is rendered once due, into its row's
 /// epoch, at the pass's key and with its metadata, whatever a pass stored there before, as its
-/// version spells it; a retired epoch is skipped, a failed try is due again later, and the
-/// drain stops on an SSR out of reach.
+/// version spells it; a retired epoch is skipped, a failed try or a page rendered revisable is
+/// due again later, and the drain stops on an SSR out of reach.
 /// </summary>
 public sealed class RevisionDrainTests(PostgresContainerFixture postgres)
 {
@@ -104,6 +105,49 @@ public sealed class RevisionDrainTests(PostgresContainerFixture postgres)
             drainedAt + RevisionQueue.RetryAfter + TimeSpan.FromMinutes(1));
         var row = (await rig.RowsAsync()).Single(static row => row.Path == Page);
         Assert.Equal((PrerenderDemandState.Failed, 3), (row.State, row.Attempts));
+    }
+
+    // The serving API read a copy of the index that still held the state open.
+    [Fact]
+    public async Task PageRenderedRevisableIsDueAgainUntilItComesBackFrozen()
+    {
+        await using var rig = await StartAsync();
+        rig.Harness.Ssr.Answer(Page, static () => FakeSsr.Revisable(Page, FakeSsr.BuildA));
+        await EnqueueAsync(rig, onlyEnglish: true);
+        rig.Harness.Clock.Advance(PastSettling);
+
+        await rig.DrainAsync();
+        var afterOne = (await rig.RowsAsync()).Single(static row => row.Path == Page);
+        rig.Harness.Clock.Advance(RevisionQueue.RetryAfter);
+        await rig.DrainAsync();
+
+        Assert.Equal((PrerenderDemandState.Pending, 1), (afterOne.State, afterOne.Attempts));
+        var row = (await rig.RowsAsync()).Single(static row => row.Path == Page);
+        Assert.Equal(PrerenderDemandState.Done, row.State);
+        Assert.Equal(
+            FakeSsr.ArchivedCaching,
+            rig.Harness.Store!.Objects[$"pages/1{Page}"].CacheControl);
+    }
+
+    // A state open again at that version (a rebuilt index) does not loop.
+    [Fact]
+    public async Task PageStillRevisableIsFailedForGoodAtTheLastTry()
+    {
+        await using var rig = await StartAsync();
+        Func<HttpResponseMessage> revisable = static () => FakeSsr.Revisable(Page, FakeSsr.BuildA);
+        rig.Harness.Ssr.Answer(Page, revisable, revisable, revisable);
+        await EnqueueAsync(rig, onlyEnglish: true);
+        rig.Harness.Clock.Advance(PastSettling);
+
+        for (var drain = 0; drain < RevisionPageRunner.MaxAttempts; drain++)
+        {
+            await rig.DrainAsync();
+            rig.Harness.Clock.Advance(RevisionQueue.RetryAfter);
+        }
+
+        var row = (await rig.RowsAsync()).Single(static row => row.Path == Page);
+        Assert.Equal((PrerenderDemandState.Failed, 3), (row.State, row.Attempts));
+        Assert.Contains("revisable", row.Reason, StringComparison.Ordinal);
     }
 
     // Data Dragon spelled the champion FiddleSticks up to 16.9.1, Fiddlesticks from 16.10.1:

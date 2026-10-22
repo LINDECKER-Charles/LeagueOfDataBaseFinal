@@ -28,8 +28,18 @@ internal sealed record DemandEnd
     /// <summary>The SSR's refusals waited out on the way.</summary>
     public int Refusals { get; init; }
 
-    public static DemandEnd Written(long bytes) =>
-        new() { State = PrerenderDemandState.Done, Bytes = bytes };
+    /// <summary>
+    /// The class the SSR marked a written page with (<c>archived</c>, <c>revisable</c>); null
+    /// for a page not written.
+    /// </summary>
+    public string? StoredClass { get; init; }
+
+    public static DemandEnd Written(long bytes, string storedClass) => new()
+    {
+        State = PrerenderDemandState.Done,
+        Bytes = bytes,
+        StoredClass = storedClass,
+    };
 
     public static DemandEnd Skipped(string reason) =>
         new() { State = PrerenderDemandState.Skipped, Reason = reason };

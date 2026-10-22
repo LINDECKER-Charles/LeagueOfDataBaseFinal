@@ -107,7 +107,8 @@ internal sealed class DemandPageWriter(
 
             var written = PageObjects.Of(job, page);
             await store.PutAsync(written, cancellationToken);
-            return DemandTry.Ended(DemandEnd.Written(written.Body.Length));
+            var storedClass = page.Header(PrerenderHeaders.CacheClass)!;
+            return DemandTry.Ended(DemandEnd.Written(written.Body.Length, storedClass));
         }
         catch (SsrUnavailableException exception)
         {
