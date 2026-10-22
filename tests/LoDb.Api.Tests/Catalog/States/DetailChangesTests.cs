@@ -1,12 +1,9 @@
 using System.Text.Json;
 using LoDb.Domain.Catalog;
 using LoDb.Domain.Paths;
-using LoDb.Domain.States;
 using LoDb.Domain.States.Diff;
 using LoDb.Domain.States.Fields;
-using LoDb.Domain.States.Projections;
 using LoDb.Domain.Versions;
-using LoDb.Ingestion.Catalog.Snapshots;
 using LoDb.Ingestion.Catalog.States.Snapshots;
 using LoDb.Testing.States;
 
@@ -16,7 +13,8 @@ namespace LoDb.Api.Tests.Catalog.States;
 /// The block « Ce qui a changé » of an opener at 16.18.1 over real pairs of the recording, the
 /// index seeded as it is built: with the keys the engine finds between the en_US entries of the
 /// entity's previous state, at 8.7.1, and of its page. Fiddlesticks is compared to 3.13.24, when
-/// Data Dragon wrote its id FiddleSticks.
+/// Data Dragon wrote its id FiddleSticks. Data Dragon shipped ar_AE after both: their ar_AE
+/// catalogs hold en_US.
 /// </summary>
 [Collection(StateApiGroup.Name)]
 public sealed class DetailChangesTests(StateApiFixture api) : IDisposable
@@ -26,6 +24,7 @@ public sealed class DetailChangesTests(StateApiFixture api) : IDisposable
     private const string Opener = "16.18.1";
     private const string Latest = "16.19.1";
     private const string English = "en_US";
+    private const string Arabic = "ar_AE";
 
     private static readonly IndexedEntity Fiddlesticks =
         new(ResourceType.Champions, "Fiddlesticks");
@@ -40,6 +39,8 @@ public sealed class DetailChangesTests(StateApiFixture api) : IDisposable
     [InlineData(ResourceType.Champions, "Fiddlesticks", "zh_CN")]
     [InlineData(ResourceType.Runes, "8000", "fr_FR")]
     [InlineData(ResourceType.Summoners, "SummonerFlash", "fr_FR")]
+    [InlineData(ResourceType.Items, "3078", Arabic)]
+    [InlineData(ResourceType.Champions, "Fiddlesticks", Arabic)]
     public async Task BlockListsTheFieldsTheIndexMarksChanged(
         ResourceType resource,
         string id,
@@ -132,6 +133,55 @@ public sealed class DetailChangesTests(StateApiFixture api) : IDisposable
         Assert.Equal(["removed"], tips.Pluck("segments", "kind"));
     }
 
+    // The index keys en_US fields: one that neither side has in the page's language is listed
+    // all the same, without values.
+    [Fact]
+    public async Task FieldNeitherSideHasIsListedWithoutValues()
+    {
+        await SeedAsync(TrinityForce, FieldKey.Of(ChangeField.RequiredChampion));
+
+        var page = await api.GetJsonAsync(PathOf(TrinityForce, "fr_FR"));
+        var required = FieldsOf(page)["requiredChampion"];
+
+        Assert.Equal(
+            KeysOf(page.GetProperty("state").Items("changedFields")),
+            KeysOf(page.GetProperty("changes").Items("fields")));
+        Assert.Empty(Sides(required));
+        Assert.Empty(required.Items("segments"));
+    }
+
+    // Set against en_US, a text reads as a translation that did not change; a number does not
+    // depend on the language.
+    [Fact]
+    public async Task TextComparedToEnglishShowsAfterAlone()
+    {
+        var fields = await FieldsAsync(TrinityForce, Arabic);
+        var description = fields["description"];
+
+        Assert.Equal(["same"], description.Pluck("segments", "kind"));
+        Assert.Equal(
+            [await DescriptionAsync(Opener, Arabic)],
+            description.Pluck("segments", "text"));
+        Assert.Equal(["3733", "3333"], Sides(fields["goldTotal"]));
+    }
+
+    // Its spells' per-rank strings read the same in every language; its tips, English only
+    // before, are listed without values.
+    [Fact]
+    public async Task ChampionComparedToEnglishKeepsWhatEveryLanguageWritesAlike()
+    {
+        var fields = await FieldsAsync(Fiddlesticks, Arabic);
+        var champion = (await api.CatalogAsync(Opener, Arabic)).FindChampion(Fiddlesticks.Id);
+        Assert.NotNull(champion);
+        var reap = champion.Spells[2].Name;
+
+        Assert.Equal(["15/14/13/12/11", "10/9/8/7/6"], Sides(fields["spellCooldown.e"]));
+        Assert.Equal([reap], Sides(fields["spellName.e"]));
+        Assert.Equal(reap, fields["spellName.e"].GetProperty("subject").Text("name"));
+        Assert.Empty(fields["allyTips"].Items("segments"));
+        Assert.Empty(Sides(fields["allyTips"]));
+    }
+
     public void Dispose() => api.Reset();
 
     private static string PathOf(IndexedEntity entity, string language) =>
@@ -168,39 +218,16 @@ public sealed class DetailChangesTests(StateApiFixture api) : IDisposable
             .Where(segment => segment.Text("kind") is "same" || segment.Text("kind") == side)
             .Select(static segment => segment.Text("text")));
 
-    private static IReadOnlyList<ProjectedField> ProjectionOf(
-        CatalogSnapshot catalog,
-        IndexedEntity entity) =>
-        entity.Resource switch
-        {
-            ResourceType.Champions => ChampionProjection.Of(Listed(
-                ListedEntities.Champions(catalog),
-                entity,
-                static entry => entry.Summary.Id)),
-            ResourceType.Items => ItemProjection.Of(
-                Listed(ListedEntities.Items(catalog), entity, static entry => entry.Id)),
-            ResourceType.Runes => RuneTreeProjection.Of(Listed(
-                ListedEntities.RuneTrees(catalog),
-                entity,
-                static entry => EntityKey.Of(entry.Id))),
-            _ => SummonerProjection.Of(
-                Listed(ListedEntities.Summoners(catalog), entity, static entry => entry.Id)),
-        };
-
-    // The entity among those with a page, by folded key: the index's identity across versions.
-    private static TEntry Listed<TEntry>(
-        IReadOnlyList<TEntry> entries,
+    // The index the page reads: the entity changed at 16.18.1, its keys the engine's in en_US,
+    // then those a test adds.
+    private async Task<IReadOnlyList<string>> SeedAsync(
         IndexedEntity entity,
-        Func<TEntry, string> idOf) =>
-        Assert.Single(entries, entry => EntityKey.Of(idOf(entry)) == entity.Key);
-
-    // The index the page reads: the entity changed at 16.18.1, its keys the engine's in en_US.
-    private async Task<IReadOnlyList<string>> SeedAsync(IndexedEntity entity)
+        params FieldKey[] added)
     {
         var compared = ComparedOf(entity);
         var keys = EntityDiff.ChangedKeys(
-            ProjectionOf(await api.CatalogAsync(compared, English), entity),
-            ProjectionOf(await api.CatalogAsync(Opener, English), entity));
+            ListedProjections.Of(await api.CatalogAsync(compared, English), entity),
+            ListedProjections.Of(await api.CatalogAsync(Opener, English), entity));
         api.Seed(
             [compared, Opener, Latest],
             [
@@ -208,10 +235,10 @@ public sealed class DetailChangesTests(StateApiFixture api) : IDisposable
                 TestStates.Open(entity, Opener) with
                 {
                     PreviousOpener = PatchVersion.Parse(compared),
-                    ChangedFields = keys,
+                    ChangedFields = [.. keys, .. added],
                 },
             ]);
-        return [.. keys.Select(NameOf)];
+        return [.. keys.Concat(added).Select(NameOf)];
     }
 
     private async Task<Dictionary<string, JsonElement>> FieldsAsync(
@@ -226,7 +253,7 @@ public sealed class DetailChangesTests(StateApiFixture api) : IDisposable
     private async Task<string> DescriptionAsync(string version, string language)
     {
         var catalog = await api.CatalogAsync(version, language);
-        return ProjectionOf(catalog, TrinityForce)
+        return ListedProjections.Of(catalog, TrinityForce)
             .Single(static field => field.Key == FieldKey.Of(ChangeField.Description))
             .Values[0];
     }

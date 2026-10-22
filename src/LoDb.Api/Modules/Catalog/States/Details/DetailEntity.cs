@@ -1,7 +1,9 @@
+using LoDb.Domain.Catalog;
 using LoDb.Domain.Catalog.Champions;
 using LoDb.Domain.Catalog.Items;
 using LoDb.Domain.Catalog.Runes;
 using LoDb.Domain.Catalog.Summoners;
+using LoDb.Domain.Languages;
 using LoDb.Domain.Paths;
 using LoDb.Domain.States.Projections;
 using LoDb.Ingestion.Catalog.Snapshots;
@@ -28,6 +30,22 @@ internal sealed record DetailEntity
 
     /// <summary>The entity as the index holds it.</summary>
     public IndexedEntity Entity => new(Path.Type, Path.Id);
+
+    /// <summary>
+    /// The language the entity's resource is written in, in <paramref name="catalog"/>: the
+    /// catalog's own, or en_US where Data Dragon did not ship it yet at that version.
+    /// </summary>
+    public DdragonLanguage? ContentLanguageIn(CatalogSnapshot catalog)
+    {
+        ArgumentNullException.ThrowIfNull(catalog);
+        return Path.Type switch
+        {
+            ResourceType.Champions => catalog.Champions.ContentLanguage,
+            ResourceType.Items => catalog.Items.ContentLanguage,
+            ResourceType.Runes => catalog.Runes.ContentLanguage,
+            _ => catalog.Summoners.ContentLanguage,
+        };
+    }
 
     public static DetailEntity Of(ChampionDetail champion, CatalogSnapshot catalog)
     {

@@ -27,7 +27,9 @@ namespace LoDb.Api.Modules.Catalog.Reading;
 /// the page's language, admitted as the page's own: within the budget of cold work, as the
 /// caller is. The short URL goes without the block while that catalog is not stored, which is
 /// acceptable for the latest version; a pinned opener never does: it answers 503 and is never
-/// stored without its block.
+/// stored without its block. Where Data Dragon did not ship the page's language yet at that
+/// version, that catalog holds en_US: the block then compares only what reads the same in
+/// every language (<see cref="ComparedProjection"/>).
 /// </para>
 /// </remarks>
 internal sealed partial class StateGateway(

@@ -1,4 +1,5 @@
 using LoDb.Domain.States.Diff;
+using LoDb.Domain.States.Fields;
 using LoDb.Ingestion.Catalog.Snapshots;
 using LoDb.Ingestion.Catalog.States.Snapshots;
 
@@ -9,8 +10,9 @@ namespace LoDb.Api.Modules.Catalog.States.Details;
 /// patch » shows it.
 /// </summary>
 /// <remarks>
-/// Only the fields the index marks changed are compared, en_US keys for the values of the
-/// page's language: the block, the history and the page of the patch list the same fields.
+/// The block lists exactly the fields the index marks changed, in its order, en_US keys for
+/// the values of the page's language: the block, the history and the page of the patch list
+/// the same fields, a field that neither side has in that language included.
 /// </remarks>
 internal static class StateChanges
 {
@@ -42,13 +44,23 @@ internal static class StateChanges
             Language = page.Language,
             Keys = state.ChangedFields.ToHashSet(),
         };
+        var after = entity.Project(page) ?? [];
+        var before = ComparedProjection.Of(entity, compared, after);
+        var diffs = EntityDiff.Compare(before, after, scope).ToDictionary(static diff => diff.Key);
         var names = new EntityNames(entity.Entity, page, compared);
-        var diffs = EntityDiff.Compare(entity.Project(compared), entity.Project(page) ?? [], scope);
         return new EntityChanges
         {
             Kind = state.Kind,
             ComparedVersion = compared.Version.Value,
-            Fields = [.. diffs.Select(diff => FieldChanges.Of(diff, names))],
+            Fields = [.. state.ChangedFields.Select(key => FieldOf(key, diffs, names))],
         };
     }
+
+    private static FieldChange FieldOf(
+        FieldKey key,
+        Dictionary<FieldKey, FieldDiff> diffs,
+        EntityNames names) =>
+        diffs.TryGetValue(key, out var diff)
+            ? FieldChanges.Of(diff, names)
+            : FieldChanges.WithoutValues(key, names);
 }

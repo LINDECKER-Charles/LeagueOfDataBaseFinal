@@ -104,10 +104,15 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   pas. Le bloc « Historique » se lit dans l'index seul ; l'ouvreur lit en plus le catalogue
   de la dernière version de l'état précédent, dans sa langue : épinglé, il répond 503 tant
   que ce catalogue n'est pas stocké, jamais rendu sans son bloc ; l'URL courte sort alors
-  sans le bloc. Une ancienne URL du site qui nomme une version mène à la canonique de la page
-  qu'elle nommait : l'ouvreur de l'état clos, avec le slug de cette version, ou l'URL courte
-  de l'état ouvert ; sans version, une entité absente du dernier patch mène à l'ouvreur de
-  son dernier état (amendements du 2026-10-16 et du 2026-10-22).
+  sans le bloc. Le bloc liste toujours les champs que l'index marque changés, même sans
+  valeur dans la langue de la page. Si Data Dragon ne livrait pas encore cette langue à la
+  version comparée, son catalogue tient l'en_US : seuls les nombres, codes, ids et chaînes par
+  rang des sorts y gardent leur valeur avant, un texte ou un nom s'affiche avec sa seule
+  valeur après (voulu, `ComparedProjection`). Une ancienne URL du site qui nomme une version
+  mène à la canonique de la page qu'elle nommait : l'ouvreur de l'état clos, avec le slug de
+  cette version, ou l'URL courte de l'état ouvert ; sans version, une entité absente du
+  dernier patch mène à l'ouvreur de son dernier état (amendements du 2026-10-16 et du
+  2026-10-22).
 - Une page qui oublie `Seo.apply` n'a ni canonique ni hreflang. Une clé `about.*`, `api.*`
   ou `seo.*` n'est traduite que si un ancêtre fournit son scope (`provideTranslocoScope`) ;
   sinon la clé brute sort dans le HTML, sans erreur. Le chrome (en-tête, pied de page) n'en
