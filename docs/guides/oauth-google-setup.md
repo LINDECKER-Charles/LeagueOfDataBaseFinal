@@ -114,8 +114,11 @@ l'edge TLS (Caddy → nginx → API), si l'API ne faisait pas confiance aux en-t
 → erreur `redirect_uri_mismatch`.
 
 **Déjà configuré** : nginx ne croit `X-Forwarded-For` que de l'edge (`LODB_EDGE_CIDR`) et
-transmet le schéma à l'API, qui accepte ces en-têtes des réseaux privés
-(`LoDb__Hosting__KnownProxyNetworks__*`, fixés par `compose.yaml`). Si l'edge change,
+transmet le schéma à l'API. Sur un hôte, l'API n'accepte ces en-têtes que du sous-réseau
+de sa stack (`LODB_STACK_SUBNET`) : `compose.deploy.yaml` remplace par lui les réseaux privés
+de `compose.yaml` (`LoDb__Hosting__KnownProxyNetworks__*`, les autres retirés par `!reset`),
+et le job de déploiement refuse une configuration qui en croirait un autre. En local, ce sont
+les réseaux privés de `compose.yaml`. Si l'edge change,
 vérifier que le nouvel intermédiaire émet bien `X-Forwarded-Proto: https`.
 
 ## 6. Comportement applicatif (rappel, ancienne stack)

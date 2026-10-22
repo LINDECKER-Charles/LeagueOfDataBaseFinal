@@ -30,8 +30,9 @@ npm ci --prefix tests/LoDb.E2E
 npm --prefix tests/LoDb.E2E run browsers:install
 ```
 
-`npm ci` n'écrit pas les lockfiles. Un chantier ne les committe jamais : l'intégration les
-régénère par `npm install --prefix <dossier>` puis les committe.
+`npm ci` n'écrit pas les lockfiles. Ils sont générés, jamais édités à la main : un
+changement de dépendance passe par `npm install --prefix <dossier>`, et le lockfile part
+dans le commit de ce changement. Dependabot commite les siens de la même façon.
 
 ## Build et tests sur l'hôte
 
@@ -69,17 +70,14 @@ npm --prefix src/LoDb.Web run build:shell
 | `i18n:build` | catalogues servis (`dist/i18n`) : complétés par `en`, messages ICU compilés ; lancé avant chaque build et par `npm start` |
 | `build:web` | build SSR, dans `dist/web/{browser,server}` |
 | `build:shell` | build statique des coquilles, dans `dist/shell/browser` |
-| `api:generate`, `api:check` | contrat OpenAPI et client généré : bouchons jusqu'à L2.2 |
-| `i18n:convert`, `i18n:report` | conversion des catalogues et complétude : bouchons jusqu'à L3.3 |
+| `api:generate` | reconstruit l'API avec la génération OpenAPI (`src/LoDb.Api/openapi/*.json`), puis le client TypeScript du document `app` (`src/app/core/api/generated/`) |
+| `api:check` | régénère les mêmes fichiers et échoue s'ils diffèrent de ceux du commit ; job `contract` de la CI |
+| `i18n:convert` | conversion ponctuelle des catalogues YAML de l'ancienne stack (`legacy/app/translations`) vers `public/i18n` ; la relancer écrase les catalogues JSON, désormais la source |
+| `i18n:report` | complétude des catalogues face à `en`, dans `docs/reecriture/rapports/i18n-completude.md` ; jamais bloquant, job `i18n` de la CI |
 
-Tant que `api:generate` n'est qu'un bouchon, les documents OpenAPI se produisent à la main :
-
-```bash
-dotnet build src/LoDb.Api -p:LoDbGenerateOpenApi=true
-```
-
-Elle écrit `src/LoDb.Api/openapi/LoDb.Api_app.json` et `LoDb.Api_public-v1.json`. Ce sont
-des artefacts générés : un chantier ne les committe pas.
+Les documents OpenAPI et le client sont des artefacts générés, jamais édités à la main : un
+changement de contrat lance `npm --prefix src/LoDb.Web run api:generate` et committe ce
+qu'il écrit dans le même commit.
 
 ## La stack d'intégration
 
@@ -89,8 +87,8 @@ docker compose -p lodb-dev -f compose.yaml -f compose.override.yaml ps
 ```
 
 Une seule instance tourne sur le poste. Le premier qui en a besoin la démarre, les autres
-la réutilisent. Seuls les agents d'intégration, de jalon et de vérification la
-reconstruisent.
+la réutilisent. Avant de rendre un travail, elle se reconstruit avec
+`up -d --build --wait` (garde-fous d'[`AGENTS.md`](../../AGENTS.md)).
 
 | Service | Rôle | Port hôte | Variable |
 |---|---|---|---|
@@ -171,7 +169,8 @@ fumée au staging et à la production (`tools/cutover/readonly-e2e.sh`).
 
 Un emplacement est une seconde stack, isolée par son nom de projet et par ses ports, pour
 éprouver une branche sans toucher à la stack d'intégration. On le lance **depuis son
-worktree**, et seulement si sa mission l'attribue. Il est supprimé avant de rendre. Au plus
+worktree**, quand une branche doit tourner à côté de la stack d'intégration. Il est
+supprimé (`down -v`) avant de rendre. Au plus
 deux emplacements tournent à la fois.
 
 | Emplacement | Projet | HTTP | API | SSR | Postgres | Mailpit |
@@ -256,13 +255,12 @@ manque, la piste est `npm install-scripts approve <paquet>`.
 docker compose -p lodb-dev -f compose.yaml -f compose.override.yaml logs --no-log-prefix api | grep -v '^{'
 ```
 
-Deux causes sont connues au lot 0, consignées dans le
-[rapport du jalon](../reecriture/rapports/jalons/lot-00.md) :
-
-- `libgssapi_krb5.so.2`, au premier accès de l'API à Postgres ;
-- les traces multi-lignes du SSR sur une erreur de rendu.
-
-Ne les filtrez pas : corrigez-les à la source.
+Les deux causes connues sont corrigées ([rapport du jalon](../reecriture/rapports/jalons/lot-00.md)) :
+`libgssapi_krb5.so.2` au premier accès de l'API à Postgres, neutralisé par
+`Gss Encryption Mode=Disable` dans les chaînes de connexion (`compose.yaml`), et les traces
+multi-lignes du SSR, qu'écrit désormais en une ligne JSON son dernier gestionnaire
+d'erreurs (`src/server/failure-handler.ts`). Une nouvelle ligne hors JSON ne se filtre pas :
+corrigez-la à la source.
 
 **Les E2E ne trouvent pas de navigateur.** Relancez
 `npm --prefix tests/LoDb.E2E run browsers:install`.
@@ -278,6 +276,7 @@ et l'étiquette pointe vers l'index : c'est le même build. Après une reconstru
 **Avertissements sans conséquence** :
 
 - `DEP0205` (`module.register()`) pendant `build:web` sous Node 26 ;
-- « `NO_COLOR` env is ignored » de Playwright quand le terminal pose `FORCE_COLOR` ;
-- `UsingEphemeralFileSystemLocationInContainer` (clés Data Protection) au démarrage de
-  l'API, jusqu'à leur persistance en base (L4.1).
+- « `NO_COLOR` env is ignored » de Playwright quand le terminal pose `FORCE_COLOR`.
+
+Les clés Data Protection sont gardées en base (`PersistKeysToDbContext`) : un avertissement
+`UsingEphemeralFileSystemLocationInContainer` au démarrage de l'API n'est plus attendu.

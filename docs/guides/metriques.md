@@ -141,7 +141,8 @@ s'arrête (SSR injoignable, réglage refusé), `prerender.demand.unreadable` (Wa
 
 ## API — métriques du framework
 
-Noms à confirmer au premier scrape d'un hôte (`.NET 10`, OpenTelemetry 1.x) :
+Noms des conventions sémantiques (`.NET 10`, OpenTelemetry 1.x), à revoir à chaque montée de
+version :
 
 - ASP.NET Core : `http_server_request_duration_seconds` (`http_route`,
   `http_request_method`, `http_response_status_code`…), `http_server_active_requests`,
@@ -150,7 +151,9 @@ Noms à confirmer au premier scrape d'un hôte (`.NET 10`, OpenTelemetry 1.x) :
 - Sécurité du framework, ajoutés explicitement (`TelemetryRegistration.cs`) : meters
   `Microsoft.AspNetCore.Identity`, `Microsoft.AspNetCore.Authentication` et
   `Microsoft.AspNetCore.Authorization` (connexions, défis, refus, résultats des politiques).
-- Runtime : `dotnet_thread_pool_queue_length`, `dotnet_gc_*`, `dotnet_process_*`.
+- Runtime : `dotnet_thread_pool_queue_length_total` (une jauge, que l'exportateur Prometheus
+  publie avec `_total`, constaté au premier scrape de la prod), `dotnet_gc_*`,
+  `dotnet_process_*`.
 - Données : meters `Npgsql` (pool de connexions) et `Microsoft.EntityFrameworkCore`.
 - Client HTTP sortant (Data Dragon) : `http_client_request_duration_seconds`.
 

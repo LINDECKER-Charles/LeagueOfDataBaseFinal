@@ -19,8 +19,8 @@ environnement.
 
 | Où | Contenu | Écrit par |
 |---|---|---|
-| Secrets de dépôt `STAGING_*`, `PROD_*` | Connexion SSH et dossier de l'hôte, **ceux de l'ancienne stack, réutilisés tels quels** ; certificat Data Protection (nouveau) ; clés de l'hôte (`*_SSH_KNOWN_HOSTS`, nouveau) | déjà en place, sauf le certificat et les clés de l'hôte |
-| Secrets de dépôt `ENV_STAGING`, `ENV_PROD` | Le `.env` complet de l'environnement : **contenu remplacé** par celui de la nouvelle stack | l'exploitant (*Settings ▸ Secrets*) |
+| Secrets de dépôt `STAGING_*`, `PROD_*` | Connexion SSH et dossier de l'hôte, ceux de l'ancienne stack, repris tels quels ; certificat Data Protection (depuis la bascule, à ne jamais remplacer) ; clés de l'hôte (`*_SSH_KNOWN_HOSTS`, optionnelles, non posées au 2026-10-22) | en place (§ 3.2) |
+| Secrets de dépôt `ENV_STAGING`, `ENV_PROD` | Le `.env` complet de l'environnement, celui de la nouvelle stack depuis la bascule | l'exploitant (*Settings ▸ Secrets*) |
 | Environnements GitHub `staging`, `production` | Règles de protection des déploiements (§ 3.3) | GitHub au premier déploiement ; règles par l'exploitant |
 | Environnements GitHub `desktop-release`, `android-release`, variables de dépôt | Clés de signature des apps, drapeaux de release | l'exploitant |
 | `.env` de l'hôte (`$STAGING_PATH/.env`, `$PROD_PATH/.env`) | Variables Compose et réglages de l'API (§ 4), **sans les secrets** | le job, depuis `ENV_STAGING` ou `ENV_PROD` |
@@ -36,11 +36,26 @@ Modèles versionnés : [`.env.staging.example`](../../.env.staging.example) et
 `ENV_STAGING` et `ENV_PROD`. Ces copies sont les seules lisibles : les tenir chiffrées hors du
 dépôt et les envoyer à GitHub sans fichier en clair.
 
-## 2. Mise en place, dans l'ordre
+## 2. État en place, et historique de la mise en place
 
-Les valeurs 🔁 ne se lisent que dans le `.env` de l'hôte (`$STAGING_PATH/.env`,
-`$PROD_PATH/.env`), les secrets GitHub n'étant pas relisibles. Les relever **avant** la
-bascule de l'environnement : son premier déploiement remplace ce fichier.
+Les deux environnements servent la nouvelle stack depuis la bascule du **2026-10-04** : les
+secrets du § 3.2 existent, et un déploiement ne demande qu'un push de `dev` (staging) ou la
+fusion de `test` dans `main` (prod, promotion des digests `:staging-validated` en `:prod` et
+`:latest`). Changer une variable : modifier `.env.staging` ou `.env.prod`, puis remettre le
+fichier complet dans `ENV_STAGING` ou `ENV_PROD` (§ 4). **Ne jamais remplacer**
+`STAGING_DATA_PROTECTION_PFX` ni `PROD_DATA_PROTECTION_PFX` : les clés Data Protection déjà
+chiffrées deviendraient illisibles (sessions et jetons perdus, § 6.2).
+
+### Historique : la bascule (faite le 2026-10-04, ne pas rejouer)
+
+> Procédure suivie une seule fois par environnement, gardée pour mémoire. **Ne pas la
+> rejouer** : `ENV_*` remplacé par un modèle ou certificat recréé casseraient
+> l'environnement servi.
+
+Les valeurs 🔁 ne se lisaient que dans le `.env` de l'hôte (`$STAGING_PATH/.env`,
+`$PROD_PATH/.env`), les secrets GitHub n'étant pas relisibles. Elles ont été relevées
+**avant** la bascule de chaque environnement, dont le premier déploiement a remplacé ce
+fichier.
 
 **`staging`** (au moment de fusionner la bascule dans `dev`, dont le push déploie) :
 
@@ -55,11 +70,13 @@ bascule de l'environnement : son premier déploiement remplace ce fichier.
 1. Certificat Data Protection **propre à la prod** (§ 6.2), jamais celui de `staging`.
 2. `.env.prod` rempli depuis `.env.prod.example`, valeurs 🔁 de l'ancienne prod (§ 4.4).
 3. Secret `ENV_PROD` **remplacé** ; secret `PROD_DATA_PROTECTION_PFX` créé. Pas avant :
-   tant que `main` porte l'ancienne stack, un push de `main` la redéploierait avec ce `.env`.
+   tant que `main` portait l'ancienne stack, un push de `main` l'aurait redéployée avec ce
+   `.env`.
 4. SMTP, Stripe, Google : § 6.4 à 6.6.
-5. Fusion de `test` dans `main` : promotion de `:staging` en `:prod`, déploiement de `prod`.
+5. Fusion de `test` dans `main` : promotion des digests `:staging-validated` en `:prod` et
+   `:latest`, déploiement de `prod`.
 
-Les sauvegardes hors hôte de la base de prod s'activent ensuite, à part
+Les sauvegardes hors hôte de la base de prod se sont activées ensuite, à part
 ([`sauvegardes.md`](sauvegardes.md)) : sans elles, le déploiement reste vert.
 
 ## 3. GitHub
@@ -94,13 +111,13 @@ packages `lodb/api` et `lodb/web-ssr`, nouveaux, peuvent rester privés. Une com
 
 | `staging` | `prod` | Statut | Rôle |
 |---|---|---|---|
-| `STAGING_SSH_KEY` 🔒 | `PROD_SSH_KEY` 🔒 | existant | Clé privée SSH de déploiement. |
-| `STAGING_HOST` | `PROD_HOST` | existant | IP ou FQDN de l'hôte. |
-| `STAGING_PATH` | `PROD_PATH` | existant | Dossier du dépôt sur l'hôte, celui de l'ancienne stack : la nouvelle y prend sa place. |
-| `STAGING_SSH_USER` | `PROD_SSH_USER` | existant | Utilisateur SSH (➖, `root` par défaut). |
-| `STAGING_SSH_KNOWN_HOSTS` | `PROD_SSH_KNOWN_HOSTS` | **nouveau**, à créer | Lignes `known_hosts` des clés de l'hôte (§ 6.3) : `ssh` refuse alors toute autre clé. Absent : la clé est lue par `ssh-keyscan` à chaque run, sans vérification, et le run porte un avertissement *Host key not pinned*. |
-| `ENV_STAGING` 🔒 | `ENV_PROD` 🔒 | **à remplacer** | Contenu complet de `.env.staging` / `.env.prod` (§ 4). |
-| `STAGING_DATA_PROTECTION_PFX` 🔒 | `PROD_DATA_PROTECTION_PFX` 🔒 | **nouveau** | Le `.pfx` de l'environnement en base64, sur une ligne (§ 6.2). Celui de la prod ne change plus une fois servi : les clés déjà chiffrées deviendraient illisibles (sessions et jetons perdus). |
+| `STAGING_SSH_KEY` 🔒 | `PROD_SSH_KEY` 🔒 | en place | Clé privée SSH de déploiement. |
+| `STAGING_HOST` | `PROD_HOST` | en place | IP ou FQDN de l'hôte. |
+| `STAGING_PATH` | `PROD_PATH` | en place | Dossier du dépôt sur l'hôte, celui de l'ancienne stack : la nouvelle y a pris sa place. |
+| `STAGING_SSH_USER` | `PROD_SSH_USER` | en place | Utilisateur SSH (➖, `root` par défaut). |
+| `STAGING_SSH_KNOWN_HOSTS` | `PROD_SSH_KNOWN_HOSTS` | ➖ optionnel, non posé au 2026-10-22 | Lignes `known_hosts` des clés de l'hôte (§ 6.3) : `ssh` refuse alors toute autre clé. Absent : la clé est lue par `ssh-keyscan` à chaque run, sans vérification, et le run porte un avertissement *Host key not pinned*. |
+| `ENV_STAGING` 🔒 | `ENV_PROD` 🔒 | en place, mis à jour à chaque changement de variable | Contenu complet de `.env.staging` / `.env.prod` (§ 4). |
+| `STAGING_DATA_PROTECTION_PFX` 🔒 | `PROD_DATA_PROTECTION_PFX` 🔒 | en place depuis le 2026-10-04, **à ne jamais remplacer** | Le `.pfx` de l'environnement en base64, sur une ligne (§ 6.2). Celui de la prod ne change plus une fois servi : les clés déjà chiffrées deviendraient illisibles (sessions et jetons perdus). |
 
 Un secret absent arrive vide : la première étape de `_deploy.yml` les vérifie et échoue en
 nommant ceux qui manquent, avant toute connexion à l'hôte.
@@ -136,6 +153,7 @@ La façon d'obtenir chaque valeur est dans [`release-desktop.md`](release-deskto
 |---|---|---|
 | `desktop-release` | `AZURE_CLIENT_ID`, `AZURE_TENANT_ID`, `AZURE_SUBSCRIPTION_ID` | secrets 🔒 |
 | `desktop-release` | `APPLE_DEVELOPER_ID_P12`, `APPLE_DEVELOPER_ID_P12_PASSWORD`, `APPLE_NOTARY_KEY_P8`, `APPLE_NOTARY_KEY_ID`, `APPLE_NOTARY_ISSUER_ID` | secrets 🔒 |
+| `desktop-release` (ou dépôt) | `LODB_DESKTOP_UPDATE_PRIVATE_KEY`, clé de signature des flux, lue par le job `sign` | secret 🔒 |
 | `desktop-release` | `AZURE_SIGNING_ENDPOINT`, `AZURE_SIGNING_ACCOUNT`, `AZURE_SIGNING_PROFILE`, `APPLE_APP_IDENTITY`, `APPLE_INSTALL_IDENTITY` | variables |
 | `android-release` | `ANDROID_UPLOAD_KEYSTORE_BASE64`, `ANDROID_UPLOAD_STORE_PASSWORD`, `ANDROID_UPLOAD_KEY_PASSWORD` | secrets 🔒 |
 | `android-release` | `ANDROID_APP_SIGNING_KEYSTORE_BASE64`, `ANDROID_APP_SIGNING_STORE_PASSWORD`, `ANDROID_APP_SIGNING_KEY_PASSWORD` | secrets 🔒 |
@@ -497,7 +515,10 @@ les deux SSR `observability` ; en prod, Postgres rejoint `sauvegardes` (§ 4.7).
 <summary>Réglages internes de l'API, avec leur défaut (non transmis par compose)</summary>
 
 Pour en changer un sur un hôte, l'ajouter sous `services.api.environment` de
-`compose.deploy.yaml`, puis dans le `.env`.
+`compose.deploy.yaml`, puis dans le `.env`. Exception : sur le staging,
+`LoDb__Ingestion__SyncConcurrency`, `LoDb__Ingestion__LanguageConcurrency` et
+`LoDb__Egress__FetchConcurrency` passent déjà du `.env` (`compose.staging.yaml`, § 4.5) ; en
+prod, ils gardent leur défaut.
 
 | Section | Clés (défaut) |
 |---|---|
@@ -881,7 +902,7 @@ Volumes du projet (`lodb-staging_…`, `lodb-prod_…`) :
 | `assets-cache` | nouveau | Cache des bundles de `/build/` de nginx, clé = nom du fichier : un déploiement le trouve chaud. |
 | `seo-cache`, `legacy-cache` | nouveaux | Caches de nginx des fichiers pour les robots (sitemaps, `robots.txt`, `llms.txt`) et des 301 de l'ancien site, clé préfixée par la révision : un déploiement repart de zéro, les entrées précédentes s'éteignent (7 jours, 1 heure). |
 | `nginx-temp` | nouveau | Fichiers temporaires de nginx : corps de requête et réponses plus grands que ses tampons, que le client n'a pas encore lus. Chacun est supprimé dès son ouverture : le volume ne contient que ce qui sert. |
-| `front-builds` | nouveau | Bundles hachés des builds successifs : `web-ssr` y ajoute les siens au démarrage et rafraîchit leur date toutes les heures, `/build/` y trouve ceux des builds précédents ; le job supprime ceux qu'aucun build en service n'a livrés depuis 30 jours. |
+| `front-builds` | nouveau | Bundles hachés des builds successifs : `web-ssr` y ajoute les siens au démarrage et rafraîchit leur date toutes les heures, `/build/` y trouve ceux des builds précédents ; le job supprime ceux qu'aucun build en service n'a livrés depuis `LODB_FRONT_BUILDS_RETENTION_DAYS` jours (400 par défaut, 395 au moins, § 4). |
 | `storage`, `app_state` | ancienne stack, **laissés intacts** | Non montés : ni réutilisés (`storage` appartient à `www-data`, l'API ne pourrait pas y écrire) ni supprimés (retour arrière, reprise des agrégats et de l'audit). Supprimés à la décommission, après export. |
 
 ## 6. Obtenir les valeurs
@@ -893,6 +914,9 @@ pointent déjà vers l'hôte. Pour un nouveau nom, enregistrements A (et AAAA) v
 avant le déploiement : le job contrôle le TLS public.
 
 ### 6.2 Certificat Data Protection (un par environnement)
+
+Ceux de `staging` et de `prod` existent depuis la bascule : ces commandes ne servent qu'à un
+nouvel environnement, jamais à remplacer un certificat servi.
 
 ```bash
 openssl req -x509 -newkey rsa:3072 -nodes -days 3650 -subj "/CN=lodb data protection" \
@@ -1042,16 +1066,16 @@ Ports et emplacements : [`developpement.md`](developpement.md).
 L'ancienne stack archivée a son propre `.env`, `legacy/.env` (modèle
 `legacy/.env.example`), lu par `docker compose --project-directory legacy …`.
 
-## 8. Écarts connus, à trancher avant la bascule
+## 8. Écarts connus
 
 - **Pays des visiteurs** : aucun fichier GeoLite2 n'est monté et ni
   `LoDb__Analytics__GeoIpDatabase` ni `GEOIP_DB_PATH` ne sont transmis sur un hôte. Les
-  vues de prod n'auront pas de pays, contrairement à l'ancienne stack.
+  vues de prod n'ont pas de pays, contrairement à l'ancienne stack.
 - **Connexion Google sur Android** : aucun fichier d'environnement du front ne définit
   `googleClientId`. La connexion reste coupée dans l'app, quels que soient les
   `AppClients` du serveur.
-- **Releases des apps** : les workflows attendent un appel après le déploiement de `prod`
-  (« contrat d'appel » des guides de release), que `ci.yml` ne fait pas. Elles se lancent
-  donc à la main.
-- **Réglages internes** : aucun n'est réglable depuis le `.env` sans modifier
-  `compose.deploy.yaml` (§ 4.3, encadré).
+- **Releases des apps** : aucun job de `ci.yml` n'appelle les workflows de release
+  (« contrat d'appel » des guides, non câblé). Elles se lancent à la main.
+- **Réglages internes** : en prod, aucun n'est réglable depuis le `.env` sans modifier
+  `compose.deploy.yaml` (§ 4.3, encadré) ; le staging en reçoit trois de son `.env`
+  (`compose.staging.yaml`, § 4.5).
