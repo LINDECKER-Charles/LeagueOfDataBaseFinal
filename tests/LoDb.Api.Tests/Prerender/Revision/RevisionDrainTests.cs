@@ -2,18 +2,21 @@ using System.Net;
 using LoDb.Api.Modules.Admin.Prerender.Pages;
 using LoDb.Api.Modules.Admin.Prerender.Revision.Queue;
 using LoDb.Api.Tests.Prerender.Support;
+using LoDb.Domain.Catalog;
 using LoDb.Domain.Languages;
 using LoDb.Infrastructure.Persistence.Prerender.Demand;
+using LoDb.Ingestion.Catalog.States.Snapshots;
 using LoDb.Testing;
+using LoDb.Testing.States;
 using Microsoft.EntityFrameworkCore;
 
 namespace LoDb.Api.Tests.Prerender.Revision;
 
 /// <summary>
 /// The drain of the queue of the closed states: a page is rendered once due, into its row's
-/// epoch, at the pass's key and with its metadata, whatever a pass stored there before; a
-/// retired epoch is skipped, a failed try is due again later, and the drain stops on an SSR
-/// out of reach.
+/// epoch, at the pass's key and with its metadata, whatever a pass stored there before, as its
+/// version spells it; a retired epoch is skipped, a failed try is due again later, and the
+/// drain stops on an SSR out of reach.
 /// </summary>
 public sealed class RevisionDrainTests(PostgresContainerFixture postgres)
 {
@@ -101,6 +104,36 @@ public sealed class RevisionDrainTests(PostgresContainerFixture postgres)
             drainedAt + RevisionQueue.RetryAfter + TimeSpan.FromMinutes(1));
         var row = (await rig.RowsAsync()).Single(static row => row.Path == Page);
         Assert.Equal((PrerenderDemandState.Failed, 3), (row.State, row.Attempts));
+    }
+
+    // Data Dragon spelled the champion FiddleSticks up to 16.9.1, Fiddlesticks from 16.10.1:
+    // one state, whose path keeps its opener's spelling.
+    [Fact]
+    public async Task PageOfAnIdWhoseCaseChangedIsWrittenAsItsVersionSpellsIt()
+    {
+        await using var rig = await StartAsync();
+        var catalog = rig.Harness.Catalog;
+        catalog.Pages[RevisionRig.Older] = VersionPageList.Ready(["champions/FiddleSticks"]);
+        catalog.Pages[RevisionRig.Leaving] = VersionPageList.Ready(["champions/Fiddlesticks"]);
+        rig.Harness.Ssr.IsRedirected = static path =>
+            path.EndsWith("/16.10.1/champions/FiddleSticks", StringComparison.Ordinal);
+        await rig.SettleAsync();
+        var fiddlesticks = new IndexedEntity(ResourceType.Champions, "FiddleSticks");
+        rig.Index(1, TestStates.Closed(fiddlesticks, "16.9.1", "16.10.1") with
+        {
+            ClosedAt = ClosedByPromotion,
+        });
+        await rig.ProduceAsync();
+        rig.Harness.Clock.Advance(PastSettling);
+
+        await rig.DrainAsync();
+
+        var keys = rig.Harness.Store!.Objects.Keys;
+        Assert.Contains("pages/1/de/16.9.1/champions/FiddleSticks", keys);
+        Assert.Contains("pages/1/de/16.10.1/champions/Fiddlesticks", keys);
+        Assert.All(
+            await rig.RowsAsync(),
+            static row => Assert.Equal(PrerenderDemandState.Done, row.State));
     }
 
     [Fact]

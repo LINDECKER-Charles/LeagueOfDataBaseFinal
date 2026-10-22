@@ -21,13 +21,16 @@ namespace LoDb.Api.Modules.Admin.Prerender.Revision.Drain;
 /// </summary>
 /// <remarks>
 /// Its stored copy is the one to replace: a pass that wrote it is no reason to skip it, unlike
-/// the automatic queue. A refusal of the SSR is waited out as its Retry-After asks,
+/// the automatic queue. The row names the page as the state's opener spells it; the page
+/// rendered is the one the catalogue of its version lists (<see cref="VersionPageIndex"/>), the
+/// copy a pass stored. A refusal of the SSR is waited out as its Retry-After asks,
 /// <see cref="DemandPageRunner.MostRefusals"/> times at most; a pace that holds the renders,
 /// <see cref="DemandPageRunner.MostHolds"/> times: the page is then due again later. A failure
 /// that may not last counts a try, failed for good at <see cref="MaxAttempts"/>.
 /// </remarks>
 internal sealed class RevisionPageRunner(
     IPrerenderCatalog catalog,
+    PageIndexCache indexes,
     RevisionQueue queue,
     DemandPageWriter writer,
     RevisionMetrics metrics,
@@ -58,12 +61,13 @@ internal sealed class RevisionPageRunner(
             : await WhyNotAsync(page, cancellationToken);
         if (end is null)
         {
+            var job = JobOf(page!, await SpellingAsync(page!, cancellationToken), row.Epoch);
             if (!await queue.ClaimAsync(row, cancellationToken))
             {
                 return null;
             }
 
-            end = await RenderAsync(JobOf(page!, row.Epoch), row.Attempts, cancellationToken);
+            end = await RenderAsync(job, row.Attempts, cancellationToken);
         }
 
         await queue.EndAsync(row, end, cancellationToken);
@@ -79,6 +83,15 @@ internal sealed class RevisionPageRunner(
         return from is null ? DemandEnd.Skipped(NotPinned)
             : from > clock.GetUtcNow() ? DemandEnd.Deferred(SettlingUntil(from.Value))
             : null;
+    }
+
+    // The page as its version spells it, or as queued when its catalogue cannot say.
+    private async Task<string> SpellingAsync(
+        DemandPath page,
+        CancellationToken cancellationToken)
+    {
+        var listed = await indexes.OfAsync(page.Version, cancellationToken);
+        return listed?.SpellingOf(page.PagePath) ?? page.PagePath;
     }
 
     private async Task<DemandEnd> RenderAsync(
@@ -138,14 +151,14 @@ internal sealed class RevisionPageRunner(
         }
     }
 
-    private static PageJob JobOf(DemandPath page, int epoch) => new(
+    private static PageJob JobOf(DemandPath page, string pagePath, int epoch) => new(
         new ClaimedUnit
         {
             Pass = new RunningPass(NoPass, epoch, PassScope.Everything),
             Version = page.Version,
             Locale = page.Locale,
         },
-        page.PagePath);
+        pagePath);
 
     private static string SettlingUntil(DateTimeOffset from) =>
         "Its version just left the latest rank; the servers hold it for the latest patch until "
