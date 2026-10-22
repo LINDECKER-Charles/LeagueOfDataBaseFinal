@@ -1,11 +1,7 @@
 using LoDb.Api.Modules.Catalog.States.Details;
 using LoDb.Domain.Catalog;
-using LoDb.Domain.Languages;
 using LoDb.Domain.States.Diff;
 using LoDb.Domain.States.Fields;
-using LoDb.Domain.Versions;
-using LoDb.Ingestion.Catalog;
-using LoDb.Ingestion.Catalog.Snapshots;
 using LoDb.Ingestion.Catalog.States.Snapshots;
 
 namespace LoDb.Api.Tests.Catalog.States;
@@ -25,7 +21,7 @@ public sealed class FieldChangesTests(StateApiFixture api)
     [Fact]
     public async Task EntitiesOfAValueAreNamedInThePageLanguage()
     {
-        var names = new EntityNames(TrinityForce, await CatalogAsync("16.19.1", "fr_FR"), null);
+        var names = new EntityNames(TrinityForce, await api.CatalogAsync("16.19.1", "fr_FR"), null);
 
         var recipe = FieldChanges.Of(
             Diff(FieldKey.Of(ChangeField.Recipe), ["1042"], ["1042", "1001"]),
@@ -44,8 +40,8 @@ public sealed class FieldChangesTests(StateApiFixture api)
     {
         var names = new EntityNames(
             TrinityForce,
-            await CatalogAsync("16.19.1", "en_US"),
-            await CatalogAsync("8.7.1", "en_US"));
+            await api.CatalogAsync("16.19.1", "en_US"),
+            await api.CatalogAsync("8.7.1", "en_US"));
 
         var recipe = FieldChanges.Of(
             Diff(FieldKey.Of(ChangeField.Recipe), ["3371"], ["1042"]),
@@ -57,7 +53,7 @@ public sealed class FieldChangesTests(StateApiFixture api)
     [Fact]
     public async Task ChampionNamesItsSkinsAndItsSpells()
     {
-        var names = new EntityNames(Garen, await CatalogAsync("16.19.1", "fr_FR"), null);
+        var names = new EntityNames(Garen, await api.CatalogAsync("16.19.1", "fr_FR"), null);
 
         var skins = FieldChanges.Of(
             Diff(FieldKey.Of(ChangeField.Skins), ["86000"], ["86000", "86001"]),
@@ -75,7 +71,7 @@ public sealed class FieldChangesTests(StateApiFixture api)
     [Fact]
     public async Task RunesOfARowAreNamedAndAnUnknownSubjectKeepsTheEngineName()
     {
-        var names = new EntityNames(Precision, await CatalogAsync("16.19.1", "en_US"), null);
+        var names = new EntityNames(Precision, await api.CatalogAsync("16.19.1", "en_US"), null);
 
         var keystones = FieldChanges.Of(
             Diff(FieldKey.Of(ChangeField.RuneSlot, "keystone"), ["8005"], ["8008"]),
@@ -95,7 +91,7 @@ public sealed class FieldChangesTests(StateApiFixture api)
     [Fact]
     public async Task TextTravelsByItsSegmentsAlone()
     {
-        var names = new EntityNames(TrinityForce, await CatalogAsync("16.19.1", "en_US"), null);
+        var names = new EntityNames(TrinityForce, await api.CatalogAsync("16.19.1", "en_US"), null);
         TextSegment[] segments =
         [
             new() { Kind = SegmentKind.Same, Text = "Grants " },
@@ -122,17 +118,4 @@ public sealed class FieldChangesTests(StateApiFixture api)
         After = after,
         Segments = [],
     };
-
-    // Read as the renderer reads: a public caller's load may be refused by the cold gate
-    // while another test loads a catalog in the same second.
-    private async Task<CatalogSnapshot> CatalogAsync(string version, string language)
-    {
-        var load = await api.Reader.GetAsync(
-            PatchVersion.Parse(version),
-            DdragonLanguage.Parse(language),
-            ColdDemand.Synchronous.By(ColdCaller.Internal),
-            StateApiFixture.Token);
-        Assert.True(load.IsReady, $"{version}/{language}: {load.Status}");
-        return load.Catalog;
-    }
 }

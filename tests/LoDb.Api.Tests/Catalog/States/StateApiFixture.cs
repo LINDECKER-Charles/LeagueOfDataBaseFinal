@@ -1,6 +1,10 @@
 using System.Net;
 using System.Text.Json;
+using LoDb.Domain.Languages;
+using LoDb.Domain.Versions;
+using LoDb.Ingestion.Catalog;
 using LoDb.Ingestion.Catalog.Reading;
+using LoDb.Ingestion.Catalog.Snapshots;
 using LoDb.Ingestion.Catalog.States;
 using LoDb.Ingestion.Catalog.States.Snapshots;
 using LoDb.Ingestion.Pipeline.Versions;
@@ -20,6 +24,8 @@ namespace LoDb.Api.Tests.Catalog.States;
 public sealed class StateApiFixture(PostgresContainerFixture postgres) : IAsyncLifetime
 {
     private const string ProblemContentType = "application/problem+json";
+    private const string UnboundedColdLoads = "1000";
+    private const string PublicColdLoads = "500";
 
     private TestDatabase? _database;
     private ApiFactory? _factory;
@@ -39,6 +45,9 @@ public sealed class StateApiFixture(PostgresContainerFixture postgres) : IAsyncL
     public async ValueTask InitializeAsync()
     {
         _database = await postgres.CreateMigratedDatabaseAsync(Token);
+        // The budgets of cold work are not what these tests read, and an opener reads two
+        // catalogs no memory holds: at the served rates, a test would be refused the work of
+        // the tests before it.
         _factory = new ApiFactory
         {
             PostgresConnectionString = _database.AppConnectionString,
@@ -46,6 +55,10 @@ public sealed class StateApiFixture(PostgresContainerFixture postgres) : IAsyncL
             {
                 ["LoDb:Egress:RetryBaseDelay"] = "00:00:00.001",
                 ["LoDb:Catalog:VersionsLifetime"] = "00:00:00.001",
+                ["LoDb:Catalog:ColdLoadsPerSecond"] = UnboundedColdLoads,
+                ["LoDb:Catalog:PublicColdLoadsPerSecond"] = PublicColdLoads,
+                ["LoDb:Catalog:ColdLoadBurst"] = UnboundedColdLoads,
+                ["LoDb:Ingestion:ColdDatasetsPerMinute"] = UnboundedColdLoads,
             },
         };
         var replay = DdragonFixtures.CreateReplay();
@@ -73,6 +86,21 @@ public sealed class StateApiFixture(PostgresContainerFixture postgres) : IAsyncL
         States.Snapshot = EntityStateSnapshot.Empty;
         States.IsUnavailable = false;
         Reader.ReleaseAll();
+    }
+
+    /// <summary>
+    /// A catalog read as the renderer reads it, whose loads wait for their turn where a
+    /// public caller's are refused.
+    /// </summary>
+    public async Task<CatalogSnapshot> CatalogAsync(string version, string language)
+    {
+        var load = await Reader.GetAsync(
+            PatchVersion.Parse(version),
+            DdragonLanguage.Parse(language),
+            ColdDemand.Synchronous.By(ColdCaller.Internal),
+            Token);
+        Assert.True(load.IsReady, $"{version}/{language}: {load.Status}");
+        return load.Catalog;
     }
 
     public Task<HttpResponseMessage> GetAsync(string path) =>

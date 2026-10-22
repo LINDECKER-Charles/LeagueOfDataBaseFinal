@@ -16,9 +16,6 @@ namespace LoDb.Api.Tests.Catalog.States;
 [Collection(StateApiGroup.Name)]
 public sealed class DetailStateTests : IDisposable
 {
-    private const string NeedsDiffEngine =
-        "Compares two projections: needs the projections and the diff engine of lot L1.";
-
     private const string Archived = "8.7.1";
     private const string Previous = "16.18.1";
     private const string Latest = "16.19.1";
@@ -147,7 +144,7 @@ public sealed class DetailStateTests : IDisposable
         Assert.True(charm.IsNull("changes"));
     }
 
-    [Fact(Skip = NeedsDiffEngine)]
+    [Fact]
     public async Task OpenerShowsTheFieldsItsStateChanged()
     {
         var boots = await api.GetJsonAsync("/api/catalog/16.18.1/en_US/items/1001");
@@ -162,7 +159,9 @@ public sealed class DetailStateTests : IDisposable
         Assert.Equal(["Boots"], name.Pluck("after", "value"));
     }
 
-    [Fact(Skip = NeedsDiffEngine)]
+    // The recording's Faerie Charm reads the same at both versions, as a text whose
+    // translation lags would: the field still shows, as one segment kept.
+    [Fact]
     public async Task ShortUrlOfAStateOpenedAtTheLatestShowsItsChanges()
     {
         var charm = await api.GetJsonAsync("/api/catalog/16.19.1/en_US/items/1004");
@@ -171,8 +170,8 @@ public sealed class DetailStateTests : IDisposable
 
         Assert.Equal(Previous, changes.Text("comparedVersion"));
         Assert.Equal(("plaintext", "text"), (plaintext.Text("field"), plaintext.Text("kind")));
-        Assert.Equal(0, plaintext.GetProperty("before").GetArrayLength());
-        Assert.NotEqual(0, plaintext.GetProperty("segments").GetArrayLength());
+        Assert.Empty(plaintext.Items("before"));
+        Assert.Equal(["same"], plaintext.Pluck("segments", "kind"));
     }
 
     public void Dispose() => api.Reset();
