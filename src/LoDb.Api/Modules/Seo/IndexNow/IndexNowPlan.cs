@@ -2,14 +2,13 @@ using LoDb.Api.Modules.Seo.Sitemaps;
 using LoDb.Domain.Languages;
 using LoDb.Domain.Versions;
 using LoDb.Ingestion.Catalog.Snapshots;
-using LoDb.Ingestion.Catalog.States.Snapshots;
 
 namespace LoDb.Api.Modules.Seo.IndexNow;
 
 /// <summary>
 /// What the promotion of a patch announces to IndexNow, in every locale, by category and in
 /// the order it is sent: the short URLs first, which a refusal must not drop, then the pages
-/// of changes, then the openers of the states the promotion closed.
+/// of changes, then the openers of the states closed since the previous latest patch.
 /// </summary>
 /// <remarks>
 /// The short URLs are every page a patch touches, as <c>latest.xml</c> dates them, changed or
@@ -18,11 +17,12 @@ namespace LoDb.Api.Modules.Seo.IndexNow;
 /// </remarks>
 /// <param name="ShortUrls">The pages of the latest patch, under their short URLs.</param>
 /// <param name="PatchPages">
-/// <c>/{locale}/changes</c> and the previous patch's <c>/{locale}/{previous}/changes</c>, each
-/// when its patch changed something.
+/// <c>/{locale}/changes</c> and <c>/{locale}/{version}/changes</c> of each version the
+/// promotion made a past one, each when its patch changed something.
 /// </param>
 /// <param name="Openers">
-/// The openers of the states the promotion closed, frozen as their own canonical.
+/// The openers of the states closed since the previous latest patch, frozen as their own
+/// canonical.
 /// </param>
 internal sealed record IndexNowPlan(
     IReadOnlyList<string> ShortUrls,
@@ -43,7 +43,7 @@ internal sealed record IndexNowPlan(
     /// The plan of the promotion of <paramref name="catalog"/>'s version, which
     /// <paramref name="index"/> covers, under <paramref name="origin"/>.
     /// </summary>
-    public static IndexNowPlan Of(string origin, CatalogSnapshot catalog, EntityStateSnapshot index)
+    public static IndexNowPlan Of(string origin, CatalogSnapshot catalog, PromotionIndex index)
     {
         ArgumentNullException.ThrowIfNull(catalog);
         return new(
@@ -61,27 +61,22 @@ internal sealed record IndexNowPlan(
     ];
 
     /// <summary>
-    /// The pages of changes of <paramref name="promoted"/>, now under the short URL, and of the
-    /// covered version before it, now under its versioned URL: those that changed something.
+    /// The pages of changes that changed something among those of <paramref name="promoted"/>,
+    /// now under the short URL, and of the versions it made past ones, under their versioned
+    /// URL: the previous latest patch's, which leaves the short URL, and any listed since.
     /// </summary>
     public static IReadOnlyList<string> PatchPagesOf(
         string origin,
         PatchVersion promoted,
-        EntityStateSnapshot index)
+        PromotionIndex index)
     {
         ArgumentNullException.ThrowIfNull(index);
         // A null version prefixes the short URL, the latest patch's.
-        var versions = new List<PatchVersion?>();
-        if (index.HasChanges(promoted))
-        {
-            versions.Add(null);
-        }
-
-        if (index.Coverage.Before(promoted) is { } previous && index.HasChanges(previous))
-        {
-            versions.Add(previous);
-        }
-
+        IEnumerable<PatchVersion?> latest = index.States.HasChanges(promoted) ? [null] : [];
+        var versions = latest.Concat(index.PastSince(promoted)
+            .Where(index.States.HasChanges)
+            .Select(static version => (PatchVersion?)version))
+            .ToList();
         return
         [
             .. UiLocales.All.SelectMany(locale => versions.Select(version =>
@@ -90,21 +85,22 @@ internal sealed record IndexNowPlan(
     }
 
     /// <summary>
-    /// The openers of the states the promotion of <paramref name="promoted"/> closed: those
-    /// whose last version is the covered one before it, each under its opener's versioned URL.
+    /// The openers of the states closed since the previous latest patch, by the promotion of
+    /// <paramref name="promoted"/> or by the versions listed before it: those whose last
+    /// version is one it made past, each under its opener's versioned URL.
     /// </summary>
     public static IReadOnlyList<string> OpenersOf(
         string origin,
         PatchVersion promoted,
-        EntityStateSnapshot index)
+        PromotionIndex index)
     {
         ArgumentNullException.ThrowIfNull(index);
-        if (index.Coverage.Before(promoted) is not { } previous)
+        if (index.PastSince(promoted) is not [.., var oldest])
         {
             return [];
         }
 
-        var closed = index.ClosedBetween(previous, promoted);
+        var closed = index.States.ClosedBetween(oldest, promoted);
         return
         [
             .. UiLocales.All.SelectMany(locale => closed.Select(state =>

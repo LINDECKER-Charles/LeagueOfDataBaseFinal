@@ -78,7 +78,10 @@ internal sealed partial class IndexNowSubmitter(
             return null;
         }
 
-        return IndexNowPlan.Of(origin, load.Catalog, index);
+        // The snapshot does not tell yet which patch was promoted before: the covered version
+        // before this one stands for it, which misses a version listed but never promoted.
+        var promotion = new PromotionIndex(index, PreviousLatest: null);
+        return IndexNowPlan.Of(origin, load.Catalog, promotion);
     }
 
     private async Task SubmitAsync(

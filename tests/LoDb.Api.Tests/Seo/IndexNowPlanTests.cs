@@ -1,20 +1,20 @@
 using LoDb.Api.Modules.Seo.IndexNow;
 using LoDb.Domain.Languages;
 using LoDb.Domain.Versions;
-using LoDb.Ingestion.Catalog.States.Snapshots;
 
 namespace LoDb.Api.Tests.Seo;
 
 /// <summary>
 /// What a promotion announces to IndexNow beyond the short URLs, read in the index of states
 /// (<see cref="SeoStates"/>): the pages of changes that changed something, the openers of the
-/// states that promotion closed, and the requests the whole takes.
+/// states closed since the previous latest patch, and the requests the whole takes.
 /// </summary>
 public sealed class IndexNowPlanTests
 {
     private const string Origin = "https://league-of-data-base.com";
 
-    private static readonly EntityStateSnapshot Index = SeoStates.Snapshot();
+    // The previous latest patch unknown: the covered version before the promoted one.
+    private static readonly PromotionIndex Index = new(SeoStates.Snapshot(), PreviousLatest: null);
 
     private static readonly int Locales = UiLocales.All.Count;
 
@@ -64,6 +64,44 @@ public sealed class IndexNowPlanTests
         Assert.Contains($"{Origin}/fr/7.21.1/items/1001-boots", openers);
         Assert.Contains($"{Origin}/fr/8.7.1/items/3371-molten-edge", openers);
         Assert.Empty(IndexNowPlan.OpenersOf(Origin, Version(SeoStates.Start), Index));
+    }
+
+    [Fact]
+    public void AnnouncesEveryVersionListedSinceThePreviousLatestPatch()
+    {
+        // 8.7.1 was the latest; 16.18.1 was listed, never promoted, before 16.19.1.
+        var skipped = Index with { PreviousLatest = Version(SeoStates.Archived) };
+        var latest = Version(SeoStates.Latest);
+
+        var pages = IndexNowPlan.PatchPagesOf(Origin, latest, skipped);
+        var openers = IndexNowPlan.OpenersOf(Origin, latest, skipped);
+
+        Assert.Equal(
+            [$"{Origin}/ar/changes", $"{Origin}/ar/16.18.1/changes", $"{Origin}/ar/8.7.1/changes"],
+            pages.Take(3));
+        Assert.Equal(3 * Locales, pages.Count);
+        Assert.Equal(
+            [
+                $"{Origin}/ar/7.21.1/items/1001-boots",
+                $"{Origin}/ar/8.7.1/items/3371-molten-edge",
+                $"{Origin}/ar/16.18.1/items/3078-trinity-force",
+            ],
+            openers.Take(3));
+        Assert.Equal(3 * Locales, openers.Count);
+    }
+
+    [Fact]
+    public void ReadsTheCoveredVersionBeforeWhenThePreviousLatestIsNotOlder()
+    {
+        var latest = Version(SeoStates.Latest);
+        var notOlder = Index with { PreviousLatest = latest };
+
+        Assert.Equal(
+            IndexNowPlan.OpenersOf(Origin, latest, Index),
+            IndexNowPlan.OpenersOf(Origin, latest, notOlder));
+        Assert.Equal(
+            IndexNowPlan.PatchPagesOf(Origin, latest, Index),
+            IndexNowPlan.PatchPagesOf(Origin, latest, notOlder));
     }
 
     [Theory]
