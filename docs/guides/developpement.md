@@ -145,6 +145,19 @@ Où placer un test et ce que chaque couche coûte : [`tests.md`](tests.md).
 Ils exigent une stack démarrée. Par défaut, ils visent la stack d'intégration
 (`http://localhost:18080`).
 
+Une stack neuve n'ingère que le dernier patch : son index des états ne couvre que lui, et les
+specs qui choisissent une page d'ancien patch par son état (`support/states.ts`) ne trouvent
+aucun état clos. Avant elles, et avant `tools/routing/check-urls.sh`, indexer les patchs
+d'avant, comme la CI :
+
+```bash
+bash tools/states/index-past-patches.sh
+```
+
+Le script ingère l'en_US des 5 patchs qui précèdent le dernier (`LODB_STATES_PATCHES`, une
+minute chacun, images comprises), puis relance le service `states`, qui reconstruit l'index à
+partir du plus ancien ; l'API le relit dans la minute.
+
 ```bash
 npm --prefix tests/LoDb.E2E test
 npm --prefix tests/LoDb.E2E run typecheck
@@ -183,6 +196,7 @@ Cycle complet de l'emplacement 1 (pour l'emplacement 2, reprendre ses valeurs) :
 
 ```bash
 LODB_HTTP_PORT=18180 LODB_API_PORT=18181 LODB_SSR_PORT=18182 LODB_PG_PORT=15532 LODB_MAIL_PORT=18125 docker compose -p lodb-dev-e1 -f compose.yaml -f compose.override.yaml up -d --build --wait
+LODB_E2E_COMPOSE_PROJECT=lodb-dev-e1 bash tools/states/index-past-patches.sh http://localhost:18180
 LODB_E2E_BASE_URL=http://localhost:18180 LODB_E2E_COMPOSE_PROJECT=lodb-dev-e1 \
   LODB_E2E_MAIL_URL=http://localhost:18125 npm --prefix tests/LoDb.E2E test
 docker compose -p lodb-dev-e1 -f compose.yaml -f compose.override.yaml down -v --rmi local

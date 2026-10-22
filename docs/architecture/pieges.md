@@ -342,6 +342,13 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   première visite d'un patch attend son ingestion. Une 503 ou une 502 du SSR en E2E se
   cherche d'abord là.
 - Les instantanés de `tests/LoDb.E2E/test-results/` sont écrasés au passage suivant.
+- **L'index des états d'une stack neuve ne couvre que son dernier patch.** Le service `states`
+  tourne avant toute promotion, la première promotion indexe ce qu'elle trouve, et un ancien
+  patch ingéré ensuite à la demande n'y entre pas : seule la commande `catalog states build`
+  reconstruit quand le début de la couverture recule. Les specs qui choisissent leurs pages par
+  l'état (`support/states.ts`) échouent alors en le disant, et `check-urls.sh` saute ses lignes
+  d'états : `tools/states/index-past-patches.sh` d'abord, comme la CI
+  ([`developpement.md`](../guides/developpement.md)).
 - **Débits par adresse de nginx relevés** : toute la suite arrive sous une seule adresse (la
   passerelle Docker), plus vite qu'un visiteur. `compose.override.yaml` relève
   `LODB_PAGES_*`, `LODB_API_READS_*`, `LODB_LEGACY_*` et `LODB_SITEMAPS_*` (débit et rafale) ;
