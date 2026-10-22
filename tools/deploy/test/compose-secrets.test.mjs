@@ -133,7 +133,7 @@ for (const template of TEMPLATES) {
           assert.equal(setting in migrate.environment, false, setting);
         }
         assert.equal(migrate.environment.ConnectionStrings__LoDb.includes(APP_ROLE), false);
-        for (const service of [api, migrate]) {
+        for (const service of [api, migrate, rendered.config.services.states]) {
           assert.doesNotMatch(service.environment.ConnectionStrings__LoDb, /password/i);
         }
         assert.equal('POSTGRES_PASSWORD' in postgres.environment, false);
@@ -142,6 +142,20 @@ for (const template of TEMPLATES) {
           postgres.secrets.map((secret) => [secret.source, targetName(secret)]),
           [[DATABASE_PASSWORD, basename(POSTGRES_PASSWORD_FILE)]],
         );
+      });
+
+      // The index of states is rows, written as the API's role: its password alone, as a file.
+      it('gives states the password of the API role only, as a file', () => {
+        const { states } = rendered.config.services;
+
+        assert.deepEqual(
+          states.secrets.map((secret) => [secret.source, targetName(secret)]),
+          [[APP_DATABASE_PASSWORD, DATABASE_PASSWORD_SETTING]],
+        );
+        assert.ok(states.environment.ConnectionStrings__LoDb.includes(APP_ROLE));
+        for (const key of [...keys, ...generated]) {
+          assert.equal(key in states.environment, false, key);
+        }
       });
     },
   );

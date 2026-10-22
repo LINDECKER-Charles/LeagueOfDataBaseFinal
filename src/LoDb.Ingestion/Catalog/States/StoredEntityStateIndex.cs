@@ -1,10 +1,10 @@
 using System.Data;
-using System.Data.Common;
 using LoDb.Domain.States.Fingerprints;
 using LoDb.Domain.States.Fields;
 using LoDb.Domain.Versions;
 using LoDb.Infrastructure.Persistence;
 using LoDb.Infrastructure.Persistence.States;
+using LoDb.Ingestion.Catalog.States.Loading;
 using LoDb.Ingestion.Catalog.States.Snapshots;
 using Microsoft.EntityFrameworkCore;
 
@@ -27,7 +27,7 @@ internal sealed class StoredEntityStateIndex(IDbContextFactory<LoDbDbContext> co
         {
             return await LoadAsync(cancellationToken).ConfigureAwait(false);
         }
-        catch (DbException exception)
+        catch (Exception exception) when (UnreachableDatabase.IsCause(exception))
         {
             throw new StateIndexUnavailableException(
                 "The index of states could not be read.",

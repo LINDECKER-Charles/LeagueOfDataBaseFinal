@@ -1,4 +1,5 @@
 using LoDb.Domain.Versions;
+using LoDb.Ingestion.Catalog.States;
 using LoDb.Ingestion.Pipeline.Versions;
 using LoDb.Testing;
 using LoDb.Testing.Fixtures;
@@ -9,7 +10,8 @@ namespace LoDb.Ingestion.Tests.Pipeline;
 
 /// <summary>
 /// The run that promotes a version tells every listener once, stage by stage; a listener that
-/// throws is logged and leaves the version promoted, the other listeners told.
+/// throws is logged and leaves the version promoted, the other listeners told. The index of
+/// states, the first stage, covers the version before the later stages read it.
 /// </summary>
 public sealed class PromotionListenerTests(PostgresContainerFixture postgres)
 {
@@ -72,6 +74,21 @@ public sealed class PromotionListenerTests(PostgresContainerFixture postgres)
         Assert.Equal(["index", "first", "second", "announce"], calls);
     }
 
+    [Fact]
+    public async Task IndexOfStatesCoversThePromotedVersionBeforeTheLaterStages()
+    {
+        await using var harness = await IngestionHarness.CreateAsync(postgres);
+        var probe = new CoverageProbe();
+        var instance = harness.StartInstance(services =>
+            services.AddSingleton<IPromotionListener>(probe));
+        probe.Index = instance.Get<IEntityStateIndex>();
+
+        await VersionIngestionTests.IngestAsync(instance, Latest);
+
+        Assert.Equal([true], probe.Covered);
+        Assert.DoesNotContain(instance.Logs, static log => log.Id.Name == "ingest.listener.failed");
+    }
+
     private sealed class RecordingListener : IPromotionListener
     {
         public List<PatchVersion> Promoted { get; } = [];
@@ -91,6 +108,22 @@ public sealed class PromotionListenerTests(PostgresContainerFixture postgres)
 
         public Task OnPromotedAsync(PatchVersion version, CancellationToken cancellationToken) =>
             throw new HttpRequestException("The endpoint is unreachable.");
+    }
+
+    // A pre-rendering stage: what the index it reads covers when its turn comes.
+    private sealed class CoverageProbe : IPromotionListener
+    {
+        public IEntityStateIndex? Index { get; set; }
+
+        public List<bool> Covered { get; } = [];
+
+        public PromotionStage Stage => PromotionStage.Prerender;
+
+        public async Task OnPromotedAsync(PatchVersion version, CancellationToken cancellationToken)
+        {
+            var snapshot = await Index!.GetAsync(cancellationToken);
+            Covered.Add(snapshot.Coverage.Contains(version));
+        }
     }
 
     private sealed class OrderListener(PromotionStage stage, string name, List<string> calls)
