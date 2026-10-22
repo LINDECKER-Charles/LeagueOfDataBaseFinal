@@ -199,8 +199,8 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   compté par `lodb_db_unavailable_total`. Npgsql ne donne au pool épuisé ni type ni code :
   son message est reconnu par son texte, et `DatabaseFailureTests` le revérifie sur un vrai
   pool à chaque montée de version.
-- **Rôle Postgres de l'API** : l'API se connecte comme `lodb_app` (lignes seulement, 15 s par
-  requête), `migrate` comme le superutilisateur ([`configuration.md`](../guides/configuration.md)
+- **Rôle Postgres de l'API** : l'API et le one-shot `states` (index des états) se connectent
+  comme `lodb_app` (lignes seulement, 15 s par requête), `migrate` comme le superutilisateur ([`configuration.md`](../guides/configuration.md)
   § 4.3). Un `42501` (`permission denied`, `must be owner`) d'une commande lancée dans le
   conteneur `api` est voulu : ce qui change le schéma passe par `migrate`
   (`docker compose run --rm migrate …`), jamais par l'API ni par un droit accordé à la main,
@@ -225,7 +225,8 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   `lodb_network_gate_refusals_total`, sans log. Un conteneur d'un réseau partagé
   (`observability`) ne joint que le port 9464. Un nouveau service qui appelle l'API doit
   être sur le réseau `default` de la stack.
-- **Postgres sur le seul réseau `data`**, avec `api` et `migrate` (interne sur un hôte : aucune
+- **Postgres sur le seul réseau `data`**, avec `api` et les one-shots `migrate` et `states`
+  (interne sur un hôte : aucune
   route vers l'extérieur) : nginx et le SSR ne joignent pas la base, et l'API répond un 404 à
   un pair de `data` (ce n'est pas le réseau de `KnownProxyNetworks`). Un nouveau service qui
   lit la base rejoint `data` et appelle `lodb-postgres` ; un outil local passe par le port
@@ -557,6 +558,111 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   `assets/messages.js` (21 locales), ses couleurs et ses faces recopient `src/styles`
   (`tools/nginx/test/maintenance-sources.test.mjs` tient l'accord) : un jeton de thème changé
   côté site se recopie là, sinon le test échoue.
+- **`states` passe avant la page de maintenance.** Le job lance `docker compose run --rm
+  migrate`, puis `docker compose run --rm --no-deps states` (`catalog states build`), puis
+  seulement `maintenance_on` et `up` (`tools/deploy/test/deploy-checks.test.mjs` tient cet
+  ordre). L'ancienne pile sert pendant la construction (les tables de l'index sont additives,
+  l'image en place les ignore), un échec arrête le job pendant qu'elle sert encore, et le
+  passage de `states` dans `up` ne fait plus rien. `--no-deps` : `migrate` vient de tourner.
+  Jamais `--ingest-missing` au déploiement : `states` monte `ddragon` en lecture seule.
+- **Data Dragon injoignable au déploiement** : `catalog states build` lit la liste des versions
+  de Data Dragon (le cache de l'hôte n'est qu'en mémoire), sauf tant qu'aucune version n'est
+  promue. Une génération de l'index est courante : il ne l'attend pas (code 0, ligne
+  `states.build.deferred`) et l'API sert l'index en retard jusqu'à sa réconciliation. **Aucune**
+  n'est courante (premier déploiement de la règle par état, nouveau schéma d'empreinte) : code 1
+  (`states.build.failed`), le déploiement s'arrête avant la page de maintenance. Voulu : une API
+  qui démarrerait sur un index vide servirait la règle résiduelle partout, sans historique dans
+  les sitemaps ; ne pas « corriger » en différant.
+
+## Index des états d'entité
+
+L'index qui décide la page indexée de chaque fiche d'ancien patch
+([spécification](../produit/seo-une-page-par-etat.md), ADR 0005 et ADR 0003, amendements du
+2026-10-22) : tables `catalog_state_*`, écrites par `LoDb.Ingestion/Catalog/States/`.
+
+- **Ce qui change l'empreinte change l'index.** L'empreinte d'une entité
+  (`EntityFingerprint`, schéma `FingerprintScheme.Current`) se calcule sur les entrées du
+  domaine du catalogue en_US **stocké**, vues par les projections de
+  `LoDb.Domain/States/Projections/`. Changer une projection, un gabarit de `ChangeField`,
+  `DdragonText.PlainText` ou la sérialisation, c'est monter `FingerprintScheme.Current` : une
+  génération neuve, puis les pages des états qui changent pré-calculées de nouveau
+  (spécification, § 3.7). Un **mapper d'ingestion** qui change les entrées stockées change
+  l'entrée de l'empreinte **sans** changer de schéma : réingérer l'en_US de toutes les versions
+  (ou neutraliser l'écart dans la projection), puis `catalog states build --rebuild`. Sinon les
+  versions ingérées avant et après le changement s'opposent, et la frontière ouvre de faux
+  états.
+- **Balisage, traduction, icône : aucun état.** `PlainText` lit un texte comme la page :
+  `<br>`, `<hr>` et les deux bouts de `li`, `p`, `ul`, `ol`, `maintext`, `stats`, `rules`,
+  `flavortext` font un saut de ligne, les autres balises et les commentaires disparaissent, un
+  `<` qui n'ouvre pas de balise reste du texte, les entités sont décodées, les blancs réduits et
+  les sauts répétés repliés : un `<br>` de plus ou de moins n'ouvre rien. L'empreinte ne lit que
+  l'en_US (une traduction corrigée seule n'ouvre rien) et aucune image (une icône redessinée
+  non plus). Voulu.
+- **Chromas comptées comme skins** (limite acceptée le 2026-10-22). Data Dragon liste les
+  chromas parmi les skins ; l'ingestion les retire d'après le catalogue des chromas de
+  CommunityDragon (celui du patch, sinon `latest`, sinon aucun : `ChromaSkins.Without`). Un patch
+  ingéré avant que CommunityDragon connaisse une nouvelle chroma ouvre donc un état pour elle
+  seule (`skins`, `skin.<id>.name`), refermé par le patch suivant qui la filtre ; CommunityDragon
+  injoignable, toute chroma compte comme un skin. `ChromaSourcePairTests` épingle ce
+  comportement. Correctif prévu, pas fait : lire `parentSkin` de Data Dragon dans le mapper des
+  skins, réingérer l'en_US, puis `catalog states build --rebuild` (point précédent).
+- **Champions réduits à leur résumé** (vieilles versions sans `championFull`, fichier en 403) :
+  sorts, passif, lore et skins vides ; l'empreinte voit tout disparaître puis revenir, deux
+  états de plus. Accepté.
+- **Premier état au début de la couverture : `baseline`.** Il n'a été comparé à rien : l'API
+  le dit `baseline` (`EntityStateSnapshot.KindOf`), sans `changes`, et la fiche n'affiche ni
+  résumé, ni pastille, ni bloc ; la version de début n'a pas de page de patch (404). L'index,
+  lui, le range comme un état nouveau (`previous_opener_version` nul). Les runes n'ont aucun
+  état avant 7.22.1 : un jeu définitivement absent n'étend ni n'interrompt un état.
+- **Clé repliée, chemin de l'ouvreur.** La clé d'une entité est son id en minuscules
+  (`EntityKey` : `FiddleSticks` et `Fiddlesticks` sont une seule entité) ; le chemin stocké
+  garde la casse et le slug de la version ouvreuse. Toute lecture replie de même ; la file des
+  états clos rend chaque version sous la graphie de son propre catalogue.
+- **Écrit avec le rôle de l'API** (`lodb_app` : lignes seulement, 15 s par requête), une
+  transaction par version, sous le verrou consultatif `catalog:states`, essayé toutes les
+  0,5 s : 1 minute pour la commande (puis code 1), 5 s pour la promotion et la réconciliation,
+  qui rendent la main sans échec (`states.update.locked`). Ne pas relever le délai du rôle pour
+  une reconstruction : elle avance version par version et reprend où elle s'est arrêtée.
+- **Générations.** Une reconstruction écrit une génération neuve à côté de la courante, la rend
+  courante en une transaction, puis supprime l'ancienne ; l'API ne lit que la génération
+  courante du schéma qu'elle compile, et celles d'un autre schéma ne sont jamais touchées (une
+  image précédente lit la sienne). Une génération en attente au même début de couverture
+  reprend, les autres sont supprimées, `--rebuild` les supprime toutes. **Seule la commande**
+  reconstruit quand le début de la couverture bouge : la promotion et la réconciliation ne
+  construisent que si aucune génération n'est courante, et ne font sinon qu'étendre.
+- **Couverture** : la plus longue suite de versions listées (liste de Data Dragon, plus le
+  dernier patch promu) dont les jeux en_US sont stockés, jusqu'au dernier patch promu. Une
+  version listée sans son en_US coupe la couverture : les plus anciennes sortent de l'index et
+  passent à la règle résiduelle (canonique sur l'URL courte, aucun historique), sans erreur. Le
+  remède : `ingest --version <v> --languages en_US`, ou `catalog states build --ingest-missing`
+  dans un conteneur qui écrit `ddragon` (`docker compose run --rm --no-deps api catalog states
+  build --ingest-missing`). Une version dont les quatre jeux sont définitivement absents est
+  sautée, comme non listée.
+- **Copie en mémoire, une par processus**, chargée à la première lecture ; son repère
+  (génération, fin de couverture) est relu au plus toutes les `LoDb:Catalog:VersionsLifetime`
+  (1 min) : un autre processus voit une promotion jusqu'à une minute après celui qui a écrit.
+  Base injoignable : la copie tenue reste servie, revérifiée une durée plus tard. Aucune copie :
+  503 `state-index-unavailable` avec `Retry-After` (fiche, `…/changes`, anciennes URL,
+  `/sitemap.xml`, `latest.xml` et `{version}.xml`), ligne `states.copy.failed` et compteur
+  `lodb_states_unavailable_total` ; `/api/meta` répond quand même, sans `oldestChangesVersion`
+  (`catalog.meta.degraded`).
+- **Première construction dans l'API** : sans aucune génération (pile locale neuve, E2E), la
+  première promotion construit tout l'index dans le processus de l'API, sous ses limites. Sur
+  un hôte, `states` passe à chaque déploiement : n'arrive pas.
+- **Ordre de la promotion** : les écouteurs s'exécutent par étape (`PromotionStage` :
+  `StateIndex`, `Prerender`, `Announce`), triés de façon stable par `VersionIngestion`, quel que
+  soit leur ordre d'enregistrement ; un nouvel écouteur déclare son étape
+  (`PromotionListenerTests`). Le précalcul et IndexNow lisent dans l'index ce que la promotion a
+  changé ; s'il ne couvre pas encore la version, ils journalisent et s'arrêtent
+  (`prerender.promotion.index_behind`, `seo.indexnow.unindexed`). La réconciliation de l'index
+  (`catalog.states.reconcile`, 10 min) puis celle du précalcul (`prerender.reconcile`, 30 min)
+  rattrapent ; IndexNow, jamais (les sitemaps datés prennent le relais).
+- **Ouvreur épinglé et budget à froid** : l'ouvreur d'un ancien patch lit aussi le catalogue
+  de la dernière version de l'état précédent, dans sa langue. Non stocké, ce catalogue consomme
+  le budget des visiteurs (`LoDb:Ingestion:ColdDatasetsPerMinute`, 6 par minute) ; au-delà,
+  la fiche répond 503 `catalog-pending` avec `Retry-After`, jamais rendue ni stockée sans son
+  bloc. Une passe d'ouvreurs sur des versions dont l'en_US seul est stocké se voit en 503
+  retentées : voulu. L'URL courte, elle, sort sans le bloc.
 
 ## Catalogue pré-rendu et CDN (ADR 0011)
 

@@ -41,8 +41,9 @@ applicatif de l'API ou du SSR, Vector ne produit rien de tel : `EventName`, `Log
 `State` (API), `level`, `msg` et les champs du SSR n'existent que comme texte dans `_msg`.
 
 Les services de la stack (`compose.yaml`) : `api`, `migrate` (conteneur éphémère des
-migrations), `web-ssr`, `web-ssr-prerender` (le SSR de la passe de précalcul), `nginx` et
-`postgres`. Les quatre premiers écrivent la ligne JSON de [`logging.md`](logging.md) ;
+migrations), `states` (conteneur éphémère de l'index des états d'entité), `web-ssr`,
+`web-ssr-prerender` (le SSR de la passe de précalcul), `nginx` et `postgres`. Les cinq
+premiers écrivent la ligne JSON de [`logging.md`](logging.md) ;
 `nginx` n'écrit que ses erreurs (`access_log off`, `docker/nginx/nginx.conf`) et `postgres`
 ses requêtes lentes, en texte. Les services de l'ancienne stack (`php`, `go-fetcher`,
 `go-api`, `mailer`) sont retirés au déploiement (`--remove-orphans`,
@@ -130,6 +131,11 @@ stack:lodb-prod service:api _time:1d ("prerender.unit.completed" OR "prerender.s
 
 # Le dernier passage des migrations (conteneur éphémère `migrate`)
 stack:lodb-prod service:migrate _time:7d ("db.migrate.completed" OR "db.baseline.refused" OR "db.roles.applied")
+
+# L'index des états d'entité : le passage du déploiement (conteneur éphémère `states`), puis
+# ses mises à jour par la promotion et la réconciliation, et les copies illisibles de l'API
+stack:lodb-prod service:states _time:7d ("states.update.completed" OR "states.build.")
+stack:lodb-prod service:api _time:1d ("states.update." OR "states.copy.failed")
 
 # Requêtes Postgres de plus de 500 ms (texte de Postgres, jamais leurs paramètres)
 stack:lodb-prod service:postgres _time:6h "duration:"

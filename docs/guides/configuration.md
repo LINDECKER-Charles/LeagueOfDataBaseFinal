@@ -419,7 +419,9 @@ même nom.
 
 `ConnectionStrings__LoDb` (hôte `lodb-postgres`, base `LODB_DB_NAME`, **sans mot de passe** :
 le service y pose `LoDb__Database__Password`, lu dans `/run/secrets` ; pour l'API, rôle
-`lodb_app`, pool borné par `Maximum Pool Size=32;Timeout=5` ; pour `migrate`, `LODB_DB_USER`),
+`lodb_app`, pool borné par `Maximum Pool Size=32;Timeout=5` ; pour `migrate`, `LODB_DB_USER` ;
+pour `states`, `lodb_app` sous `Application Name=lodb-states`, avec `LoDb__Storage__Root`
+sur `ddragon` monté en lecture seule),
 `LoDb__Accounts__SiteOrigin`, `LoDb__Seo__CanonicalOrigin` et `LoDb__PublicApi__SiteOrigin`
 (`https://` + `LODB_CANONICAL_HOST`), `LoDb__PublicApi__Reference__BaseUrl`
 (`LODB_PUBLIC_API_ORIGIN`), `LoDb__DataProtection__CertificatePath`,
@@ -482,12 +484,15 @@ processus (`pids`).
 | `postgres` | `0.5` | `1024` | `256` | `512m` |
 | `nginx` | `0.25` | `2048` | `256` | `512m` |
 | `migrate` | — | — | `256` | `128m` |
+| `states` | `0.5` | `512` | `256` | `512m` |
 
 Les quotas des services des visiteurs totalisent 3 des 4 vCPU de l'hôte : sous une charge
 qui les dépasse, la stack déleste (`503` avec `Retry-After`) au lieu de prendre l'hôte des
 autres projets. Le SSR de la passe (`web-ssr-prerender`) s'y ajoute au poids le plus bas :
 le noyau ne lui cède que le CPU que personne ne demande, et son régulateur le freine avant
-(§ 4.10). Le bridage se
+(§ 4.10). `states` (§ 4.12) ne tourne que pendant le déploiement, avant la page de
+maintenance, à côté des visiteurs : sous leur poids, au-dessus du SSR de la passe ; ses limites
+et la durée de sa première construction sont à mesurer au staging. Le bridage se
 lit dans `container_cpu_cfs_throttled_seconds_total` (alerte `ConteneurCpuBride`,
 `infra-vps`) : recalibrer après 7 jours, en regard de la latence. La sonde de santé de l'API
 démarre un runtime .NET dans ce quota : toutes les 60 s en marche, toutes les 2 s au
@@ -500,15 +505,15 @@ un tmpfs borné, compté dans sa limite mémoire.
 
 | Service | Utilisateur | Écrit dans | Capacités reprises |
 |---|---|---|---|
-| `api`, `migrate` | `app` (image chiseled) | `ddragon` (`api`), tmpfs `/tmp` (64 Mio) | — |
+| `api`, `migrate`, `states` | `app` (image chiseled) | `ddragon` (`api` ; `states` le lit en lecture seule), tmpfs `/tmp` (64 Mio) | — |
 | `web-ssr` | `node` | `front-builds`, tmpfs `/tmp` (16 Mio) | — |
 | `web-ssr-prerender` | `node` | tmpfs `/tmp` (16 Mio) : aucun volume | — |
 | `nginx` | `nginx`, port 8080 | caches et fichiers temporaires (volumes), tmpfs `/tmp` (64 Mio : configuration rendue, pid) | — |
 | `postgres` | root, puis `postgres` | `pgdata`, tmpfs `/var/run/postgresql` (8 Mio) et `/tmp` (16 Mio) | `CHOWN`, `DAC_OVERRIDE`, `FOWNER`, `SETGID`, `SETUID` (entrée de l'image), toutes parmi celles que Docker accorde par défaut |
 
-Réseaux : `default` (nginx, SSR, API, `migrate`) porte le HTTP, sur `LODB_STACK_SUBNET`
-(§ 6.8) ; `data` (Postgres, API, `migrate`) est interne sur un hôte, sans route vers
-l'extérieur : nginx et les SSR ne joignent pas la base. nginx rejoint aussi `edge`, l'API et
+Réseaux : `default` (nginx, SSR, API, `migrate`, `states`) porte le HTTP, sur
+`LODB_STACK_SUBNET` (§ 6.8) ; `data` (Postgres, API, `migrate`, `states`) est interne sur un
+hôte, sans route vers l'extérieur : nginx et les SSR ne joignent pas la base. nginx rejoint aussi `edge`, l'API et
 les deux SSR `observability` ; en prod, Postgres rejoint `sauvegardes` (§ 4.7).
 
 <details>
@@ -578,6 +583,7 @@ quotas se revoient avec ceux de la prod :
 | `LODB_PRERENDER_RENDERS_PER_MINUTE`, `LODB_PRERENDER_RENDER_BURST`, `LODB_PRERENDER_MAX_IN_FLIGHT`, `LODB_PRERENDER_VISITOR_RESERVE` | `30`, `5`, `1`, `1` | `120`, `10`, `2`, `4` |
 | `LODB_PRERENDER_PACE_MIN`, `LODB_PRERENDER_PACE_MAX`, `LoDb__Prerender__Pace__StepRendersPerMinute` | `10`, `30`, `10` | `30`, `240`, `30` |
 | `web-ssr-prerender` : `cpus`, `cpu_shares` | `0.25`, `64` | `1.0`, `128` |
+| `states` (index des états, § 4.12) : `cpu_shares` | `128` | `512` |
 | `LoDb__Prerender__AutoEnqueueOnPromotion` | `false` | `false` jusqu'à la fin de la passe complète, puis `true` (`.env.prod.example`) |
 | `LoDb__Ingestion__SyncConcurrency`, `LoDb__Ingestion__LanguageConcurrency`, `LoDb__Egress__FetchConcurrency` | `1`, `1`, `1` | `4`, `4`, `16` |
 | Sonde de santé de l'API au démarrage | toutes les 10 s pendant 60 s | toutes les 2 s pendant 20 s |
@@ -876,6 +882,73 @@ qui recrée l'API : le relevé et le rendu s'arrêtent, la table reste. Le pupit
 **Ce qui la montre** : le bloc « File automatique des pages refusées » de `/admin/prerender`,
 les métriques `lodb_prerender_demand_*` ([`metriques.md`](metriques.md)) et les lignes
 `prerender.demand.*` de l'API, une par relevé qui apporte des pages et une par lot rendu.
+
+### 4.12 Index des états d'entité
+
+La canonique des fiches, les sitemaps des anciens patchs, les pages de patch, IndexNow et la
+file des états clos (§ 4.13) lisent l'index des états d'entité, en Postgres
+([spécification](../produit/seo-une-page-par-etat.md), § 3.2 et § 4). Aucune ligne du `.env`
+ne le règle : il dépend du code (schéma d'empreinte) et des jeux en_US stockés.
+
+**Le service `states`** (`compose.yaml`, surchargé par `compose.deploy.yaml`) : l'image de
+l'API, commande `catalog states build`, `lodb_app` (`Application Name=lodb-states`, mot de
+passe `LODB_APP_DB_PASSWORD` en fichier sur un hôte), `ddragon` en lecture seule, réseaux
+`default` et `data`, `restart: "no"`, après `migrate` ; `api` attend sa réussite
+(`service_completed_successfully`). Le déploiement le lance juste après `migrate`, avant la page
+de maintenance (`docker compose run --rm --no-deps states`) ; son passage dans `up` ne fait
+plus rien. Ressources : § 4.3 ; poids au staging : § 4.5.
+
+**La commande** `catalog states build [--rebuild] [--ingest-missing]`, dans l'image de l'API
+(un réglage d'hôte s'écrit `--clé=valeur`, jamais juste après une option) :
+
+| Situation | Ce qu'elle fait |
+|---|---|
+| La génération courante du schéma compilé couvre déjà jusqu'au dernier patch promu | rien |
+| Seule la fin de la couverture a avancé | elle étend la génération courante |
+| Aucune génération courante, début de la couverture déplacé, ou `--rebuild` | elle construit une génération neuve, la rend courante en une transaction, puis supprime l'ancienne |
+
+Elle lit les jeux en_US stockés, un catalogue à la fois, une transaction par version, et
+reprend une construction interrompue. Elle ne télécharge aucun jeu, sauf avec
+`--ingest-missing`, qui ingère d'abord l'en_US de chaque version listée qui en manque ; elle
+lit en revanche la liste des versions de Data Dragon dès qu'une version est promue.
+
+| Code | Cas |
+|---|---|
+| `0` | index à jour (rien, étendu ou construit) ; ou liste de Data Dragon illisible sans `--ingest-missing` alors qu'une génération est courante (`states.build.deferred`, Warning) : l'API sert l'index en retard jusqu'à sa réconciliation |
+| `1` | liste illisible et aucune génération courante (`states.build.failed`, Error : premier déploiement, nouveau schéma d'empreinte), verrou `catalog:states` tenu par un autre écrivain pendant une minute, ou tout autre échec (`cli.command.failed`), liste illisible avec `--ingest-missing` compris |
+| `2` | arguments invalides |
+
+**Rattrapages.** La promotion d'un patch étend l'index en premier (étape `StateIndex`), en
+ingérant l'en_US des versions listées après la fin de la couverture qui en manquent. La tâche
+`catalog.states.reconcile` (toutes les 10 min, une instance à la fois, coupée par
+`LoDb:Workers:Enabled=false`) fait de même, et construit l'index s'il n'y en a aucun ; aucun
+passage n'est garanti au démarrage. Seule la commande reconstruit quand le début de la
+couverture bouge, en général au déploiement suivant.
+
+**Copie en mémoire** : chaque processus de l'API tient la sienne, relit son repère au plus
+toutes les `LoDb:Catalog:VersionsLifetime` (1 min) et la recharge quand la génération ou la fin
+de couverture a changé. Sans copie et base injoignable : 503 `state-index-unavailable`
+(§ « Index des états » de [`pieges.md`](../architecture/pieges.md)).
+
+**Vérifier la couverture avant une bascule** (spécification, § 4.2 et 4.3) : chaque version
+listée doit avoir ses jeux en_US stockés, sinon la couverture commence après le trou. Ingérer
+ceux qui manquent, version par version (`--latest` est plafonné à 50) :
+
+```bash
+docker compose exec -T api dotnet LoDb.Api.dll ingest --version <v> --languages en_US
+# ou, toutes les versions listées d'un coup, dans un conteneur qui écrit ddragon :
+docker compose run --rm --no-deps api catalog states build --ingest-missing
+```
+
+**Reconstruire** après un changement de mapper qui modifie les entrées stockées (en_US
+réingéré de toutes les versions d'abord) : `docker compose run --rm --no-deps states catalog
+states build --rebuild`. Un nouveau schéma d'empreinte (`FingerprintScheme.Current`) se
+construit de lui-même au déploiement qui le porte ; ses pages se recalculent ensuite (§ 4.13).
+
+**Ce qui le montre** : la ligne `states.update.completed` de chaque mise à jour (déclencheur,
+issue, début et fin de la couverture, états ouverts et clos, comptes par ressource), les
+métriques `lodb_states_*` ([`metriques.md`](metriques.md)) et, au pupitre `/admin/prerender`,
+les ouvreurs, pages figées et révisables attendus par version.
 
 ## 5. Fichiers et volumes de l'hôte
 

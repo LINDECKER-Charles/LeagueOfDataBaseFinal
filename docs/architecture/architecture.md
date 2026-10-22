@@ -18,10 +18,11 @@ sauf les quelques-unes que l'entrypoint de `postgres` reprend par `cap_add`) et 
 |---|---|---|
 | `api` | `docker/api/` | `LoDb.Api` sur 8080, métriques sur 9464 ; seul écrivain du volume `ddragon` |
 | `migrate` | même image, `migrate` | one-shot : migrations EF, rôles `lodb_app` et `lodb_sauvegarde` ; l'API attend sa réussite |
+| `states` | même image, `catalog states build` | one-shot après `migrate` : rattrape l'index des états d'entité (`ddragon` en lecture seule, rôle `lodb_app`) ; l'API attend sa réussite |
 | `web-ssr` | `docker/web-ssr/` | Angular SSR (Node) des visiteurs sur 4000 ; écrit les bundles dans `front-builds` |
 | `web-ssr-prerender` | même image | SSR de la passe de précalcul, joint par l'API seule, jamais par nginx ([ADR 0011](../reecriture/adr/0011-catalogue-pre-rendu-et-cdn.md)) |
 | `nginx` | `docker/nginx/` | frontal sur 8080 : caches de pages, `/cdn/blobs/`, lecture du stockage objet |
-| `postgres` | `postgres:17-alpine` | sur le réseau `data` seul, partagé avec `api` et `migrate` |
+| `postgres` | `postgres:17-alpine` | sur le réseau `data` seul, partagé avec `api`, `migrate` et `states` |
 | `mailpit` | dev seulement | puits SMTP des e-mails de compte (`compose.override.yaml`) |
 | `pages-store` | dev seulement | stockage objet simulé par moto, en mémoire (`compose.override.yaml`) |
 
@@ -86,10 +87,33 @@ nginx ne sert que `/cdn/blobs/`. Le manifeste (`ddragon_version`, `ddragon_asset
 Postgres.
 
 **Promotion d'un patch.** Une version complète devient la dernière si aucune plus récente n'est
-promue (`Pipeline/Versions/VersionStates.cs`). Les `IPromotionListener` réagissent : soumission
-IndexNow (`Modules/Seo/IndexNow/`) et mise en file du patch remplacé pour le précalcul
-(`PrerenderPromotionListener`, seulement si `LoDb__Prerender__AutoEnqueueOnPromotion`).
-`LatestCatalogWarmer` épingle en mémoire les catalogues de la nouvelle version.
+promue (`Pipeline/Versions/VersionStates.cs`). Les `IPromotionListener` réagissent dans l'ordre
+de l'étape que chacun déclare (`PromotionStage`, tri stable de `VersionIngestion`, quel que soit
+l'enregistrement) :
+
+1. `StateIndex` : l'index des états d'entité s'étend jusqu'à la version promue
+   (`StateIndexPromotionListener`, `LoDb.Ingestion/Catalog/States/`) ;
+2. `Prerender` : une fois l'index à jour, l'unité du patch remplacé (seulement si
+   `LoDb__Prerender__AutoEnqueueOnPromotion`), puis la file des pages des états que la promotion
+   a clos (`PrerenderPromotionListener`) ;
+3. `Announce` : IndexNow (`Modules/Seo/IndexNow/`) : les URL courtes, les pages de patch qui ont
+   changé quelque chose et les ouvreurs des états clos depuis le patch promu avant.
+
+Les étapes 2 et 3 lisent dans l'index ce que la promotion a changé ; un écouteur qui échoue est
+journalisé sans défaire la promotion, et les réconciliations (`catalog.states.reconcile`,
+`prerender.reconcile`) rattrapent l'index puis le précalcul. `LatestCatalogWarmer` épingle en
+mémoire les catalogues de la nouvelle version.
+
+**Index des états d'entité** ([ADR 0005](../reecriture/adr/0005-web-ssr-urls-et-seo.md) et
+[ADR 0003](../reecriture/adr/0003-ingestion-proactive-et-taches-de-fond.md), amendements du
+2026-10-22). Pour chaque champion, objet, arbre de runes et sort listé, la suite des versions
+où sa fiche ne change pas (empreinte SHA-256 de ce qu'elle affiche, catalogue en_US,
+`LoDb.Domain/States/`). Tables `catalog_state_generation`, `catalog_state_version` et
+`catalog_entity_state`, écrites sous le verrou `catalog:states` par la commande
+`catalog states build` (service `states`), la promotion et la réconciliation ; chaque processus
+en tient une copie en mémoire (`IEntityStateIndex`) qui se recharge d'elle-même. L'API en tire
+la canonique des fiches (`StateView`), leur état, leur historique et leurs changements, les
+pages de patch et les sitemaps des anciens patchs.
 
 **Précalcul des anciens patchs** ([ADR 0011](../reecriture/adr/0011-catalogue-pre-rendu-et-cdn.md),
 [spécification](../produit/pre-rendu-catalogue-cdn.md)). `PrerenderWorker` parcourt une passe par
@@ -175,7 +199,7 @@ Chemin d'un changement (`.github/workflows/ci.yml`) :
    déploiement de la prod.
 
 Un déploiement : `.env` découpé (secrets en fichiers sous `.deploy/secrets/`), pull, `pg_dump`,
-`migrate`, page de maintenance, `up --wait` des services des visiteurs puis du SSR de la passe,
+`migrate`, `states` (index des états), page de maintenance, `up --wait` des services des visiteurs puis du SSR de la passe,
 tests de fumée. Détail : [`github-actions-secrets.md`](../guides/github-actions-secrets.md).
 
 ## Dépôt
