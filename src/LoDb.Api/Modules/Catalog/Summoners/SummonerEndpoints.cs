@@ -76,6 +76,8 @@ internal static class SummonerEndpoints
             ColdDemand.Synchronous,
             request.CancellationToken);
         var details = SummonerDetails.Of(spell, context.Catalog, images);
-        return context.Answer(details with { Canonical = canonical.Link }, images);
+        return context.Answer(
+            details with { Canonical = canonical.Link ?? details.Canonical },
+            images);
     }
 }

@@ -1,10 +1,12 @@
 import type { CatalogMeta } from '../api/generated/models/catalog-meta';
 
-// What a spec leaves unsaid: one version, read in en_US alone, and the patterns of the API.
+// What a spec leaves unsaid: one version, read in en_US alone, and the patterns of the API;
+// a single version has no page of changes.
 const BASE: CatalogMeta = {
   latest: '16.19.1',
   versions: ['16.19.1'],
   readyVersions: ['16.19.1'],
+  oldestChangesVersion: null,
   versionPattern: String.raw`\d+(?:\.\d+)+`,
   languages: ['en_US'],
   languagePattern: '[a-z]{2}_[A-Z]{2}',

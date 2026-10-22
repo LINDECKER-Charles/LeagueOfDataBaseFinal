@@ -13,6 +13,7 @@ import { championSeo } from './champion-seo';
 import { championsListSeo } from './champions-list-seo';
 import type { HeadSource } from './head-source';
 import type { Translate } from './translate';
+import { detailStateOf } from '../../../../core/testing/detail-state-of';
 
 const CONTEXT: PageContext = { locale: 'en', version: '16.19.1', pinned: false, language: 'en_US' };
 const PINNED: PageContext = { ...CONTEXT, version: '15.14.1', pinned: true };
@@ -44,6 +45,7 @@ const ANNIE: ChampionCard = {
 
 const DETAILS: ChampionDetails = {
   canonicalPath: 'champions/Annie',
+  ...detailStateOf('champions/Annie'),
   version: '16.19.1',
   language: 'en_US',
   profile: ANNIE,
@@ -90,10 +92,8 @@ describe('championSeo', () => {
   it('hands over the canonical the API places a pinned champion at', () => {
     const canonical = { version: null, path: 'champions/Annie' };
     const page = championSeo({ context: PINNED, details: { ...DETAILS, canonical } }, translate);
-    const unplaced = championSeo({ context: PINNED, details: DETAILS }, translate);
 
     expect(page).toMatchObject({ version: '15.14.1', canonical });
-    expect(unplaced).toMatchObject({ canonical: null });
   });
 
   it('describes the path home › champions › champion, then the champion as a character', () => {

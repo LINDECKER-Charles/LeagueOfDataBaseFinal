@@ -80,8 +80,8 @@ internal static class ChampionEndpoints
         }
 
         var images = await ImagesOfAsync(context, champion, request.CancellationToken);
-        var details = ChampionDetails.Of(champion, context.Catalog, images)
-            with { Canonical = canonical.Link };
+        var page = ChampionDetails.Of(champion, context.Catalog, images);
+        var details = page with { Canonical = canonical.Link ?? page.Canonical };
         // An app gets more than the web: no cache may hand one the other's page.
         request.Context.Response.Headers.Append(HeaderNames.Vary, ClientHeader.Name);
         return context.Answer(

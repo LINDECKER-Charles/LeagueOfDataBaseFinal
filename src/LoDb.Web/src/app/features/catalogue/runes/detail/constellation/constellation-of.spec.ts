@@ -2,6 +2,7 @@ import type { CatalogImage } from '../../../../../core/api/generated/models/cata
 import type { RuneEntry } from '../../../../../core/api/generated/models/rune-entry';
 import type { RuneTreeDetails } from '../../../../../core/api/generated/models/rune-tree-details';
 import { constellationOf } from './constellation-of';
+import { detailStateOf } from '../../../../../core/testing/detail-state-of';
 
 const IMAGE: CatalogImage = { status: 'present', url: '/cdn/blobs/a.png' };
 
@@ -20,6 +21,7 @@ function rune(id: number, key: string, texts: Partial<RuneEntry> = {}): RuneEntr
 function treeOf(slots: RuneTreeDetails['slots']): RuneTreeDetails {
   return {
     canonicalPath: 'runes/precision',
+    ...detailStateOf('runes/precision'),
     language: 'en_US',
     version: '16.19.1',
     profile: {

@@ -7,7 +7,11 @@ import { ChampionArt } from '../models/champion-art';
 import { ChampionCard } from '../models/champion-card';
 import { ChampionSkin } from '../models/champion-skin';
 import { DetailNeighbours } from '../models/detail-neighbours';
+import { EntityChanges } from '../models/entity-changes';
+import { EntityState } from '../models/entity-state';
 import { ImageVariant } from '../models/image-variant';
+import { StateHistoryEntry } from '../models/state-history-entry';
+import { StateNext } from '../models/state-next';
 
 /**
  * `GET /api/catalog/{version}/{lang}/champions/{id}`: the card, then the lore, the
@@ -39,7 +43,12 @@ export interface ChampionDetails {
    */
   art: ChampionArt;
   blurb: string;
-  canonical?: (null | CanonicalLink);
+
+  /**
+   * The page search engines index for the entity: never null, the page itself when no
+   * other is.
+   */
+  canonical: CanonicalLink;
 
   /**
    * The page the routing redirects a stale or slugless URL to.
@@ -52,8 +61,14 @@ export interface ChampionDetails {
    * older version, the hotlinked `art.centered` standing in.
    */
   centeredArtVariants: Array<ImageVariant>;
+  changes: (null | EntityChanges);
   contentLanguage?: (string | null);
   enemyTips: Array<string>;
+
+  /**
+   * The entity's states up to the page's, newest first; every state on the short URL.
+   */
+  history: Array<StateHistoryEntry>;
   language: string;
   lore?: (string | null);
 
@@ -61,6 +76,12 @@ export interface ChampionDetails {
    * The champions before and after it in the list's order.
    */
   neighbours: DetailNeighbours;
+  next: (null | StateNext);
+
+  /**
+   * Whether the latest version holds the entity (« Dans le dernier patch »).
+   */
+  presentInLatest: boolean;
 
   /**
    * The facts of the list's card.
@@ -73,5 +94,6 @@ export interface ChampionDetails {
    * the web; to remove once the client policy's minimum of each app reads `…/skins`.
    */
   skins?: (Array<ChampionSkin> | null);
+  state: (null | EntityState);
   version: string;
 }

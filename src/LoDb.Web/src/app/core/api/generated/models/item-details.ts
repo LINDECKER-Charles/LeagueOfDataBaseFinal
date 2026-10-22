@@ -3,10 +3,14 @@
 
 import { CanonicalLink } from '../models/canonical-link';
 import { DetailNeighbours } from '../models/detail-neighbours';
+import { EntityChanges } from '../models/entity-changes';
 import { EntityLink } from '../models/entity-link';
+import { EntityState } from '../models/entity-state';
 import { ItemCard } from '../models/item-card';
 import { ItemUpgrade } from '../models/item-upgrade';
 import { RecipeStep } from '../models/recipe-step';
+import { StateHistoryEntry } from '../models/state-history-entry';
+import { StateNext } from '../models/state-next';
 
 /**
  * `GET /api/catalog/{version}/{lang}/items/{id}`: the card, then the description, the
@@ -20,12 +24,18 @@ export interface ItemDetails {
    * Classic item, never for a current one (UP 6).
    */
   availableMaps: Array<number>;
-  canonical?: (null | CanonicalLink);
+
+  /**
+   * The page search engines index for the entity: never null, the page itself when no
+   * other is.
+   */
+  canonical: CanonicalLink;
 
   /**
    * The page the routing redirects a stale or slugless URL to.
    */
   canonicalPath: string;
+  changes: (null | EntityChanges);
   contentLanguage?: (string | null);
 
   /**
@@ -38,12 +48,23 @@ export interface ItemDetails {
    * Riot's rich text, unresolved template tokens removed.
    */
   description: string;
+
+  /**
+   * The entity's states up to the page's, newest first; every state on the short URL.
+   */
+  history: Array<StateHistoryEntry>;
   language: string;
 
   /**
    * The items before and after it in the list's order.
    */
   neighbours: DetailNeighbours;
+  next: (null | StateNext);
+
+  /**
+   * Whether the latest version holds the entity (« Dans le dernier patch »).
+   */
+  presentInLatest: boolean;
 
   /**
    * The facts of the list's card, the edition and its twin among them.
@@ -52,6 +73,7 @@ export interface ItemDetails {
   recipe?: (null | RecipeStep);
   requiredAlly?: (null | EntityLink);
   requiredChampion?: (null | EntityLink);
+  state: (null | EntityState);
 
   /**
    * The listed items it builds into, in the upstream order, with their price.

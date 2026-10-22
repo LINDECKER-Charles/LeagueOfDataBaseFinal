@@ -1,4 +1,5 @@
 using LoDb.Api.Hosting;
+using LoDb.Api.Modules.Catalog.Changes;
 using LoDb.Api.Modules.Catalog.Champions;
 using LoDb.Api.Modules.Catalog.Http;
 using LoDb.Api.Modules.Catalog.Items;
@@ -52,6 +53,7 @@ internal static class CatalogModule
         RuneEndpoints.Map(catalog);
         SummonerEndpoints.Map(catalog);
         SearchEndpoint.Map(catalog);
+        ChangesEndpoint.Map(catalog);
         WarmUpEndpoint.Map(catalog);
 
         PickerEndpoints.Map(

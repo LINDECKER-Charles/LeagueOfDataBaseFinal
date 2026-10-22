@@ -12,6 +12,7 @@ import { CatalogueHead } from '../../shared/codex/head/catalogue-head';
 import type { CatalogueTexts } from '../../shared/codex/head/catalogue-texts';
 import { provideMeta } from '../../shared/testing/provide-meta';
 import { RuneDetail } from './rune-detail';
+import { detailStateOf } from '../../../../core/testing/detail-state-of';
 
 const CONTEXT: PageContext = { locale: 'en', version: '16.19.1', pinned: false, language: 'en_US' };
 const IMAGE: CatalogImage = { status: 'present', url: '/cdn/blobs/domination.png' };
@@ -24,6 +25,7 @@ const TREES: RuneTreeCard[] = ['Precision', 'Domination', 'Sorcery'].map((key, i
 }));
 const DETAILS: RuneTreeDetails = {
   canonicalPath: 'runes/domination',
+  ...detailStateOf('runes/domination'),
   language: 'en_US',
   version: CONTEXT.version,
   profile: TREES[1] as RuneTreeCard,

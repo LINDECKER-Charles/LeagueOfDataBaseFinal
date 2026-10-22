@@ -23,6 +23,8 @@ export type { GetSummoner$Params as GetSummoner$Params } from './fn/catalog/get-
 export { getSummoner as getSummoner } from './fn/catalog/get-summoner';
 export type { SearchCatalog$Params as SearchCatalog$Params } from './fn/catalog/search-catalog';
 export { searchCatalog as searchCatalog } from './fn/catalog/search-catalog';
+export type { GetPatchChanges$Params as GetPatchChanges$Params } from './fn/catalog/get-patch-changes';
+export { getPatchChanges as getPatchChanges } from './fn/catalog/get-patch-changes';
 export type { WarmUpCatalog$Params as WarmUpCatalog$Params } from './fn/catalog/warm-up-catalog';
 export { warmUpCatalog as warmUpCatalog } from './fn/catalog/warm-up-catalog';
 export type { PickChampions$Params as PickChampions$Params } from './fn/pickers/pick-champions';

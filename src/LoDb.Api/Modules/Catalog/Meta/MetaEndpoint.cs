@@ -75,6 +75,7 @@ internal sealed partial class MetaEndpoint(
         Latest = versions.Latest?.Value,
         Versions = [.. versions.Listed.Select(static version => version.Value)],
         ReadyVersions = [.. versions.Ready.Select(static version => version.Value)],
+        OldestChangesVersion = null,
         VersionPattern = PatchVersion.Pattern,
         Languages = [.. languages.Select(static language => language.Code)],
         LanguagePattern = DdragonLanguage.Pattern,

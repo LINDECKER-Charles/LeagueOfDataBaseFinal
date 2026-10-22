@@ -48,6 +48,12 @@ export interface CatalogMeta {
   locales: Array<LocaleLanguage>;
 
   /**
+   * The oldest version that has a page of changes: every version from it up to the latest
+   * one has one. Null while the index covers fewer than two versions.
+   */
+  oldestChangesVersion: (string | null);
+
+  /**
    * The versions ingested ahead of any visit, newest first.
    */
   readyVersions: Array<string>;

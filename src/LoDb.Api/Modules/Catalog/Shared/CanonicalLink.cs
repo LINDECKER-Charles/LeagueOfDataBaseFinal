@@ -1,4 +1,5 @@
 using LoDb.Ingestion.Catalog.Canonicals;
+using LoDb.Ingestion.Catalog.Snapshots;
 
 namespace LoDb.Api.Modules.Catalog.Shared;
 
@@ -16,6 +17,15 @@ internal sealed record CanonicalLink
 
     /// <summary>The entity's path in that version.</summary>
     public required string Path { get; init; }
+
+    /// <summary>
+    /// The page itself, in its version: a detail's canonical until the rule decides another.
+    /// </summary>
+    public static CanonicalLink PageItself(CatalogSnapshot catalog, string path)
+    {
+        ArgumentNullException.ThrowIfNull(catalog);
+        return new CanonicalLink { Version = catalog.Version.Value, Path = path };
+    }
 
     public static CanonicalLink? Of(CanonicalPage? page) => page is null
         ? null

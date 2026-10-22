@@ -12,6 +12,7 @@ import { CatalogueHead } from '../../shared/codex/head/catalogue-head';
 import type { CatalogueTexts } from '../../shared/codex/head/catalogue-texts';
 import { provideMeta } from '../../shared/testing/provide-meta';
 import { SummonerDetail } from './summoner-detail';
+import { detailStateOf } from '../../../../core/testing/detail-state-of';
 
 const CONTEXT: PageContext = { locale: 'en', version: '16.19.1', pinned: false, language: 'en_US' };
 const CARD: SummonerCard = {
@@ -37,6 +38,7 @@ const CARD: SummonerCard = {
 };
 const DETAILS: SummonerDetails = {
   canonicalPath: CARD.canonicalPath,
+  ...detailStateOf(CARD.canonicalPath),
   language: 'en_US',
   version: CONTEXT.version,
   cost: [0],

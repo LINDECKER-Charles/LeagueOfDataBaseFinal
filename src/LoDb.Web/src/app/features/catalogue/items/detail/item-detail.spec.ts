@@ -12,6 +12,7 @@ import { CatalogueHead } from '../../shared/codex/head/catalogue-head';
 import type { CatalogueTexts } from '../../shared/codex/head/catalogue-texts';
 import { provideMeta } from '../../shared/testing/provide-meta';
 import { ItemDetail } from './item-detail';
+import { detailStateOf } from '../../../../core/testing/detail-state-of';
 
 const CONTEXT: PageContext = { locale: 'en', version: '16.19.1', pinned: false, language: 'en_US' };
 const IMAGE: CatalogImage = { status: 'present', url: '/cdn/blobs/a.png' };
@@ -38,6 +39,7 @@ const CARD: ItemCard = {
 const DETAILS: ItemDetails = {
   availableMaps: [453],
   canonicalPath: CARD.canonicalPath,
+  ...detailStateOf(CARD.canonicalPath),
   description: '<mainText><stats>50% Base Mana Regen</stats></mainText>',
   language: 'en_US',
   version: CONTEXT.version,

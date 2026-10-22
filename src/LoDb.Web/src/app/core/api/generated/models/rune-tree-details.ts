@@ -3,28 +3,50 @@
 
 import { CanonicalLink } from '../models/canonical-link';
 import { DetailNeighbours } from '../models/detail-neighbours';
+import { EntityChanges } from '../models/entity-changes';
+import { EntityState } from '../models/entity-state';
 import { RuneRow } from '../models/rune-row';
 import { RuneTreeCard } from '../models/rune-tree-card';
+import { StateHistoryEntry } from '../models/state-history-entry';
+import { StateNext } from '../models/state-next';
 
 /**
  * `GET /api/catalog/{version}/{lang}/runes/{id}`: a rune path and its rows, every image
  * resolved, and the paths on either side of it in the list.
  */
 export interface RuneTreeDetails {
-  canonical?: (null | CanonicalLink);
+
+  /**
+   * The page search engines index for the entity: never null, the page itself when no
+   * other is.
+   */
+  canonical: CanonicalLink;
 
   /**
    * The page the routing redirects a stale or slugless URL to.
    */
   canonicalPath: string;
+  changes: (null | EntityChanges);
   contentLanguage?: (string | null);
+
+  /**
+   * The entity's states up to the page's, newest first; every state on the short URL.
+   */
+  history: Array<StateHistoryEntry>;
   language: string;
 
   /**
    * The paths before and after it in the list's order.
    */
   neighbours: DetailNeighbours;
+  next: (null | StateNext);
+
+  /**
+   * Whether the latest version holds the entity (« Dans le dernier patch »).
+   */
+  presentInLatest: boolean;
   profile: RuneTreeCard;
   slots: Array<RuneRow>;
+  state: (null | EntityState);
   version: string;
 }

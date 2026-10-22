@@ -16,6 +16,12 @@ internal sealed record CatalogMeta
     /// <summary>Every version Data Dragon lists, newest first, the long tail included.</summary>
     public required IReadOnlyList<string> Versions { get; init; }
 
+    /// <summary>
+    /// The oldest version that has a page of changes: every version from it up to the latest
+    /// one has one. Null while the index covers fewer than two versions.
+    /// </summary>
+    public required string? OldestChangesVersion { get; init; }
+
     /// <summary>The versions ingested ahead of any visit, newest first.</summary>
     public required IReadOnlyList<string> ReadyVersions { get; init; }
 

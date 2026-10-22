@@ -79,6 +79,8 @@ internal static class ItemEndpoints
             ColdDemand.Synchronous,
             request.CancellationToken);
         var details = ItemDetails.Of(page, images);
-        return context.Answer(details with { Canonical = canonical.Link }, images);
+        return context.Answer(
+            details with { Canonical = canonical.Link ?? details.Canonical },
+            images);
     }
 }

@@ -847,6 +847,75 @@
         }
       }
     },
+    "/api/catalog/{version}/{lang}/changes": {
+      "get": {
+        "tags": [
+          "Catalog"
+        ],
+        "summary": "What a patch changed: entities whose state opens there, and retired.",
+        "operationId": "getPatchChanges",
+        "parameters": [
+          {
+            "name": "version",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PatchChanges"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/catalog/{version}/{lang}/warm-up": {
       "get": {
         "tags": [
@@ -8710,6 +8779,7 @@
       "CatalogMeta": {
         "required": [
           "versions",
+          "oldestChangesVersion",
           "readyVersions",
           "versionPattern",
           "languages",
@@ -8735,6 +8805,13 @@
               "type": "string"
             },
             "description": "Every version Data Dragon lists, newest first, the long tail included."
+          },
+          "oldestChangesVersion": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The oldest version that has a page of changes: every version from it up to the latest\none has one. Null while the index covers fewer than two versions."
           },
           "readyVersions": {
             "type": "array",
@@ -9026,6 +9103,12 @@
           "version",
           "language",
           "canonicalPath",
+          "canonical",
+          "state",
+          "history",
+          "next",
+          "presentInLatest",
+          "changes",
           "profile",
           "blurb",
           "allyTips",
@@ -9056,13 +9139,50 @@
             "description": "The page the routing redirects a stale or slugless URL to."
           },
           "canonical": {
+            "description": "The page search engines index for the entity: never null, the page itself when no\nother is.",
+            "$ref": "#/components/schemas/CanonicalLink"
+          },
+          "state": {
             "oneOf": [
               {
                 "type": "null"
               },
               {
-                "description": "The page search engines index for the entity (ADR 0005, amendment of 2026-10-14): its\nshort URL at the latest version, or its page in the last version that held it;\n`null` when this page stays out of the index.",
-                "$ref": "#/components/schemas/CanonicalLink"
+                "description": "The state that holds the page's version; null outside the index (a version older than\nit, listed after the latest, or before any promotion).",
+                "$ref": "#/components/schemas/EntityState"
+              }
+            ]
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StateHistoryEntry"
+            },
+            "description": "The entity's states up to the page's, newest first; every state on the short URL."
+          },
+          "next": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "What followed the page's state, when it is closed; null otherwise.",
+                "$ref": "#/components/schemas/StateNext"
+              }
+            ]
+          },
+          "presentInLatest": {
+            "type": "boolean",
+            "description": "Whether the latest version holds the entity (« Dans le dernier patch »)."
+          },
+          "changes": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "What the page's state changed: on its opener, and on the short URL when the open state\nopened at the latest version; null otherwise.",
+                "$ref": "#/components/schemas/EntityChanges"
               }
             ]
           },
@@ -9410,6 +9530,128 @@
           }
         },
         "description": "A build's champion on the patch it renders on; a ghost when the patch lacks it."
+      },
+      "ChangedField": {
+        "required": [
+          "field",
+          "subject"
+        ],
+        "type": "object",
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/ChangeField"
+          },
+          "subject": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "The sub-entity of the field; null for a template without one.",
+                "$ref": "#/components/schemas/ChangeSubject"
+              }
+            ]
+          }
+        },
+        "description": "A field a state's opener changed, without its values: what the history and the patch page\nlist, one i18n label per ChangeField."
+      },
+      "ChangeField": {
+        "enum": [
+          "name",
+          "description",
+          "title",
+          "lore",
+          "roles",
+          "resource",
+          "rating",
+          "stat",
+          "statPerLevel",
+          "allyTips",
+          "enemyTips",
+          "passiveName",
+          "passiveDescription",
+          "spellName",
+          "spellDescription",
+          "spellCooldown",
+          "spellCost",
+          "spellRange",
+          "spellMaxRank",
+          "spellCharges",
+          "skins",
+          "skinName",
+          "plaintext",
+          "goldTotal",
+          "goldBase",
+          "goldSell",
+          "purchasable",
+          "recipe",
+          "statPercent",
+          "maps",
+          "tags",
+          "depth",
+          "consumable",
+          "requiredChampion",
+          "requiredAlly",
+          "runeSlot",
+          "runeName",
+          "runeShortDesc",
+          "runeLongDesc",
+          "cooldown",
+          "cost",
+          "costType",
+          "range",
+          "summonerLevel",
+          "charges",
+          "modes"
+        ],
+        "type": "string",
+        "description": "The closed set of field templates a page of an entity displays and the index compares\n(docs/produit/seo-une-page-par-etat.md): what a state's changed fields name, and the key\nof their i18n label."
+      },
+      "ChangeSubject": {
+        "required": [
+          "kind",
+          "key",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/SubjectKind"
+          },
+          "key": {
+            "type": "string",
+            "description": "`q`, a stat in snake_case (the key of its `stat.*` label), a rating, a rune or\nskin id, a rune row token (`keystone`, `row1`…)."
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Its name in the page's language (a spell's, a rune's, a skin's); null where the front\nlabels the key itself (stats, ratings, rows), or where the answer reads no catalog (the\nhistory)."
+          }
+        },
+        "description": "The sub-entity a changed field belongs to: a spell slot, a stat, a rating, a rune, a row of\nrunes or a skin."
+      },
+      "ChangeValue": {
+        "required": [
+          "value",
+          "label"
+        ],
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "description": "A number, a text, a code, an id, `true` or `false`, as its `valueKind` says."
+          },
+          "label": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The name, in the page's language, of the item, champion, rune or skin\nstring ChangeValue.Value identifies; null for any other kind of value."
+          }
+        },
+        "description": "A value of a changed field, as an invariant string, and its display name when it\nis the id of an entity or a sub-entity."
       },
       "CheckoutCreated": {
         "required": [
@@ -9960,6 +10202,43 @@
         },
         "description": "A verified e-mail."
       },
+      "EntityChangeKind": {
+        "enum": [
+          "new",
+          "changed",
+          "returned"
+        ],
+        "type": "string",
+        "description": "How a state of an entity begins, as its opener shows it (« Nouveau dans ce patch »,\n« Ce qui a changé dans ce patch », « De retour »)."
+      },
+      "EntityChanges": {
+        "required": [
+          "kind",
+          "comparedVersion",
+          "fields"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/EntityChangeKind"
+          },
+          "comparedVersion": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The version compared to: the last one of the entity's previous state, a return\nincluded; null for a new entity."
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FieldChange"
+            },
+            "description": "The fields changed; none for a new entity."
+          }
+        },
+        "description": "What the state of the page changed when it opened: on an opener's page, and on the\nshort URL when the open state opened at the latest version."
+      },
       "EntityLink": {
         "required": [
           "id",
@@ -9995,6 +10274,58 @@
           }
         },
         "description": "Another entry a page links to: a recipe component, an upgrade, a bound champion."
+      },
+      "EntityState": {
+        "required": [
+          "openerVersion",
+          "lastVersion",
+          "isOpen",
+          "isOpener",
+          "kind",
+          "changedFields",
+          "openerLink",
+          "canonical"
+        ],
+        "type": "object",
+        "properties": {
+          "openerVersion": {
+            "type": "string",
+            "description": "The version that opened the state, whose page search engines index."
+          },
+          "lastVersion": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The last version of a closed state; null while it is open. An open state's range never\nnames the latest version (« depuis le patch X »): a promotion changes nothing of it."
+          },
+          "isOpen": {
+            "type": "boolean"
+          },
+          "isOpener": {
+            "type": "boolean",
+            "description": "Whether the page's version is the opener."
+          },
+          "kind": {
+            "$ref": "#/components/schemas/EntityChangeKind"
+          },
+          "changedFields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChangedField"
+            },
+            "description": "The fields the opener changed; none for a new entity."
+          },
+          "openerLink": {
+            "description": "The opener's page, which « Inchangé depuis le patch X » links: its versioned URL, or the\nshort URL when the opener is the latest version.",
+            "$ref": "#/components/schemas/CanonicalLink"
+          },
+          "canonical": {
+            "description": "The state's canonical: its opener once closed, the short URL while open.",
+            "$ref": "#/components/schemas/CanonicalLink"
+          }
+        },
+        "description": "The state of the entity that holds the page's version: the run of versions over\nwhich its page shows the same thing, and the version that opened it."
       },
       "FavoriteBoard": {
         "required": [
@@ -10133,6 +10464,72 @@
           }
         },
         "description": "A favorite slot: what is stored, and how the resolved patch shows it."
+      },
+      "FieldChange": {
+        "required": [
+          "field",
+          "subject",
+          "kind",
+          "valueKind",
+          "before",
+          "after",
+          "segments"
+        ],
+        "type": "object",
+        "properties": {
+          "field": {
+            "$ref": "#/components/schemas/ChangeField"
+          },
+          "subject": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ChangeSubject"
+              }
+            ]
+          },
+          "kind": {
+            "description": "How to show the values: one before and after, a list in order, a set (what was added\nand removed), or a text by its segments.",
+            "$ref": "#/components/schemas/FieldKind"
+          },
+          "valueKind": {
+            "$ref": "#/components/schemas/ValueKind"
+          },
+          "before": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChangeValue"
+            },
+            "description": "The values before; empty when the field is new, or when its localized values are equal\n(the value after shows alone)."
+          },
+          "after": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChangeValue"
+            },
+            "description": "The values after; empty when the field is gone."
+          },
+          "segments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TextSegment"
+            },
+            "description": "A text's diff, word by word (character by character in ja, zh, th), to write as text in\n`&lt;del&gt;` and `&lt;ins&gt;`, never as HTML; empty for another kind."
+          }
+        },
+        "description": " A field of the block « Ce qui a changé dans ce patch », its values in the page's language\n: only the fields the index marks changed, each shown even when its two localized\n values are equal."
+      },
+      "FieldKind": {
+        "enum": [
+          "value",
+          "list",
+          "set",
+          "text"
+        ],
+        "type": "string",
+        "description": "How the values of a field compare and show."
       },
       "ForgotPasswordRequest": {
         "required": [
@@ -10555,6 +10952,12 @@
           "version",
           "language",
           "canonicalPath",
+          "canonical",
+          "state",
+          "history",
+          "next",
+          "presentInLatest",
+          "changes",
           "profile",
           "description",
           "availableMaps",
@@ -10580,13 +10983,50 @@
             "description": "The page the routing redirects a stale or slugless URL to."
           },
           "canonical": {
+            "description": "The page search engines index for the entity: never null, the page itself when no\nother is.",
+            "$ref": "#/components/schemas/CanonicalLink"
+          },
+          "state": {
             "oneOf": [
               {
                 "type": "null"
               },
               {
-                "description": "The page search engines index for the entity (ADR 0005, amendment of 2026-10-14): its\nshort URL at the latest version, or its page in the last version that held it;\n`null` when this page stays out of the index.",
-                "$ref": "#/components/schemas/CanonicalLink"
+                "description": "The state that holds the page's version; null outside the index (a version older than\nit, listed after the latest, or before any promotion).",
+                "$ref": "#/components/schemas/EntityState"
+              }
+            ]
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StateHistoryEntry"
+            },
+            "description": "The entity's states up to the page's, newest first; every state on the short URL."
+          },
+          "next": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "What followed the page's state, when it is closed; null otherwise.",
+                "$ref": "#/components/schemas/StateNext"
+              }
+            ]
+          },
+          "presentInLatest": {
+            "type": "boolean",
+            "description": "Whether the latest version holds the entity (« Dans le dernier patch »)."
+          },
+          "changes": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "What the page's state changed: on its opener, and on the short URL when the open state\nopened at the latest version; null otherwise.",
+                "$ref": "#/components/schemas/EntityChanges"
               }
             ]
           },
@@ -11380,6 +11820,108 @@
           }
         },
         "description": "A pass to launch: the epoch it writes and its perimeter, as explicit lists. Every field is\noptional: empty, it fills the served epoch with every page of every older patch, newest\nfirst."
+      },
+      "PatchChangeEntry": {
+        "required": [
+          "id",
+          "name",
+          "image",
+          "kind",
+          "changedFields",
+          "link"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string",
+            "description": "Its name in the page's language: from the version's catalog, or from the version\nbefore's for a retired entity."
+          },
+          "image": {
+            "$ref": "#/components/schemas/CatalogImage"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/PatchChangeKind"
+          },
+          "changedFields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChangedField"
+            },
+            "description": "The fields a change or a return changed; none for a new or retired one."
+          },
+          "link": {
+            "description": "Its page at the version (the short URL when the version is the latest); for a retired\nentity, the opener of its last state.",
+            "$ref": "#/components/schemas/CanonicalLink"
+          }
+        },
+        "description": "An entity a patch changed, as its page of changes lists it."
+      },
+      "PatchChangeGroup": {
+        "required": [
+          "type",
+          "entries"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/ResourceType"
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PatchChangeEntry"
+            },
+            "description": "New, changed, returned, then retired entities, each by name."
+          }
+        },
+        "description": "The entities of one resource a patch changed."
+      },
+      "PatchChangeKind": {
+        "enum": [
+          "new",
+          "changed",
+          "returned",
+          "retired"
+        ],
+        "type": "string",
+        "description": "What a patch did to an entity, as its page of changes groups it."
+      },
+      "PatchChanges": {
+        "required": [
+          "version",
+          "language",
+          "previousVersion",
+          "hasChanges",
+          "groups"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string"
+          },
+          "previousVersion": {
+            "type": "string",
+            "description": "The version compared to: the covered version before it."
+          },
+          "hasChanges": {
+            "type": "boolean",
+            "description": "Whether the patch changed anything; a page without is `noindex, follow`, and\nout of the sitemaps."
+          },
+          "groups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PatchChangeGroup"
+            },
+            "description": "One group per resource that changed, in the order of the resources."
+          }
+        },
+        "description": "`GET /api/catalog/{version}/{lang}/changes`: what a patch changed against the version\nlisted before it: the entities whose state opens there and those it retired."
       },
       "PerkView": {
         "required": [
@@ -14102,6 +14644,12 @@
           "version",
           "language",
           "canonicalPath",
+          "canonical",
+          "state",
+          "history",
+          "next",
+          "presentInLatest",
+          "changes",
           "profile",
           "slots",
           "neighbours"
@@ -14125,13 +14673,50 @@
             "description": "The page the routing redirects a stale or slugless URL to."
           },
           "canonical": {
+            "description": "The page search engines index for the entity: never null, the page itself when no\nother is.",
+            "$ref": "#/components/schemas/CanonicalLink"
+          },
+          "state": {
             "oneOf": [
               {
                 "type": "null"
               },
               {
-                "description": "The page search engines index for the entity (ADR 0005, amendment of 2026-10-14): its\nshort URL at the latest version, or its page in the last version that held it;\n`null` when this page stays out of the index.",
-                "$ref": "#/components/schemas/CanonicalLink"
+                "description": "The state that holds the page's version; null outside the index (a version older than\nit, listed after the latest, or before any promotion).",
+                "$ref": "#/components/schemas/EntityState"
+              }
+            ]
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StateHistoryEntry"
+            },
+            "description": "The entity's states up to the page's, newest first; every state on the short URL."
+          },
+          "next": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "What followed the page's state, when it is closed; null otherwise.",
+                "$ref": "#/components/schemas/StateNext"
+              }
+            ]
+          },
+          "presentInLatest": {
+            "type": "boolean",
+            "description": "Whether the latest version holds the entity (« Dans le dernier patch »)."
+          },
+          "changes": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "What the page's state changed: on its opener, and on the short URL when the open state\nopened at the latest version; null otherwise.",
+                "$ref": "#/components/schemas/EntityChanges"
               }
             ]
           },
@@ -14440,6 +15025,15 @@
           }
         },
         "description": "`GET /api/catalog/{version}/{lang}/search`: the hits, resource by resource in the\norder champions, items, runes, summoners, each in the upstream order and capped."
+      },
+      "SegmentKind": {
+        "enum": [
+          "same",
+          "removed",
+          "added"
+        ],
+        "type": "string",
+        "description": "What a segment of a text diff is to the text before."
       },
       "ServiceProbe": {
         "required": [
@@ -14754,6 +15348,79 @@
           }
         }
       },
+      "StateHistoryEntry": {
+        "required": [
+          "openerVersion",
+          "lastVersion",
+          "kind",
+          "changedFields",
+          "link"
+        ],
+        "type": "object",
+        "properties": {
+          "openerVersion": {
+            "type": "string"
+          },
+          "lastVersion": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The last version of a closed state; null while open (« depuis le patch X »)."
+          },
+          "kind": {
+            "$ref": "#/components/schemas/EntityChangeKind"
+          },
+          "changedFields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChangedField"
+            }
+          },
+          "link": {
+            "description": "The state's canonical: its opener once closed, the short URL while open.",
+            "$ref": "#/components/schemas/CanonicalLink"
+          }
+        },
+        "description": "A state of the entity in the block « Historique », read from the index alone: no\nvalue, subjects without a name."
+      },
+      "StateNext": {
+        "required": [
+          "kind",
+          "version",
+          "link"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/StateNextKind"
+          },
+          "version": {
+            "type": "string",
+            "description": "The version that changed or no longer holds the entity."
+          },
+          "link": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "The next opener's versioned URL for a change (a 301 while that version is the latest,\naccepted: a frozen page never changes); null for a removal.",
+                "$ref": "#/components/schemas/CanonicalLink"
+              }
+            ]
+          }
+        },
+        "description": "What followed a closed state (« Changé au patch X », « Retiré au patch X »), on a frozen\npage only."
+      },
+      "StateNextKind": {
+        "enum": [
+          "changed",
+          "removed"
+        ],
+        "type": "string",
+        "description": "How a closed state ended."
+      },
       "StepBody": {
         "type": "object",
         "properties": {
@@ -15004,6 +15671,18 @@
         },
         "description": "The champion, rune page and purchase order of a submitted build, in the shape the build\nstores them; the rules, not the binding, judge what is missing."
       },
+      "SubjectKind": {
+        "enum": [
+          "spellSlot",
+          "stat",
+          "rating",
+          "rune",
+          "runeSlot",
+          "skin"
+        ],
+        "type": "string",
+        "description": "What the subject of a field template designates; its key's shape is in\nFieldTokens."
+      },
       "SummonerCard": {
         "required": [
           "id",
@@ -15082,6 +15761,12 @@
           "version",
           "language",
           "canonicalPath",
+          "canonical",
+          "state",
+          "history",
+          "next",
+          "presentInLatest",
+          "changes",
           "profile",
           "cost",
           "range",
@@ -15107,13 +15792,50 @@
             "description": "The page the routing redirects a stale or slugless URL to."
           },
           "canonical": {
+            "description": "The page search engines index for the entity: never null, the page itself when no\nother is.",
+            "$ref": "#/components/schemas/CanonicalLink"
+          },
+          "state": {
             "oneOf": [
               {
                 "type": "null"
               },
               {
-                "description": "The page search engines index for the entity (ADR 0005, amendment of 2026-10-14): its\nshort URL at the latest version, or its page in the last version that held it;\n`null` when this page stays out of the index.",
-                "$ref": "#/components/schemas/CanonicalLink"
+                "description": "The state that holds the page's version; null outside the index (a version older than\nit, listed after the latest, or before any promotion).",
+                "$ref": "#/components/schemas/EntityState"
+              }
+            ]
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StateHistoryEntry"
+            },
+            "description": "The entity's states up to the page's, newest first; every state on the short URL."
+          },
+          "next": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "What followed the page's state, when it is closed; null otherwise.",
+                "$ref": "#/components/schemas/StateNext"
+              }
+            ]
+          },
+          "presentInLatest": {
+            "type": "boolean",
+            "description": "Whether the latest version holds the entity (« Dans le dernier patch »)."
+          },
+          "changes": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "What the page's state changed: on its opener, and on the short URL when the open state\nopened at the latest version; null otherwise.",
+                "$ref": "#/components/schemas/EntityChanges"
               }
             ]
           },
@@ -15327,6 +16049,22 @@
           }
         },
         "description": "A table and its weight on disk, indexes and TOAST included."
+      },
+      "TextSegment": {
+        "required": [
+          "kind",
+          "text"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/SegmentKind"
+          },
+          "text": {
+            "type": "string"
+          }
+        },
+        "description": "A run of tokens of a text diff, as plain text: the front writes it as text, never as HTML\n(Trusted Types, and Riot's bare `&lt;li&gt;` break the hydration)."
       },
       "TokenRequest": {
         "required": [
@@ -15598,6 +16336,19 @@
           }
         },
         "description": "The activity of one account: the account, if it still exists, and a page."
+      },
+      "ValueKind": {
+        "enum": [
+          "number",
+          "percent",
+          "text",
+          "flag",
+          "code",
+          "entity",
+          "range"
+        ],
+        "type": "string",
+        "description": "What a value of a field is, which tells the front how to show it. Every value travels as an\ninvariant string: OpenAPI refuses unions of numbers and strings."
       },
       "VerifyEmailRequest": {
         "required": [

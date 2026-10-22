@@ -77,6 +77,8 @@ internal static class RuneEndpoints
             ColdDemand.Synchronous,
             request.CancellationToken);
         var details = RuneTreeDetails.Of(tree, context.Catalog, images);
-        return context.Answer(details with { Canonical = canonical.Link }, images);
+        return context.Answer(
+            details with { Canonical = canonical.Link ?? details.Canonical },
+            images);
     }
 }
