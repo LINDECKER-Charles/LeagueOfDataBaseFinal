@@ -11,10 +11,13 @@ import { rememberedTarget } from './remembered-target';
 import { targetOf } from './target-of';
 
 const LATEST = '16.19.1';
+// The oldest version with a page of changes: OLDER has its lists, but no page of changes.
+const OLDEST_CHANGES = '16.18.1';
 const OLDER = '15.14.1';
 const META = catalogMetaOf({
   latest: LATEST,
-  versions: [LATEST, '16.18.1', OLDER],
+  versions: [LATEST, OLDEST_CHANGES, OLDER],
+  oldestChangesVersion: OLDEST_CHANGES,
   languages: ['en_US', 'en_GB', 'fr_FR', 'zh_CN', 'zh_TW', 'zh_MY'],
   locales: [
     { locale: 'en', language: 'en_US' },
@@ -115,6 +118,13 @@ describe('currentChoice', () => {
     expect(currentChoice(shown, META, OPTIONS)).toEqual({ version: OLDER, language: 'en:en_GB' });
   });
 
+  it('shows the latest patch on its page of changes when the kept patch has none', () => {
+    const remembered: Preferences = { version: OLDER, lang: 'en_GB' };
+    const shown = { url: '/en/changes', locale: 'en' as const, remembered };
+
+    expect(currentChoice(shown, META, OPTIONS)).toEqual({ version: LATEST, language: 'en:en_GB' });
+  });
+
   it('shows nothing while no version is ingested', () => {
     const empty = { ...META, latest: null, versions: [] };
     const shown = { url: '/en/', locale: 'en' as const, remembered: null };
@@ -209,7 +219,19 @@ describe('rememberedTarget', () => {
     {
       rule: "fills both axes of the page of the latest patch's changes, as a list",
       url: '/en/changes',
-      expected: { version: OLDER, lang: 'en_GB' },
+      remembered: { lang: 'en_GB', version: OLDEST_CHANGES },
+      expected: { version: OLDEST_CHANGES, lang: 'en_GB' },
+    },
+    {
+      rule: 'keeps the page of changes on the latest patch for a patch older than the oldest one',
+      url: '/en/changes',
+      expected: { lang: 'en_GB' },
+    },
+    {
+      rule: 'leaves the page of changes alone for a patch that has none and the own language',
+      url: '/en/changes',
+      remembered: { lang: null, version: OLDER },
+      expected: null,
     },
     { rule: 'leaves the pages that read no context', url: '/en/about', expected: null },
     { rule: 'leaves the pages outside the locales', url: '/b/abc123', expected: null },
