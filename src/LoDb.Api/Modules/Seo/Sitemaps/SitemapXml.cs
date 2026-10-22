@@ -10,9 +10,9 @@ namespace LoDb.Api.Modules.Seo.Sitemaps;
 /// known.
 /// </summary>
 /// <remarks>
-/// The only date is the promotion of the latest patch (<see cref="SitemapEntry"/>): a guessed
-/// one is worse than none. The writer escapes every value, so a location can never break the
-/// document.
+/// Dates are known moments only (<see cref="SitemapEntry"/>), never a guessed release date:
+/// a guessed one is worse than none. The writer escapes every value, so a location can never
+/// break the document.
 /// </remarks>
 internal static class SitemapXml
 {

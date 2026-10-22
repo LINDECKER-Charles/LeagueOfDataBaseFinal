@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.Options;
 
@@ -6,8 +5,8 @@ namespace LoDb.Api.Modules.Seo;
 
 /// <summary>
 /// Refuses at startup a canonical origin that is not a bare http(s) origin, since a path or a
-/// query would be copied into every URL of the sitemaps, a negative sitemap window, and an
-/// IndexNow key the protocol does not accept.
+/// query would be copied into every URL of the sitemaps, and an IndexNow key the protocol does
+/// not accept.
 /// </summary>
 internal sealed partial class SeoOptionsValidator : IValidateOptions<SeoOptions>
 {
@@ -21,13 +20,6 @@ internal sealed partial class SeoOptionsValidator : IValidateOptions<SeoOptions>
         if (!string.IsNullOrEmpty(origin) && !IsBareOrigin(origin))
         {
             failures.Add($"CanonicalOrigin must read as https://host[:port], not '{origin}'.");
-        }
-
-        if (options.SitemapVersionWindow < 0)
-        {
-            failures.Add(string.Create(
-                CultureInfo.InvariantCulture,
-                $"SitemapVersionWindow must be 0 or more, not {options.SitemapVersionWindow}."));
         }
 
         var key = options.IndexNowKey;

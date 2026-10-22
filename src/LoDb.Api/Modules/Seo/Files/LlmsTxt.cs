@@ -28,7 +28,11 @@ internal static class LlmsTxt
         ("items", "Every item: gold cost, statistics, build path and map availability"),
         ("runes", "Every rune path: keystones, slots and minor runes with effect text"),
         ("summoners", "Every summoner spell: cooldown, range, unlock level and game modes"),
-        (SitePages.PatchHistory, "Every game patch, each linking its four lists as they were"),
+        (SitePages.Changes, "What the latest patch changed, entity by entity"),
+        (
+            SitePages.PatchHistory,
+            "Every game patch, each linking its page of changes and its four lists as they were"
+        ),
     ];
 
     private static readonly (string Path, string About)[] AboutPages =
