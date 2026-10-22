@@ -14,7 +14,7 @@
   2026-10-20 »). Le 2026-10-22, les écouteurs de promotion s'exécutent dans un ordre qu'ils
   déclarent, l'index des états a sa tâche de réconciliation et les pages des états clos sont
   pré-calculées de nouveau sans dépendre de `AutoEnqueueOnPromotion` (voir § « Amendement
-  du 2026-10-22 ») : en vigueur dans le code, en prod à la bascule de la règle par état.
+  du 2026-10-22 ») : en vigueur en prod depuis le 2026-10-22, avec la règle par état.
 - **Suivi** (2026-10-22), écarts entre la table des tâches et le code :
   - le rollup des analytics tourne toutes les 5 minutes (`analytics.rollup`) ;
   - la rétention (`analytics.retention`, quotidienne) supprime les événements bruts à
@@ -235,10 +235,9 @@ Le catalogue pré-rendu ([ADR 0011](0011-catalogue-pre-rendu-et-cdn.md)) ajoute 
 
 ## Amendement du 2026-10-22 — index des états et ordre de la promotion
 
-*En vigueur dans le code (lots L0, L2 et L6 de la
-[spécification](../../produit/seo-une-page-par-etat.md)) ; il part en prod au même déploiement
-que la règle par état de l'[ADR 0005](0005-web-ssr-urls-et-seo.md) (amendement du
-2026-10-22).*
+*En vigueur en prod depuis le 2026-10-22 (lots L0, L2 et L6 de la
+[spécification](../../produit/seo-une-page-par-etat.md)), parti au même déploiement que la
+règle par état de l'[ADR 0005](0005-web-ssr-urls-et-seo.md) (amendement du 2026-10-22).*
 
 La règle par état lit un index des états d'entité, tenu en Postgres, que chaque promotion
 étend avant tout le reste. Or `VersionIngestion` appelle aujourd'hui les écouteurs dans

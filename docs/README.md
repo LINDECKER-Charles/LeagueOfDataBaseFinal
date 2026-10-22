@@ -53,8 +53,8 @@ s'appliquent pas à la stack en service.
 
 | Doc | Contenu |
 |---|---|
-| [seo-indexabilite.md](produit/seo-indexabilite.md) | **Fait foi pour le SEO** : cap, règle en vigueur dans le code, règle servie en prod jusqu'à la bascule, mesure, chronologie |
-| [seo-une-page-par-etat.md](produit/seo-une-page-par-etat.md) | Spécification de la règle « une page indexée par état » (décidée le 2026-10-22, en vigueur dans le code, en prod à sa bascule) et ce que l'implémentation a tranché |
+| [seo-indexabilite.md](produit/seo-indexabilite.md) | **Fait foi pour le SEO** : cap, règle en vigueur (en prod depuis le 2026-10-22), bascule, mesure, chronologie |
+| [seo-une-page-par-etat.md](produit/seo-une-page-par-etat.md) | Spécification de la règle « une page indexée par état » (décidée et en prod le 2026-10-22), ce que l'implémentation a tranché et les résultats |
 | [seo-anciens-patchs.md](produit/seo-anciens-patchs.md) | Diagnostic de la désindexation d'août et demande du 2026-10-14 (réalisée, remplacée le 2026-10-22) |
 | [pre-rendu-catalogue-cdn.md](produit/pre-rendu-catalogue-cdn.md) | Spécification du catalogue pré-rendu et du CDN : lots, réglages, tests ; état des lots en tête |
 | [pre-rendu-admin-ux.md](produit/pre-rendu-admin-ux.md) | Spécification de l'écran `/admin/prerender` (livrée le 2026-10-21) |

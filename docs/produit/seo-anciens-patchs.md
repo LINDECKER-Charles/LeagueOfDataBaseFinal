@@ -12,10 +12,9 @@ chaque patch épinglé et dans chaque langue.
 > [`seo-indexabilite.md`](seo-indexabilite.md).
 >
 > **Remplacé le 22 octobre 2026** : la règle qui a suivi ce diagnostic (une page indexée par
-> entité, celle du dernier patch) laisse tout l'historique hors de Google. Le code applique
-> désormais une page indexée par état d'entité
-> ([`seo-une-page-par-etat.md`](seo-une-page-par-etat.md)) ; la prod garde la règle du
-> 14 octobre jusqu'à la bascule de son déploiement.
+> entité, celle du dernier patch) laisse tout l'historique hors de Google. La prod applique
+> depuis le 22 octobre une page indexée par état d'entité
+> ([`seo-une-page-par-etat.md`](seo-une-page-par-etat.md)).
 
 ## 1. Constat (Search Console, relevé le 14 octobre 2026)
 

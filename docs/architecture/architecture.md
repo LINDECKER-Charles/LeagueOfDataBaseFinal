@@ -178,13 +178,13 @@ de l'hôte chaque nuit par le réseau `sauvegardes` et le rôle en lecture `lodb
 journal dans `backup_run` ([`sauvegardes.md`](../guides/sauvegardes.md)).
 
 **SEO.** Sitemaps, `robots.txt` et `llms.txt` viennent de l'API (`server.d/seo.conf`), les
-anciennes URL du site passent par `/api/legacy` (`server.d/legacy-redirects.conf`). Le code
+anciennes URL du site passent par `/api/legacy` (`server.d/legacy-redirects.conf`). Le site
 applique une page indexée par état d'entité (ADR 0005, amendement du 2026-10-22,
 [`seo-une-page-par-etat.md`](../produit/seo-une-page-par-etat.md)) : la canonique de chaque
 fiche vient de l'index des états (`StateView`), transmise au SSR, et chaque patch a sa page de
-changements (`/{locale}/[{version}/]changes`, `GET /api/catalog/{version}/{lang}/changes`). La
-prod sert la règle du 2026-10-14 (une page indexée par entité) jusqu'à la bascule de son
-déploiement. Doc vivante : [`seo-indexabilite.md`](../produit/seo-indexabilite.md).
+changements (`/{locale}/[{version}/]changes`, `GET /api/catalog/{version}/{lang}/changes`). En
+prod depuis le 2026-10-22, à la place de la règle du 2026-10-14 (une page indexée par entité).
+Doc vivante : [`seo-indexabilite.md`](../produit/seo-indexabilite.md).
 
 ## Environnements et livraison
 

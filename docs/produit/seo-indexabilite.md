@@ -1,7 +1,7 @@
 # SEO et indexation : cap, règle en vigueur, suivi
 
-Ce document dit la règle que le code applique pour être indexé, celle que la prod sert
-jusqu'à la bascule, et comment on mesure. Chaque décision vit dans son ADR, amendements
+Ce document dit la règle en vigueur pour être indexé, servie en prod depuis le 2026-10-22,
+et comment on mesure. Chaque décision vit dans son ADR, amendements
 datés compris (le plus récent l'emporte) : [ADR 0005](../reecriture/adr/0005-web-ssr-urls-et-seo.md) pour
 les URL, les canoniques et les sitemaps, [ADR 0011](../reecriture/adr/0011-catalogue-pre-rendu-et-cdn.md)
 pour les pages des anciens patchs. L'état des lieux du site Symfony (juillet 2026) est archivé :
@@ -18,12 +18,12 @@ pour les pages des anciens patchs. L'état des lieux du site Symfony (juillet 20
   ne bâtit pas sur un contournement en attendant une fenêtre de mesure : on pose la règle
   propre, on relève une base de départ, puis on ajuste sur la mesure.
 
-## Règle en vigueur dans le code : une page indexée par état
+## Règle en vigueur : une page indexée par état
 
 Celle de l'amendement du 2026-10-22 de l'ADR 0005 (une page indexée par état d'entité), avec
 ceux du même jour des ADR 0003 et 0011 : [spécification](seo-une-page-par-etat.md), dont le
-§ 11 dit ce que l'implémentation a tranché. **En vigueur dans le code** ; la prod la sert à la
-bascule de son déploiement (ci-dessous) et applique jusque-là la règle du 2026-10-14.
+§ 11 dit ce que l'implémentation a tranché. **En vigueur en prod depuis le 2026-10-22 à
+16:55 UTC** (bascule ci-dessous) ; elle y remplace la règle du 2026-10-14 (chronologie).
 
 Un **état** est une suite de patchs consécutifs où la fiche d'une entité ne change pas
 (empreinte de ce qu'elle affiche dans le catalogue en_US, images ignorées). Son premier patch,
@@ -43,21 +43,24 @@ catalogues, jamais celui de l'index.
 | Listes | Canonique sur la liste nue du dernier patch ; au-delà de la première page, `?page=N` est sa propre canonique | `features/catalogue/shared/seo/catalogue-list-seo.ts` |
 | Page de patch | `/{locale}/changes` (dernier patch), `/{locale}/{version}/changes` (ancien patch) : ce que la version a changé ; sa propre canonique ; `noindex, follow` si le patch n'a rien changé ; 404 pour la première version couverte, hors de l'index et après le dernier patch ; `/{locale}/patches` y mène | `src/LoDb.Api/Modules/Catalog/Changes/`, `features/catalogue/changes/` |
 | Anciennes URL (ancien site) | 301 directe vers la canonique de l'état à la version nommée (l'ouvreur d'un état clos, l'URL courte de l'état ouvert) ; sans état à cette version, l'URL courte si le dernier patch porte l'id, sinon la fiche épinglée, sinon une 302 vers la liste ; sans version, un champion, un objet ou un sort retiré mène à l'ouvreur de son dernier état ; une voie de runes absente du dernier patch garde la règle du 2026-10-16 ; une liste mène à la liste nue | `src/LoDb.Api/Modules/Legacy/` |
-| Sitemaps | L'index annonce les 21 `latest.xml`, puis les 21 `{version}.xml` de chaque version couverte passée dont le fichier n'est pas vide (~8 440 entrées au plus) ; `{version}.xml` liste la page de patch (si elle a changé quelque chose), puis les ouvreurs des états clos ouverts à cette version, lus dans l'index seul ; `latest.xml` ajoute `/{locale}/changes` ; `lastmod` : la clôture de l'état pour un ouvreur, la promotion qui a fait passer la version (ou la construction de l'index) pour une page de patch ; `max-age=3600` ; 404 hors de la couverture, 503 tant que l'index n'est pas chargé | `src/LoDb.Api/Modules/Seo/Sitemaps/` |
+| Sitemaps | L'index annonce les 21 `latest.xml`, puis les 21 `{version}.xml` de chaque version couverte passée dont le fichier n'est pas vide (7 518 entrées au 2026-10-22, dont 21 × 357 fichiers de version) ; `{version}.xml` liste la page de patch (si elle a changé quelque chose), puis les ouvreurs des états clos ouverts à cette version, lus dans l'index seul ; `latest.xml` ajoute `/{locale}/changes` ; `lastmod` : la clôture de l'état pour un ouvreur, la promotion qui a fait passer la version (ou la construction de l'index) pour une page de patch ; `max-age=3600` ; 404 hors de la couverture, 503 tant que l'index n'est pas chargé | `src/LoDb.Api/Modules/Seo/Sitemaps/` |
 | IndexNow | À chaque promotion : toutes les URL courtes, puis les pages de patch qui ont changé quelque chose depuis le patch promu avant, puis les ouvreurs des états clos depuis ; rien si l'index ne couvre pas la version ; coupé sans clé (`seo.indexnow.planned`) | `src/LoDb.Api/Modules/Seo/IndexNow/` |
 | `robots.txt`, `llms.txt` | Générés par l'API ; `llms.txt` cite `/en/changes` | `src/LoDb.Api/Modules/Seo/Files/` |
 | Staging | `LODB_NOINDEX=1` : `X-Robots-Tag: noindex, nofollow` et 403 aux robots d'IA, jamais `Disallow: /` | `docker/nginx/snippets/security-headers.conf`, `docker/nginx/nginx.conf` |
-| Pages des anciens patchs | Servies par le cache `lodb_archive` (autant que dit la `Cache-Control` de l'objet : un an figée, une heure révisable), le stockage pré-rendu (derrière `LODB_PAGES_STORE_ENABLED`), puis le SSR dans un budget borné (503 avec `Retry-After` au-delà) ; chaque page refusée entre dans la file de la demande, chaque page d'un état que la promotion clôt dans la file des états clos | ADR 0011, `docker/nginx/sites/site.conf`, `src/LoDb.Api/Modules/Admin/Prerender/Revision/` |
+| Pages des anciens patchs | Servies par le cache `lodb_archive` (autant que dit la `Cache-Control` de l'objet : un an figée, une heure révisable), le stockage pré-rendu (derrière `LODB_PAGES_STORE_ENABLED`, à `0` en prod au 2026-10-22), puis le SSR dans un budget borné (503 avec `Retry-After` au-delà) ; chaque page refusée entre dans la file de la demande, chaque page d'un état que la promotion clôt dans la file des états clos | ADR 0011, `docker/nginx/sites/site.conf`, `src/LoDb.Api/Modules/Admin/Prerender/Revision/` |
 
 Comportements voulus à ne pas « corriger » : [`pieges.md`](../architecture/pieges.md)
 (« Historique des patchs », « Index des états d'entité », pages révisables).
 
 ### Limites connues
 
-- **La bascule sert une epoch vide** : à 900 pages par minute, ~11 h pour les ~600 000
-  ouvreurs, ~3 jours pour le reste ; d'ici là, une page absente du stockage passe par le budget
-  épinglé du SSR (503 au-delà) et la file de la demande. La part de 503 servies à Googlebot se
-  suit pendant la passe (spécification, § 4.3).
+- **L'epoch servie est vide et la prod ne lit pas le stockage** : l'epoch 2, servie depuis la
+  bascule, attend ses passes, et `LODB_PAGES_STORE_ENABLED` vaut `0`. Une page d'ancien patch
+  absente du cache `lodb_archive` (purgé par le changement d'epoch, que sa clé porte) passe donc
+  par le budget épinglé du SSR (503 au-delà) et la file de la demande. Le levier : remplir
+  l'epoch 2 (~409 000 ouvreurs des états clos, environ 7 h 30 à 900 pages par minute, puis le
+  reste), puis poser `LODB_PAGES_STORE_ENABLED=1`. La part de 503 servies à Googlebot se suit
+  pendant les passes (spécification, § 4.3 et § 12).
 - **Pages révisables** : la copie d'avant d'une page dont l'état vient de se clore peut être
   servie environ deux heures après son nouveau rendu ; Bing peut la lire via IndexNow. Accepté.
 - **Ce que l'empreinte ne voit pas** : une correction de traduction seule, un changement de
@@ -69,44 +72,30 @@ Comportements voulus à ne pas « corriger » : [`pieges.md`](../architecture/pi
   rien) : ni résumé ni bloc, et cette version n'a pas de page de patch.
 - **« Dans le dernier patch »** sur une page figée mène à l'URL courte, en 404 si l'entité est
   retirée plus tard ; « Changé au patch X » mène à une 301 tant que X est le dernier patch.
-- **Comptes** : les ~600 000 pages indexables et les 85 % de copies (spécification, § 1.2)
-  sont des majorants mesurés sur le JSON brut ; les comptes réels viendront de la première
-  construction de l'index en prod (ligne `states.update.completed`).
 
-### Bascule en prod
+### Bascule en prod (2026-10-22)
 
-D'un seul coup : ni interrupteur ni coexistence des deux règles ; le déploiement du changement
-qui porte la règle est la bascule (spécification, § 4). L'index des états se construit avant
-que l'API serve (service `states`, avant la page de maintenance), l'epoch 2 du stockage
-devient l'epoch servie et les passes la remplissent, ouvreurs d'abord. Aucun envoi IndexNow à
-la bascule : les sitemaps annoncent l'historique, puis IndexNow annonce à chaque promotion les
-ouvreurs qu'elle clôt et les pages de patch. Retour arrière : un revert, l'epoch 1 gardée deux
-semaines. Un commit de documentation datera la bascule et passera ce document à « en vigueur ».
+D'un seul coup, sans interrupteur ni coexistence des deux règles (spécification, § 4) : la
+bascule est le déploiement de la PR #102 (`test` → `main`, fusion `9b94ddec`), fini à
+**16:55 UTC**. Le
+service `states` a construit l'index avant la page de maintenance : génération 1, de 0.151.2 à
+16.21.1 (404 versions), **20 540 états** (19 472 clos, 1 068 ouverts), soit ~431 000 fiches
+indexables dans les 21 langues, sous le majorant de ~600 000 (spécification, § 1.2).
+`ENV_PROD` sert l'epoch 2 (`LODB_ARCHIVE_SERVE_EPOCH=2`) ; `LODB_PAGES_STORE_ENABLED` reste à
+`0`. Aucun envoi IndexNow : les sitemaps annoncent l'historique (7 518 fichiers), puis IndexNow
+annonce à chaque promotion les ouvreurs qu'elle clôt et les pages de patch. Le staging a
+basculé à la fusion de la PR #101 dans `dev`, le même jour.
 
-## Règle servie en prod jusqu'à la bascule (2026-10-14)
-
-Celle de l'amendement du 2026-10-14 de l'ADR 0005, complété le 2026-10-16 (anciennes URL) ;
-les pages d'anciens patchs sont servies depuis le stockage pré-rendu depuis le 2026-10-20.
-
-- **Fiche d'un ancien patch, entité présente au dernier patch** : canonique et `og:url` sur
-  l'URL courte (chemin et slug du dernier patch), `index, follow`, ni hreflang ni JSON-LD.
-- **Entité retirée** : indexable dans la dernière version qui la portait ; ses fiches
-  antérieures en `noindex, follow`, sans canonique.
-- **Anciennes URL** : l'URL courte si l'entité existe au dernier patch, la liste nue pour une
-  liste, la fiche épinglée de la version nommée pour une entité retirée.
-- **Sitemaps** : l'index n'annonce que les `latest.xml` des 21 langues
-  (`LoDb__Seo__SitemapVersionWindow` à `0`) ; le sitemap d'une version passée ne liste que les
-  fiches canoniques chez lui.
-- **IndexNow** : les URL courtes du patch promu, dans les 21 langues.
-- **Limites** : l'historique est hors de l'index (~22 800 pages indexables, 1 085 × 21
-  langues, pour ~28 000 contenus distincts × 21 langues) ; une page d'ancien patch gardée un
-  an ou stockée garde la canonique de son rendu, en 404 ou en 301 quand l'entité a été
-  retirée ou renommée depuis (ADR 0011, note de § nginx).
+Reste : les passes de l'epoch 2 au pupitre (`/admin/prerender`, « ouvreurs d'abord » puis
+entière), puis la lecture du stockage par nginx ; le retrait de l'epoch 1 à partir du
+2026-11-05. Retour arrière : un revert, l'epoch 1 gardée deux semaines (spécification, § 4.4).
+Relevé de départ, comptes et vérifications : spécification, § 12.
 
 ## Mesure
 
-Le propriétaire relève la Search Console le jour de la bascule, puis 2, 4 et 8 semaines
-après :
+Le propriétaire relève la Search Console le jour de la bascule (relevé de départ :
+spécification, § 12), puis 2, 4 et 8 semaines après, les 2026-11-05, 2026-11-19 et
+2026-12-17 :
 
 - pages indexées, impressions des URL versionnées et des pages de patch ;
 - « Explorée, actuellement non indexée », qui doit baisser ;
@@ -128,11 +117,12 @@ résultats s'écrivent dans la spécification et dans l'amendement de l'ADR 0005
 | 2026-10-10 | Cache des anciens patchs par epoch (7 jours), bundles gardés 30 jours | ADR 0005, am. 10-10 | Non : remplacé le 2026-10-20 |
 | 2026-10-11 | Index des sitemaps borné à 12 versions ; anciens patchs découverts par des liens | ADR 0005, am. 10-11 | Liens oui ; fenêtre non (`0` depuis le 2026-10-14, retirée du code le 2026-10-22) |
 | 2026-10-12 | `?page=N` canonique, `lastmod` daté par patch, IndexNow, 301 de la barre finale | changelog du 2026-10-12 | Oui |
-| 2026-10-14 | Une page indexée par entité : canonique d'un ancien patch sur l'URL courte, entité retirée indexée à sa dernière version | ADR 0005, am. 10-14 | En prod jusqu'à la bascule ; remplacée dans le code |
-| 2026-10-16 | Anciennes URL versionnées en 301 vers l'URL courte | ADR 0005, am. 10-16 | En prod jusqu'à la bascule ; remplacée dans le code, sauf pour une voie de runes retirée |
-| 2026-10-20 | Pages des anciens patchs pré-rendues dans un stockage objet, `archived` gardée un an ; CDN prévu | ADR 0011, ADR 0005 am. 10-20 | Stockage oui ; CDN non construit |
+| 2026-10-14 | Une page indexée par entité : canonique d'un ancien patch sur l'URL courte, entité retirée indexée à sa dernière version | ADR 0005, am. 10-14 | En prod jusqu'au 2026-10-22 (bascule par état) |
+| 2026-10-16 | Anciennes URL versionnées en 301 vers l'URL courte | ADR 0005, am. 10-16 | En prod jusqu'au 2026-10-22, sauf pour une voie de runes retirée, où elle reste |
+| 2026-10-20 | Pages des anciens patchs pré-rendues dans un stockage objet, `archived` gardée un an ; CDN prévu | ADR 0011, ADR 0005 am. 10-20 | Stockage écrit, pas encore lu par nginx en prod (`LODB_PAGES_STORE_ENABLED=0`) ; CDN non construit |
 | 2026-10-21/22 | SSR dédié et régulateur de la passe, file de la demande, vitesse réglable | ADR 0011, amendements | Oui |
-| **2026-10-22** | **Une page indexée par état** : un ouvreur indexé par état d'entité, une page par patch, sitemaps des versions passées, pages révisables | ADR 0005, 0003 et 0011, am. 10-22 ; [spécification](seo-une-page-par-etat.md) | **En vigueur dans le code** ; en prod à la bascule |
+| **2026-10-22** | **Une page indexée par état** : un ouvreur indexé par état d'entité, une page par patch, sitemaps des versions passées, pages révisables | ADR 0005, 0003 et 0011, am. 10-22 ; [spécification](seo-une-page-par-etat.md) | **Oui** : en prod depuis le 2026-10-22 |
+| 2026-10-22, 16:55 UTC | Bascule de la prod sur la règle par état (PR #102, `9b94ddec`), epoch 2 servie | [spécification](seo-une-page-par-etat.md), § 12 | — |
 
 Diagnostic de la désindexation d'août et demande du 2026-10-14 :
 [`seo-anciens-patchs.md`](seo-anciens-patchs.md).

@@ -13,8 +13,8 @@
 > | 6 — Alléger les pages | plus tard |
 >
 > Le cap d'indexation a changé depuis cette spécification : une page indexée par état
-> ([`seo-une-page-par-etat.md`](seo-une-page-par-etat.md), décidée le 2026-10-22, en vigueur
-> dans le code, en prod à sa bascule ; [ADR 0011](../reecriture/adr/0011-catalogue-pre-rendu-et-cdn.md),
+> ([`seo-une-page-par-etat.md`](seo-une-page-par-etat.md), décidée et en prod le 2026-10-22 ;
+> [ADR 0011](../reecriture/adr/0011-catalogue-pre-rendu-et-cdn.md),
 > amendement du 2026-10-22). Elle change ici ce que la passe stocke (les classes `archived` et
 > `revisable`), les pages d'une version (la page de patch), la `Cache-Control` que nginx
 > donne et garde, et ajoute la file des états clos et la passe « ouvreurs d'abord » ; les
