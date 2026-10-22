@@ -1,9 +1,10 @@
 # Une page indexée par état : tout l'historique dans Google, sans copie
 
-> **État** (2026-10-22) : décidé, implémentation en cours sur `feat/seo-une-page-par-etat`
-> (lots L0 à L7, § 6). Jusqu'à la bascule du § 4, le code applique la règle du 14 octobre
-> (`CanonicalReferences`, une page indexée par entité) ; la règle en vigueur et l'avancement
-> se lisent dans [`seo-indexabilite.md`](seo-indexabilite.md).
+> **État** (2026-10-22) : **en vigueur dans le code** (lots L0 à L7, § 6, sur
+> `feat/seo-une-page-par-etat`). La prod applique la règle du 14 octobre (une page indexée
+> par entité) jusqu'à la bascule du § 4, son déploiement. Ce que l'implémentation a tranché
+> autrement que le texte ci-dessous est au § 11, qui l'emporte. Règle en vigueur et
+> avancement : [`seo-indexabilite.md`](seo-indexabilite.md).
 
 Chantier décidé le 22 octobre 2026. Le site est une base de données : chaque contenu
 distinct qu'elle tient doit avoir une page indexée, une seule. Une fiche d'ancien patch n'est

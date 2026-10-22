@@ -3,12 +3,12 @@
 - **Statut** : acceptée — 2026-09-24
 - **Remplace** : rendu Twig + îlots Vue, locale portée par la session et un cookie
 - **En vigueur dans le code** (2026-10-22) : la grammaire d'URL, le hreflang et la CSP du texte
-  et de leurs amendements ; pour les canoniques et les sitemaps, **l'amendement du
-  2026-10-14**, complété le 2026-10-16 (anciennes URL) ; depuis le 2026-10-20, les pages
-  stockées gardent la canonique de leur rendu (limite connue, ADR 0011). L'amendement du 2026-10-22 est
-  décidé, pas encore implémenté : il prend effet au déploiement du changement qui le porte,
-  d'un seul coup et sans interrupteur. Le CDN de l'amendement du 2026-10-20 n'est pas construit. Règle en vigueur et
-  avancement : [`seo-indexabilite.md`](../../produit/seo-indexabilite.md).
+  et de leurs amendements ; pour les canoniques, les sitemaps et les anciennes URL,
+  **l'amendement du 2026-10-22** (une page indexée par état). La prod sert encore
+  l'amendement du 2026-10-14, complété le 2026-10-16, jusqu'au déploiement qui porte la règle
+  par état : sa bascule, d'un seul coup et sans interrupteur. Le CDN de l'amendement du
+  2026-10-20 n'est pas construit. Règle en vigueur et avancement :
+  [`seo-indexabilite.md`](../../produit/seo-indexabilite.md).
 - **Amendements** :
   - le 2026-10-10, les pages des anciens patchs ont leur propre cache, dont la clé ne contient
     plus la révision de déploiement (voir § « Amendement du 2026-10-10 ») ;
@@ -30,8 +30,8 @@
     change pas a une page indexée, son premier patch ; chaque patch a sa page de changements,
     et l'index des sitemaps annonce de nouveau les versions passées (voir § « Amendement du
     2026-10-22 »).
-    Il remplace l'amendement du 2026-10-14 pour les canoniques et les sitemaps, **à sa
-    bascule** : décidé, pas encore implémenté.
+    Il remplace l'amendement du 2026-10-14 pour les canoniques et les sitemaps : en vigueur
+    dans le code, servi en prod **à sa bascule**.
 
 ## Contexte
 
@@ -264,10 +264,10 @@ compromis des deux semaines ci-dessous) et la rétention des bundles (400 jours,
 
 ## Amendement du 2026-10-14 — une page indexée par entité
 
-*En vigueur dans le code. Remplacé pour la règle des canoniques et les sitemaps par
-l'amendement du 2026-10-22 (une page indexée par état d'entité), décidé mais pas encore
-implémenté : cette règle reste celle du site jusqu'au déploiement du changement qui porte
-la règle par état.*
+*Remplacé pour la règle des canoniques et les sitemaps par l'amendement du 2026-10-22 (une
+page indexée par état d'entité), en vigueur dans le code : cette règle reste celle que la prod
+sert jusqu'au déploiement qui porte la règle par état. Les notes datées ci-dessous disent ce
+qui ne vaut plus.*
 
 Le site a perdu presque toute sa visibilité dans Google depuis le 16 août 2026
 ([diagnostic](../../produit/seo-anciens-patchs.md)) : 2 570 pages indexées contre ~20 000 fin
@@ -420,9 +420,10 @@ chaque page d'ancien patch dans un stockage objet. Pour cette ADR :
 
 ## Amendement du 2026-10-22 — une page indexée par état
 
-*Décidé, pas encore implémenté (lots L0 à L7 de la
-[spécification](../../produit/seo-une-page-par-etat.md)). Jusqu'au déploiement qui le porte,
-le code applique l'amendement du 2026-10-14.*
+*En vigueur dans le code (lots L0 à L7 de la
+[spécification](../../produit/seo-une-page-par-etat.md), dont le § 11 dit ce que
+l'implémentation a tranché). La prod sert l'amendement du 2026-10-14 jusqu'au déploiement qui
+le porte : sa bascule.*
 
 La règle du 2026-10-14 n'indexe qu'une page par entité et par langue, celle du dernier patch :
 ~22 800 pages. L'historique des patchs, qui est le contenu propre de la base, reste hors de
@@ -465,14 +466,19 @@ détail : [spécification](../../produit/seo-une-page-par-etat.md).
   - pour les autres versions d'un état clos, l'ouvreur ;
   - hors de la couverture (version plus ancienne, listée après le dernier patch, ou avant
     toute promotion) : la règle résiduelle, celle du 2026-10-14 pour une version non promue
-    (l'URL courte si le dernier patch porte l'entité, sinon la page elle-même).
+    (l'URL courte si le dernier patch porte l'entité, sinon la page elle-même) ;
+  - *précisé à l'implémentation* : une version de l'état ouvert dont le dernier patch n'a plus
+    l'entité (index en retard sur un retrait) désigne l'ouvreur de l'état, pas une URL courte
+    en 404.
 
   `canonical` est toujours présent sur une fiche. Les listes et les variantes régionales ne
   changent pas. Une entité retirée n'est plus un cas à part : le `noindex, follow` de ses
   fiches antérieures disparaît. Un id réutilisé change d'empreinte, donc d'état.
 - **Contenu** :
   - l'ouvreur montre « Ce qui a changé dans ce patch » : les champs que l'index marque
-    changés, avec les valeurs de la langue de la page ;
+    changés, avec les valeurs de la langue de la page ; *précisé à l'implémentation* : le
+    premier état d'une entité au début de la couverture, comparé à rien, est `baseline` et ne
+    montre ni bloc ni résumé ;
   - les autres versions montrent « Inchangé depuis le patch X » ;
   - « Historique » remplace « Dans les patchs précédents » ; la plage de l'état ouvert ne
     nomme pas le dernier patch (« depuis le patch X ») ;
@@ -499,7 +505,10 @@ détail : [spécification](../../produit/seo-une-page-par-etat.md).
   3. IndexNow (toutes les URL courtes comme avant, les ouvreurs que la promotion a clos, les
      pages de patch qui ont changé quelque chose).
 
-  Les étapes 2 et 3 lisent dans l'index ce qui a changé.
+  Les étapes 2 et 3 lisent dans l'index ce qui a changé ; rien ne part tant qu'il ne couvre pas
+  la version promue. *Précisé à l'implémentation* : IndexNow part du patch promu avant
+  (`EntityStateSnapshot.PromotedBefore`), pas de la version couverte juste avant : une version
+  listée mais jamais promue entre deux promotions est annoncée par la suivante.
 - **Redirections héritées** (amendement du 2026-10-16) : une ancienne URL qui nomme une
   version mène à la canonique de sa cible selon cette règle, l'ouvreur de son état ou l'URL
   courte ; sans état à cette version, l'URL courte si le dernier patch porte l'id, sinon la
