@@ -3,6 +3,7 @@ using LoDb.Ingestion.Catalog.Canonicals;
 using LoDb.Ingestion.Catalog.Export;
 using LoDb.Ingestion.Catalog.Images;
 using LoDb.Ingestion.Catalog.Reading;
+using LoDb.Ingestion.Catalog.States;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -42,6 +43,7 @@ public static class CatalogRegistration
         services.TryAddSingleton<IImageResolver, ImageResolver>();
         services.TryAddSingleton<CatalogExport>();
         services.TryAddSingleton<IArtVariantIngestion, ArtVariantIngestion>();
+        services.AddLoDbCatalogStates();
         return services;
     }
 }
