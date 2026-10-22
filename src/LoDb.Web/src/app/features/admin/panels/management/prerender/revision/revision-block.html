@@ -1,0 +1,76 @@
+@if (report.value(); as data) {
+  <lodb-admin-card [heading]="'admin.prerender.revision.title' | adminText" data-revision>
+    <span lodbCardHead [lodbBadge]="data.isActive ? 'good' : 'muted'" data-revision-state>
+      {{ 'admin.prerender.revision.states.' + (data.isActive ? 'active' : 'dormant') | adminText }}
+    </span>
+    <div class="flex flex-col gap-4 text-[0.9rem] text-text-muted">
+      <p class="m-0">{{ 'admin.prerender.revision.lede' | adminText }}</p>
+      @if (!data.isActive) {
+        <p class="m-0 text-gold" data-revision-why>
+          {{ 'admin.prerender.revision.why.dormant' | adminText }}
+        </p>
+      }
+      <div class="grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-x-6 gap-y-4">
+        <div data-revision-readout="pending">
+          <span class="readout-label">{{
+            'admin.prerender.revision.figures.pending' | adminText
+          }}</span>
+          <span class="readout-value">{{ count(data.pending) }}</span>
+          <p class="readout-text">
+            {{ 'admin.prerender.revision.figures.due' | adminText: { count: data.due } }}
+          </p>
+        </div>
+        <div data-revision-readout="hour">
+          <span class="readout-label">{{
+            'admin.prerender.revision.figures.hour' | adminText
+          }}</span>
+          <span class="readout-value">{{ count(data.writtenLastHour) }}</span>
+        </div>
+        <div data-revision-readout="day">
+          <span class="readout-label">{{
+            'admin.prerender.revision.figures.day' | adminText
+          }}</span>
+          <span class="readout-value">{{ count(data.writtenLastDay) }}</span>
+        </div>
+        <div data-revision-readout="failed">
+          <span class="readout-label">{{
+            'admin.prerender.revision.figures.failed' | adminText
+          }}</span>
+          <span class="readout-value">{{ count(data.failed) }}</span>
+          <p class="readout-text">
+            {{ 'admin.prerender.revision.figures.skipped' | adminText: { count: data.skipped } }}
+          </p>
+        </div>
+      </div>
+      <p class="m-0" data-revision-next>
+        {{
+          'admin.prerender.revision.next'
+            | adminText: { at: at(data.nextDueAt), closed: at(data.closedThrough) }
+        }}
+      </p>
+      @if (data.epochs.length > 0) {
+        <ul class="m-0 flex list-none flex-col gap-1 p-0" data-revision-epochs>
+          @for (epoch of data.epochs; track epoch.epoch) {
+            <li class="font-mono text-[0.85rem]" [attr.data-revision-epoch]="epoch.epoch">
+              {{
+                'admin.prerender.revision.epoch'
+                  | adminText
+                    : {
+                        epoch: epoch.epoch,
+                        served: epoch.epoch === data.servedEpoch,
+                        pending: epoch.pending,
+                        done: epoch.done,
+                        failed: epoch.failed,
+                      }
+              }}
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="m-0" data-revision-empty>
+          {{ 'admin.prerender.revision.empty' | adminText }}
+        </p>
+      }
+    </div>
+  </lodb-admin-card>
+}
