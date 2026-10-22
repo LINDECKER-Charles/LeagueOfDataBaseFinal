@@ -54,6 +54,31 @@ public sealed class GenerationTests(PostgresContainerFixture postgres)
             (await index.GenerationsAsync()).Select(static generation => (long?)generation.Id));
     }
 
+    // The queue of the closed states reads the closures past its watermark: a promotion's are
+    // dated after the build's and every earlier one, alike within the promotion.
+    [Fact]
+    public async Task ClosuresOfAPromotionAreDatedAfterEveryEarlierOne()
+    {
+        await using var index = await StateIndexHarness.CreateAsync(postgres, Versions);
+        await StoreHistoryAsync(index);
+        await index.PromoteAsync("90.3.1");
+        await index.BuildAsync();
+        var built = (await index.GenerationsAsync()).Single();
+        var earlier = (await index.StatesAsync()).Where(static state => state.ClosedAt is not null)
+            .Select(static state => state.ClosedAt!.Value)
+            .ToList();
+
+        await index.PromoteAndListenAsync("90.5.1");
+        var promoted = (await index.StatesAsync())
+            .Where(static state => state.LastVersion == "90.3.1")
+            .Select(static state => state.ClosedAt!.Value)
+            .ToList();
+
+        Assert.Equal([built.BuiltAt, built.BuiltAt], earlier);
+        Assert.Single(promoted.Distinct());
+        Assert.True(promoted[0] > built.BuiltAt);
+    }
+
     [Fact]
     public async Task BuildDoesNothingOnceTheIndexCoversTheLatestVersion()
     {
