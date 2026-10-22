@@ -100,7 +100,6 @@ services:
       LoDb__Accounts__Google__AppClients__1__ClientId:
       LoDb__Contact__Recipient:
       LoDb__Contact__NotificationLocale:
-      LoDb__Seo__SitemapVersionWindow:
       LoDb__Seo__IndexNowKey:
       # Bounds of the catalogs in memory and of the cold work (ADR 0003, amendment of
       # 2026-10-10); configuration.md gives their defaults.
