@@ -195,11 +195,14 @@ l'original.**
   |---|---|
   | La génération courante du schéma compilé couvre déjà [début … dernier patch] | rien |
   | Seule la fin de la couverture a avancé | rattrapage vers l'avant, dans la génération courante |
-  | Le début a bougé, le schéma diffère, ou `--rebuild` | reconstruction complète dans une **nouvelle** génération, puis bascule de `is_current` en une transaction et suppression de l'ancienne |
+  | Le début a reculé, le schéma diffère (aucune génération courante du sien), ou `--rebuild` | reconstruction complète dans une **nouvelle** génération, puis bascule de `is_current` en une transaction et suppression de l'ancienne |
+  | Une version listée après la fin de la couverture manque de son en_US (la promotion qui l'a sautée n'a pas pu l'ingérer) | rien : la génération courante reste, en retard (`states.coverage.interrupted`, Warning), jamais une plus courte à sa place ; la promotion suivante ou la réconciliation ingère la version et l'étend |
 
   - Une reconstruction garde le `closed_at` des états dont la ressource, la clé, l'ouvreur, la
     dernière version et l'empreinte n'ont pas changé ; les autres prennent la date de la
-    reconstruction.
+    reconstruction, sauf ceux qu'elle clôt à partir de la fin d'une génération restée en
+    retard sur les promotions : une date strictement après son `built_at`, comme les
+    extensions qu'elle remplace (§ 11.5).
   - Elle lit un catalogue en_US à la fois (jeux de données lus directement, pas par la LRU),
     une transaction par version, idempotente, reprenable, une ligne de synthèse par lot.
   - Elle ne télécharge rien, sauf avec `--ingest-missing` (en_US seulement).
