@@ -210,13 +210,18 @@ compromis des deux semaines ci-dessous) et la rétention des bundles (400 jours,
   (`LoDb__Seo__SitemapVersionWindow`, `12` par défaut, `0` pour le dernier patch seul, une
   valeur négative refusée au démarrage). Il annonçait auparavant chaque version listée dans
   chaque locale : des milliers de sitemaps, des millions d'URL épinglées. *Remplacé le
-  2026-10-14 : la fenêtre vaut `0` par défaut (`SeoOptions.DefaultSitemapVersionWindow`) ;
-  l'amendement du 2026-10-22 la retire à sa bascule.*
+  2026-10-14 : la fenêtre vaut `0` par défaut. Remplacé de nouveau le 2026-10-22 (amendement
+  du 2026-10-22) : plus de fenêtre, `LoDb__Seo__SitemapVersionWindow` n'existe plus ; l'index
+  annonce les `latest.xml`, puis les 21 sitemaps de chaque version couverte passée dont le
+  fichier n'est pas vide.*
 - **Rien ne disparaît** : le sitemap d'une version hors de la fenêtre reste servi à son URL,
   immuable, et ses pages restent canoniques et indexables. Ni `noindex` ni `Disallow`. Le
   sitemap principal de chaque locale ne change pas, sinon qu'il liste la nouvelle page
   ci-dessous. *Remplacé le 2026-10-14 : les pages d'un ancien patch ne sont plus canoniques,
-  la fenêtre passe à `0`.*
+  la fenêtre passe à `0`. Remplacé de nouveau le 2026-10-22 : le sitemap d'une version passée
+  couverte par l'index des états ne liste que sa page de patch et les ouvreurs de ses états
+  clos, un `urlset` vide servi mais pas annoncé sinon ; une version hors de la couverture ou
+  pas encore promue répond 404.*
 - **Découverte par liens** : le sélecteur de version est un formulaire, que les robots ne
   soumettent pas. Deux chemins de liens rendent chaque ancien patch atteignable :
   - `/{locale}/patches`, « Historique des patchs », lié depuis le pied de page de chaque
@@ -224,7 +229,10 @@ compromis des deux semaines ci-dessous) et la rétention des bundles (400 jours,
     les versions prêtes) avec ses quatre listes, rendue par le serveur avec le cache du
     dernier patch ;
   - sur chaque fiche, « Dans les patchs précédents » : la même entrée dans les six versions
-    listées avant celle de la page.
+    listées avant celle de la page. *Remplacé le 2026-10-22 : le bloc « Historique » liste les
+    états de l'entité jusqu'à celui de la page, chacun lié à sa page indexée ; il ne lit que la
+    réponse de la fiche, plus `/api/meta`. `/{locale}/patches` lie aussi la page de patch de
+    chaque version qui en a une.*
 
   Aucune des deux ne lit de catalogue pour se rendre : des liens seulement, tirés de
   `/api/meta`.
@@ -294,7 +302,9 @@ patchs restent consultables sans lui faire concurrence.
   antérieures sont `noindex, follow`, sans canonique. Aucun index entité → versions n'existe :
   désigner cette dernière version ne lit qu'un catalogue de plus, celui de la version suivante,
   quand l'entité manque au dernier patch. Une entité retirée, réintroduite puis retirée de
-  nouveau garde une page par période : rare, accepté.
+  nouveau garde une page par période : rare, accepté. *Remplacé le 2026-10-22 : une entité
+  retirée n'est plus un cas à part. Son dernier état est indexé à son ouvreur, comme ses états
+  antérieurs, et aucune fiche n'est plus `noindex`.*
 - **Une seule règle, côté API** (`CanonicalReferences`, `LoDb.Ingestion/Catalog/Canonicals`) :
   chaque fiche porte `canonical` (`{ version, path }`, `version` nulle pour l'URL courte ;
   `null` hors de l'index), que le front écrit dans le `<head>` par `Seo.apply`
@@ -302,6 +312,10 @@ patchs restent consultables sans lui faire concurrence.
   ne dépendent pas de la langue : les catalogues en_US répondent pour les 21. Celui du dernier
   patch est épinglé en mémoire ; celui de la version suivante se charge comme celui de la page,
   dans le budget du travail à froid (503 avec `Retry-After` sinon, comme une page froide).
+  *Remplacé le 2026-10-22 : la règle unique est celle des états (`StateView`,
+  `LoDb.Ingestion/Catalog/States/Canonicals/`), lue dans l'index des états d'entité, qui
+  donne aussi les sitemaps ; `canonical` n'est jamais `null`. `CanonicalReferences` et
+  `CanonicalReader` sont retirés du code.*
 - **Sitemaps** : seulement des URL canoniques. `LoDb__Seo__SitemapVersionWindow` passe à `0`
   par défaut : l'index n'annonce que les `latest.xml` des 21 langues. Le sitemap d'une version
   passée reste servi, jamais en 404 pour une version listée : il ne liste plus que les fiches
@@ -309,9 +323,13 @@ patchs restent consultables sans lui faire concurrence.
   Une URL que Google a déjà apprise répond ainsi un document valide plutôt qu'une erreur du
   rapport Sitemaps, et une fenêtre non nulle garde un sens : annoncer les entités que les
   derniers patchs ont retirées. Ils ne sont plus `immutable` : ce qu'ils listent suit le
-  dernier patch (`max-age=3600`).
+  dernier patch (`max-age=3600`). *Remplacé le 2026-10-22, sauf `max-age=3600` : plus de
+  fenêtre ; le sitemap d'une version passée liste sa page de patch et les ouvreurs de ses
+  états clos, et l'index annonce chaque fichier qui n'est pas vide.*
 - **Liens internes** : `/{locale}/patches` et « Dans les patchs précédents » restent, pour les
-  visiteurs ; rien n'est ajouté qui élargisse l'exploration.
+  visiteurs ; rien n'est ajouté qui élargisse l'exploration. *Remplacé le 2026-10-22 :
+  « Historique » remplace « Dans les patchs précédents », et chaque patch a sa page de
+  changements, liée depuis `/{locale}/patches`.*
 - **Caches** : la réponse d'une fiche d'ancien patch (un jour) et sa page (`lodb_archive`,
   jusqu'à deux semaines) gardent leur canonique jusqu'à expiration ; une entité que le patch
   suivant retire ou renomme pointe ce temps vers une URL courte en 404 ou en 301. Rare, borné,
@@ -344,11 +362,19 @@ de 10.13.1).
 **Décision.** Une 301 héritée mène directement à la canonique de sa cible :
 
 - **Entité présente au dernier patch** (même id) : l'URL courte, au chemin et au slug du dernier
-  patch, quelle que soit la version de l'ancienne URL (chemin ou `?version=`).
+  patch, quelle que soit la version de l'ancienne URL (chemin ou `?version=`). *Remplacé le
+  2026-10-22 : l'index des états tranche à la version nommée. État clos, son ouvreur (au slug
+  de cette version) ; état ouvert, l'URL courte ; aucun état à cette version, l'URL courte si
+  le dernier patch porte l'id, comme ici.*
 - **Liste**, épinglée ou non : la liste nue du dernier patch (`/en/16.4.1/champions` est
   canonique à `/en/champions`, `catalogue-list-seo.ts`).
 - **Entité absente du dernier patch** (retirée) : inchangé. Fiche épinglée de la version
   nommée, au slug de son catalogue s'il est stocké ; sinon 302 vers la liste de cette version.
+  *Remplacé le 2026-10-22 pour les champions, les objets et les sorts : l'index tranche comme
+  ci-dessus, et une ancienne URL sans version mène à l'ouvreur du dernier état de l'entité au
+  lieu d'une 404. Sans état à la version nommée, cette règle demeure. Une voie de runes absente
+  du dernier patch la garde entière : l'ancien site la nommait par sa clé, que seul le
+  catalogue du dernier patch traduit en id.*
 - Tant que le catalogue du dernier patch n'est pas lu, une ancienne URL versionnée ne mène
   nulle part (503 avec `Retry-After`, comme une page froide) : elle ne sait pas encore si
   l'entité existe toujours.
