@@ -7,6 +7,13 @@ summary: Les fiches et les listes des anciens patchs viennent d'une copie déjà
 tags: [performance, seo, anciens-patchs]
 ---
 
+> **Remplacé le 2026-10-22** par [une page indexée par état](../../produit/seo-une-page-par-etat.md) :
+> une page du stockage n'est plus toujours gardée un an en classe `archived`. Elle garde la
+> `Cache-Control` de sa classe : `archived` (un an) pour une page d'état clos, `revisable` (une
+> heure) pour l'état en cours, recalculée quand une promotion le clôt ; le cache chaud de nginx
+> suit l'objet. La page de patch (`/{locale}/{version}/changes`) est rangée avec les listes et
+> les fiches. Le reste vaut toujours.
+
 ## Ce qui change
 
 Les pages d'un ancien patch (une fiche de champion, d'objet, de rune ou de sort, et les quatre

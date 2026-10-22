@@ -1,9 +1,11 @@
 // Boots the built nginx image in front of the stub's page store (lib/upstream-stub.conf) and
 // checks lot 3 of ADR 0011: a past patch's page comes from the store, then from the cache, with
-// its own headers and none of S3's; every failure of the store, a query and a path a pass never
-// writes reach the SSR server, which the store never sees, and so does the latest patch pinned
-// in the path; the rate holds across both; a bundle the SSR server no longer has comes from the
-// store, under the same rate. Switched off, nginx never asks the store; a store it cannot trust
+// its own headers and none of S3's, the class of its object (archived, or revisable for the
+// open state's page) and as long as its object says, a patch page included; every failure of
+// the store, a query and a path a pass never writes reach the SSR server, which the store never
+// sees, and so does the latest patch pinned in the path; the rate holds across both; a bundle
+// the SSR server no longer has comes from the store, under the same rate, and is kept a year
+// whatever its object says. Switched off, nginx never asks the store; a store it cannot trust
 // or find is nginx-pages-store-unreachable.test.mjs's. Needs Docker and the image's tag in
 // LODB_NGINX_IMAGE (tools/nginx/README.md); skipped without it.
 import assert from 'node:assert/strict';
@@ -34,6 +36,19 @@ const PAGES_BEFORE_REFUSAL = 1 + Number(STORE.LODB_PAGES_BURST);
 const OBJECTS = '/lodb-pages/pages/5';
 // The stub store holds the pages of 15.2.1; each other version stands for one of its failures.
 const STORED = '/en/15.2.1/champions';
+// The patch page of a past patch, which the pass stores beside its lists and entities.
+const PATCH_PAGE = '/fr/15.2.1/changes';
+// A page of the open state, stored with the revisable class's lifetime; one whose object lives
+// a second, for the hot cache's expiry; and the classes nginx gives the client
+// (core/routing/response/cache-control.ts).
+const REVISABLE = '/en/14.1.1/items/1036-long-sword';
+const BRIEF = '/en/14.2.1/champions';
+const CLASSES = {
+  archived: 'public, max-age=3600, s-maxage=31536000',
+  revisable: 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=3600',
+};
+// Past the brief object's second: nginx counts its lifetime in whole seconds.
+const BRIEF_LIFETIME_MS = 2_500;
 const FAILING = {
   missing: '/en/15.1.1/champions',
   forbidden: '/en/15.3.1/champions',
@@ -78,6 +93,7 @@ const CLIENT_HEADERS = { cookie: 'lod_prefs=loc=fr', authorization: 'Bearer stol
 // neither has (the store answers 403), one only the SSR server has, and a name no pass writes,
 // which nginx resolves to the first one's.
 const PRUNED_BUNDLE = '/build/old-ABCD1234.js';
+const BRIEF_BUNDLE = '/build/brief-ABCD1234.js';
 const GONE_BUNDLE = '/build/gone-ABCD1234.js';
 const CURRENT_BUNDLE = '/build/main-ABCD1234.js';
 const DOTTED_BUNDLE = '/build/media/../old-ABCD1234.js';
@@ -159,6 +175,51 @@ describe('nginx image in front of the page store',
         assert.deepEqual(await stack.storeRequests(), [`GET ${OBJECTS}${STORED}`]);
         assert.ok((await keysOf()).includes(`KEY: 4.5|http://localhost${STORED}`));
       });
+
+    test("serves a revisable stored page with its class, kept as long as its object says",
+      async () => {
+        const visitor = aClient();
+        const answers = [await get(REVISABLE, visitor), await get(REVISABLE, visitor)];
+
+        assert.deepEqual(answers.map(sourceOf), [['MISS', 'store'], ['HIT', 'cache']]);
+        for (const answer of answers) {
+          assert.equal(answer.status, 200);
+          assert.equal(answer.body.toString(), stack.storedPage);
+          assert.equal(answer.headers['cache-control'], CLASSES.revisable);
+          assert.deepEqual(storeHeadersOf(answer), []);
+        }
+      });
+
+    test('reads the store again once a stored page outlived its object, never a bundle',
+      async () => {
+        const before = await stack.storeRequests();
+        const fetched = [await get(BRIEF, aClient()), await get(BRIEF_BUNDLE, aClient())];
+        await new Promise((resolve) => setTimeout(resolve, BRIEF_LIFETIME_MS));
+        const page = await get(BRIEF, aClient());
+        const bundle = await get(BRIEF_BUNDLE, aClient());
+
+        assert.deepEqual(sourceOf(fetched[0]), ['MISS', 'store']);
+        assert.deepEqual(sourceOf(page), ['EXPIRED', 'store']);
+        assert.equal(page.body.toString(), stack.storedPage);
+        // Not the revisable class's value: the class an object of no known class gets.
+        assert.equal(page.headers['cache-control'], CLASSES.archived);
+        assert.deepEqual([fetched[1], bundle].map((answer) => answer.headers['x-cache-status']),
+          ['MISS', 'HIT']);
+        assert.equal(bundle.body.toString(), 'brief bundle\n');
+        assert.deepEqual((await stack.storeRequests()).slice(before.length),
+          [`GET ${OBJECTS}${BRIEF}`, `GET /lodb-pages${BRIEF_BUNDLE}`, `GET ${OBJECTS}${BRIEF}`]);
+      });
+
+    test('serves a past patch\'s patch page from the store', async () => {
+      const visitor = aClient();
+      const before = await stack.storeRequests();
+      const answers = [await get(PATCH_PAGE, visitor), await get(PATCH_PAGE, visitor)];
+
+      assert.deepEqual(answers.map(sourceOf), [['MISS', 'store'], ['HIT', 'cache']]);
+      assert.equal(answers[1].body.toString(), stack.storedPage);
+      assert.deepEqual((await stack.storeRequests()).slice(before.length),
+        [`GET ${OBJECTS}${PATCH_PAGE}`]);
+    });
 
     test('answers a HEAD and a conditional request with the page, under no validator of S3',
       async () => {
@@ -248,6 +309,8 @@ describe('nginx image in front of the page store',
           ['/en/15.2.1/champions/../items'],
           ['/en/15.2.1//champions'],
           ['/en/15.2.1/patches'],
+          ['/en/15.2.1/changes/items'],
+          ['/en/15.2.1/changesets'],
           [STORED, { method: 'POST', body: Buffer.from('x') }],
         ];
         for (const [path, options] of requests) {

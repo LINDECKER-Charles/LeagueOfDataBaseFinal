@@ -56,9 +56,13 @@ version stands for each of its other answers (`403`, `429`, `500`, `503`, a list
 answers); `storeRequests()` (`lib/stack.mjs`) reads what reached it. A stored page comes from the
 store then from the cache (`X-LoDb-Source`: `store`, `cache`), with its policy, report-only
 policy, reporting endpoints and `Link` posed again from the metadata (an object without its
-policy gets a strict one, and any stored page the type of a page), the `archived` class's
-one-year `Cache-Control`, none of the store's own headers (`x-amz-*`, `x-amzn-*`, CORS, as the
-local stack's simulated store sends them, nor the validators and ranges S3 states of the
+policy gets a strict one, and any stored page the type of a page), the `Cache-Control` of its
+object's class (`revisable` for an object of that class, the `archived` class's year otherwise),
+kept in the hot cache as long as its object says (an object living a second is read from the
+store again, `EXPIRED`, while a bundle is kept a year whatever its object says), a patch page
+(`/{locale}/{version}/changes`) as any other page, none of the store's own headers (`x-amz-*`,
+`x-amzn-*`, CORS, as the local stack's simulated store sends them, nor the validators and
+ranges S3 states of the
 compressed object: a `HEAD` gets the headers of a `GET`, a conditional request on the store's
 `ETag` or `Last-Modified` and a `Range` get the whole page), and decompressed for a client
 without gzip; the store gets the key with its own `Host` and none of the client's headers; each
@@ -83,8 +87,9 @@ second holds the page to the site: the 21 locales and their texts, each identity
 faces against `src/LoDb.Web/src/styles`, the English a visitor without JavaScript reads.
 
 `archived-cache-control.test.mjs` needs neither: the `Cache-Control` nginx gives a page from the
-store (`sites/site.conf`) is the SSR server's `archived` class
-(`src/LoDb.Web/src/app/core/routing/response/cache-control.ts`), the same constant twice.
+store (`sites/site.conf`) is the SSR server's `archived` class, or its `revisable` one for an
+object of that class (`src/LoDb.Web/src/app/core/routing/response/cache-control.ts`), the same
+constants in both languages.
 
 `compose-environment.test.mjs` needs the Docker CLI only (`docker compose config`): every
 `LODB_*` default of the image reaches nginx with the same value through `compose.yaml`, on a
