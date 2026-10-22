@@ -3,6 +3,7 @@ import type { PrerenderPatchesReport } from '../../../../../../../core/api/gener
 import type { PrerenderReport } from '../../../../../../../core/api/generated/models/prerender-report';
 import { RESOURCE_TYPE } from '../../../../../../../core/api/generated/models/resource-type-array';
 import { LOCALES } from '../../../../../../../core/i18n/locales';
+import { OPENERS_PAGES } from '../../common/patches/openers-pages';
 import type { LaunchPreset } from '../../common/scope/launch-preset';
 import type { PatchSelection } from '../../common/selection/patch-selection';
 import { type EpochKind, epochChoices } from '../perimeter/epoch-choices';
@@ -20,6 +21,11 @@ export interface LaunchDraft {
   readonly epoch: number;
   readonly epochKind: EpochKind;
   readonly skipComplete: boolean;
+  /**
+   * Whether only the patch page and the openers of the index are rendered, the pages that may
+   * be indexed, before a pass over every page.
+   */
+  readonly openersFirst: boolean;
   readonly fromPass: number | null;
   /**
    * Whether the ticks are read from the coverage yet: 'all', 'incomplete' and the lists wait
@@ -78,6 +84,7 @@ export function draftOf(
     epoch,
     epochKind: kindOf(report, epoch),
     skipComplete: preset.skipComplete,
+    openersFirst: preset.pages === OPENERS_PAGES,
     fromPass: preset.fromPass,
     isResolved: patches !== null,
     isPriorityCapped: false,

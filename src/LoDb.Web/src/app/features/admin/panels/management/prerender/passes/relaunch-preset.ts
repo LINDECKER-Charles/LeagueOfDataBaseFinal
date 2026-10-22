@@ -47,7 +47,7 @@ function versionsOf(pass: PrerenderPassView, sources: RelaunchSources): LaunchPr
 /**
  * « Relancer ce périmètre » (§ 5.4): the perimeter of a pass again, whole. Its versions (every
  * older patch, its list read from the complete progress, or its range from before the lists
- * turned into the older patches it spans), its locales, types and priorities; its epoch,
+ * turned into the older patches it spans), its locales, types, pages and priorities; its epoch,
  * unless retired since, then the served one. Nothing is skipped: it renders again what the
  * pass rendered.
  */
@@ -62,6 +62,7 @@ export function relaunchPreset(pass: PrerenderPassView, sources: RelaunchSources
     pageTypes: pass.scope.pageTypes ?? null,
     epoch: pass.epoch < sources.servedEpoch ? sources.servedEpoch : pass.epoch,
     skipComplete: false,
+    pages: pass.scope.pages ?? null,
     fromPass: pass.id,
   };
 }

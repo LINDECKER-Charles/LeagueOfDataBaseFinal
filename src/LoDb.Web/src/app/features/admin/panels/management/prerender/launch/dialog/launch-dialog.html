@@ -161,6 +161,10 @@
           [enqueuesPromotions]="store.report.enqueuesPromotions"
           (changed)="store.update({ pageTypes: $event })"
         />
+        <lodb-pages-choice
+          [openersFirst]="store.draft().openersFirst"
+          (changed)="store.update({ openersFirst: $event })"
+        />
         <lodb-epoch-cards
           [choices]="store.choices"
           [epoch]="store.draft().epoch"

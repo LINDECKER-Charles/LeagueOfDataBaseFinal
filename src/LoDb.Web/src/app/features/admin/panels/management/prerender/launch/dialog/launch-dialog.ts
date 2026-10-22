@@ -19,6 +19,7 @@ import { injectAdminText } from '../../../../../shared/inject-admin-text';
 import type { LaunchField, LaunchMessage, LaunchStep } from '../call/launch-errors-of';
 import { EpochCards } from '../perimeter/epoch-cards';
 import { LocaleChips } from '../perimeter/locale-chips';
+import { PagesChoice } from '../perimeter/pages-choice';
 import { TypeChips } from '../perimeter/type-chips';
 import { PatchPicker } from '../picker/patch-picker';
 import { PasteBox } from '../priority/paste-box';
@@ -59,6 +60,7 @@ const FOOTER_ID = 'prerender-launch-footer';
     EpochCards,
     LaunchSummary,
     LocaleChips,
+    PagesChoice,
     PasteBox,
     PatchPicker,
     PriorityTray,
