@@ -9,9 +9,9 @@ import { TextSegment } from '../models/text-segment';
 import { ValueKind } from '../models/value-kind';
 
 /**
- * A field of the block « Ce qui a changé dans ce patch », its values in the page's language
- * : only the fields the index marks changed, each shown even when its two localized
- *  values are equal.
+ * A field of the block « Ce qui a changé dans ce patch », its values in the page's language:
+ * exactly the fields the index marks changed, each shown even when its two localized values
+ * are equal, or when neither side has one (no values, no segments).
  */
 export interface FieldChange {
 
@@ -21,8 +21,9 @@ export interface FieldChange {
   after: Array<ChangeValue>;
 
   /**
-   * The values before; empty when the field is new, when its localized values are equal
-   * (the value after shows alone), and for a text, which its segments carry.
+   * The values before; empty when the field is new, when its localized values are equal or
+   * the version compared had it only in en_US (the value after shows alone), and for a
+   * text, which its segments carry.
    */
   before: Array<ChangeValue>;
   field: ChangeField;
@@ -36,7 +37,8 @@ export interface FieldChange {
   /**
    * A text's diff, word by word (character by character in ja, zh, th), to write as text in
    * `&lt;del&gt;` and `&lt;ins&gt;`, never as HTML; one `same` segment when
-   * its localized texts are equal; empty for another kind.
+   * its localized texts are equal or the version compared had it only in en_US; empty for
+   * another kind, and for a text neither side has in the page's language.
    */
   segments: Array<TextSegment>;
   subject: (null | ChangeSubject);

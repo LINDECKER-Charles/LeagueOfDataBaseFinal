@@ -11,9 +11,7 @@ internal static class ChangesEndpoint
             .WithName("getPatchChanges")
             .WithSummary("What a patch changed: entities whose state opens there, and retired.");
 
-    // The contract only, until the index answers it: no version has a page of changes yet.
     private static Task<Results<CachedJson<PatchChanges>, CatalogProblem>> GetAsync(
         [AsParameters] ChangesRequest request) =>
-        Task.FromResult<Results<CachedJson<PatchChanges>, CatalogProblem>>(
-            CatalogProblem.NoPatchPage(request.Version));
+        request.Changes.ReadAsync(request.Scope, request.CancellationToken);
 }

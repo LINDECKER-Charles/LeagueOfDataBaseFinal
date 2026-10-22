@@ -84,18 +84,37 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   qu'une montée de version peut déplacer.
 - Points d'accroche de `app.config.ts` : chaque propriétaire remplit son dossier
   (`core/auth`, `core/analytics`, `core/update`) sans toucher `app.config.ts` ni `app.html`.
-- **Historique des patchs** (`/{locale}/patches`) : quatre liens par version listée, des
-  centaines de versions. Balisage nu et `ViewEncapsulation.None` voulus (l'attribut
-  d'encapsulation pesait un tiers de la page) : ni attribut, ni classe, ni pipe par lien.
-  L'index des sitemaps n'annonce que le dernier patch (`LoDb__Seo__SitemapVersionWindow`,
-  `0`) ; le sitemap d'un ancien patch reste servi, mais ne liste que les fiches des entités
-  dont c'est la dernière version, souvent aucune : un `urlset` vide n'est pas une
-  régression. La fiche d'un ancien patch est canonique au dernier patch, sans hreflang ni
-  JSON-LD, ou `noindex, follow` avant la dernière version d'une entité retirée (ADR 0005,
-  amendement du 2026-10-14) : voulu. Les visiteurs atteignent les anciens patchs par cette
-  page et le bloc « Dans les patchs précédents » des fiches, qui ne chargent aucun catalogue.
-  Une ancienne URL du site qui nomme une version perd cette version dans sa 301 (URL courte,
-  liste nue) tant que l'entité existe au dernier patch : voulu (amendement du 2026-10-16).
+- **Historique des patchs** (`/{locale}/patches`) : par version listée, sa page de
+  changements quand elle en a une, puis ses quatre listes, des centaines de versions.
+  Balisage nu et `ViewEncapsulation.None` voulus (l'attribut d'encapsulation pesait un tiers
+  de la page) : ni attribut, ni classe, ni pipe par lien. Une fiche d'ancien patch est
+  indexée une fois par état (ADR 0005, amendement du 2026-10-22) : l'ouvreur d'un état clos
+  est sa propre canonique, les autres versions de l'état désignent l'ouvreur dans la même
+  langue, sans hreflang ni JSON-LD, et une version de l'état ouvert désigne l'URL courte :
+  voulu, « Autre page avec balise canonique correcte » monte dans la Search Console.
+  L'API décide la canonique (`StateView`) depuis l'index des états et le dernier patch du
+  lecteur de catalogues, jamais celui de l'index : une page à ce patch est toujours sa
+  propre canonique. Une version que l'index ne couvre pas encore (index en retard sur une
+  promotion) compte comme l'état ouvert ; hors de l'index (plus ancienne que sa couverture,
+  listée après le dernier patch, avant toute promotion), la règle résiduelle donne l'URL
+  courte si le dernier patch tient l'entité, sinon la page elle-même. Index illisible et pas
+  de copie en mémoire : la fiche et `…/changes` répondent 503 avec `Retry-After`. Le
+  `{version}.xml` d'un ancien patch ne liste que sa page de changements et les ouvreurs de
+  ses états clos : un `urlset` vide reste servi, mais l'index des sitemaps ne l'annonce
+  pas. Le bloc « Historique » se lit dans l'index seul ; l'ouvreur lit en plus le catalogue
+  de la dernière version de l'état précédent, dans sa langue : épinglé, il répond 503 tant
+  que ce catalogue n'est pas stocké, jamais rendu sans son bloc ; l'URL courte sort alors
+  sans le bloc. Le bloc liste toujours les champs que l'index marque changés, même sans
+  valeur dans la langue de la page. Si Data Dragon ne livrait pas encore cette langue à la
+  version comparée, son catalogue tient l'en_US : seuls les nombres, codes, ids et chaînes par
+  rang des sorts y gardent leur valeur avant, un texte ou un nom s'affiche avec sa seule
+  valeur après (voulu, `ComparedProjection`). Une ancienne URL du site qui nomme une version
+  mène à la canonique de la page qu'elle nommait : l'ouvreur de l'état clos, avec le slug de
+  cette version, ou l'URL courte de l'état ouvert ; sans version, un champion, un objet ou
+  un sort absent du dernier patch mène à l'ouvreur de son dernier état. Une voie de runes
+  absente du dernier patch garde la règle du 2026-10-16 (sa page épinglée de la version
+  nommée, 404 sans version) : l'ancien site la nommait par sa clé, que seul le catalogue du
+  dernier patch traduit en id pour l'index (amendements du 2026-10-16 et du 2026-10-22).
 - Une page qui oublie `Seo.apply` n'a ni canonique ni hreflang. Une clé `about.*`, `api.*`
   ou `seo.*` n'est traduite que si un ancêtre fournit son scope (`provideTranslocoScope`) ;
   sinon la clé brute sort dans le HTML, sans erreur. Le chrome (en-tête, pied de page) n'en
@@ -221,8 +240,11 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   catalogue ouvert ; les images restantes restent en attente et les listes les confient à
   la file de fond. Un catalogue qui ne s'ouvre pas et un flux expiré finissent toujours
   `failed`, en gardant les comptes atteints.
-- Une URL de l'ancien site sur une version non stockée répond `302` vers la liste de la
-  version, sans rien ingérer : voulu (une entrée retirée du jeu ne devient pas une 404).
+- Une URL de l'ancien site qui nomme une version où l'index des états n'a pas l'entité, pour
+  une entité absente du dernier patch et une version non stockée, répond `302` vers la liste
+  de la version, sans rien ingérer : voulu (une entrée retirée du jeu ne devient pas une
+  404). Une entité que l'index connaît à cette version mène à sa canonique sans ouvrir aucun
+  catalogue que celui du dernier patch.
 - **E-mails** : le modèle d'un `EmailMessage` s'écrit avec `EmailModelKeys`, jamais en
   littéral (sinon `dead` dès le premier essai). L'outbox n'envoie rien sans
   `LoDb:Mail:Host` : voulu. En local, Mailpit sur http://localhost:18025.
