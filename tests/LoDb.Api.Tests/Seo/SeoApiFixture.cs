@@ -1,14 +1,11 @@
-using System.Globalization;
 using System.Net;
 using System.Text.Json;
 using LoDb.Api.Modules.Seo.IndexNow;
-using LoDb.Domain.Languages;
-using LoDb.Domain.Versions;
-using LoDb.Ingestion.Catalog;
-using LoDb.Ingestion.Catalog.Reading;
+using LoDb.Ingestion.Catalog.States;
 using LoDb.Ingestion.Pipeline.Versions;
 using LoDb.Testing;
 using LoDb.Testing.Fixtures;
+using LoDb.Testing.States;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,42 +14,37 @@ namespace LoDb.Api.Tests.Seo;
 
 /// <summary>
 /// The API over the recorded Data Dragon and its own database holding 16.19.1, ingested whole
-/// and promoted, and the en_US datasets of <see cref="Archived"/> and of <see cref="Previous"/>,
-/// listed after it, the sitemaps' language, read once as a visitor would (their images wait
-/// for the workers, which are off). Crawler reads only queue the other versions, and the
-/// workers are off: their sitemaps stay pending whatever the order of the tests. The sitemap
-/// index announces <see cref="SitemapVersionWindow"/> past versions, 16.18.1 only: 8.7.1 lies
-/// outside. The canonical origin is the test client's, and the promotion of 16.19.1 submitted
-/// its pages to <see cref="IndexNow"/> under <see cref="IndexNowKey"/>.
+/// and promoted, reading the index of states of <see cref="SeoStates"/> from memory. The
+/// canonical origin is the test client's, and the promotion of 16.19.1 submitted its pages to
+/// <see cref="IndexNow"/> under <see cref="IndexNowKey"/>.
 /// </summary>
 public sealed class SeoApiFixture(PostgresContainerFixture postgres) : IAsyncLifetime
 {
-    /// <summary>The past versions the index announces, few enough for the fixtures.</summary>
-    public const int SitemapVersionWindow = 1;
-
     /// <summary>The origin of the test client, set as the canonical one.</summary>
     public const string Origin = "http://localhost";
 
     /// <summary>The IndexNow key the site publishes.</summary>
     public const string IndexNowKey = "5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e";
 
-    /// <summary>A past version outside the window, its en_US datasets stored.</summary>
-    public static readonly PatchVersion Archived = PatchVersion.Parse("8.7.1");
-
-    /// <summary>
-    /// The version listed after <see cref="Archived"/> and before the latest one, its en_US
-    /// datasets stored: where its sitemap reads which entities 8.7.1 was the last to hold.
-    /// </summary>
-    public static readonly PatchVersion Previous = PatchVersion.Parse("16.18.1");
-
     private TestDatabase? _database;
     private ApiFactory? _factory;
     private HttpClient? _client;
+    private IServiceProvider? _services;
 
     public static CancellationToken Token => TestContext.Current.CancellationToken;
 
     /// <summary>What the IndexNow endpoint received.</summary>
     public FakeIndexNow IndexNow { get; } = new();
+
+    /// <summary>
+    /// The index of states the API reads, set before the promotion: a test may make it
+    /// unavailable, and must restore it.
+    /// </summary>
+    public InMemoryEntityStateIndex States { get; } = new() { Snapshot = SeoStates.Snapshot() };
+
+    /// <summary>The services of the API, to build what a test runs outside a request.</summary>
+    public IServiceProvider Services =>
+        _services ?? throw new InvalidOperationException("The fixture is not initialized.");
 
     private HttpClient Client =>
         _client ?? throw new InvalidOperationException("The fixture is not initialized.");
@@ -67,8 +59,6 @@ public sealed class SeoApiFixture(PostgresContainerFixture postgres) : IAsyncLif
             {
                 // The production backoff starts at one second: only the attempts matter.
                 ["LoDb:Egress:RetryBaseDelay"] = "00:00:00.001",
-                ["LoDb:Seo:SitemapVersionWindow"] =
-                    SitemapVersionWindow.ToString(CultureInfo.InvariantCulture),
                 ["LoDb:Seo:CanonicalOrigin"] = Origin,
                 ["LoDb:Seo:IndexNowKey"] = IndexNowKey,
             },
@@ -78,9 +68,11 @@ public sealed class SeoApiFixture(PostgresContainerFixture postgres) : IAsyncLif
             services =>
             {
                 services.AddDdragonFixtureReplay(replay);
+                services.AddSingleton<IEntityStateIndex>(States);
                 services.AddHttpClient(IndexNowClient.ClientName)
                     .ConfigurePrimaryHttpMessageHandler(() => IndexNow);
             }));
+        _services = host.Services;
         await IngestAsync(host.Services);
 
         // The redirects are what the tests check: never follow them.
@@ -129,14 +121,5 @@ public sealed class SeoApiFixture(PostgresContainerFixture postgres) : IAsyncLif
             IngestionRequest.Complete,
             Token);
         Assert.Equal(VersionIngestionOutcome.Completed, latest.Outcome);
-        foreach (var version in (PatchVersion[])[Archived, Previous])
-        {
-            var stored = await services.GetRequiredService<ICatalogReader>().GetAsync(
-                version,
-                DdragonLanguage.EnUs,
-                ColdDemand.Synchronous.By(ColdCaller.Internal),
-                Token);
-            Assert.True(stored.IsReady, $"{version.Value}: {stored.Status}");
-        }
     }
 }

@@ -12,6 +12,13 @@ tags: [navigation, anciens-patchs, referencement]
 > sitemaps n'annonce plus que le dernier patch (fenêtre à 0, plus 12). La page « Historique
 > des patchs » et le bloc « Dans les patchs précédents » valent toujours.
 
+> **Remplacé le 2026-10-22** par [`seo-une-page-par-etat`](../../produit/seo-une-page-par-etat.md) :
+> plus de fenêtre, `LoDb__Seo__SitemapVersionWindow` disparaît. L'index des sitemaps annonce
+> le sitemap de chaque patch passé couvert par l'index des états dès qu'il liste quelque
+> chose : la page des changements du patch et les pages d'ouverture de ses états clos, une
+> page indexée par état. Le bloc « Dans les patchs précédents » laisse la place à
+> « Historique ».
+
 ## Ce qui change
 
 Le pied de page mène à une nouvelle page, « Historique des patchs ». Elle liste tous les

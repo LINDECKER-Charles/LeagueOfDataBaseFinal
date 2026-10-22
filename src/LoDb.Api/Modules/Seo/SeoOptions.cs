@@ -8,12 +8,6 @@ internal sealed class SeoOptions
     public const string SectionName = "LoDb:Seo";
 
     /// <summary>
-    /// Default of <see cref="SitemapVersionWindow"/>: the latest version alone, the one whose
-    /// short URLs are canonical.
-    /// </summary>
-    public const int DefaultSitemapVersionWindow = 0;
-
-    /// <summary>
     /// Origin every published URL points to, such as <c>https://league-of-data-base.com</c>;
     /// unset, the files use the origin of the request.
     /// </summary>
@@ -24,19 +18,6 @@ internal sealed class SeoOptions
     /// <c>Host</c> header.
     /// </remarks>
     public string? CanonicalOrigin { get; set; }
-
-    /// <summary>
-    /// How many versions before the latest one the sitemap index announces; <c>0</c>, the
-    /// default, leaves only the latest version's sitemaps.
-    /// </summary>
-    /// <remarks>
-    /// A past version's sitemap lists only the pages still canonical there, those of the
-    /// entities it was the last to hold (ADR 0005, amendment of 2026-10-14): every other page
-    /// of a past version is indexed under its latest short URL, or not at all. A window then
-    /// announces the entities the last patches dropped; the sitemap of a version outside it
-    /// is still served.
-    /// </remarks>
-    public int SitemapVersionWindow { get; set; } = DefaultSitemapVersionWindow;
 
     /// <summary>
     /// Key of the IndexNow protocol, 8 to 128 letters, digits or dashes: set, the promotion

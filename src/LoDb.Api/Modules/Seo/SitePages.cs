@@ -20,9 +20,18 @@ internal static class SitePages
 
     /// <summary>
     /// Path of the patch history below the locale: the page linking every listed version's
-    /// lists, how crawlers reach the versions the sitemap index no longer announces.
+    /// page of changes and lists, how crawlers reach every patch by links, those the sitemap
+    /// index does not announce included (outside the index of states, or with nothing indexed).
     /// </summary>
     public const string PatchHistory = "patches";
+
+    /// <summary>
+    /// Path of a patch's page of changes below the locale and the version prefix:
+    /// <c>/{locale}/changes</c> for the latest patch, <c>/{locale}/{version}/changes</c> for
+    /// another. Not in <see cref="PatchBound"/>: a patch that changed nothing has a
+    /// <c>noindex</c> page, which no sitemap nor IndexNow announces.
+    /// </summary>
+    public const string Changes = "changes";
 
     /// <summary>
     /// Pages that exist once per locale, never per version, and change with every promoted
