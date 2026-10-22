@@ -5,9 +5,9 @@ namespace LoDb.Api.Workers.Prerender;
 
 /// <summary>
 /// The reconciliation of the pre-rendering with the promotions (ADR 0011): every half hour,
-/// the patch the latest one replaced gets the units its promotion's notice should have given
-/// it, and the states the index closed since the queue of the closed states last took them are
-/// enqueued, on one instance at a time.
+/// once the index of states covers the latest patch, the patch it replaced gets the units its
+/// promotion's notice should have given it, and the states the index closed since the queue of
+/// the closed states last took them are enqueued, on one instance at a time.
 /// </summary>
 /// <remarks>
 /// The reconciler is resolved per run, from a scope of its own: absent (the module not

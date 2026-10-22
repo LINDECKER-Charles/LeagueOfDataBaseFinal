@@ -85,8 +85,11 @@ internal sealed class RevisionRig : IAsyncDisposable
     public async Task SettleAsync()
     {
         Index(1);
-        await Producer.ProduceAsync(null, Token);
+        await ProduceAsync();
     }
+
+    /// <summary>A run of the producer on the index as the test set it; the rows written.</summary>
+    public Task<int> ProduceAsync() => Producer.ProduceAsync(Harness.Index.Snapshot, Token);
 
     public async Task<List<PrerenderRevisionPage>> RowsAsync()
     {

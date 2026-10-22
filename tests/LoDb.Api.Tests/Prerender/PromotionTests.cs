@@ -8,8 +8,10 @@ using LoDb.Domain.Languages;
 using LoDb.Domain.Versions;
 using LoDb.Infrastructure.Persistence.Ddragon;
 using LoDb.Infrastructure.Persistence.Prerender;
+using LoDb.Ingestion.Catalog.States.Snapshots;
 using LoDb.Ingestion.Pipeline.Versions;
 using LoDb.Testing;
+using LoDb.Testing.States;
 using Microsoft.EntityFrameworkCore;
 
 namespace LoDb.Api.Tests.Prerender;
@@ -17,7 +19,8 @@ namespace LoDb.Api.Tests.Prerender;
 /// <summary>
 /// The patch that leaves the latest rank gets its units, one per locale: they join the active
 /// pass ahead of the others, or open a pass on the served epoch; the reconciliation heals a
-/// notice lost; nothing happens where the promotions are not to be followed (the staging).
+/// notice lost; nothing happens where the promotions are not to be followed (the staging), nor
+/// while the index of states does not cover the promotion.
 /// </summary>
 public sealed class PromotionTests(PostgresContainerFixture postgres)
 {
@@ -199,6 +202,30 @@ public sealed class PromotionTests(PostgresContainerFixture postgres)
             static record => record.Id.Name == "prerender.promotion.deferred");
     }
 
+    // Its step of the promotion failed: the index still ends at 16.18.1.
+    [Fact]
+    public async Task IndexBehindThePromotionGivesNoUnitUntilItCoversIt()
+    {
+        await using var harness = await StartAsync(isAutomatic: true);
+        harness.Index.Snapshot = TestStates.Snapshot([Older.Value, Left.Value], []);
+        var reconciler = harness.Get<PrerenderReconciler>();
+
+        await Listener(harness).OnPromotedAsync(Latest, Token);
+        var whileBehind = await reconciler.ReconcileAsync(Token);
+        await using (var db = harness.Database.CreateContext())
+        {
+            Assert.False(await db.PrerenderPasses.AnyAsync(Token));
+        }
+
+        harness.Index.Snapshot = Covering();
+        var caughtUp = await reconciler.ReconcileAsync(Token);
+
+        Assert.Equal((0, UiLocales.All.Count), (whileBehind, caughtUp));
+        Assert.Contains(
+            harness.Logs.GetSnapshot(),
+            static record => record.Id.Name == "prerender.promotion.index_behind");
+    }
+
     private static IPromotionListener Listener(PrerenderHarness harness) =>
         Assert.Single(
             harness.Get<IEnumerable<IPromotionListener>>(),
@@ -215,11 +242,16 @@ public sealed class PromotionTests(PostgresContainerFixture postgres)
                 [Section + "ServedEpoch"] = servedEpoch.ToString(CultureInfo.InvariantCulture),
             });
         harness.Catalog.Pinned.Add(Left);
+        harness.Index.Snapshot = Covering();
         await using var db = harness.Database.CreateContext();
         db.DdragonVersions.AddRange(Promoted(Left, 2), Promoted(Latest, 1));
         await db.SaveChangesAsync(Token);
         return harness;
     }
+
+    // The index of states, extended by the promotion of 16.19.1.
+    private static EntityStateSnapshot Covering() =>
+        TestStates.Snapshot([Older.Value, Left.Value, Latest.Value], []);
 
     private static DdragonVersion Promoted(PatchVersion version, int daysAgo)
     {

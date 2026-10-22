@@ -11,11 +11,16 @@ namespace LoDb.Api.Modules.Admin.Prerender.Revision.Producing;
 /// and stored so since.
 /// </summary>
 /// <remarks>
-/// Versions from the one the last promotion replaced on are left out: they were not older
-/// patches before it, so no pass and no queue stored them yet, and the unit of that version
-/// renders them (its promotion's settling delay waited out). The path is the state's, as its
-/// opener spells it: the slug and the id are the same in every version of a state but for
-/// the case of a champion id Data Dragon changed, whose page then redirects and is skipped.
+/// <para>
+/// The version the closing promotion replaced is one of them, though its unit renders it too:
+/// the demand queue, a pass, or that unit when the index caught up late, may have stored its
+/// page while the index still held the state open, and nothing else would render it again. It
+/// costs one page per closed state and locale.
+/// </para>
+/// <para>
+/// The path is the state's, as its opener spells it: the drain renders each version's own
+/// spelling, which differs when Data Dragon changed the case of an id within the state.
+/// </para>
 /// </remarks>
 internal static class ClosedStatePages
 {
@@ -25,13 +30,9 @@ internal static class ClosedStatePages
     /// </summary>
     /// <param name="states">The closed states, in any order.</param>
     /// <param name="coverage">The versions the index covers.</param>
-    /// <param name="leaving">
-    /// The version the latest one replaced at the last promotion; null when there was none.
-    /// </param>
     public static IReadOnlyList<RevisionPage> Of(
         IEnumerable<IndexedState> states,
-        CoveredVersions coverage,
-        PatchVersion? leaving)
+        CoveredVersions coverage)
     {
         ArgumentNullException.ThrowIfNull(states);
         ArgumentNullException.ThrowIfNull(coverage);
@@ -39,7 +40,7 @@ internal static class ClosedStatePages
         [
             .. states
                 .Where(static state => state.Last is not null)
-                .SelectMany(state => VersionsOf(state, coverage, leaving)
+                .SelectMany(state => VersionsOf(state, coverage)
                     .Select(version => (Version: version, Path: state.Path)))
                 .OrderBy(static page => page.Version)
                 .ThenBy(static page => page.Path, StringComparer.Ordinal)
@@ -51,12 +52,8 @@ internal static class ClosedStatePages
 
     private static IEnumerable<PatchVersion> VersionsOf(
         IndexedState state,
-        CoveredVersions coverage,
-        PatchVersion? leaving) =>
-        coverage.All.Where(version =>
-            version >= state.Opener
-            && version <= state.Last!
-            && (leaving is null || version < leaving));
+        CoveredVersions coverage) =>
+        coverage.All.Where(version => version >= state.Opener && version <= state.Last!);
 
     private static RevisionPage PageOf(PatchVersion version, UiLocale locale, string path)
     {

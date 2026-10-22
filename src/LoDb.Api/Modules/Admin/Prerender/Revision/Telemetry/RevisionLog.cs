@@ -34,13 +34,6 @@ internal static partial class RevisionLog
         DateTimeOffset closedThrough);
 
     [LoggerMessage(
-        EventName = "prerender.revision.index_behind",
-        Level = LogLevel.Warning,
-        Message = "The index of states does not cover {Version} yet: the states its promotion"
-            + " closed are enqueued once it does, by the reconciliation.")]
-    public static partial void IndexBehind(ILogger logger, string version);
-
-    [LoggerMessage(
         EventName = "prerender.revision.drained",
         Level = LogLevel.Information,
         Message = "The queue of the closed states rendered a batch of {Pages} pages: {Written}"

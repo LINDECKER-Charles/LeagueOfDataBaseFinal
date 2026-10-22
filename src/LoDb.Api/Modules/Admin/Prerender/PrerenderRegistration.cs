@@ -79,6 +79,7 @@ internal static class PrerenderRegistration
     private static void AddPromotion(IServiceCollection services)
     {
         services.TryAddSingleton<PromotedVersions>();
+        services.TryAddSingleton<CoveringIndex>();
         services.TryAddSingleton<VersionEnqueuer>();
         services.TryAddSingleton<PrerenderReconciler>();
         services.TryAddEnumerable(ServiceDescriptor

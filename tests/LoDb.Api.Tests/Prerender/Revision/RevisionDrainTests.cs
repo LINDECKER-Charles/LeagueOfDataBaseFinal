@@ -127,12 +127,12 @@ public sealed class RevisionDrainTests(PostgresContainerFixture postgres)
         RevisionRig.StartAsync(postgres, settings?.ToDictionary());
 
     // The state of the item from 16.9.1 to 16.10.1, closed by the promotion of 16.11.1: its
-    // page of 16.9.1 in every locale, or in English alone.
+    // pages of both versions in every locale, or in English alone.
     private static async Task EnqueueAsync(RevisionRig rig, bool onlyEnglish = false)
     {
         await rig.SettleAsync();
         rig.Index(1, RevisionRig.Closed("16.9.1", "16.10.1", ClosedByPromotion));
-        await rig.Producer.ProduceAsync(RevisionRig.Latest, Token);
+        await rig.ProduceAsync();
         if (onlyEnglish)
         {
             await using var db = rig.Harness.Database.CreateContext();

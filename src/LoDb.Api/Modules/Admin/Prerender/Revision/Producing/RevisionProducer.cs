@@ -6,7 +6,6 @@ using LoDb.Api.Modules.Admin.Prerender.Revision.Telemetry;
 using LoDb.Domain.Versions;
 using LoDb.Infrastructure.Persistence;
 using LoDb.Infrastructure.Persistence.Prerender.Revision;
-using LoDb.Ingestion.Catalog.States;
 using LoDb.Ingestion.Catalog.States.Snapshots;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -15,16 +14,17 @@ namespace LoDb.Api.Modules.Admin.Prerender.Revision.Producing;
 
 /// <summary>
 /// Fills the queue of the closed states (<c>prerender_revision</c>): the pages of every state the
-/// index closed since its watermark, each version but those the last promotion made older
-/// patches, in the 21 locales, for the served epoch and for the epoch the active pass writes,
-/// due once the servers read an index that covers the closure.
+/// index closed since its watermark, each of its versions, in the 21 locales, for the served
+/// epoch and for the epoch the active pass writes, due once the servers read an index that
+/// covers the closure.
 /// </summary>
 /// <remarks>
 /// <para>
 /// Called by the promotion, after the index extended (<c>PromotionStage.Prerender</c>), and by
-/// the reconciliation of the pre-rendering, which heals a promotion whose notice was lost:
-/// idempotent through the watermark, on any instance, whatever <c>AutoEnqueueOnPromotion</c>
-/// says. It runs whenever the store is configured, the staging included.
+/// the reconciliation of the pre-rendering, which heals a promotion whose notice was lost, each
+/// with an index that covers the latest patch (<see cref="CoveringIndex"/>): idempotent through
+/// the watermark, on any instance, whatever <c>AutoEnqueueOnPromotion</c> says. It runs
+/// whenever the store is configured, the staging included.
 /// </para>
 /// <para>
 /// A generation the watermark does not name (the first run, a rebuild of the index) is
@@ -36,7 +36,6 @@ namespace LoDb.Api.Modules.Admin.Prerender.Revision.Producing;
 /// </remarks>
 internal sealed class RevisionProducer(
     PrerenderActivation activation,
-    IEntityStateIndex index,
     PromotedVersions promoted,
     IPrerenderCatalog catalog,
     IDbContextFactory<LoDbDbContext> contexts,
@@ -50,29 +49,15 @@ internal sealed class RevisionProducer(
     /// <summary>
     /// Enqueues what the closures since the watermark changed; the rows written.
     /// </summary>
-    /// <param name="promotedVersion">
-    /// The version a promotion just made the latest, whose closures the index must cover first;
-    /// null for a reconciliation.
-    /// </param>
+    /// <param name="snapshot">The index, covering the latest patch.</param>
     /// <param name="cancellationToken">Cancels the reads and the writes.</param>
     public async Task<int> ProduceAsync(
-        PatchVersion? promotedVersion,
+        EntityStateSnapshot snapshot,
         CancellationToken cancellationToken)
     {
-        if (!activation.IsActive)
+        ArgumentNullException.ThrowIfNull(snapshot);
+        if (!activation.IsActive || snapshot.Generation is null)
         {
-            return 0;
-        }
-
-        var snapshot = await index.GetAsync(cancellationToken);
-        if (snapshot.Generation is null)
-        {
-            return 0;
-        }
-
-        if (promotedVersion is not null && !snapshot.Coverage.Contains(promotedVersion))
-        {
-            RevisionLog.IndexBehind(logger, promotedVersion.Value);
             return 0;
         }
 
@@ -97,7 +82,7 @@ internal sealed class RevisionProducer(
         var closed = snapshot.States.Where(state => state.ClosedAt > since).ToList();
         var enqueue = new RevisionEnqueue
         {
-            Pages = ClosedStatePages.Of(closed, snapshot.Coverage, leaving),
+            Pages = ClosedStatePages.Of(closed, snapshot.Coverage),
             Epochs = await EpochsAsync(db, cancellationToken),
             Now = clock.GetUtcNow(),
             DueAt = clock.GetUtcNow() + catalog.SettlingDelay,
