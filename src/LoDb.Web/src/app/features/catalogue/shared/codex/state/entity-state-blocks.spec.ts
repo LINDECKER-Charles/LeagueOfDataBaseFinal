@@ -197,7 +197,7 @@ describe('EntityStateBlocks', () => {
     expect(block.querySelector('dd [aria-hidden]')).toBeNull();
   });
 
-  it('says since when a page of a state it did not open is unchanged, linking its opener', async () => {
+  it('says since when a page its state did not open is unchanged, linking its opener', async () => {
     const block = await render('11.7.1', {
       state: stateOf('11.5.1', '11.9.1', '11.7.1'),
       history: FROZEN_HISTORY,
@@ -242,7 +242,7 @@ describe('EntityStateBlocks', () => {
     ]);
   });
 
-  it('links the opener of the open state from the short URL, the regional variant kept', async () => {
+  it('links the opener of the open state from the short URL, keeping the variant', async () => {
     const block = await render(
       LATEST,
       { state: stateOf('16.17.1', null, LATEST), isPresentInLatest: true },

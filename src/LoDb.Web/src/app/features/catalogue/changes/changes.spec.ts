@@ -259,7 +259,7 @@ describe("the page of a patch's changes", () => {
     });
   });
 
-  it('serves the latest patch at its short URL, out of the index when it changed nothing', async () => {
+  it('serves the latest patch at its short URL, unindexed when it changed nothing', async () => {
     const { init, page, apply } = await visit('/fr/changes');
 
     expect(init.status).toBe(HttpStatusCode.Ok);
