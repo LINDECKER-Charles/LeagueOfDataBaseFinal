@@ -17,6 +17,8 @@ internal sealed class FakeSsr : HttpMessageHandler
     public const string BuildA = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
     public const string BuildB = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
     public const string ArchivedCaching = "public, max-age=3600, s-maxage=31536000";
+    public const string RevisableCaching =
+        "public, max-age=3600, s-maxage=3600, stale-while-revalidate=3600";
     public const string Policy = "script-src 'self' 'sha256-cGFnZQ=='";
     public const string ReportOnlyPolicy = "require-trusted-types-for 'script'";
     public const string Endpoints = "csp=\"/api/security/csp-reports\"";
@@ -66,21 +68,12 @@ internal sealed class FakeSsr : HttpMessageHandler
     }
 
     /// <summary>A page of the pass: what the SSR stores, as it sends it.</summary>
-    public static HttpResponseMessage Archived(string path, string build)
-    {
-        var response = Html(path, HttpStatusCode.OK);
-        response.Headers.CacheControl = CacheControlHeaderValue.Parse(ArchivedCaching);
-        response.Headers.TryAddWithoutValidation("X-LoDb-Cache-Class", "archived");
-        response.Headers.TryAddWithoutValidation("X-LoDb-Build", build);
-        response.Headers.TryAddWithoutValidation("Content-Security-Policy", Policy);
-        response.Headers.TryAddWithoutValidation(
-            "Content-Security-Policy-Report-Only",
-            ReportOnlyPolicy);
-        response.Headers.TryAddWithoutValidation("Reporting-Endpoints", Endpoints);
-        response.Headers.TryAddWithoutValidation("Link", Preconnect);
-        response.Headers.Vary.Add("Accept-Encoding");
-        return response;
-    }
+    public static HttpResponseMessage Archived(string path, string build) =>
+        Stored(path, build, "archived", ArchivedCaching);
+
+    /// <summary>A page of the pass of an open state, which a promotion renders again.</summary>
+    public static HttpResponseMessage Revisable(string path, string build) =>
+        Stored(path, build, "revisable", RevisableCaching);
 
     /// <summary>An answer of <paramref name="status"/>, with a Retry-After when given.</summary>
     public static HttpResponseMessage Status(HttpStatusCode status, int? retryAfterSeconds = null)
@@ -147,6 +140,26 @@ internal sealed class FakeSsr : HttpMessageHandler
         return IsRedirected?.Invoke(path) == true
             ? Status(HttpStatusCode.MovedPermanently)
             : Archived(path, Build);
+    }
+
+    private static HttpResponseMessage Stored(
+        string path,
+        string build,
+        string cacheClass,
+        string caching)
+    {
+        var response = Html(path, HttpStatusCode.OK);
+        response.Headers.CacheControl = CacheControlHeaderValue.Parse(caching);
+        response.Headers.TryAddWithoutValidation("X-LoDb-Cache-Class", cacheClass);
+        response.Headers.TryAddWithoutValidation("X-LoDb-Build", build);
+        response.Headers.TryAddWithoutValidation("Content-Security-Policy", Policy);
+        response.Headers.TryAddWithoutValidation(
+            "Content-Security-Policy-Report-Only",
+            ReportOnlyPolicy);
+        response.Headers.TryAddWithoutValidation("Reporting-Endpoints", Endpoints);
+        response.Headers.TryAddWithoutValidation("Link", Preconnect);
+        response.Headers.Vary.Add("Accept-Encoding");
+        return response;
     }
 
     private static HttpResponseMessage Html(string path, HttpStatusCode status)

@@ -17,8 +17,8 @@ namespace LoDb.Api.Modules.Admin.Prerender.Demand.Drain;
 /// metadata): a page of the queue is a page of the epoch like any other.
 /// </summary>
 /// <remarks>
-/// The verdicts are the pass's (<see cref="RenderVerdicts"/>), but for a 200 without the
-/// archived mark, a try that failed rather than a page skipped. An SSR out of reach, or an answer
+/// The verdicts are the pass's (<see cref="RenderVerdicts"/>), but for a 200 without a stored
+/// class's mark, a try that failed rather than a page skipped. An SSR out of reach, or an answer
 /// that refuses every page (a setting), stops the drain until its next tick; the outage is
 /// said once, with the pass's (<see cref="SsrOutage"/>).
 /// </remarks>
@@ -36,7 +36,7 @@ internal sealed class DemandPageWriter(
     // opens its (version, locale), and a render that ran out of time on a cold catalogue
     // comes back as a page of a shorter class: tried again later, never skipped for good.
     private const string Unmarked =
-        "The SSR answered 200 without the archived mark: its catalogue was likely still loading.";
+        "The SSR answered 200 without a storable mark: its catalogue was likely still loading.";
 
     public async Task<DemandTry> TryAsync(PageJob job, CancellationToken cancellationToken)
     {
