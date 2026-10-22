@@ -4,6 +4,7 @@ using LoDb.Domain.Languages;
 using LoDb.Domain.Versions;
 using LoDb.Ingestion.Catalog;
 using LoDb.Ingestion.Catalog.Reading;
+using LoDb.Testing.States;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using JsonOptions = Microsoft.AspNetCore.Http.Json.JsonOptions;
@@ -12,7 +13,8 @@ namespace LoDb.Api.Tests.Catalog;
 
 /// <summary>
 /// <c>/api/meta</c> serializes and tags its answer once while the lists it is built from
-/// read the same, and tags it as a fresh serialization would.
+/// read the same, and tags it as a fresh serialization would; the oldest page of changes
+/// follows the index of states.
 /// </summary>
 public sealed class MetaMemoTests
 {
@@ -47,8 +49,37 @@ public sealed class MetaMemoTests
         Assert.Equal((await BodyAsync(Endpoint(reader))).Tag, after.Tag);
     }
 
-    private static MetaEndpoint Endpoint(ListsReader reader) =>
-        new(reader, Options.Create(Json), NullLogger<MetaEndpoint>.Instance);
+    [Fact]
+    public async Task OldestPageOfChangesFollowsTheIndex()
+    {
+        var states = new InMemoryEntityStateIndex();
+        var endpoint = Endpoint(new ListsReader(), states);
+        var before = await MetaAsync(endpoint);
+
+        states.Snapshot = TestStates.Snapshot(["16.17.1", "16.18.1", "16.19.1"], []);
+        var covered = await MetaAsync(endpoint);
+        states.IsUnavailable = true;
+        var unreadable = await MetaAsync(endpoint);
+
+        Assert.Null(before.OldestChangesVersion);
+        Assert.Equal("16.18.1", covered.OldestChangesVersion);
+        Assert.Null(unreadable.OldestChangesVersion);
+    }
+
+    private static MetaEndpoint Endpoint(
+        ListsReader reader,
+        InMemoryEntityStateIndex? states = null) =>
+        new(
+            reader,
+            states ?? new InMemoryEntityStateIndex(),
+            Options.Create(Json),
+            NullLogger<MetaEndpoint>.Instance);
+
+    private static async Task<CatalogMeta> MetaAsync(MetaEndpoint endpoint)
+    {
+        var answer = await endpoint.GetAsync(Token);
+        return Assert.IsType<CachedJson<CatalogMeta>>(answer.Result).Value;
+    }
 
     private static async Task<JsonBody> BodyAsync(MetaEndpoint endpoint)
     {

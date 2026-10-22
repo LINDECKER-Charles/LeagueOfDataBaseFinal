@@ -36,6 +36,7 @@ internal static class CatalogModule
         services.AddCatalogJson();
         services.TryAddSingleton<CatalogGateway>();
         services.TryAddSingleton<StateGateway>();
+        services.TryAddSingleton<PatchChangesGateway>();
         services.TryAddSingleton<MetaEndpoint>();
         services.TryAddSingleton(TimeProvider.System);
         AddWarmUp(services, configuration);

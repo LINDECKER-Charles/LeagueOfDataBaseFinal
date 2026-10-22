@@ -98,7 +98,7 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   promotion) compte comme l'état ouvert ; hors de l'index (plus ancienne que sa couverture,
   listée après le dernier patch, avant toute promotion), la règle résiduelle donne l'URL
   courte si le dernier patch tient l'entité, sinon la page elle-même. Index illisible et pas
-  de copie en mémoire : la fiche répond 503 avec `Retry-After`. Le
+  de copie en mémoire : la fiche et `…/changes` répondent 503 avec `Retry-After`. Le
   `{version}.xml` d'un ancien patch ne liste que sa page de changements et les ouvreurs de
   ses états clos : un `urlset` vide reste servi, mais l'index des sitemaps ne l'annonce
   pas. Le bloc « Historique » se lit dans l'index seul ; l'ouvreur lit en plus le catalogue
