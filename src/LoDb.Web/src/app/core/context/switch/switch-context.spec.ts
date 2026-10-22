@@ -120,6 +120,18 @@ const CASES: Case[] = [
     to: '/fr/15.14.1/runes',
   },
   {
+    rule: "pins the page of a patch's changes in its path, as a list",
+    from: '/fr/changes',
+    target: { version: '15.14.1' },
+    to: '/fr/15.14.1/changes',
+  },
+  {
+    rule: "brings the page of a patch's changes back to the latest patch",
+    from: '/fr/15.14.1/changes?lang=en_GB',
+    target: { version: null },
+    to: '/fr/changes?lang=en_GB',
+  },
+  {
     rule: 'lets the path win over the query',
     from: '/fr/15.14.1/runes?version=16.1.1',
     target: {},

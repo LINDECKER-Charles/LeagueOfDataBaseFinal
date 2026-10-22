@@ -1,5 +1,6 @@
 import type { ResourceType } from '../../app/core/api/generated/models/resource-type';
 import { isCatalogueRoute } from '../../app/core/routing/url/is-catalogue-route';
+import { PATCH_CHANGES_PATH } from '../../app/core/routing/patch-changes-path';
 import { CHAMPION_FACET_KEYS } from '../../app/features/catalogue/champions/list/champion-facet-keys';
 import { ITEM_FACET_KEYS } from '../../app/features/catalogue/items/list/facets/item-facet-keys';
 import { RUNE_FACET_KEYS } from '../../app/features/catalogue/runes/list/rune-facet-keys';
@@ -38,19 +39,22 @@ const DETAIL_PARAMS: ReadonlySet<string> = new Set(PAGE_PARAMS);
 const PATCH_HISTORY_PAGE = 'patches';
 const NO_PARAMS: ReadonlySet<string> = new Set();
 
-function isPatchHistory(page: readonly string[]): boolean {
-  return page.length === 1 && page[0] === PATCH_HISTORY_PAGE;
+function isOnly(page: readonly string[], segment: string): boolean {
+  return page.length === 1 && page[0] === segment;
 }
 
 /**
  * The query parameters a page of the catalogue reads, from its decoded segments below the
- * locale and the version: a list its search, paging and facets (ADR 0005), a detail none of
- * its own, the history of the patches none at all. Null for any other page, whose query the
- * server leaves to it.
+ * locale and the version: a list its search, paging and facets (ADR 0005), a detail and the
+ * page of a patch's changes none of their own, the history of the patches none at all. Null
+ * for any other page, whose query the server leaves to it.
  */
 export function ownedParamsOf(page: readonly string[]): ReadonlySet<string> | null {
-  if (isPatchHistory(page)) {
+  if (isOnly(page, PATCH_HISTORY_PAGE)) {
     return NO_PARAMS;
+  }
+  if (isOnly(page, PATCH_CHANGES_PATH)) {
+    return DETAIL_PARAMS;
   }
   if (!isCatalogueRoute(page)) {
     return null;

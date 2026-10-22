@@ -1,8 +1,20 @@
 {
   "title": "Patch history",
-  "description": "Every League of Legends patch Data Dragon lists, each with its champions, items, runes and summoner spells as they were in that patch.",
-  "intro": "Every patch Data Dragon lists, newest first. Each one opens its champions, items, runes and summoner spells as they were at the time.",
+  "description": "Every League of Legends patch Data Dragon lists, each with what it changed and its champions, items, runes and summoner spells as they were in that patch.",
+  "intro": "Every patch Data Dragon lists, newest first. Each one opens what it changed, then its champions, items, runes and summoner spells as they were at the time.",
   "group": "Patches {{ major }}.x",
   "latest": "Current",
-  "empty": "No patch is listed for now."
+  "empty": "No patch is listed for now.",
+  "changes_link": "Changes",
+  "changes": {
+    "title": "Patch {{ version }} changes",
+    "description": "What League of Legends patch {{ version }} changed against patch {{ previous }}: the champions, items, runes and summoner spells changed, new, back or removed.",
+    "description_empty": "League of Legends patch {{ version }} changed no champion, item, rune or summoner spell against patch {{ previous }}.",
+    "intro": "What patch {{ version }} changed against patch {{ previous }}, from Riot’s Data Dragon data.",
+    "empty": "This patch changed nothing the encyclopedia shows.",
+    "changed": "Changed",
+    "new": "New",
+    "returned": "Back",
+    "retired": "Removed"
+  }
 }

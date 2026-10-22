@@ -1,7 +1,7 @@
-// The texts no locale may leave to the `en` fallback: the patch history, the links that lead
-// to it from every page of the catalogue (the footer, the history of a detail), and what a
-// detail and its head say of its entity's states. The other scopes are not all translated
-// yet (`npm run i18n:report`), hence a list of keys.
+// The texts no locale may leave to the `en` fallback: the patch history and the pages of each
+// patch's changes, the links that lead to them from every page of the catalogue (the footer,
+// the history of a detail), and what a detail and its head say of its entity's states. The
+// other scopes are not all translated yet (`npm run i18n:report`), hence a list of keys.
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
 import { describe, test } from 'node:test';
@@ -74,6 +74,13 @@ describe('the texts translated in every locale', () => {
         const text = valueAt(scopes.get(ROOT).get(locale), key);
         assert.match(String(text ?? ''), ANY_TEXT, `${locale}: ${key}`);
       }
+    }
+  });
+
+  test('the pages of the changes: every text of en, with the same parameters', () => {
+    const reference = valueAt(scopes.get(PATCHES).get(REFERENCE), 'changes');
+    for (const locale of locales) {
+      expectSameTexts(valueAt(scopes.get(PATCHES).get(locale), 'changes'), reference, locale);
     }
   });
 

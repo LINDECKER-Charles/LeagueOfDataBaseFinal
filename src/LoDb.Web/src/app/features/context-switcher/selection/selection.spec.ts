@@ -206,6 +206,11 @@ describe('rememberedTarget', () => {
       remembered: { lang: 'en_AU', version: null },
       expected: null,
     },
+    {
+      rule: "fills both axes of the page of the latest patch's changes, as a list",
+      url: '/en/changes',
+      expected: { version: OLDER, lang: 'en_GB' },
+    },
     { rule: 'leaves the pages that read no context', url: '/en/about', expected: null },
     { rule: 'leaves the pages outside the locales', url: '/b/abc123', expected: null },
   ];

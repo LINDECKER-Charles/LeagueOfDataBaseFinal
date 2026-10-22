@@ -11,9 +11,10 @@ import { injectPatchGroups } from './rows/inject-patch-groups';
 
 /**
  * `/{locale}/patches`: every version Data Dragon lists, grouped by first segment, newest
- * first, each row linking the four lists of its version. The version selector is a form,
- * which crawlers do not submit: this page and the detail pages' previous patches are how
- * they reach a past patch by links. One read of `/api/meta`, whatever the number of versions.
+ * first, each row linking the page of its version's changes, where it has one, then its four
+ * lists. The version selector is a form, which crawlers do not submit: this page and the
+ * history of the detail pages are how they reach a past patch by links. One read of
+ * `/api/meta`, whatever the number of versions.
  */
 @Component({
   selector: 'lodb-patch-history-page',

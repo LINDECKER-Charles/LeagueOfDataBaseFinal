@@ -182,6 +182,8 @@ describe('preRouteOf', () => {
     '/en/items?q=boots&page=2&size=all&tag=Boots,Armor&tag_all=1&price=0-3000',
     '/fr/15.13.1/items/3031-infinity-edge?lang=fr_FR',
     '/en/items?la%6Eg=en_GB',
+    '/en/changes?version=15.14.1&lang=en_GB',
+    '/fr/15.13.1/changes?lang=fr_FR',
   ])('keeps the parameters %s reads', (url) => {
     expect(route(url)).toEqual({ kind: 'render' });
   });
@@ -199,6 +201,8 @@ describe('preRouteOf', () => {
     [`/en/champions?q=${'a'.repeat(199)}&page=2`, '/en/champions?page=2'],
     ['/fr/patches?x=1', '/fr/patches'],
     ['/fr/patches?version=15.14.1&lang=fr_FR', '/fr/patches'],
+    ['/fr/changes?x=1', '/fr/changes'],
+    ['/fr/15.13.1/changes?page=2&lang=fr_FR', '/fr/15.13.1/changes?lang=fr_FR'],
   ])('redirects %s to %s', (url, location) => {
     expect(route(url)).toEqual({ kind: 'redirect', location, reason: 'query' });
   });
@@ -255,5 +259,10 @@ describe('ownedParamsOf, against the facet schemas', () => {
 
   it('lets a detail keep its version and language only', () => {
     expect([...(ownedParamsOf(['items', '1036']) ?? [])].sort()).toEqual(['lang', 'version']);
+  });
+
+  it("lets the page of a patch's changes keep its version and language only", () => {
+    expect([...(ownedParamsOf(['changes']) ?? [])].sort()).toEqual(['lang', 'version']);
+    expect(ownedParamsOf(['changes', 'x'])).toBeNull();
   });
 });

@@ -4,17 +4,17 @@ import { versionMatcher } from '../../../core/api/meta/version-matcher';
 import type { Preferences } from '../../../core/context/preferences/preferences';
 import type { ContextTarget } from '../../../core/context/switch/context-target';
 import type { Locale } from '../../../core/i18n/locales';
-import { isCatalogueRoute } from '../../../core/routing/url/is-catalogue-route';
+import { isVersionedRoute } from '../../../core/routing/url/is-versioned-route';
 import { parsePublicUrl } from '../../../core/routing/url/parse-public-url';
 import { primaryLanguage } from '../options/primary-language';
 
 const VERSION_PARAM = 'version';
 const LANG_PARAM = 'lang';
 
-// Only the home page and the catalogue read a version and a language: elsewhere the cookie
-// would only add a query the page ignores.
+// Only the home page, the catalogue and a patch's changes read a version and a language:
+// elsewhere the cookie would only add a query the page ignores.
 function readsContext(page: readonly string[]): boolean {
-  return page.length === 0 || isCatalogueRoute(page);
+  return page.length === 0 || isVersionedRoute(page);
 }
 
 // An older version `/api/meta` lists; the latest is what the URL already follows.

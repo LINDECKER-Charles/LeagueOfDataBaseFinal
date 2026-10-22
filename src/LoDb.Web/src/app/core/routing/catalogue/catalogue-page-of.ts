@@ -1,5 +1,4 @@
 import type { ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
-import type { ResourceType } from '../../api/generated/models/resource-type';
 import { DEFAULT_LOCALE } from '../../i18n/default-locale';
 import { isLocale } from '../../i18n/is-locale';
 import type { CataloguePage } from '../catalogue-page';
@@ -21,7 +20,7 @@ function queryOf(url: string): string {
 export function cataloguePageOf(
   route: ActivatedRouteSnapshot,
   state: RouterStateSnapshot,
-  resource: ResourceType,
+  resource: CataloguePage['resource'],
 ): CataloguePage {
   const locale = route.paramMap.get('locale');
   return {

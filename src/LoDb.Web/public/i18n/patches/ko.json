@@ -1,8 +1,20 @@
 {
   "title": "패치 기록",
-  "description": "Data Dragon에 등록된 모든 리그 오브 레전드 패치와, 각 패치 당시의 챔피언, 아이템, 룬, 소환사 주문.",
-  "intro": "Data Dragon에 등록된 모든 패치를 최신순으로 보여 줍니다. 각 패치에서 당시의 챔피언, 아이템, 룬, 소환사 주문을 볼 수 있습니다.",
+  "description": "Data Dragon에 등록된 모든 리그 오브 레전드 패치와, 각 패치의 변경 사항 및 당시의 챔피언, 아이템, 룬, 소환사 주문.",
+  "intro": "Data Dragon에 등록된 모든 패치를 최신순으로 보여 줍니다. 각 패치에서 변경 사항과 당시의 챔피언, 아이템, 룬, 소환사 주문을 볼 수 있습니다.",
   "group": "패치 {{ major }}.x",
   "latest": "현재",
-  "empty": "현재 등록된 패치가 없습니다."
+  "empty": "현재 등록된 패치가 없습니다.",
+  "changes_link": "변경 사항",
+  "changes": {
+    "title": "패치 {{ version }} 변경 사항",
+    "description": "리그 오브 레전드 패치 {{ version }}이(가) 패치 {{ previous }} 대비 바꾼 것: 변경, 추가, 복귀, 제거된 챔피언, 아이템, 룬, 소환사 주문.",
+    "description_empty": "리그 오브 레전드 패치 {{ version }}은(는) 패치 {{ previous }} 대비 챔피언, 아이템, 룬, 소환사 주문을 하나도 바꾸지 않았습니다.",
+    "intro": "Riot의 Data Dragon 데이터에 따른, 패치 {{ previous }} 대비 패치 {{ version }}의 변경 사항.",
+    "empty": "이 패치는 백과사전에 표시되는 내용을 바꾸지 않았습니다.",
+    "changed": "변경",
+    "new": "추가",
+    "returned": "복귀",
+    "retired": "제거"
+  }
 }
