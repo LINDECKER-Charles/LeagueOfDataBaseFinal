@@ -390,9 +390,10 @@ networks:
     ipam:
       config:
         - subnet: ${LODB_STACK_SUBNET:?LODB_STACK_SUBNET is required (set by the deploy job)}
-  # Postgres's network (compose.yaml), which only the API and migrate share with it. Internal:
-  # no route leaves it. Its subnet stays Docker's choice: nothing trusts it, and the API's
-  # port answers it a 404 (KnownProxyNetworks is the stack's subnet above).
+  # Postgres's network (compose.yaml), which only the API and the one-shots migrate and states
+  # share with it. Internal: no route leaves it. Its subnet stays Docker's choice: nothing
+  # trusts it, and the API's port answers it a 404 (KnownProxyNetworks is the stack's subnet
+  # above).
   data:
     internal: true
   # Shared ingress network, created once per host by infra-vps; the deploy job only
