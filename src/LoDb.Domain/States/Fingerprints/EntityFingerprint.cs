@@ -1,3 +1,6 @@
+using System.Globalization;
+using System.Security.Cryptography;
+using System.Text;
 using LoDb.Domain.States.Projections;
 
 namespace LoDb.Domain.States.Fingerprints;
@@ -8,6 +11,8 @@ namespace LoDb.Domain.States.Fingerprints;
 /// </summary>
 public static class EntityFingerprint
 {
+    private const char Separator = ':';
+
     /// <summary>
     /// Lowercase hexadecimal SHA-256 of a canonical serialization of
     /// <paramref name="projection"/>: fields in the order of <c>ChangeField</c>, subjects
@@ -20,6 +25,23 @@ public static class EntityFingerprint
     public static string Of(IReadOnlyList<ProjectedField> projection)
     {
         ArgumentNullException.ThrowIfNull(projection);
-        throw new NotImplementedException("L1");
+        var serialized = new StringBuilder();
+        foreach (var field in DistinctFields.Canonical(projection))
+        {
+            Write(serialized, field.Key.ToDotted());
+            serialized.Append(CultureInfo.InvariantCulture, $"{field.Values.Count}{Separator}");
+            foreach (var value in field.Values)
+            {
+                Write(serialized, value);
+            }
+        }
+
+        return Convert.ToHexStringLower(
+            SHA256.HashData(Encoding.UTF8.GetBytes(serialized.ToString())));
     }
+
+    // Length-prefixed, so no key nor value can pass for a boundary: two projections serialize
+    // alike only when they hold the same keys with the same values.
+    private static void Write(StringBuilder serialized, string text) =>
+        serialized.Append(CultureInfo.InvariantCulture, $"{text.Length}{Separator}{text}");
 }

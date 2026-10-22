@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -13,6 +14,7 @@ namespace LoDb.Domain.Text;
 public static partial class DdragonText
 {
     private const char MarkupStart = '<';
+    private const char PlainLineBreak = '\n';
     private const string SingleSpace = " ";
 
     // PHP's trim() set: NBSP and other Unicode spaces are content, not padding.
@@ -39,8 +41,29 @@ public static partial class DdragonText
     /// share: <see cref="Clean"/>, then the markup removed, a line break (<c>&lt;br&gt;</c>)
     /// kept as one, then the whitespace collapsed. A change of markup alone changes nothing.
     /// </summary>
-    public static string PlainText(string? html) =>
-        html is null ? string.Empty : throw new NotImplementedException("L1");
+    /// <remarks>
+    /// Raw whitespace flows like a space, as the page renders the HTML; a list item starts a
+    /// line like a break, since Riot ships bare <c>&lt;li&gt;</c>. Runs of breaks and blank
+    /// lines fold into one break, so a spacing change (<c>&lt;br&gt;&lt;br&gt;</c>) is markup
+    /// alone too. Character references are decoded: the diff is shown as text.
+    /// </remarks>
+    public static string PlainText(string? html)
+    {
+        var cleaned = Clean(html);
+        if (cleaned.Length == 0)
+        {
+            return string.Empty;
+        }
+
+        var flowing = AsciiWhitespace().Replace(cleaned, SingleSpace);
+        var broken = PlainBreak().Replace(flowing, PlainLineBreak.ToString());
+        var plain = WebUtility.HtmlDecode(Tag().Replace(broken, string.Empty));
+        return string.Join(
+            PlainLineBreak,
+            plain.Split(PlainLineBreak)
+                .Select(static line => Trim(AsciiWhitespace().Replace(line, SingleSpace)))
+                .Where(static line => line.Length > 0));
+    }
 
     /// <summary>
     /// Display form of a category tag: "CriticalStrike" reads "Critical Strike". Matching
@@ -102,6 +125,15 @@ public static partial class DdragonText
         @"<br[ \t\n\r\v\f]*/?[ \t\n\r\v\f]*>",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex LineBreak();
+
+    [GeneratedRegex("[ \t\n\r\v\f]+")]
+    private static partial Regex AsciiWhitespace();
+
+    // A line break or the start of a list item: both begin a line of the displayed text.
+    [GeneratedRegex(
+        @"<(?:br[ \t\n\r\v\f]*/?[ \t\n\r\v\f]*|li(?:[ \t\n\r\v\f][^>]*)?)>",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex PlainBreak();
 
     // An unclosed tag runs to the end of the text, as strip_tags() reads it.
     [GeneratedRegex(@"<[^>]*(?:>|\z)")]
