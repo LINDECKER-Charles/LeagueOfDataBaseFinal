@@ -17,17 +17,11 @@ internal static class VersionPages
 {
     /// <summary>
     /// The canonical path of every entity the lists of <paramref name="catalog"/> show, once
-    /// each: debris and placeholder spells have no page (UP 10); the Classic twins do.
+    /// each: debris and placeholder spells have no page (UP 10); the Classic twins do. The
+    /// index of states holds the same entities (<see cref="ListedEntities"/>).
     /// </summary>
-    public static IEnumerable<CanonicalPath> ListedEntityPaths(CatalogSnapshot catalog)
-    {
-        ArgumentNullException.ThrowIfNull(catalog);
-        return catalog.Champions.Entries.Select(catalog.PathOf)
-            .Concat(catalog.ListedItems.Select(catalog.PathOf))
-            .Concat(catalog.Runes.Entries.Select(catalog.PathOf))
-            .Concat(catalog.ListedSummoners.Select(catalog.PathOf))
-            .DistinctBy(static path => path.Value, StringComparer.Ordinal);
-    }
+    public static IEnumerable<CanonicalPath> ListedEntityPaths(CatalogSnapshot catalog) =>
+        ListedEntities.PathsOf(catalog);
 
     /// <summary>The four lists, then the listed entities of <paramref name="catalog"/>.</summary>
     public static IEnumerable<string> Of(CatalogSnapshot catalog) =>
