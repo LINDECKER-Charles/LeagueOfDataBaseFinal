@@ -85,6 +85,22 @@ public static class SeoStates
             ],
             Promotions);
 
+    /// <summary>
+    /// The same history when <see cref="Previous"/> was listed but never promoted: the
+    /// promotion of <see cref="Latest"/> replaced <see cref="Archived"/>.
+    /// </summary>
+    public static EntityStateSnapshot SkippedPrevious()
+    {
+        var snapshot = Snapshot();
+        return EntityStateSnapshot.Of(
+            snapshot.Generation!,
+            snapshot.States,
+            [
+                new PromotedVersion(PatchVersion.Parse(Archived), TestStates.BuiltAt.AddDays(-9)),
+                new PromotedVersion(PatchVersion.Parse(Latest), LatestPromotedAt),
+            ]);
+    }
+
     private static IndexedState Changed(IndexedState state, string previousOpener) =>
         state with
         {

@@ -109,6 +109,34 @@ public sealed class IndexNowApiTests(SeoApiFixture api)
     }
 
     [Fact]
+    public async Task PromotionAfterAVersionNeverPromotedAnnouncesWhatChangedSinceThePreviousOne()
+    {
+        var sent = api.IndexNow.Submissions.Count;
+        var submitter = SubmitterOf(
+            new SeoOptions { CanonicalOrigin = Origin, IndexNowKey = Key },
+            new FakeLogger<IndexNowSubmitter>());
+        api.States.Snapshot = SeoStates.SkippedPrevious();
+        try
+        {
+            await submitter.OnPromotedAsync(
+                PatchVersion.Parse(SeoStates.Latest),
+                SeoApiFixture.Token);
+        }
+        finally
+        {
+            api.States.Snapshot = SeoStates.Snapshot();
+        }
+
+        var urls = UrlsOf([.. api.IndexNow.Submissions.Skip(sent)]);
+        Assert.Contains($"{Origin}/fr/{SeoStates.Previous}/changes", urls);
+        Assert.Contains($"{Origin}/fr/{SeoStates.Archived}/changes", urls);
+        Assert.Contains($"{Origin}/fr/{SeoStates.Previous}/items/3078-trinity-force", urls);
+        Assert.Contains($"{Origin}/fr/{SeoStates.Archived}/items/3371-molten-edge", urls);
+        Assert.Contains($"{Origin}/fr/{SeoStates.Start}/items/1001-boots", urls);
+        Assert.DoesNotContain($"{Origin}/fr/{SeoStates.Unchanged}/changes", urls);
+    }
+
+    [Fact]
     public async Task KeyFileAnswersTheKeyAndNothingElse()
     {
         using var keyFile = await api.GetAsync($"/{Key}.txt");
