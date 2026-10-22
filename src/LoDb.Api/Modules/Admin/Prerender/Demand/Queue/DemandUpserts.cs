@@ -1,5 +1,4 @@
 using LoDb.Api.Modules.Admin.Prerender.Demand.Validation;
-using LoDb.Domain.Paths;
 using LoDb.Infrastructure.Persistence;
 using LoDb.Infrastructure.Persistence.Prerender.Demand;
 using Microsoft.EntityFrameworkCore;
@@ -83,7 +82,7 @@ internal sealed class DemandUpserts(IDbContextFactory<LoDbDbContext> contexts, T
             Texts("paths", pages.Select(static page => page.Page.Path)),
             Texts("versions", pages.Select(static page => page.Page.Version.Value)),
             Texts("locales", pages.Select(static page => page.Page.LocaleCode)),
-            Texts("types", pages.Select(static page => CanonicalPath.SegmentOf(page.Page.Type))),
+            Texts("types", pages.Select(static page => page.Page.TypeName)),
             new("counts", NpgsqlDbType.Array | NpgsqlDbType.Bigint)
             {
                 Value = pages.Select(static page => page.Count).ToArray(),

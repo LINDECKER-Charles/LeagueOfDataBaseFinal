@@ -9,7 +9,8 @@ namespace LoDb.Api.Modules.Admin.Prerender.Demand.Queue;
 
 /// <summary>
 /// What the passes wrote of some versions into the served epoch: a page is in the store once a
-/// unit of its (version, locale) over its type completed, or walked past it.
+/// unit of its (version, locale) over its type completed, or walked past it. The patch page,
+/// of no type, only by a unit over every type.
 /// </summary>
 /// <remarks>
 /// Whatever the pass's state: a cancelled pass keeps what it wrote. A page a completed unit
@@ -58,7 +59,7 @@ internal sealed class ServedUnits
         ArgumentNullException.ThrowIfNull(page);
         ArgumentNullException.ThrowIfNull(index);
         return _units[(page.Version.Value, page.LocaleCode)].Any(unit =>
-            (unit.Types is null || unit.Types.Contains(page.Type))
+            (unit.Types is null || (page.Type is { } type && unit.Types.Contains(type)))
             && (unit.IsCompleted || index.IndexIn(unit.Types, page.PagePath) is var at
                 && at >= 0 && at < unit.Cursor));
     }
