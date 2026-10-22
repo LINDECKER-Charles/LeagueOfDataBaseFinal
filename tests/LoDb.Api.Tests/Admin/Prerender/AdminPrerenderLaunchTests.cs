@@ -101,6 +101,41 @@ public sealed class AdminPrerenderLaunchTests(PostgresContainerFixture postgres)
     }
 
     [Fact]
+    public async Task OpenersPassIsStoredExpectingItsPagesAndShownAsSuch()
+    {
+        using var admin = await AdminBrowser.OpenAsync(App);
+        _catalog.Openers[Newer] = new HashSet<string>(["items/1036-long-sword"]);
+
+        using var response = await admin.PostAsync(
+            Passes,
+            new { versions = new[] { Newer.Value }, locales = French, pages = "openers" });
+
+        await ApiJson.ReadAsync(response, HttpStatusCode.Created);
+        await using (var db = App.Database())
+        {
+            var pass = await db.PrerenderPasses.Include(static pass => pass.Units)
+                .SingleAsync(Cancellation);
+            Assert.Equal(PassPages.Openers, PassScopeJson.Read(pass.Scope).Pages);
+            Assert.Equal(2, Assert.Single(pass.Units).PagesExpected);
+        }
+
+        using var report = await admin.GetAsync("/api/admin/prerender");
+        var passes = (await ApiJson.ReadAsync(report, HttpStatusCode.OK)).GetProperty("passes");
+        Assert.Equal("openers", passes[0].GetProperty("scope").GetProperty("pages").GetString());
+    }
+
+    [Fact]
+    public async Task UnknownSetOfPagesIsRefusedOnItsField()
+    {
+        using var admin = await AdminBrowser.OpenAsync(App);
+
+        using var response = await admin.PostAsync(Passes, new { pages = "everything" });
+
+        Assert.Equal(["malformed"], (await ApiJson.FieldErrorsAsync(response))["pages"]);
+        Assert.Equal(0, await PassCountAsync());
+    }
+
+    [Fact]
     public async Task ActivePassRefusesTheLaunchBeforeThePlanningReadsAnything()
     {
         using var admin = await AdminBrowser.OpenAsync(App);

@@ -45,6 +45,8 @@ internal sealed class UnitRunner(
     private const string NotPinned = "the API does not count it among the older patches yet.";
     private const string Unknown = "Data Dragon does not list this version.";
 
+    private static readonly IReadOnlySet<string> NoOpeners = new HashSet<string>();
+
     public async Task<UnitEnd> RunAsync(ClaimedUnit unit, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(unit);
@@ -60,7 +62,7 @@ internal sealed class UnitRunner(
         }
 
         waits.End(unit);
-        var paths = PageTypes.Keep(list.Paths, unit.Pass.Scope.PageTypes);
+        var paths = await PathsAsync(unit, list.Paths, cancellationToken);
         await queue.StartAsync(unit, paths.Count, cancellationToken);
         var walk = new UnitWalk(unit, paths, new UnitTally());
         var started = clock.GetTimestamp();
@@ -132,6 +134,19 @@ internal sealed class UnitRunner(
                 IsOpening = index - walk.Unit.Cursor < options.Value.MaxInFlight,
             },
             cancellationToken);
+    }
+
+    // The pages the unit walks; an openers scope reads the openers of its version in the index.
+    private async Task<IReadOnlyList<string>> PathsAsync(
+        ClaimedUnit unit,
+        IReadOnlyList<string> versionPages,
+        CancellationToken cancellationToken)
+    {
+        var scope = unit.Pass.Scope;
+        var openers = scope.Pages == PassPages.Openers
+            ? await catalog.OpenersAsync(unit.Version, cancellationToken)
+            : NoOpeners;
+        return UnitPages.Of(versionPages, scope, openers);
     }
 
     // The pass was paused or cancelled, or it cannot go on as configured: then it pauses, so

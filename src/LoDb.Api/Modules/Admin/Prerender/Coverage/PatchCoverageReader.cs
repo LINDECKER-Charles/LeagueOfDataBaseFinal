@@ -1,4 +1,5 @@
 using LoDb.Api.Modules.Accounts.Http;
+using LoDb.Api.Modules.Admin.Prerender.Coverage.Index;
 using LoDb.Api.Modules.Admin.Prerender.Http;
 using LoDb.Api.Modules.Admin.Prerender.Http.Views;
 using LoDb.Api.Modules.Admin.Prerender.Http.Views.Patches;
@@ -7,17 +8,20 @@ using LoDb.Api.Modules.Admin.Prerender.Pages;
 using LoDb.Api.Modules.Admin.Prerender.Passes.Planning;
 using LoDb.Domain.Languages;
 using LoDb.Domain.Versions;
+using LoDb.Ingestion.Catalog.States;
 using Microsoft.Extensions.Options;
 
 namespace LoDb.Api.Modules.Admin.Prerender.Coverage;
 
 /// <summary>
 /// The older patches and what one epoch holds of each, (version, locale) by (version, locale),
-/// with what the admin estimates a pass with: read rarely, when the launch dialog opens or the
-/// coverage tab shows, so it folds the epoch's units without a cache.
+/// with what the admin estimates a pass with, and what the index of states expects of each:
+/// read rarely, when the launch dialog opens or the coverage tab shows, so it folds the epoch's
+/// units without a cache.
 /// </summary>
 internal sealed class PatchCoverageReader(
     IPrerenderCatalog catalog,
+    IEntityStateIndex index,
     EpochCoverage coverage,
     ExpectedPages expected,
     EstimateBasisReader estimates,
@@ -49,6 +53,7 @@ internal sealed class PatchCoverageReader(
         var pinned = await catalog.PinnedVersionsAsync(cancellationToken);
         var map = await coverage.ReadAsync(read, cancellationToken);
         var perLocale = await expected.ReadAsync(TypeMask.All, null, cancellationToken);
+        var indexed = IndexedPages.Of(await index.GetAsync(cancellationToken));
         return (new PrerenderPatchesReport
         {
             GeneratedAt = clock.GetUtcNow(),
@@ -56,11 +61,22 @@ internal sealed class PatchCoverageReader(
             ServedEpoch = options.Value.ServedEpoch,
             LatestVersion = (await catalog.LatestVersionAsync(cancellationToken))?.Value,
             Locales = Locales,
-            Patches = [.. pinned.Select(version => RowOf(version, map, perLocale))],
+            Patches =
+            [
+                .. pinned.Select(version =>
+                    RowOf(version, map, perLocale) with { Indexed = ViewOf(indexed, version) }),
+            ],
             Coverage = map.Summary(pinned),
             Estimates = await estimates.ReadAsync(pinned, cancellationToken),
         }, null);
     }
+
+    private static PrerenderIndexedPages? ViewOf(
+        IReadOnlyDictionary<PatchVersion, IndexedPageCounts> indexed,
+        PatchVersion version) =>
+        indexed.TryGetValue(version, out var counts)
+            ? new PrerenderIndexedPages { Openers = counts.Openers }
+            : null;
 
     private static PrerenderPatchRow RowOf(
         PatchVersion version,

@@ -6,8 +6,9 @@ namespace LoDb.Api.Modules.Admin.Prerender.Pages;
 
 /// <summary>
 /// The perimeter a pass was launched over: explicit lists of older patches, locales and types
-/// of page, each left null for all of them, the versions to render first, and whether the
-/// units already complete in its epoch were left out.
+/// of page, each left null for all of them, which pages of each (every one, or the openers of
+/// the index first), the versions to render first, and whether the units already complete in
+/// its epoch were left out.
 /// </summary>
 /// <remarks>
 /// Stored as JSON in <c>prerender_pass.scope</c> (<see cref="PassScopeJson"/>). A pass stored
@@ -35,6 +36,12 @@ internal sealed record PassScope
     public IReadOnlyList<ResourceType>? PageTypes { get; init; }
 
     /// <summary>
+    /// Every page of each (version, locale), or only the patch page and the openers of the
+    /// index (<see cref="PassPages.Openers"/>).
+    /// </summary>
+    public PassPages Pages { get; init; } = PassPages.Every;
+
+    /// <summary>
     /// The versions to render first, in this order; the rest follow, newest first.
     /// </summary>
     public IReadOnlyList<PatchVersion> Priority { get; init; } = [];
@@ -42,8 +49,11 @@ internal sealed record PassScope
     /// <summary>Whether the units already complete in the pass's epoch were left out.</summary>
     public bool SkipComplete { get; init; }
 
-    /// <summary>Whether it renders every type of page: a promotion may then join it.</summary>
-    public bool HasEveryPageType => PageTypes is null;
+    /// <summary>
+    /// Whether it renders every page of each type: a promotion may then join it. An openers
+    /// scope does not, whatever its types.
+    /// </summary>
+    public bool HasEveryPageType => PageTypes is null && Pages == PassPages.Every;
 
     /// <summary>Whether nothing restricts it: its epoch is then whole once it completes.</summary>
     public bool IsWhole =>
@@ -51,7 +61,7 @@ internal sealed record PassScope
         && Oldest is null
         && Newest is null
         && Locales is null
-        && PageTypes is null;
+        && HasEveryPageType;
 
     /// <summary>A scope of exactly one version, as a promotion opens.</summary>
     public static PassScope Of(PatchVersion version) => new() { Versions = [version] };

@@ -33,6 +33,12 @@ internal sealed class FakeCatalog : IPrerenderCatalog
     /// </summary>
     public Dictionary<PatchVersion, DateTimeOffset> PinnedFrom { get; } = [];
 
+    /// <summary>The openers of a version in the index, as the test sets them; none by default.</summary>
+    public Dictionary<PatchVersion, IReadOnlySet<string>> Openers { get; } = [];
+
+    /// <summary>How long the servers take to see a promotion; 21 minutes, as by default.</summary>
+    public TimeSpan SettlingDelay { get; set; } = TimeSpan.FromMinutes(21);
+
     /// <summary>
     /// The reads a version answers not stored yet before its pages: an ingestion under way.
     /// </summary>
@@ -80,6 +86,11 @@ internal sealed class FakeCatalog : IPrerenderCatalog
 
         return Task.FromResult(Pages.GetValueOrDefault(version) ?? VersionPageList.Ready(SixPages));
     }
+
+    public Task<IReadOnlySet<string>> OpenersAsync(
+        PatchVersion version,
+        CancellationToken cancellationToken) =>
+        Task.FromResult(Openers.GetValueOrDefault(version) ?? new HashSet<string>());
 
     public Task IngestAsync(PatchVersion version, CancellationToken cancellationToken)
     {

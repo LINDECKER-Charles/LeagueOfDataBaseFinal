@@ -11804,6 +11804,13 @@
             },
             "description": "The types of page rendered (champions, items, runes, summoners); null for all four."
           },
+          "pages": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "`openers` for the patch page and the pages that open a state at each version, open\nor closed (the pages that may be indexed, rendered first); null for every page. A pass\nover every page follows it: a promotion never joins it, and it makes no epoch whole."
+          },
           "priority": {
             "type": [
               "null",
@@ -12429,6 +12436,20 @@
         },
         "description": "What the admin estimates a pass with, all measured here."
       },
+      "PrerenderIndexedPages": {
+        "required": [
+          "openers"
+        ],
+        "type": "object",
+        "properties": {
+          "openers": {
+            "type": "integer",
+            "description": "The pages an openers pass renders: the patch page, when the patch has one, and the\npages that open a state at it, open or closed.",
+            "format": "int32"
+          }
+        },
+        "description": "What the index of states expects of an older patch, in each locale."
+      },
       "PrerenderPaceView": {
         "required": [
           "mode",
@@ -12873,6 +12894,17 @@
             ],
             "description": "When a unit of the epoch last ended for it; null when none did.",
             "format": "date-time"
+          },
+          "indexed": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "What the index of states expects of it, in each locale; null for a version the index\ndoes not cover.",
+                "$ref": "#/components/schemas/PrerenderIndexedPages"
+              }
+            ]
           }
         },
         "description": "One older patch in an epoch."
@@ -13098,6 +13130,13 @@
               "type": "string"
             },
             "description": "The types of page rendered; null for all four."
+          },
+          "pages": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "`openers` when only the patch page and the openers of the index are rendered; null\nfor every page."
           },
           "priority": {
             "type": "array",

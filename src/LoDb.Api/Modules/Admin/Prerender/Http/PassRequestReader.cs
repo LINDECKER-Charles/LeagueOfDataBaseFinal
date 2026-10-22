@@ -30,6 +30,7 @@ internal static class PassRequestReader
     public const string VersionsField = "versions";
     public const string LocalesField = "locales";
     public const string PageTypesField = "pageTypes";
+    public const string PagesField = "pages";
     public const string PriorityField = "priority";
 
     /// <summary>The field of the refusals that concern the perimeter as a whole.</summary>
@@ -127,10 +128,23 @@ internal static class PassRequestReader
                 .ToList(),
             Locales = locales is null ? null : ScopeLists.LocalesOf(locales.Select(LocaleOf)),
             PageTypes = types is null ? null : ScopeLists.TypesOf(types.Select(PageTypeOf)),
+            Pages = PagesOf(errors, request.Pages),
             Priority = [.. (TextsOf(errors, request.Priority, PriorityRule) ?? [])
                 .Select(PatchVersion.Parse)],
             SkipComplete = request.SkipComplete,
         };
+    }
+
+    // Every page unless the openers are asked for; anything else is refused on its field.
+    private static PassPages PagesOf(FieldErrors errors, string? text)
+    {
+        if (PassScopeJson.PagesOf(text) is { } pages)
+        {
+            return pages;
+        }
+
+        errors.Add(PagesField, FieldErrors.Malformed);
+        return PassPages.Every;
     }
 
     // The items of a list once each, in their order; null for a list not sent, and for one
