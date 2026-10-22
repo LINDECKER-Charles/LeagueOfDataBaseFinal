@@ -1,6 +1,6 @@
 using System.Net;
 
-namespace LoDb.Api.Tests.Catalog;
+namespace LoDb.Api.Tests.Catalog.States;
 
 /// <summary>
 /// The answers over the index of states the promotion of 16.19.1 built, the one version the
