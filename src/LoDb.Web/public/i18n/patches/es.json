@@ -1,8 +1,20 @@
 {
   "title": "Historial de parches",
-  "description": "Todos los parches de League of Legends que lista Data Dragon, cada uno con sus campeones, objetos, runas y hechizos de invocador tal como eran en ese parche.",
-  "intro": "Todos los parches que lista Data Dragon, del más reciente al más antiguo. Cada uno abre sus campeones, objetos, runas y hechizos de invocador tal como eran entonces.",
+  "description": "Todos los parches de League of Legends que lista Data Dragon, cada uno con lo que cambió y sus campeones, objetos, runas y hechizos de invocador tal como eran en ese parche.",
+  "intro": "Todos los parches que lista Data Dragon, del más reciente al más antiguo. Cada uno abre lo que cambió y luego sus campeones, objetos, runas y hechizos de invocador tal como eran entonces.",
   "group": "Parches {{ major }}.x",
   "latest": "Actual",
-  "empty": "Por ahora no hay ningún parche listado."
+  "empty": "Por ahora no hay ningún parche listado.",
+  "changes_link": "Cambios",
+  "changes": {
+    "title": "Cambios del parche {{ version }}",
+    "description": "Qué cambió el parche {{ version }} de League of Legends respecto al parche {{ previous }}: campeones, objetos, runas y hechizos de invocador modificados, nuevos, de vuelta o retirados.",
+    "description_empty": "El parche {{ version }} de League of Legends no cambió ningún campeón, objeto, runa ni hechizo de invocador respecto al parche {{ previous }}.",
+    "intro": "Qué cambió el parche {{ version }} respecto al parche {{ previous }}, según los datos de Data Dragon de Riot.",
+    "empty": "Este parche no cambió nada de lo que muestra la enciclopedia.",
+    "changed": "Modificados",
+    "new": "Nuevos",
+    "returned": "De vuelta",
+    "retired": "Retirados"
+  }
 }

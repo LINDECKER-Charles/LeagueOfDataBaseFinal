@@ -7,6 +7,16 @@ summary: Les pages des anciens patchs renvoient les moteurs de recherche vers la
 tags: [seo]
 ---
 
+> **Remplacé le 2026-10-22** par [`une-page-par-etat-dans-google`](2026-10-22-une-page-par-etat-dans-google.md) :
+> une page d'ancien patch n'est plus canonique au dernier patch. Chaque état d'une fiche (une
+> suite de patchs où elle ne change pas) est indexé à la page du patch qui l'a ouvert ; un
+> état encore en cours désigne la fiche du dernier patch. Un objet ou un sort retiré du jeu
+> est indexé au patch qui a ouvert son dernier état, et ses pages antérieures ne sont plus
+> `noindex`. `canonical` n'est jamais `null` : l'API le calcule depuis l'index des états
+> (`StateView`), plus par `CanonicalReferences`. Les sitemaps des anciens patchs listent les
+> ouvreurs de leurs états clos, sans fenêtre. Les anciens patchs restent consultables depuis
+> l'historique des patchs, et le bloc « Historique » remplace « Dans les patchs précédents ».
+
 ## Ce qui change
 
 Chaque champion, objet, rune ou sort existait aux yeux de Google en autant de pages presque

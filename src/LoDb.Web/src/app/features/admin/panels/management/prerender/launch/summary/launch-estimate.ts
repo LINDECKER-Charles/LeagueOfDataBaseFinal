@@ -88,10 +88,18 @@ function addedShare(
   return missing.length === 0 ? 0 : shareOf(missing, basis);
 }
 
+// The pages a unit of the patch lists: every page, measured or guessed; for an openers pass,
+// its openers in the index, none for a patch the index does not cover.
+function perUnitOf(draft: LaunchDraft, row: PrerenderPatchRow, report: PrerenderPatchesReport) {
+  return draft.isOpenersFirst
+    ? (row.indexed?.openers ?? 0)
+    : pagesPerLocaleOf(row.version, report.patches).pages;
+}
+
 function tallyRow(draft: LaunchDraft, row: PrerenderPatchRow, report: PrerenderPatchesReport) {
   const doesSkip = draft.skipComplete && draft.epochKind !== 'new';
   const tally: Tally = { units: 0, rerendered: 0, pages: 0, addedPages: 0 };
-  const perUnit = pagesPerLocaleOf(row.version, report.patches).pages;
+  const perUnit = perUnitOf(draft, row, report);
   for (const locale of draft.locales) {
     const at = report.locales.indexOf(locale);
     const isHeldAlready = isHeldIn(draft, row, at);
@@ -142,7 +150,8 @@ function guessesOf(rows: readonly PrerenderPatchRow[], report: PrerenderPatchesR
 /**
  * The figures of a launch (§ 3.5), from the draft and the coverage of the epoch it writes:
  * units (a locale already holding every type chosen is left out when `skipComplete` asks),
- * pages (each unit at its patch's pages a locale, times the share of the types), volume,
+ * pages (each unit at its patch's pages a locale, its openers for an openers pass, times the
+ * share of the types), volume,
  * duration at the pace measured but never above the configured ceiling, and the cost of the
  * pages not stored yet, cell by cell, by the types each holds: rendering a stored page again
  * replaces it.

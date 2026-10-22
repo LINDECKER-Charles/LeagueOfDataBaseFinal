@@ -51,7 +51,12 @@ public sealed class BaselineSchemaTests(PostgresContainerFixture postgres)
     /// <summary>Tables of the pre-rendering passes; like lot 4's, not in NewTables.</summary>
     internal static readonly string[] PrerenderTables =
         ["prerender_build", "prerender_demand", "prerender_pace_setting",
-         "prerender_pass", "prerender_unit"];
+         "prerender_pass", "prerender_revision", "prerender_revision_watermark",
+         "prerender_unit"];
+
+    /// <summary>Tables of the index of entity states; like lot 4's, not in NewTables.</summary>
+    internal static readonly string[] StateIndexTables =
+        ["catalog_entity_state", "catalog_state_generation", "catalog_state_version"];
 
     // Everything a migration adds to a Doctrine table, frozen: Identity's columns on users
     // (nullable, with a default or generated, so that the legacy stack keeps inserting rows)
@@ -180,7 +185,8 @@ public sealed class BaselineSchemaTests(PostgresContainerFixture postgres)
             .Concat(SessionTables)
             .Concat(AudienceTables)
             .Concat(BackupTables)
-            .Concat(PrerenderTables);
+            .Concat(PrerenderTables)
+            .Concat(StateIndexTables);
 
     // The table itself, its columns, constraints, indexes and triggers, and the sequences of
     // its identity columns, which PostgreSQL names after it.

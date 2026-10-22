@@ -70,8 +70,8 @@ porte tous les RID d'une même version.
 1. Monter `VersionPrefix` dans une PR et la fusionner.
 2. Poser le tag sur le commit qui partira en prod :
    `git tag desktop-vX.Y.Z <sha>`, puis `git push origin desktop-vX.Y.Z`.
-3. Déployer la prod. Le déploiement appelle le workflow avec le SHA déployé
-   (voir [Contrat d'appel](#contrat-dappel)). À défaut, on le lance à la main :
+3. Déployer la prod, puis lancer le workflow à la main sur le SHA déployé (aucun workflow
+   ne l'appelle, voir [Contrat d'appel](#contrat-dappel)) :
    `gh workflow run release-desktop.yml -f sha=<sha> -f channel=stable`.
 4. Suivre le run : les jobs `build`, `pack` et `gate` de chaque RID, puis `publish`. La
    release apparaît d'abord en *pre-release*, puis elle est promue (`--latest`) quand les
@@ -82,13 +82,16 @@ Relancer un run est sans risque :
 - une release déjà promue n'est pas republiée ;
 - une pre-release incomplète est complétée (`vpk upload --merge`).
 
-La beta suit le même chemin après le déploiement de staging, sans tag préalable. Elle reste
+La beta se lance de même après un déploiement de staging, sur un SHA de `test` et sans tag
+préalable : `gh workflow run release-desktop.yml -f sha=<sha> -f channel=beta`. Elle reste
 en *pre-release*, et seules les 5 dernières betas sont gardées.
 
 ### Contrat d'appel
 
-Le déploiement de prod (L8.1) appelle le workflow une fois le déploiement réussi, sur le
-SHA exact ; le staging fait de même avec `channel: beta`.
+**Non câblé** : ni `ci.yml` ni `_deploy.yml` n'appellent ce workflow, les releases se
+lancent à la main (`workflow_dispatch`). Le workflow accepte aussi `workflow_call` ; un
+appel après un déploiement réussi, sur le SHA exact (`channel: beta` pour le staging),
+prendrait cette forme :
 
 ```yaml
   desktop:

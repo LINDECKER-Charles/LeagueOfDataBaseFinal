@@ -3,7 +3,19 @@
 - **Statut** : acceptée — 2026-09-24
 - **S'appuie sur** : la chaîne de logs existante vers Grafana
   ([`observabilite.md`](../../guides/observabilite.md)), la convention de journalisation
-  ([`logging.md`](../../guides/logging.md))
+  ([`logging.md`](../../guides/logging.md), réécrite pour la nouvelle stack le 2026-10-22 ;
+  la version PHP est archivée sous `legacy/docs/guides/`)
+- **Suivi** (2026-10-22), écarts entre le texte et le code :
+  - images `${REGISTRY}/api`, `${REGISTRY}/web-ssr`, `${REGISTRY}/nginx`
+    (`REGISTRY=ghcr.io/<owner>/lodb`), et non `lodb-api`… ;
+  - promotion **par digest** : `_promote.yml` pose `:prod` et `:latest` sur les digests
+    marqués `:staging-validated`, et refuse si `:staging` ne les désigne plus ;
+  - les migrations tournent dans le service `migrate`, l'image de l'API lancée avec la
+    commande `migrate`, et non un `efbundle` ;
+  - les releases desktop et Android ne sont pas déclenchées par le déploiement : elles se
+    lancent à la main (`gh workflow run`) ;
+  - `trace_id` n'est écrit que sur les lignes émises pendant une trace (une requête HTTP) ;
+    les tâches de fond et les commandes n'en portent pas ([`logging.md`](../../guides/logging.md)).
 
 ## Contexte
 

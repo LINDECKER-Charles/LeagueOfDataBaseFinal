@@ -3,25 +3,30 @@ import { languageOf } from '../../../core/api/meta/language-of';
 import { versionMatcher } from '../../../core/api/meta/version-matcher';
 import type { Preferences } from '../../../core/context/preferences/preferences';
 import type { ContextTarget } from '../../../core/context/switch/context-target';
+import { pinnableVersion } from '../../../core/context/switch/pinnable-version';
 import type { Locale } from '../../../core/i18n/locales';
-import { isCatalogueRoute } from '../../../core/routing/url/is-catalogue-route';
+import { isVersionedRoute } from '../../../core/routing/url/is-versioned-route';
 import { parsePublicUrl } from '../../../core/routing/url/parse-public-url';
 import { primaryLanguage } from '../options/primary-language';
 
 const VERSION_PARAM = 'version';
 const LANG_PARAM = 'lang';
 
-// Only the home page and the catalogue read a version and a language: elsewhere the cookie
-// would only add a query the page ignores.
+// Only the home page, the catalogue and a patch's changes read a version and a language:
+// elsewhere the cookie would only add a query the page ignores.
 function readsContext(page: readonly string[]): boolean {
-  return page.length === 0 || isCatalogueRoute(page);
+  return page.length === 0 || isVersionedRoute(page);
 }
 
-// An older version `/api/meta` lists; the latest is what the URL already follows.
-function olderVersion(version: string | null, meta: CatalogMeta): string | null {
-  return version !== null && version !== meta.latest && meta.versions.includes(version)
-    ? version
-    : null;
+// An older version `/api/meta` lists that the page exists at (a patch's changes only from
+// `oldestChangesVersion`); the latest is what the URL already follows.
+function olderVersion(
+  page: readonly string[],
+  version: string | null,
+  meta: CatalogMeta,
+): string | null {
+  const isOlder = version !== null && version !== meta.latest && meta.versions.includes(version);
+  return isOlder ? pinnableVersion(page, version, meta) : null;
 }
 
 // A regional variant of the locale's own language (`en_GB` on `/en/`), never another one.
@@ -52,7 +57,7 @@ export function rememberedTarget(
     return null;
   }
   const namesVersion = page.version !== null || page.query.get(VERSION_PARAM) !== null;
-  const version = namesVersion ? null : olderVersion(remembered.version, meta);
+  const version = namesVersion ? null : olderVersion(page.page, remembered.version, meta);
   const namesLang = page.query.get(LANG_PARAM) !== null;
   const lang = namesLang ? null : variantOf(remembered.lang, page.locale, meta);
   if (version === null && lang === null) {

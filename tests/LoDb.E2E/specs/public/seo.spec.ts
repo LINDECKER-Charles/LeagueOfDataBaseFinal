@@ -1,16 +1,33 @@
-import type { Page } from '@playwright/test';
-import { metaOf, olderVersion } from '../../support/catalog';
+import type { APIRequestContext, Page } from '@playwright/test';
+import { metaOf } from '../../support/catalog';
 import { emptyFields, readHead, typesOf, type Head } from '../../support/head';
 import { LOCALES, pageUrl } from '../../support/public-pages';
+import {
+  findOpenerPage,
+  olderPatchesWithChanges,
+  statePageOf,
+  type EntityState,
+  type StatePage,
+} from '../../support/states';
 import { expect, test } from '../../support/test';
 
 // The head crawlers read (ADR 0005): the server's, JavaScript off. Each page's head is its own
 // unit tests'; two samples prove the integrated head on real data and configuration, rendered
-// on request and prerendered, and a past patch the canonical the API places its entity at.
-// The head after hydration is specs/public/smoke.spec.ts's; the diff against production is
+// on request and prerendered. A past patch's page is indexed once per state of its entity
+// (amendment of 2026-10-22): the API decides from its index, the SSR server writes the head,
+// and only the stack shows both agree, on the entities its index puts in each state. The head
+// after hydration is specs/public/smoke.spec.ts's; the diff against production is
 // tools/seo-diff's.
 const BRAND = 'League Of Data Base';
 const INDEXABLE = 'index, follow';
+const LANGUAGE = 'en_US';
+const NOT_INDEXED = 'noindex, follow';
+// How the description of an opener begins (public/i18n/seo/en.json, state.summary*).
+const SUMMARY: Readonly<Record<Exclude<EntityState['kind'], 'baseline'>, string>> = {
+  changed: 'Changed in patch',
+  new: 'New in patch',
+  returned: 'Back in patch',
+};
 const X_DEFAULT = 'x-default';
 
 interface SampledPage {
@@ -53,6 +70,22 @@ function expectJsonLd(head: Head, types: readonly string[]): void {
   expect(emptyFields(head.jsonLd), 'empty JSON-LD fields').toEqual([]);
 }
 
+// The opener of a closed state of several patches, whose patch has a page: its first version
+// is indexed, the others point to it.
+function isClosedRun(state: EntityState): boolean {
+  const isRun = state.lastVersion !== state.openerVersion;
+  return !state.isOpen && state.isOpener && isRun && state.kind !== 'baseline';
+}
+
+async function closedRunOpener(request: APIRequestContext): Promise<StatePage> {
+  const meta = await metaOf(request);
+  return findOpenerPage(request, meta, 'closed state of several patches', isClosedRun);
+}
+
+function summaryOf(state: EntityState): string {
+  return state.kind === 'baseline' ? '' : `${SUMMARY[state.kind]} ${state.openerVersion}`;
+}
+
 async function crawl(page: Page, url: string): Promise<Head> {
   const response = await page.goto(url);
   expect(response?.status(), url).toBe(200);
@@ -81,16 +114,77 @@ test.describe('head of the public pages, as crawlers read it', { tag: '@readonly
     });
   }
 
-  // ADR 0005, amendment of 2026-10-14: Annie is in every patch, indexed at the latest one.
-  test('points a past patch to the short URL of the latest one', async ({ page, request }) => {
-    const older = olderVersion(await metaOf(request));
+  test('indexes the opener of a closed state at its own URL, in every locale', async ({
+    page,
+    request,
+  }) => {
+    const opener = await closedRunOpener(request);
+    const path = `${opener.version}/${opener.path}`;
 
-    const head = await crawl(page, pageUrl('en', `${older}/champions/Annie`));
+    const head = await crawl(page, pageUrl('en', path));
 
-    expect(head.title).toContain(older);
+    const { openerVersion, lastVersion } = opener.state;
+    expect(head.title).toContain(`(patches ${openerVersion} to ${lastVersion})`);
+    const summary = summaryOf(opener.state);
+    expect(head.description?.slice(0, summary.length)).toBe(summary);
     expect(head.robots).toBe(INDEXABLE);
-    expect(head.canonicals.map(pathOf)).toEqual([pageUrl('en', 'champions/Annie')]);
+    expect(head.canonicals.map(pathOf)).toEqual([pageUrl('en', path)]);
+    expectAlternates(head, path);
+    expectJsonLd(head, ['BreadcrumbList']);
+  });
+
+  test("points another patch of a closed state to the state's opener", async ({
+    page,
+    request,
+  }) => {
+    const opener = await closedRunOpener(request);
+    const last = await statePageOf(request, opener.state.lastVersion ?? '', opener);
+    expect(last?.state.isOpener, 'the last patch of the state').toBe(false);
+
+    const head = await crawl(page, pageUrl('en', `${last?.version}/${last?.path}`));
+
+    expect(head.title).toContain(`(patch ${last?.version})`);
+    expect(head.robots).toBe(INDEXABLE);
+    expect(head.canonicals.map(pathOf)).toEqual([
+      pageUrl('en', `${opener.version}/${opener.path}`),
+    ]);
     expect(head.alternates).toEqual([]);
     expect(head.jsonLd).toEqual([]);
+  });
+
+  // A revisable page: its state still holds at the latest patch, whose short URL is indexed.
+  test('points a past patch of the open state to the short URL', async ({ page, request }) => {
+    const meta = await metaOf(request);
+    const isOpen = (state: EntityState) => state.isOpen;
+    const open = await findOpenerPage(request, meta, 'open state older than the latest', isOpen);
+
+    const head = await crawl(page, pageUrl('en', `${open.version}/${open.path}`));
+
+    expect(head.title).toContain(`(patch ${open.version})`);
+    expect(head.robots).toBe(INDEXABLE);
+    expect(head.canonicals.map(pathOf)).toEqual([pageUrl('en', open.path)]);
+    expect(head.alternates).toEqual([]);
+    expect(head.jsonLd).toEqual([]);
+  });
+
+  test("indexes the page of a past patch's changes at its own URL", async ({ page, request }) => {
+    const [version] = olderPatchesWithChanges(await metaOf(request));
+    expect(version, 'the index of states must cover the patches before the latest').toBeDefined();
+    const answer = await request.get(`/api/catalog/${version}/${LANGUAGE}/changes`);
+    const { hasChanges } = (await answer.json()) as { readonly hasChanges: boolean };
+    const path = `${version}/changes`;
+
+    const head = await crawl(page, pageUrl('en', path));
+
+    expect(head.title).toContain(`Patch ${version}`);
+    expect(head.canonicals.map(pathOf)).toEqual([pageUrl('en', path)]);
+    if (hasChanges) {
+      expect(head.robots).toBe(INDEXABLE);
+      expectAlternates(head, path);
+      expectJsonLd(head, ['BreadcrumbList', 'ItemList']);
+    } else {
+      expect(head.robots).toBe(NOT_INDEXED);
+      expect(head.alternates).toEqual([]);
+    }
   });
 });

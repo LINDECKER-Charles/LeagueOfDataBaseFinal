@@ -1,7 +1,12 @@
 # Brouillons du changelog joueurs de la bascule
 
+> **État (2026-10-22)** : la bascule du 2026-10-04 a publié quatre brouillons sur cinq. Il ne
+> reste qu'`applications`, à publier le jour où une app est réellement disponible au public
+> (aucune release desktop ni Android n'est encore publiée) : remplacer alors `AAAA-MM-JJ` par
+> la date de cette publication, pas celle de la bascule.
+
 Entrées de [`docs/changelog/`](../../changelog/README.md) pour la bascule vers la nouvelle
-stack, rédigées à l'avance (L8.3) : aucune n'entre dans `docs/changelog/` avant le jour de la
+stack, rédigées à l'avance (L8.3) : aucune n'entrait dans `docs/changelog/` avant le jour de la
 bascule, puisqu'une entrée décrit ce qui arrive **en prod**. Format et règles de rédaction :
 [`TEMPLATE.md`](../../changelog/TEMPLATE.md) et [`README.md`](../../changelog/README.md) du
 changelog.

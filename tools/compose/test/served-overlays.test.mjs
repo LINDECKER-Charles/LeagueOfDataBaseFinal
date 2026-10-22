@@ -1,6 +1,7 @@
 // Checks what Compose makes of the served overlays, from the .env examples: the production
 // stack's CPU quotas, weights and process caps (compose.deploy.yaml), its runtime hardening
-// and networks (the pass renderer included), the edge's route to nginx, the hosts the API
+// and networks (the pass renderer and the one-shots included), the index of states built
+// before the API starts, the edge's route to nginx, the hosts the API
 // answers, the smaller share of the staging stack (compose.staging.yaml), the optional login
 // on the staging pages (compose.staging-auth.yaml), whose bcrypt hash must reach the edge's
 // label intact, and the production's declaration to Umami (compose.umami.yaml).
@@ -32,8 +33,10 @@ const PASS_SSR_ALIAS = 'lodb-web-ssr-prerender';
 const EDGE_SECRET = '5e'.repeat(32);
 const HOST_ADDITIONS = 'LODB_EDGE_CIDR=172.18.0.0/16\nLODB_STACK_SUBNET=10.231.1.0/24\n'
   + `LODB_EDGE_SECRET=${EDGE_SECRET}\n`;
-// Every service of the stack, the one-shot migrate included.
-const SERVICES = [...RUNNING, 'migrate'];
+// The one-shots, run before the API starts: the migrations, then the index of states.
+const ONE_SHOTS = ['migrate', 'states'];
+// Every service of the stack, the one-shots included.
+const SERVICES = [...RUNNING, ...ONE_SHOTS];
 // The pass renderer's CPU weight and quota: prod, then the staging's smaller ones.
 const PASS_SSR_LIMITS = {
   prod: { shares: 128, cpus: 1, memory: 704 * 1024 * 1024 },
@@ -46,6 +49,8 @@ const NGINX_UPSTREAM = '{{upstreams 8080}}';
 const NGINX_TEMP = '/var/cache/nginx/temp';
 // The staging share of the host: about three quarters of a core.
 const STAGING_CORES = 0.75;
+// The staging one-shots' weight, under the production visitors they run beside.
+const STAGING_ONE_SHOT_SHARES = 128;
 const HASH = '$2a$14$jM2G4xK0ZDa8W6PF31H9BOKCv81PEwu/7g692HVRaN72tRoi1jH52';
 const AUTH_ENV = `LODB_STAGING_BASIC_AUTH_USER=tester\nLODB_STAGING_BASIC_AUTH_HASH='${HASH}'\n`;
 const OPEN_PATHS = '/api/* /v1/* /webhooks/* /healthz /build/* /cdn/blobs/* /u/*';
@@ -119,13 +124,32 @@ describe('served overlays through Compose',
       assert.deepEqual(networksOf(prod.postgres), ['data']);
       assert.deepEqual(prod.postgres.networks.data.aliases, ['lodb-postgres']);
       assert.deepEqual(networksOf(prod.api), ['data', 'default', 'observability']);
-      assert.deepEqual(networksOf(prod.migrate), ['data', 'default']);
+      for (const name of ONE_SHOTS) {
+        assert.deepEqual(networksOf(prod[name]), ['data', 'default'], name);
+      }
       assert.deepEqual(networksOf(prod.nginx), ['default', 'edge']);
       assert.deepEqual(networksOf(prod['web-ssr']), ['default', 'observability']);
       assert.deepEqual(networksOf(prod[PASS_SSR]), ['default', 'observability']);
       // The network nginx reaches the API from is the one the API trusts.
       const [{ subnet }] = served.networks.default.ipam.config;
       assert.equal(prod.api.environment.LoDb__Hosting__KnownProxyNetworks__0, subnet);
+    });
+
+    // The API serves an index (docs/produit/seo-une-page-par-etat.md § 4.1): built by its own
+    // image, as its role, from the stored datasets it cannot change, under the visitors.
+    test('builds the index of states before the API starts, reading the datasets only', () => {
+      const { states, api } = prod;
+      assert.deepEqual(states.command, ['catalog', 'states', 'build']);
+      assert.equal(states.image, api.image, 'the API image, no extra build');
+      assert.equal(states.restart, 'no');
+      assert.equal(states.depends_on.migrate.condition, 'service_completed_successfully');
+      assert.equal(api.depends_on.states.condition, 'service_completed_successfully');
+      const storage = states.volumes.find((mount) => mount.target === '/srv/storage');
+      assert.deepEqual([storage?.source, storage?.read_only], ['ddragon', true]);
+      assert.match(states.environment.ConnectionStrings__LoDb, /Username=lodb_app;/);
+      assert.equal(states.environment.LoDb__Storage__Root, '/srv/storage');
+      assert.ok(states.cpu_shares > prod[PASS_SSR].cpu_shares, 'above the pass renderer');
+      assert.ok(states.cpu_shares < api.cpu_shares, 'under the visitors it runs beside');
     });
 
     test('has the edge reach nginx on its port, with the header nginx requires', () => {
@@ -146,7 +170,11 @@ describe('served overlays through Compose',
         assert.ok(limits.pids > 0, `${name} has a process cap`);
         assert.ok(prod[name].cpu_shares > 0, `${name} has a CPU weight`);
       }
-      assert.ok(limitsOf(prod.migrate).pids > 0, 'migrate has a process cap');
+      for (const name of ONE_SHOTS) {
+        assert.ok(limitsOf(prod[name]).pids > 0, `${name} has a process cap`);
+        assert.ok(limitsOf(prod[name]).memory > 0, `${name} has a memory limit`);
+      }
+      assert.ok(Number(limitsOf(prod.states).cpus) > 0, 'states has a CPU quota');
       assert.ok(coresOf(prod) < 4, `${coresOf(prod)} cores leave the host some`);
       assert.ok(RUNNING.every((name) => prod.nginx.cpu_shares >= prod[name].cpu_shares));
     });
@@ -190,6 +218,9 @@ describe('served overlays through Compose',
       for (const name of RUNNING) {
         assert.ok(staging[name].cpu_shares < prod[name].cpu_shares, `${name} weighs less`);
         assert.ok(Number(limitsOf(staging[name]).cpus) < Number(limitsOf(prod[name]).cpus));
+      }
+      for (const name of ONE_SHOTS) {
+        assert.equal(staging[name].cpu_shares, STAGING_ONE_SHOT_SHARES, `${name} weighs less`);
       }
       const api = staging.api.environment;
       assert.equal(api.LoDb__Ingestion__SyncConcurrency, '1');

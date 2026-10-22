@@ -97,12 +97,7 @@
       </section>
     }
 
-    <lodb-previous-patches
-      class="mt-14"
-      [context]="context"
-      [path]="details.canonicalPath"
-      [canonical]="details.canonical"
-    />
+    <lodb-entity-state class="mt-14" [context]="context" [details]="details" />
 
     <!-- Once the page is idle: the pager measures itself once hydrated, out of sight, and
          a click never lands while it hydrates (docs/architecture/pieges.md). -->

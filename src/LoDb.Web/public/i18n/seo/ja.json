@@ -1,5 +1,6 @@
 {
   "versioned_suffix": "(パッチ {{ version }})",
+  "state_range_suffix": "(パッチ {{ first }}〜{{ last }})",
   "home": {
     "title": "League Of Data Base — リーグ・オブ・レジェンド百科事典",
     "description": "パッチ{{ version }}のリーグ・オブ・レジェンドのチャンピオン、アイテム、ルーン、サモナースペルを網羅。ステータス、スキル、詳細を21言語で。"
@@ -98,5 +99,11 @@
       "title": "よくある質問",
       "description": "League Of Data Base についての回答: 何ができるサイトか、League of Legends のデータの出典、更新頻度、アカウントが必要かどうか。"
     }
+  },
+  "state": {
+    "summary": "パッチ {{ version }} で変更：{{ fields }}。",
+    "summary_more": "パッチ {{ version }} で変更：{{ fields }}…",
+    "summary_new": "パッチ {{ version }} で追加。",
+    "summary_returned": "パッチ {{ version }} で復帰。"
   }
 }

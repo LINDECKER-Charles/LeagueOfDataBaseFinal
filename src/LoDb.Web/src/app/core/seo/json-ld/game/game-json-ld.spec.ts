@@ -7,6 +7,7 @@ import { championJsonLd } from './champion-json-ld';
 import { itemJsonLd } from './item-json-ld';
 import { runePathJsonLd } from './rune-path-json-ld';
 import { summonerSpellJsonLd } from './summoner-spell-json-ld';
+import { detailStateOf } from '../../../testing/detail-state-of';
 
 const ORIGIN = 'https://league-of-data-base.com';
 const IMAGE = { status: 'present', url: '/cdn/blobs/ab12.png' } as const;
@@ -23,6 +24,7 @@ function urlsOf(path: string) {
 const AHRI: ChampionDetails = {
   ...COMMON,
   canonicalPath: 'champions/Ahri',
+  ...detailStateOf('champions/Ahri'),
   abilities: [],
   allyTips: [],
   enemyTips: [],
@@ -57,6 +59,7 @@ const AHRI: ChampionDetails = {
 const FAERIE_CHARM: ItemDetails = {
   ...COMMON,
   canonicalPath: 'items/1004-faerie-charm',
+  ...detailStateOf('items/1004-faerie-charm'),
   availableMaps: [11, 12],
   description: '<mainText><stats><attention>50%</attention> Base Mana Regen</stats></mainText>',
   upgrades: [],
@@ -79,6 +82,7 @@ const FAERIE_CHARM: ItemDetails = {
 const PRECISION: RuneTreeDetails = {
   ...COMMON,
   canonicalPath: 'runes/8000-precision',
+  ...detailStateOf('runes/8000-precision'),
   profile: {
     canonicalPath: 'runes/8000-precision',
     id: 8000,
@@ -97,6 +101,7 @@ const PRECISION: RuneTreeDetails = {
 const FLASH: SummonerDetails = {
   ...COMMON,
   canonicalPath: 'summoners/SummonerFlash',
+  ...detailStateOf('summoners/SummonerFlash'),
   cost: [0],
   globalRange: false,
   range: [425],

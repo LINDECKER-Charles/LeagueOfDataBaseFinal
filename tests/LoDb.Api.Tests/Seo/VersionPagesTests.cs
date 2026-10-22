@@ -14,8 +14,9 @@ using Microsoft.Extensions.DependencyInjection;
 namespace LoDb.Api.Tests.Seo;
 
 /// <summary>
-/// The pages of one (version, locale): the four lists and every entity they show, the one
-/// list the pre-render pass and the sitemaps share.
+/// The pages of one (version, locale): the four lists, the patch page and every entity they
+/// show, in that order (the cursor of a unit of the pass is an index in it), the entities being
+/// those the sitemaps list.
 /// </summary>
 public sealed class VersionPagesTests(PostgresContainerFixture postgres) : IAsyncLifetime
 {
@@ -73,16 +74,21 @@ public sealed class VersionPagesTests(PostgresContainerFixture postgres) : IAsyn
     }
 
     [Fact]
-    public void PagesAreTheFourListsThenEveryListedEntityOnce()
+    public void PagesAreTheFourListsThePatchPageThenEveryListedEntityOnce()
     {
         var catalog = Catalog;
 
         var pages = VersionPages.Of(catalog).ToList();
 
-        Assert.Equal(SitePages.Lists, pages.Take(SitePages.Lists.Count));
+        Assert.Equal(
+            [.. SitePages.Lists, SitePages.Changes],
+            pages.Take(SitePages.Lists.Count + 1));
+        Assert.Equal(
+            [.. VersionPages.ListedEntityPaths(catalog).Select(static path => path.Value)],
+            pages.Skip(SitePages.Lists.Count + 1));
         Assert.Equal(pages.Count, pages.Distinct(StringComparer.Ordinal).Count());
         Assert.Equal(
-            SitePages.Lists.Count + ListedEntityCount(catalog),
+            SitePages.Lists.Count + 1 + ListedEntityCount(catalog),
             pages.Count);
     }
 
@@ -123,7 +129,8 @@ public sealed class VersionPagesTests(PostgresContainerFixture postgres) : IAsyn
         var patchBound = SitemapLocations.PatchBound(Prefix, catalog).ToList();
 
         Assert.Equal(
-            [.. SitePages.PatchBound.Concat(VersionPages.Of(catalog).Skip(SitePages.Lists.Count))
+            [.. SitePages.PatchBound.Concat(VersionPages.ListedEntityPaths(catalog)
+                .Select(static path => path.Value))
                 .Select(static path => Prefix + path)],
             patchBound);
     }

@@ -1,5 +1,6 @@
 {
   "versioned_suffix": "(الإصدار {{ version }})",
+  "state_range_suffix": "(الإصدارات {{ first }} إلى {{ last }})",
   "home": {
     "title": "League Of Data Base — موسوعة League of Legends",
     "description": "أبطال League of Legends وعناصرها وروناتها وتعاويذ المستدعي للتحديث {{ version }} — إحصائيات ومهارات وتفاصيل بـ21 لغة."
@@ -98,5 +99,11 @@
       "title": "الأسئلة الشائعة",
       "description": "إجابات عن League Of Data Base: ما هو، ومن أين تأتي بيانات League of Legends، وكم مرة تُحدَّث، وهل يلزم إنشاء حساب."
     }
+  },
+  "state": {
+    "summary": "تغيّر في الإصدار {{ version }}: {{ fields }}.",
+    "summary_more": "تغيّر في الإصدار {{ version }}: {{ fields }}…",
+    "summary_new": "جديد في الإصدار {{ version }}.",
+    "summary_returned": "عاد في الإصدار {{ version }}."
   }
 }

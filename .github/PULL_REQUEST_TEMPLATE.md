@@ -16,11 +16,13 @@
 
 ## 🧪 Tests & guardrails
 
-<!-- Must be green before requesting review (same as CI). -->
+<!-- Must be green before requesting review. CI also runs the tools' tests (node --test),
+     tools/routing/check-urls.sh and the E2E suite: see the guardrails in AGENTS.md. -->
 
 - [ ] `dotnet build LoDb.slnx -c Release` · `dotnet test LoDb.slnx`
-- [ ] `npm --prefix src/LoDb.Web run lint` · `typecheck` · `test` · `build:web` · `api:check`
+- [ ] `npm --prefix src/LoDb.Web run lint` · `typecheck` · `test` · `build:web` · `build:shell` · `api:check`
 - [ ] Added or updated tests proving the change works
+- [ ] Changelog entry added if the change is visible to players (`docs/changelog/`)
 
 ## ✅ Checklist
 

@@ -175,9 +175,10 @@ internal sealed class VersionIngestion(
     }
 
     // The version is promoted whatever a listener does: a failure is logged, never thrown.
+    // OrderBy is stable: the listeners of one stage keep their registration order.
     private async Task NotifyAsync(PatchVersion version, CancellationToken cancellationToken)
     {
-        foreach (var listener in listeners)
+        foreach (var listener in listeners.OrderBy(static listener => listener.Stage))
         {
             try
             {

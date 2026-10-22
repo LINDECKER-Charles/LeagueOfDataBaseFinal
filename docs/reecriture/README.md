@@ -1,10 +1,24 @@
 # Réécriture .NET 10 + Angular — dossier de décision
 
-> **Statut** : décisions actées le 2026-09-24, avant la première ligne de code.
-> Ce dossier est la source de vérité de la réécriture. Elle est désormais la stack du
-> dépôt, décrite par [`../../AGENTS.md`](../../AGENTS.md) ; l'ancienne (Symfony + Go +
-> Vue) est archivée sous `legacy/` et reste en production jusqu'à la
-> [bascule](bascule.md).
+> **Statut** : décisions actées le 2026-09-24 ; **basculé en prod le 2026-10-04**
+> ([`bascule.md`](bascule.md), état en tête). La réécriture est la stack du dépôt, décrite par
+> [`../../AGENTS.md`](../../AGENTS.md) et, en vue d'ensemble, par
+> [`architecture.md`](../architecture/architecture.md). L'ancienne (Symfony + Go + Vue) est
+> archivée sous `legacy/` jusqu'à la décommission, après le *contract* (au plus tôt le
+> 2026-11-03).
+>
+> **Ce qui fait foi ici** :
+>
+> - les [ADR](adr/) et leurs amendements datés (le plus récent l'emporte) ;
+> - `bascule.md`, jusqu'à la décommission ;
+> - les invariants des §§ 5 et 6 de `heritage.md`, et la table des 301 de `plan-migration.md` ;
+> - deux rapports : `rapports/contrat-v1.md` (écarts du contrat `/v1`, que les tests citent) et
+>   `rapports/schema-baseline.md` (jusqu'au *contract*).
+>
+> `rapports/i18n-completude.md`, `diff-seo.md` et `lighthouse.md` sont réécrits par leurs
+> outils. Tout le reste raconte la construction de septembre 2026 et est **historique** : le
+> reste de `heritage.md` et de `plan-migration.md`, `plan-implementation.md`, `implementation/`
+> et les autres rapports, jalons compris. Ces documents ne s'appliquent plus tels quels.
 
 ## Pourquoi réécrire
 
@@ -33,7 +47,7 @@ Bloodborne Legendary Run (Angular + Capacitor + mises à jour Android).
 |---|---|
 | [0001](adr/0001-reecriture-dotnet-angular.md) | Réécrire en **.NET 10 LTS + Angular 22** ; PHP, Go, Twig et Vue disparaissent à la bascule |
 | [0002](adr/0002-hote-serveur-unique.md) | **Un seul hôte ASP.NET Core** (monolithe modulaire) : absorbe `go-fetcher` et `go-api` ; egress filtré dans le processus |
-| [0003](adr/0003-ingestion-proactive-et-taches-de-fond.md) | **Ingestion proactive** à la sortie d'un patch + tâches de fond (`BackgroundService`) : fin du loader SSE, des placeholders et du polling |
+| [0003](adr/0003-ingestion-proactive-et-taches-de-fond.md) | **Ingestion proactive** à la sortie d'un patch + tâches de fond (`BackgroundService`) : fin des placeholders et du polling ; un flux SSE d'attente revient le 2026-09-28 pour un changement de patch ou de langue (`/api/catalog/{version}/{lang}/warm-up`) |
 | [0004](adr/0004-stockage-etat-et-scaling.md) | Blobs derrière `IBlobStore` ; **manifeste, analytics et audit dans Postgres** ; aucun état dans le processus web qui empêche de passer à N instances |
 | [0005](adr/0005-web-ssr-urls-et-seo.md) | **Angular SSR** (Node) + cache HTTP partagé ; **locale dans l'URL** (`/fr/…`) : hreflang, cache public, sitemaps par langue |
 | [0006](adr/0006-front-angular-multi-cibles.md) | **Un workspace Angular, trois coquilles** (web, desktop, Android) ; i18n au runtime (Transloco) ; client API généré depuis OpenAPI |
@@ -41,12 +55,19 @@ Bloodborne Legendary Run (Angular + Capacitor + mises à jour Android).
 | [0008](adr/0008-mises-a-jour-integrees.md) | Mises à jour intégrées : **Velopack** (desktop), **live update signé du front** + **Play In-App Updates** (Android) |
 | [0009](adr/0009-identite-authentification-sessions.md) | **ASP.NET Core Identity** : cookie (web) + jetons (apps), migration transparente des hash, plus de session serveur |
 | [0010](adr/0010-observabilite-tests-ci.md) | **OpenTelemetry** + logs JSON + `/metrics` ; Testcontainers, fixtures Data Dragon, Playwright ; un seul contrat OpenAPI |
-| [0011](adr/0011-catalogue-pre-rendu-et-cdn.md) | **Catalogue pré-rendu** : pages des anciens patchs calculées une fois dans un stockage objet Scaleway, servies par nginx avec le SSR en repli ; **Cloudflare** devant le site (2026-10-20) |
+| [0011](adr/0011-catalogue-pre-rendu-et-cdn.md) | **Catalogue pré-rendu** : pages des anciens patchs calculées une fois dans un stockage objet Scaleway, servies par nginx avec le SSR en repli (2026-10-20) ; **Cloudflare** devant le site prévu, pas encore construit |
+| [0012](adr/0012-audience-umami.md) | **Audience Umami** à côté de la mesure maison ; `/v1/trends` passe sur Umami à une date de bascule (2026-10-11) |
 
-Plan d'exécution et bascule : [`plan-migration.md`](plan-migration.md). Découpage en chantiers,
-conventions et ordre d'exécution : [`plan-implementation.md`](plan-implementation.md).
+Bascule, retour arrière et *contract* : [`bascule.md`](bascule.md). Plan et découpage de la
+construction (historiques) : [`plan-migration.md`](plan-migration.md),
+[`plan-implementation.md`](plan-implementation.md).
 
 ## Architecture cible
+
+*Schéma du 2026-09-24. Il ne montre ni le stockage des pages pré-rendues, ni le SSR de la
+passe, ni Umami, ni les sauvegardes hors hôte ; le blob store est le volume `ddragon` (monté
+sur `/srv/storage`), pas l'ancien `storage`. Vue d'ensemble à jour :
+[`architecture.md`](../architecture/architecture.md).*
 
 ```
                       Caddy — edge partagé du VPS (TLS, infra-vps)
@@ -98,8 +119,13 @@ et deviennent des tests dès le lot 1 du plan.
 
     reecriture/
       README.md          ← ce fichier : pourquoi, décisions, architecture, versions
-      heritage.md        ← contournements hérités → réponse ; invariants à porter
-      plan-migration.md  ← lots, critères de sortie, bascule, retour arrière, risques
-      plan-implementation.md ← chantiers, conventions, ordre d'exécution, couverture
-      implementation/    ← détail des chantiers, un fichier par lot
-      adr/               ← une décision par fichier (contexte, décision, alternatives)
+      adr/               ← une décision par fichier, amendements datés : fait foi
+      bascule.md         ← runbook de la bascule (faite), retour arrière, contract : fait foi
+                           jusqu'à la décommission
+      heritage.md        ← contournements hérités → réponse (historique) ; §§ 5-6 : invariants
+      plan-migration.md  ← lots, critères de sortie, risques (historique) ; table des 301
+      plan-implementation.md ← chantiers, conventions, ordre d'exécution (historique)
+      implementation/    ← détail des chantiers, un fichier par lot (historique)
+      rapports/          ← rapports de construction et jalons (historique), sauf contrat-v1,
+                           schema-baseline et les rapports générés par les outils
+      changelog-bascule/ ← brouillons de changelog de la bascule

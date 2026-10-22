@@ -1,5 +1,6 @@
 {
   "versioned_suffix": "(patch {{ version }})",
+  "state_range_suffix": "(patche {{ first }} až {{ last }})",
   "home": {
     "title": "League Of Data Base — encyklopedie League of Legends",
     "description": "Šampioni, předměty, runy a kouzla vyvolávače League of Legends pro patch {{ version }} — statistiky, schopnosti a detaily ve 21 jazycích."
@@ -98,5 +99,11 @@
       "title": "Časté dotazy",
       "description": "Odpovědi na otázky o League Of Data Base: co to je, odkud pocházejí jeho data o League of Legends, jak často se aktualizují a zda je potřeba účet."
     }
+  },
+  "state": {
+    "summary": "Změněno v patchi {{ version }}: {{ fields }}.",
+    "summary_more": "Změněno v patchi {{ version }}: {{ fields }}…",
+    "summary_new": "Nové v patchi {{ version }}.",
+    "summary_returned": "Zpět v patchi {{ version }}."
   }
 }

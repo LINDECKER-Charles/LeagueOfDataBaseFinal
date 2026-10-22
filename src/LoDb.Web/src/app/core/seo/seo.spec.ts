@@ -17,8 +17,14 @@ const ORIGIN = 'https://league-of-data-base.com';
 const CATALOGUES: Record<string, Translation> = {
   en: { base: { title: 'League of Data Base', description: 'The LoL encyclopedia.' } },
   fr: { base: { title: 'League of Data Base', description: "L'encyclopédie de LoL." } },
-  'seo/en': { versioned_suffix: '(patch {{ version }})' },
-  'seo/fr': { versioned_suffix: '(version {{ version }})' },
+  'seo/en': {
+    versioned_suffix: '(patch {{ version }})',
+    state_range_suffix: '(patches {{ first }} to {{ last }})',
+  },
+  'seo/fr': {
+    versioned_suffix: '(version {{ version }})',
+    state_range_suffix: '(patchs {{ first }} à {{ last }})',
+  },
 };
 
 // Asynchronous like the HTTP loader, so a render has to wait for the texts.
@@ -175,6 +181,35 @@ describe('Seo', () => {
     expect(hrefs('canonical')).toEqual([`${ORIGIN}/fr/champions/Ahri`]);
   });
 
+  // The opener of a closed state: its run of patches replaces the version, never both.
+  it('titles the opener of a state with its run of patches, alone', async () => {
+    await seo().apply({
+      ...AHRI,
+      version: '11.5.1',
+      titlePatches: { first: '11.5.1', last: '11.9.1' },
+    });
+
+    expect(document.title).toBe(
+      'Ahri, champion de LoL (patchs 11.5.1 à 11.9.1) — League Of Data Base',
+    );
+  });
+
+  it('titles the opener of a state of one version with that version, once', async () => {
+    await seo().apply({
+      ...AHRI,
+      version: '11.5.1',
+      titlePatches: { first: '11.5.1', last: '11.5.1' },
+    });
+
+    expect(document.title).toBe('Ahri, champion de LoL (version 11.5.1) — League Of Data Base');
+  });
+
+  it('adds no patch to a pinned title that names its own', async () => {
+    await seo().apply({ ...AHRI, title: 'Patch 11.5.1', version: '11.5.1', titlePatches: false });
+
+    expect(document.title).toBe('Patch 11.5.1 — League Of Data Base');
+  });
+
   it('keeps a private page out of the index, titled like the account pages', async () => {
     await seo().apply({ title: 'Connexion', kind: 'private', locale: 'fr' });
 
@@ -211,12 +246,13 @@ describe('Seo', () => {
     expect(jsonLd()).toEqual([]);
   });
 
-  it('keeps a donation return out of the index while following its links', async () => {
-    await seo().apply({ title: 'Merci', kind: 'donation-return', locale: 'fr', path: 'donate' });
+  it('keeps a noindex page out of the index while following its links', async () => {
+    await seo().apply({ title: 'Merci', kind: 'noindex', locale: 'fr', path: 'donate' });
 
     expect(meta('robots')).toBe('noindex, follow');
     expect(hrefs('canonical')).toEqual([`${ORIGIN}/fr/donate`]);
     expect(hrefs('alternate')).toEqual([]);
+    expect(jsonLd()).toEqual([]);
   });
 
   it('replaces every tag of the previous page', async () => {

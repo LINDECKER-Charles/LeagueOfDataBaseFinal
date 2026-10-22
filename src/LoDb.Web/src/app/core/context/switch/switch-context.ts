@@ -3,11 +3,12 @@ import { languageOf } from '../../api/meta/language-of';
 import { versionMatcher } from '../../api/meta/version-matcher';
 import type { Locale } from '../../i18n/locales';
 import { formatPublicUrl } from '../../routing/url/format-public-url';
-import { isCatalogueRoute } from '../../routing/url/is-catalogue-route';
+import { isVersionedRoute } from '../../routing/url/is-versioned-route';
 import { parsePublicUrl } from '../../routing/url/parse-public-url';
 import type { PublicUrl } from '../../routing/url/public-url';
 import type { QueryString } from '../../routing/url/query-string';
 import type { ContextTarget } from './context-target';
+import { pinnableVersion } from './pinnable-version';
 
 const VERSION_PARAM = 'version';
 const LANG_PARAM = 'lang';
@@ -45,22 +46,24 @@ function queryOf(current: PublicUrl, lang: string | null, version: string | null
 /**
  * The URL of the same page in another context (ADR 0005): a pure rewrite, so switching is
  * one navigation, never a chain of redirects. The locale replaces the first segment; the
- * version goes into the path of the catalogue pages, into `?version=` elsewhere, and only
- * when it is not the latest; the language goes into `?lang=` unless it is the locale's
- * own; a page outside the locales, whose path has none, reads any language from `?lang=`.
- * The rest of the query and the fragment survive. The path wins over the query.
+ * version goes into the path of the catalogue pages and of a patch's changes, into
+ * `?version=` elsewhere, and only when it is not the latest, nor a patch without a page of
+ * changes on that page (`pinnableVersion`); the language goes into `?lang=` unless it is the
+ * locale's own; a page outside the locales, whose path has none, reads any language from
+ * `?lang=`. The rest of the query and the fragment survive. The path wins over the query.
  */
 export function switchContext(url: string, target: ContextTarget, meta: CatalogMeta): string {
   const matcher = versionMatcher(meta);
   const current = parsePublicUrl(url, (segment) => matcher.test(segment));
   const locale = current.locale === null ? null : (target.locale ?? current.locale);
   const requested = kept(target.version, current.version ?? current.query.get(VERSION_PARAM));
-  const version = requested === meta.latest ? null : requested;
+  const pinnable = pinnableVersion(current.page, requested, meta);
+  const version = pinnable === meta.latest ? null : pinnable;
   const lang =
     locale === null
       ? outsideLang(target, current, meta)
       : variantOf(kept(target.lang, current.query.get(LANG_PARAM)), locale, meta);
-  const inPath = locale !== null && isCatalogueRoute(current.page);
+  const inPath = locale !== null && isVersionedRoute(current.page);
   const query = queryOf(current, lang, inPath ? null : version);
   return formatPublicUrl({ ...current, locale, version: inPath ? version : null, query });
 }

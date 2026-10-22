@@ -32,7 +32,8 @@ sorti des repos applicatifs.
 
 ## Prérequis sur l'hôte (dans l'ordre)
 
-1. **Déployer `infra-vps`** : edge + réseaux `edge` et `observability`.
+1. **Déployer `infra-vps`** : edge + réseaux `edge` et `observability`, plus `sauvegardes`
+   sur l'hôte de la prod (le job de déploiement échoue si l'un d'eux manque).
 2. Enregistrements DNS (A/AAAA) de `CADDY_DOMAINS` et `API_CADDY_DOMAINS` pointés vers
    l'hôte, ports **80/443** joignables — sinon l'émission ACME échoue (Caddy réessaie
    seul une fois le DNS propagé).
@@ -43,7 +44,8 @@ sorti des repos applicatifs.
 
 ## ➕ Ajouter un projet au VPS (« la méthode »)
 
-Aucune modification côté edge. Dans le compose du projet, sur son conteneur public :
+Aucune modification côté edge. Dans le compose du projet, sur son conteneur public
+(exemple générique d'`infra-vps`, pas celui de LoDb) :
 
 ```yaml
 services:
@@ -62,13 +64,20 @@ networks:
 certificat et route. La définition de l'edge, l'onboarding détaillé (observabilité
 comprise) et les limites mémoire recommandées vivent dans `infra-vps`.
 
+Le bloc réel de LoDb est celui du service `nginx` de `compose.deploy.yaml` : nginx écoute
+sur **8080**, et deux labels routent, `caddy_0` (site, `CADDY_DOMAINS`) et `caddy_1`
+(sous-domaine `api.`, `API_CADDY_DOMAINS`), chacun avec
+`reverse_proxy: "{{upstreams 8080}}"` et
+`reverse_proxy.header_up: X-LoDb-Edge ${LODB_EDGE_SECRET}`. Sans cet en-tête, nginx répond
+`403` ([`configuration.md`](configuration.md) § 6.7).
+
 ---
 
 ## Vérification post-déploiement
 
 ```bash
 # Sur l'hôte
-docker network ls | grep -E 'edge|observability'
+docker network ls | grep -E 'edge|observability|sauvegardes'
 docker ps --format '{{.Names}} {{.Status}}' | grep -E '^edge|lodb'
 
 # Depuis n'importe où : HTTP/2 200 et certificat Let's Encrypt valide
@@ -85,5 +94,5 @@ curl -sSI https://<domaine>/healthz
 | Site down après push mais edge `Up` | app pas sur `edge`, ou label absent | `docker inspect <nginx> --format '{{json .Config.Labels}}'` ; vérifier `CADDY_DOMAINS` |
 | `403` de nginx sur tout le site LoDb (hors `/healthz`) | l'edge n'a pas encore relu les labels de nginx (quelques secondes après un `up`), ou `LODB_EDGE_SECRET` a changé d'un seul côté | attendre ; sinon redéployer : le job réécrit les labels et nginx depuis `.deploy/secrets/LODB_EDGE_SECRET` ([`configuration.md`](configuration.md) § 6.7) |
 | « Edge Caddy container not found » pendant le self-heal TLS | le Caddy de l'edge ne tourne pas, ou sous un autre projet Compose que `edge` | `docker ps --filter label=com.docker.compose.project=edge` ; corriger côté `infra-vps` |
-| Collision staging/prod | `COMPOSE_PROJECT_NAME` manquant dans un `ENV_*` | l'ajouter au secret, redéployer |
+| Le job s'arrête sur « COMPOSE_PROJECT_NAME is '…' in the .env; staging expects 'lodb-staging' » (ou `prod`) | `COMPOSE_PROJECT_NAME` absent ou faux dans `ENV_*` : le job refuse plutôt que de laisser staging et prod se remplacer | le poser à `lodb-staging` ou `lodb-prod` dans le secret, redéployer |
 | `stat …/compose.deploy.yaml: no such file` | `COMPOSE_FILE` polluée dans le shell | `unset COMPOSE_FILE` (le job l'exporte proprement lui-même) |

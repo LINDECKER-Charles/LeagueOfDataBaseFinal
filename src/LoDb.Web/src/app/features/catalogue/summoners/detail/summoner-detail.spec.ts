@@ -10,8 +10,8 @@ import type { SeoPage } from '../../../../core/seo/seo-page';
 import { provideTestTransloco } from '../../../../core/testing/provide-test-transloco';
 import { CatalogueHead } from '../../shared/codex/head/catalogue-head';
 import type { CatalogueTexts } from '../../shared/codex/head/catalogue-texts';
-import { provideMeta } from '../../shared/testing/provide-meta';
 import { SummonerDetail } from './summoner-detail';
+import { detailStateOf } from '../../../../core/testing/detail-state-of';
 
 const CONTEXT: PageContext = { locale: 'en', version: '16.19.1', pinned: false, language: 'en_US' };
 const CARD: SummonerCard = {
@@ -37,6 +37,7 @@ const CARD: SummonerCard = {
 };
 const DETAILS: SummonerDetails = {
   canonicalPath: CARD.canonicalPath,
+  ...detailStateOf(CARD.canonicalPath),
   language: 'en_US',
   version: CONTEXT.version,
   cost: [0],
@@ -69,7 +70,6 @@ async function render(entry = ENTRY) {
   const write = (_: string, build: (texts: CatalogueTexts) => SeoPage) => heads.push(build(TEXTS));
   TestBed.configureTestingModule({
     providers: [
-      provideMeta(),
       provideRouter([{ path: 'en/summoners/:id', component: SummonerDetail, data: { entry } }]),
       provideTestTransloco({ otherwise: { edition: { classic: 'LoL Classic' } } }),
       { provide: CatalogueHead, useValue: { write } },

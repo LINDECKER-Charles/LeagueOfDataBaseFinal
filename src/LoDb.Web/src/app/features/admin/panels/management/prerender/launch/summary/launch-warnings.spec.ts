@@ -15,6 +15,7 @@ const DRAFT: LaunchDraft = {
   epoch: 2,
   epochKind: 'served',
   skipComplete: true,
+  isOpenersFirst: false,
   fromPass: null,
   isResolved: true,
   isPriorityCapped: false,
@@ -64,6 +65,11 @@ describe('launchWarnings', () => {
     expect(codes({ pageTypes: ['items'] }, {}, { ...REPORT, enqueuesPromotions: false })).toEqual(
       [],
     );
+  });
+
+  it('warns that the openers leave every other page to a pass that must follow', () => {
+    expect(codes({ isOpenersFirst: true })).toEqual(['openers']);
+    expect(codes({ isOpenersFirst: true, pageTypes: ['items'] })).toEqual(['openers']);
   });
 
   it('warns that nothing of a new or standby epoch is served before the switch', () => {

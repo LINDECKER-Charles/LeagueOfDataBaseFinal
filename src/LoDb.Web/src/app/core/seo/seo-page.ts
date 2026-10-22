@@ -27,19 +27,29 @@ interface SeoPageBase {
 }
 
 interface AddressedPage extends SeoPageBase {
-  /** `page`: indexable (default); `donation-return`: `noindex, follow`, no alternates. */
-  readonly kind?: 'page' | 'donation-return';
+  /**
+   * `page`: indexable (default); `noindex`: `noindex, follow`, its links still followed, but
+   * neither alternates nor structured data (a donation's return, a patch that changed nothing).
+   */
+  readonly kind?: 'page' | 'noindex';
   /** Path below `/{locale}/[{version}/]`: the API's `canonicalPath`, `''` for home. */
   readonly path: string;
-  /** A pinned version, older than the latest one: see {@link canonical}. */
+  /** A pinned version, other than the latest one: see {@link canonical}. */
   readonly version?: string | null;
   /**
-   * Where a page of a pinned version is indexed (ADR 0005, amendment of 2026-10-14): an
-   * entity's page hands its API `canonical` over, null keeping the page out of the index
-   * (`noindex, follow`); unset, the same path at the latest version. A page of the latest
-   * version is its own canonical whatever this says.
+   * Where a page of a pinned version is indexed (ADR 0005, amendment of 2026-10-22): an
+   * entity's page hands its API `canonical` over, which always names a page; unset, the same
+   * path at the latest version. A page of the latest version is its own canonical whatever
+   * this says.
    */
-  readonly canonical?: CanonicalLink | null;
+  readonly canonical?: CanonicalLink;
+  /**
+   * The patches a pinned page's title names after it: by default its own version
+   * (`seo.versioned_suffix`); the run of patches of a state whose opener it is
+   * (`seo.state_range_suffix`, or the version suffix for a run of one); `false` when the
+   * title already names its patch. A title never carries two of them.
+   */
+  readonly titlePatches?: { readonly first: string; readonly last: string } | false;
   /** The page's own nodes, after the site graph; built once the URLs are known. */
   readonly jsonLd?: (urls: SeoUrls) => readonly JsonLdNode[];
 }

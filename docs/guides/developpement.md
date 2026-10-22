@@ -30,8 +30,9 @@ npm ci --prefix tests/LoDb.E2E
 npm --prefix tests/LoDb.E2E run browsers:install
 ```
 
-`npm ci` n'écrit pas les lockfiles. Un chantier ne les committe jamais : l'intégration les
-régénère par `npm install --prefix <dossier>` puis les committe.
+`npm ci` n'écrit pas les lockfiles. Ils sont générés, jamais édités à la main : un
+changement de dépendance passe par `npm install --prefix <dossier>`, et le lockfile part
+dans le commit de ce changement. Dependabot commite les siens de la même façon.
 
 ## Build et tests sur l'hôte
 
@@ -69,17 +70,14 @@ npm --prefix src/LoDb.Web run build:shell
 | `i18n:build` | catalogues servis (`dist/i18n`) : complétés par `en`, messages ICU compilés ; lancé avant chaque build et par `npm start` |
 | `build:web` | build SSR, dans `dist/web/{browser,server}` |
 | `build:shell` | build statique des coquilles, dans `dist/shell/browser` |
-| `api:generate`, `api:check` | contrat OpenAPI et client généré : bouchons jusqu'à L2.2 |
-| `i18n:convert`, `i18n:report` | conversion des catalogues et complétude : bouchons jusqu'à L3.3 |
+| `api:generate` | reconstruit l'API avec la génération OpenAPI (`src/LoDb.Api/openapi/*.json`), puis le client TypeScript du document `app` (`src/app/core/api/generated/`) |
+| `api:check` | régénère les mêmes fichiers et échoue s'ils diffèrent de ceux du commit ; job `contract` de la CI |
+| `i18n:convert` | conversion ponctuelle des catalogues YAML de l'ancienne stack (`legacy/app/translations`) vers `public/i18n` ; la relancer écrase les catalogues JSON, désormais la source |
+| `i18n:report` | complétude des catalogues face à `en`, dans `docs/reecriture/rapports/i18n-completude.md` ; jamais bloquant, job `i18n` de la CI |
 
-Tant que `api:generate` n'est qu'un bouchon, les documents OpenAPI se produisent à la main :
-
-```bash
-dotnet build src/LoDb.Api -p:LoDbGenerateOpenApi=true
-```
-
-Elle écrit `src/LoDb.Api/openapi/LoDb.Api_app.json` et `LoDb.Api_public-v1.json`. Ce sont
-des artefacts générés : un chantier ne les committe pas.
+Les documents OpenAPI et le client sont des artefacts générés, jamais édités à la main : un
+changement de contrat lance `npm --prefix src/LoDb.Web run api:generate` et committe ce
+qu'il écrit dans le même commit.
 
 ## La stack d'intégration
 
@@ -89,8 +87,8 @@ docker compose -p lodb-dev -f compose.yaml -f compose.override.yaml ps
 ```
 
 Une seule instance tourne sur le poste. Le premier qui en a besoin la démarre, les autres
-la réutilisent. Seuls les agents d'intégration, de jalon et de vérification la
-reconstruisent.
+la réutilisent. Avant de rendre un travail, elle se reconstruit avec
+`up -d --build --wait` (garde-fous d'[`AGENTS.md`](../../AGENTS.md)).
 
 | Service | Rôle | Port hôte | Variable |
 |---|---|---|---|
@@ -101,6 +99,13 @@ reconstruisent.
 | `postgres` | PostgreSQL 17, base `lodb` (utilisateur et mot de passe `lodb` en dev) | 15432 | `LODB_PG_PORT` |
 | `mailpit` | interface des e-mails de dev | 18025 | `LODB_MAIL_PORT` |
 | `pages-store` | stockage objet simulé des pages pré-rendues (moto, l'API S3 en mémoire ; 5000 dans le réseau, alias `lodb-pages-store`), bucket `lodb-pages-dev` ([`configuration.md`](configuration.md), § 7) | aucun | — |
+
+Deux conteneurs éphémères passent avant l'API, qui attend leur réussite : `migrate`
+(migrations, rôles) puis `states` (`catalog states build`, l'index des états d'entité,
+[`configuration.md`](configuration.md) § 4.12). Avant toute promotion, `states` ne fait rien ;
+la première promotion construit alors l'index dans l'API. Il ne couvre ensuite que les
+versions consécutives dont l'en_US est stocké, jusqu'au dernier patch : sur une pile neuve,
+souvent la seule dernière version, sans page de patch ni historique.
 
 Vérifier la stack :
 
@@ -147,6 +152,20 @@ Où placer un test et ce que chaque couche coûte : [`tests.md`](tests.md).
 Ils exigent une stack démarrée. Par défaut, ils visent la stack d'intégration
 (`http://localhost:18080`).
 
+Une stack neuve n'ingère que le dernier patch : son index des états ne couvre que lui, et les
+specs qui choisissent une page d'ancien patch par son état (`support/states.ts`) ne trouvent
+aucun état clos. Avant elles, et avant `tools/routing/check-urls.sh`, indexer les patchs
+d'avant, comme la CI :
+
+```bash
+bash tools/states/index-past-patches.sh
+```
+
+Le script ingère l'en_US des 5 patchs qui précèdent le dernier (`LODB_STATES_PATCHES`, une
+minute chacun, images comprises), puis relance le service `states`, qui reconstruit l'index à
+partir du plus ancien, et attend que l'API le relise (une minute au plus, sur une lecture) :
+lancé juste après, `check-urls.sh` ne lit jamais l'ancien et ne saute pas ses lignes d'états.
+
 ```bash
 npm --prefix tests/LoDb.E2E test
 npm --prefix tests/LoDb.E2E run typecheck
@@ -171,7 +190,8 @@ fumée au staging et à la production (`tools/cutover/readonly-e2e.sh`).
 
 Un emplacement est une seconde stack, isolée par son nom de projet et par ses ports, pour
 éprouver une branche sans toucher à la stack d'intégration. On le lance **depuis son
-worktree**, et seulement si sa mission l'attribue. Il est supprimé avant de rendre. Au plus
+worktree**, quand une branche doit tourner à côté de la stack d'intégration. Il est
+supprimé (`down -v`) avant de rendre. Au plus
 deux emplacements tournent à la fois.
 
 | Emplacement | Projet | HTTP | API | SSR | Postgres | Mailpit |
@@ -184,6 +204,7 @@ Cycle complet de l'emplacement 1 (pour l'emplacement 2, reprendre ses valeurs) :
 
 ```bash
 LODB_HTTP_PORT=18180 LODB_API_PORT=18181 LODB_SSR_PORT=18182 LODB_PG_PORT=15532 LODB_MAIL_PORT=18125 docker compose -p lodb-dev-e1 -f compose.yaml -f compose.override.yaml up -d --build --wait
+LODB_E2E_COMPOSE_PROJECT=lodb-dev-e1 bash tools/states/index-past-patches.sh http://localhost:18180
 LODB_E2E_BASE_URL=http://localhost:18180 LODB_E2E_COMPOSE_PROJECT=lodb-dev-e1 \
   LODB_E2E_MAIL_URL=http://localhost:18125 npm --prefix tests/LoDb.E2E test
 docker compose -p lodb-dev-e1 -f compose.yaml -f compose.override.yaml down -v --rmi local
@@ -256,13 +277,19 @@ manque, la piste est `npm install-scripts approve <paquet>`.
 docker compose -p lodb-dev -f compose.yaml -f compose.override.yaml logs --no-log-prefix api | grep -v '^{'
 ```
 
-Deux causes sont connues au lot 0, consignées dans le
-[rapport du jalon](../reecriture/rapports/jalons/lot-00.md) :
+Les deux causes connues sont corrigées ([rapport du jalon](../reecriture/rapports/jalons/lot-00.md)) :
+`libgssapi_krb5.so.2` au premier accès de l'API à Postgres, neutralisé par
+`Gss Encryption Mode=Disable` dans les chaînes de connexion (`compose.yaml`), et les traces
+multi-lignes du SSR, qu'écrit désormais en une ligne JSON son dernier gestionnaire
+d'erreurs (`src/server/failure-handler.ts`). Une nouvelle ligne hors JSON ne se filtre pas :
+corrigez-la à la source.
 
-- `libgssapi_krb5.so.2`, au premier accès de l'API à Postgres ;
-- les traces multi-lignes du SSR sur une erreur de rendu.
-
-Ne les filtrez pas : corrigez-les à la source.
+**L'API ne démarre pas, `states` a échoué.** `docker compose -p lodb-dev -f compose.yaml -f
+compose.override.yaml logs states` : `states.build.failed` dit que la liste des versions de
+Data Dragon est illisible alors qu'aucun index n'existe (réseau coupé) ; relancer une fois le
+réseau rétabli. Un historique plus long s'obtient en ingérant l'en_US de chaque version listée
+depuis la plus ancienne voulue (`ingest --version <v> --languages en_US`), puis en relançant
+`states`, qui reconstruit l'index sur le nouveau début de couverture.
 
 **Les E2E ne trouvent pas de navigateur.** Relancez
 `npm --prefix tests/LoDb.E2E run browsers:install`.
@@ -278,6 +305,7 @@ et l'étiquette pointe vers l'index : c'est le même build. Après une reconstru
 **Avertissements sans conséquence** :
 
 - `DEP0205` (`module.register()`) pendant `build:web` sous Node 26 ;
-- « `NO_COLOR` env is ignored » de Playwright quand le terminal pose `FORCE_COLOR` ;
-- `UsingEphemeralFileSystemLocationInContainer` (clés Data Protection) au démarrage de
-  l'API, jusqu'à leur persistance en base (L4.1).
+- « `NO_COLOR` env is ignored » de Playwright quand le terminal pose `FORCE_COLOR`.
+
+Les clés Data Protection sont gardées en base (`PersistKeysToDbContext`) : un avertissement
+`UsingEphemeralFileSystemLocationInContainer` au démarrage de l'API n'est plus attendu.

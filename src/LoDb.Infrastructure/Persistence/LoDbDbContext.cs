@@ -13,8 +13,10 @@ using LoDb.Infrastructure.Persistence.Outbox;
 using LoDb.Infrastructure.Persistence.Prerender;
 using LoDb.Infrastructure.Persistence.Prerender.Demand;
 using LoDb.Infrastructure.Persistence.Prerender.Pace;
+using LoDb.Infrastructure.Persistence.Prerender.Revision;
 using LoDb.Infrastructure.Persistence.PublicApi;
 using LoDb.Infrastructure.Persistence.Scheduling;
+using LoDb.Infrastructure.Persistence.States;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -84,7 +86,20 @@ public sealed class LoDbDbContext(DbContextOptions<LoDbDbContext> options)
     public DbSet<PrerenderBuild> PrerenderBuilds => Set<PrerenderBuild>();
 
     public DbSet<PrerenderDemandPage> PrerenderDemand => Set<PrerenderDemandPage>();
+
     public DbSet<PrerenderPaceSetting> PrerenderPaceSettings => Set<PrerenderPaceSetting>();
+
+    public DbSet<PrerenderRevisionPage> PrerenderRevisions => Set<PrerenderRevisionPage>();
+
+    public DbSet<PrerenderRevisionWatermark> PrerenderRevisionWatermarks =>
+        Set<PrerenderRevisionWatermark>();
+
+    public DbSet<CatalogStateGeneration> CatalogStateGenerations =>
+        Set<CatalogStateGeneration>();
+
+    public DbSet<CatalogStateVersion> CatalogStateVersions => Set<CatalogStateVersion>();
+
+    public DbSet<CatalogEntityState> CatalogEntityStates => Set<CatalogEntityState>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

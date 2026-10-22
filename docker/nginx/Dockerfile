@@ -35,7 +35,12 @@ LABEL org.opencontainers.image.title="lodb-nginx" \
 # (compose.deploy.yaml). LODB_EDGE_SECRET, the one allowed empty, is empty here: nginx then
 # asks the edge for no header (sites/site.conf). LODB_REVISION, first part of the page
 # cache's key, defaults to the image's revision (compose.yaml sets it); LODB_ARCHIVE_EPOCH,
-# first part of the past patches' cache key, is raised by hand (docs/guides/configuration.md).
+# first part of the past patches' cache key, is raised by hand to purge that cache
+# (docs/guides/configuration.md): the chrome, the CSP or the /api contract changed visibly, or
+# pages of the served epoch were rendered again in place (a new fingerprint scheme). Serving
+# another epoch of the store purges it already, the served epoch being the key's second part:
+# the switch to one indexed page per state (2026-10-22) leaves it at 3. A revisable page leaves
+# that cache within the hour its object gives it, without any purge.
 # LODB_PAGES_STORE_* name the object store of the pre-rendered pages (ADR 0011), off by
 # default (`none` stands for no bucket: an empty value is refused like any other), and
 # LODB_ARCHIVE_SERVE_EPOCH the prefix of its keys that nginx reads.

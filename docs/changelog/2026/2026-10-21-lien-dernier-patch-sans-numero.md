@@ -2,10 +2,15 @@
 date: 2026-10-21
 type: fix
 scope: front
-title: Le lien « Dans le dernier patch » d'un ancien patch ne nomme plus un patch dépassé
+title: Le lien « Dans le dernier patch » ne nomme plus un patch dépassé
 summary: Sur la fiche d'un ancien patch, le lien vers la même fiche au dernier patch ne porte plus de numéro de version, qui pouvait rester celui d'un patch précédent.
 tags: [catalogue]
 ---
+
+> **Remplacé le 2026-10-22** par [`une-page-par-etat-dans-google`](2026-10-22-une-page-par-etat-dans-google.md) :
+> `previous-patches.ts` n'existe plus ; le lien « Dans le dernier patch → », toujours sans
+> numéro et vers l'adresse courte, vit dans le bloc des états de la fiche, sa présence décidée
+> par l'API (`isPresentInLatest`), plus par `meta.latest`.
 
 ## Ce qui change
 

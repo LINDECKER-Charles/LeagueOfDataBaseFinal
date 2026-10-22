@@ -79,6 +79,16 @@ describe('PageResponse', () => {
     expect(headersOf(init)['cache-control']).toBe('public, max-age=3600, s-maxage=31536000');
   });
 
+  it('keeps a revisable page an hour, then an hour stale', () => {
+    const init: ResponseInit = { headers: new Headers() };
+
+    serverResponse(init).cache('revisable');
+
+    expect(headersOf(init)['cache-control']).toBe(
+      'public, max-age=3600, s-maxage=3600, stale-while-revalidate=3600',
+    );
+  });
+
   it('keeps a response it may not store out of caches, whatever is set afterwards', () => {
     const init: ResponseInit = { headers: new Headers() };
     const response = serverResponse(init);

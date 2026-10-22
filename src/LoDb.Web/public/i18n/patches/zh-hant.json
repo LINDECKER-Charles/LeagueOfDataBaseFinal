@@ -1,8 +1,20 @@
 {
   "title": "版本歷史",
-  "description": "Data Dragon 列出的所有英雄聯盟版本，每個版本都保留當時的英雄、物品、符文和召喚師技能。",
-  "intro": "Data Dragon 列出的所有版本，從最新開始。每個版本都會開啟當時的英雄、物品、符文和召喚師技能。",
+  "description": "Data Dragon 列出的所有英雄聯盟版本，每個版本都附有其變更，並保留當時的英雄、物品、符文和召喚師技能。",
+  "intro": "Data Dragon 列出的所有版本，從最新開始。每個版本都會先開啟其變更，再開啟當時的英雄、物品、符文和召喚師技能。",
   "group": "{{ major }}.x 版本",
   "latest": "目前",
-  "empty": "目前沒有列出的版本。"
+  "empty": "目前沒有列出的版本。",
+  "changes_link": "變更",
+  "changes": {
+    "title": "版本 {{ version }} 變更",
+    "description": "英雄聯盟版本 {{ version }} 相對於版本 {{ previous }} 的變更：被變更、新增、回歸或移除的英雄、物品、符文和召喚師技能。",
+    "description_empty": "英雄聯盟版本 {{ version }} 相對於版本 {{ previous }} 沒有變更任何英雄、物品、符文或召喚師技能。",
+    "intro": "根據 Riot 的 Data Dragon 資料，版本 {{ version }} 相對於版本 {{ previous }} 的變更。",
+    "empty": "此版本沒有變更百科中顯示的任何內容。",
+    "changed": "變更",
+    "new": "新增",
+    "returned": "回歸",
+    "retired": "移除"
+  }
 }

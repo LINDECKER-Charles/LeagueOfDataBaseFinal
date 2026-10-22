@@ -228,6 +228,12 @@ export class CoverageTab {
     ];
   }
 
+  // What the index of states expects of the patch in each locale: its openers, its frozen and
+  // its revisable entity pages; a dash for a patch the index does not cover.
+  protected indexedOf(row: PrerenderPatchRow): string {
+    return row.indexed ? this.texts.text('prerender.coverage.indexed', { ...row.indexed }) : '—';
+  }
+
   protected stripLabel(row: PrerenderPatchRow): string {
     return this.texts.text('prerender.common.strip', {
       complete: row.completeLocales,

@@ -16,6 +16,7 @@ sans signal : il ralentit la CI et casse deux fois pour la même raison.
 |---|---|---|---|
 | Unitaire .NET | `LoDb.Domain.Tests`, parties pures d'`Infrastructure`/`Ingestion` | règles, calculs, formats, cas limites | I/O, hôte HTTP |
 | Intégration .NET | `LoDb.Infrastructure.Tests`, `LoDb.Ingestion.Tests` | SQL et migrations sur un vrai Postgres, Data Dragon rejoué, stockage S3 simulé (MinIO) | contrat HTTP |
+| Desktop | `LoDb.Desktop.Tests` | coquille desktop sans fenêtre native : hôte local (garde loopback, proxy de l'API), pont, connexion Google, mises à jour Velopack, isolation de Photino (ADR 0007) | parcours web, fenêtre réelle |
 | API | `LoDb.Api.Tests` | contrat HTTP (codes, corps, en-têtes), sécurité (auth, XSRF/`Origin`, limites), câblage d'un module | une règle pure déjà testée plus bas |
 | Composants | Vitest (`*.spec.ts` à côté du code) | rendu, état, services, SSR sans navigateur | mise en page réelle, contraste, service worker |
 | Outils | `node --test` (`tools/<outil>/test`), image nginx (`tools/nginx/test`) | scripts, configuration nginx (routage, cache, en-têtes) | parcours utilisateur |
@@ -38,9 +39,12 @@ vivent dans `tools/nginx/test` et `tools/routing/check-urls.sh`, que le job `e2e
 avant Playwright. Le sous-ensemble `@readonly` sert aussi de *smoke* du staging et de la prod
 (`tools/cutover/readonly-e2e.sh`) : un test fusionné garde ce tag.
 
-Les suites `node --test` des outils tournent toutes en CI (job `workflows`, job `front` pour
-le rapport de traduction, job `e2e` pour nginx), sauf celles des outils de la bascule, qui
-partent avec `legacy/`. Une suite d'outil qu'aucun workflow ne lance peut casser sans bruit.
+Les suites `node --test` des outils tournent en CI (job `workflows`, job `front` pour le
+rapport de traduction, job `e2e` pour nginx), sauf : celles des outils de la bascule, qui
+partent avec `legacy/` (`tools/cutover`, `tools/parity`, `tools/builds-parity`,
+`tools/v1-capture`, `tools/seo-diff`, `tools/i18n/test/convert`), et celles de
+`tools/fixtures` et `tools/lighthouse`, outils lancés à la main. Une suite d'outil qu'aucun
+workflow ne lance peut casser sans bruit : la lancer quand on touche à l'outil.
 
 ### Paramétrage
 

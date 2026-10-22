@@ -1,5 +1,6 @@
 {
   "versioned_suffix": "(patch {{ version }})",
+  "state_range_suffix": "(patch {{ first }} hingga {{ last }})",
   "home": {
     "title": "League Of Data Base — ensiklopedia League of Legends",
     "description": "Champion, item, rune, dan summoner spell League of Legends untuk patch {{ version }} — statistik, kemampuan, dan detail dalam 21 bahasa."
@@ -98,5 +99,11 @@
       "title": "Pertanyaan umum",
       "description": "Jawaban seputar League Of Data Base: apa itu, dari mana data League of Legends-nya berasal, seberapa sering diperbarui, dan apakah perlu akun."
     }
+  },
+  "state": {
+    "summary": "Diubah di patch {{ version }}: {{ fields }}.",
+    "summary_more": "Diubah di patch {{ version }}: {{ fields }}…",
+    "summary_new": "Baru di patch {{ version }}.",
+    "summary_returned": "Kembali di patch {{ version }}."
   }
 }

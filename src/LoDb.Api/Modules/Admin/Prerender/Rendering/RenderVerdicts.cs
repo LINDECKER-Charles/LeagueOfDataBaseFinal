@@ -7,13 +7,15 @@ namespace LoDb.Api.Modules.Admin.Prerender.Rendering;
 
 /// <summary>
 /// Reads what the SSR answered for a page into what the pass does with it: only a 200 the SSR
-/// marked <c>archived</c>, compressed in gzip and named after its build, is ever written.
+/// marked with a stored class (<c>archived</c> or <c>revisable</c>), compressed in gzip and
+/// named after its build, is ever written.
 /// </summary>
 /// <remarks>
 /// The class comes from the SSR's mark, never from a copy of its <c>Cache-Control</c>, which
-/// would drift from the front's constant. A 200 kept out of every cache (<c>no-store</c>) is a
-/// render that missed part of itself, such as a catalog that failed to load: tried again,
-/// never skipped for good.
+/// would drift from the front's constant; the object keeps that <c>Cache-Control</c>, which
+/// nginx follows. A mark the pass does not know is skipped, as an unmarked page. A 200 kept
+/// out of every cache (<c>no-store</c>) is a render that missed part of itself, such as a
+/// catalog that failed to load: tried again, never skipped for good.
 /// </remarks>
 internal static partial class RenderVerdicts
 {
@@ -36,7 +38,7 @@ internal static partial class RenderVerdicts
     private static RenderVerdict OfSuccess(RenderedPage page)
     {
         var mark = page.Header(PrerenderHeaders.CacheClass);
-        if (!string.Equals(mark, PrerenderHeaders.StoredClass, StringComparison.Ordinal))
+        if (mark is null || !PrerenderHeaders.StoredClasses.Contains(mark))
         {
             return IsKeptOutOfCaches(page) ? RenderVerdict.Transient : RenderVerdict.Skipped;
         }

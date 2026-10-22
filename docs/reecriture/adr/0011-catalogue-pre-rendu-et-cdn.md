@@ -1,13 +1,32 @@
 # ADR 0011 — Catalogue pré-rendu et CDN
 
 - **Statut** : acceptée — 2026-10-20
+- **État** (2026-10-22) :
+  - le stockage, la passe et la lecture par nginx (lots 0 à 3 de la spécification) sont en
+    prod depuis le 2026-10-21 (PR #93), la lecture par nginx derrière
+    `LODB_PAGES_STORE_ENABLED` ;
+  - le SSR dédié et le régulateur sont en prod le 2026-10-21 (PR #96), la file de la demande
+    et la vitesse réglable le 2026-10-22 (PR #99) ;
+  - **le CDN (lot 4) n'est pas construit** : rien de Cloudflare dans le dépôt ;
+  - les pages révisables (amendement du 2026-10-22) sont en vigueur dans le code ; la prod les
+    sert à la bascule de la règle par état (ADR 0005, amendement du 2026-10-22).
 - **Révise** (amendements du 2026-10-20) : [ADR 0002](0002-hote-serveur-unique.md) (un second
   hôte sortant), [ADR 0003](0003-ingestion-proactive-et-taches-de-fond.md) (la tâche de
   précalcul), [ADR 0004](0004-stockage-etat-et-scaling.md) (nginx sert aussi depuis un
   stockage objet), [ADR 0005](0005-web-ssr-urls-et-seo.md) (`lodb_archive` en cache chaud,
   la classe `archived` gardée un an, le CDN devant le site)
-- **Amendement** : le 2026-10-21, la passe a son propre SSR, de faible priorité, et un rythme
-  qui suit le CPU libre de l'hôte (voir § « Amendement du 2026-10-21 »)
+- **Amendements** :
+  - le 2026-10-21, la passe a son propre SSR, de faible priorité, et un rythme qui suit le CPU
+    libre de l'hôte (voir § « Amendement du 2026-10-21 — un SSR et un rythme pour la passe ») ;
+  - le 2026-10-21 encore, une file automatique précalcule les pages que le SSR des visiteurs
+    refuse, la plus demandée d'abord (voir § « Amendement du 2026-10-21 — file de la
+    demande ») ;
+  - le 2026-10-22, la vitesse d'une passe se règle à la main, sous un frein d'urgence, sur
+    plusieurs moteurs (voir § « Amendement du 2026-10-22 — vitesse réglable ») ;
+  - le 2026-10-22 encore, le stockage garde aussi des pages révisables, celles des anciens
+    patchs dont l'état est encore ouvert, pré-calculées de nouveau page par page quand une
+    promotion le clôt ; une passe peut se limiter aux ouvreurs (voir § « Amendement du
+    2026-10-22 — pages révisables »). En vigueur dans le code, en prod à la bascule.
 - **Remplace** : la spécification du cache recyclé de 68 Go, interrompue et jamais
   publiée
 - **Détail** : [spécification](../../produit/pre-rendu-catalogue-cdn.md) (lots, réglages,
@@ -77,7 +96,9 @@ visiteur ─► Cloudflare ── en cache ────────────�
 - **Ce qui est stocké** : la `200` de classe `archived` du SSR, compressée en gzip une fois,
   avec `Content-Type`, `Content-Encoding` et `Cache-Control` en en-têtes de l'objet, et en
   métadonnées (sous 2 Ko) la CSP de la page, sa version Report-Only, `Reporting-Endpoints`,
-  `Link` et le build. Jamais une 503, une 5xx, une 404 ni une 301.
+  `Link` et le build. Jamais une 503, une 5xx, une 404 ni une 301. *Amendé le 2026-10-22 :
+  la `200` de classe `archived` ou `revisable`, chacune avec sa `Cache-Control` (amendement
+  du 2026-10-22).*
 - **Deux epochs du stockage** : celle d'écriture, celle de la passe en cours, et celle que
   sert nginx (`LODB_ARCHIVE_SERVE_EPOCH`). Une epoch se remplit pendant que l'autre reste
   servie ; la bascule se fait par la variable et un redéploiement, sans point d'accès.
@@ -93,15 +114,18 @@ visiteur ─► Cloudflare ── en cache ────────────�
 - Une tâche de fond de l'API ([ADR 0003](0003-ingestion-proactive-et-taches-de-fond.md),
   amendement du 2026-10-20) parcourt les pages par (version, langue) : chaque catalogue se
   charge une fois pour toutes ses pages. Les pages sont les 4 listes et toutes les entités
-  listées, tirées de la même fonction que les sitemaps.
+  listées, tirées de la même fonction que les sitemaps. *Amendé le 2026-10-22 : les 4 listes,
+  la page de patch, puis les entités, dans cet ordre figé (`VersionPages.Of`), les entités
+  tirées du prédicat que partage l'index des états.*
 - Elle appelle le SSR **en direct** sur le réseau de la pile, jamais à travers nginx, avec
   `X-LoDb-Prerender: 1`, l'hôte public de l'environnement (`X-Forwarded-Host`),
   `X-Forwarded-Proto: https` et `Accept-Encoding: gzip`. nginx efface toujours l'en-tête du
   précalcul côté public : un client ne peut pas se faire passer pour la passe.
 - Le SSR l'admet dans une **voie `prerender`** : son propre budget, une place seulement si le
   trafic réel en garde, aucune limite par client, aucune ligne de journal par page. Il marque
-  `X-LoDb-Cache-Class: archived` la réponse qu'il faut écrire et expose, à la passe seule, la
-  liste des bundles du build (`/_lodb/build-files`).
+  `X-LoDb-Cache-Class: archived` la réponse qu'il faut écrire (*ou `revisable`, depuis le
+  2026-10-22*) et expose, à la passe seule, la liste des bundles du build
+  (`/_lodb/build-files`).
 - L'API copie **tout le jeu haché** d'un build avant sa première page (les chunks différés
   ne sont nommés que dans le JavaScript), puis écrit un `PUT` par page. Une 301 ou une 404
   est sautée ; une 503 fait reculer la tâche selon son `Retry-After`.
@@ -119,10 +143,13 @@ visiteur ─► Cloudflare ── en cache ────────────�
   rejoignent la passe active ou en ouvrent une, en prod seulement
   (`LoDb__Prerender__AutoEnqueueOnPromotion`, faux en prod tant que la passe complète, lancée
   à la main, n'est pas terminée). Le staging reste presque vide : des passes
-  manuelles sur un petit périmètre.
+  manuelles sur un petit périmètre. *Amendé le 2026-10-22 : seulement une fois que l'index
+  des états couvre le patch promu ; ce réglage ne commande plus que ces unités, la file des
+  états clos tourne sans lui, staging compris.*
 - Un panneau d'administration pilote la passe sous `/api/admin/prerender` ; chaque action
-  est auditée. Il montre l'epoch servie et, quand une passe est complète, la consigne de
-  bascule.
+  est auditée. Il montre l'epoch servie et la consigne de bascule dès qu'une epoch plus
+  récente, que la passe active n'écrit pas, n'a plus aucun manque, quelles que soient les
+  passes qui l'ont remplie (`EpochReadiness`).
 
 ### nginx
 
@@ -140,15 +167,28 @@ visiteur ─► Cloudflare ── en cache ────────────�
 - Les en-têtes de la page sont reposés depuis les métadonnées ; `X-LoDb-Source:
   cache|store|ssr` dit d'où vient chaque page épinglée.
 - La classe `archived` passe à un `s-maxage` d'un an : une page d'ancien patch ne change
-  qu'avec une epoch.
+  qu'avec une epoch. *Amendé le 2026-10-22 : vrai d'une page figée seulement ; nginx garde
+  chaque page autant que dit la `Cache-Control` de son objet, et donne au client celle de sa
+  classe.*
+
+  *Limite constatée le 2026-10-22 : sous la règle des canoniques du 2026-10-14, la canonique
+  d'une fiche d'ancien patch dépend du dernier patch. Une page stockée garde celle de son
+  rendu jusqu'à l'epoch suivante, même quand l'entité a été retirée ou renommée depuis : à la
+  promotion, seule la version qui quitte le dernier patch est recalculée
+  (`PrerenderPromotionListener`). Traitée par l'amendement du 2026-10-22 : seule une page
+  d'état clos, qui ne change plus, garde l'année ; une page de l'état ouvert est
+  `revisable` (une heure) et la file des états clos la recalcule quand une promotion clôt
+  son état.*
 - Un bundle que le SSR ne connaît plus (404) est cherché sous `build/` dans le stockage.
 - `front-builds` garde ses bundles **400 jours** (`LODB_FRONT_BUILDS_RETENTION_DAYS`, le job
   de déploiement refuse moins de 395), plus que l'an de la classe `archived`. La copie sous
   `build/` ne vaut que pour un build dont la passe a écrit une page : une page rendue par le
   SSR sur un raté du stockage, que `lodb_archive` garde jusqu'à un an, nomme les bundles d'un
-  build jamais copié (toutes les pages avant le lot 3, celles du staging, sans passe
-  automatique, et celles des déploiements entre deux passes).
-- `LODB_PAGES_STORE_ENABLED=0` (défaut en local et en CI) laisse nginx tel qu'avant.
+  build jamais copié (toutes les pages rendues avant la mise en service du stockage, celles
+  du staging, sans passe automatique, et celles des déploiements entre deux passes).
+- `LODB_PAGES_STORE_ENABLED=0` (défaut de `compose.yaml` et de l'image nginx) laisse nginx tel
+  qu'avant ; la pile de développement et les E2E de la CI l'allument sur le stockage simulé
+  (`compose.override.yaml`).
 
 ### CDN
 
@@ -184,6 +224,9 @@ Les lots 0 à 3 (stockage, passe, nginx) partent en prod et la passe démarre **
 travail de DNS : le lot 3 soulage seul le budget saturé, et son effet se mesure seul. Le CDN
 suit.
 
+*Fait : les lots 0 à 3 sont en prod depuis le 2026-10-21. Le CDN n'est pas commencé ; sa date
+reste à fixer.*
+
 ## Alternatives écartées
 
 | Alternative | Pourquoi non |
@@ -197,7 +240,7 @@ suit.
 | Bascule de l'epoch à chaud (fichier ou `map` lu par nginx) | Exige un signal de rechargement entre conteneurs, donc le socket Docker, que le durcissement refuse |
 | Certificat d'origine Cloudflare | Refusé par les navigateurs : il casse le retour en « DNS only », les apps et les vérifications directes |
 | Purge complète du CDN à chaque déploiement | Une rafale de ratés sur ~4 millions d'adresses, de fausses alertes et de la sortie facturée, pour des pages qui ne changent pas |
-| MinIO en production | Toujours écarté ([ADR 0004](0004-stockage-etat-et-scaling.md)) ; il sert aux tests et au développement seulement |
+| MinIO en production | Toujours écarté ([ADR 0004](0004-stockage-etat-et-scaling.md)) ; il sert aux tests seulement (`PageStoreContainerFixture`). La pile de développement simule le stockage avec moto (`pages-store`, `compose.override.yaml`) : les images officielles de MinIO ne sont plus publiées, les tests tirent celle d'un fork communautaire épinglée par empreinte |
 
 ## Conséquences
 
@@ -210,9 +253,11 @@ suit.
   SSR, que `lodb_archive` garde un an.
 - **+** Le CDN rapproche toutes les pages des visiteurs lointains et des robots.
 - **−** Un correctif de sécurité du front qui bascule tout de suite sur une epoch vide
-  renvoie **toutes** les pages épinglées vers le SSR saturé pendant les 10 à 16 jours de la
-  passe : les 503 reviennent. On l'atténue par l'ordre de la demande et un budget de passe
-  relevé.
+  renvoie **toutes** les pages épinglées vers le SSR saturé pendant toute la passe : les 503
+  reviennent. On l'atténue par l'ordre de la demande et un budget de passe relevé. *La durée
+  estimée ici (10 à 16 jours) est dépassée : 27 pages par minute mesurées le 2026-10-21, puis
+  900 par minute au plus en mode manuel, soit 3 à 7 jours pour 4,2 à 9 millions de pages
+  (amendement du 2026-10-22 — vitesse réglable ; spécification, « Débit attendu »).*
 - **−** La lecture du stockage dépend de l'adresse du VPS : s'il en change, chaque lecture
   répond 403 et nginx retombe sans bruit sur le SSR, pendant que la passe continue d'écrire
   (l'écriture ne dépend pas de l'adresse). `X-LoDb-Source` le rend visible ; la politique
@@ -220,8 +265,8 @@ suit.
 - **−** Une lecture anonyme conditionnée par l'adresse à côté de l'IAM n'est pas documentée
   par Scaleway, ni le passage intact des métadonnées. La sonde `verifier` les prouve avant
   que nginx lise le stockage en prod ; à défaut, la lecture devient publique sur `pages/*`
-  et `build/*`. Les tests et le développement utilisent MinIO, qui ne prouve rien de
-  Scaleway.
+  et `build/*`. Les tests utilisent MinIO, la pile de développement moto : ni l'un ni l'autre
+  ne prouve rien de Scaleway.
 - **+** **Facturation tranchée : l'arrondi se fait sur le total du projet, pas par objet.**
   Scaleway compte « 1 Ko pendant 1 seconde comme 1 Go-heure » sans dire sur quoi il arrondit.
   Mesure du 20 octobre 2026 : 300 objets de 1 Ko en `ONEZONE_IA`, écrits entre 18 h 33 et
@@ -258,3 +303,98 @@ Débit attendu : 150 à 220 pages par minute en moyenne, le catalogue en 13 à 1
 ralentissement mesurable des visiteurs jusqu'à ~80 % d'occupation de l'hôte. Détail, seuils
 et réglages : [spécification](../../produit/pre-rendu-catalogue-cdn.md), lot 2, « Capacité
 adaptative de la passe ».
+
+## Amendement du 2026-10-21 — file de la demande
+
+Le premier jour de prod, le SSR des visiteurs refuse ~160 rendus d'anciens patchs par minute,
+pendant que la passe manuelle avance dans l'ordre des unités : les pages vraiment demandées
+attendent leur tour.
+
+- Chaque page d'ancien patch que le SSR des visiteurs refuse est comptée par lui, en mémoire
+  et de façon cumulative, sous son chemin canonique ; l'API relève ces comptes sur le port
+  des métriques (`GET /refused`) toutes les 30 s (`PrerenderDemandCollectWorker`) et en tient
+  la file `prerender_demand` (migration additive).
+- `PrerenderDemandWorker` précalcule ces pages dans l'epoch servie, la plus demandée d'abord,
+  par le chemin même de la passe (SSR de la passe, verdicts, build copié d'abord). Pendant une
+  passe, la file tient au plus la moitié des places en vol (`QueueSharePercent`) ; sans passe,
+  toutes. Les passes manuelles ne changent pas.
+- Interrupteur : `LODB_PRERENDER_DEMAND_ENABLED`. Bornes, rythme et pupitre :
+  [spécification](../../produit/pre-rendu-catalogue-cdn.md), lot 2, « File automatique des
+  pages refusées ».
+
+## Amendement du 2026-10-22 — vitesse réglable
+
+La première unité de prod a avancé à 27 pages par minute : la borne était l'espacement du
+régulateur, pas le CPU (un rendu coûte ~0,1 s de CPU au moteur).
+
+- **Mode manuel**, réglé au pupitre : une cible de 1 à `LODB_PRERENDER_MANUAL_MAX` pages par
+  minute (900 sur un hôte), gardée en base. Le mode adaptatif reste le défaut,
+  `LODB_PRERENDER_PACE_MODE=fixed` le coupe-circuit.
+- **Frein d'urgence** (`ManualDecision`) : un visiteur du dernier patch refusé, ou 3 minutes
+  avec l'hôte à 90 % ou plus, ou un signal rouge de ce qu'attendent les visiteurs, arrêtent
+  tout nouveau rendu pendant 5 minutes. Les 503 des anciens patchs ne freinent pas.
+- **Plusieurs moteurs** : `web-ssr-prerender` en `LODB_PRERENDER_RENDERERS` répliques (2 sur un
+  hôte), un cœur chacune, au poids CPU le plus bas ; l'API répartit les rendus.
+- Commande d'exploitation `prerender pause|resume`, pour un déploiement pendant une passe.
+
+Débit attendu à 900 pages par minute : 4,2 millions de pages en un peu plus de 3 jours. Détail :
+[spécification](../../produit/pre-rendu-catalogue-cdn.md), lot 2, « Vitesse réglable ».
+
+## Amendement du 2026-10-22 — pages révisables
+
+*En vigueur dans le code ; il part en prod au même déploiement que la règle par état de
+l'ADR 0005 (amendement du 2026-10-22), sa bascule.*
+
+L'[ADR 0005](0005-web-ssr-urls-et-seo.md) (amendement du 2026-10-22) indexe une page par état
+d'entité. La page d'un ancien patch n'est donc plus immuable dans tous les cas. Celle d'un
+état **clos** ne change plus (pour un schéma d'empreinte donné). Celle d'un état **ouvert**,
+celui du dernier patch, a pour canonique l'URL courte jusqu'à ce que l'entité change : sa
+canonique, son titre et son historique changent alors. Cela concerne 5 à 15 % des pages
+épinglées, et au plus ~24 000 pages par promotion
+([spécification](../../produit/seo-une-page-par-etat.md), § 1.2, des majorants).
+
+- **Deux classes dans le stockage** : `archived` (un an) pour une page figée, `revisable`
+  (`public, max-age=3600, s-maxage=3600, stale-while-revalidate=3600`) pour une page
+  révisable. Le SSR choisit la classe selon l'état que l'API rend ; un état inconnu sur une
+  version épinglée donne `revisable`, jamais `archived`. Les verdicts de la passe admettent
+  les deux marques, et la ligne « Ce qui est stocké » vaut pour les deux classes.
+- **nginx** : pour les pages, le cache chaud suit la `Cache-Control` de l'objet
+  (`s-maxage`, `stale-while-revalidate`) ; l'année forcée ne vaut plus qu'en repli, pour un
+  objet sans `Cache-Control`, et reste pour les bundles. L'en-tête envoyé au client vaut
+  `revisable` pour un objet révisable, `archived` par défaut. nginx n'impose plus `archived`
+  à toute réponse du stockage.
+- **À chaque promotion**, après la mise à jour de l'index des états :
+  - les pages des états que la promotion a clos (toutes leurs versions, dans les 21 langues)
+    entrent dans une **file par page** (`prerender_revision`), pour l'epoch servie et pour
+    celle qu'écrit la passe active si elle diffère. Un worker la vide par le chemin de la file
+    de la demande, en partageant ses places de rendu, et ne rend une page qu'une fois que
+    l'API qui sert voit sa clôture. Cette file ne dépend pas de
+    `LoDb__Prerender__AutoEnqueueOnPromotion` : elle tourne dès que le stockage est
+    configuré, staging compris (ADR 0003, amendement du 2026-10-22) ;
+  - comme avant, l'unité de la version qui quitte le dernier patch, sous
+    `AutoEnqueueOnPromotion` ; elle porte la seule page de patch qu'une promotion change.
+
+  Les copies de nginx de ces pages expirent en deux heures environ (celles du CDN aussi, une
+  fois construit).
+
+  *Précisé à l'implémentation* : ni l'unité ni la file ne démarrent tant que l'index des
+  états ne couvre pas le patch promu (`prerender.promotion.index_behind`) ; le rapprochement
+  du précalcul les ajoute ensuite. La file prend aussi la version qui vient de quitter le
+  dernier patch : sa page a pu être stockée révisable pendant que l'index tenait l'état ouvert.
+  Une page recalculée qui revient `revisable` est retentée (trois essais), et chaque version
+  est rendue sous la graphie de son catalogue (la casse d'un id peut changer dans un état).
+- **La passe** : une passe peut se limiter aux ouvreurs de chaque version (périmètre
+  `pages: "openers"`, plus la page de patch), lancée avant la passe entière ; une promotion
+  ne la rejoint jamais. La page de patch n'est pas un type de page : toute unité qui couvre
+  tous les types la rend, et l'ordre des pages d'une version (listes, page de patch, entités)
+  est figé. La file de la demande garde sa priorité et admet la page de patch.
+- **Epoch 2** : au déploiement qui porte la nouvelle règle, `LODB_ARCHIVE_SERVE_EPOCH=2`,
+  seule valeur changée. Changer l'epoch servie purge déjà le cache chaud, et aucune variable
+  ne règle d'epoch d'écriture : les passes sont lancées au pupitre sur l'epoch 2, ouvreurs
+  d'abord. Une page absente part au SSR, puis à la file de la demande : ~11 h pour les
+  ouvreurs, ~3 jours pour le reste, accepté (relire l'epoch 1 ferait coexister les deux
+  règles), et la part de 503 servies à Googlebot est suivie pendant la passe. L'epoch 1 est
+  gardée deux semaines pour un retour arrière, puis retirée par
+  `tools/prerender/scaleway-bucket.sh` (`RETIRED_EPOCHS=1`, règle `retire-pages-1`).
+- **Conséquence** : la classe `archived` ne garde plus que des pages vraiment immuables. Une
+  page révisable coûte une relecture du stockage par heure au plus.

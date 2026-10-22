@@ -1,3 +1,4 @@
+import type { CatalogMeta } from '../../api/generated/models/catalog-meta';
 import { catalogMetaOf } from '../../testing/catalog-meta-of';
 import type { ContextTarget } from './context-target';
 import { switchContext } from './switch-context';
@@ -21,6 +22,7 @@ interface Case {
   readonly from: string;
   readonly target: ContextTarget;
   readonly to: string;
+  readonly meta?: CatalogMeta;
 }
 
 // The five cases of the legacy urls.spec.ts (destinationForSwitch), under the locale prefix:
@@ -176,5 +178,54 @@ describe('switchContext', () => {
 
   it.each(CASES)('$rule', ({ from, target, to }) => {
     expect(switchContext(from, target, META)).toBe(to);
+  });
+});
+
+// A patch's changes exist from the oldest version that has some up to the newest: 15.14.1
+// does, 14.1.1 (the first version the index covers, say) does not.
+const CHANGES_META = {
+  ...META,
+  versions: [LATEST, '15.14.1', '14.1.1'],
+  oldestChangesVersion: '15.14.1',
+  newestChangesVersion: LATEST,
+};
+
+const CHANGES_CASES: Case[] = [
+  {
+    rule: 'pins it in its path, as a list',
+    from: '/fr/changes',
+    target: { version: '15.14.1' },
+    to: '/fr/15.14.1/changes',
+  },
+  {
+    rule: 'brings it back to the latest patch',
+    from: '/fr/15.14.1/changes?lang=en_GB',
+    target: { version: null },
+    to: '/fr/changes?lang=en_GB',
+  },
+  {
+    rule: 'leaves the short URL for a patch older than the oldest with a page of changes',
+    from: '/fr/15.14.1/changes',
+    target: { version: '14.1.1', lang: 'en_GB' },
+    to: '/fr/changes?lang=en_GB',
+  },
+  {
+    rule: 'leaves the short URL while the index has no page of changes',
+    from: '/fr/changes',
+    target: { version: '15.14.1' },
+    to: '/fr/changes',
+    meta: { ...CHANGES_META, oldestChangesVersion: null, newestChangesVersion: null },
+  },
+  {
+    rule: 'still pins that patch on its lists',
+    from: '/fr/items',
+    target: { version: '14.1.1' },
+    to: '/fr/14.1.1/items',
+  },
+];
+
+describe("switchContext on a patch's changes", () => {
+  it.each(CHANGES_CASES)('$rule', ({ from, target, to, meta }) => {
+    expect(switchContext(from, target, meta ?? CHANGES_META)).toBe(to);
   });
 });

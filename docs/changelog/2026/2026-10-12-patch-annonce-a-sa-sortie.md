@@ -7,6 +7,12 @@ summary: Le plan du site n'annonce plus les pages d'un patch que le site n'a pas
 tags: [seo, patchs]
 ---
 
+> **Remplacé en partie le 2026-10-22** par [`une-page-par-etat-dans-google`](2026-10-22-une-page-par-etat-dans-google.md) :
+> plus de fenêtre dans `/sitemap.xml` ; le sitemap d'une version listée après le dernier patch
+> promu, comme celui d'une version que l'index des états ne couvre pas, répond 404 au lieu
+> d'être servi, et avant toute promotion l'index n'annonce que les `latest.xml`. Un patch pas
+> encore mis en ligne n'est toujours pas annoncé.
+
 ## Ce qui change
 
 Le plan du site remis aux moteurs de recherche n'annonce plus les pages d'un patch publié par

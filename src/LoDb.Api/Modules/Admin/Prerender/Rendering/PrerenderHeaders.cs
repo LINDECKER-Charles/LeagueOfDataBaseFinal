@@ -1,3 +1,5 @@
+using System.Collections.Frozen;
+
 namespace LoDb.Api.Modules.Admin.Prerender.Rendering;
 
 /// <summary>
@@ -14,8 +16,18 @@ internal static class PrerenderHeaders
     /// <summary>Set by the SSR, on the pass's lane only, when the page may be stored.</summary>
     public const string CacheClass = "X-LoDb-Cache-Class";
 
-    /// <summary>The one class the pass stores: an older patch's page never changes again.</summary>
-    public const string StoredClass = "archived";
+    /// <summary>An older patch's page of a closed state: it never changes again.</summary>
+    public const string ArchivedClass = "archived";
+
+    /// <summary>
+    /// An older patch's page of the open state, or of a state the index does not know yet: it
+    /// changes once, when a promotion closes the state and the page is rendered again.
+    /// </summary>
+    public const string RevisableClass = "revisable";
+
+    /// <summary>The classes the pass stores; any other mark is a page it skips.</summary>
+    public static readonly FrozenSet<string> StoredClasses =
+        FrozenSet.Create(StringComparer.Ordinal, ArchivedClass, RevisableClass);
 
     /// <summary>The digest of the build that rendered the page, on the pass's lane only.</summary>
     public const string Build = "X-LoDb-Build";

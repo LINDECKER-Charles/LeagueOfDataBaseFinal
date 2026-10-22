@@ -82,6 +82,17 @@ describe('CoverageTab', () => {
     ).toBe('false');
   });
 
+  it('says what the index expects of each patch it covers, a dash for the others', async () => {
+    const { page } = await open();
+
+    const indexed = (version: string) =>
+      page.querySelector(`[data-version="${version}"] [data-indexed]`)?.textContent?.trim();
+    expect([indexed('16.19.1'), indexed('16.18.1')]).toEqual([
+      '—',
+      'admin.prerender.coverage.indexed',
+    ]);
+  });
+
   it('unfolds a season on demand', async () => {
     const { fixture, page } = await open();
 

@@ -1,8 +1,20 @@
 {
   "title": "Historia patchy",
-  "description": "Wszystkie patche League of Legends wymienione przez Data Dragon, każdy z czempionami, przedmiotami, runami i zaklęciami przywoływacza w takiej postaci, jaką miały w tym patchu.",
-  "intro": "Wszystkie patche wymienione przez Data Dragon, od najnowszego. Każdy otwiera swoich czempionów, przedmioty, runy i zaklęcia przywoływacza w takiej postaci, jaką miały wtedy.",
+  "description": "Wszystkie patche League of Legends wymienione przez Data Dragon, każdy z tym, co zmienił, oraz z czempionami, przedmiotami, runami i zaklęciami przywoływacza w takiej postaci, jaką miały w tym patchu.",
+  "intro": "Wszystkie patche wymienione przez Data Dragon, od najnowszego. Każdy otwiera swoje zmiany, a potem swoich czempionów, przedmioty, runy i zaklęcia przywoływacza w takiej postaci, jaką miały wtedy.",
   "group": "Patche {{ major }}.x",
   "latest": "Aktualny",
-  "empty": "Na razie nie ma żadnego patcha."
+  "empty": "Na razie nie ma żadnego patcha.",
+  "changes_link": "Zmiany",
+  "changes": {
+    "title": "Zmiany w patchu {{ version }}",
+    "description": "Co zmienił patch {{ version }} League of Legends względem patcha {{ previous }}: czempioni, przedmioty, runy i zaklęcia przywoływacza zmienione, nowe, przywrócone lub usunięte.",
+    "description_empty": "Patch {{ version }} League of Legends nie zmienił względem patcha {{ previous }} żadnego czempiona, przedmiotu, runy ani zaklęcia przywoływacza.",
+    "intro": "Co zmienił patch {{ version }} względem patcha {{ previous }}, według danych Data Dragon od Riot.",
+    "empty": "Ten patch nie zmienił niczego, co pokazuje encyklopedia.",
+    "changed": "Zmienione",
+    "new": "Nowe",
+    "returned": "Przywrócone",
+    "retired": "Usunięte"
+  }
 }

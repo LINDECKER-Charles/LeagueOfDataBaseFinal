@@ -40,6 +40,12 @@ export interface PrerenderScopeView {
   pageTypes?: (Array<string> | null);
 
   /**
+   * `openers` when only the patch page and the openers of the index are rendered; null
+   * for every page.
+   */
+  pages?: (string | null);
+
+  /**
    * The versions rendered first, in this order (100 at most).
    */
   priority: Array<string>;

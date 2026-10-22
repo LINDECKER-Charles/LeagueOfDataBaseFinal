@@ -30,7 +30,7 @@ Deux niveaux, décidés par l'API (`GET /api/client-policy`, plateforme `android
 Publier la politique sans bundle ramène les appareils au bundle embarqué dans leur APK : c'est
 le retrait d'un bundle fautif, sans nouvelle release.
 
-La config Capacitor attendue (branchement hors L10.3/L10.4, voir [Limites
+La config Capacitor, déclarée dans `capacitor.config.ts` (reste à faire : [Limites
 connues](#limites-connues)) :
 
 ```ts
@@ -78,8 +78,8 @@ version de chaque plugin inclus dans `capacitor.settings.gradle`.
 
 1. Poser le tag sur le commit qui partira en prod :
    `git tag android-vX.Y.Z <sha>`, puis `git push origin android-vX.Y.Z`.
-2. Déployer la prod. Le déploiement appelle le workflow avec le SHA déployé
-   (voir [Contrat d'appel](#contrat-dappel)). À défaut, on le lance à la main :
+2. Déployer la prod, puis lancer le workflow à la main sur le SHA déployé (aucun workflow
+   ne l'appelle, voir [Contrat d'appel](#contrat-dappel)) :
    `gh workflow run release-android.yml -f sha=<sha>`.
 3. Suivre le run : `build`, `sign`, `stage`, `gate`, `cleanup`, `publish`, puis `play` quand Play
    est activé.
@@ -94,8 +94,9 @@ Relancer un run est sans risque :
 
 ### Contrat d'appel
 
-Le déploiement de prod (L8.1) appelle le workflow une fois le déploiement réussi, sur le
-SHA exact :
+**Non câblé** : ni `ci.yml` ni `_deploy.yml` n'appellent ce workflow, les releases se
+lancent à la main (`workflow_dispatch`). Le workflow accepte aussi `workflow_call` ; un
+appel après le déploiement de prod réussi, sur le SHA exact, prendrait cette forme :
 
 ```yaml
   android:
@@ -395,16 +396,17 @@ ces fichiers.
 
 ## Limites connues
 
-- **Branchements hors périmètre de L10.3/L10.4**, à faire avant la première release :
-  - `AndroidPlatform` doit démarrer `AndroidUpdates` et lui confier `updateState` et
-    `applyUpdate()` ;
-  - `capacitor.config.ts` doit déclarer le plugin `LiveUpdate` (voir [Côté app](#côté-app)),
-    puis `cap sync` régénérer `capacitor.settings.gradle`, et `package-lock.json` être
-    régénéré ;
+- **Branchements restants**, à faire avant la première release (aucune release Android
+  publiée au 2026-10-22). Déjà faits : `AndroidPlatform` confie `updateState` et
+  `applyUpdate()` à `AndroidUpdates`, `capacitor.config.ts` déclare `LiveUpdate` (paquet dans
+  `package.json` et `package-lock.json`), nginx sert `/android/latest.json` avec son en-tête
+  CORS (`server.d/android-latest.conf`), et les secrets sont inventoriés dans
+  [`configuration.md`](configuration.md) § 3.4. Restent :
+  - `cap sync` doit régénérer `capacitor.settings.gradle`, qui n'inclut pas encore le
+    plugin ;
   - la base native doit être remontée ensuite (`native-fingerprint.mjs --update`) ;
-  - nginx doit servir `/android/latest.json` avec son en-tête CORS ;
-  - le déploiement de prod doit appeler ce workflow ([Contrat d'appel](#contrat-dappel)) ;
-  - les secrets sont à ajouter au guide des secrets GitHub Actions.
+  - l'appel de ce workflow par le déploiement de prod n'est pas câblé : les releases se
+    lancent à la main ([Contrat d'appel](#contrat-dappel)).
 - La porte et le workflow n'ont tourné qu'à blanc (`actionlint`) : le premier run réel est à
   suivre de près. Le passage de `build` à `sign` a été rejoué dans un conteneur Linux, avec
   des sorties de build factices et des clés jetables.

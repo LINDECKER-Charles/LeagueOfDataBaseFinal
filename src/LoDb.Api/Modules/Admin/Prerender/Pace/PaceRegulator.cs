@@ -14,11 +14,12 @@ namespace LoDb.Api.Modules.Admin.Prerender.Pace;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Driven from <c>PrerenderEngine.RunAsync</c>, under the pass's lock, and from the queue's
-/// drain, under its own (<see cref="BeginQueue"/>): the command line drains a unit at the fixed
-/// pace, as does an instance whose background tasks are off. Held in memory, as the engine's
-/// pulse: each pass starts again at the floor, or at the target; the queue joins a pace already
-/// driven as it is, and the pace stops once neither drives it.
+/// Driven from <c>PrerenderEngine.RunAsync</c>, under the pass's lock, and from the drain of
+/// each automatic queue (the refused pages, the closed states), under its own
+/// (<see cref="BeginQueue"/>): the command line drains a unit at the fixed pace, as does an
+/// instance whose background tasks are off. Held in memory, as the engine's pulse: each pass
+/// starts again at the floor, or at the target; a queue joins a pace already driven as it is,
+/// and the pace stops once neither the pass nor any queue drives it.
 /// </para>
 /// <para>
 /// A new target applies at once; a change of mode at the next decision, within 30 s.
@@ -41,7 +42,7 @@ internal sealed class PaceRegulator
     private PaceMemory? _memory;
     private long _passId;
     private bool _isPassDriving;
-    private bool _isQueueDriving;
+    private readonly HashSet<string> _queuesDriving = new(StringComparer.Ordinal);
     private long? _fixedPassId;
     private long _drive;
     private DateTimeOffset _decidedAt;
@@ -106,20 +107,21 @@ internal sealed class PaceRegulator
         lock (_gate)
         {
             (_isPassDriving, _passId) = (false, NoPass);
-            _memory = _isQueueDriving ? _memory : null;
+            _memory = _queuesDriving.Count > 0 ? _memory : null;
         }
     }
 
     /// <summary>
-    /// The queue drains pages: from the floor, or the target, unless a pass already drives the
-    /// pace, which it then shares as it is. Called again, it changes nothing.
+    /// The queue named <paramref name="queue"/> drains pages: from the floor, or the target,
+    /// unless a pass or another queue already drives the pace, which it then shares as it is.
+    /// Called again, it changes nothing.
     /// </summary>
-    public void BeginQueue()
+    public void BeginQueue(string queue)
     {
         var now = _clock.GetUtcNow();
         lock (_gate)
         {
-            _isQueueDriving = true;
+            _queuesDriving.Add(queue);
             if (_memory is not null)
             {
                 return;
@@ -132,14 +134,15 @@ internal sealed class PaceRegulator
     }
 
     /// <summary>
-    /// The queue stopped draining: the fixed pace applies again, unless a pass drives.
+    /// The queue named <paramref name="queue"/> stopped draining: the fixed pace applies again,
+    /// unless a pass or another queue drives.
     /// </summary>
-    public void EndQueue()
+    public void EndQueue(string queue)
     {
         lock (_gate)
         {
-            _isQueueDriving = false;
-            _memory = _isPassDriving ? _memory : null;
+            _queuesDriving.Remove(queue);
+            _memory = _isPassDriving || _queuesDriving.Count > 0 ? _memory : null;
         }
     }
 

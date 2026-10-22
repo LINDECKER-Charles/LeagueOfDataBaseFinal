@@ -14,11 +14,11 @@ plus ; leur guide est
 
 | Fichier | Rôle |
 |---|---|
-| `ci.yml` (*CI/CD*) | Orchestrateur. Déclenché par `push` (`dev`, `main` : les seules branches qui déploient) et `pull_request`, filtré sur les chemins de la nouvelle stack. Checks parallèles, **sauf sur `main`** : `dotnet` (build + tests, Testcontainers), `front` (lint, typecheck, tests, `build:web`, `build:shell`), `contract` (`api:check`), `i18n` (`i18n:report`, non bloquant), `workflows` (actions épinglées, actionlint, outils de déploiement), `supply-chain` (images de base épinglées par digest, `npm audit` des dépendances de production du front : bloquant dès `high`, exceptions datées dans `tools/ci/npm-audit-allowlist.json`), `e2e` (stack `lodb-dev`, grammaire d'URL `tools/routing/check-urls.sh`, image nginx `tools/nginx`, puis Playwright). Sur un push de **`dev`**, checks bloquants verts : `merge-to-test`, `build`, `deploy-staging`, puis `staging-validated` (pose `:staging-validated` sur les digests que `staging` vient de servir, smoke tests passés). Sur un push de **`main`** : `promote`, `deploy-prod`. |
+| `ci.yml` (*CI/CD*) | Orchestrateur. Déclenché par `push` (`dev`, `main` : les seules branches qui déploient) et `pull_request`, filtré sur les chemins de la nouvelle stack. Checks parallèles, **sauf sur `main`** : `dotnet` (build + tests, Testcontainers), `front` (lint, typecheck, tests, `build:web`, `build:shell`), `contract` (`api:check`), `i18n` (`i18n:report`, non bloquant), `workflows` (actions épinglées, actionlint, outils de déploiement), `supply-chain` (images de base épinglées par digest, `npm audit` des dépendances de production du front : bloquant dès `high`, exceptions datées dans `tools/ci/npm-audit-allowlist.json`), `e2e` (stack `lodb-dev`, patchs d'avant le dernier indexés par `tools/states/index-past-patches.sh`, grammaire d'URL `tools/routing/check-urls.sh`, image nginx `tools/nginx`, puis Playwright). Sur un push de **`dev`**, checks bloquants verts : `merge-to-test`, `build`, `deploy-staging`, puis `staging-validated` (pose `:staging-validated` sur les digests que `staging` vient de servir, smoke tests passés). Sur un push de **`main`** : `promote`, `deploy-prod`. |
 | `_build.yml` | Réutilisable : résout `test` en **un** commit et en construit les images `ghcr.io/<owner>/lodb/{api,web-ssr,nginx}`, poussées sous `:<sha>` (ce commit de `test`) avec leur SBOM et leur attestation de provenance ; label OCI et `APP_REVISION` = ce SHA. Trivy scanne chaque image poussée et **bloque** sur une vulnérabilité HIGH ou CRITICAL corrigée en amont ; `:staging` n'est posé qu'ensuite, sur les digests scannés ([`tools/ci/README.md`](../../tools/ci/README.md)). |
 | `_deploy.yml` | Réutilisable : déploiement SSH d'un hôte, même logique pour `staging` et `prod`. Entrées `environment` (`staging` ou `prod`) et `branch` (`test` ou `main`) ; secrets passés par `ci.yml` (§ Secrets). Son job tourne dans l'environnement GitHub `staging` ou `production`. |
 | `_promote.yml` | Réutilisable : pose `:prod` et `:latest` sur les digests que `staging` a validés, **sans rebuild** (`tools/ci/promote-images.sh`). Refuse si `:staging` ne désigne plus ces digests, ou si leur révision n'a pas le code du commit promu. |
-| `release-desktop.yml`, `release-android.yml` | Releases signées des apps ([`release-desktop.md`](release-desktop.md), [`release-android.md`](release-android.md)). |
+| `release-desktop.yml`, `release-android.yml` | Releases signées des apps, lancées à la main (`gh workflow run`) : aucun job de `ci.yml` ne les appelle ([`release-desktop.md`](release-desktop.md), [`release-android.md`](release-android.md)). |
 
 ```
 push dev  ─▶ checks (dotnet, front, contract, workflows, supply-chain, e2e ; i18n informatif)
@@ -68,11 +68,13 @@ GitHub de sa cible (`staging`, `production`), où l'exploitant pose les protecti
 | `ENV_FILE` | `ENV_STAGING` | `ENV_PROD` |
 | `DATA_PROTECTION_PFX` | `STAGING_DATA_PROTECTION_PFX` | `PROD_DATA_PROTECTION_PFX` |
 
-Les quatre premières lignes existent déjà (ancienne stack). `ENV_STAGING` et `ENV_PROD`
-existent aussi, mais leur contenu est **remplacé** par le `.env` de la nouvelle stack ; les
-deux certificats sont nouveaux ([`configuration.md`](configuration.md), § 2 et 3.2). Les
-clés de l'hôte (`*_SSH_KNOWN_HOSTS`) sont à créer (§ 6.3 du même guide) : absentes, le job
-les lit par `ssh-keyscan`, sans vérification, et le run porte un avertissement.
+Les lignes requises sont en place depuis la bascule du 2026-10-04 : `ENV_STAGING` et
+`ENV_PROD` portent le `.env` de la nouvelle stack, et les deux certificats ne se remplacent
+**jamais**, les clés Data Protection déjà chiffrées deviendraient illisibles
+([`configuration.md`](configuration.md), § 2 et 3.2). Les clés de l'hôte
+(`*_SSH_KNOWN_HOSTS`) sont facultatives, non posées au 2026-10-22 (§ 6.3 du même guide) :
+absentes, le job les lit par `ssh-keyscan`, sans vérification, et le run porte un
+avertissement.
 
 Le stockage des pages pré-rendues n'ajoute **aucun secret GitHub** : la clé de son application
 d'écriture entre dans `ENV_STAGING` et `ENV_PROD` (lignes 🔒 `LoDb__Prerender__AccessKey` et
@@ -146,20 +148,28 @@ La nouvelle stack prend la place de l'ancienne dans le même projet Compose
    (`::notice` « Deployed revision »), puis contrôle le TLS public (avec relance de l'edge)
    et, par l'edge, que nginx accepte ses requêtes.
 
-## Basculer `staging`
+## Historique : la bascule (faite le 2026-10-04, ne pas rejouer)
+
+> Étapes suivies une seule fois, gardées pour mémoire. **Ne pas les rejouer** : remplacer
+> `ENV_PROD` par un modèle ou recréer `PROD_DATA_PROTECTION_PFX` casserait la prod (clés
+> Data Protection illisibles, sessions et jetons perdus). Mettre en prod aujourd'hui, c'est
+> le chemin du haut : fusion manuelle de `test` dans `main`.
+
+**`staging`** :
 
 1. `.env.staging` rempli, valeurs 🔁 relevées dans `$STAGING_PATH/.env` **avant** ce
    déploiement ([`configuration.md`](configuration.md), § 2).
 2. `ENV_STAGING` remplacé, `STAGING_DATA_PROTECTION_PFX` créé.
-3. Fusion de la bascule dans `dev` : son push déploie `staging`. La base de l'ancien staging
-   est gardée et migrée ; le volume `ddragon` part vide et l'ingestion le remplit.
+3. Fusion de la bascule dans `dev` : son push a déployé `staging`. La base de l'ancien
+   staging a été gardée et migrée ; le volume `ddragon` est parti vide et l'ingestion l'a
+   rempli.
 
-## Mettre en prod, et bascule
+**`prod`** :
 
 1. `staging` validé.
 2. Juste avant la fusion : `.env.prod` rempli depuis `$PROD_PATH/.env`, `ENV_PROD` remplacé,
-   `PROD_DATA_PROTECTION_PFX` créé. Pas avant : tant que `main` porte l'ancienne stack, un
-   push de `main` la redéploierait avec ce `.env`.
+   `PROD_DATA_PROTECTION_PFX` créé. Pas avant : tant que `main` portait l'ancienne stack, un
+   push de `main` l'aurait redéployée avec ce `.env`.
 3. Fenêtre de bascule du [runbook](../reecriture/bascule.md) (sauvegarde de la base faite).
 4. Fusion manuelle de `test` dans `main` : promotion, puis déploiement de `prod`.
 

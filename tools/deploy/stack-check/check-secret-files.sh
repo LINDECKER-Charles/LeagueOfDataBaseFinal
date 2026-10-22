@@ -8,8 +8,8 @@
 #   - the Stripe webhook accepts an event signed with the secret of the file only;
 #   - Mailpit, which accepts no other login, receives the mail the API sends with the
 #     password of the file;
-#   - no secret value is in the environment of api, migrate or postgres, and the API names
-#     the settings it read from files.
+#   - no secret value is in the environment of api, migrate, states or postgres, and the API
+#     names the settings it read from files.
 #
 # From the repository root, Docker running, on the slot lodb-dev-e1 (developpement.md) unless
 # COMPOSE_PROJECT_NAME and the LODB_*_PORT variables name another; the stack is removed
@@ -110,7 +110,7 @@ no_secret_in_any_environment() {
     LODB_APP_DB_PASSWORD BackupRole__Password)
   local -a secrets=("$DB_PASSWORD" "$MAIL_PASSWORD" "$WEBHOOK_SECRET" "$STRIPE_KEY" "$VISITOR_KEY"
     "$(cat "$secrets_dir/LODB_APP_DB_PASSWORD")" "$BACKUP_PASSWORD")
-  for service in api migrate postgres; do
+  for service in api migrate states postgres; do
     environment="$(compose ps -aq "$service" | xargs docker inspect \
       --format '{{range .Config.Env}}{{println .}}{{end}}')"
     for index in "${!secrets[@]}"; do
@@ -171,7 +171,7 @@ check "the Stripe webhook takes the secret of the file over the environment's" \
   webhook_takes_the_file_secret
 check "the mail relay takes the password of the file over the environment's" \
   relay_takes_the_file_password
-check "no secret value in the environment of api, migrate or postgres" \
+check "no secret value in the environment of api, migrate, states or postgres" \
   no_secret_in_any_environment
 check "the API names the settings it read from files, without their values" \
   api_names_its_secret_files

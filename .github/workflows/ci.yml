@@ -142,7 +142,7 @@ jobs:
       - name: Check the API contract
         run: npm --prefix src/LoDb.Web run api:check
 
-  # Translation completeness (L3.3): reported, never blocking.
+  # Translation completeness: reported, never blocking.
   i18n:
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -287,6 +287,12 @@ jobs:
       - name: Start the lodb-dev stack (waits for every probe)
         run: docker compose up -d --build --wait --wait-timeout 300
 
+      # A fresh stack indexes its latest patch alone: the en_US of the patches before it, then the
+      # states service again, give the URL grammar and the E2E closed and open states to check
+      # (docs/produit/seo-une-page-par-etat.md, § 8).
+      - name: Index the patches before the latest
+        run: bash tools/states/index-past-patches.sh
+
       - name: Setup Node
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
@@ -301,7 +307,7 @@ jobs:
         run: bash tools/routing/check-urls.sh
 
       - name: Test the nginx image
-        run: LODB_NGINX_IMAGE="$COMPOSE_PROJECT_NAME-nginx" node --test tools/nginx/test/*.test.mjs
+        run: LODB_NGINX_IMAGE="$COMPOSE_PROJECT_NAME-nginx" node --test tools/nginx/test/*.test.mjs tools/nginx/test/*/*.test.mjs
 
       - name: Install dependencies
         run: npm ci --prefix tests/LoDb.E2E

@@ -1,6 +1,11 @@
 # ADR 0008 — Mises à jour intégrées aux apps (desktop et Android)
 
 - **Statut** : acceptée — 2026-09-24
+- **Suivi** (2026-10-22) : la source desktop est `SignedGithubSource`
+  (`src/LoDb.Desktop/Updates/Engine/Signing/`) : les GitHub Releases, dont chaque flux est
+  signé et vérifié avant tout téléchargement, et non `GithubSource` seul. Les releases se
+  lancent à la main (`gh workflow run`) : aucun déploiement ne les appelle
+  ([`release-desktop.md`](../../guides/release-desktop.md)).
 
 ## Contexte
 

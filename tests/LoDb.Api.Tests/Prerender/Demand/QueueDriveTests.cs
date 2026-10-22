@@ -9,13 +9,17 @@ using LoDb.Testing;
 namespace LoDb.Api.Tests.Prerender.Demand;
 
 /// <summary>
-/// The queue drives the regulator while it has pages: alone, it renders at the regulator's or
-/// the operator's pace, never at the fixed pace no signal watches; beside a pass, it shares the
-/// pace as it is, and the pace stops once neither drives it.
+/// A queue drives the regulator while it has pages: alone, it renders at the regulator's or
+/// the operator's pace, never at the fixed pace no signal watches; beside a pass or the other
+/// queue, it shares the pace as it is, and the pace stops once none drives it.
 /// </summary>
 public sealed class QueueDriveTests(PostgresContainerFixture postgres)
 {
     private const long PassId = 7;
+
+    // The two automatic queues, as their drains name themselves.
+    private const string Demand = "prerender:demand";
+    private const string Revision = "prerender:revision";
     private const int ManualTarget = 300;
     private const double Tolerance = 0.05;
     private static readonly TimeSpan FloorInterval = TimeSpan.FromMinutes(1) / PaceRig.Floor;
@@ -27,10 +31,10 @@ public sealed class QueueDriveTests(PostgresContainerFixture postgres)
     {
         using var rig = new PaceRig();
 
-        rig.Regulator.BeginQueue();
+        rig.Regulator.BeginQueue(Demand);
         var driven = (rig.Regulator.IsDriven, rig.Regulator.Allowance());
         var snapshot = rig.Regulator.Snapshot()!;
-        rig.Regulator.EndQueue();
+        rig.Regulator.EndQueue(Demand);
 
         Assert.Equal((true, PaceRig.Floor), driven);
         Assert.Equal(0, snapshot.PassId);
@@ -45,7 +49,7 @@ public sealed class QueueDriveTests(PostgresContainerFixture postgres)
         using var rig = new PaceRig();
         rig.Manual(ManualTarget);
 
-        rig.Regulator.BeginQueue();
+        rig.Regulator.BeginQueue(Demand);
 
         Assert.Equal(ManualTarget, rig.Regulator.Allowance());
     }
@@ -58,13 +62,13 @@ public sealed class QueueDriveTests(PostgresContainerFixture postgres)
         rig.DecideAfter(30, SignalLevel.Green);
         rig.DecideAfter(30, SignalLevel.Green);
 
-        rig.Regulator.BeginQueue();
-        rig.Regulator.BeginQueue();
+        rig.Regulator.BeginQueue(Demand);
+        rig.Regulator.BeginQueue(Demand);
         var joined = rig.Regulator.Allowance();
         rig.Regulator.End();
         var afterPass = rig.Regulator.Allowance();
         var snapshot = rig.Regulator.Snapshot()!;
-        rig.Regulator.EndQueue();
+        rig.Regulator.EndQueue(Demand);
 
         Assert.Equal((60, 60), (joined, afterPass));
         Assert.Equal((0, PaceState.Climbing), (snapshot.PassId, snapshot.State));
@@ -72,15 +76,29 @@ public sealed class QueueDriveTests(PostgresContainerFixture postgres)
     }
 
     [Fact]
+    public void QueueOutlivesAnotherQueueEnding()
+    {
+        using var rig = new PaceRig();
+        rig.Regulator.BeginQueue(Demand);
+        rig.Regulator.BeginQueue(Revision);
+
+        rig.Regulator.EndQueue(Demand);
+        var afterOne = rig.Regulator.IsDriven;
+        rig.Regulator.EndQueue(Revision);
+
+        Assert.Equal((true, false), (afterOne, rig.Regulator.IsDriven));
+    }
+
+    [Fact]
     public void PassOutlivesTheQueue()
     {
         using var rig = new PaceRig();
-        rig.Regulator.BeginQueue();
+        rig.Regulator.BeginQueue(Demand);
         rig.Regulator.Begin(PassId);
         rig.DecideAfter(30, SignalLevel.Green);
         rig.DecideAfter(30, SignalLevel.Green);
 
-        rig.Regulator.EndQueue();
+        rig.Regulator.EndQueue(Demand);
 
         Assert.True(rig.Regulator.IsDriven);
         Assert.Equal(PassId, rig.Regulator.Snapshot()!.PassId);
