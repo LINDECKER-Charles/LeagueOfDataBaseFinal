@@ -42,10 +42,13 @@ public static partial class DdragonText
     /// kept as one, then the whitespace collapsed. A change of markup alone changes nothing.
     /// </summary>
     /// <remarks>
-    /// Raw whitespace flows like a space, as the page renders the HTML; a list item starts a
-    /// line like a break, since Riot ships bare <c>&lt;li&gt;</c>. Runs of breaks and blank
-    /// lines fold into one break, so a spacing change (<c>&lt;br&gt;&lt;br&gt;</c>) is markup
-    /// alone too. Character references are decoded: the diff is shown as text.
+    /// The markup is read as the page's renderer reads it: a <c>&lt;</c> that opens no tag
+    /// (<c>1 &lt; 2</c>) is text, and each tag the page lays out as a block (a list item, a
+    /// paragraph, a list, a rule, Riot's <c>&lt;stats&gt;</c> or <c>&lt;rules&gt;</c>)
+    /// starts a line like a break, since Riot ships bare <c>&lt;li&gt;</c> and glues text to
+    /// them. Raw whitespace flows like a space. Runs of breaks and blank lines fold into one
+    /// break, so a spacing change (<c>&lt;br&gt;&lt;br&gt;</c>) is markup alone too.
+    /// Character references are decoded: the diff is shown as text.
     /// </remarks>
     public static string PlainText(string? html)
     {
@@ -57,7 +60,7 @@ public static partial class DdragonText
 
         var flowing = AsciiWhitespace().Replace(cleaned, SingleSpace);
         var broken = PlainBreak().Replace(flowing, PlainLineBreak.ToString());
-        var plain = WebUtility.HtmlDecode(Tag().Replace(broken, string.Empty));
+        var plain = WebUtility.HtmlDecode(Markup().Replace(broken, string.Empty));
         return string.Join(
             PlainLineBreak,
             plain.Split(PlainLineBreak)
@@ -129,11 +132,18 @@ public static partial class DdragonText
     [GeneratedRegex("[ \t\n\r\v\f]+")]
     private static partial Regex AsciiWhitespace();
 
-    // A line break or the start of a list item: both begin a line of the displayed text.
+    // A void break, or either end of a tag the page lays out as a block (foundation/
+    // ddragon.css and the browser's defaults): each begins a line of the displayed text.
     [GeneratedRegex(
-        @"<(?:br[ \t\n\r\v\f]*/?[ \t\n\r\v\f]*|li(?:[ \t\n\r\v\f][^>]*)?)>",
+        @"<(?:(?:br|hr)[ \t\n\r\v\f]*/?[ \t\n\r\v\f]*"
+            + @"|/?(?:li|p|ul|ol|maintext|stats|rules|flavortext)(?:[ \t\n\r\v\f][^<>]*)?)>",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex PlainBreak();
+
+    // A comment, or a tag: a name that starts with a letter, closed before any other "<". A
+    // lone "<" stays text, as the page's renderer (rich-text-html.ts) keeps it.
+    [GeneratedRegex(@"<!--[\s\S]*?(?:-->|\z)|</?[A-Za-z][^<>]*>")]
+    private static partial Regex Markup();
 
     // An unclosed tag runs to the end of the text, as strip_tags() reads it.
     [GeneratedRegex(@"<[^>]*(?:>|\z)")]

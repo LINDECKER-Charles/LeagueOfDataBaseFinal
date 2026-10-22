@@ -17,7 +17,23 @@ public sealed class PlainTextTests
     [InlineData("Line one\n   and  the\trest<br/>  Line two", "Line one and the rest\nLine two")]
     [InlineData("<br><li><passive>Spark:</passive> burns.<li>Stacks.", "Spark: burns.\nStacks.")]
     [InlineData("Fish &amp; chips", "Fish & chips")]
+    [InlineData("<p>First</p><p>Second</p>", "First\nSecond")]
+    [InlineData("Before<ul><li>One</li><li>Two</li></ul>After", "Before\nOne\nTwo\nAfter")]
+    [InlineData(
+        "<stats>+20 AD</stats>Unique.<rules>Once.</rules><hr>End",
+        "+20 AD\nUnique.\nOnce.\nEnd")]
+    [InlineData("<passive>Lifesteal</passive> <statGood>up</statGood>", "Lifesteal up")]
     public void MarkupGoesAndLinesStay(string html, string expected)
+    {
+        Assert.Equal(expected, DdragonText.PlainText(html));
+    }
+
+    [Theory]
+    [InlineData("Below 30% < 50% health, <b>more</b> hits", "Below 30% < 50% health, more hits")]
+    [InlineData("Deals 1<2 times <i>damage", "Deals 1<2 times damage")]
+    [InlineData("Cost <<b>50</b>> mana", "Cost <50> mana")]
+    [InlineData("Shield<!-- hidden <b>note</b> --> up<!-- unclosed", "Shield up")]
+    public void ALessThanThatOpensNoTagIsText(string html, string expected)
     {
         Assert.Equal(expected, DdragonText.PlainText(html));
     }
