@@ -171,8 +171,10 @@ internal sealed partial class LegacyResolver(
     }
 
     // The redirect the index of states decides, if any: at the version named, the opener of a
-    // closed state, the short URL of an open one; without a version, the opener of the last
-    // state of an entry the latest catalog lacks. The rule of 2026-10-16 decides the rest.
+    // closed state, the short URL of an open one, or its opener when the latest catalog lacks
+    // the entry (an index behind the promotion that retired it, as StateView rules); without a
+    // version, the opener of the last state of an entry the latest catalog lacks. The rule of
+    // 2026-10-16 decides the rest.
     private async Task<LegacyRedirect?> IndexedAsync(
         EntityLookup lookup,
         CanonicalPath? fromLatest,
@@ -190,7 +192,7 @@ internal sealed partial class LegacyResolver(
         var entity = new IndexedEntity(lookup.Legacy.Resource, id);
         if (pinned is null)
         {
-            return snapshot.StatesOf(entity) is [.., { IsOpen: false } last]
+            return snapshot.StatesOf(entity) is [.., var last]
                 ? lookup.MovedToOpener(last)
                 : null;
         }
@@ -198,7 +200,8 @@ internal sealed partial class LegacyResolver(
         return snapshot.Locate(entity, pinned, latest).State switch
         {
             { IsOpen: false } closed => lookup.MovedToOpener(closed),
-            { IsOpen: true } when fromLatest is not null => lookup.MovedToLatest(fromLatest),
+            { } open when fromLatest is not null => lookup.MovedToLatest(fromLatest),
+            { } open => lookup.MovedToOpener(open),
             _ => null,
         };
     }

@@ -89,6 +89,25 @@ public sealed class LegacyStateRedirectTests : IDisposable
         Assert.Equal("/en/3.13.24/items", gone.Headers.Location?.OriginalString);
     }
 
+    // The promotion that retired Molten Edge is not indexed yet: its state is still open, and
+    // its pages name their opener (StateView), the latest patch lacking it.
+    [Theory]
+    [InlineData("/object/3371")]
+    [InlineData("/8.7.1/object/3371")]
+    public async Task EntryTheLatestPatchLacksBehindTheIndexLandsOnItsOpener(string oldUrl)
+    {
+        api.States.Snapshot = TestStates.Snapshot(
+            ["7.22.1", "8.7.1", "16.18.1"],
+            [
+                TestStates.Open(MoltenEdge, "7.22.1") with
+                {
+                    Path = "items/3371-molten-edge",
+                },
+            ]);
+
+        Assert.Equal("/en/7.22.1/items/3371-molten-edge", await api.LocationOfAsync(oldUrl));
+    }
+
     [Fact]
     public async Task UnreadableIndexAnswersARetry()
     {

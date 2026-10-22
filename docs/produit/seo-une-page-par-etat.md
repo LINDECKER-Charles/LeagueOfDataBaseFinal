@@ -539,12 +539,13 @@ mène directement à la canonique de sa cible.
   catalogue stocké de la version nommée ; le nom d'un arbre de runes se traduit en id par le
   catalogue du dernier patch.
 - L'index tranche ensuite à la version nommée : état clos, son ouvreur ; état ouvert, l'URL
-  courte.
+  courte, ou son ouvreur si le dernier patch n'a plus l'entité (index en retard sur la
+  promotion qui l'a retirée), comme la canonique de `StateView`.
 - Pas d'état à cette version : l'URL courte si le dernier patch porte l'id, sinon la 302 vers
   la liste reste.
 - Version listée après le dernier patch : la règle du 2026-10-16, inchangée.
 - Sans version nommée, une entité retirée mène à l'ouvreur de son dernier état, au lieu d'une
-  404.
+  404, que l'index l'ait déjà clos ou non.
 - Une liste mène toujours à la liste nue du dernier patch. Le reste ne change pas (503 tant que
   le catalogue du dernier patch n'est pas lu, choix de la locale, 301 gardée une heure).
 
