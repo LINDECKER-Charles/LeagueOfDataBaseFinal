@@ -18,9 +18,12 @@ namespace LoDb.Api.Cli.Catalog;
 /// up to the latest. One summary line per update, one per batch of 50 versions.
 /// </para>
 /// <para>
-/// Exit code 0 once the index is caught up, or when Data Dragon's list of versions cannot be
-/// read without <c>--ingest-missing</c> (one warning line; the API's reconciliation catches up
-/// later); 1 when another writer kept the index's lock for a minute, or on any other failure;
+/// Exit code 0 once the index is caught up; 0 as well when, without <c>--ingest-missing</c>,
+/// Data Dragon's list of versions cannot be read while a generation is current: the API
+/// serves that index, behind, until its reconciliation catches it up (one warning line). With
+/// none current (the first deploy, a new fingerprint scheme), the API would serve no index:
+/// exit code 1, so that the deploy stops while the old stack still serves (§ 4.1). Exit code
+/// 1 as well when another writer kept the index's lock for a minute, or on any other failure;
 /// 2 on invalid arguments. Host settings come as <c>--key=value</c>, never right after a
 /// switch: the host's command-line reader would take the setting for the switch's value.
 /// </para>
@@ -40,26 +43,25 @@ internal sealed partial class CatalogStatesBuildCommand(IServiceProvider service
 
         // Resolved here, as in migrate: a missing setting fails as one logged line.
         var updater = services.GetRequiredService<IStateIndexUpdater>();
-        var request = new StateIndexRequest
-        {
-            Trigger = StateIndexTrigger.Build,
-            ShouldRebuild = options.ShouldRebuild,
-            ShouldIngestMissing = options.ShouldIngestMissing,
-        };
         try
         {
-            var report = await updater.UpdateAsync(request, cancellationToken);
+            var report = await updater.UpdateAsync(RequestOf(options), cancellationToken);
             return report.Outcome == StateIndexOutcome.Locked
                 ? CliExitCodes.Failure
                 : CliExitCodes.Success;
         }
         catch (EgressException exception) when (!options.ShouldIngestMissing)
         {
-            var logger = services.GetRequiredService<ILogger<CatalogStatesBuildCommand>>();
-            LogDeferred(logger, exception);
-            return CliExitCodes.Success;
+            return await UnlistedAsync(updater, exception, cancellationToken);
         }
     }
+
+    private static StateIndexRequest RequestOf(CatalogStatesBuildArguments options) => new()
+    {
+        Trigger = StateIndexTrigger.Build,
+        ShouldRebuild = options.ShouldRebuild,
+        ShouldIngestMissing = options.ShouldIngestMissing,
+    };
 
     // Null once the usage is printed.
     private static async Task<CatalogStatesBuildArguments?> ParseAsync(
@@ -77,10 +79,35 @@ internal sealed partial class CatalogStatesBuildCommand(IServiceProvider service
         }
     }
 
+    // The list of versions could not be read: an index that lags is served as it is, while
+    // no index at all must not reach the API.
+    private async Task<int> UnlistedAsync(
+        IStateIndexUpdater updater,
+        EgressException exception,
+        CancellationToken cancellationToken)
+    {
+        var logger = services.GetRequiredService<ILogger<CatalogStatesBuildCommand>>();
+        if (!await updater.HasCurrentAsync(cancellationToken))
+        {
+            LogNoIndex(logger, exception);
+            return CliExitCodes.Failure;
+        }
+
+        LogDeferred(logger, exception);
+        return CliExitCodes.Success;
+    }
+
     [LoggerMessage(
         EventName = "states.build.deferred",
         Level = LogLevel.Warning,
-        Message = "Data Dragon could not be read: the index of states is left as it is, for the"
-            + " API's reconciliation to catch up.")]
+        Message = "Data Dragon's list of versions could not be read: the current index of"
+            + " states is left as it is, for the API's reconciliation to catch up.")]
     private static partial void LogDeferred(ILogger logger, Exception exception);
+
+    [LoggerMessage(
+        EventName = "states.build.failed",
+        Level = LogLevel.Error,
+        Message = "Data Dragon's list of versions could not be read, and no index of states"
+            + " is current: the API cannot serve without one.")]
+    private static partial void LogNoIndex(ILogger logger, Exception exception);
 }
