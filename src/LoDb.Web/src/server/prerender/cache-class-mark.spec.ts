@@ -8,12 +8,15 @@ describe('cacheClassMark', () => {
     });
   });
 
-  it.each([CACHE_CONTROL.latest, CACHE_CONTROL.transient, CACHE_CONTROL.private, null])(
-    'leaves unmarked a render of the pass under %s',
-    (cacheControl) => {
-      expect(cacheClassMark('prerender', cacheControl)).toEqual({});
-    },
-  );
+  it.each([
+    CACHE_CONTROL.latest,
+    CACHE_CONTROL.revisable,
+    CACHE_CONTROL.transient,
+    CACHE_CONTROL.private,
+    null,
+  ])('leaves unmarked a render of the pass under %s', (cacheControl) => {
+    expect(cacheClassMark('prerender', cacheControl)).toEqual({});
+  });
 
   it.each(['pinned', 'current'] as const)('never marks a render of the %s lane', (lane) => {
     expect(cacheClassMark(lane, CACHE_CONTROL.archived)).toEqual({});

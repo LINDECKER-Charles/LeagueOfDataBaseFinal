@@ -27,6 +27,7 @@ cache_of() {
   case "$1" in
     latest) echo 'public, max-age=0, s-maxage=1800, stale-while-revalidate=86400' ;;
     archived) echo 'public, max-age=3600, s-maxage=31536000' ;;
+    revisable) echo 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=3600' ;;
     transient) echo 'public, max-age=0, s-maxage=60' ;;
     private) echo 'private, no-store' ;;
     outside) echo 'public, max-age=0, s-maxage=3600' ;;
