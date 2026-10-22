@@ -2,6 +2,7 @@ import type { CatalogMeta } from '../../../core/api/generated/models/catalog-met
 import { versionMatcher } from '../../../core/api/meta/version-matcher';
 import { pageContextOf } from '../../../core/context/page-context-of';
 import type { Preferences } from '../../../core/context/preferences/preferences';
+import { pinnableVersion } from '../../../core/context/switch/pinnable-version';
 import type { Locale } from '../../../core/i18n/locales';
 import { parsePublicUrl } from '../../../core/routing/url/parse-public-url';
 import type { LanguageOption } from '../options/language-option';
@@ -15,6 +16,19 @@ interface ShownPage {
   readonly locale: Locale;
   /** This session's choice, else the remembered one (`PreferencesStore.current`). */
   readonly remembered: Preferences | null;
+}
+
+// The remembered version names the chip only where the URL may take it (`rememberedTarget`):
+// never on the page of a patch that has none, which stays on the latest patch's.
+function rememberedOn(
+  page: readonly string[],
+  remembered: Preferences | null,
+  meta: CatalogMeta,
+): Preferences | null {
+  if (remembered === null) {
+    return null;
+  }
+  return { ...remembered, version: pinnableVersion(page, remembered.version, meta) };
 }
 
 /**
@@ -36,7 +50,7 @@ export function currentChoice(
     locale: page.locale ?? shown.locale,
     path: page.version,
     query: page.query.toString(),
-    remembered: shown.remembered,
+    remembered: rememberedOn(page.page, shown.remembered, meta),
   };
   const context = pageContextOf(sources, meta);
   if (context === null) {

@@ -1,0 +1,58 @@
+<lodb-backdrop />
+<div class="relative mx-auto max-w-4xl">
+  <header class="mb-12">
+    <h1 class="text-gold-grad font-beaufort text-2xl font-bold uppercase tracking-wide sm:text-4xl">
+      {{ 'patches.changes.title' | transloco: { version: changes().version } }}
+    </h1>
+    <p class="mt-4 text-text-muted">
+      {{
+        'patches.changes.intro'
+          | transloco: { version: changes().version, previous: changes().previousVersion }
+      }}
+    </p>
+    <p class="mt-5">
+      <a
+        class="hx-chip nav-link px-3 py-1.5 hover:text-hex"
+        [routerLink]="['/', locale(), 'patches']"
+        >{{ 'patches.title' | transloco }}</a
+      >
+    </p>
+  </header>
+
+  @for (section of sections(); track section.type) {
+    <section class="mb-12" [attr.aria-labelledby]="'changes-' + section.type">
+      <header class="codex-header mb-6">
+        <h2 [id]="'changes-' + section.type">{{ section.title }}</h2>
+        <span class="codex-header__meta">{{ section.count }}</span>
+      </header>
+      @for (group of section.groups; track group.kind) {
+        <h3 class="mb-3 mt-6 text-sm font-semibold uppercase tracking-wide text-gold-light">
+          {{ 'patches.changes.' + group.kind | transloco }}
+        </h3>
+        <!-- Cards in a div list, never ul/li (docs/architecture/pieges.md). -->
+        <div role="list" class="grid gap-3 sm:grid-cols-2">
+          @for (entry of group.entries; track entry.id) {
+            <div role="listitem" class="flex items-start gap-3">
+              <lodb-catalogue-image
+                class="size-10 rounded"
+                [image]="entry.image"
+                [name]="entry.name"
+                [size]="iconSize"
+              />
+              <div class="min-w-0">
+                <a class="nav-link font-semibold hover:text-hex" [routerLink]="entry.url">{{
+                  entry.name
+                }}</a>
+                @if (entry.fields) {
+                  <p class="text-sm text-text-muted">{{ entry.fields }}</p>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </section>
+  } @empty {
+    <p class="text-text-muted">{{ 'patches.changes.empty' | transloco }}</p>
+  }
+</div>

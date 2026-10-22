@@ -7,6 +7,11 @@ summary: Sur la fiche d'un ancien patch, le lien vers la même fiche au dernier 
 tags: [catalogue]
 ---
 
+> **Remplacé le 2026-10-22** par [une page indexée par état](../../produit/seo-une-page-par-etat.md) :
+> `previous-patches.ts` n'existe plus ; le lien « Dans le dernier patch → », toujours sans
+> numéro et vers l'adresse courte, vit dans le bloc des états de la fiche, sa présence décidée
+> par l'API (`presentInLatest`), plus par `meta.latest`.
+
 ## Ce qui change
 
 Sur la fiche d'un champion, d'un objet, d'une rune ou d'un sort à un ancien patch, le lien

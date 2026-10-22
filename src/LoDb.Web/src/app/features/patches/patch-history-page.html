@@ -1,4 +1,6 @@
 <lodb-backdrop />
+<!-- Translated once for the hundreds of rows, never a pipe per link. -->
+@let changesLabel = 'patches.changes_link' | transloco;
 <div class="patches-page">
   <header>
     <h1 class="patches-page__title text-gold-grad">{{ 'patches.title' | transloco }}</h1>
@@ -26,6 +28,9 @@
                 }
               </th>
               <td>
+                @if (row.changes; as changes) {
+                  <a [routerLink]="changes">{{ changesLabel }}</a>
+                }
                 @for (list of row.lists; track list.resource) {
                   <a [routerLink]="list.url">{{ labels()[list.resource] }}</a>
                 }

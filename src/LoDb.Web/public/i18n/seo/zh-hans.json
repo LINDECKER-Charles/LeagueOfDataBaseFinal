@@ -1,5 +1,6 @@
 {
   "versioned_suffix": "(版本 {{ version }})",
+  "state_range_suffix": "(版本 {{ first }} 至 {{ last }})",
   "home": {
     "title": "League Of Data Base — 英雄联盟百科全书",
     "description": "版本 {{ version }} 的英雄联盟英雄、装备、符文与召唤师技能 — 21 种语言的属性、技能与详细资料。"
@@ -98,5 +99,11 @@
       "title": "常见问题",
       "description": "关于 League Of Data Base 的解答：它是什么，《英雄联盟》数据从何而来，多久更新一次，以及是否需要账号。"
     }
+  },
+  "state": {
+    "summary": "于版本 {{ version }} 更改：{{ fields }}。",
+    "summary_more": "于版本 {{ version }} 更改：{{ fields }}…",
+    "summary_new": "于版本 {{ version }} 新增。",
+    "summary_returned": "于版本 {{ version }} 回归。"
   }
 }

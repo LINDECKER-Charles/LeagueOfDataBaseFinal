@@ -22,6 +22,7 @@ import { audiencePageOf } from './core/analytics/audience/normalize/audience-pag
 import { API_BASE_URL } from './core/api/api-base-url';
 import { handleNavigationError } from './core/routing/failure/handle-navigation-error';
 import { catalogMetaOf } from './core/testing/catalog-meta-of';
+import { detailStateOf } from './core/testing/detail-state-of';
 import { provideTestTransloco } from './core/testing/provide-test-transloco';
 import { AccountPage } from './features/account/account-page';
 import { AdminPage } from './features/admin/admin-page';
@@ -29,6 +30,7 @@ import { ApiPortalPage } from './features/api-portal/api-portal-page';
 import { EditorPage } from './features/builds/editor/editor-page';
 import { SharePage } from './features/builds/share/share-page';
 import { TrendsPage } from './features/builds/trends/trends-page';
+import { PatchChangesPage } from './features/catalogue/changes/patch-changes-page';
 import { ChampionsPage } from './features/catalogue/champions/champions-page';
 import { ItemsPage } from './features/catalogue/items/items-page';
 import { RunesPage } from './features/catalogue/runes/runes-page';
@@ -59,15 +61,27 @@ const META = catalogMetaOf({
   ],
 });
 const DETAILS = /^\/api\/catalog\/[^/]+\/[^/]+\/(?<path>[^/]+\/[^/]+)$/;
+const CHANGES = /^\/api\/catalog\/(?<version>[^/]+)\/[^/]+\/changes$/;
 
-// The simulated API: its meta, and any detail at the path it was asked for.
+// What the API answers at `url`: a detail at the path it was asked for, the changes of a
+// patch, else its meta.
+function bodyOf(url: string): unknown {
+  const path = DETAILS.exec(url)?.groups?.['path'];
+  if (path) {
+    return { canonicalPath: path, profile: { name: path }, ...detailStateOf(path) };
+  }
+  const version = CHANGES.exec(url)?.groups?.['version'];
+  return version
+    ? { version, language: 'en_US', previousVersion: OLDER, hasChanges: false, groups: [] }
+    : META;
+}
+
+// The simulated API: its meta, any detail, any patch's changes.
 function simulatedApi(requested: string[]): HttpInterceptorFn {
   return (request) => {
     const url = request.urlWithParams;
     requested.push(url);
-    const path = DETAILS.exec(url)?.groups?.['path'];
-    const body = path ? { canonicalPath: path, profile: { name: path } } : META;
-    return of(new HttpResponse({ status: HttpStatusCode.Ok, url, body }));
+    return of(new HttpResponse({ status: HttpStatusCode.Ok, url, body: bodyOf(url) }));
   };
 }
 
@@ -132,6 +146,8 @@ const PUBLIC_PAGES: Page[] = [
   { url: '/en/u/faker', page: ProfilePage },
   { url: '/en/developers', page: DevelopersPage },
   { url: '/fr/patches', page: PatchHistoryPage },
+  { url: '/en/changes', page: PatchChangesPage },
+  { url: `/fr/${OLDER}/changes`, page: PatchChangesPage },
   { url: '/en/donate', page: DonatePage },
   { url: '/b/Zx81kQ', page: SharePage },
 ];
@@ -198,6 +214,7 @@ describe('routes (ADR 0005)', () => {
     ['/en/items/1036-long-sword', '/en/items/1036-long-sword'],
     [`/fr/${OLDER}/runes`, `/fr/${OLDER}/runes`],
     [`/de/${OLDER}/summoners/SummonerFlash`, `/de/${OLDER}/summoners/SummonerFlash`],
+    [`/fr/${OLDER}/changes`, `/fr/${OLDER}/changes`],
   ])('lets the audience see the real path of the catalogue page %s', async (url, sent) => {
     const { router } = await visit(url);
 
@@ -239,6 +256,7 @@ describe('routes (ADR 0005)', () => {
     `/en/${OLDER}`,
     `/en/${OLDER}/trends`,
     `/en/${OLDER}/patches`,
+    '/en/changes/champions',
     '/en/account',
     '/en/account/nowhere',
     '/en/u',

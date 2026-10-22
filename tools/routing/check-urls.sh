@@ -9,7 +9,10 @@
 # nginx, for instance http://localhost:18180. The catalogue rows need a version ingested:
 # the script first waits for the patch watch to ingest one (LODB_ROUTING_WAIT seconds, 600
 # by default), then asks the API through the same nginx for the item 1036 in the latest
-# version and in the one before it, which ingests them on demand if needed.
+# version and in the one before it, which ingests them on demand if needed. A page of an older
+# version is expected in the class its entity's state gives it (docs/produit/
+# seo-une-page-par-etat.md, § 3.7), and a page of a patch's changes where the API has one: the
+# data of the stack decide which rows apply, each said as it runs.
 #
 # Needs curl and jq. Prints one line per check; exit code 1 when any check fails.
 set -euo pipefail
@@ -134,9 +137,30 @@ meta() {
   curl -sS --max-time 30 "$BASE/api/meta"
 }
 
-# The canonical path of an item for a version, asked in en_US (the language of /en/).
+# The item's detail for a version, asked in en_US (the language of /en/).
+item_details() {
+  curl -sS --max-time 300 "$BASE/api/catalog/$1/en_US/items/$ITEM"
+}
+
+# The canonical path of the item for a version.
 canonical_path() {
-  curl -sS --max-time 300 "$BASE/api/catalog/$1/en_US/items/$ITEM" | jq -er .canonicalPath
+  item_details "$1" | jq -er .canonicalPath
+}
+
+# The class of a pinned page of the item: frozen once its state is closed, revisable while it
+# is open or the API knows no state there.
+state_class() {
+  if [ "$(item_details "$1" | jq -r '.state.isOpen')" = false ]; then
+    echo archived
+  else
+    echo revisable
+  fi
+}
+
+# Whether the API has a page of changes for a version (none for the first version its index
+# covers, nor outside it).
+has_changes_page() {
+  [ "$(curl -sS -o /dev/null -w '%{http_code}' --max-time 300 "$BASE/api/catalog/$1/en_US/changes")" = 200 ]
 }
 
 # ── The catalogue must hold a version ────────────────────────────────────────────────
@@ -199,7 +223,38 @@ row /en/champions 200 latest - -
 settle "/fr/$older/runes"
 row "/fr/$older/runes" 200 archived - -
 row "/en/$item" 200 latest - -
-row "/en/$older/$older_item" 200 archived - -
+row "/en/$older/$older_item" 200 "$(state_class "$older")" - -
+
+# ── Pinned pages by the state of their entity: the item's history, as the API renders it ──
+history="$(item_details "$latest" | jq -c '.history')"
+# The opener of a closed state, under its canonical: frozen.
+frozen="$(jq -r 'map(select(.lastVersion != null))[0] // empty | "\(.link.version)/\(.link.path)"' <<<"$history")"
+# The opener of the open state, when older than the latest: revisable, its path unchanged since.
+revisable="$(jq -r --arg latest "$latest" \
+  'map(select(.lastVersion == null and .openerVersion != $latest))[0] // empty
+   | "\(.openerVersion)/\(.link.path)"' <<<"$history")"
+if [ -n "$frozen" ]; then
+  row "/en/$frozen" 200 archived - -
+else
+  echo "skip the item has no closed state: no frozen page to ask for"
+fi
+if [ -n "$revisable" ]; then
+  row "/en/$revisable" 200 revisable - -
+else
+  echo "skip the item's open state opened at the latest version: no revisable page to ask for"
+fi
+
+# ── The page of a patch's changes: the latest at its short URL, a past one pinned ─────
+if has_changes_page "$latest"; then
+  row /en/changes 200 latest - -
+else
+  row /en/changes 404 transient noindex -
+fi
+if has_changes_page "$older"; then
+  row "/en/$older/changes" 200 archived - -
+else
+  row "/en/$older/changes" 404 transient noindex -
+fi
 
 # ── Canonical redirects ──────────────────────────────────────────────────────────────
 row "/en/$latest/champions" 301 transient - /en/champions
@@ -212,6 +267,8 @@ row "/en/$latest/$item" 301 transient - "/en/$item"
 row "/en/$latest/items/$ITEM" 301 transient - "/en/items/$ITEM"
 row "/en/$older/items/$ITEM" 301 transient - "/en/$older/$older_item"
 row "/en/$older/items/$MISSING_ITEM" 302 transient - "/en/$older/items"
+row "/en/$latest/changes" 301 transient - /en/changes
+row "/en/changes?version=$older" 301 transient - "/en/$older/changes"
 
 # ── Settled before any render: outside the grammar, a query the page does not read ────
 row /wordpress/wp-admin/ 404 outside noindex -
@@ -219,6 +276,7 @@ row /fr%2Fchampions 400 unstored - -
 row "/en/champions?utm_source=mail&q=ahri" 301 unstored - "/en/champions?q=ahri"
 row "/en/items/$ITEM?x=1" 301 unstored - "/en/items/$ITEM"
 row "/en/$older/$older_item?q=x" 301 unstored - "/en/$older/$older_item"
+row "/en/changes?x=1&lang=en_GB" 301 unstored - "/en/changes?lang=en_GB"
 # One path per page: the home keeps its slash, no other page has one.
 row /en 301 unstored - /en/
 row /fr/about/ 301 unstored - /fr/about

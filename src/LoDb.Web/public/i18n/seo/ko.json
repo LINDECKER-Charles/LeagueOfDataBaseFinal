@@ -1,5 +1,6 @@
 {
   "versioned_suffix": "(패치 {{ version }})",
+  "state_range_suffix": "(패치 {{ first }}~{{ last }})",
   "home": {
     "title": "League Of Data Base — 리그 오브 레전드 백과사전",
     "description": "패치 {{ version }}의 리그 오브 레전드 챔피언, 아이템, 룬, 소환사 주문 — 21개 언어로 스탯, 스킬, 상세 정보 제공."
@@ -98,5 +99,11 @@
       "title": "자주 묻는 질문",
       "description": "League Of Data Base에 대한 답변: 어떤 사이트인지, 리그 오브 레전드 데이터의 출처, 갱신 주기, 계정이 필요한지 여부."
     }
+  },
+  "state": {
+    "summary": "패치 {{ version }}에서 변경: {{ fields }}.",
+    "summary_more": "패치 {{ version }}에서 변경: {{ fields }}…",
+    "summary_new": "패치 {{ version }}에서 추가.",
+    "summary_returned": "패치 {{ version }}에서 복귀."
   }
 }

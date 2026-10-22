@@ -1,8 +1,20 @@
 {
   "title": "Yama geçmişi",
-  "description": "Data Dragon’un listelediği tüm League of Legends yamaları; her biri o yamadaki şampiyonları, eşyaları, rünleri ve çağırıcı büyüleriyle.",
-  "intro": "Data Dragon’un listelediği tüm yamalar, en yeniden başlayarak. Her biri şampiyonlarını, eşyalarını, rünlerini ve çağırıcı büyülerini o zamanki halleriyle açar.",
+  "description": "Data Dragon’un listelediği tüm League of Legends yamaları; her biri değişiklikleriyle ve o yamadaki şampiyonları, eşyaları, rünleri ve çağırıcı büyüleriyle.",
+  "intro": "Data Dragon’un listelediği tüm yamalar, en yeniden başlayarak. Her biri önce değişikliklerini, ardından şampiyonlarını, eşyalarını, rünlerini ve çağırıcı büyülerini o zamanki halleriyle açar.",
   "group": "{{ major }}.x yamaları",
   "latest": "Güncel",
-  "empty": "Şu anda listelenen bir yama yok."
+  "empty": "Şu anda listelenen bir yama yok.",
+  "changes_link": "Değişiklikler",
+  "changes": {
+    "title": "{{ version }} yaması değişiklikleri",
+    "description": "League of Legends {{ version }} yamasının {{ previous }} yamasına göre değiştirdikleri: değişen, yeni, geri dönen veya kaldırılan şampiyonlar, eşyalar, rünler ve çağırıcı büyüleri.",
+    "description_empty": "League of Legends {{ version }} yaması, {{ previous }} yamasına göre hiçbir şampiyonu, eşyayı, rünü veya çağırıcı büyüsünü değiştirmedi.",
+    "intro": "{{ version }} yamasının {{ previous }} yamasına göre değiştirdikleri, Riot’un Data Dragon verilerine göre.",
+    "empty": "Bu yama, ansiklopedinin gösterdiği hiçbir şeyi değiştirmedi.",
+    "changed": "Değişenler",
+    "new": "Yeniler",
+    "returned": "Geri dönenler",
+    "retired": "Kaldırılanlar"
+  }
 }

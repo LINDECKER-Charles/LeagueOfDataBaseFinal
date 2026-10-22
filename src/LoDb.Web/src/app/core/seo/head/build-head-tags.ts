@@ -19,32 +19,29 @@ type Metas = HeadTags['metas'];
 
 const ROBOTS: Record<PageKind, string> = {
   page: 'index, follow',
-  // The return pages of a donation: out of the index, but their links still count.
-  'donation-return': 'noindex, follow',
+  // Out of the index, but its links still lead crawlers on.
+  noindex: 'noindex, follow',
   private: 'noindex, nofollow',
   error: 'noindex, nofollow',
   share: 'noindex, nofollow',
 };
-// A page of a pinned version indexed nowhere (ADR 0005, amendment of 2026-10-14): out of the
-// index, but its links still lead crawlers on.
-const UNINDEXED = 'noindex, follow';
 const TWITTER_CARD = 'summary_large_image';
 const SITEMAP = { rel: 'sitemap', href: '/sitemap.xml', type: 'application/xml', title: 'Sitemap' };
 
 /**
- * The head of a page. Only an addressed page gets a canonical, and only one that is its own
- * canonical the site graph, and its 21 alternates if indexable: an alternate pointing at a
- * page canonical elsewhere or `noindex` would send crawlers mixed signals, and the structured
- * data of a past patch would contradict, under the same ids, those of its canonical.
+ * The head of a page. Only an addressed page gets a canonical, and only an indexable one that
+ * is its own canonical the site graph and its 21 alternates: an alternate pointing at a page
+ * canonical elsewhere or `noindex` would send crawlers mixed signals, and the structured data
+ * of a past patch would contradict, under the same ids, those of its canonical.
  */
 export function buildHeadTags(input: HeadInput): HeadTags {
   const title = pageTitle(input.page, input.texts);
-  const { urls, robots, links, isOwnCanonical } = indexingOf(input);
+  const { urls, robots, links, isIndexedHere } = indexingOf(input);
   return {
     title,
     metas: [...pageMetas(input, title, urls), ...siteMetas(robots)],
     links: [...links, SITEMAP],
-    jsonLd: isOwnCanonical && urls !== null ? jsonLdOf(input, title, urls) : [],
+    jsonLd: isIndexedHere && urls !== null ? jsonLdOf(input, title, urls) : [],
   };
 }
 
@@ -55,38 +52,36 @@ interface Indexing {
   readonly robots: string;
   /** The canonical, then the alternates of an indexable page that is its own canonical. */
   readonly links: HeadTags['links'];
-  readonly isOwnCanonical: boolean;
+  /** Whether the page is indexable and its own canonical: the one indexed under its URL. */
+  readonly isIndexedHere: boolean;
 }
 
 function indexingOf(input: HeadInput): Indexing {
   const { page, origin, locale } = input;
   const kind: PageKind = page.kind ?? 'page';
   if (!('path' in page)) {
-    return { urls: null, robots: ROBOTS[kind], links: [], isOwnCanonical: false };
+    return { urls: null, robots: ROBOTS[kind], links: [], isIndexedHere: false };
   }
   const address: PageAddress = { origin, locale, version: page.version ?? null, path: page.path };
   const canonical = canonicalOf(address, page.canonical);
-  if (canonical === null) {
-    return { urls: null, robots: UNINDEXED, links: [], isOwnCanonical: false };
-  }
   const urls = seoUrlsOf(canonical);
-  const isOwnCanonical = isSamePage(canonical, address);
-  const alternates = isOwnCanonical && kind === 'page' ? alternateLinks(address) : [];
+  const isIndexedHere = kind === 'page' && isSamePage(canonical, address);
+  const alternates = isIndexedHere ? alternateLinks(address) : [];
   return {
     urls,
     robots: ROBOTS[kind],
     links: [{ rel: 'canonical', href: urls.canonical }, ...alternates],
-    isOwnCanonical,
+    isIndexedHere,
   };
 }
 
 // A page of the latest version is its own canonical. A pinned one is indexed where the API
-// places its entity, by default as the same page at the latest version, or nowhere (null).
-function canonicalOf(address: PageAddress, target: CanonicalTarget): PageAddress | null {
+// places it (an entity's state), by default as the same page at the latest version.
+function canonicalOf(address: PageAddress, target: CanonicalTarget): PageAddress {
   if (address.version === null || target === undefined) {
     return { ...address, version: null };
   }
-  return target === null ? null : { ...address, version: target.version, path: target.path };
+  return { ...address, version: target.version, path: target.path };
 }
 
 function isSamePage(page: PageAddress, other: PageAddress): boolean {

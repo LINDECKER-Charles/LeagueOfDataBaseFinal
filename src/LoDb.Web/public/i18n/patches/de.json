@@ -1,8 +1,20 @@
 {
   "title": "Patch-Verlauf",
-  "description": "Jeder League-of-Legends-Patch, den Data Dragon auflistet, mit seinen Champions, Items, Runen und Beschwörerzaubern, wie sie in diesem Patch waren.",
-  "intro": "Alle Patches, die Data Dragon auflistet, der neueste zuerst. Jeder öffnet seine Champions, Items, Runen und Beschwörerzauber so, wie sie damals waren.",
+  "description": "Jeder League-of-Legends-Patch, den Data Dragon auflistet, mit seinen Änderungen und seinen Champions, Items, Runen und Beschwörerzaubern, wie sie in diesem Patch waren.",
+  "intro": "Alle Patches, die Data Dragon auflistet, der neueste zuerst. Jeder öffnet seine Änderungen, dann seine Champions, Items, Runen und Beschwörerzauber so, wie sie damals waren.",
   "group": "Patches {{ major }}.x",
   "latest": "Aktuell",
-  "empty": "Derzeit ist kein Patch aufgeführt."
+  "empty": "Derzeit ist kein Patch aufgeführt.",
+  "changes_link": "Änderungen",
+  "changes": {
+    "title": "Änderungen in Patch {{ version }}",
+    "description": "Was League-of-Legends-Patch {{ version }} gegenüber Patch {{ previous }} geändert hat: geänderte, neue, zurückgekehrte oder entfernte Champions, Items, Runen und Beschwörerzauber.",
+    "description_empty": "League-of-Legends-Patch {{ version }} hat gegenüber Patch {{ previous }} keinen Champion, kein Item, keine Rune und keinen Beschwörerzauber geändert.",
+    "intro": "Was Patch {{ version }} gegenüber Patch {{ previous }} geändert hat, nach den Data-Dragon-Daten von Riot.",
+    "empty": "Dieser Patch hat nichts geändert, was die Enzyklopädie zeigt.",
+    "changed": "Geändert",
+    "new": "Neu",
+    "returned": "Zurück",
+    "retired": "Entfernt"
+  }
 }

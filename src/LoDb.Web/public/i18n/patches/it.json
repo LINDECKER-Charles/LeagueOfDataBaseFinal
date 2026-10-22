@@ -1,8 +1,20 @@
 {
   "title": "Cronologia delle patch",
-  "description": "Tutte le patch di League of Legends elencate da Data Dragon, ciascuna con campioni, oggetti, rune e incantesimi da evocatore com’erano in quella patch.",
-  "intro": "Tutte le patch elencate da Data Dragon, dalla più recente. Ognuna apre i suoi campioni, oggetti, rune e incantesimi da evocatore com’erano allora.",
+  "description": "Tutte le patch di League of Legends elencate da Data Dragon, ciascuna con le sue modifiche e con campioni, oggetti, rune e incantesimi da evocatore com’erano in quella patch.",
+  "intro": "Tutte le patch elencate da Data Dragon, dalla più recente. Ognuna apre le sue modifiche, poi i suoi campioni, oggetti, rune e incantesimi da evocatore com’erano allora.",
   "group": "Patch {{ major }}.x",
   "latest": "Attuale",
-  "empty": "Nessuna patch è elencata per ora."
+  "empty": "Nessuna patch è elencata per ora.",
+  "changes_link": "Modifiche",
+  "changes": {
+    "title": "Modifiche della patch {{ version }}",
+    "description": "Cosa ha cambiato la patch {{ version }} di League of Legends rispetto alla patch {{ previous }}: campioni, oggetti, rune e incantesimi da evocatore modificati, nuovi, di ritorno o rimossi.",
+    "description_empty": "La patch {{ version }} di League of Legends non ha cambiato alcun campione, oggetto, runa o incantesimo da evocatore rispetto alla patch {{ previous }}.",
+    "intro": "Cosa ha cambiato la patch {{ version }} rispetto alla patch {{ previous }}, secondo i dati Data Dragon di Riot.",
+    "empty": "Questa patch non ha cambiato nulla di ciò che mostra l’enciclopedia.",
+    "changed": "Modificati",
+    "new": "Nuovi",
+    "returned": "Di ritorno",
+    "retired": "Rimossi"
+  }
 }

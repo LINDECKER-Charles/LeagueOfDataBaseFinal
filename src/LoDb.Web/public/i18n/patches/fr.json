@@ -1,8 +1,20 @@
 {
   "title": "Historique des patchs",
-  "description": "Tous les patchs de League of Legends listés par Data Dragon, chacun avec ses champions, objets, runes et sorts d’invocateur tels qu’ils étaient alors.",
-  "intro": "Tous les patchs listés par Data Dragon, du plus récent au plus ancien. Chacun ouvre ses champions, objets, runes et sorts d’invocateur tels qu’ils étaient à l’époque.",
+  "description": "Tous les patchs de League of Legends listés par Data Dragon, chacun avec ce qu’il a changé et ses champions, objets, runes et sorts d’invocateur tels qu’ils étaient alors.",
+  "intro": "Tous les patchs listés par Data Dragon, du plus récent au plus ancien. Chacun ouvre ce qu’il a changé, puis ses champions, objets, runes et sorts d’invocateur tels qu’ils étaient à l’époque.",
   "group": "Patchs {{ major }}.x",
   "latest": "Actuel",
-  "empty": "Aucun patch n’est listé pour l’instant."
+  "empty": "Aucun patch n’est listé pour l’instant.",
+  "changes_link": "Changements",
+  "changes": {
+    "title": "Changements du patch {{ version }}",
+    "description": "Ce que le patch {{ version }} de League of Legends a changé par rapport au patch {{ previous }} : champions, objets, runes et sorts d’invocateur modifiés, nouveaux, de retour ou retirés.",
+    "description_empty": "Le patch {{ version }} de League of Legends n’a changé aucun champion, objet, rune ni sort d’invocateur par rapport au patch {{ previous }}.",
+    "intro": "Ce que le patch {{ version }} a changé par rapport au patch {{ previous }}, d’après les données Data Dragon de Riot.",
+    "empty": "Ce patch n’a rien changé de ce que montre l’encyclopédie.",
+    "changed": "Modifiés",
+    "new": "Nouveaux",
+    "returned": "De retour",
+    "retired": "Retirés"
+  }
 }
