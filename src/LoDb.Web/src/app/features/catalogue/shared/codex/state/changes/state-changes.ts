@@ -16,7 +16,8 @@ const TITLE_KEYS: Readonly<Record<Exclude<EntityChanges['kind'], 'baseline'>, st
  * « Ce qui a changé dans ce patch » on the page of a state's opener: each field the patch
  * changed, before then after, a text by its diff written as text (`<del>`, `<ins>`, never
  * HTML); « Nouveau dans ce patch » for a new entity, « De retour » for a return, compared
- * with its state before the absence. Rendered by the server, read by crawlers.
+ * with its state before the absence. Rendered by the server, read by crawlers: the pieces of
+ * a value are spaced, and its arrow is read, so that the text says « 3,000 → 3,100 ».
  */
 @Component({
   selector: 'lodb-state-changes',
@@ -42,9 +43,7 @@ const TITLE_KEYS: Readonly<Record<Exclude<EntityChanges['kind'], 'baseline'>, st
                     <ins class="bg-hex/15 text-hex-bright no-underline">{{ piece.text }}</ins>
                   }
                   @case ('arrow') {
-                    <span class="mx-1.5 inline-block rtl:-scale-x-100" aria-hidden="true">{{
-                      piece.text
-                    }}</span>
+                    <span class="inline-block rtl:-scale-x-100">{{ piece.text }}</span>
                   }
                   @default {
                     <span>{{ piece.text }}</span>

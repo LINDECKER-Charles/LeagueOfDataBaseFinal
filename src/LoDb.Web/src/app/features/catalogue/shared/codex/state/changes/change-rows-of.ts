@@ -10,6 +10,7 @@ import { valueTextOf } from './value-text-of';
 type Pieces = ChangeRow['pieces'];
 
 const ARROW = '→';
+const SPACE = ' ';
 
 function textsOf(values: readonly ChangeValue[], change: FieldChange, format: ValueFormat) {
   return values.map((value) => valueTextOf(value, change, format));
@@ -38,19 +39,32 @@ function valuePieces(change: FieldChange, format: ValueFormat): Pieces {
   ];
 }
 
-// A set: what it lost, then what it gained; the values after when neither (equal here).
+// The values of `side` that `other` lacks.
+function onlyIn(side: readonly ChangeValue[], other: readonly ChangeValue[]) {
+  const others = new Set(other.map((value) => value.value));
+  return side.filter((value) => !others.has(value.value));
+}
+
+// A set: what it lost, then what it gained, each as one list; the values after when neither
+// (equal here).
 function setPieces(change: FieldChange, format: ValueFormat): Pieces {
-  const before = new Set(change.before.map((value) => value.value));
-  const after = new Set(change.after.map((value) => value.value));
-  const removed = change.before.filter((value) => !after.has(value.value));
-  const added = change.after.filter((value) => !before.has(value.value));
-  if (removed.length === 0 && added.length === 0) {
+  const removed = joined(textsOf(onlyIn(change.before, change.after), change, format), format);
+  const added = joined(textsOf(onlyIn(change.after, change.before), change, format), format);
+  if (removed === '' && added === '') {
     return [{ kind: 'same', text: joined(textsOf(change.after, change, format), format) }];
   }
   return [
-    ...textsOf(removed, change, format).map((text) => ({ kind: 'removed' as const, text })),
-    ...textsOf(added, change, format).map((text) => ({ kind: 'added' as const, text })),
+    ...(removed === '' ? [] : [{ kind: 'removed' as const, text: removed }]),
+    ...(added === '' ? [] : [{ kind: 'added' as const, text: added }]),
   ];
+}
+
+// Pieces read apart, by eye, by a screen reader and in the page's text: a space between two of
+// them, which a text's diff already carries in its own runs.
+function spaced(pieces: Pieces): Pieces {
+  return pieces.flatMap((piece, index) =>
+    index === 0 ? [piece] : [{ kind: 'same' as const, text: SPACE }, piece],
+  );
 }
 
 // A field the index marks changed that neither side holds in this language: its label alone.
@@ -66,10 +80,10 @@ function piecesOf(change: FieldChange, format: ValueFormat): Pieces {
     case 'text':
       return change.segments;
     case 'set':
-      return setPieces(change, format);
+      return spaced(setPieces(change, format));
     case 'value':
     case 'list':
-      return valuePieces(change, format);
+      return spaced(valuePieces(change, format));
   }
 }
 

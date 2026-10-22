@@ -157,6 +157,44 @@ describe('EntityStateBlocks', () => {
     expect(block.querySelector('dd b, dd img')).toBeNull();
   });
 
+  // Crawlers and screen readers read the text: no two values may run into one word.
+  it('keeps the values of a row apart in its text, the arrow between them read', async () => {
+    const block = await render('11.5.1', {
+      state: stateOf('11.5.1', '11.9.1', '11.5.1'),
+      changes: {
+        kind: 'changed',
+        comparedVersion: '10.1.1',
+        fields: [
+          {
+            field: 'skins',
+            subject: null,
+            kind: 'set',
+            valueKind: 'entity',
+            before: [{ value: '103001', label: 'Dynasty Ahri' }],
+            after: [
+              { value: '103002', label: 'Midnight Ahri' },
+              { value: '103003', label: 'Foxfire Ahri' },
+            ],
+            segments: [],
+          },
+          {
+            field: 'goldTotal',
+            subject: null,
+            kind: 'value',
+            valueKind: 'number',
+            before: [{ value: '3000', label: null }],
+            after: [{ value: '3100', label: null }],
+            segments: [],
+          },
+        ],
+      },
+    });
+    const texts = Array.from(block.querySelectorAll('dd'), (row) => row.textContent?.trim());
+
+    expect(texts).toEqual(['Dynasty Ahri Midnight Ahri, Foxfire Ahri', '3,000 → 3,100']);
+    expect(block.querySelector('dd [aria-hidden]')).toBeNull();
+  });
+
   it('says since when a page of a state it did not open is unchanged, linking its opener', async () => {
     const block = await render('11.7.1', {
       state: stateOf('11.5.1', '11.9.1', '11.7.1'),

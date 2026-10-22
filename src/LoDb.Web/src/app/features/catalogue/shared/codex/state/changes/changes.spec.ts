@@ -66,7 +66,9 @@ describe('changeRowsOf', () => {
     expect(row?.label).toBe('Prix total');
     expect(row?.pieces).toEqual([
       { kind: 'removed', text: '3 000' },
+      { kind: 'same', text: ' ' },
       { kind: 'arrow', text: '→' },
+      { kind: 'same', text: ' ' },
       { kind: 'added', text: '3 100,5' },
     ]);
   });
@@ -103,7 +105,7 @@ describe('changeRowsOf', () => {
     );
 
     expect(rows.map((row) => row.pieces.map((piece) => piece.text))).toEqual([
-      ['7%', '→', '10%'],
+      ['7%', ' ', '→', ' ', '10%'],
       ['25,000, Global'],
       ['Gangplank'],
     ]);
@@ -141,15 +143,42 @@ describe('changeRowsOf', () => {
     expect(rows.map((row) => row.pieces)).toEqual([
       [
         { kind: 'removed', text: 'Mage' },
+        { kind: 'same', text: ' ' },
         { kind: 'arrow', text: '→' },
+        { kind: 'same', text: ' ' },
         { kind: 'added', text: 'Mage, Support' },
       ],
       [
         { kind: 'removed', text: 'Boots' },
+        { kind: 'same', text: ' ' },
         { kind: 'added', text: 'Critical Strike' },
       ],
       [{ kind: 'removed', text: '99' }],
       [{ kind: 'added', text: 'URF' }],
+    ]);
+  });
+
+  it('lists what a set lost, then what it gained, each as one phrase', () => {
+    const [row] = changeRowsOf(
+      [
+        change({
+          field: 'skins',
+          kind: 'set',
+          valueKind: 'entity',
+          before: [{ value: '103001', label: 'Dynasty Ahri' }],
+          after: [
+            { value: '103002', label: 'Midnight Ahri' },
+            { value: '103003', label: 'Foxfire Ahri' },
+          ],
+        }),
+      ],
+      EN,
+    );
+
+    expect(row?.pieces).toEqual([
+      { kind: 'removed', text: 'Dynasty Ahri' },
+      { kind: 'same', text: ' ' },
+      { kind: 'added', text: 'Midnight Ahri, Foxfire Ahri' },
     ]);
   });
 
