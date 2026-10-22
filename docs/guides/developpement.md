@@ -163,7 +163,8 @@ bash tools/states/index-past-patches.sh
 
 Le script ingère l'en_US des 5 patchs qui précèdent le dernier (`LODB_STATES_PATCHES`, une
 minute chacun, images comprises), puis relance le service `states`, qui reconstruit l'index à
-partir du plus ancien ; l'API le relit dans la minute.
+partir du plus ancien, et attend que l'API le relise (une minute au plus, sur une lecture) :
+lancé juste après, `check-urls.sh` ne lit jamais l'ancien et ne saute pas ses lignes d'états.
 
 ```bash
 npm --prefix tests/LoDb.E2E test
