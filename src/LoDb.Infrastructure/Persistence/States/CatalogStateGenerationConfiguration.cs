@@ -16,7 +16,19 @@ internal sealed class CatalogStateGenerationConfiguration
                 "state_count >= 0 AND open_state_count >= 0 AND open_state_count <= state_count");
         });
         builder.HasKey(generation => generation.Id);
+        ConfigureProperties(builder);
 
+        // One current generation per scheme: the flip of a rebuild clears the old one first,
+        // in the same transaction, so a reader never sees two nor none.
+        builder.HasIndex(generation => generation.Scheme)
+            .IsUnique()
+            .HasFilter("is_current")
+            .HasDatabaseName("ux_catalog_state_generation_current");
+        ConfigureChildren(builder);
+    }
+
+    private static void ConfigureProperties(EntityTypeBuilder<CatalogStateGeneration> builder)
+    {
         builder.Property(generation => generation.FirstVersion)
             .HasMaxLength(CatalogStateGeneration.VersionMaxLength);
         builder.Property(generation => generation.LastVersion)
@@ -32,14 +44,11 @@ internal sealed class CatalogStateGenerationConfiguration
         builder.Property(generation => generation.OpenStateCount)
             .HasDefaultValue(0)
             .ValueGeneratedNever();
+    }
 
-        // One current generation per scheme: the flip of a rebuild clears the old one first,
-        // in the same transaction, so a reader never sees two nor none.
-        builder.HasIndex(generation => generation.Scheme)
-            .IsUnique()
-            .HasFilter("is_current")
-            .HasDatabaseName("ux_catalog_state_generation_current");
-
+    // Its versions and states go with it.
+    private static void ConfigureChildren(EntityTypeBuilder<CatalogStateGeneration> builder)
+    {
         builder.HasMany<CatalogStateVersion>()
             .WithOne()
             .HasForeignKey(version => version.GenerationId)
