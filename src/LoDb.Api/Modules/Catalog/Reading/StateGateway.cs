@@ -44,24 +44,9 @@ internal sealed partial class StateGateway(
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(entity);
-        var demand = ColdDemand.Synchronous.By(caller);
         try
         {
-            var view = await ViewAsync(entity.Catalog, demand, cancellationToken);
-            if (view is null)
-            {
-                return StateRead.Fail(CatalogProblem.Pending());
-            }
-
-            var standing = view.Locate(entity.Path, entity.Catalog.Version);
-            var state = DetailStates.Of(view, standing, entity);
-            if (!standing.IsOpener)
-            {
-                return StateRead.Read(state);
-            }
-
-            var opener = new Opener(view, standing, entity);
-            return await WithChangesAsync(state, opener, demand, cancellationToken);
+            return await LocateAsync(entity, ColdDemand.Synchronous.By(caller), cancellationToken);
         }
         catch (StateIndexUnavailableException exception)
         {
@@ -73,6 +58,28 @@ internal sealed partial class StateGateway(
             LogUpstreamFailed(logger, entity.Catalog.Version.Value, exception);
             return StateRead.Fail(CatalogProblem.UpstreamUnavailable());
         }
+    }
+
+    private async Task<StateRead> LocateAsync(
+        DetailEntity entity,
+        ColdDemand demand,
+        CancellationToken cancellationToken)
+    {
+        var view = await ViewAsync(entity.Catalog, demand, cancellationToken);
+        if (view is null)
+        {
+            return StateRead.Fail(CatalogProblem.Pending());
+        }
+
+        var standing = view.Locate(entity.Path, entity.Catalog.Version);
+        var state = DetailStates.Of(view, standing, entity);
+        if (!standing.IsOpener)
+        {
+            return StateRead.Read(state);
+        }
+
+        var opener = new Opener(view, standing, entity);
+        return await WithChangesAsync(state, opener, demand, cancellationToken);
     }
 
     // The latest catalog a pinned page reads is en_US: paths and presence do not depend on the
