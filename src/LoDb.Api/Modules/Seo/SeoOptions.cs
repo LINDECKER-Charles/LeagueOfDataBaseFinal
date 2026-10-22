@@ -21,13 +21,14 @@ internal sealed class SeoOptions
 
     /// <summary>
     /// Key of the IndexNow protocol, 8 to 128 letters, digits or dashes: set, the promotion
-    /// of a patch submits the pages it changed to the search engines that share IndexNow
-    /// (Bing, Yandex, Naver, Seznam…), and <c>/{key}.txt</c> proves the site holds it.
+    /// of a patch submits its pages to the search engines that share IndexNow (Bing, Yandex,
+    /// Naver, Seznam…), and <c>/{key}.txt</c> proves the site holds it.
     /// </summary>
     /// <remarks>
     /// Public by design: the key file publishes it. Submitting also needs
-    /// <see cref="CanonicalOrigin"/>, the host the URLs belong to: without either, nothing is
-    /// submitted, as on a local stack or on staging, which no engine indexes.
+    /// <see cref="CanonicalOrigin"/>, the host the URLs belong to. Without the key but with the
+    /// origin, as on staging, which no engine indexes, the promotion only logs what it would
+    /// submit; without the origin, as on a local stack, nothing happens.
     /// </remarks>
     public string? IndexNowKey { get; set; }
 }
