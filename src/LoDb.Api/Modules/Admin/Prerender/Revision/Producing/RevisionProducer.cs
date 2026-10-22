@@ -5,6 +5,7 @@ using LoDb.Api.Modules.Admin.Prerender.Promotion;
 using LoDb.Api.Modules.Admin.Prerender.Revision.Telemetry;
 using LoDb.Domain.Versions;
 using LoDb.Infrastructure.Persistence;
+using LoDb.Infrastructure.Persistence.Prerender;
 using LoDb.Infrastructure.Persistence.Prerender.Revision;
 using LoDb.Ingestion.Catalog.States.Snapshots;
 using Microsoft.EntityFrameworkCore;
@@ -15,8 +16,9 @@ namespace LoDb.Api.Modules.Admin.Prerender.Revision.Producing;
 /// <summary>
 /// Fills the queue of the closed states (<c>prerender_revision</c>): the pages of every state the
 /// index closed since its watermark, each of its versions, in the 21 locales, for the served
-/// epoch and for the epoch the active pass writes, due once the servers read an index that
-/// covers the closure.
+/// epoch, the epoch the active pass writes and every newer one a completed pass filled (an
+/// epoch on standby for its switch), due once the servers read an index that covers the
+/// closure.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -120,17 +122,20 @@ internal sealed class RevisionProducer(
         return new DueClosures(history, lastPromotion);
     }
 
-    // The served epoch, and the one the active pass writes when it is another.
+    // The served epoch, the one the active pass writes, and every newer one a completed pass
+    // filled: on standby for its switch, it must not keep the pages of the states closed since.
     private async Task<IReadOnlyList<int>> EpochsAsync(
         LoDbDbContext db,
         CancellationToken cancellationToken)
     {
         var served = options.Value.ServedEpoch;
         var written = await db.PrerenderPasses.AsNoTracking()
-            .Where(static pass => pass.IsActive)
-            .Select(static pass => (int?)pass.Epoch)
-            .SingleOrDefaultAsync(cancellationToken);
-        return written is { } epoch && epoch != served ? [served, epoch] : [served];
+            .Where(pass => pass.IsActive
+                || (pass.State == PrerenderPassState.Completed && pass.Epoch > served))
+            .Select(static pass => pass.Epoch)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+        return [served, .. written.Where(epoch => epoch != served).Order()];
     }
 
     private PrerenderRevisionWatermark MarkOf(

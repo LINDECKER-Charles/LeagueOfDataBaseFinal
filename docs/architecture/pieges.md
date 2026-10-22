@@ -856,7 +856,8 @@ stockage objet, puis lues par nginx
   d'une entité désigne l'URL courte ; quand une promotion clôt cet état, sa canonique, son
   titre et son historique changent. Le SSR la marque `revisable` (une heure), la passe la
   stocke ainsi, et la file des états clos (`prerender_revision`) la recalcule après la
-  promotion, dans l'epoch servie et dans celle de la passe active : chaque version de chaque
+  promotion, dans l'epoch servie, dans celle de la passe active et dans toute epoch plus
+  récente remplie par une passe terminée (en attente de sa bascule) : chaque version de chaque
   état clos (celle qui vient de quitter le dernier patch comprise), dans les 21 langues, due
   21 minutes après (`2 × LoDb:Catalog:VersionsLifetime` + 1 min, le temps que tous les
   processus lisent l'index qui la couvre). La copie révisable d'avant peut encore être servie

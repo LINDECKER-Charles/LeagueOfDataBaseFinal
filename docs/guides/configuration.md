@@ -985,7 +985,7 @@ chaque page autant que dit son objet (§ 4.8). Aucune ligne du `.env` ne règle 
 |---|---|
 | Producteur | l'écouteur de l'étape `Prerender` de chaque promotion, puis `prerender.reconcile` (toutes les 30 min), une fois l'index des états à jour jusqu'au dernier patch ; idempotent par une marque (`prerender_revision_watermark` : génération, dernière clôture traitée) |
 | Pages mises en file | chaque version, de l'ouvreur à la dernière, de chaque état clos depuis la marque (la version qui quitte le dernier patch comprise), dans les 21 langues, sous la graphie de chaque version |
-| Epochs | l'epoch servie (`LoDb__Prerender__ServedEpoch`), plus celle qu'écrit la passe active quand elle diffère |
+| Epochs | l'epoch servie (`LoDb__Prerender__ServedEpoch`), celle qu'écrit la passe active quand elle diffère, et toute epoch plus récente qu'une passe terminée a remplie (en attente de sa bascule) ; jamais celle d'une passe annulée |
 | Délai avant rendu | `2 × LoDb:Catalog:VersionsLifetime` + 1 min (21 min) : tous les processus lisent alors un index qui couvre la clôture |
 | Rendu | `PrerenderRevisionWorker`, toutes les 30 s, verrou `prerender:revision`, lots de 20, sur le SSR de la passe, au rythme et dans les places de la file de la demande (§ 4.11) |
 | Essais | 3 ; nouvel essai 5 min après ; une page rendue de nouveau `revisable` compte comme un essai raté ; les lignes d'une epoch retirée sont sautées |
@@ -1010,9 +1010,10 @@ qui le porte (§ 4.12). Peu de pages changent d'état : les recalculer dans l'ep
 monter `LODB_ARCHIVE_EPOCH` (§ 4.1). Beaucoup : une passe sur une epoch neuve, puis la bascule
 de `LODB_ARCHIVE_SERVE_EPOCH` (§ 4.8). Une page figée ne l'est que pour un schéma.
 
-**Limite** : une epoch qu'une passe terminée a remplie, ni servie ni écrite par une passe
-active, ne reçoit pas les pages des états clos entre-temps ; basculer dessus sans tarder, ou
-relancer une passe sur les versions de ces états avant la bascule.
+Une epoch qu'une passe terminée a remplie, plus récente que l'epoch servie, reçoit les pages
+des états clos jusqu'à sa bascule : rien à rattraper avant de basculer. Une epoch laissée en
+attente sans bascule les reçoit aussi, pour rien : basculer dessus, ou la retirer
+(`tools/prerender/scaleway-bucket.sh`).
 
 **Ce qui la montre** : le bloc « File des états clos » de `/admin/prerender` (en attente,
 dues, écrites en 1 h et 24 h, en échec, par epoch ; `GET /api/admin/prerender/revision`) et la

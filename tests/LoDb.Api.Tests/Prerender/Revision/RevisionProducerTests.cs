@@ -3,6 +3,7 @@ using LoDb.Api.Modules.Admin.Prerender.Passes;
 using LoDb.Api.Modules.Admin.Prerender.Pages;
 using LoDb.Domain.Catalog;
 using LoDb.Domain.Languages;
+using LoDb.Infrastructure.Persistence.Prerender;
 using LoDb.Infrastructure.Persistence.Prerender.Demand;
 using LoDb.Ingestion.Catalog.States.Snapshots;
 using LoDb.Ingestion.Pipeline.Versions;
@@ -88,6 +89,25 @@ public sealed class RevisionProducerTests(PostgresContainerFixture postgres)
             Epoch = 2,
             Scope = PassScope.Of(RevisionRig.Older) with { PageTypes = [ResourceType.Runes] },
         });
+        rig.Index(1, RevisionRig.Closed("16.9.1", "16.10.1", ClosedByPromotion));
+
+        await rig.ProduceAsync();
+
+        var rows = await rig.RowsAsync();
+        Assert.Equal(
+            [(1, 2 * UiLocales.All.Count), (2, 2 * UiLocales.All.Count)],
+            rows.GroupBy(static row => row.Epoch)
+                .Select(static epoch => (epoch.Key, epoch.Count())));
+    }
+
+    // Epoch 2, filled by a completed pass, waits for its switch; epoch 3's pass was cancelled.
+    [Fact]
+    public async Task EpochOnStandbyForItsSwitchGetsThePagesToo()
+    {
+        await using var rig = await RevisionRig.StartAsync(postgres);
+        await rig.SettleAsync();
+        await AddPassAsync(rig, 2, PrerenderPassState.Completed);
+        await AddPassAsync(rig, 3, PrerenderPassState.Cancelled);
         rig.Index(1, RevisionRig.Closed("16.9.1", "16.10.1", ClosedByPromotion));
 
         await rig.ProduceAsync();
@@ -253,6 +273,20 @@ public sealed class RevisionProducerTests(PostgresContainerFixture postgres)
 
         Assert.Equal(0, await rig.ProduceAsync());
         Assert.Null(await rig.WatermarkAsync());
+    }
+
+    private static async Task AddPassAsync(RevisionRig rig, int epoch, PrerenderPassState state)
+    {
+        var finishedAt = rig.Harness.Clock.GetUtcNow();
+        await using var db = rig.Harness.Database.CreateContext();
+        db.PrerenderPasses.Add(new PrerenderPass
+        {
+            Epoch = epoch,
+            State = state,
+            CreatedAt = finishedAt.AddHours(-1),
+            FinishedAt = finishedAt,
+        });
+        await db.SaveChangesAsync(Token);
     }
 
     private static async Task<int> UnitsAsync(RevisionRig rig)

@@ -968,10 +968,11 @@ lui. Elles l'emportent sur les sections citées ; les ADR en reprennent l'essent
   promotion (`prerender.revision.generation`). Une reconstruction qui passe la fin d'un index
   resté en retard sur les promotions date ce qu'elle y clôt après son `built_at`, comme les
   extensions qu'elle remplace : les clôtures de la dernière promotion sont mises en file quand
-  même. Une copie de l'index plus ancienne que la génération de la marque ne fait rien. Une ligne déjà en file pour la même page et la même
-  epoch repasse en attente.
-- **Epochs** : l'epoch servie et celle de la passe active ; une epoch remplie par une passe
-  terminée, ni servie ni écrite, ne reçoit pas les clôtures d'ici sa bascule.
+  même. Une copie de l'index plus ancienne que la génération de la marque ne fait rien. Une
+  ligne déjà en file pour la même page et la même epoch repasse en attente.
+- **Epochs** : l'epoch servie, celle de la passe active, et toute epoch plus récente qu'une
+  passe terminée a remplie, qui reçoit ainsi les clôtures jusqu'à sa bascule ; jamais celle
+  d'une passe annulée.
 - **Rendu de la file** : chaque version sous la graphie de son catalogue (casse de l'id,
   slug), pas celle de l'ouvreur ; une page qui revient `revisable` compte comme un essai raté
   (nouvel essai 5 min après, échec définitif au troisième) ; les places de rendu sont celles
