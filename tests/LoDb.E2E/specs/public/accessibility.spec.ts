@@ -14,6 +14,7 @@ const TEMPLATE_PATHS = [
   'items/3031-infinity-edge',
   'runes/8100-domination',
   'summoners/SummonerFlash',
+  'changes',
   'account/login',
 ];
 const RICH_PATHS = ['', 'champions/Annie'];
