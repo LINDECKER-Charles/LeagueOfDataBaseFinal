@@ -1,5 +1,9 @@
 # Une page indexée par état : tout l'historique dans Google, sans copie
 
+> **État** (2026-10-22) : décidé, aucun lot livré. Jusqu'à la bascule du § 4, le code applique
+> la règle du 14 octobre (`CanonicalReferences`, une page indexée par entité) ; la règle en
+> vigueur et l'avancement se lisent dans [`seo-indexabilite.md`](seo-indexabilite.md).
+
 Chantier décidé le 22 octobre 2026. Le site est une base de données : chaque contenu
 distinct qu'elle tient doit avoir une page indexée, une seule. Une fiche d'ancien patch n'est
 plus indexée sous l'URL du dernier patch, ni répétée à chaque patch : elle l'est **une fois
@@ -18,7 +22,8 @@ Diagnostic précédent : [`seo-anciens-patchs.md`](seo-anciens-patchs.md).
 
 | Période | Index `/sitemap.xml` | URL annoncées | Pages d'anciens patchs | Raison |
 |---|---|---|---|---|
-| 18 juillet → 11 octobre | ~8 400 fichiers (402 versions × 21 langues) | ~4,2 millions | propre canonique, indexable, hreflang | ouvrir la longue traîne (« Aatrox patch 16.13 ») |
+| 18 juillet → 4 octobre (ancien site) | une sitemap par version, ~400 fichiers ; une langue par hôte, la locale vivant en session | ~200 000 par langue | propre canonique, indexable, sans hreflang | ouvrir la longue traîne (« Aatrox patch 16.13 ») |
+| 4 → 11 octobre (nouvelle pile) | ~8 400 fichiers (402 versions × 21 langues) | ~4,2 millions | propre canonique, indexable, hreflang | la même règle, en 21 langues |
 | 11 → 14 octobre | 273 fichiers (13 versions × 21) | ~160 000 (Search Console) | inchangé | **la charge** : pages rendues à la demande dans un budget borné |
 | depuis le 14 octobre | 21 `latest.xml` | ~22 800 (1 085 × 21) | canonique vers l'URL courte ; entité retirée indexée à sa dernière version | **le SEO** : Google voyait des doublons |
 
@@ -376,10 +381,24 @@ Chaque lot livre son code, ses tests et ses documents dans le même commit, selo
   révisables ; l'ordre des écouteurs de promotion.
 - `docs/guides/configuration.md` : retrait de `LoDb__Seo__SitemapVersionWindow` ; le service
   de construction de l'index au déploiement.
-- `docs/produit/seo-indexabilite.md` : « Politique canonique ».
+- `docs/produit/seo-indexabilite.md` : « Règle en vigueur » passe à la règle par état, la
+  chronologie note la bascule.
+- `docs/produit/pre-rendu-catalogue-cdn.md` : les passages qui ne stockent qu'une `200` de
+  classe `archived` et font imposer `archived` par nginx, le rejet du `noindex` « la règle des
+  canoniques suffit », et « les canoniques (amendement du 2026-10-14) et les sitemaps ne
+  changent pas ».
+- `docs/architecture/architecture.md` : la règle des canoniques citée dans la vue
+  d'ensemble.
+- L'ADR 0005 : une note « Remplacé » en ligne dans les amendements du 2026-10-11 (fenêtre),
+  du 2026-10-14 et du 2026-10-16 (entité retirée), et l'état de l'amendement du 2026-10-22
+  passé à « en vigueur ». L'ADR 0011 : l'état de son amendement du 2026-10-22, et la note sur
+  la péremption des canoniques stockées. L'un et l'autre aussi si l'implémentation tranche
+  autrement un point de leurs amendements du 2026-10-22.
 - `tools/routing/check-urls.sh` : le segment `changes`.
-- L'ADR 0005 et l'ADR 0011 si l'implémentation tranche autrement un point de leurs
-  amendements du 2026-10-22.
+- Le changelog : les entrées non publiées qui décrivent « Dans les patchs précédents » et la
+  canonique d'une fiche d'ancien patch vers celle du dernier patch (2026-10-11, 2026-10-14,
+  2026-10-21) deviennent fausses au lot L5. Publier la release en attente avant L5, ou faire
+  dire le remplacement par l'entrée du lot L7.
 
 ## 8. Tests
 
@@ -418,8 +437,8 @@ plus.
 Selon `AGENTS.md` : conventions, garde-fous, un commit par changement cohérent, aucune ligne
 d'attribution. Pas de push direct sur `dev`, `test` ni `main`.
 
-1. **Branche `feat/seo-une-page-par-etat`**, partie de `docs/seo-une-page-par-etat` (ou de
-   `dev` une fois cette branche fusionnée) : lots L0 à L7.
+1. **Branche `feat/seo-une-page-par-etat`**, partie de `dev` une fois cette spécification
+   fusionnée : lots L0 à L7.
    Une pull request vers `dev`, avec une CI verte. Avant la PR, sur la pile locale :
    reconstruction de l'index sur les fixtures, une petite passe, des `<head>` et
    des sitemaps conformes au § 3.3.

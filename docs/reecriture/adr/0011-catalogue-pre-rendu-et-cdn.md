@@ -1,20 +1,35 @@
 # ADR 0011 — Catalogue pré-rendu et CDN
 
 - **Statut** : acceptée — 2026-10-20
+- **État** (2026-10-22) :
+  - le stockage, la passe et la lecture par nginx (lots 0 à 3 de la spécification) sont en
+    prod depuis le 2026-10-21 (PR #93), la lecture par nginx derrière
+    `LODB_PAGES_STORE_ENABLED` ;
+  - le SSR dédié et le régulateur sont en prod le 2026-10-21 (PR #96), la file de la demande
+    et la vitesse réglable le 2026-10-22 (PR #99) ;
+  - **le CDN (lot 4) n'est pas construit** : rien de Cloudflare dans le dépôt ;
+  - les pages révisables (amendement du 2026-10-22) sont décidées, pas encore implémentées.
 - **Révise** (amendements du 2026-10-20) : [ADR 0002](0002-hote-serveur-unique.md) (un second
   hôte sortant), [ADR 0003](0003-ingestion-proactive-et-taches-de-fond.md) (la tâche de
   précalcul), [ADR 0004](0004-stockage-etat-et-scaling.md) (nginx sert aussi depuis un
   stockage objet), [ADR 0005](0005-web-ssr-urls-et-seo.md) (`lodb_archive` en cache chaud,
   la classe `archived` gardée un an, le CDN devant le site)
-- **Amendement** : le 2026-10-21, la passe a son propre SSR, de faible priorité, et un rythme
-  qui suit le CPU libre de l'hôte (voir § « Amendement du 2026-10-21 »)
+- **Amendements** :
+  - le 2026-10-21, la passe a son propre SSR, de faible priorité, et un rythme qui suit le CPU
+    libre de l'hôte (voir § « Amendement du 2026-10-21 — un SSR et un rythme pour la passe ») ;
+  - le 2026-10-21 encore, une file automatique précalcule les pages que le SSR des visiteurs
+    refuse, la plus demandée d'abord (voir § « Amendement du 2026-10-21 — file de la
+    demande ») ;
+  - le 2026-10-22, la vitesse d'une passe se règle à la main, sous un frein d'urgence, sur
+    plusieurs moteurs (voir § « Amendement du 2026-10-22 — vitesse réglable ») ;
+  - le 2026-10-22 encore, le stockage garde aussi des pages révisables, celles des anciens
+    patchs dont l'état est encore ouvert, pré-calculées de nouveau quand une promotion le
+    clôt ; la passe sert d'abord les pages indexables (voir § « Amendement du 2026-10-22 —
+    pages révisables »). Décidé, pas encore implémenté.
 - **Remplace** : la spécification du cache recyclé de 68 Go, interrompue et jamais
   publiée
 - **Détail** : [spécification](../../produit/pre-rendu-catalogue-cdn.md) (lots, réglages,
   tests, livraison)
-- **Amendements** : le 2026-10-22, le stockage garde aussi des pages révisables, celles des
-  anciens patchs dont l'état est encore ouvert, pré-calculées de nouveau quand une promotion
-  le clôt ; la passe sert d'abord les pages indexables (voir § « Amendement du 2026-10-22 »)
 
 ## Contexte
 
@@ -124,8 +139,9 @@ visiteur ─► Cloudflare ── en cache ────────────�
   à la main, n'est pas terminée). Le staging reste presque vide : des passes
   manuelles sur un petit périmètre.
 - Un panneau d'administration pilote la passe sous `/api/admin/prerender` ; chaque action
-  est auditée. Il montre l'epoch servie et, quand une passe est complète, la consigne de
-  bascule.
+  est auditée. Il montre l'epoch servie et la consigne de bascule dès qu'une epoch plus
+  récente, que la passe active n'écrit pas, n'a plus aucun manque, quelles que soient les
+  passes qui l'ont remplie (`EpochReadiness`).
 
 ### nginx
 
@@ -144,14 +160,23 @@ visiteur ─► Cloudflare ── en cache ────────────�
   cache|store|ssr` dit d'où vient chaque page épinglée.
 - La classe `archived` passe à un `s-maxage` d'un an : une page d'ancien patch ne change
   qu'avec une epoch.
+
+  *Limite constatée le 2026-10-22 : sous la règle des canoniques du 2026-10-14, encore celle
+  du code, la canonique d'une fiche d'ancien patch dépend du dernier patch. Une page stockée
+  garde celle de son rendu jusqu'à l'epoch suivante, même quand l'entité a été retirée ou
+  renommée depuis : à la promotion, seule la version qui quitte le dernier patch est
+  recalculée (`PrerenderPromotionListener`). Rien ne borne cette péremption ; l'amendement du
+  2026-10-22 (pages révisables) la traite.*
 - Un bundle que le SSR ne connaît plus (404) est cherché sous `build/` dans le stockage.
 - `front-builds` garde ses bundles **400 jours** (`LODB_FRONT_BUILDS_RETENTION_DAYS`, le job
   de déploiement refuse moins de 395), plus que l'an de la classe `archived`. La copie sous
   `build/` ne vaut que pour un build dont la passe a écrit une page : une page rendue par le
   SSR sur un raté du stockage, que `lodb_archive` garde jusqu'à un an, nomme les bundles d'un
-  build jamais copié (toutes les pages avant le lot 3, celles du staging, sans passe
-  automatique, et celles des déploiements entre deux passes).
-- `LODB_PAGES_STORE_ENABLED=0` (défaut en local et en CI) laisse nginx tel qu'avant.
+  build jamais copié (toutes les pages rendues avant la mise en service du stockage, celles
+  du staging, sans passe automatique, et celles des déploiements entre deux passes).
+- `LODB_PAGES_STORE_ENABLED=0` (défaut de `compose.yaml` et de l'image nginx) laisse nginx tel
+  qu'avant ; la pile de développement et les E2E de la CI l'allument sur le stockage simulé
+  (`compose.override.yaml`).
 
 ### CDN
 
@@ -187,6 +212,9 @@ Les lots 0 à 3 (stockage, passe, nginx) partent en prod et la passe démarre **
 travail de DNS : le lot 3 soulage seul le budget saturé, et son effet se mesure seul. Le CDN
 suit.
 
+*Fait : les lots 0 à 3 sont en prod depuis le 2026-10-21. Le CDN n'est pas commencé ; sa date
+reste à fixer.*
+
 ## Alternatives écartées
 
 | Alternative | Pourquoi non |
@@ -200,7 +228,7 @@ suit.
 | Bascule de l'epoch à chaud (fichier ou `map` lu par nginx) | Exige un signal de rechargement entre conteneurs, donc le socket Docker, que le durcissement refuse |
 | Certificat d'origine Cloudflare | Refusé par les navigateurs : il casse le retour en « DNS only », les apps et les vérifications directes |
 | Purge complète du CDN à chaque déploiement | Une rafale de ratés sur ~4 millions d'adresses, de fausses alertes et de la sortie facturée, pour des pages qui ne changent pas |
-| MinIO en production | Toujours écarté ([ADR 0004](0004-stockage-etat-et-scaling.md)) ; il sert aux tests et au développement seulement |
+| MinIO en production | Toujours écarté ([ADR 0004](0004-stockage-etat-et-scaling.md)) ; il sert aux tests seulement (`PageStoreContainerFixture`). La pile de développement simule le stockage avec moto (`pages-store`, `compose.override.yaml`) : les images officielles de MinIO ne sont plus publiées, les tests tirent celle d'un fork communautaire épinglée par empreinte |
 
 ## Conséquences
 
@@ -213,9 +241,11 @@ suit.
   SSR, que `lodb_archive` garde un an.
 - **+** Le CDN rapproche toutes les pages des visiteurs lointains et des robots.
 - **−** Un correctif de sécurité du front qui bascule tout de suite sur une epoch vide
-  renvoie **toutes** les pages épinglées vers le SSR saturé pendant les 10 à 16 jours de la
-  passe : les 503 reviennent. On l'atténue par l'ordre de la demande et un budget de passe
-  relevé.
+  renvoie **toutes** les pages épinglées vers le SSR saturé pendant toute la passe : les 503
+  reviennent. On l'atténue par l'ordre de la demande et un budget de passe relevé. *La durée
+  estimée ici (10 à 16 jours) est dépassée : 27 pages par minute mesurées le 2026-10-21, puis
+  900 par minute au plus en mode manuel, soit 3 à 7 jours pour 4,2 à 9 millions de pages
+  (amendement du 2026-10-22 — vitesse réglable ; spécification, « Débit attendu »).*
 - **−** La lecture du stockage dépend de l'adresse du VPS : s'il en change, chaque lecture
   répond 403 et nginx retombe sans bruit sur le SSR, pendant que la passe continue d'écrire
   (l'écriture ne dépend pas de l'adresse). `X-LoDb-Source` le rend visible ; la politique
@@ -223,8 +253,8 @@ suit.
 - **−** Une lecture anonyme conditionnée par l'adresse à côté de l'IAM n'est pas documentée
   par Scaleway, ni le passage intact des métadonnées. La sonde `verifier` les prouve avant
   que nginx lise le stockage en prod ; à défaut, la lecture devient publique sur `pages/*`
-  et `build/*`. Les tests et le développement utilisent MinIO, qui ne prouve rien de
-  Scaleway.
+  et `build/*`. Les tests utilisent MinIO, la pile de développement moto : ni l'un ni l'autre
+  ne prouve rien de Scaleway.
 - **+** **Facturation tranchée : l'arrondi se fait sur le total du projet, pas par objet.**
   Scaleway compte « 1 Ko pendant 1 seconde comme 1 Go-heure » sans dire sur quoi il arrondit.
   Mesure du 20 octobre 2026 : 300 objets de 1 Ko en `ONEZONE_IA`, écrits entre 18 h 33 et
@@ -262,7 +292,46 @@ ralentissement mesurable des visiteurs jusqu'à ~80 % d'occupation de l'hôte. D
 et réglages : [spécification](../../produit/pre-rendu-catalogue-cdn.md), lot 2, « Capacité
 adaptative de la passe ».
 
+## Amendement du 2026-10-21 — file de la demande
+
+Le premier jour de prod, le SSR des visiteurs refuse ~160 rendus d'anciens patchs par minute,
+pendant que la passe manuelle avance dans l'ordre des unités : les pages vraiment demandées
+attendent leur tour.
+
+- Chaque page d'ancien patch que le SSR des visiteurs refuse est comptée par lui, en mémoire
+  et de façon cumulative, sous son chemin canonique ; l'API relève ces comptes sur le port
+  des métriques (`GET /refused`) toutes les 30 s (`PrerenderDemandCollectWorker`) et en tient
+  la file `prerender_demand` (migration additive).
+- `PrerenderDemandWorker` précalcule ces pages dans l'epoch servie, la plus demandée d'abord,
+  par le chemin même de la passe (SSR de la passe, verdicts, build copié d'abord). Pendant une
+  passe, la file tient au plus la moitié des places en vol (`QueueSharePercent`) ; sans passe,
+  toutes. Les passes manuelles ne changent pas.
+- Interrupteur : `LODB_PRERENDER_DEMAND_ENABLED`. Bornes, rythme et pupitre :
+  [spécification](../../produit/pre-rendu-catalogue-cdn.md), lot 2, « File automatique des
+  pages refusées ».
+
+## Amendement du 2026-10-22 — vitesse réglable
+
+La première unité de prod a avancé à 27 pages par minute : la borne était l'espacement du
+régulateur, pas le CPU (un rendu coûte ~0,1 s de CPU au moteur).
+
+- **Mode manuel**, réglé au pupitre : une cible de 1 à `LODB_PRERENDER_MANUAL_MAX` pages par
+  minute (900 sur un hôte), gardée en base. Le mode adaptatif reste le défaut,
+  `LODB_PRERENDER_PACE_MODE=fixed` le coupe-circuit.
+- **Frein d'urgence** (`ManualDecision`) : un visiteur du dernier patch refusé, ou 3 minutes
+  avec l'hôte à 90 % ou plus, ou un signal rouge de ce qu'attendent les visiteurs, arrêtent
+  tout nouveau rendu pendant 5 minutes. Les 503 des anciens patchs ne freinent pas.
+- **Plusieurs moteurs** : `web-ssr-prerender` en `LODB_PRERENDER_RENDERERS` répliques (2 sur un
+  hôte), un cœur chacune, au poids CPU le plus bas ; l'API répartit les rendus.
+- Commande d'exploitation `prerender pause|resume`, pour un déploiement pendant une passe.
+
+Débit attendu à 900 pages par minute : 4,2 millions de pages en un peu plus de 3 jours. Détail :
+[spécification](../../produit/pre-rendu-catalogue-cdn.md), lot 2, « Vitesse réglable ».
+
 ## Amendement du 2026-10-22 — pages révisables
+
+*Décidé, pas encore implémenté : il part au même déploiement que la règle par état de
+l'ADR 0005 (amendement du 2026-10-22).*
 
 L'[ADR 0005](0005-web-ssr-urls-et-seo.md) (amendement du 2026-10-22) indexe une page par état
 d'entité. La page d'un ancien patch n'est donc plus immuable dans tous les cas. Celle d'un

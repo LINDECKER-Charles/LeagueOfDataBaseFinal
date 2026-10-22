@@ -2,6 +2,13 @@
 
 - **Statut** : acceptée — 2026-09-24
 - **Remplace** : rendu Twig + îlots Vue, locale portée par la session et un cookie
+- **En vigueur dans le code** (2026-10-22) : la grammaire d'URL, le hreflang et la CSP du texte
+  et de leurs amendements ; pour les canoniques et les sitemaps, **l'amendement du
+  2026-10-14**, complété le 2026-10-16 (anciennes URL) ; depuis le 2026-10-20, les pages
+  stockées gardent la canonique de leur rendu (limite connue, ADR 0011). L'amendement du 2026-10-22 est
+  décidé, pas encore implémenté : il prend effet au déploiement du changement qui le porte,
+  d'un seul coup et sans interrupteur. Le CDN de l'amendement du 2026-10-20 n'est pas construit. Règle en vigueur et
+  avancement : [`seo-indexabilite.md`](../../produit/seo-indexabilite.md).
 - **Amendements** :
   - le 2026-10-10, les pages des anciens patchs ont leur propre cache, dont la clé ne contient
     plus la révision de déploiement (voir § « Amendement du 2026-10-10 ») ;
@@ -22,7 +29,8 @@
   - le 2026-10-22, une page indexée par état d'entité : chaque suite de patchs où une fiche ne
     change pas a une page indexée, son premier patch ; chaque patch a sa page de changements,
     et l'index des sitemaps annonce toutes les versions (voir § « Amendement du 2026-10-22 »).
-    Il remplace l'amendement du 2026-10-14 pour les canoniques et les sitemaps.
+    Il remplace l'amendement du 2026-10-14 pour les canoniques et les sitemaps, **à sa
+    bascule** : décidé, pas encore implémenté.
 
 ## Contexte
 
@@ -86,8 +94,8 @@ nginx. Le mode de rendu est choisi route par route :
 /{locale}/                                      accueil
 /{locale}/champions                             liste, dernier patch
 /{locale}/champions/{id}                        détail, dernier patch (URL canonique courte)
-/{locale}/{version}/champions/{id}              détail, patch passé (amendement du 2026-10-22)
-/{locale}/[{version}/]changes                   ce qu'un patch a changé (amendement du 2026-10-22)
+/{locale}/{version}/champions/{id}              détail, patch passé (canonique : amendements du 2026-10-14 et du 2026-10-22)
+/{locale}/[{version}/]changes                   ce qu'un patch a changé (amendement du 2026-10-22, à venir)
 /{locale}/items/{id}-{slug}   /{locale}/runes/{id}-{slug}   /{locale}/summoners/{id}
 /{locale}/u/{username}                          profil public
 /b/{token}                                      partage de build (hors locale, noindex)
@@ -116,10 +124,13 @@ nginx. Le mode de rendu est choisi route par route :
 ### SEO porté et étendu
 
 - Canonique = schéma + hôte + chemin, sans query. `www` et `.fr` restent redirigés à
-  l'edge (nginx), pas dans l'app.
+  l'edge (nginx), pas dans l'app. *Exception depuis le 2026-10-12 : au-delà de la première
+  page, une liste est sa propre canonique avec `?page=N` (`catalogue-list-seo.ts`).*
 - **hreflang** entre les 21 locales + `x-default` (nouveau).
-- **Sitemaps par locale** ; celui d'une version passée liste sa page de changements et les
-  fiches indexées chez elle, et l'index les annonce tous (amendement du 2026-10-22).
+- **Sitemaps par locale**. Aujourd'hui (amendement du 2026-10-14), l'index n'annonce que les
+  `latest.xml` des 21 langues ; à la bascule de l'amendement du 2026-10-22, celui d'une
+  version passée liste sa page de changements et les fiches indexées chez elle, et l'index les
+  annonce tous.
 - JSON-LD conservé à l'identique : `@graph` du site, BreadcrumbList, VideoGame,
   PropertyValue pour les stats (jamais Product ou Offer), ItemList, ProfilePage, FAQPage,
   Dataset… Encodage sûr contre la XSS, champs vides retirés.
@@ -159,6 +170,12 @@ chunks.
 | `lodb_archive` | `^/{locale}/[0-9]` : version épinglée dans le chemin | **epoch** + URL, sans révision | 6 Go, 7 j, gardée à la 2ᵉ demande |
 | `lodb_assets` | `/build/` | nom du fichier | 1 Go, 30 j |
 
+*Remplacé le 2026-10-20 pour `lodb_archive` (20 Go, 90 j, gardée à la 1ʳᵉ demande, devant le
+stockage pré-rendu), la classe `archived` (un an au lieu d'une semaine, ce qui retire le
+compromis des deux semaines ci-dessous) et la rétention des bundles (400 jours,
+`LODB_FRONT_BUILDS_RETENTION_DAYS`) : § « Amendement du 2026-10-20 » et
+[ADR 0011](0011-catalogue-pre-rendu-et-cdn.md).*
+
 - **Epoch** (`LODB_ARCHIVE_EPOCH`) : la seule purge des anciens patchs. Elle se monte à la
   main quand le chrome, la CSP ou le contrat `/api` changent de façon visible, et après tout
   correctif de sécurité du front, avec le retrait du chunk vulnérable
@@ -191,7 +208,9 @@ chunks.
   (`latest.xml` des 21 locales) et ceux des **12** versions listées ensuite par Data Dragon
   (`LoDb__Seo__SitemapVersionWindow`, `12` par défaut, `0` pour le dernier patch seul, une
   valeur négative refusée au démarrage). Il annonçait auparavant chaque version listée dans
-  chaque locale : des milliers de sitemaps, des millions d'URL épinglées.
+  chaque locale : des milliers de sitemaps, des millions d'URL épinglées. *Remplacé le
+  2026-10-14 : la fenêtre vaut `0` par défaut (`SeoOptions.DefaultSitemapVersionWindow`) ;
+  l'amendement du 2026-10-22 la retire à sa bascule.*
 - **Rien ne disparaît** : le sitemap d'une version hors de la fenêtre reste servi à son URL,
   immuable, et ses pages restent canoniques et indexables. Ni `noindex` ni `Disallow`. Le
   sitemap principal de chaque locale ne change pas, sinon qu'il liste la nouvelle page
@@ -236,8 +255,10 @@ chunks.
 
 ## Amendement du 2026-10-14 — une page indexée par entité
 
-*Remplacé le 2026-10-22 pour la règle des canoniques et les sitemaps : une page indexée par
-état d'entité, et non plus par entité (§ « Amendement du 2026-10-22 »).*
+*En vigueur dans le code. Remplacé pour la règle des canoniques et les sitemaps par
+l'amendement du 2026-10-22 (une page indexée par état d'entité), décidé mais pas encore
+implémenté : cette règle reste celle du site jusqu'au déploiement du changement qui porte
+la règle par état.*
 
 Le site a perdu presque toute sa visibilité dans Google depuis le 16 août 2026
 ([diagnostic](../../produit/seo-anciens-patchs.md)) : 2 570 pages indexées contre ~20 000 fin
@@ -294,6 +315,9 @@ patchs restent consultables sans lui faire concurrence.
   jusqu'à deux semaines) gardent leur canonique jusqu'à expiration ; une entité que le patch
   suivant retire ou renomme pointe ce temps vers une URL courte en 404 ou en 301. Rare, borné,
   accepté. Le `<head>` des anciens patchs change : l'epoch par défaut monte à `3`.
+  *Plus borné depuis le 2026-10-20 : une page gardée un an (`archived`) ou stockée par le
+  précalcul garde la canonique de son rendu jusqu'à l'epoch suivante (ADR 0011, note de
+  § nginx). L'amendement du 2026-10-22 traite ce cas (pages révisables).*
 
 **Mesure** (propriétaire), dans la Search Console, 4 à 8 semaines après le déploiement en
 production, comparée au relevé du 14 octobre 2026 :
@@ -360,19 +384,27 @@ chaque page d'ancien patch dans un stockage objet. Pour cette ADR :
   et nginx la repose ; les en-têtes constants restent à l'edge. `X-LoDb-Source:
   cache|store|ssr` dit d'où vient une page épinglée. Le SSR ne lit toujours aucun cookie et
   ne détient aucun secret ; l'en-tête du précalcul est effacé par nginx côté public.
-- **CDN** : Cloudflare se place devant `league-of-data-base.com`, `www`, `test` et le `.fr`,
-  et garde les pages aux durées de l'origine (`s-maxage`). `/` n'y est jamais gardé : sa 302
-  dépend d'`Accept-Language` et du cookie, que Cloudflare ne distingue pas. La grammaire
-  d'URL, les canoniques et les sitemaps ne changent pas.
+- **CDN** (prévu, pas encore construit au 2026-10-22 : lot 4 de la
+  [spécification](../../produit/pre-rendu-catalogue-cdn.md)) : Cloudflare se placera devant
+  `league-of-data-base.com`, `www`, `test` et le `.fr`, et gardera les pages aux durées de
+  l'origine (`s-maxage`). `/` n'y sera jamais gardé : sa 302 dépend d'`Accept-Language` et du
+  cookie, que Cloudflare ne distingue pas. La grammaire d'URL, les canoniques et les sitemaps
+  ne changent pas.
 
 ## Amendement du 2026-10-22 — une page indexée par état
 
+*Décidé, pas encore implémenté (lots L0 à L7 de la
+[spécification](../../produit/seo-une-page-par-etat.md)). Jusqu'au déploiement qui le porte,
+le code applique l'amendement du 2026-10-14.*
+
 La règle du 2026-10-14 n'indexe qu'une page par entité et par langue, celle du dernier patch :
 ~22 800 pages. L'historique des patchs, qui est le contenu propre de la base, reste hors de
-Google. Celle du 2026-07-18 indexait chaque patch : ~4,2 millions de pages, dont **~85 % sont
-la copie exacte de la page de la version d'avant** (mesure du 22 octobre 2026 sur Data
-Dragon : 13,5 % des pages d'objets diffèrent de la version précédente, 17,7 % des pages de
-champions, 6,8 % des sorts). La chute d'août est venue de ces copies, pas du volume. La charge
+Google. Celle du 2026-07-18 indexait chaque patch : ~200 000 pages par langue sur l'ancien
+site, qui n'avait qu'une langue par hôte, et ~4,2 millions sur la nouvelle pile en 21 langues
+(du 4 au 11 octobre). Dans les deux cas, **~85 % sont la copie exacte de la page de la version
+d'avant** (mesure du 22 octobre 2026 sur Data Dragon : 13,5 % des pages d'objets diffèrent de
+la version précédente, 17,7 % des pages de champions, 6,8 % des sorts). La chute d'août,
+survenue sur l'ancien site, est venue de ces copies, pas du volume. La charge
 qui justifiait la fenêtre du 2026-10-11 est désormais tenue par le stockage pré-rendu et la
 file de la demande ([ADR 0011](0011-catalogue-pre-rendu-et-cdn.md)). Constat, mesures et
 détail : [spécification](../../produit/seo-une-page-par-etat.md).

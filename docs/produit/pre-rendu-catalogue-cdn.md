@@ -1,5 +1,21 @@
 # Catalogue pré-rendu : stockage objet et CDN
 
+> **État des lots au 2026-10-22**
+>
+> | Lot | État |
+> |---|---|
+> | 0 — Décision écrite | fait : [ADR 0011](../reecriture/adr/0011-catalogue-pre-rendu-et-cdn.md) (2026-10-20) |
+> | 1 — Stockage | fait, en prod le 2026-10-21 (PR #85, #93) |
+> | 2 — Passe de précalcul | fait, en prod le 2026-10-21 ; capacité adaptative (PR #94, en prod par #96), file automatique (PR #98) et vitesse réglable (PR #97), en prod le 2026-10-22 (#99) |
+> | 3 — nginx sert depuis le stockage | fait, en prod le 2026-10-21 (PR #85, #91), la lecture derrière `LODB_PAGES_STORE_ENABLED` |
+> | 4 — CDN Cloudflare (4a `infra-vps`, 4b DNS, 4c LoDb) | **non commencé** ; date à fixer |
+> | 5 — Mesure de l'effet | à relever, 7 jours après la lecture du stockage en prod |
+> | 6 — Alléger les pages | plus tard |
+>
+> Le cap d'indexation a changé depuis cette spécification : une page indexée par état
+> ([`seo-une-page-par-etat.md`](seo-une-page-par-etat.md), décidée le 2026-10-22, pas encore
+> implémentée). Les passages d'ici qu'elle modifie sont listés dans son § 7.
+
 Chantier décidé le 20 octobre 2026. Toutes les pages des anciens patchs sont calculées une
 fois, rangées dans un stockage objet (Scaleway, Paris), et le site ne fait plus que les
 servir. Un CDN (Cloudflare) les rapproche des visiteurs du monde entier. Le rendu SSR ne
@@ -271,7 +287,8 @@ révise renvoient vers elle par un amendement daté :
     (`${LODB_ARCHIVE_SERVE_EPOCH}`), `__AutoEnqueueOnPromotion` (faux au staging ; faux en prod
     jusqu'à la fin de la passe complète, puis vrai), `__AllowInsecureEndpoint` (développement).
     Vides, elles laissent la tâche en sommeil : `Add*` ne fait aucune I/O ;
-  - nginx : `LODB_PAGES_STORE_ENABLED` (`0` par défaut : en local et en CI, rien ne change),
+  - nginx : `LODB_PAGES_STORE_ENABLED` (`0` par défaut dans `compose.yaml` et l'image ; la pile
+    de développement et les E2E de la CI l'allument sur le stockage simulé),
     `LODB_PAGES_STORE_SCHEME`, `_HOST`, `_PORT`, `_BUCKET`, et l'epoch servie
     (`LODB_ARCHIVE_SERVE_EPOCH`) ;
   - SSR : le budget de la voie `prerender` (lot 2).
@@ -1209,7 +1226,7 @@ Selon `docs/guides/tests.md`, au plus près de la couche qui porte le comporteme
 Selon `AGENTS.md` : conventions, garde-fous, un commit par changement cohérent, aucune ligne
 d'attribution. Pas de push sur `dev`, `test` ni `main`.
 
-1. **Cette branche (`feat/pre-rendu-catalogue`)** : lots 0 à 3, une pull request vers `dev`
+1. **La branche `feat/pre-rendu-catalogue`** (fusionnée, PR #85) : lots 0 à 3, une pull request vers `dev`
    avec une CI verte. Avant la PR, sur la pile locale :
    - une passe sur quelques (version, langue) va au bout ;
    - nginx sert les pages depuis le stockage simulé ;
