@@ -22,6 +22,6 @@ export const LEGAL_INFO = new InjectionToken<LegalInfo>('LEGAL_INFO', {
     siret: 'N/A',
     dpoEmail: 'charles.lindecker@outlook.fr',
     jurisdictionCountry: 'France',
-    effectiveDate: '2026-10-11',
+    effectiveDate: '2026-10-22',
   }),
 });

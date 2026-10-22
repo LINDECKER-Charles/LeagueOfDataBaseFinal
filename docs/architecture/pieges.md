@@ -221,10 +221,8 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   les messages restent `pending` avec 0 tentative jusqu'à ce que l'heure libère une place.
   Un e-mail « qui n'arrive pas » se cherche d'abord dans la jauge `lodb_outbox_deferred` et
   le journal `outbox.hourly_cap.reached` ; un lien retenu plus d'une heure arrive expiré.
-- **Comptes non vérifiés effacés après 7 jours** (tâche `accounts.unverified_purge`, horaire),
-  sauf build, clé API, don, rôle, bannissement, soutien ou connexion Google : un compte de
-  test non vérifié d'une pile locale qui tourne depuis une semaine disparaît, c'est voulu.
-  Le renvoi de l'e-mail de vérification est limité à 5 par compte, puis 1 par jour.
+- **Renvoi de l'e-mail de vérification** limité à 5 par compte, puis 1 par jour : un compte
+  non vérifié n'est jamais effacé d'office (purge retirée le 2026-10-22).
 - **Hôtes de l'API** (`AllowedHosts`, posé par `compose.deploy.yaml`) : un `Host` absent de la
   liste reçoit un `400`. Un nouvel appelant interne (service, sonde) doit utiliser un nom
   listé (`lodb-api`, `localhost`, `127.0.0.1`) ; le port 9464 n'est pas filtré, la collecte
