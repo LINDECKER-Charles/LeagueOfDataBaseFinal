@@ -6,8 +6,7 @@ import { accountLinkIn, accountLinkMailedTo, lastMailTo } from './mailbox';
 // The account's whole life across the API, its outbox and a mailbox: the links the e-mails
 // carry, their token in the fragment, and the session cookies of a real browser exist only on
 // the stack. Each rule of the forms is Vitest's or the API's.
-const BANNER =
-  'Confirm your email address to create builds and vote: an unconfirmed account is deleted after 7 days.';
+const BANNER = 'Confirm your email address to create builds and vote.';
 // Meets every rule of the checklist, like the first one, and differs from it.
 const NEW_PASSWORD = 'Shurima-Sun-Disc-2047!';
 // The token of an e-mail link sits in its fragment, then leaves the address bar.

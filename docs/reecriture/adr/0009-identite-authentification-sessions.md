@@ -105,11 +105,9 @@
 - **Vote** : e-mail vérifié et compte vieux de 24 h (`LoDb:Builds:Votes`), sinon 403
   (`email-not-verified`, `account-too-recent`).
 - **Vérification d'e-mail** : renvoi limité par compte, 5 en tout puis 1 par 24 h
-  (`LoDb:Accounts:VerificationResend`). Un compte encore non vérifié 7 jours après sa
-  création est effacé par une tâche horaire (`LoDb:Accounts:UnverifiedPurge`), sauf s'il
-  détient un build, une clé API, un don, un rôle, un bannissement, le statut de soutien ou
-  une connexion Google ; l'effacement suit le chemin d'une suppression de compte et se
-  journalise (`account.delete`, `reason` `email-unverified`).
+  (`LoDb:Accounts:VerificationResend`). Un compte non vérifié est conservé : il ne crée
+  ni build ni clé API et ne vote pas, mais rien ne l'efface d'office (amendement du
+  2026-10-22).
 - Bannissement : vérifié à la connexion **et** lors de la revalidation périodique du
   security stamp (quelques minutes). Il prend donc effet sur les sessions déjà
   ouvertes. Les builds d'un banni sortent des tendances, mais leurs liens de partage
@@ -213,3 +211,7 @@
   (§ Sessions, exception à « aucune session serveur ») ; clé TOTP scellée, codes de secours
   hachés, codes TOTP à usage unique, identifiant du journal en HMAC, garde anti-CSRF selon
   le schéma authentifié, `AllowedHosts` (§ Second facteur et journal).
+- **2026-10-22** : fin de l'effacement des comptes non vérifiés après 7 jours (tâche
+  `accounts.unverified_purge` et `LoDb:Accounts:UnverifiedPurge` retirées) : des joueurs
+  perdaient leur compte faute d'avoir reçu l'e-mail à temps (§ Protections). Les
+  `account.delete` de `reason` `email-unverified` déjà journalisés restent lisibles.
