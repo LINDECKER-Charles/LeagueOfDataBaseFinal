@@ -123,12 +123,14 @@ public sealed class FieldChangesTests(StateApiFixture api)
         Segments = [],
     };
 
+    // Read as the renderer reads: a public caller's load may be refused by the cold gate
+    // while another test loads a catalog in the same second.
     private async Task<CatalogSnapshot> CatalogAsync(string version, string language)
     {
         var load = await api.Reader.GetAsync(
             PatchVersion.Parse(version),
             DdragonLanguage.Parse(language),
-            ColdDemand.Synchronous,
+            ColdDemand.Synchronous.By(ColdCaller.Internal),
             StateApiFixture.Token);
         Assert.True(load.IsReady, $"{version}/{language}: {load.Status}");
         return load.Catalog;
