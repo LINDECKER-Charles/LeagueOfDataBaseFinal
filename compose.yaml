@@ -387,8 +387,10 @@ services:
       LODB_PAGE_CACHE_KEYS_SIZE: ${LODB_PAGE_CACHE_KEYS_SIZE:-32m}
       LODB_PAGE_CACHE_INACTIVE: ${LODB_PAGE_CACHE_INACTIVE:-24h}
       # Raised by hand only, the purge of the past patches' pages (docs/guides/configuration.md):
-      # 3 since their head points to the latest patch's canonical (ADR 0005, amendment of
-      # 2026-10-14), which the pages cached before do not.
+      # the chrome, the CSP or the /api contract changed visibly, or pages of the served epoch were
+      # rendered again in place (a new fingerprint scheme). Serving another epoch of the store
+      # (LODB_ARCHIVE_SERVE_EPOCH, the key's second part) purges it already: the switch to one
+      # indexed page per state (2026-10-22) leaves it at 3.
       LODB_ARCHIVE_EPOCH: ${LODB_ARCHIVE_EPOCH:-3}
       # The past patches' cache is the hot copy of the object store (ADR 0011): every page
       # kept at its first request, for months, within 20 GB of disk.
