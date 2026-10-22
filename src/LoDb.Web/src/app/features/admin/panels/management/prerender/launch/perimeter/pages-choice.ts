@@ -18,7 +18,8 @@ import { AdminTextPipe } from '../../../../../shared/admin-text-pipe';
       <div class="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-labelledby="launch-pages-title">
         @for (choice of choices; track choice.isOpeners) {
           <label
-            class="flex cursor-pointer flex-col gap-1.5 border border-gold/28 p-3 has-checked:border-hex has-checked:bg-hex/5"
+            class="flex cursor-pointer flex-col gap-1.5 border border-gold/28 p-3
+              has-checked:border-hex has-checked:bg-hex/5"
             [attr.data-pages]="choice.key"
           >
             <span class="flex items-center gap-2 text-gold-bright">

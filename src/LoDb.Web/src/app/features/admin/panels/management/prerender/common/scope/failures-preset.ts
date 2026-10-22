@@ -62,10 +62,9 @@ function presetOf(
 /**
  * The relaunch of the versions a pass did not complete cleanly (§ 3.1): those with a cell
  * failed or with failed pages, and for a cancelled pass those it never reached or cut short;
- * over the pass's locales, types, pages and epoch (the served one when it was retired since), leaving
- * out what the epoch already holds. Its
- * units and pages say on the button what it renders again: a unit with two failed pages is
- * rendered whole. Null when nothing is to render again.
+ * over the pass's locales, types, pages and epoch (the served one when it was retired since),
+ * leaving out what the epoch already holds. Its units and pages say on the button what it renders
+ * again: a unit with two failed pages is rendered whole. Null when nothing is to render again.
  */
 export function failuresPreset(
   pass: PrerenderPassView,
