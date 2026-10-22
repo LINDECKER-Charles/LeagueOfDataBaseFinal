@@ -718,22 +718,36 @@ changelog du comportement qu'il change (§ 7), selon `AGENTS.md`. Un test exista
 casse, E2E compris, se corrige dans ce lot. Les lots arrivent sur la même branche, en une PR
 (§ 10).
 
-| Lot | Contenu | Dépend de |
+Le contrat du lot L0 a réparti les fichiers entre les lots pour qu'ils travaillent en
+parallèle : le tableau dit ce que chacun a livré, l'intégration ce qu'elle a ajouté en les
+fusionnant (L1 à L6 dans cet ordre).
+
+| Lot | Contenu livré | Dépend de |
 |---|---|---|
-| **L0 Contrat** | **Tout le schéma du chantier**, en une migration additive : `catalog_state_generation`, `catalog_entity_state`, `prerender_revision` et la marque de son producteur. **Contrat OpenAPI** : sur les fiches, `canonical` requis, `state`, `history`, `next`, `presentInLatest`, `changes` ; `GET …/changes` mappé, réponse en bouchon jusqu'à L3 ; `CatalogMeta` et la plus ancienne page de patch ; énumération `ChangeField` (gabarits fermés, sujet facultatif). Records sous `Modules/Catalog/`, client régénéré (`npm run api:generate`). **Interfaces** : lectures de l'index (§ 3.2) avec un double de test ; `PromotionStage` sur `IPromotionListener`, tri dans `NotifyAsync`, étapes déclarées par les deux écouteurs existants, test d'ordre. **Classe `revisable`** côté front (`CacheClass`, `CACHE_CONTROL`) et `cache_of` de `check-urls.sh` | — |
-| **L1 Domaine** | Projections et empreintes par ressource, `DdragonText.PlainText`, SHA-256 et `FingerprintScheme`, `ChampionStats` descendu dans `LoDb.Domain`, moteur de différences (découpage par langue), purs, dans `LoDb.Domain` ; tests du § 8 | L0 |
-| **L2 Index** | Prédicat d'existence partagé (déplacé dans `LoDb.Ingestion`, `VersionPages` l'appelle), couverture, générations, commande `catalog states build`, routine d'extension, écouteur `StateIndex`, verrou, tâche de réconciliation, copie en mémoire, service `states` (`compose.yaml`, `compose.deploy.yaml`, `_deploy.yml`, tests de surcouche et de secrets), métriques et lignes de synthèse | L0, L1 |
-| **L3 API** | Service des canoniques (règle par état et règle résiduelle) ; `CanonicalGateway` cesse d'utiliser `CanonicalReferences` et `CanonicalReader` ; champs des fiches, 503 d'un ouvreur épinglé sans catalogue de comparaison ; point d'accès des changements ; plus ancienne page de patch dans `CatalogMeta` ; redirections héritées | L0, L1 ; L2 pour les vraies données (le double avant) |
-| **L4 Fichiers SEO** | Index des sitemaps sans fenêtre (fichiers non vides), `{version}.xml` depuis l'index seul, réponses HTTP, `latest.xml`, `lastmod`, IndexNow (contenu, lots de 10 000, ligne `seo.indexnow.planned`), `llms.txt` et commentaires ; retrait de `LoDb__Seo__SitemapVersionWindow` ; **suppression** de `CanonicalReferences`, `CanonicalReader`, de leur enregistrement et de leurs tests, une fois `SitemapLocations.Version` et `CrawlerCatalog` passés sur l'index | L3 |
-| **L5 Front** | `<head>` selon le § 3.3 et le § 3.4 (canonique requise, `UNINDEXED` retiré, suffixe de plage, résumé, `kind` `noindex`), blocs « Ce qui a changé », « Inchangé depuis », « Historique » (remplace `codex/history/`), page de patch, route et `isVersionedRoute`, paramètres possédés et pré-routeur, liens de `/patches`, clés i18n des 21 langues, lignes `changes` de `check-urls.sh` | L0 ; L3 pour les vraies données |
-| **L6 Cache et pré-calcul** | Classe selon l'état dans le résolveur des fiches, verdicts et `cache-class-mark.ts`, nginx (cache chaud des pages selon l'objet, `map` de l'en-tête client, `changes` dans la `map` stricte, tests `tools/nginx`), **`VersionPages`** (seul lot qui change ses pages et leur ordre : `changes`, ordre figé ; L2 n'y remplace que le prédicat d'existence), file de la demande (`changes`), file `prerender_revision` (producteur, worker, pupitre), périmètre `openers` (pupitre compris), lignes de `check-urls.sh` choisies par l'état, commentaire de `LODB_ARCHIVE_EPOCH` (`compose.yaml`, `docker/nginx/Dockerfile`) | L0, L2 |
-| **L7 E2E et changelog** | E2E du § 8, entrée de changelog côté joueur (historique, pages de patch), états « en vigueur dans le code » (§ 7) | L1 à L6 |
+| **L0 Contrat** | **Tout le schéma du chantier**, en une migration additive (`20261022103012_CatalogStateIndex`) : `catalog_state_generation`, `catalog_state_version` (les versions couvertes d'une génération, leur ordre et le point de reprise d'une construction), `catalog_entity_state`, `prerender_revision` et `prerender_revision_watermark` (la marque de son producteur). **Contrat OpenAPI** : sur les fiches, `canonical` requis, `state`, `history`, `next`, `presentInLatest`, `changes` ; `GET …/changes` mappé, réponse en bouchon jusqu'à L3 ; `CatalogMeta.oldestChangesVersion` ; énumération `ChangeField` (46 gabarits fermés, sujet facultatif) et ses clés pointées (`FieldKey`). Records sous `Modules/Catalog/States/` et `Changes/`, client régénéré (`npm run api:generate`). **Interfaces** : `IEntityStateIndex` et `EntityStateSnapshot` (lectures du § 3.2) avec un double de test (`InMemoryEntityStateIndex`, `TestStates`) ; `PromotionStage` sur `IPromotionListener`, tri dans `NotifyAsync`, étapes déclarées par les deux écouteurs existants, test d'ordre ; prédicat d'existence partagé (`ListedEntities`, déplacé dans `LoDb.Ingestion`, que `VersionPages` appelle). **Classe `revisable`** côté front (`CacheClass`, `CACHE_CONTROL`) et `cache_of` de `check-urls.sh` | — |
+| **L1 Domaine** | Projections et empreintes par ressource, `DdragonText.PlainText`, SHA-256 et `FingerprintScheme`, `ChampionStats` descendu dans `LoDb.Domain` (`ChampionStatRows`), moteur de différences (découpage par langue), purs, dans `LoDb.Domain` ; tests du § 8 (domaine, paires réelles) | L0 |
+| **L2 Index** | Couverture, générations, commande `catalog states build`, routine d'extension, écouteur `StateIndex`, verrou, tâche de réconciliation, politique de rechargement de la copie en mémoire, service `states` (`compose.yaml`, `compose.deploy.yaml` dont le retrait de la ligne `LoDb__Seo__SitemapVersionWindow` pour L4, `_deploy.yml` et son commentaire d'ordre, tests de surcouche et de secrets), métriques et lignes de synthèse | L0, L1 |
+| **L3 API** | Service des canoniques `StateView` (règle par état et règle résiduelle, `LoDb.Ingestion/Catalog/States/Canonicals/`) ; `StateGateway` remplace `CanonicalGateway` ; champs des fiches, 503 `catalog-pending` d'un ouvreur épinglé sans catalogue de comparaison ; point d'accès des changements ; plus ancienne page de patch dans `CatalogMeta` ; redirections héritées. Documents : invariant SSR d'`AGENTS.md`, paragraphe « Historique des patchs » et 302 héritée de `pieges.md`, notes « Remplacé » du changelog du 2026-10-14 (une fiche par entité) et du 2026-10-16 | L0, L1 ; L2 pour les vraies données (le double avant) |
+| **L4 Fichiers SEO** | Index des sitemaps sans fenêtre (fichiers non vides), `{version}.xml` depuis l'index seul, réponses HTTP, `latest.xml`, `lastmod`, IndexNow (contenu, lots de 10 000, lignes `seo.indexnow.planned` et `.unindexed`), `llms.txt` et commentaires ; retrait de l'option `LoDb__Seo__SitemapVersionWindow`, de sa validation et de `SitemapWindowTests` ; notes « Remplacé en partie » du changelog du 2026-10-11 et du 2026-10-12 (pages datées) | L3 |
+| **L5 Front** | `<head>` selon le § 3.3 et le § 3.4 (canonique requise, `UNINDEXED` retiré, suffixe de plage, résumé, `kind` `noindex`), blocs « Ce qui a changé », « Inchangé depuis », « Historique » (remplace `codex/history/`), page de patch, route et `isVersionedRoute`, paramètres possédés et pré-routeur, liens de `/patches`, clés i18n des 21 langues (et leur test, `i18n/test/translated-texts.test.mjs`), **classe selon l'état dans le résolveur des fiches** (`entryCacheClassOf`), lignes de `check-urls.sh` (pages de patch, fiches épinglées choisies par l'état) ; notes « Remplacé » du changelog du 2026-10-14 (lien vers le patch actuel) et du 2026-10-21 | L0 ; L3 pour les vraies données |
+| **L6 Cache et pré-calcul** | Verdicts et `cache-class-mark.ts`, nginx (cache chaud des pages selon l'objet, `map` de l'en-tête client, `changes` dans la `map` stricte, tests et README de `tools/nginx`, commentaire de `LODB_ARCHIVE_EPOCH` du `Dockerfile`), **`VersionPages`** (`changes`, ordre figé), file de la demande (`changes`), file `prerender_revision` (producteur, worker, marque, pupitre), périmètre `openers` (pupitre compris) ; note « Remplacé » du changelog du 2026-10-20 | L0, L2 |
+| **Intégration** | Retrait de `CanonicalReferences`, `CanonicalReader`, de leur enregistrement et de leurs tests ; `EntityStateSnapshot.PromotedBefore`, lu par IndexNow ; le genre `baseline` (domaine, API, front) ; `SitePages.Changes`, seul littéral du segment ; le poids de `states` au staging (`compose.staging.yaml`) ; le commentaire de `LODB_ARCHIVE_EPOCH` de `compose.yaml` ; les remarques de `FieldDiff` ; un champ sans valeur rendu par son seul libellé ; les clés i18n du pupitre ; `PrerenderRevisionWorker` dans `ConventionalWorkersTests` | L1 à L6 |
+| **L7 E2E et documentation** | E2E du § 8 ; tous les documents du § 7 que les lots n'ont pas écrits, d'après le code intégré ; entrée de changelog côté joueur ; états « en vigueur dans le code » | L1 à L6 |
 
 ## 7. Documentation à mettre à jour avec le code
 
 Chaque document change dans le lot qui change le comportement qu'il décrit. Les notes de
 changelog suivent le format de [`docs/changelog/README.md`](../changelog/README.md)
 (« Remplacé le AAAA-MM-JJ par … ») ; aucune release n'est publiée avant.
+
+Le contrat du lot L0 n'a laissé aux lots L1 à L6 que les documents du § 6 (invariant
+d'`AGENTS.md`, deux paragraphes de `pieges.md`, notes du changelog, `tools/nginx/README.md`) :
+le reste de ce tableau a été écrit par le lot L7, d'après le code intégré. Les notes
+« Remplacé » citent toutes l'entrée côté joueur
+[`2026-10-22-une-page-par-etat-dans-google`](../changelog/2026/2026-10-22-une-page-par-etat-dans-google.md),
+qui remplace aussi en partie `2026-10-12-patch-annonce-a-sa-sortie`. Les guides gagnent
+deux sections : `configuration.md` § 4.12 (index des états) et § 4.13 (pages révisables et file
+des états clos).
 
 | Lot | Documents |
 |---|---|
@@ -816,3 +830,153 @@ d'attribution. Pas de push direct sur `dev`, `test` ni `main`.
 2. **Une pull request vers `dev`**, avec une CI verte. `ENV_STAGING` change avant la fusion
    (§ 4.2) : la fusion déploie le staging, et c'est sa bascule.
 3. **Prod** selon le § 4.3.
+
+## 11. Ce que l'implémentation a tranché
+
+Décisions prises par les lots et l'intégration là où ce texte ne disait rien, ou autrement que
+lui. Elles l'emportent sur les sections citées ; les ADR en reprennent l'essentiel (notes
+« précisé à l'implémentation »). Pièges qui en découlent : [`pieges.md`](../architecture/pieges.md),
+§ « Index des états d'entité » et « Catalogue pré-rendu ».
+
+### 11.1 Empreinte et différences (§ 3.1, § 3.4)
+
+- **`PlainText`** fait un saut de ligne de `<br>`, `<hr>` et des deux bouts de `li`, `p`, `ul`,
+  `ol`, `maintext`, `stats`, `rules`, `flavortext` (pas seulement `<br>`) ; il ne retire que
+  les vraies balises (`<` suivi d'une lettre) et les commentaires, garde un `<` isolé comme le
+  fait la page, décode les entités et replie les sauts répétés. Un `<br>` de plus ou de moins
+  n'ouvre donc pas d'état.
+- **Sérialisation** : les champs projetés, dédoublonnés (la première clé l'emporte), triés par
+  l'ordre de `ChangeField` puis par sujet en ordinal, écrits préfixés de leur longueur, en
+  UTF-8, puis SHA-256 en hexadécimal minuscule. `EntityDiff.ChangedKeys` n'est pas vide si et
+  seulement si les empreintes diffèrent ; il rend les clés de l'« après » dans leur ordre,
+  puis celles du seul « avant ».
+- **Portée d'un sort d'invocateur** : 25 000 ou plus s'écrit `global`.
+- **Différence d'un texte** : mots, suites de blancs et signes de ponctuation, chacun fait
+  d'éléments de texte entiers ; un élément de texte par jeton en ja_JP, zh_CN, zh_TW et th_TH.
+  Au-delà d'un million de cases d'alignement (une refonte d'un long lore CJK), le milieu changé
+  s'écrit en un seul segment retiré puis un seul ajouté.
+- **`FieldDiff`** : pour un champ texte, `Before` et `After` sont vides et la différence est
+  dans `Segments` ; pour les autres, `Segments` est vide.
+- **Chromas** : les skins projetés sont ceux que l'ingestion a gardés, après le filtre des
+  chromas par le catalogue de CommunityDragon. Limite acceptée le 2026-10-22, sans
+  réingestion : un patch ingéré avant que CommunityDragon connaisse une nouvelle chroma ouvre
+  un état pour elle seule. Correctif à venir : `parentSkin` dans le mapper, en_US réingéré,
+  `--rebuild`.
+
+### 11.2 Index des états (§ 3.2, § 4.1)
+
+- **Une table de plus**, `catalog_state_version` (génération, version, rang, `indexed_at`) :
+  les versions couvertes, leur ordre, que le SQL n'a pas, et le point de reprise d'une
+  construction. Pas de colonnes de tri des versions sur les états.
+- **« Listée »** veut dire la liste de Data Dragon plus le dernier patch promu ; une version
+  dont les quatre jeux en_US sont définitivement absents est sautée, comme non listée.
+- **Seule la commande reconstruit quand le début de la couverture bouge.** La promotion et la
+  réconciliation ne construisent que si aucune génération n'est courante, et sinon étendent.
+  Une génération en attente au même début reprend ; les autres sont supprimées ;
+  `--rebuild` les supprime toutes.
+- **La commande lit la liste des versions de Data Dragon** (dès qu'une version est promue) :
+  « elle ne télécharge rien » vaut pour les jeux. Liste illisible sans `--ingest-missing` :
+  code 0 et `states.build.deferred` si une génération est courante ; code 1 et
+  `states.build.failed` s'il n'y en a aucune, pour que le premier déploiement et un nouveau
+  schéma arrêtent le job au lieu de servir un index vide.
+- **Verrou** : essayé toutes les 0,5 s ; une minute pour la commande, puis code 1 ; 5 s pour la
+  promotion et la réconciliation, qui rendent la main sans échec (issue `locked`).
+- **Déploiement** : `docker compose run --rm --no-deps states` (sans relancer `migrate`).
+- **Retrait juste après un jeu absent** : un état clos juste après une version où sa ressource
+  manquait garde cette version pour dernière.
+- **Copie en mémoire** : tout échec de rechargement, pas seulement de la base, garde la copie
+  tenue ; sans copie, 503 `state-index-unavailable` et nouvel essai à la lecture suivante.
+- **Événements** `states.*` (trois segments, ADR 0010) et métriques `lodb_states_*`
+  ([`metriques.md`](../guides/metriques.md)).
+- **Sans aucune génération** (pile neuve), la première promotion construit tout l'index dans
+  le processus de l'API.
+
+### 11.3 Canoniques, fiches, page de patch, anciennes URL (§ 3.3 à § 3.5, § 3.9)
+
+- **Genre `baseline`** (ajouté à `EntityChangeKind`, intégration) : le premier état d'une
+  entité ouvert au début de la couverture n'a été comparé à rien. L'API le dit `baseline`
+  dans `state` et `history`, avec `changes: null` ; la fiche n'affiche ni résumé, ni pastille,
+  ni bloc, et sa description et son titre sont ceux d'un ouvreur sans résumé. L'index le
+  stocke comme un état nouveau ; `PatchChangeKind` ne change pas (la version de début n'a pas
+  de page de patch).
+- **État ouvert dont le dernier patch n'a plus l'entité** (index en retard sur un retrait) :
+  la canonique est l'ouvreur de l'état, pas une URL courte en 404.
+- **Ouvreur dont l'index n'a pas l'état précédent** : `changes` garde son genre, sans version
+  comparée ni champs, sans 503.
+- **Le bloc liste exactement les clés de l'index, dans leur ordre**, même un champ qu'aucun
+  des deux côtés n'a dans la langue de la page (sans valeur ; le front n'en montre que le
+  libellé). Sur un ouvreur, `state.changedFields` reprend `changes.fields`, sujets nommés
+  pareil, depuis le catalogue comparé quand la page ne les a plus.
+- **Catalogue comparé en en_US de repli** (Data Dragon n'avait pas encore la langue de la page
+  à cette version) : les nombres, codes, ids et chaînes par rang des sorts gardent leur valeur
+  avant ; un texte ou un nom ne montre que sa valeur après (`ComparedProjection`).
+- **URL courte** : sans bloc aussi quand Data Dragon échoue sur le catalogue comparé, pas
+  seulement quand il n'est pas chargé. Un ouvreur épinglé répond 503 `catalog-pending`.
+- **Page de patch** : une entité que le catalogue n'a pas est nommée par son id, sans image ;
+  une réponse dont des icônes sont en attente est gardée 5 s (`public, max-age=5`, avec
+  `Retry-After`) ; validation dans l'ordre 400 (version), 400 (langue), 503, 404.
+- **`/api/meta`** ne répond jamais 503 pour l'index : `oldestChangesVersion` nul et une ligne
+  `catalog.meta.degraded`.
+- **Anciennes URL** : une voie de runes absente du dernier patch garde la règle du 2026-10-16
+  (sa page épinglée avec une version, 404 sans) : seul le catalogue du dernier patch traduit sa
+  clé en id.
+- **Front** : le résumé de la description ne vaut que pour l'ouvreur épinglé d'un état clos,
+  jamais pour l'URL courte ; les textes de la page de patch vivent dans le scope `patches` ;
+  les blocs restent en bas de la fiche, à la place de l'ancien ; l'historique nomme les sujets
+  de sorts, de runes et de skins par les noms de la page ; les codes sans table du front
+  (modes, type de coût, ressource) s'affichent tels quels ; une page `noindex` n'a plus de
+  JSON-LD du site. Sur une page de patch, la version mémorisée ou choisie ne s'applique
+  qu'entre `oldestChangesVersion` et le dernier patch (`has-changes-page.ts`, la règle de
+  `/patches`) ; sinon la page reste sur le dernier patch et la pastille le dit.
+- **`check-urls.sh`** suit ce que dit l'API : une page de patch peut répondre 404 sur une
+  petite couverture, et les lignes des pages figée et révisable s'écrivent « skip » quand
+  l'historique de l'objet n'en a pas.
+
+### 11.4 Sitemaps, IndexNow, `llms.txt` (§ 3.6, § 3.8)
+
+- **IndexNow part du patch promu avant** (`EntityStateSnapshot.PromotedBefore`, intégration),
+  pas de la version couverte juste avant : il annonce `/{locale}/{v}/changes` de chaque version
+  couverte depuis ce patch (compris) jusqu'à la version promue (exclue) qui a changé quelque
+  chose, et les ouvreurs des états dont la dernière version est dans cet intervalle. Une
+  version listée mais jamais promue est ainsi annoncée par la promotion suivante.
+- **`latest.xml`** répond aussi 503 tant que la copie de l'index n'est pas chargée.
+- **Index en retard sur le lecteur** : `latest.xml` sans `/{locale}/changes`, la fin de la
+  couverture annoncée comme une version passée, une version entre elle et le dernier patch en
+  404.
+- **`SitePages.Changes`** est le seul littéral du segment `changes` côté API ; il n'entre pas
+  dans `PatchBound`. La ligne `/en/changes` de `llms.txt` est toujours présente.
+- **Index illisible pendant une promotion** : IndexNow échoue en `ingest.listener.failed` ;
+  une version que l'index ne couvre pas donne `seo.indexnow.unindexed`.
+- Pas de commande de simulation d'IndexNow : la ligne `seo.indexnow.planned` en tient lieu.
+
+### 11.5 Pré-calcul et cache (§ 3.7, § 3.8)
+
+- **La file des états clos prend aussi la version qui quitte le dernier patch** (acceptée) :
+  sa page a pu être stockée révisable par la file de la demande, une passe ou une unité
+  tardive pendant que l'index tenait l'état ouvert. Une page par état clos et par langue de
+  plus, comptée dans les ~24 000 du § 1.2.
+- **Rien du pré-calcul ne part sur un index qui ne couvre pas le patch promu** : ni l'unité
+  de la version qui part, ni la file (`prerender.promotion.index_behind`, aussi sans index du
+  tout) ; `prerender.reconcile` les ajoute une fois l'index rattrapé.
+- **Attendre l'index** : par l'échéance des lignes (`due_at` = maintenant +
+  `2 × VersionsLifetime` + 1 min, 21 min), pas par le repère de l'index lu par l'API.
+- **Marque** : sur une génération que la marque ne nomme pas (premier passage,
+  reconstruction), le producteur part du plus tardif de `built_at` et du dernier `closed_at`
+  des états clos avant la version qui part : il ne met en file que les clôtures de la dernière
+  promotion (`prerender.revision.generation`). Une copie de l'index plus ancienne que la
+  génération de la marque ne fait rien. Une ligne déjà en file pour la même page et la même
+  epoch repasse en attente.
+- **Epochs** : l'epoch servie et celle de la passe active ; une epoch remplie par une passe
+  terminée, ni servie ni écrite, ne reçoit pas les clôtures d'ici sa bascule.
+- **Rendu de la file** : chaque version sous la graphie de son catalogue (casse de l'id,
+  slug), pas celle de l'ouvreur ; une page qui revient `revisable` compte comme un essai raté
+  (nouvel essai 5 min après, échec définitif au troisième) ; les places de rendu sont celles
+  de la file de la demande (`RenderClaimant.Queue`).
+- **`changes` est toujours dans `VersionPages.Of`**, même pour une version sans page de patch
+  (404, sautée) : la liste ne dépend pas de l'index. Une passe « ouvreurs » sur une version
+  hors de l'index ne rend que `changes`.
+- **Pupitre** : les comptes par version (ouvreurs, figées, révisables) sont ceux des fiches
+  par langue ; listes et page de patch, figées aussi, n'y sont pas. `prerender unit` n'a pas
+  d'option pour le périmètre des ouvreurs.
+- **En-tête client de nginx** : sans build stocké, celui de l'amont ; avec, `revisable` pour
+  un objet qui porte exactement sa valeur, `archived` sinon.
