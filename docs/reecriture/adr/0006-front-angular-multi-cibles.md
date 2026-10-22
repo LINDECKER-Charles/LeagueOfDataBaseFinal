@@ -52,7 +52,7 @@ src/LoDb.Web/src/app/
   features/    catalogue/  builds/  account/  api-portal/  admin/  editorial/
 ```
 
-Les règles de `CLAUDE.md` s'appliquent telles quelles :
+Les règles d'`AGENTS.md` (que `CLAUDE.md` importe) s'appliquent telles quelles :
 
 - un composant = présentation + câblage mince ;
 - l'orchestration vit dans des services et des fonctions pures, testables sans monter le

@@ -12,6 +12,16 @@
   2026-10-11, un warm-up dont les images sont refusées se termine `done` (même section,
   point 4). Le 2026-10-20, la tâche de précalcul du catalogue (voir § « Amendement du
   2026-10-20 »).
+- **Suivi** (2026-10-22), écarts entre la table des tâches et le code :
+  - le rollup des analytics tourne toutes les 5 minutes (`analytics.rollup`) ;
+  - la rétention (`analytics.retention`, quotidienne) supprime les événements bruts à
+    13 mois ; l'IP et le user-agent ne sont plus écrits du tout, ceux des lignes d'avant sont
+    effacés à 30 jours ;
+  - l'expiration des crédits API est implémentée (`Workers/Billing/CreditExpiryJob.cs`) ;
+  - une tâche horaire, `audience.trends`, tire l'audience d'Umami pour `/v1/trends`
+    ([ADR 0012](0012-audience-umami.md)) ;
+  - les tâches du précalcul (passe, file de la demande, élagage) sont décrites par
+    l'[ADR 0011](0011-catalogue-pre-rendu-et-cdn.md) et ses amendements.
 
 ## Contexte
 
