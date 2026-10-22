@@ -1,12 +1,16 @@
 # 🤝 Guide de contribution
 
+> **Ancienne stack (Symfony + Go + Vue), archivée.** Ce document décrit le site d'avant la
+> bascule du 2026-10-04 et ne s'applique pas à la stack en service. Version en vigueur :
+> [`CONTRIBUTING.md`](../../CONTRIBUTING.md).
+
 > ⚠️ **À réécrire.** Les sections « Prérequis », « Configuration initiale » et « Garde-fous »
 > ci-dessous décrivent l'ancienne stack (Symfony + Go + Vue), archivée sous `legacy/`. Pour la
-> nouvelle stack, suivez [`CONTRIBUTING.md`](../CONTRIBUTING.md) et
-> [`guides/developpement.md`](guides/developpement.md). *EN / ES : the setup and guardrail sections
+> nouvelle stack, suivez [`CONTRIBUTING.md`](../../CONTRIBUTING.md) et
+> [`guides/developpement.md`](../../docs/guides/developpement.md). *EN / ES : the setup and guardrail sections
 > below describe the archived stack; follow `CONTRIBUTING.md` instead.*
 
-> 📌 **Guide court & canonique :** [`CONTRIBUTING.md`](../CONTRIBUTING.md) · **Conventions de code complètes :** [`AGENTS.md`](../AGENTS.md).
+> 📌 **Guide court & canonique :** [`CONTRIBUTING.md`](../../CONTRIBUTING.md) · **Conventions de code complètes :** [`AGENTS.md`](../AGENTS.md).
 > Ce document en est la version détaillée et multilingue (onboarding, templates d'issue et de PR). En cas de divergence, `CONTRIBUTING.md` et `AGENTS.md` font foi.
 
 ## 🌍 Languages / Langues
@@ -46,7 +50,7 @@ Nous sommes ravis que vous souhaitiez contribuer à **League of Database** ! Ce 
    docker compose up -d --build
    # app :8080 · Mailpit :8025 · go-fetcher :8085/healthz
    ```
-   Détails : [`docker.md`](../legacy/docs/guides/docker.md), [`configuration.md`](../legacy/docs/guides/configuration.md).
+   Détails : [`docker.md`](guides/docker.md), [`configuration.md`](guides/configuration.md).
 
 3. **Dev front (optionnel, depuis `app/`)**
    ```bash
@@ -118,7 +122,7 @@ git push origin feature/votre-fonctionnalite
 
 ### 📋 Template de Pull Request
 
-Rien à copier : ouvrir une PR pré-remplit automatiquement le [template natif](../.github/PULL_REQUEST_TEMPLATE.md).
+Rien à copier : ouvrir une PR pré-remplit automatiquement le [template natif](../../.github/PULL_REQUEST_TEMPLATE.md).
 
 ### 🎨 Standards de code
 
@@ -143,7 +147,7 @@ Rien à copier : ouvrir une PR pré-remplit automatiquement le [template natif](
 
 ### 🐛 Signaler un bug · 💡 Proposer une fonctionnalité
 
-Le tracker propose des **formulaires guidés** (bug / fonctionnalité) : voir [`.github/ISSUE_TEMPLATE`](../.github/ISSUE_TEMPLATE). Rien à copier-coller.
+Le tracker propose des **formulaires guidés** (bug / fonctionnalité) : voir [`.github/ISSUE_TEMPLATE`](../../.github/ISSUE_TEMPLATE). Rien à copier-coller.
 
 ### 🔍 Review process
 
@@ -181,7 +185,7 @@ We're excited that you want to contribute to **League of Database**! This guide 
    docker compose up -d --build
    # app :8080 · Mailpit :8025 · go-fetcher :8085/healthz
    ```
-   Details: [`docker.md`](../legacy/docs/guides/docker.md), [`configuration.md`](../legacy/docs/guides/configuration.md).
+   Details: [`docker.md`](guides/docker.md), [`configuration.md`](guides/configuration.md).
 
 3. **Frontend dev (optional, from `app/`)**
    ```bash
@@ -253,7 +257,7 @@ git push origin feature/your-feature
 
 ### 📋 Pull Request Template
 
-Nothing to copy: opening a PR automatically pre-fills the [native template](../.github/PULL_REQUEST_TEMPLATE.md).
+Nothing to copy: opening a PR automatically pre-fills the [native template](../../.github/PULL_REQUEST_TEMPLATE.md).
 
 ### 🎨 Code Standards
 
@@ -278,7 +282,7 @@ Nothing to copy: opening a PR automatically pre-fills the [native template](../.
 
 ### 🐛 Reporting Bugs · 💡 Proposing Features
 
-The tracker provides **guided forms** (bug / feature): see [`.github/ISSUE_TEMPLATE`](../.github/ISSUE_TEMPLATE). Nothing to copy-paste.
+The tracker provides **guided forms** (bug / feature): see [`.github/ISSUE_TEMPLATE`](../../.github/ISSUE_TEMPLATE). Nothing to copy-paste.
 
 ### 🔍 Review Process
 
@@ -316,7 +320,7 @@ The tracker provides **guided forms** (bug / feature): see [`.github/ISSUE_TEMPL
    docker compose up -d --build
    # app :8080 · Mailpit :8025 · go-fetcher :8085/healthz
    ```
-   Detalles: [`docker.md`](../legacy/docs/guides/docker.md), [`configuration.md`](../legacy/docs/guides/configuration.md).
+   Detalles: [`docker.md`](guides/docker.md), [`configuration.md`](guides/configuration.md).
 
 3. **Dev frontend (opcional, desde `app/`)**
    ```bash
@@ -388,7 +392,7 @@ git push origin feature/tu-funcionalidad
 
 ### 📋 Template de Pull Request
 
-Nada que copiar: abrir una PR pre-rellena automáticamente el [template nativo](../.github/PULL_REQUEST_TEMPLATE.md).
+Nada que copiar: abrir una PR pre-rellena automáticamente el [template nativo](../../.github/PULL_REQUEST_TEMPLATE.md).
 
 ### 🎨 Estándares de Código
 
@@ -413,7 +417,7 @@ Nada que copiar: abrir una PR pre-rellena automáticamente el [template nativo](
 
 ### 🐛 Reportar Bugs · 💡 Proponer Funcionalidades
 
-El tracker ofrece **formularios guiados** (bug / funcionalidad): ver [`.github/ISSUE_TEMPLATE`](../.github/ISSUE_TEMPLATE). Nada que copiar y pegar.
+El tracker ofrece **formularios guiados** (bug / funcionalidad): ver [`.github/ISSUE_TEMPLATE`](../../.github/ISSUE_TEMPLATE). Nada que copiar y pegar.
 
 ### 🔍 Proceso de Revisión
 
