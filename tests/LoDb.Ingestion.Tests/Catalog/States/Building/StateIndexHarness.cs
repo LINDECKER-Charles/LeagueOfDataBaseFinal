@@ -13,6 +13,7 @@ using LoDb.Ingestion.Pipeline.Versions;
 using LoDb.Ingestion.Tests.Pipeline;
 using LoDb.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace LoDb.Ingestion.Tests.Catalog.States.Building;
 
@@ -64,10 +65,13 @@ internal sealed class StateIndexHarness : IAsyncDisposable
         return new StateIndexHarness(harness, body);
     }
 
-    /// <summary>Another instance over the same database and store: another process.</summary>
-    public IngestionInstance StartInstance()
+    /// <summary>
+    /// Another instance over the same database and store: another process, with the services
+    /// <paramref name="configure"/> adds.
+    /// </summary>
+    public IngestionInstance StartInstance(Action<IServiceCollection>? configure = null)
     {
-        var instance = harness.StartInstance();
+        var instance = harness.StartInstance(configure);
         instance.Upstream.Serve(
             static url => url.AbsolutePath == VersionList,
             versionList,
@@ -130,6 +134,20 @@ internal sealed class StateIndexHarness : IAsyncDisposable
             Trigger = StateIndexTrigger.Build,
             ShouldRebuild = true,
         });
+
+    /// <summary>
+    /// Makes the current generation pending again, as a build stopped before it made its
+    /// generation current leaves it.
+    /// </summary>
+    public async Task SetAsideCurrentAsync()
+    {
+        await using var db = harness.Database.CreateContext();
+        await db.CatalogStateGenerations
+            .Where(static generation => generation.IsCurrent)
+            .ExecuteUpdateAsync(
+                static setters => setters.SetProperty(generation => generation.IsCurrent, false),
+                Token);
+    }
 
     /// <summary>The states of the current generation, by resource, key and opener.</summary>
     public async Task<IReadOnlyList<CatalogEntityState>> StatesAsync()

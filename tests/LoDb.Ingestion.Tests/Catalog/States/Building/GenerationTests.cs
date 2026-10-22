@@ -15,8 +15,8 @@ namespace LoDb.Ingestion.Tests.Catalog.States.Building;
 /// <summary>
 /// The generations of the index: a promotion extends the current one version by version, a
 /// build catches up or does nothing, and a rebuild writes a new one that reads the same,
-/// closing dates included, before it takes the old one's place. A list of versions that
-/// cannot be read leaves the index as it is.
+/// closing dates included, before it takes the old one's place. The reconciliation builds
+/// the first one; a list of versions that cannot be read leaves the index as it is.
 /// </summary>
 public sealed class GenerationTests(PostgresContainerFixture postgres)
 {
@@ -136,6 +136,25 @@ public sealed class GenerationTests(PostgresContainerFixture postgres)
         Assert.True(await index.Instance.Get<StoredDatasets>().ExistAsync(scope, Token));
     }
 
+    // An API started on no index: its reconciliation builds it, as the command would.
+    [Fact]
+    public async Task ReconciliationBuildsTheIndexWhenNoneIsCurrent()
+    {
+        await using var index = await StateIndexHarness.CreateAsync(postgres, Versions);
+        await StoreHistoryAsync(index);
+        await index.PromoteAsync("90.5.1");
+
+        var report = await index.UpdateAsync(new StateIndexRequest
+        {
+            Trigger = StateIndexTrigger.Reconcile,
+        });
+
+        Assert.Equal(
+            (StateIndexOutcome.Built, Versions.Length),
+            (report.Outcome, report.VersionsIndexed));
+        Assert.Equal(Versions, await index.CoverageAsync());
+    }
+
     // The build command runs in a process of its own, where no list is cached yet: the update
     // fails without touching the index, which tells whether one is current all the same.
     [Fact]
@@ -162,8 +181,10 @@ public sealed class GenerationTests(PostgresContainerFixture postgres)
         Assert.Equal(Versions[..3], await index.CoverageAsync());
     }
 
-    // Changes, a retirement, a return and an unchanged version, over five versions.
-    private static async Task StoreHistoryAsync(StateIndexHarness index)
+    /// <summary>
+    /// Changes, a retirement, a return and an unchanged version, over five versions.
+    /// </summary>
+    internal static async Task StoreHistoryAsync(StateIndexHarness index)
     {
         var datasets = await ReadAsync();
         var dearer = datasets.ChangingItem(
@@ -176,7 +197,8 @@ public sealed class GenerationTests(PostgresContainerFixture postgres)
         await index.StoreAsync("90.5.1", dearer.WithoutItem(Boots));
     }
 
-    private static string Comparable(CatalogEntityState state) =>
+    /// <summary>A state as a rebuild must find it again, its closing date aside.</summary>
+    internal static string Comparable(CatalogEntityState state) =>
         string.Join(
             '|',
             state.Resource,
