@@ -20,6 +20,28 @@ internal static class ChampionSamples
         Stats = new Dictionary<string, double>(),
     };
 
+    /// <summary>A champion's detail with the spells and skins given, nothing else.</summary>
+    internal static ChampionDetail Detail(
+        ChampionSummary summary,
+        IReadOnlyList<ChampionSpell> spells,
+        IReadOnlyList<Skin> skins) => new()
+    {
+        Summary = summary,
+        AllyTips = [],
+        EnemyTips = [],
+        Spells = spells,
+        Skins = skins,
+    };
+
+    internal static ChampionSpell Spell(string id, string cooldown) => new()
+    {
+        Id = id,
+        Name = id,
+        Description = string.Empty,
+        Image = id + ".png",
+        CooldownBurn = cooldown,
+    };
+
     internal static Skin Skin(string id, string name, params int[] chromaIds) => new()
     {
         Id = id,

@@ -1,4 +1,5 @@
 using LoDb.Domain.Languages;
+using LoDb.Domain.States.Diff.Tokens;
 
 namespace LoDb.Domain.States.Diff;
 
@@ -21,6 +22,13 @@ public static class TextDiff
         ArgumentNullException.ThrowIfNull(before);
         ArgumentNullException.ThrowIfNull(after);
         ArgumentNullException.ThrowIfNull(language);
-        throw new NotImplementedException("L1");
+        if (string.Equals(before, after, StringComparison.Ordinal))
+        {
+            return [new TextSegment { Kind = SegmentKind.Same, Text = after }];
+        }
+
+        return TokenAlignment.Of(
+            TextTokens.Of(before, language),
+            TextTokens.Of(after, language));
     }
 }
