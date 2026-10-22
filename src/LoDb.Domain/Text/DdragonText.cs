@@ -35,6 +35,14 @@ public static partial class DdragonText
     }
 
     /// <summary>
+    /// The one plain form of a Data Dragon text, which the fingerprint and the diff engine
+    /// share: <see cref="Clean"/>, then the markup removed, a line break (<c>&lt;br&gt;</c>)
+    /// kept as one, then the whitespace collapsed. A change of markup alone changes nothing.
+    /// </summary>
+    public static string PlainText(string? html) =>
+        html is null ? string.Empty : throw new NotImplementedException("L1");
+
+    /// <summary>
     /// Display form of a category tag: "CriticalStrike" reads "Critical Strike". Matching
     /// keeps the raw tag.
     /// </summary>
