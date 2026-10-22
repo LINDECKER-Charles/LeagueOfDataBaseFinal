@@ -6,6 +6,11 @@ de réglage n'en sont la cause. Google explore les pages et refuse de les indexe
 site lui présente des dizaines de milliers de pages quasi identiques : chaque entité, pour
 chaque patch épinglé et dans chaque langue.
 
+> **Suite, le 22 octobre 2026** : la règle qui a suivi ce diagnostic (une page indexée par
+> entité, celle du dernier patch) laisse tout l'historique hors de Google. Elle est remplacée
+> par une page indexée par état d'entité :
+> [`seo-une-page-par-etat.md`](seo-une-page-par-etat.md).
+
 ## 1. Constat (Search Console, relevé le 14 octobre 2026)
 
 **Performances** (propriété `https://league-of-data-base.com/`) :

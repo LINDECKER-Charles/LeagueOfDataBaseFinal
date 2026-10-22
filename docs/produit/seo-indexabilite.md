@@ -144,6 +144,12 @@ soit un `ErrorController` custom, soit des liens statiques (suffisant).
 > [ADR 0005, amendement du 2026-10-14](../reecriture/adr/0005-web-ssr-urls-et-seo.md) ;
 > diagnostic : [`seo-anciens-patchs.md`](seo-anciens-patchs.md). Les deux points ci-dessous
 > sur les patchs historiques et le sitemap-index ne valent plus.
+>
+> **Remplacée de nouveau le 2026-10-22** : une page indexée par **état** d'entité, la suite de
+> patchs où sa fiche ne change pas, à son premier patch ; chaque patch a sa page de
+> changements, et l'index des sitemaps annonce toutes les versions. Règle, mesures et
+> déploiement : [`seo-une-page-par-etat.md`](seo-une-page-par-etat.md) ;
+> [ADR 0005, amendement du 2026-10-22](../reecriture/adr/0005-web-ssr-urls-et-seo.md).
 
 - **Dernier patch** — URL courte `/champion/Aatrox`, canonique, non versionnée :
   la page mise en avant. `?version&lang` reste une variante de rendu de cette page

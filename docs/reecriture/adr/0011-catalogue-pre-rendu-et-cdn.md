@@ -12,6 +12,9 @@
   publiée
 - **Détail** : [spécification](../../produit/pre-rendu-catalogue-cdn.md) (lots, réglages,
   tests, livraison)
+- **Amendements** : le 2026-10-22, le stockage garde aussi des pages révisables, celles des
+  anciens patchs dont l'état est encore ouvert, pré-calculées de nouveau quand une promotion
+  le clôt ; la passe sert d'abord les pages indexables (voir § « Amendement du 2026-10-22 »)
 
 ## Contexte
 
@@ -258,3 +261,34 @@ Débit attendu : 150 à 220 pages par minute en moyenne, le catalogue en 13 à 1
 ralentissement mesurable des visiteurs jusqu'à ~80 % d'occupation de l'hôte. Détail, seuils
 et réglages : [spécification](../../produit/pre-rendu-catalogue-cdn.md), lot 2, « Capacité
 adaptative de la passe ».
+
+## Amendement du 2026-10-22 — pages révisables
+
+L'[ADR 0005](0005-web-ssr-urls-et-seo.md) (amendement du 2026-10-22) indexe une page par état
+d'entité. La page d'un ancien patch n'est donc plus immuable dans tous les cas. Celle d'un
+état **clos** ne change plus jamais. Celle d'un état **ouvert**, celui du dernier patch, a
+pour canonique l'URL courte jusqu'à ce que l'entité change : sa canonique, son titre et son
+historique changent alors. Cela concerne 5 à 15 % des pages épinglées, et environ
+24 000 pages par promotion ([spécification](../../produit/seo-une-page-par-etat.md), § 1.2).
+
+- **Deux classes dans le stockage** : `archived` (un an) pour une page figée, `revisable`
+  (`s-maxage` d'un jour, `stale-while-revalidate` d'un jour) pour une page révisable. Le SSR
+  choisit la classe selon l'état que l'API rend, et la passe écrit les deux. nginx applique
+  la classe de l'objet quand c'est l'une des deux, et `archived` pour un objet sans classe ; il
+  n'impose plus `archived` à toute réponse du stockage. La ligne « Ce qui est stocké » vaut
+  pour les deux classes.
+- **À chaque promotion**, après la mise à jour de l'index des états, le pré-calcul refait
+  dans l'epoch servie :
+  - les pages des états que la promotion a clos, dans les 21 langues ;
+  - les pages de patch concernées ;
+  - et, comme avant, l'unité de la version qui quitte le dernier patch.
+
+  Les copies de nginx et du CDN de ces pages expirent en un jour au plus.
+- **Ordre de la passe** : d'abord les pages indexables de toutes les versions (ouvreurs
+  d'états clos, pages de patch), puis les autres. La file de la demande garde sa priorité.
+- **Epoch 2** : elle devient l'epoch d'écriture et l'epoch servie au déploiement qui porte
+  la nouvelle règle, avec `LODB_ARCHIVE_EPOCH` monté. La passe la remplit dans l'ordre
+  ci-dessus. Une page absente part au SSR, puis à la file de la demande. L'epoch 1 est gardée
+  deux semaines pour un retour arrière, puis retirée (`retire-pages-1`).
+- **Conséquence** : la classe `archived` ne garde plus que des pages vraiment immuables. Une
+  page révisable coûte une relecture du stockage par jour au plus.

@@ -18,7 +18,11 @@
     du 2026-10-16 ») ;
   - le 2026-10-20, les pages des anciens patchs sont pré-rendues dans un stockage objet ;
     `lodb_archive` devient un cache chaud devant lui, la classe `archived` est gardée un an,
-    et un CDN se place devant le site (voir § « Amendement du 2026-10-20 »).
+    et un CDN se place devant le site (voir § « Amendement du 2026-10-20 ») ;
+  - le 2026-10-22, une page indexée par état d'entité : chaque suite de patchs où une fiche ne
+    change pas a une page indexée, son premier patch ; chaque patch a sa page de changements,
+    et l'index des sitemaps annonce toutes les versions (voir § « Amendement du 2026-10-22 »).
+    Il remplace l'amendement du 2026-10-14 pour les canoniques et les sitemaps.
 
 ## Contexte
 
@@ -82,7 +86,8 @@ nginx. Le mode de rendu est choisi route par route :
 /{locale}/                                      accueil
 /{locale}/champions                             liste, dernier patch
 /{locale}/champions/{id}                        détail, dernier patch (URL canonique courte)
-/{locale}/{version}/champions/{id}              détail, patch passé (amendement du 2026-10-14)
+/{locale}/{version}/champions/{id}              détail, patch passé (amendement du 2026-10-22)
+/{locale}/[{version}/]changes                   ce qu'un patch a changé (amendement du 2026-10-22)
 /{locale}/items/{id}-{slug}   /{locale}/runes/{id}-{slug}   /{locale}/summoners/{id}
 /{locale}/u/{username}                          profil public
 /b/{token}                                      partage de build (hors locale, noindex)
@@ -113,8 +118,8 @@ nginx. Le mode de rendu est choisi route par route :
 - Canonique = schéma + hôte + chemin, sans query. `www` et `.fr` restent redirigés à
   l'edge (nginx), pas dans l'app.
 - **hreflang** entre les 21 locales + `x-default` (nouveau).
-- **Sitemaps par locale** ; ceux des versions passées ne listent plus que leurs fiches
-  canoniques (amendement du 2026-10-14).
+- **Sitemaps par locale** ; celui d'une version passée liste sa page de changements et les
+  fiches indexées chez elle, et l'index les annonce tous (amendement du 2026-10-22).
 - JSON-LD conservé à l'identique : `@graph` du site, BreadcrumbList, VideoGame,
   PropertyValue pour les stats (jamais Product ou Offer), ItemList, ProfilePage, FAQPage,
   Dataset… Encodage sûr contre la XSS, champs vides retirés.
@@ -230,6 +235,9 @@ chunks.
   du 2026-10-11) ; `style-src 'unsafe-inline'` reste imposé par Angular.
 
 ## Amendement du 2026-10-14 — une page indexée par entité
+
+*Remplacé le 2026-10-22 pour la règle des canoniques et les sitemaps : une page indexée par
+état d'entité, et non plus par entité (§ « Amendement du 2026-10-22 »).*
 
 Le site a perdu presque toute sa visibilité dans Google depuis le 16 août 2026
 ([diagnostic](../../produit/seo-anciens-patchs.md)) : 2 570 pages indexées contre ~20 000 fin
@@ -356,3 +364,79 @@ chaque page d'ancien patch dans un stockage objet. Pour cette ADR :
   et garde les pages aux durées de l'origine (`s-maxage`). `/` n'y est jamais gardé : sa 302
   dépend d'`Accept-Language` et du cookie, que Cloudflare ne distingue pas. La grammaire
   d'URL, les canoniques et les sitemaps ne changent pas.
+
+## Amendement du 2026-10-22 — une page indexée par état
+
+La règle du 2026-10-14 n'indexe qu'une page par entité et par langue, celle du dernier patch :
+~22 800 pages. L'historique des patchs, qui est le contenu propre de la base, reste hors de
+Google. Celle du 2026-07-18 indexait chaque patch : ~4,2 millions de pages, dont **~85 % sont
+la copie exacte de la page de la version d'avant** (mesure du 22 octobre 2026 sur Data
+Dragon : 13,5 % des pages d'objets diffèrent de la version précédente, 17,7 % des pages de
+champions, 6,8 % des sorts). La chute d'août est venue de ces copies, pas du volume. La charge
+qui justifiait la fenêtre du 2026-10-11 est désormais tenue par le stockage pré-rendu et la
+file de la demande ([ADR 0011](0011-catalogue-pre-rendu-et-cdn.md)). Constat, mesures et
+détail : [spécification](../../produit/seo-une-page-par-etat.md).
+
+| Option | Pour | Contre |
+|---|---|---|
+| Une page par entité (2026-10-14) | Le signal se concentre sur le dernier patch | L'historique, qui fait la base, n'est pas indexable : ~22 800 pages pour ~28 000 contenus distincts × 21 langues |
+| Une page par patch (2026-07-18) | Simple ; tout est indexable | 85 % de copies quasi identiques : la cause de la désindexation d'août |
+| **Une page par état** | Chaque contenu distinct a une page indexée, aucune copie n'en a ; ~600 000 pages | Un index entité → états à tenir ; des pages d'anciens patchs qui changent encore (révisables) |
+
+**Décision : une page indexée par état.**
+
+- **État** : la suite des versions listées consécutives où une entité existe avec la même
+  **empreinte**, condensé pur de son contenu propre dans le catalogue en_US (images
+  ignorées), versionné par un numéro de schéma. Son **ouvreur** est sa première version.
+  L'état qui contient le dernier patch est **ouvert**, les autres sont **clos**.
+- **Index des états** en Postgres, construit une fois par une commande, puis mis à jour à
+  chaque promotion **avant tout autre écouteur**, et réparé au démarrage du worker.
+- **Canoniques** :
+  - l'URL courte pour le dernier patch et pour les pages d'anciens patchs de l'état ouvert ;
+  - pour l'ouvreur d'un état clos, lui-même, avec hreflang et JSON-LD ;
+  - pour les autres versions d'un état clos, l'ouvreur.
+
+  Les listes, les variantes régionales et les versions non promues ne changent pas. Une
+  entité retirée n'est plus un cas à part : le `noindex, follow` de ses fiches antérieures
+  disparaît. Un id réutilisé change d'empreinte, donc d'état.
+- **Contenu** :
+  - l'ouvreur montre « Ce qui a changé dans ce patch » (différence avec l'état précédent,
+    dans la langue de la page) ;
+  - les autres versions montrent « Inchangé depuis le patch X » ;
+  - « Historique » remplace « Dans les patchs précédents » ;
+  - l'ouvreur d'un état clos porte la plage de l'état dans son titre.
+- **Page de patch** `/{locale}/{version}/changes`, et `/{locale}/changes` pour le dernier
+  patch : ce que la version a changé. `/{locale}/patches` y mène.
+- **Sitemaps** : l'index annonce les `latest.xml`, puis le `{version}.xml` de chaque version
+  passée, dans les 21 langues (~8 440 entrées). Un fichier de version liste sa page de patch
+  et les ouvreurs de ses états clos. `lastmod` donne le moment où une page est devenue
+  indexable ; aucune date de sortie de patch n'est devinée.
+  `LoDb__Seo__SitemapVersionWindow` disparaît.
+- **Pages figées et révisables** : une page d'un état clos ne lie que des URL versionnées et
+  ne change plus (classe `archived`). Une page d'ancien patch de l'état ouvert prend la
+  classe `revisable` (un jour) et se pré-calcule de nouveau quand la promotion clôt son état
+  (ADR 0011, amendement du 2026-10-22).
+- **À la promotion, dans cet ordre** :
+  1. l'index ;
+  2. le pré-calcul (version qui part, états clos, pages de patch) ;
+  3. IndexNow (URL courtes changées, ouvreurs devenus indexables, pages de patch).
+- **Redirections héritées** (amendement du 2026-10-16) : une ancienne URL qui nomme une
+  version mène à la canonique de sa cible selon cette règle, l'ouvreur de son état ou l'URL
+  courte.
+- **Bascule d'un seul coup** : ni interrupteur, ni coexistence des deux règles. Le
+  changement qui porte cette règle retire `CanonicalReferences` et `CanonicalReader`, et son
+  déploiement est la bascule. L'index se construit avant que l'API serve, par un service de
+  déploiement lancé après `migrate`. Retour arrière : un revert, avec l'epoch 1 du stockage
+  gardée deux semaines (ADR 0011, amendement du 2026-10-22).
+
+**Mesure** (propriétaire), dans la Search Console, 2, 4 et 8 semaines après la bascule,
+comparée au relevé du jour de la bascule :
+
+- les pages indexées, les impressions des URL versionnées et des pages de patch montent ;
+- « Explorée, actuellement non indexée » baisse ;
+- « Autre page avec balise canonique correcte » monte, ce qui est attendu (les versions d'un
+  état qui ne sont pas l'ouvreur) ;
+- si les ouvreurs restent « explorés, non indexés », ou si « Google n'a pas choisi la même
+  URL canonique que l'utilisateur » gonfle entre deux états voisins, l'empreinte devient
+  moins fine (sans les skins, puis sans les champs mineurs) : nouveau schéma, index
+  reconstruit, pages changées pré-calculées de nouveau.
