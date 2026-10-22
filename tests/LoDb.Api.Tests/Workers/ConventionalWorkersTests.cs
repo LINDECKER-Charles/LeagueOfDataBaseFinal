@@ -39,7 +39,6 @@ public sealed class ConventionalWorkersTests
         [
             typeof(AuthenticatorSecretsJob),
             typeof(RefreshFamilyPurgeJob),
-            typeof(UnverifiedAccountPurgeJob),
             typeof(AnalyticsRetentionJob),
             typeof(AnalyticsRollupJob),
             typeof(AnalyticsWriterWorker),

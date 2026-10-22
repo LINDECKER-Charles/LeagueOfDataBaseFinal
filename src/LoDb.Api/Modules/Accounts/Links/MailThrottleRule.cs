@@ -32,8 +32,8 @@ internal sealed record MailThrottleRule
 
     /// <summary>
     /// Verification e-mails asked again: a few in all, 5 by default, then one per interval, a
-    /// day by default. An unverified account is erased after a week, so an address typed by
-    /// someone else receives a handful of them at most.
+    /// day by default, so an address typed by someone else receives a handful of them before
+    /// the pace drops to a daily one.
     /// </summary>
     public static MailThrottleRule ConfirmEmail(VerificationResendOptions options)
     {

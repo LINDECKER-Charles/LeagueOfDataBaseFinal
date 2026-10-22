@@ -368,7 +368,7 @@ même nom.
 | `LoDb__Mail__Port` | ➖ | `587` par défaut. |
 | `LoDb__Mail__Security` | ➖ | `Auto` par défaut ; `None`, `SslOnConnect`, `StartTls`, `StartTlsWhenAvailable`. |
 | `LoDb__Mail__Username`, `LoDb__Mail__Password` 🔒 | si le relais authentifie | Identifiants SMTP. |
-| `LoDb__Mail__From` | prod | `Nom <adresse>`, sur un domaine couvert par SPF, DKIM et DMARC. Défaut : `no-reply@leagueofdatabase.gg`, **un autre domaine** : toujours le définir. |
+| `LoDb__Mail__From` | prod | `Nom <adresse>`, sur un domaine couvert par SPF, DKIM et DMARC (§ 6.4). Défaut : `LeagueOfDataBase <contact@charles-lindecker.com>`, l'expéditeur de la prod. |
 | `LoDb__Billing__StripeSecretKey` 🔒 ⚙️ | prod | `sk_live_…` en prod, `sk_test_…` sur `staging`. Absente : dons et achats de crédits en 503. |
 | `LoDb__Billing__StripeWebhookSecret` 🔒 ⚙️ | prod | `whsec_…` de l'endpoint `/webhooks/stripe` de l'environnement. Absent : webhook en 503, alerte `billing.webhook.unconfigured`. |
 | `LoDb__Accounts__Google__ClientId` | ➖ | Client OAuth web. Absent : connexion Google coupée (`google-unavailable`). |
@@ -504,7 +504,7 @@ Pour en changer un sur un hôte, l'ajouter sous `services.api.environment` de
 | `LoDb:Hosting` | `HttpPort` (8080, attendu par nginx et le SSR), `MetricsPort` (9464, jamais publié), `MaxRequestBodySize` (131072 octets, soit 128 Kio ; au-delà, 413), `DatabaseBusyRetryAfter` (5 s, `Retry-After` du 503 quand le pool Postgres reste occupé), `SecretsDirectory` (`/run/secrets` : un fichier par réglage, nommé d'après sa clé avec `__`, lu au démarrage ; vide, il vaut un réglage absent ; il prime sur toute autre source) |
 | `LoDb:Database` | `Password` (aucun : sans lui, la chaîne de connexion reste telle quelle ; posé, il y remplace le mot de passe) ; pour `migrate` seulement, `AppRole:Password` (aucun : le mot de passe de `lodb_app` reste tel quel ; ASCII imprimable), `AppRole:StatementTimeout` (15 s), `AppRole:ConnectionLimit` (50, `-1` sans limite), `BackupRole:Password` (aucun : le mot de passe de `lodb_sauvegarde` reste tel quel ; ASCII imprimable) |
 | `LoDb:Workers` | `Enabled` (`true` ; seul `false` coupe toutes les tâches de fond) |
-| `LoDb:Accounts` | `SecureCookies` (vrai hors Development) ; `VerificationResend:FreeResends` (5 renvois de l'e-mail de vérification par compte), puis un par `VerificationResend:Interval` (1 j) ; `UnverifiedPurge:After` (7 j : un compte encore non vérifié est effacé, sauf build, clé API, don, rôle, bannissement, soutien ou Google), `UnverifiedPurge:BatchSize` (500 comptes par passage horaire) ; `RefreshTokens:ReuseGrace` (30 s, de 0 à 5 min : le jeton de rafraîchissement qu'un échange vient de remplacer s'échange encore pour la même génération, contre une réponse perdue ou deux échanges simultanés ; au-delà, il révoque sa famille) |
+| `LoDb:Accounts` | `SecureCookies` (vrai hors Development) ; `VerificationResend:FreeResends` (5 renvois de l'e-mail de vérification par compte), puis un par `VerificationResend:Interval` (1 j) ; `RefreshTokens:ReuseGrace` (30 s, de 0 à 5 min : le jeton de rafraîchissement qu'un échange vient de remplacer s'échange encore pour la même génération, contre une réponse perdue ou deux échanges simultanés ; au-delà, il révoque sa famille) |
 | `LoDb:RateLimiting` | par compte et par heure glissante, jamais par adresse : `CheckoutsPerHour` (10 checkouts de pack ou de plan), `ApiKeyIssuesPerHour` (5 clés créées ou régénérées), `BuildEditsPerHour` (60 builds créés ou remplacés), `VotesPerHour` (120 votes) ; au-delà, `429 rate-limited` |
 | `LoDb:Builds:Votes` | `MinimumAccountAge` (1 j : âge du compte avant son premier vote ; l'e-mail vérifié est aussi exigé) |
 | `LoDb:Mail` | `Timeout` (`00:00:30`) |
@@ -938,6 +938,10 @@ alors à la connexion (`Host key verification failed`).
 
 Mêmes identifiants que le `MAILER_DSN` de l'ancienne stack du même environnement (§ 4.4).
 Le domaine de `LoDb__Mail__From` doit autoriser le relais : SPF, DKIM et DMARC.
+`charles-lindecker.com` le fait pour le relais de Hostinger (SPF
+`include:_spf.mail.hostinger.com`, DKIM `hostingermail1`, DMARC `p=none`) ;
+`league-of-data-base.com` ne publie aucun de ces enregistrements : un e-mail envoyé en son nom
+serait refusé ou classé indésirable.
 
 ### 6.5 Stripe
 

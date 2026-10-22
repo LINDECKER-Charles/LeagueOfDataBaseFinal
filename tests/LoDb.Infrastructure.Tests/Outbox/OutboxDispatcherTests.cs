@@ -41,7 +41,7 @@ public sealed class OutboxDispatcherTests(PostgresContainerFixture postgres)
         Assert.Equal(DispatchSummary.Empty, second);
         var sent = Assert.Single(_transport.Sent);
         Assert.Equal(OutboxHarness.Recipient, sent.To.Mailboxes.Single().Address);
-        Assert.Equal("no-reply@leagueofdatabase.gg", sent.From.Mailboxes.Single().Address);
+        Assert.Equal("contact@charles-lindecker.com", sent.From.Mailboxes.Single().Address);
         Assert.StartsWith("Confirmez votre adresse e-mail", sent.Subject, StringComparison.Ordinal);
         var row = Assert.Single(await harness.RowsAsync(Cancellation));
         Assert.Equal(EmailOutboxStatus.Sent, row.Status);
