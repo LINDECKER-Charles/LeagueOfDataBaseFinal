@@ -19,7 +19,7 @@ paresseux de l'ancienne stack.
 
 ## 1. Méthode
 
-Outil : [`tools/next/parity/`](../../../tools/next/parity/README.md) pour la collecte,
+Outil : [`tools/next/parity/`](../../../tools/parity/README.md) pour la collecte,
 [`tests/LoDb.Parity/`](../../../tests/LoDb.Parity) pour la comparaison et le classement.
 
 - **Échantillon** : 16.19.1 à 16.10.1 (les 10 dernières versions de `versions.json`),

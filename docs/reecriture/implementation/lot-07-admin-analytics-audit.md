@@ -1,5 +1,9 @@
 # Lot 7 — Admin, analytics, audit, contact
 
+> **Historique** : spécification de construction de septembre 2026, exécutée (bascule le
+> 2026-10-04). Les règles en vigueur sont dans [`AGENTS.md`](../../../AGENTS.md) et les
+> [ADR](../adr/) ; plusieurs choix de ce lot ont changé depuis, par amendement daté.
+
 Objectif du lot : analytics et audit en Postgres avec leur rétention enfin automatique, un
 module admin Angular multi-admin avec MFA, et le formulaire de contact.
 

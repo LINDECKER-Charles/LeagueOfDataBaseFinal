@@ -1,5 +1,12 @@
 # Héritage — ce que la réécriture corrige, ce qu'elle garde
 
+> **Statut (2026-10-22)** : inventaire de construction, du 2026-09-24. Les §§ 1 à 4 décrivent
+> l'ancienne stack et ce que la réécriture en a fait : ils sont **historiques** (le § 4 visait
+> la prod d'alors, Symfony, remplacée le 2026-10-04). Les §§ 5 et 6 restent des **invariants**
+> du site, sauf la puce « URLs » du § 6 : une fiche d'ancien patch n'est plus sa propre
+> canonique depuis l'amendement du 2026-10-14 de l'ADR 0005 (règle en vigueur :
+> [`seo-indexabilite.md`](../produit/seo-indexabilite.md)).
+
 Inventaire établi le 2026-09-24 à partir :
 
 - de `CLAUDE.md` et de toute la documentation (`docs/`) ;
@@ -148,9 +155,10 @@ Chaque point devient un cas de test du lot 1 ([ADR 0010](adr/0010-observabilite-
   allow-list, écrits de façon atomique. Rien d'autre n'est exposé.
 - **Synchronisme** : détail, picker, build et recherche résolvent leurs images de façon
   synchrone ; seules les listes peuvent différer.
-- **URLs** : dernier patch en URL courte canonique ; patchs passés auto-canoniques ;
-  `/build/` réservé au front, partage sur `/b/{token}` (capacité opaque, noindex, sans
-  JSON-LD).
+- **URLs** : dernier patch en URL courte canonique ; patchs passés auto-canoniques
+  (*remplacé : ADR 0005, amendement du 2026-10-14, puis la règle par état décidée le
+  2026-10-22*) ; `/build/` réservé au front, partage sur `/b/{token}` (capacité opaque,
+  noindex, sans JSON-LD).
 - **Builds** : épinglés à leur patch et à leur mode. Un élément disparu devient un
   « fantôme », jamais supprimé automatiquement. L'import rapporte ce qui a été retiré.
   Arbre secondaire limité à 2 runes de rangées différentes (FIFO). Au plus 8 objets par

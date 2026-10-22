@@ -1,5 +1,9 @@
 # Lot 8 — Préparation de la bascule
 
+> **Historique** : spécification de construction de septembre 2026, exécutée (bascule le
+> 2026-10-04). Les règles en vigueur sont dans [`AGENTS.md`](../../../AGENTS.md) et les
+> [ADR](../adr/) ; plusieurs choix de ce lot ont changé depuis, par amendement daté.
+
 Objectif du lot : tout ce que la bascule exige et qui se construit dans le dépôt —
 déploiement, outils, runbook, répétition locale —, pour que la fenêtre de bascule
 elle-même, qui reste une opération hôte, se déroule sans improvisation.

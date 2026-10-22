@@ -1,5 +1,9 @@
 # Lot 1 — Données Data Dragon
 
+> **Historique** : spécification de construction de septembre 2026, exécutée (bascule le
+> 2026-10-04). Les règles en vigueur sont dans [`AGENTS.md`](../../../AGENTS.md) et les
+> [ADR](../adr/) ; plusieurs choix de ce lot ont changé depuis, par amendement daté.
+
 Objectif du lot : récupérer, normaliser, stocker et servir en mémoire les données et images
 Data Dragon / CommunityDragon, avec toutes les particularités connues en tests, et la
 persistance de base de toute la réécriture.

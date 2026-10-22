@@ -1,10 +1,31 @@
 # Runbook de bascule
 
+> **État au 2026-10-22 — la bascule est faite.**
+>
+> - **J = 2026-10-04** : merge manuel `test`→`main` `848b90a2` (sans PR ; la branche d'intégration
+>   `chore/bascule-nouvelle-stack` était entrée dans `dev` par la PR #42), release 3.0.0. Les 72 h de
+>   surveillance renforcée se sont closes le 2026-10-07. Aucun retour arrière n'a eu lieu.
+> - **Migrations** : toutes celles arrivées depuis sont restées additives ; `tools/contract/check.sh`
+>   passe sur la tête de `dev` (15 migrations, relevé du 2026-10-22).
+> - **Retour arrière** (§ 8) : **plus jouable tel qu'écrit**. Relevé du 2026-10-22 sur l'hôte de
+>   prod : ni `/root/lodb-backups` ni `$PROD_PATH/legacy/.env`, et le job ne garde que ses
+>   10 dernières sauvegardes, la plus ancienne du 2026-10-12. L'ancien `.env` de la prod est donc
+>   à reconstituer. Le § 8.2 ignore aussi `compose.umami.yaml` et `compose.sauvegarde.yaml`,
+>   apparus depuis : relancer l'ancienne stack couperait la mesure Umami et les sauvegardes hors
+>   hôte. Enfin, les moteurs ont appris depuis 18 jours les URL de la nouvelle grammaire, que
+>   l'ancienne stack sert en 404. Un incident se corrige en avant.
+> - **Contract** (§ 9) : possible à partir du **2026-11-03** (J+30), sur décision explicite.
+>   Rien n'est encore planifié.
+> - **Décommission** (§ 10) : après le *contract*. Les docs du § 10.3 sont réécrites (2026-10-22).
+> - Ce runbook garde la procédure telle qu'elle a été jouée. La répétition sur `staging` avec
+>   le dump réel (§ 3.2) n'a pas de relevé dans le dépôt.
+
 Procédure pas à pas de la bascule de l'ancienne stack (Symfony + Go + Vue) vers la nouvelle
 (.NET + Angular), **en place** : la nouvelle stack prend la place de l'ancienne dans le même
 projet Compose, le même dossier de l'hôte et la même base (`lodb-staging`, puis `lodb-prod`).
-Elle met en œuvre [`plan-migration.md`](plan-migration.md) (« Bascule (lot 8) ») avec les
-outils du lot 8 :
+Elle met en œuvre [`plan-migration.md`](plan-migration.md) (« Bascule (lot 8) »), dont elle
+remplace le modèle d'un projet `lodb-next` à part par cette bascule sur place (2026-09-28),
+avec les outils du lot 8 :
 
 - déploiement et promotion (L8.1) : [`github-actions-secrets.md`](../guides/github-actions-secrets.md)
   et [`configuration.md`](../guides/configuration.md) ;
@@ -515,6 +536,11 @@ arrière reste possible jusqu'au *contract*.
 
 ## 8. Retour arrière
 
+> **Au 2026-10-22, cette procédure n'est plus jouable telle qu'écrite** (voir l'état en tête de
+> ce runbook) : l'ancien `.env` de la prod n'est plus sur l'hôte, et le § 8.2 ne tient pas
+> compte des calques `compose.umami.yaml` et `compose.sauvegarde.yaml`. Avant tout retour
+> arrière, il faudrait reconstituer `legacy/.env`, puis rejouer la procédure sur le staging.
+
 ### 8.1 Critères
 
 | Situation | Décision |
@@ -597,8 +623,8 @@ l'ancienne stack ne peut plus tourner sur la base.
 - Sauvegarde de la base juste avant, restaurée à blanc pour la vérifier.
 - Le *contract* devient une migration EF ordinaire, appliquée par `migrate` : staging
   d'abord, puis merge `test`→`main`. Jamais de SQL à la main sur la prod.
-- Le superutilisateur `LODB_DB_USER` ne sert ensuite plus qu'à `migrate`, aux sauvegardes et
-  à `psql` : l'API a son propre rôle (`lodb_app`).
+- Le superutilisateur `LODB_DB_USER` ne sert déjà plus qu'à `migrate`, aux sauvegardes et à
+  `psql` : l'API a son propre rôle (`lodb_app`) depuis le 2026-10-11 (`5097f110`).
 
 ## 10. Décommission
 
@@ -629,9 +655,8 @@ s'exportent pas : ils se régénèrent.
 JSON et `manifest.json` vivent dans la feature qui les lit,
 `src/LoDb.Web/src/app/features/editorial/changelog/published/`, un vrai dossier à la place de
 l'ancien lien symbolique. La copie de `app/public/changelog/` dans l'image `web-ssr` et dans
-les builds Android a disparu. Reste à faire : pointer l'outillage du changelog joueur
-(synthèse de release, [`changelog/README.md`](../changelog/README.md)) sur ce dossier. Le
-contexte de build de `web-ssr` peut redevenir `src/LoDb.Web`.
+les builds Android a disparu. [`changelog/README.md`](../changelog/README.md) nomme ce dossier
+depuis le 2026-10-22. Le contexte de build de `web-ssr` peut redevenir `src/LoDb.Web`.
 
 L'ancienne stack archivée n'a plus de changelog : relancée depuis `legacy/`, sa page
 `/changelog` est vide et sa version affichée est `0.0.0`.
@@ -640,20 +665,24 @@ L'ancienne stack archivée n'a plus de changelog : relancée depuis `legacy/`, s
 
 | Document | Changement |
 |---|---|
-| `AGENTS.md` | **fait** : décrit la nouvelle stack (stack, commandes, garde-fous, scopes), seul fichier d'instructions versionné ; les règles PHP sont dans `legacy/AGENTS.md`, supprimé avec `legacy/` |
+| `AGENTS.md` | **fait** : décrit la nouvelle stack (stack, commandes, garde-fous, scopes), fichier d'instructions qui fait foi, que `CLAUDE.md` importe ; les règles PHP sont dans `legacy/AGENTS.md`, supprimé avec `legacy/` |
 | `README.md`, `CONTRIBUTING.md`, `docs/README.md` | **fait** avec l'archivage (l'ancien README est `legacy/README.md`) |
-| `docs/contribution.md` | démarrage, commandes et garde-fous de la nouvelle stack, en FR, EN et ES (bandeau d'avertissement en attendant) |
-| `docs/architecture/` (`architecture.md`, `analytics.md`, `api-publique.md`, `responsive-mobile.md`) | réécrits d'après `docs/reecriture/README.md` et les ADR |
+| `docs/contribution.md` | **fait** (2026-10-22) : archivé sous `legacy/docs/` ; [`CONTRIBUTING.md`](../../CONTRIBUTING.md) et `AGENTS.md` font foi |
+| `docs/architecture/` (`architecture.md`, `analytics.md`, `api-publique.md`, `responsive-mobile.md`) | **fait** (2026-10-22) : réécrits d'après le code et les ADR ; les anciennes versions sont sous `legacy/docs/architecture/` |
 | `docs/guides/setup.md`, `docker.md`, `configuration.md` | **fait** : archivés sous `legacy/docs/guides/`, remplacés par `developpement.md` et le nouveau `configuration.md` |
 | `docs/guides/github-actions-secrets.md` | **fait** : guide du pipeline de la nouvelle stack ; l'ancien est sous `legacy/docs/guides/` |
-| `docs/guides/observabilite.md`, `logging.md` | exemples sur `api` et `web-ssr` (`EventName`), plus de `php` ni `go-api` |
+| `docs/guides/observabilite.md`, `logging.md` | **fait** (2026-10-22) : exemples sur `api` et `web-ssr` (`EventName`), plus de `php` ni `go-api` ; l'ancien `logging.md` est sous `legacy/docs/guides/` |
 | `docs/guides/oauth-google-setup.md` | à jour pour la nouvelle stack ; à la décommission, retirer du client OAuth l'URI `/connect/google/check` et le § 6 |
 | `docs/guides/packaging-apk.md` | **fait** : archivé sous `legacy/docs/guides/`, remplacé par l'ADR 0007 et `release-android.md` |
-| `docs/guides/migration-edge-proxy.md` | relus contre la nouvelle stack |
-| `docs/changelog/README.md` | table des scopes (Twig, îlots Vue, Symfony, Go → front Angular, API .NET) |
-| `docs/reecriture/` | statut « basculé » dans son README ; ce runbook complété des dates et relevés réels |
+| `docs/guides/migration-edge-proxy.md` | **fait** (2026-10-22) : relu contre la nouvelle stack |
+| `docs/changelog/README.md` | **fait** : table des scopes de la nouvelle stack ; destination des releases (2026-10-22) |
+| `docs/produit/seo-indexabilite.md` | **fait** (2026-10-22) : règle SEO en vigueur et cible ; l'état des lieux du site Symfony est sous `legacy/docs/produit/` |
+| `docs/reecriture/` | **fait** (2026-10-22) : statut « basculé » dans son README, état daté en tête de ce runbook, bandeau « historique » sur les plans, les lots et les rapports |
 
 ## Points ouverts
+
+*Relevés avant la bascule ; leur issue n'est pas consignée. Ils ne valent plus que pour une
+rebascule, sauf le premier (divergence de `test`), qui concerne toute promotion.*
 
 - **Branche `test`** : la fusion automatique `dev`→`test` de `ci.yml` échoue si `test` a
   divergé (correctif poussé directement sur `test` ou `main`) ; vérifier avant § 1.1.

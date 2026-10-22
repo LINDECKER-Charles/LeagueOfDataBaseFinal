@@ -18,7 +18,7 @@
 
 Références : [plan §8](../../plan-implementation.md#8-jalons-et-critères-de-sortie),
 [lot 8](../../implementation/lot-08-bascule.md), [runbook](../../bascule.md) § 3.1,
-[outils de bascule](../../../../tools/next/cutover/README.md).
+[outils de bascule](../../../../tools/cutover/README.md).
 
 ## 1. Commandes et résultats
 

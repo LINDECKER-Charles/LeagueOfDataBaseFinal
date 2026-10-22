@@ -1,5 +1,12 @@
 # Plan de migration
 
+> **Historique (2026-09-24).** La bascule a eu lieu le 2026-10-04, **sur place** et non par un
+> projet `lodb-next` à part : les §§ Principes et Bascule (lot 8), retour arrière compris, sont
+> remplacés par
+> [`bascule.md`](bascule.md) (2026-09-28). Seule la **table des 301** reste en vigueur, mise à
+> jour par l'amendement du 2026-10-16 de l'[ADR 0005](adr/0005-web-ssr-urls-et-seo.md). Les
+> règles en vigueur sont dans [`AGENTS.md`](../../AGENTS.md) et les ADR.
+
 Reconstruction **en parallèle** jusqu'à la parité, puis **bascule du domaine**. On ne
 mélange pas des pages Twig et Angular sous un même domaine : sessions et
 authentification seraient incompatibles.
