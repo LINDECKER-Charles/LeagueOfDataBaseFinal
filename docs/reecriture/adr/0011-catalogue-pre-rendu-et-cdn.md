@@ -95,7 +95,9 @@ visiteur ─► Cloudflare ── en cache ────────────�
 - **Ce qui est stocké** : la `200` de classe `archived` du SSR, compressée en gzip une fois,
   avec `Content-Type`, `Content-Encoding` et `Cache-Control` en en-têtes de l'objet, et en
   métadonnées (sous 2 Ko) la CSP de la page, sa version Report-Only, `Reporting-Endpoints`,
-  `Link` et le build. Jamais une 503, une 5xx, une 404 ni une 301.
+  `Link` et le build. Jamais une 503, une 5xx, une 404 ni une 301. *Amendé le 2026-10-22 :
+  la `200` de classe `archived` ou `revisable`, chacune avec sa `Cache-Control` (amendement
+  du 2026-10-22).*
 - **Deux epochs du stockage** : celle d'écriture, celle de la passe en cours, et celle que
   sert nginx (`LODB_ARCHIVE_SERVE_EPOCH`). Une epoch se remplit pendant que l'autre reste
   servie ; la bascule se fait par la variable et un redéploiement, sans point d'accès.
@@ -111,15 +113,18 @@ visiteur ─► Cloudflare ── en cache ────────────�
 - Une tâche de fond de l'API ([ADR 0003](0003-ingestion-proactive-et-taches-de-fond.md),
   amendement du 2026-10-20) parcourt les pages par (version, langue) : chaque catalogue se
   charge une fois pour toutes ses pages. Les pages sont les 4 listes et toutes les entités
-  listées, tirées de la même fonction que les sitemaps.
+  listées, tirées de la même fonction que les sitemaps. *Amendé le 2026-10-22 : les 4 listes,
+  la page de patch, puis les entités, dans cet ordre figé (`VersionPages.Of`), les entités
+  tirées du prédicat que partage l'index des états.*
 - Elle appelle le SSR **en direct** sur le réseau de la pile, jamais à travers nginx, avec
   `X-LoDb-Prerender: 1`, l'hôte public de l'environnement (`X-Forwarded-Host`),
   `X-Forwarded-Proto: https` et `Accept-Encoding: gzip`. nginx efface toujours l'en-tête du
   précalcul côté public : un client ne peut pas se faire passer pour la passe.
 - Le SSR l'admet dans une **voie `prerender`** : son propre budget, une place seulement si le
   trafic réel en garde, aucune limite par client, aucune ligne de journal par page. Il marque
-  `X-LoDb-Cache-Class: archived` la réponse qu'il faut écrire et expose, à la passe seule, la
-  liste des bundles du build (`/_lodb/build-files`).
+  `X-LoDb-Cache-Class: archived` la réponse qu'il faut écrire (*ou `revisable`, depuis le
+  2026-10-22*) et expose, à la passe seule, la liste des bundles du build
+  (`/_lodb/build-files`).
 - L'API copie **tout le jeu haché** d'un build avant sa première page (les chunks différés
   ne sont nommés que dans le JavaScript), puis écrit un `PUT` par page. Une 301 ou une 404
   est sautée ; une 503 fait reculer la tâche selon son `Retry-After`.
@@ -137,7 +142,9 @@ visiteur ─► Cloudflare ── en cache ────────────�
   rejoignent la passe active ou en ouvrent une, en prod seulement
   (`LoDb__Prerender__AutoEnqueueOnPromotion`, faux en prod tant que la passe complète, lancée
   à la main, n'est pas terminée). Le staging reste presque vide : des passes
-  manuelles sur un petit périmètre.
+  manuelles sur un petit périmètre. *Amendé le 2026-10-22 : seulement une fois que l'index
+  des états couvre le patch promu ; ce réglage ne commande plus que ces unités, la file des
+  états clos tourne sans lui, staging compris.*
 - Un panneau d'administration pilote la passe sous `/api/admin/prerender` ; chaque action
   est auditée. Il montre l'epoch servie et la consigne de bascule dès qu'une epoch plus
   récente, que la passe active n'écrit pas, n'a plus aucun manque, quelles que soient les
@@ -159,14 +166,18 @@ visiteur ─► Cloudflare ── en cache ────────────�
 - Les en-têtes de la page sont reposés depuis les métadonnées ; `X-LoDb-Source:
   cache|store|ssr` dit d'où vient chaque page épinglée.
 - La classe `archived` passe à un `s-maxage` d'un an : une page d'ancien patch ne change
-  qu'avec une epoch.
+  qu'avec une epoch. *Amendé le 2026-10-22 : vrai d'une page figée seulement ; nginx garde
+  chaque page autant que dit la `Cache-Control` de son objet, et donne au client celle de sa
+  classe.*
 
-  *Limite constatée le 2026-10-22 : sous la règle des canoniques du 2026-10-14, encore celle
-  du code, la canonique d'une fiche d'ancien patch dépend du dernier patch. Une page stockée
-  garde celle de son rendu jusqu'à l'epoch suivante, même quand l'entité a été retirée ou
-  renommée depuis : à la promotion, seule la version qui quitte le dernier patch est
-  recalculée (`PrerenderPromotionListener`). Rien ne borne cette péremption ; l'amendement du
-  2026-10-22 (pages révisables) la traite.*
+  *Limite constatée le 2026-10-22 : sous la règle des canoniques du 2026-10-14, la canonique
+  d'une fiche d'ancien patch dépend du dernier patch. Une page stockée garde celle de son
+  rendu jusqu'à l'epoch suivante, même quand l'entité a été retirée ou renommée depuis : à la
+  promotion, seule la version qui quitte le dernier patch est recalculée
+  (`PrerenderPromotionListener`). Traitée par l'amendement du 2026-10-22 : seule une page
+  d'état clos, qui ne change plus, garde l'année ; une page de l'état ouvert est
+  `revisable` (une heure) et la file des états clos la recalcule quand une promotion clôt
+  son état.*
 - Un bundle que le SSR ne connaît plus (404) est cherché sous `build/` dans le stockage.
 - `front-builds` garde ses bundles **400 jours** (`LODB_FRONT_BUILDS_RETENTION_DAYS`, le job
   de déploiement refuse moins de 395), plus que l'an de la classe `archived`. La copie sous

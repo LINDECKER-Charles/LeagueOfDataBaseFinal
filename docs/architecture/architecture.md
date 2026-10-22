@@ -125,8 +125,13 @@ derrière `LODB_PAGES_STORE_ENABLED`, dans l'epoch `LODB_ARCHIVE_SERVE_EPOCH`. L
 CPU libre de l'hôte (`PrerenderPaceWorker`) ou une cible manuelle. La file de la demande :
 `web-ssr` compte les pages d'anciens patchs qu'il refuse en 503 (`GET /refused` sur 9464),
 `PrerenderDemandCollectWorker` les verse dans `prerender_demand`, `PrerenderDemandWorker` les
-précalcule, la plus demandée d'abord. État en Postgres (`prerender_pass`, `prerender_unit`,
-`prerender_build`), pupitre `/api/admin/prerender`, CLI `prerender unit|pause|resume`.
+précalcule, la plus demandée d'abord. Les pages figées (état clos, `archived`, un an) et
+révisables (état ouvert, `revisable`, une heure) sont stockées toutes deux : à chaque
+promotion, la file des états clos (`prerender_revision`, `PrerenderRevisionWorker`) recalcule
+les pages des états que la promotion a clos, dans l'epoch servie et celle de la passe active.
+Une passe peut se limiter aux ouvreurs (`{"pages":"openers"}`). État en Postgres
+(`prerender_pass`, `prerender_unit`, `prerender_build`, `prerender_revision`), pupitre
+`/api/admin/prerender`, CLI `prerender unit|pause|resume`.
 
 **Mesure d'audience.** Interne : nginx copie chaque requête de page
 (`snippets/analytics-mirror.conf`) vers `/internal/analytics/page`, le routeur du front poste

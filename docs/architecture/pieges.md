@@ -484,12 +484,17 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   `snippets/pages-store/pages.conf`, `snippets/archive-cache.conf`) : le cache chaud
   `lodb_archive` d'abord, puis le stockage objet (ADR 0011), puis le SSR. Clé **sans
   révision**, préfixée par les deux epochs (`LODB_ARCHIVE_EPOCH.LODB_ARCHIVE_SERVE_EPOCH`,
-  § « Catalogue pré-rendu » ci-dessous). Elles survivent aux déploiements et gardent jusqu'à
-  un an le chrome, la CSP et les bundles du build qui les a rendues (`s-maxage` d'un an de la
-  classe `archived`, tant que la page est demandée avant ses 90 jours d'inactivité, puis une
-  dernière copie périmée servie pendant son rafraîchissement) : voulu. Monter
+  § « Catalogue pré-rendu » ci-dessous). Elles survivent aux déploiements et gardent le
+  chrome, la CSP et les bundles du build qui les a rendues aussi longtemps que leur
+  `Cache-Control` le dit (`snippets/pages-store/pages.conf` suit l'objet du stockage) : un an
+  pour une page d'état clos (`archived`), une heure pour une page de l'état ouvert
+  (`revisable`), tant que la page est demandée avant ses 90 jours d'inactivité, puis une
+  dernière copie périmée servie pendant son rafraîchissement : voulu. `proxy_cache_valid 200
+  365d` ne vaut plus qu'en repli, pour un objet sans `Cache-Control` ; les bundles
+  (`bundles.conf`) gardent l'année quoi que dise leur objet. Monter
   `LODB_ARCHIVE_EPOCH` quand le chrome, la CSP ou le contrat `/api` changent de façon visible,
-  et après tout correctif de sécurité du front. Elle ne vide que le cache : une fois que nginx
+  après tout correctif de sécurité du front, et après des pages recalculées en place dans
+  l'epoch servie (nouveau schéma d'empreinte). Elle ne vide que le cache : une fois que nginx
   lit le stockage (`LODB_PAGES_STORE_ENABLED=1`), la requête suivante y reprend la page d'avant,
   chrome, CSP et bundles compris. Le changement passe alors par une passe sur une epoch neuve
   et la bascule de `LODB_ARCHIVE_SERVE_EPOCH`, tout de suite pour un correctif de sécurité
@@ -697,7 +702,10 @@ stockage objet, puis lues par nginx
   la bascule est une variable d'`ENV_*` et un redéploiement, aucun point d'accès ne la fait
   (le panneau donne la consigne). L'epoch `0` est celle des sondes de `scaleway-bucket.sh
   verifier`, jamais d'une passe ; la première passe de prod écrit l'epoch `1`, servie pendant
-  qu'elle se remplit.
+  qu'elle se remplit. La règle par état se sert dans l'epoch `2` : à son déploiement, seule
+  `LODB_ARCHIVE_SERVE_EPOCH` passe à `2` (ce qui purge déjà le cache chaud), et
+  `LODB_ARCHIVE_EPOCH` reste à `3` ; l'epoch `2` part vide et se remplit par les passes et la
+  file de la demande, jamais en relisant l'epoch `1`, qui porte l'ancienne règle.
 - **Repli vers le SSR, sans bruit.** Toute réponse du stockage autre qu'un objet (`404` pour
   une page absente, `403` pour une politique ou une adresse en cause, `429`, `5xx`, connexion
   au-delà d'1 s, lecture au-delà de 3 s) renvoie à `@lodb_pinned_ssr`, la voie épinglée
@@ -757,15 +765,21 @@ stockage objet, puis lues par nginx
   son nom, jamais par motif (`snippets/pages-store/answer.conf`) : une métadonnée ajoutée par la
   passe s'ajoute là, et se repose dans `archive-cache.conf`, sinon elle sort chez le client.
   Une réponse du stockage, reconnue à sa métadonnée `lodb-build`, reçoit de nginx le type
-  `text/html`, la `Cache-Control` de la classe `archived` et, si son objet n'a pas de CSP, une
-  politique stricte : jamais aucune. `ETag`, `Last-Modified` et `Accept-Ranges` décrivent
+  `text/html`, la `Cache-Control` de sa classe (`$lodb_pinned_cache_control`, une `map` sur
+  `lodb-build` et la `Cache-Control` de l'objet : `revisable` pour un objet qui porte
+  exactement sa valeur, `archived` pour tout autre) et, si son objet n'a pas de CSP, une
+  politique stricte : jamais aucune. La valeur `revisable` s'écrit deux fois dans
+  `sites/site.conf` (reconnue et donnée) et doit rester celle de `cache-control.ts`
+  (`tools/nginx/test/archived-cache-control.test.mjs`) : une valeur changée d'un seul côté
+  fait servir un an une page révisable. `ETag`, `Last-Modified` et `Accept-Ranges` décrivent
   l'objet gzip, pas la réponse (un client sans gzip reçoit d'autres octets) : masqués aussi,
   voulu. Une requête conditionnelle reçoit donc la page en `200`, jamais un `304`, et un `Range`
   la page entière ; les bundles hachés de `/build/`, servis sous le même fichier, perdent aussi
   ceux du SSR (immuables, jamais revalidés). Ne pas les « rétablir ».
 - **Clé du stockage tirée d'une `map` stricte, jamais de l'URI brute.** `$lodb_store_page`
   (`sites/site.conf`) se construit sur `$lodb_request_path`, le chemin tel qu'envoyé, par une
-  expression qui ne laisse passer que les 4 listes et les fiches d'une version, en `GET` ou
+  expression qui ne laisse passer que les 4 listes, la page de patch
+  (`/{locale}/{version}/changes`, rien au-dessous) et les fiches d'une version, en `GET` ou
   `HEAD`, sans query ; tout le reste va au SSR sans interroger le stockage. Un `proxy_pass` à
   variable ne normalise pas l'URI : ni `$uri` ni `$request_uri` n'y entrent. Un nouveau type
   de page de la grammaire (`src/LoDb.Domain/Paths`) s'ajoute aussi à cette `map`, sinon ses
@@ -826,6 +840,38 @@ stockage objet, puis lues par nginx
   sans durée. Les unités finies avant la migration reçoivent `ended_at = updated_at` ; une unité
   finie par l'image précédente après un retour à elle n'en a pas, et manque à la liste des échecs
   du moniteur (la matrice, lue par l'état, la montre).
+- **Pages révisables, recalculées page par page.** Une page d'ancien patch de l'état ouvert
+  d'une entité désigne l'URL courte ; quand une promotion clôt cet état, sa canonique, son
+  titre et son historique changent. Le SSR la marque `revisable` (une heure), la passe la
+  stocke ainsi, et la file des états clos (`prerender_revision`) la recalcule après la
+  promotion, dans l'epoch servie et dans celle de la passe active : chaque version de chaque
+  état clos (celle qui vient de quitter le dernier patch comprise), dans les 21 langues, due
+  21 minutes après (`2 × LoDb:Catalog:VersionsLifetime` + 1 min, le temps que tous les
+  processus lisent l'index qui la couvre). La copie révisable d'avant peut encore être servie
+  environ deux heures après le nouveau rendu (`s-maxage`, puis `stale-while-revalidate`) :
+  voulu. Une page recalculée qui revient `revisable` compte comme un essai raté : nouvel essai
+  5 minutes après, échec définitif au troisième, montré au pupitre. Le recalcul suit la
+  graphie du catalogue de chaque version (`FiddleSticks` puis `Fiddlesticks`), pas celle de
+  l'ouvreur. Cette file ne dépend pas de `AutoEnqueueOnPromotion` : elle tourne dès que le
+  stockage est configuré, staging compris.
+- **Rien du précalcul ne part sur un index en retard.** Tant que l'index des états ne couvre
+  pas le patch promu, ni l'unité du patch remplacé ni la file des états clos ne démarrent
+  (`prerender.promotion.index_behind`, toutes les 30 min tant qu'il est en retard) : rendues
+  sur cet index, leurs pages garderaient pour de bon l'état ouvert. `prerender.reconcile` les
+  ajoute une fois l'index rattrapé. Une génération neuve de l'index (reconstruction) est de
+  l'historique : ses clôtures ne sont pas mises en file (`prerender.revision.generation`),
+  seules celles de la dernière promotion le sont.
+- **Ordre des pages d'une version figé** (`VersionPages.Of`) : les quatre listes, puis la page
+  de patch (`changes`, toujours listée : une version sans page de patch répond 404, comptée
+  `skipped`), puis les entités. Une passe reprend à son curseur dans cet ordre : un
+  déploiement qui le change décale toute passe active, qu'on **annule au pupitre avant**. La
+  page de patch n'est pas un type de page (`TypeMask` garde quatre bits) : toute unité qui
+  couvre tous les types la rend, tout filtre de type l'écarte.
+- **Passe « ouvreurs d'abord »** (`{"pages":"openers"}`) : chaque unité rend la page de patch
+  et les ouvreurs de tout état (ouvert ou clos) à sa version, lus dans l'index. Elle ne
+  complète jamais une epoch et aucune promotion ne la rejoint : les unités d'un patch promu
+  pendant qu'elle tourne attendent sa fin (`prerender.promotion.deferred`) ; une passe entière
+  `{}` doit suivre. La commande `prerender unit` ne la propose pas.
 - **Le périmètre d'une passe reste lisible par l'image d'avant les listes.** `prerender_pass.scope`
   porte les listes (`versions`, `locales`, `pageTypes`) **et** les anciens champs qui peuvent les
   dire (`PassScopeJson`) : les bornes `oldest`/`newest` d'une liste de versions, `locale` et
@@ -835,7 +881,8 @@ stockage objet, puis lues par nginx
   qu'un retour à cette image reste possible. Ce qu'ils ne disent pas, elle le lit plus large :
   plusieurs langues ou plusieurs types sur les 21 et les 4, une liste de versions trouée (toute
   la plage entre ses bornes). Avant un tel retour, annuler la passe active si son périmètre
-  est de cette forme.
+  est de cette forme. Même règle pour `pages: "openers"`, que l'image d'avant la règle par
+  état ignore : elle lirait la passe entière, et la croirait capable de compléter l'epoch.
 - **Pas d'index sur `prerender_unit.updated_at`.** Il est réécrit à chaque page : l'indexer
   couperait les mises à jour HOT de la table, quatre millions de fois par passe. Ce qui doit être
   lu par ordre de fin passe par `ended_at`, écrit une fois, et son index partiel.

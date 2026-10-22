@@ -145,6 +145,7 @@ Jamais une ligne par URL, par fichier ou par page : une par lot, avec ses compte
 |---|---|
 | `prerender.unit.completed` | (version, langue) de la passe de précalcul |
 | `prerender.demand.drained` | lot de la file automatique |
+| `prerender.revision.drained` | lot de la file des états clos ; `prerender.revision.enqueued` par passage du producteur |
 | `states.update.completed` | mise à jour de l'index des états (commande, promotion, réconciliation), avec les comptes par ressource ; `states.update.progress` toutes les 50 versions d'une construction |
 | `seo.indexnow.submitted` | version soumise (`{Urls}`, `{Requests}`) ; sans clé IndexNow, `seo.indexnow.planned` (URL courtes, pages de patch, ouvreurs, rien d'envoyé) |
 | `fetch.batch.degraded` | lot de téléchargements (`{Failed} of {Batch}`) |
