@@ -917,7 +917,8 @@ lui. Elles l'emportent sur les sections citées ; les ADR en reprennent l'essent
   seulement quand il n'est pas chargé. Un ouvreur épinglé répond 503 `catalog-pending`.
 - **Page de patch** : une entité que le catalogue n'a pas est nommée par son id, sans image ;
   une réponse dont des icônes sont en attente est gardée 5 s (`public, max-age=5`, avec
-  `Retry-After`) ; validation dans l'ordre 400 (version), 400 (langue), 503, 404.
+  `Retry-After`), et le SSR rend alors la page `transient`, comme une liste : jamais stockée
+  figée avec ses initiales ; validation dans l'ordre 400 (version), 400 (langue), 503, 404.
 - **`/api/meta`** ne répond jamais 503 pour l'index : `oldestChangesVersion` et
   `newestChangesVersion` nuls et une ligne `catalog.meta.degraded`. `newestChangesVersion` est
   la fin de la couverture : tant que l'index est en retard sur une promotion, `/patches` ne

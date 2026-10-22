@@ -102,19 +102,34 @@ function changesOf(version: string, hasChanges = true): PatchChanges {
   };
 }
 
-const ANSWERS: Record<string, { status: number; body: unknown }> = {
+interface Answer {
+  readonly status: number;
+  readonly body: unknown;
+  readonly headers?: Record<string, string>;
+}
+
+const ANSWERS: Record<string, Answer> = {
   '/api/meta': { status: 200, body: META },
   [`/api/catalog/${OLDER}/fr_FR/changes`]: { status: 200, body: changesOf(OLDER) },
   [`/api/catalog/${LATEST}/fr_FR/changes`]: { status: 200, body: changesOf(LATEST, false) },
 };
+// OLDER still cold: its icons are placeholders, and the API says when to read it again.
+const PENDING_ICONS: Record<string, Answer> = {
+  ...ANSWERS,
+  [`/api/catalog/${OLDER}/fr_FR/changes`]: {
+    status: 200,
+    body: changesOf(OLDER),
+    headers: { 'Cache-Control': 'public, max-age=5', 'Retry-After': '5' },
+  },
+};
 const NO_PATCH_PAGE = { status: 404, body: { status: 404, code: 'no-patch-page' } };
 
-function simulatedApi(requested: string[]): HttpInterceptorFn {
+function simulatedApi(requested: string[], answers: Record<string, Answer>): HttpInterceptorFn {
   return (request) => {
     const url = request.urlWithParams;
     requested.push(url);
-    const { status, body } = ANSWERS[url] ?? NO_PATCH_PAGE;
-    const init = { status, url, headers: new HttpHeaders() };
+    const { status, body, headers }: Answer = answers[url] ?? NO_PATCH_PAGE;
+    const init = { status, url, headers: new HttpHeaders(headers) };
     return status < HttpStatusCode.BadRequest
       ? of(new HttpResponse({ ...init, body }))
       : throwError(() => new HttpErrorResponse({ ...init, error: body }));
@@ -144,7 +159,7 @@ const ROUTES: Routes = [
   },
 ];
 
-async function visit(url: string) {
+async function visit(url: string, answers = ANSWERS) {
   const init: ResponseInit = { status: HttpStatusCode.Ok, headers: new Headers() };
   const requested: string[] = [];
   TestBed.configureTestingModule({
@@ -158,7 +173,7 @@ async function visit(url: string) {
         withNavigationErrorHandler(handleNavigationError),
       ),
       provideLocationMocks(),
-      provideHttpClient(withInterceptors([simulatedApi(requested)])),
+      provideHttpClient(withInterceptors([simulatedApi(requested, answers)])),
       provideTestTransloco({
         lang: 'fr',
         byPath: { fr: ROOT_CATALOGUES.fr, 'patches/fr': PATCHES_CATALOGUES.fr },
@@ -190,6 +205,14 @@ describe("the page of a patch's changes", () => {
     expect(init.status).toBe(HttpStatusCode.Ok);
     expect(headerOf(init, 'Cache-Control')).toBe('public, max-age=3600, s-maxage=31536000');
     expect(requested).toEqual(['/api/meta', `/api/catalog/${OLDER}/fr_FR/changes`]);
+    expect(page?.querySelector('h1')?.textContent?.trim()).toBe(`Changements du patch ${OLDER}`);
+  });
+
+  it('keeps a past patch out of every store while its icons are placeholders', async () => {
+    const { init, page } = await visit(`/fr/${OLDER}/changes`, PENDING_ICONS);
+
+    expect(init.status).toBe(HttpStatusCode.Ok);
+    expect(headerOf(init, 'Cache-Control')).toBe(TRANSIENT);
     expect(page?.querySelector('h1')?.textContent?.trim()).toBe(`Changements du patch ${OLDER}`);
   });
 

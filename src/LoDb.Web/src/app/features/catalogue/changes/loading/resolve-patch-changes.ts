@@ -5,6 +5,7 @@ import { firstValueFrom, type Observable } from 'rxjs';
 import type { PatchChanges } from '../../../../core/api/generated/models/patch-changes';
 import { CatalogService } from '../../../../core/api/generated/services/catalog.service';
 import { ApiMeta } from '../../../../core/api/meta/api-meta';
+import { retryAfterOf } from '../../../../core/http/retry-after-of';
 import type { CatalogueEntry } from '../../../../core/routing/catalogue/catalogue-entry';
 import { cataloguePageOf } from '../../../../core/routing/catalogue/catalogue-page-of';
 import { openCatalogue } from '../../../../core/routing/catalogue/open-catalogue';
@@ -32,6 +33,8 @@ async function orAbsent<T>(answer: Observable<T>): Promise<T | null> {
  * unknown version is a 404, the latest pinned a 301 to `/{locale}/changes`, a known
  * `?version=` a 301 into the path), then the API's changes of the version, a real 404 when it
  * has none. An older patch's page never changes again (`archived`); the latest's, `latest`.
+ * An answer whose icons are still placeholders (a `Retry-After`, as a list's) is `transient`:
+ * kept a minute by the proxy, never stored frozen with its initials.
  */
 export const resolvePatchChanges: ResolveFn<CatalogueEntry<PatchChanges>> = async (
   route,
@@ -47,10 +50,11 @@ export const resolvePatchChanges: ResolveFn<CatalogueEntry<PatchChanges>> = asyn
     return answer(context, state.url);
   }
   const request = { version: context.version, lang: context.language };
-  const changes = await orAbsent(catalog.getPatchChanges(request));
+  const changes = await orAbsent(catalog.getPatchChanges$Response(request));
   if (changes === null) {
     return answer(NOT_FOUND, state.url);
   }
-  response.cache(cacheClassOf(context.version, meta));
-  return { context, details: changes };
+  const isPending = retryAfterOf(changes.headers.get('Retry-After'), Date.now()) !== null;
+  response.cache(isPending ? 'transient' : cacheClassOf(context.version, meta));
+  return { context, details: changes.body };
 };
