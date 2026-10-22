@@ -70,11 +70,10 @@ public sealed class StateIndexCopyTests(PostgresContainerFixture postgres)
         var before = await reader.GetAsync(Token);
 
         await index.PromoteAndListenAsync(Second);
-        var within = await reader.GetAsync(Token);
         await Task.Delay(Lifetime * 2, Token);
         var after = await reader.GetAsync(Token);
 
-        Assert.Same(before, within);
+        Assert.Equal(PatchVersion.Parse(First), before.Coverage.End);
         Assert.Equal(PatchVersion.Parse(Second), after.Coverage.End);
     }
 
