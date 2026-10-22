@@ -17,6 +17,8 @@ internal sealed class CatalogStatesReconcileJob(
     PeriodicJobServices services,
     IStateIndexUpdater updater) : PeriodicJob(services)
 {
+    private const string Unit = "versions";
+
     private static readonly TimeSpan Every = TimeSpan.FromMinutes(10);
 
     public override string Name => "catalog.states.reconcile";
@@ -27,6 +29,6 @@ internal sealed class CatalogStatesReconcileJob(
     {
         var request = new StateIndexRequest { Trigger = StateIndexTrigger.Reconcile };
         var report = await updater.UpdateAsync(request, cancellationToken);
-        return new JobRunSummary(report.VersionsIndexed, "versions");
+        return new JobRunSummary(report.VersionsIndexed, Unit);
     }
 }
