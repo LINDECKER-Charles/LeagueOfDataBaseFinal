@@ -656,8 +656,13 @@ L'index qui décide la page indexée de chaque fiche d'ancien patch
   courante du schéma qu'elle compile, et celles d'un autre schéma ne sont jamais touchées (une
   image précédente lit la sienne). Une génération en attente au même début de couverture
   reprend, les autres sont supprimées, `--rebuild` les supprime toutes. **Seule la commande**
-  reconstruit quand le début de la couverture bouge : la promotion et la réconciliation ne
-  construisent que si aucune génération n'est courante, et ne font sinon qu'étendre.
+  reconstruit quand le début de la couverture recule : la promotion et la réconciliation ne
+  construisent que si aucune génération n'est courante, et ne font sinon qu'étendre. Un début
+  qui avance n'est jamais un historique plus court : une version listée après la fin de la
+  génération courante sans son en_US (la promotion qui l'a sautée n'a pas pu l'ingérer) la
+  laisse en retard (`states.coverage.interrupted`), jusqu'à ce que la promotion suivante ou la
+  réconciliation l'ingère et l'étende ; ne pas « corriger » en reconstruisant depuis la version
+  d'après, ce qui jetterait tout l'historique sans retour.
 - **Couverture** : la plus longue suite de versions listées (liste de Data Dragon, plus le
   dernier patch promu) dont les jeux en_US sont stockés, jusqu'au dernier patch promu. Une
   version listée sans son en_US coupe la couverture : les plus anciennes sortent de l'index et

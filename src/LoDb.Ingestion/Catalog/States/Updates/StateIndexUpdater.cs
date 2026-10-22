@@ -140,17 +140,40 @@ internal sealed class StateIndexUpdater(
             return (StateIndexOutcome.Built, built);
         }
 
+        if (IsPastAGap(plan))
+        {
+            LogGap(plan);
+            return (StateIndexOutcome.Unchanged, null);
+        }
+
         var extended = await ExtendAsync(plan, cancellationToken).ConfigureAwait(false);
         return extended is null
             ? (StateIndexOutcome.Unchanged, null)
             : (StateIndexOutcome.Extended, extended);
     }
 
-    // None current yet; or, for the command, a coverage start that moved, or a rebuild asked.
+    // None current yet; or, for the command, a rebuild asked or a coverage start that moved
+    // back. A start that moved forward is a listed version whose datasets are missing, not a
+    // shorter history: a build from it would throw away every older version for good.
     private static bool ShouldBuild(UpdatePlan plan) =>
         plan.Current is not { } current
         || (plan.Request.Trigger == StateIndexTrigger.Build
-            && (plan.Request.ShouldRebuild || current.FirstVersion != plan.Run[0].Value));
+            && (plan.Request.ShouldRebuild
+                || plan.Run[0] < PatchVersion.Parse(current.FirstVersion)));
+
+    // The run starts after the current end: a listed version in between lacks its en_US
+    // datasets, and an extension would skip it. The generation stays as it is, behind, until
+    // the promotion or the reconciliation ingests that version.
+    private static bool IsPastAGap(UpdatePlan plan) =>
+        plan.Current?.LastVersion is { } last && plan.Run[0] > PatchVersion.Parse(last);
+
+    private void LogGap(UpdatePlan plan) =>
+        StateIndexLog.Interrupted(
+            logger,
+            StateIndexMetrics.TriggerOf(plan.Request.Trigger),
+            plan.Current!.Id,
+            plan.Current.LastVersion!,
+            plan.Run[0].Value);
 
     private async Task<GenerationCursor> BuildAsync(
         UpdatePlan plan,

@@ -870,8 +870,10 @@ lui. Elles l'emportent sur les sections citées ; les ADR en reprennent l'essent
   construction. Pas de colonnes de tri des versions sur les états.
 - **« Listée »** veut dire la liste de Data Dragon plus le dernier patch promu ; une version
   dont les quatre jeux en_US sont définitivement absents est sautée, comme non listée.
-- **Seule la commande reconstruit quand le début de la couverture bouge.** La promotion et la
+- **Seule la commande reconstruit quand le début de la couverture recule.** La promotion et la
   réconciliation ne construisent que si aucune génération n'est courante, et sinon étendent.
+  Une version listée après la fin de la couverture sans son en_US laisse la génération courante
+  en retard (`states.coverage.interrupted`) : jamais une génération plus courte à sa place.
   Une génération en attente au même début reprend ; les autres sont supprimées ;
   `--rebuild` les supprime toutes.
 - **La commande lit la liste des versions de Data Dragon** (dès qu'une version est promue) :

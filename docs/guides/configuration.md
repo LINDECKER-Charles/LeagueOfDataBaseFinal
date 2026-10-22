@@ -924,7 +924,8 @@ plus rien. Ressources : § 4.3 ; poids au staging : § 4.5.
 |---|---|
 | La génération courante du schéma compilé couvre déjà jusqu'au dernier patch promu | rien |
 | Seule la fin de la couverture a avancé | elle étend la génération courante |
-| Aucune génération courante, début de la couverture déplacé, ou `--rebuild` | elle construit une génération neuve, la rend courante en une transaction, puis supprime l'ancienne |
+| Aucune génération courante, début de la couverture reculé, ou `--rebuild` | elle construit une génération neuve, la rend courante en une transaction, puis supprime l'ancienne |
+| Une version listée après la fin de la couverture manque de son en_US (la promotion qui l'a sautée n'a pas pu l'ingérer) | rien : la génération courante reste, en retard (`states.coverage.interrupted`, Warning), jamais une plus courte à sa place ; la promotion suivante ou la réconciliation ingère la version et l'étend |
 
 Elle lit les jeux en_US stockés, un catalogue à la fois, une transaction par version, et
 reprend une construction interrompue. Elle ne télécharge aucun jeu, sauf avec
@@ -942,7 +943,7 @@ ingérant l'en_US des versions listées après la fin de la couverture qui en ma
 `catalog.states.reconcile` (toutes les 10 min, une instance à la fois, coupée par
 `LoDb:Workers:Enabled=false`) fait de même, et construit l'index s'il n'y en a aucun ; aucun
 passage n'est garanti au démarrage. Seule la commande reconstruit quand le début de la
-couverture bouge, en général au déploiement suivant.
+couverture recule, en général au déploiement suivant.
 
 **Copie en mémoire** : chaque processus de l'API tient la sienne, relit son repère au plus
 toutes les `LoDb:Catalog:VersionsLifetime` (1 min) et la recharge quand la génération ou la fin

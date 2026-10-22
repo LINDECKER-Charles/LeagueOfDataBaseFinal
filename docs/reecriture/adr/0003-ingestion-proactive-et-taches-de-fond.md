@@ -284,7 +284,7 @@ des états qu'elle clôt.
 `StateIndexPromotionListener`, qui ingère d'abord l'en_US des versions listées après la fin de
 la couverture. La réconciliation est `catalog.states.reconcile` (`Workers/Catalog/`, toutes
 les 10 minutes) ; elle construit l'index s'il n'y en a aucun, mais seule la commande
-`catalog states build` le reconstruit quand le début de la couverture bouge. Le verrou
+`catalog states build` le reconstruit quand le début de la couverture recule. Le verrou
 `catalog:states` attend 5 s pour la promotion et la réconciliation, qui rendent la main sans
 échec, une minute pour la commande. La file des états clos est remplie par
 `PrerenderPromotionListener` et `prerender.reconcile`, seulement une fois l'index à jour

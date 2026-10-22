@@ -137,6 +137,42 @@ public sealed class GenerationTests(PostgresContainerFixture postgres)
         Assert.Equal(Versions, await index.CoverageAsync());
     }
 
+    // The promotion of 90.5.1 could not ingest 90.4.1, which it skipped: the command keeps the
+    // whole history, behind, never a generation that starts at 90.5.1; once 90.4.1 is stored,
+    // the index catches up in the same generation.
+    [Fact]
+    public async Task BuildKeepsTheHistoryWhenAVersionAfterItsEndLacksItsDatasets()
+    {
+        await using var index = await StateIndexHarness.CreateAsync(postgres, Versions);
+        var datasets = await ReadAsync();
+        foreach (var version in Versions.Where(static version => version != "90.4.1"))
+        {
+            await index.StoreAsync(version, datasets);
+        }
+
+        await index.PromoteAsync("90.3.1");
+        var built = await index.BuildAsync();
+        await index.PromoteAsync("90.5.1");
+
+        var behind = await index.BuildAsync();
+        var coverage = await index.CoverageAsync();
+        await index.StoreAsync("90.4.1", datasets);
+        var caughtUp = await index.BuildAsync();
+
+        Assert.Equal(
+            (StateIndexOutcome.Unchanged, built.GenerationId, "90.1.1", "90.3.1"),
+            (behind.Outcome, behind.GenerationId, behind.CoverageStart?.Value,
+                behind.CoverageEnd?.Value));
+        Assert.Equal(Versions[..3], coverage);
+        Assert.Contains(
+            index.Instance.Logs,
+            static record => record.Id.Name == "states.coverage.interrupted");
+        Assert.Equal(
+            (StateIndexOutcome.Extended, built.GenerationId),
+            (caughtUp.Outcome, caughtUp.GenerationId));
+        Assert.Equal(Versions, await index.CoverageAsync());
+    }
+
     // The promotion runs where Data Dragon is reachable: the en_US datasets of a version it
     // covers and the store lacks are ingested first (the recording's two complete versions).
     [Fact]

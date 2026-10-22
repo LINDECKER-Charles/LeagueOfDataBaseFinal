@@ -13,9 +13,11 @@ namespace LoDb.Ingestion.Catalog.States.Updates;
 /// </para>
 /// <para>
 /// A build starts a new generation when none of the compiled fingerprint scheme is current,
-/// when the coverage start moved, or when asked to; a promotion and the reconciliation build
-/// only when none is current, and otherwise extend it. The copy of the index the process
-/// holds is invalidated after every update.
+/// when the coverage start moved back, or when asked to; a promotion and the reconciliation
+/// build only when none is current, and otherwise extend it. A run that starts after the
+/// current end (a listed version in between lacks its datasets) leaves the generation as it
+/// is, never a shorter one in its place. The copy of the index the process holds is
+/// invalidated after every update.
 /// </para>
 /// </remarks>
 public interface IStateIndexUpdater

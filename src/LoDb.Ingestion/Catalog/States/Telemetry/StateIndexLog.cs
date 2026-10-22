@@ -59,6 +59,19 @@ internal static partial class StateIndexLog
     public static partial void Locked(ILogger logger, string trigger);
 
     [LoggerMessage(
+        EventName = "states.coverage.interrupted",
+        Level = LogLevel.Warning,
+        Message = "The {Trigger} of the index of states left generation {GenerationId} at"
+            + " {CoverageEnd}: a listed version before {RunStart} lacks its en_US datasets. The"
+            + " promotion and the reconciliation ingest it, then extend the index.")]
+    public static partial void Interrupted(
+        ILogger logger,
+        string trigger,
+        long generationId,
+        string coverageEnd,
+        string runStart);
+
+    [LoggerMessage(
         EventName = "states.copy.loaded",
         Level = LogLevel.Information,
         Message = "Loaded the index of states: generation {GenerationId} through {CoverageEnd},"

@@ -13,7 +13,8 @@ namespace LoDb.Api.Cli.Catalog;
 /// service <c>states</c>, which the API waits for. It does nothing when the current generation
 /// of the compiled fingerprint scheme covers every version up to the latest; extends it when
 /// only the latest moved; builds a new generation, then makes it current, when none is, when
-/// the coverage start moved, or with <c>--rebuild</c>. It reads the stored en_US datasets and
+/// the coverage start moved back, or with <c>--rebuild</c>; leaves it behind when a listed
+/// version after its end lacks its datasets. It reads the stored en_US datasets and
 /// downloads none, unless <c>--ingest-missing</c> first ingests those of every listed version
 /// up to the latest. One summary line per update, one per batch of 50 versions.
 /// </para>

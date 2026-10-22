@@ -164,7 +164,9 @@ par mise à jour, jamais par version ni par état : `states.update.completed` (d
 génération, début et fin de la couverture, versions indexées et jeux ingérés, états ouverts et
 clos, états et états ouverts de la génération, comptes par ressource, durée : c'est là que se
 lisent les comptes réels d'une construction), `states.update.progress` toutes les 50 versions
-d'une longue construction, `states.update.locked` (Warning) quand le verrou reste pris. Sa copie
+d'une longue construction, `states.update.locked` (Warning) quand le verrou reste pris,
+`states.coverage.interrupted` (Warning) quand une version listée après la fin de la couverture
+manque de son en_US et que l'index reste en retard. Sa copie
 en mémoire écrit `states.copy.loaded` à chaque chargement et `states.copy.failed` (Warning,
 avec l'exception) sur un échec, la copie tenue restant servie. La commande
 `catalog states build` écrit en plus `states.build.deferred` (Warning) ou `states.build.failed`
