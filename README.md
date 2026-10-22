@@ -22,10 +22,9 @@
 ---
 
 > [!NOTE]
-> **Bascule en cours.** Ce dépôt porte la réécriture .NET 10 + Angular 22. Le site en
-> production tourne encore sur l'ancienne stack (Symfony + Go + Vue), archivée sous
-> [`legacy/`](legacy/README.md) jusqu'à la décommission ; la bascule suit le
-> [runbook](docs/reecriture/bascule.md).
+> **En production depuis le 2026-10-04.** Le site tourne sur cette stack .NET 10 +
+> Angular 22. L'ancienne (Symfony + Go + Vue) est archivée sous [`legacy/`](legacy/README.md)
+> jusqu'à sa décommission ([runbook de la bascule](docs/reecriture/bascule.md)).
 
 ## Stack
 
@@ -35,9 +34,10 @@
 | Données | PostgreSQL 17 + EF Core ; blobs adressés par contenu sur le volume `ddragon` |
 | Web | Angular 22 en SSR (Node 24), locale dans l'URL (`/fr/…`), 21 langues |
 | Apps | Desktop Photino + Velopack (Windows, macOS) ; Android Capacitor 8 |
-| Frontal | nginx (cache des pages, `/cdn/blobs/`) derrière l'edge Caddy du VPS |
+| Frontal | nginx (cache des pages, `/cdn/blobs/`, pages des anciens patchs pré-rendues dans un stockage objet) derrière l'edge Caddy du VPS |
 
-Décisions et architecture : [`docs/reecriture/`](docs/reecriture/README.md) (ADR 0001 à 0010).
+Vue d'ensemble : [`docs/architecture/architecture.md`](docs/architecture/architecture.md) ;
+décisions : [`docs/reecriture/`](docs/reecriture/README.md) (ADR 0001 à 0012).
 
 ## Démarrage rapide
 
@@ -80,11 +80,13 @@ legacy/                   ancienne stack, archivée
 
 | Doc | Contenu |
 |---|---|
-| [`docs/reecriture/README.md`](docs/reecriture/README.md) | Pourquoi la réécriture, décisions, architecture cible |
+| [`docs/architecture/architecture.md`](docs/architecture/architecture.md) | Vue d'ensemble : services, flux, environnements, dépôt |
+| [`docs/reecriture/README.md`](docs/reecriture/README.md) | Pourquoi la réécriture, décisions (ADR) |
+| [`docs/produit/seo-indexabilite.md`](docs/produit/seo-indexabilite.md) | SEO : cap, règle en vigueur, règle décidée, mesure |
 | [`docs/guides/developpement.md`](docs/guides/developpement.md) | Développer : commandes, stack locale, E2E |
 | [`docs/guides/configuration.md`](docs/guides/configuration.md) | Tous les secrets et variables à configurer (`staging`, `prod`, apps) |
 | [`docs/guides/github-actions-secrets.md`](docs/guides/github-actions-secrets.md) | Pipeline : CI, `dev` → `test` → `main`, déploiement de `staging`, promotion en `prod` |
-| [`docs/reecriture/bascule.md`](docs/reecriture/bascule.md) | Runbook de la bascule et du retour arrière |
+| [`docs/reecriture/bascule.md`](docs/reecriture/bascule.md) | Runbook de la bascule (faite), du retour arrière et du *contract* |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Contribuer : branches, commits, garde-fous |
 | [`docs/README.md`](docs/README.md) | Index complet de la documentation |
 

@@ -26,9 +26,16 @@ export function execInStack(
   { input, timeoutMs = EXEC_TIMEOUT_MS }: StackCommandOptions = {},
 ): string {
   const files = COMPOSE_FILES.flatMap((file) => ['-f', file]);
-  return execFileSync(
-    'docker',
-    ['compose', '-p', PROJECT, ...files, 'exec', '-T', service, ...command],
-    { cwd: ROOT, encoding: 'utf8', timeout: timeoutMs, input },
-  );
+  try {
+    return execFileSync(
+      'docker',
+      ['compose', '-p', PROJECT, ...files, 'exec', '-T', service, ...command],
+      { cwd: ROOT, encoding: 'utf8', timeout: timeoutMs, input },
+    );
+  } catch (error) {
+    // Node's message names the command and its standard error; the command's standard output,
+    // where a CLI of the API logs why it failed, stays on the error, which no report shows.
+    const failure = error as Error & { readonly stdout?: string };
+    throw new Error(`${failure.message}\n${failure.stdout ?? ''}`, { cause: error });
+  }
 }

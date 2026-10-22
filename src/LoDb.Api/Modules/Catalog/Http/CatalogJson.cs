@@ -1,6 +1,8 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using LoDb.Api.Hosting.OpenApi;
+using LoDb.Api.Modules.Catalog.Changes;
+using LoDb.Api.Modules.Catalog.States;
 using LoDb.Api.Modules.Catalog.WarmUp.Progress;
 using LoDb.Domain.Catalog;
 using LoDb.Domain.Derived.Items;
@@ -8,6 +10,9 @@ using LoDb.Domain.Derived.Ranges;
 using LoDb.Domain.Derived.Stats;
 using LoDb.Domain.Editions;
 using LoDb.Domain.Languages;
+using LoDb.Domain.States;
+using LoDb.Domain.States.Diff;
+using LoDb.Domain.States.Fields;
 using LoDb.Ingestion.Catalog.Hotlinks;
 using LoDb.Ingestion.Catalog.Images;
 using Microsoft.AspNetCore.OpenApi;
@@ -63,5 +68,23 @@ internal static class CatalogJson
             JsonNamingPolicy.KebabCaseLower,
             allowIntegerValues: false));
         converters.Add(new GameModeJsonConverter());
+        AddStateConverters(converters, camel);
+    }
+
+    // The states of the entities and their changes: a ChangeField's name is the key of its
+    // label in the front's catalogs.
+    private static void AddStateConverters(IList<JsonConverter> converters, JsonNamingPolicy camel)
+    {
+        converters.Add(new JsonStringEnumConverter<ChangeField>(camel, allowIntegerValues: false));
+        converters.Add(new JsonStringEnumConverter<SubjectKind>(camel, allowIntegerValues: false));
+        converters.Add(new JsonStringEnumConverter<FieldKind>(camel, allowIntegerValues: false));
+        converters.Add(new JsonStringEnumConverter<ValueKind>(camel, allowIntegerValues: false));
+        converters.Add(new JsonStringEnumConverter<SegmentKind>(camel, allowIntegerValues: false));
+        converters.Add(
+            new JsonStringEnumConverter<EntityChangeKind>(camel, allowIntegerValues: false));
+        converters.Add(
+            new JsonStringEnumConverter<StateNextKind>(camel, allowIntegerValues: false));
+        converters.Add(
+            new JsonStringEnumConverter<PatchChangeKind>(camel, allowIntegerValues: false));
     }
 }

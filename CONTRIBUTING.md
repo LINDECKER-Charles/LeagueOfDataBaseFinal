@@ -3,7 +3,8 @@
 Merci de votre intérêt pour le projet ! Ce document est le point d'entrée **court et à jour** pour contribuer.
 
 - **Conventions de code complètes** (DRY / KISS / SOLID, limites de taille, nommage, règles par langage, invariants d'architecture) : [`AGENTS.md`](AGENTS.md) — source unique, à respecter.
-- **Guide détaillé multilingue** (FR / EN / ES, templates d'issue & de PR) : [`docs/contribution.md`](docs/contribution.md).
+- **Vue d'ensemble du système** : [`docs/architecture/architecture.md`](docs/architecture/architecture.md) ; index de la documentation : [`docs/README.md`](docs/README.md).
+- **Templates** d'issue et de PR : [`.github/ISSUE_TEMPLATE/`](.github/ISSUE_TEMPLATE/) et [`.github/PULL_REQUEST_TEMPLATE.md`](.github/PULL_REQUEST_TEMPLATE.md).
 
 ---
 
@@ -14,8 +15,8 @@ Merci de votre intérêt pour le projet ! Ce document est le point d'entrée **c
 - **Docker** + **Docker Compose** — stack locale `lodb-dev` et Testcontainers.
 - **Git**.
 
-> L'ancienne stack (Symfony + Go + Vue) est archivée sous [`legacy/`](legacy/README.md) :
-> elle ne reçoit plus de contributions.
+> Le site tourne sur cette stack depuis le 2026-10-04. L'ancienne (Symfony + Go + Vue) est
+> archivée sous [`legacy/`](legacy/README.md) : elle ne reçoit plus de contributions.
 
 ## Démarrer
 
@@ -56,7 +57,7 @@ git commit -m "fix(back/builds): refuser un build sans champion"
 
 ## Garde-fous avant d'ouvrir une PR
 
-À faire passer **au vert** avant toute PR (identique à la CI) :
+À faire passer **au vert** avant toute PR :
 
 ```bash
 dotnet build LoDb.slnx -c Release            # 0 avertissement
@@ -65,11 +66,15 @@ npm --prefix src/LoDb.Web run lint
 npm --prefix src/LoDb.Web run typecheck
 npm --prefix src/LoDb.Web run test
 npm --prefix src/LoDb.Web run build:web
+npm --prefix src/LoDb.Web run build:shell
 npm --prefix src/LoDb.Web run api:check      # le client généré suit le contrat OpenAPI
 ```
 
-Les E2E (`tests/LoDb.E2E`) tournent contre la stack locale : voir
-[`docs/guides/developpement.md`](docs/guides/developpement.md).
+La CI joue aussi les tests des outils (`node --test`), `tools/routing/check-urls.sh` et les
+E2E (`tests/LoDb.E2E`), qui tournent contre la stack locale : la liste complète est dans les
+garde-fous d'[`AGENTS.md`](AGENTS.md), le détail dans
+[`docs/guides/developpement.md`](docs/guides/developpement.md). Un changement visible par le
+joueur ajoute son entrée de changelog (`docs/changelog/`).
 
 ## Standards de code
 
@@ -85,7 +90,7 @@ Ne dupliquez pas les règles ici : elles vivent dans [`AGENTS.md`](AGENTS.md). E
 
 ## Signaler un bug · proposer une fonctionnalité
 
-Via les [GitHub Issues](https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal/issues). Les templates (bug, feature, PR) sont dans [`docs/contribution.md`](docs/contribution.md).
+Via les [GitHub Issues](https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal/issues). Les templates (bug, feature, PR) sont dans [`.github/`](.github/ISSUE_TEMPLATE/).
 
 ## Licence des contributions
 

@@ -2,7 +2,7 @@
 date: 2026-10-21
 type: fix
 scope: front
-title: Le sélecteur de version propose toujours le dernier patch, même depuis un ancien patch
+title: Le sélecteur de version propose toujours le dernier patch, même sur un ancien
 summary: Ouverte sur une page d'un ancien patch, l'application se met à jour dès qu'elle est prête et propose le patch sorti depuis.
 tags: [versions, anciens-patchs]
 ---

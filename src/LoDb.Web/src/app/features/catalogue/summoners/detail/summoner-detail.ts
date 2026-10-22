@@ -17,7 +17,7 @@ import { Frame } from '../../../../ui/surfaces/frame';
 import { EditionCounterpart } from '../../shared/codex/edition/edition-counterpart';
 import { CatalogueHead } from '../../shared/codex/head/catalogue-head';
 import { HERO_STYLES } from '../../shared/codex/hero/hero-styles';
-import { PreviousPatches } from '../../shared/codex/history/previous-patches';
+import { EntityStateBlocks } from '../../shared/codex/state/entity-state-blocks';
 import { injectDetailPager } from '../../shared/codex/pager/inject-detail-pager';
 import { RichText } from '../../shared/codex/rich-text/rich-text';
 import { LoadTime } from '../../shared/codex/timing/load-time';
@@ -36,7 +36,7 @@ const SEAL_ICON_SIZE = 154;
  * A summoner spell page, `/{locale}/[{version}/]summoners/{id}`: the spell in its invocation
  * seal with its cooldown, its facts on engraved plaques, its description and the modes it is
  * allowed in; for a LoL Classic twin, its edition and the link to the other game's spell;
- * then the same spell in the previous patches.
+ * then what its patch changed and the history of its states.
  */
 @Component({
   selector: 'lodb-summoner-detail',
@@ -48,7 +48,7 @@ const SEAL_ICON_SIZE = 154;
     Frame,
     LoadTime,
     Pager,
-    PreviousPatches,
+    EntityStateBlocks,
     Reveal,
     RichText,
     TranslocoPipe,

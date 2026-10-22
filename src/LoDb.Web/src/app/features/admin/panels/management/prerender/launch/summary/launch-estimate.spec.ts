@@ -21,6 +21,7 @@ function draft(changes: Partial<LaunchDraft> = {}, ticked = ['16.18.1']): Launch
     epoch: 2,
     epochKind: 'served',
     skipComplete: true,
+    isOpenersFirst: false,
     fromPass: null,
     isResolved: true,
     isPriorityCapped: false,
@@ -33,6 +34,12 @@ function patches(changes: Partial<PrerenderPatchesReport['estimates']>) {
 }
 
 describe('launchEstimate', () => {
+  it('counts an openers pass at the openers the index expects, none out of the index', () => {
+    const openers = draft({ skipComplete: false, isOpenersFirst: true }, ['16.19.1', '16.18.1']);
+
+    expect(launchEstimate(openers, PATCHES)).toMatchObject({ units: 42, pages: 21 * 87 });
+  });
+
   it('renders every unit ticked when nothing is skipped', () => {
     const estimate = launchEstimate(draft({ skipComplete: false }), PATCHES);
 

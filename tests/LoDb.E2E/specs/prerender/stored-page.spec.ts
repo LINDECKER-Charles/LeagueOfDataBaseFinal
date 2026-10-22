@@ -2,11 +2,13 @@ import { metaOf, olderVersion } from '../../support/catalog';
 import { hydrated } from '../../support/hydration';
 import { recordViolations } from '../../support/policy-violations';
 import { execInStack } from '../../support/stack';
+import { statePageOf } from '../../support/states';
 import { expect, test } from '../../support/test';
 
 // A past patch's page that the pass wrote to the stack's simulated store (pages-store), read
-// back by nginx, then hydrated in a browser under the policy its object carried (ADR 0011): the
-// pass, the store, nginx and the bundles of the build that rendered the page only meet here.
+// back by nginx under the class its entity's state gives it, then hydrated in a browser under the
+// policy its object carried (ADR 0011): the pass, the store, nginx and the bundles of the build
+// that rendered the page only meet here.
 // What nginx does with each answer of the store is tools/nginx's; what the pass writes, and
 // when, the API's tests'.
 
@@ -17,7 +19,8 @@ const LOCALE = 'en';
 const TYPE = 'summoners';
 // A spell of every patch. A detail page rather than the list: a list rendered while its
 // images are still on their way is not kept, nor stored (docs/architecture/pieges.md).
-const PAGE = 'summoners/SummonerFlash';
+const SPELL = { type: TYPE, id: 'SummonerFlash' };
+const PAGE = `${SPELL.type}/${SPELL.id}`;
 // The unit ingests its catalog, then may wait for every server to count its patch among the
 // older ones: up to three minutes after the latest one's promotion, on a stack just started.
 const UNIT_WAIT_SECONDS = 240;
@@ -27,9 +30,12 @@ const COMMAND_TIMEOUT_MS = UNIT_WAIT_SECONDS * SECOND_MS + COMMAND_MARGIN_MS;
 const BROWSING_MS = 60_000;
 // What the command prints of its unit (src/LoDb.Api/Cli/Prerender/PrerenderUnitCommand.cs).
 const UNIT_SUMMARY = / (\d+) written, \d+ skipped, 0 failed of \d+,/;
-// The `archived` class (src/LoDb.Web/src/app/core/routing/response/cache-control.ts), which
-// nginx gives every answer of the store.
+// The classes the pass stores a past patch's page under, which nginx hands on
+// (src/LoDb.Web/src/app/core/routing/response/cache-control.ts): `archived` for the page of a
+// closed state, which never changes again; `revisable` for the open state's, or an unknown one,
+// which changes when the state closes (docs/produit/seo-une-page-par-etat.md, § 3.7).
 const ARCHIVED = 'public, max-age=3600, s-maxage=31536000';
+const REVISABLE = 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=3600';
 // The hot cache in front of the store (snippets/archive-cache.conf), one file per page.
 const ARCHIVE_CACHE = '/var/cache/nginx/archive';
 
@@ -61,6 +67,8 @@ test.describe('past patches served from the page store', () => {
   }) => {
     const version = olderVersion(await metaOf(request), STEPS_BACK);
     const path = `/${LOCALE}/${version}/${PAGE}`;
+    const state = (await statePageOf(request, version, SPELL))?.state;
+    const cacheControl = state?.isOpen === false ? ARCHIVED : REVISABLE;
 
     await test.step('write the unit with the command', () => {
       expect(writeUnit(version)).toBeGreaterThan(0);
@@ -74,7 +82,7 @@ test.describe('past patches served from the page store', () => {
       expect(response.status()).toBe(200);
       expect(headers['x-lodb-source']).toBe('store');
       expect(headers['content-type']).toContain('text/html');
-      expect(headers['cache-control']).toBe(ARCHIVED);
+      expect(headers['cache-control']).toBe(cacheControl);
       expect(headers['content-security-policy']).toContain('script-src');
       expect(Object.keys(headers).filter((name) => name.startsWith('x-amz-'))).toEqual([]);
     });

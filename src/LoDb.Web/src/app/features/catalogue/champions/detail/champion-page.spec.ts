@@ -13,8 +13,8 @@ import type { CatalogueEntry } from '../../../../core/routing/catalogue/catalogu
 import { Seo } from '../../../../core/seo/seo';
 import type { SeoPage } from '../../../../core/seo/seo-page';
 import { provideTestTransloco } from '../../../../core/testing/provide-test-transloco';
-import { provideMeta } from '../../shared/testing/provide-meta';
 import { ChampionPage } from './champion-page';
+import { detailStateOf } from '../../../../core/testing/detail-state-of';
 
 const CONTEXT: PageContext = { locale: 'en', version: '16.19.1', pinned: false, language: 'en_US' };
 const ART = { splash: 'splash.jpg', centered: 'centered.jpg', loading: 'loading.jpg' };
@@ -45,6 +45,7 @@ function neighbourOf(id: string): DetailNeighbour {
 function detailsOf(overrides: Partial<ChampionDetails> = {}): ChampionDetails {
   return {
     canonicalPath: 'champions/Annie',
+    ...detailStateOf('champions/Annie'),
     version: '16.19.1',
     language: 'en_US',
     profile: cardOf('Annie'),
@@ -96,7 +97,6 @@ async function visit(details: ChampionDetails, url = '/en/champions/Annie') {
     providers: [
       provideHttpClient(),
       provideHttpClientTesting(),
-      provideMeta(),
       provideRouter([
         { path: 'en/champions/:id', resolve: { entry: () => entry }, component: ChampionPage },
         { path: '**', component: Blank },

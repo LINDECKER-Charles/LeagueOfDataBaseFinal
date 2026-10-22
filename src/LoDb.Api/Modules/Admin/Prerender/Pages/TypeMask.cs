@@ -24,11 +24,15 @@ internal static class TypeMask
     public static int Of(IReadOnlyList<ResourceType>? types) =>
         types is null ? All : types.Aggregate(None, static (mask, type) => mask | Of(type));
 
-    /// <summary>The bits of the types <paramref name="scope"/> renders.</summary>
+    /// <summary>
+    /// The bits of the types <paramref name="scope"/> renders whole; <see cref="None"/> for an
+    /// openers scope, which leaves most pages of each type out: its units never make an epoch
+    /// hold a type, nor stand for a pass over it.
+    /// </summary>
     public static int Of(PassScope scope)
     {
         ArgumentNullException.ThrowIfNull(scope);
-        return Of(scope.PageTypes);
+        return scope.Pages == PassPages.Openers ? None : Of(scope.PageTypes);
     }
 
     /// <summary>

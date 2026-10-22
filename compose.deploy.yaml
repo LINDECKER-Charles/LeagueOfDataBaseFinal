@@ -51,6 +51,9 @@
 x-lodb-connection: &lodb-connection >-
   Host=lodb-postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=lodb_app;Gss Encryption Mode=Disable;Maximum Pool Size=32;Timeout=5;Application Name=lodb-api
 
+x-lodb-states-connection: &lodb-states-connection >-
+  Host=lodb-postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=lodb_app;Gss Encryption Mode=Disable;Timeout=5;Application Name=lodb-states
+
 x-lodb-migrate-connection: &lodb-migrate-connection >-
   Host=lodb-postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=${LODB_DB_USER:-lodb};Gss Encryption Mode=Disable;Timeout=5;Application Name=lodb-migrate
 
@@ -100,7 +103,6 @@ services:
       LoDb__Accounts__Google__AppClients__1__ClientId:
       LoDb__Contact__Recipient:
       LoDb__Contact__NotificationLocale:
-      LoDb__Seo__SitemapVersionWindow:
       LoDb__Seo__IndexNowKey:
       # Bounds of the catalogs in memory and of the cold work (ADR 0003, amendment of
       # 2026-10-10); configuration.md gives their defaults.
@@ -213,6 +215,26 @@ services:
         limits:
           # Baseline plus the migrations of lots 1 to 6 pass under 64m (L8.1 trial).
           memory: 128m
+          pids: 256
+
+  # Ephemeral: `docker compose run --rm --no-deps states` after migrate, before the maintenance
+  # page (_deploy.yml), while the running stack serves; the run inside `up` then does nothing.
+  # It signs in as the API's role, its password from its file. A first build holds one en_US
+  # catalog at a time and the last state of every entity: limits to measure on staging. Under
+  # the visitors' weight while it runs beside them, above the pass renderer's.
+  states:
+    image: ${REGISTRY:?REGISTRY is required (ghcr.io/<owner>/lodb)}/api:${IMAGE_TAG:?IMAGE_TAG is required}
+    build: !reset null
+    environment:
+      ConnectionStrings__LoDb: *lodb-states-connection
+    secrets:
+      - *app-database-password
+    cpu_shares: 512
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+          cpus: "0.5"
           pids: 256
 
   web-ssr:
@@ -368,9 +390,10 @@ networks:
     ipam:
       config:
         - subnet: ${LODB_STACK_SUBNET:?LODB_STACK_SUBNET is required (set by the deploy job)}
-  # Postgres's network (compose.yaml), which only the API and migrate share with it. Internal:
-  # no route leaves it. Its subnet stays Docker's choice: nothing trusts it, and the API's
-  # port answers it a 404 (KnownProxyNetworks is the stack's subnet above).
+  # Postgres's network (compose.yaml), which only the API and the one-shots migrate and states
+  # share with it. Internal: no route leaves it. Its subnet stays Docker's choice: nothing
+  # trusts it, and the API's port answers it a 404 (KnownProxyNetworks is the stack's subnet
+  # above).
   data:
     internal: true
   # Shared ingress network, created once per host by infra-vps; the deploy job only

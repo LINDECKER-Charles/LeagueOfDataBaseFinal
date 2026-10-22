@@ -1,160 +1,174 @@
-# 📊 Analytics & panneau d'administration
+# Mesure d'audience et analytics
 
-Sous-système d'analytics (trafic, audience, stockage) et refonte Hextech du panneau
-`/admin`. Sans base de données : le flux d'événements vit en NDJSON local, consolidé
-en agrégats immuables sur le volume `storage` ; les métriques stockage dérivent de ce
-volume lui-même.
+Comment le site compte ses pages vues : la mesure maison (miroir nginx, balise, Postgres) et
+l'audience first-party d'Umami. Font foi le code cité et, pour un hôte,
+[`configuration.md`](../guides/configuration.md) ; décisions : ADR
+[0003](../reecriture/adr/0003-ingestion-proactive-et-taches-de-fond.md),
+[0004](../reecriture/adr/0004-stockage-etat-et-scaling.md),
+[0009](../reecriture/adr/0009-identite-authentification-sessions.md),
+[0012](../reecriture/adr/0012-audience-umami.md) (Umami).
 
 ## Vue d'ensemble
 
-| Brique | Rôle | Fichier(s) |
-|---|---|---|
-| Capture | 1 event/vue de page ressource, au `kernel.terminate` (zéro latence) | `EventListener/RecordRequestListener`, `Service/Analytics/RequestEventFactory` |
-| Parsing | UA → navigateur/OS/appareil/bot ; referer → source ; IP → pays | `UserAgentParser`, `RefererClassifier`, `GeoLocator` |
-| Journal | Append-only NDJSON, 1 fichier/jour UTC | `Service/Analytics/EventStore` → `var/state/analytics/events/{Y-m-d}.ndjson` |
-| Agrégation | Events → agrégat journalier mergeable → rapport de plage | `AnalyticsAggregator`, `RangeReportBuilder`, `AnalyticsReportService` |
-| Durabilité | Consolidation NDJSON local → fichiers immuables du volume `storage` | `RollupService`, `DailyAggregateStore`, cmd `app:analytics:rollup` |
-| Stockage | Analyse détaillée du stockage (familles, WebP, dédup, complétude) | `StorageAnalyticsService` |
-| Rendu | Charts SVG serveur (aucune dépendance front) | `Service/Analytics/Chart/SvgChartRenderer`, `Twig/AdminChartExtension` |
-| UI | Design system Hextech auto-contenu | `public/admin/admin.css`, `templates/admin/*` |
+| Mesure | Capture | Stockage | Lue par |
+|---|---|---|---|
+| Maison | miroir nginx (première page) + balise `POST /api/analytics/view` (navigations internes) | `analytics_event` → `analytics_daily` | panneaux `/admin`, `/v1/trends` avant la date de bascule |
+| Umami (prod seule) | le front poste `/u/api/send`, routé par l'edge vers l'Umami partagé | base d'Umami (`infra-vps`), tirée dans `audience_entity_daily` | tableau `stats.league-of-data-base.com`, `/v1/trends` à partir de la date de bascule |
 
-## Ingestion — pourquoi `kernel.terminate`
+Les deux tournent côte à côte (`core/analytics/provide-navigation-beacon.ts`) ; le code
+présente Umami comme appelé à remplacer la mesure maison (`AnalyticsRegistration.cs`,
+`AnonymousEndpointsTests.cs` : les deux captures « partent avec les analytics maison »).
 
-Le listener sœur de `FlushDeferredImagesListener` : il tourne **après**
-`fastcgi_finish_request`, donc hors du chemin critique. La réponse est déjà envoyée
-au visiteur, la capture n'ajoute aucune latence perçue. `TerminateEvent` ne se
-déclenche que pour la requête principale ; `RequestEventFactory` restreint ensuite
-aux routes ressources whitelistées (`app_home`, listes et détails), en `GET`, via le
-nom de route (`_route`) — plus robuste qu'un matching de chemin, exclut nativement
-`api_*`, `admin_*`, le setup et le SSE. La factory lit uniquement la requête et la
-query, **jamais la session**, pour ne pas forcer son démarrage.
+## Capture maison
 
-## Persistance — pas de read-merge-write sur un fichier partagé
+**Miroir de nginx.** `docker/nginx/snippets/analytics-mirror.conf` copie chaque requête de
+page vers `/_analytics/page`, avant la lecture du cache : une page servie du cache compte comme
+une autre. Il est inclus dans `location /` (`sites/site.conf`) et `@lodb_pinned_ssr`
+(`snippets/pages-store/pages.conf`). `server.d/analytics.conf` (location `internal`) filtre
+avant tout appel : autre méthode que `GET`, ou chemin hors de
+`/{locale}[/{ressource}[/{fiche}]]` sans point, renvoient 204. Une version épinglée
+(`/fr/16.1.1/items`) a un point : **le miroir ne la compte jamais**. Le reste part en `POST`
+vers `/internal/analytics/page` (hors de `/api`, aucune location publique n'y mène), chemin
+dans `X-Original-URI`, sans corps, `Cookie` et `Authorization` vidés, délais d'une seconde.
 
-Le manifeste documente que son read-merge-write n'est pas atomique : chaque écriture
-l'est (fichier `.staging/` puis `rename()`), mais la séquence lecture → fusion →
-écriture reste exposée à la course loader SSE ↔ flush terminate. Les vues de page
-sont haute fréquence : un fichier mutable partagé hériterait de cette course. D'où :
+**Balise du routeur.** `core/analytics/navigation-beacon.ts` poste par
+`navigator.sendBeacon` `{"path": …}` (`text/plain`, sans préflight) à la fin de chaque
+navigation qui change de page, sauf la première, déjà vue par le miroir. Web seulement, rien
+si le visiteur a refusé la mesure (`AudienceOptOut`).
 
-1. **Chemin chaud** — `EventStore::append()` = un `file_put_contents(FILE_APPEND | LOCK_EX)`
-   local, atomique par ligne entre workers php-fpm, microsecondes, sans réseau.
-2. **Durabilité** — `app:analytics:rollup` plie les journées **closes** en agrégats
-   immuables `analytics/daily/{Y-m-d}.json` sur le volume `storage` (écrits une seule
-   fois, jamais mutés). La journée courante reste toujours lue en direct depuis le NDJSON.
+**Deux exceptions voulues à « Jamais `AllowAnonymous` »** ([`AGENTS.md`](../../AGENTS.md),
+ADR 0009). `MirrorEndpoint.cs` et `BeaconEndpoint.cs` sont `.AllowAnonymous()` : toute
+politique porte le garde XSRF + `Origin` (`Hosting/AuthorizationPolicies.cs`) et
+`sendBeacon` ne peut pas joindre le jeton XSRF. En contrepartie :
 
-Le rapport (`AnalyticsReportService`) sait lire indifféremment l'agrégat stocké (jours
-consolidés) ou agréger le NDJSON à la volée (jours non encore consolidés) → le
-panneau est correct que le rollup ait tourné ou non.
+- la balise vérifie elle-même l'`Origin` (`TrustedOrigins.Allows` : le site, l'origine
+  publique configurée, l'app Android ; pas d'`Origin` = pas une requête cross-site, `null`
+  refusé → 403 `origin-mismatch`) et est limitée à 120 vues/min par adresse
+  (`BeaconRateLimit.cs`) ; corps de 4 Kio au plus (`BeaconBody.cs`) ;
+- le miroir n'est joignable que par nginx ;
+- `tests/LoDb.Api.Tests/Hosting/AnonymousEndpointsTests.cs` ferme la liste à ces deux routes.
 
-### Commande de rollup
+Les deux passent par `ViewIntake.cs`, sans I/O : la vue brute (instant, origine, cible, hôte,
+adresse, user-agent, referer) va dans `PageViewQueue`, `Channel` borné ; pleine, la vue est
+perdue et comptée (`reason="queue_full"`).
 
-```bash
-# Consolide les journées closes (idempotent). À planifier (cron/déploiement).
-docker compose exec php php bin/console app:analytics:rollup
-docker compose exec php php bin/console app:analytics:rollup --include-today   # + journée courante
-docker compose exec php php bin/console app:analytics:rollup --prune           # purge le NDJSON consolidé
-docker compose exec php php bin/console app:analytics:rollup --force           # réécrit les agrégats existants
-```
+## Ce qui est compté
 
-Le bouton **Consolider** de la vue d'ensemble déclenche `--include-today` (CSRF protégé).
+`CatalogPageResolver.cs` et `PageAddressParser.cs` appliquent les règles du front
+(ADR 0005) hors de la requête :
 
-### Où vit le NDJSON — `var/state`, adossé à un volume
-
-Un déploiement, c'est `compose pull` + `up -d` : le conteneur `php` est **recréé**,
-et tout ce qui a été écrit dans sa couche writable disparaît. Le journal ne peut donc
-pas vivre n'importe où sous `var/` :
-
-| Chemin | Volume | Pourquoi |
-|---|---|---|
-| `var/state/**` | `app_state` | Durable — events analytics, journal d'audit, sessions, base GeoLite2 |
-| `var/cache`, `var/log` | aucun | Jetable **volontairement** : persister le cache prod servirait le conteneur DI compilé d'une image antérieure après un déploiement |
-
-Le point de montage `var/state` est créé **dans l'image** et `chown www-data`
-(`docker/php/Dockerfile`) : Docker recopie les droits du point de montage lorsqu'il
-peuple un volume nommé vide, et un dossier absent serait créé `root` — le pool FPM ne
-pourrait plus écrire, et `EventStore::append()` avale cet échec en silence.
-
-> Fenêtre de perte : le volume `app_state` couvre la recréation de conteneur (donc
-> tout déploiement). Restent le `down -v` et la perte de l'hôte — c'est le rôle du
-> rollup, exécuté à chaque déploiement sur les journées closes
-> (`legacy/.github/workflows/_deploy.yml`). Pour rétrécir encore la fenêtre, planifier un
-> rollup horaire `--include-today`.
-
-## Vie privée & sécurité
-
-- **Modèle retenu** : IP réelle + User-Agent complet stockés (analytics fines + géo).
-  `trusted_proxies` (Caddy→nginx→php) fait remonter la vraie IP via `X-Forwarded-For`.
-- `visitorId` = HMAC(IP|UA, APP_SECRET) tronqué — identifiant pseudonyme stable pour
-  le comptage des uniques ; le couple brut n'est pas dérivable de l'id seul.
-- **Les IP/UA bruts ne quittent jamais le NDJSON local.** Les agrégats journaliers
-  du stockage ne contiennent que des compteurs + `visitorId` pseudonymes (pas de PII).
-- **Défense en profondeur** : nginx ne publie du volume `storage` que `/cdn/blobs/`
-  (liste blanche) ; tout autre chemin `/cdn/*`, dont `analytics/` et `audit/`, répond
-  404, si bien qu'aucun agrégat n'est atteignable depuis le web. L'app les lit en
-  interne, directement sur le disque (hors nginx).
-- Robots exclus des métriques humaines (comptés à part).
-- ⚠️ Rétention : le NDJSON contient de la PII. Le purger (`--prune`) après rollup,
-  ou planifier une purge des journées anciennes selon la politique de rétention.
-
-## Géolocalisation (GeoLite2)
-
-`GeoLocator` lit une base MaxMind/DB-IP `.mmdb` (format `GeoLite2-Country`) via
-`geoip2/geoip2`. Tout dégrade proprement : sans package, sans fichier, ou pour une IP
-privée/inconnue → `null`, la carte affiche « inconnu ». Provisionnement (étape ops,
-la base ne peut pas être versionnée) :
-
-```bash
-# Déposer une base ip→pays au format .mmdb, p. ex. :
-#  - MaxMind GeoLite2-Country (compte gratuit + clé de licence), ou
-#  - DB-IP ip-to-country-lite (CC-BY, même format .mmdb)
-mkdir -p app/var/state/geoip && cp GeoLite2-Country.mmdb app/var/state/geoip/
-# ou pointer GEOIP_DB_PATH vers un fichier monté (voir compose.yaml / .env)
-```
-
-Variable `GEOIP_DB_PATH` (vide → `var/state/geoip/GeoLite2-Country.mmdb` par défaut).
-Le fichier est déposé **une fois** : `var/state` est adossé au volume `app_state`
-(cf. « Persistance » ci-dessous), il survit aux déploiements.
-
-## Analytics stockage
-
-`StorageAnalyticsService` fait **une** passe `listContents` deep (taille/date
-lues au listing, sans appel par fichier) + une lecture bornée des manifestes, puis calcule : poids par
-famille (`blobs`/`data`/`manifest`/`analytics`), ventilation blobs par extension,
-**couverture WebP** (siblings / sources), **ratio de déduplication** (références
-logiques des manifestes → blobs physiques content-addressed), poids `data` par
-version/langue/type, plus gros fichiers, timeline d'ingestion (`lastModified`), et
-matrice de complétude version × langues. Résultat mémoïsé 120 s (`ddragon.cache`) ;
-dégrade en `ok=false` si le stockage est illisible (jamais de 500). `?refresh=1` force.
-
-## Panneau `/admin`
-
-`ROLE_ADMIN` via le firewall `admin` (inchangé : `AdminAuthenticator`, creds env).
-
-| Route | Page |
+| Compté | Pas compté |
 |---|---|
-| `admin_dashboard` `/admin` | Vue d'ensemble (KPIs cross-subsystème, série temporelle, donut ressources, top pages, stockage) |
-| `admin_traffic` `/admin/traffic` | Pages les plus consultées, entités, ventilations, heatmap heure×jour |
-| `admin_audience` `/admin/audience` | Uniques/récurrents/nouveaux, pays, appareils, navigateurs/OS/langues, sources & référents |
-| `admin_storage` `/admin/storage` | Analyse stockage détaillée |
-| `admin_analytics_rollup` `POST /admin/analytics/rollup` | Consolidation manuelle (CSRF) |
+| accueil (son `?version=` est gardé en colonne) | version épinglée dans le chemin, fichiers, autres pages du site |
+| listes et fiches de la dernière version | `?version=` listée sur une liste ou une fiche (301), fiche hors chemin canonique (301) |
+| fiche absente (404), catalogue illisible ou aucune version (503) : comptées avec leur statut | adresse non résolue (erreur) : perdue, comptée `unresolved` |
 
-Filtre de période `?range=7d|30d|90d|all` sur les pages trafic/audience/overview.
+Les noms de routes sont ceux de l'ancienne stack (`TrackedRoutes.cs` : `app_champion`…), pour
+que les agrégats importés et les nouveaux s'additionnent. **Robots** : `UserAgentParser`
+marque `is_bot` ; la ligne est écrite, mais l'agrégation ne la compte que dans `botViews`, hors
+de tout autre compteur (`DailyFold.cs`). Une navigation interne est classée referer
+`internal` sur l'hôte du site (`ViewEventFactory.cs`).
 
-### Design — auto-contenu par choix
+## Stockage (Postgres, ADR 0004)
 
-L'admin **reste indépendant du pipeline Vite** (invariant : « l'ops panel doit
-survivre à un build front cassé »). L'alignement Hextech est obtenu sans Vite :
-`public/admin/admin.css` (statique, servi par nginx via `try_files`, cacheable) porte
-les tokens/polices/framing identiques à `assets/styles/app.css` ; les charts sont du
-**SVG rendu serveur** (`SvgChartRenderer`), avec `<title>` natifs comme couche hover.
-Aucun îlot Vue, aucune lib de charts. Palette catégorielle = couleurs d'arbres de
-runes (CVD-safe, validées), toujours doublées d'un label/légende.
+| Table | Contenu | Durée |
+|---|---|---|
+| `analytics_event` | une vue par ligne : route, chemin, type, kind, entité, statut, version, lang, locale, `visitor`, navigateur, OS, appareil, `is_bot`, referer (hôte, source), pays | 13 mois (`EventRetentionMonths`) |
+| `analytics_daily` | un jour UTC, en quatre `jsonb` (`totals`, `buckets`, `visitors`, `country_names`), `source` `events` ou `import` | non purgée |
+| `audience_entity_daily` | (jour, `{type}:{clé}`) → `views`, `visitors` tirés d'Umami | non purgée |
 
-## Garde-fous
+`analytics_event` est partitionnée par jour UTC (`analytics_event_yyyyMMdd`), créée en SQL brut
+par `20260926185409_Lot6BillingAnalyticsApps.cs`. Une vue hors partition est refusée : la
+rétention crée les partitions d'hier à J+7 (`PartitionsAhead`), `PageViewBatchWriter.cs` crée
+celle qui manque puis recopie une fois. L'API (`lodb_app`) ne possède pas la table : les
+partitions passent par `lodb_create_analytics_partition` / `lodb_drop_analytics_partition`
+(`SECURITY DEFINER`, `Persistence/Roles/schema-privileges.sql`, [`pieges.md`](pieges.md)).
+`api analytics import --source <dossier> [--dry-run]` reprend les agrégats de l'ancienne stack
+en lignes `import`, que le rollup ne touche jamais (`AnalyticsDailySource.cs`).
 
-```bash
-docker compose exec -T php php vendor/bin/phpunit tests/Unit   # baseline + analytics
-```
+## Traitements (ADR 0003)
 
-Le front (`npm test`/`typecheck`/`build`) n'est **pas** impacté : ce lot ne touche
-ni `assets/` ni la config Vite (admin 100 % serveur).
+| Tâche | Rythme | Rôle |
+|---|---|---|
+| `AnalyticsWriterWorker` | continu, chaque instance | à la première vue en file, attend `BatchWindow` (2 s) puis écrit par `COPY` binaire de `BatchSize` (500) ; à l'arrêt, vide la file dans le délai d'arrêt de l'hôte |
+| `analytics.rollup` (`AnalyticsRollupJob`) | 5 min, une instance | replie aujourd'hui et les jours clos dont l'agrégat date d'avant leur clôture + 10 min (`AnalyticsRollup.ClosingGrace`) |
+| `analytics.retention` (`AnalyticsRetentionJob`) | 1 jour, une instance | crée les partitions à venir, supprime celles de plus de 13 mois, efface `ip`/`user_agent` résiduels |
+| `audience.trends` (`AudienceTrendsWorker`) | `PullPeriod` (1 h), une instance | tire Umami (voir plus bas) ; en sommeil sans configuration |
+
+Un lot illisible ou non écrit est perdu et compté (`lodb_analytics_views_dropped_total`,
+[`metriques.md`](../guides/metriques.md)), jamais relancé ; les logs ne portent que des
+comptes, jamais un chemin, une adresse ou un user-agent (`PageViewPump.cs`). Rollup et
+effacement relèvent leur délai de requête à `JobStatementTimeout` (5 min). Un agrégat borne
+visiteurs (`MaxVisitorsPerDay`) et hôtes référents (`MaxRefererHostsPerDay`, puis `(autres)`).
+
+## Consommateurs
+
+**Administration** (`features/admin/panels/analytics/`, rôle `Admin` + TOTP, ADR 0009).
+`/admin` (vue d'ensemble), `/admin/traffic` et `/admin/audience` lisent
+`GET /api/admin/analytics/report?range=7d|30d|90d|all` (`ReportEndpoint.cs`) : les jours clos
+depuis `analytics_daily`, aujourd'hui replié à la volée depuis `analytics_event`
+(`AnalyticsReports.cs`). « Consolider » appelle `POST /api/admin/analytics/rollup`, journalisé
+`admin.analytics_rollup`. Réponses `no-store`. `/admin/storage` lit `/api/admin/storage`.
+
+**`/v1/trends/{type}`** (`TrendsSource.cs`) : les 25 entités les plus vues sur 7 ou 30 jours,
+mises en cache 5 min par instance (`TrendsLifetime`). Source par jour :
+
+| `LoDb:Audience:TrendsSwitchDate` | Jours avant la date | Jours à partir de la date |
+|---|---|---|
+| absente (défaut) | `analytics_daily.buckets -> 'entities'` | — |
+| posée (`aaaa-mm-jj`) | `analytics_daily` | `audience_entity_daily`, chaque jour d'une entité plafonné à `ClipFactor` (3) × sa médiane sur `ClipWindowDays` (28) jours |
+
+Le plafond existe parce que la collecte d'Umami est publique, donc gonflable
+(`AudienceOptions.cs`). Retirer la date revient à la mesure maison seule.
+
+## Umami
+
+**Branchement** (prod seule : `compose.umami.yaml`, [`configuration.md`](../guides/configuration.md)
+§ 4.6, [`pieges.md`](pieges.md)). Les labels de nginx déclarent le site à l'Umami partagé
+d'`infra-vps` : `caddy_0.import: umami` fait router `/u/script.js` et `/u/api/send` par
+l'edge, `caddy_2` publie le tableau sur `stats.league-of-data-base.com`. L'UUID du site est un
+littéral, dans le calque et `core/analytics/audience/audience-site.ts`, vérifié par
+`tools/umami/test`. Le staging n'a pas ce calque.
+
+**Ce que mesure le front** (`audience-tracker.ts`, `send/audience-sender.ts`) : une vue par
+changement de page, première comprise, les événements `page-error`, `search` et
+`build-share`, avec locale, version et plateforme. `fetch` brut sans cookies ni referer,
+jamais le script d'Umami. Rien ne part avant un signe de présence (geste, ou dix secondes
+visibles : `presence/audience-presence.ts`), ni hors de l'hôte canonique, ni hors web, ni sous
+GPC, `navigator.webdriver` ou refus enregistré depuis la politique de confidentialité
+(`send/audience-opt-out.ts`). Pages de compte et d'admin : rien ; autres pages hors listes et
+fiches : leur gabarit, jamais leur adresse (`audience-route-data.ts`).
+
+**Tirage** (`Infrastructure/Audience/`). Le client HTTP `umami` (`AudienceRegistration.cs`)
+ne joint que l'hôte configuré, en https (`UmamiHostHandler`), sans redirection, cookie ni log
+de requête. Chaque passage se connecte avec le compte en lecture seule et réécrit en entier les
+`RefreshDays` (2) derniers jours UTC de `audience_entity_daily`, en ne gardant que les fiches
+de la dernière version, résolues par le même `ITrackedPageResolver` que la mesure maison
+(`AudiencePull.cs`) ; un catalogue illisible arrête le passage sans écraser un jour. La jauge
+`lodb_audience_vues_tirees` porte les vues de la dernière heure close. Sommeil tant que `Host`,
+`WebsiteId`, `Username` et `Password` ne sont pas tous posés (`audience.trends.dormant`).
+
+## Vie privée
+
+- **Jamais stockés : l'adresse IP et le user-agent.** Ils servent à la capture (empreinte,
+  navigateur, pays) ; `AnalyticsEventWriter.cs` ne copie pas les colonnes `ip` et
+  `user_agent`, gardées nullables jusqu'à l'étape *contract* (`AnalyticsEvent.cs`). Les lignes
+  d'avant ce changement voient les leurs effacées à 30 jours (`ClientDataRetention`).
+- `visitor` : HMAC-SHA256 de `{adresse}|{user-agent}` tronqué à 16 hexa, clé
+  `LoDb:Analytics:VisitorKey` (l'`APP_SECRET` de l'ancienne stack : mêmes visiteurs des deux
+  côtés) ; sans clé, une clé par processus, visiteurs recomptés au redémarrage
+  (`VisitorHasher.cs`). Les agrégats gardent ces empreintes (`visitors`) sans limite de durée.
+- Vues brutes : 13 mois (`EventRetentionMonths`, 25 au plus, plafond CNIL d'après
+  `AnalyticsOptionsValidator.cs`). Le miroir est côté serveur : il ne connaît ni l'opt-out ni
+  GPC, que la balise et Umami respectent.
+- **Pays** : `MaxMindGeoLocator.cs` lit `LoDb:Analytics:GeoIpDatabase`, à défaut
+  `GEOIP_DB_PATH` (`AnalyticsOptions.LegacyGeoIpKey`). Aucun hôte n'en monte aujourd'hui
+  ([`configuration.md`](../guides/configuration.md) § 8) : aucune vue n'a de pays.
+
+## Réglages d'un opérateur
+
+Valeurs et défauts : [`configuration.md`](../guides/configuration.md) § 4.2, 4.3 et 4.6 ;
+`LoDb:Analytics` et `LoDb:Audience` sont validés au démarrage. Secrets :
+`LoDb__Analytics__VisitorKey`, `LoDb__Audience__Username`, `LoDb__Audience__Password`. Posés par
+`compose.umami.yaml` : `LoDb__Audience__WebsiteId`, `LoDb__Audience__Host`. Dans le `.env` de la
+prod : `LoDb__Audience__TrendsSwitchDate`.

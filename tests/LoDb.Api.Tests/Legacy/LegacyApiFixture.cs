@@ -1,8 +1,10 @@
 using System.Net;
 using LoDb.Domain.Versions;
+using LoDb.Ingestion.Catalog.States;
 using LoDb.Ingestion.Pipeline.Versions;
 using LoDb.Testing;
 using LoDb.Testing.Fixtures;
+using LoDb.Testing.States;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,10 +14,12 @@ namespace LoDb.Api.Tests.Legacy;
 /// <summary>
 /// The API over the recorded Data Dragon and a database holding 16.19.1, ingested whole and
 /// promoted: the latest version. The other recorded versions stay cold until a redirect
-/// looks a name up in them.
+/// looks a name up in them. The index of states is held in memory, empty until a test seeds
+/// it.
 /// </summary>
 /// <remarks>
-/// The client never follows a redirect: the 301 itself is what the tests read.
+/// The client never follows a redirect: the 301 itself is what the tests read. A test that
+/// seeds the index empties it before it ends: the tests of the group run one at a time.
 /// </remarks>
 public sealed class LegacyApiFixture(PostgresContainerFixture postgres) : IAsyncLifetime
 {
@@ -29,6 +33,9 @@ public sealed class LegacyApiFixture(PostgresContainerFixture postgres) : IAsync
     private IServiceProvider? _services;
 
     public static CancellationToken Token => TestContext.Current.CancellationToken;
+
+    /// <summary>The index of states the API reads.</summary>
+    public InMemoryEntityStateIndex States { get; } = new();
 
     /// <summary>The services of the API host, such as its catalog reader.</summary>
     public IServiceProvider Services => _services ?? throw NotInitialized();
@@ -60,7 +67,9 @@ public sealed class LegacyApiFixture(PostgresContainerFixture postgres) : IAsync
         var replay = DdragonFixtures.CreateReplay();
         _replay = replay;
         var host = _factory.WithWebHostBuilder(builder => builder.ConfigureTestServices(
-            services => services.AddDdragonFixtureReplay(replay)));
+            services => services
+                .AddDdragonFixtureReplay(replay)
+                .AddSingleton<IEntityStateIndex>(States)));
         await IngestAsync(host.Services.GetRequiredService<IVersionIngestion>());
         _services = host.Services;
         _client = host.CreateClient(new WebApplicationFactoryClientOptions

@@ -7,6 +7,19 @@ summary: Tous les patchs publiés par Riot sont listés sur une seule page, chac
 tags: [navigation, anciens-patchs, referencement]
 ---
 
+> **Remplacé en partie le 2026-10-14** par [`une-fiche-par-entite-dans-google`](2026-10-14-une-fiche-par-entite-dans-google.md) :
+> les pages des anciens patchs ne sont plus « canoniques et indexables », et l'index des
+> sitemaps n'annonce plus que le dernier patch (fenêtre à 0, plus 12). La page « Historique
+> des patchs » et le bloc « Dans les patchs précédents » valent toujours.
+
+> **Remplacé en partie le 2026-10-22** par [`une-page-par-etat-dans-google`](2026-10-22-une-page-par-etat-dans-google.md) :
+> plus de fenêtre de versions, `LoDb__Seo__SitemapVersionWindow` disparaît. L'index des
+> sitemaps annonce le sitemap de chaque patch passé couvert par l'index des états dès qu'il
+> liste quelque chose, et ce sitemap ne liste plus que la page des changements du patch et
+> les pages d'ouverture de ses états clos : une page indexée par état. Le bloc « Dans les
+> patchs précédents » laisse la place à « Historique ». La page « Historique des patchs »
+> vaut toujours.
+
 ## Ce qui change
 
 Le pied de page mène à une nouvelle page, « Historique des patchs ». Elle liste tous les

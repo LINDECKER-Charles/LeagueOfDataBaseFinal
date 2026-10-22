@@ -170,6 +170,8 @@ services:
         condition: service_healthy
       migrate:
         condition: service_completed_successfully
+      states:
+        condition: service_completed_successfully
     restart: unless-stopped
     logging: *default-logging
     healthcheck:
@@ -206,6 +208,30 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    restart: "no"
+    logging: *default-logging
+
+  # One-shot: the API's image catches the index of entity states up to the latest promoted
+  # version (`catalog states build`, docs/produit/seo-une-page-par-etat.md § 4.1), then exits.
+  # The API starts only once it has succeeded, so that it serves an index: the first run reads
+  # the en_US catalogs of every covered version, the next ones extend the index or do nothing.
+  # It reads the stored datasets (read-only) and downloads none, Data Dragon's list of versions
+  # aside (the stack's network); it writes rows only, as the API's role (lodb_app).
+  states:
+    build: *api-build
+    command: ["catalog", "states", "build"]
+    <<: *hardening
+    tmpfs: *dotnet-tmpfs
+    environment:
+      ConnectionStrings__LoDb: >-
+        Host=lodb-postgres;Port=5432;Database=${LODB_DB_NAME:-lodb};Username=lodb_app;Password=${LODB_APP_DB_PASSWORD:-lodb-app};Gss Encryption Mode=Disable;Timeout=5;Application Name=lodb-states
+      LoDb__Storage__Root: /srv/storage
+    volumes:
+      - ddragon:/srv/storage:ro
+    networks: [default, data]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
     restart: "no"
     logging: *default-logging
 
@@ -250,7 +276,8 @@ services:
       LODB_FRONT_BUILDS_DIR: /srv/front-builds
     volumes:
       # Bundles of the builds served lately; the deploy job purges those no build shipped for
-      # 30 days (.github/workflows/_deploy.yml).
+      # LODB_FRONT_BUILDS_RETENTION_DAYS (400 by default, 395 at least;
+      # .github/workflows/_deploy.yml).
       - front-builds:/srv/front-builds
     networks:
       default:
@@ -360,8 +387,10 @@ services:
       LODB_PAGE_CACHE_KEYS_SIZE: ${LODB_PAGE_CACHE_KEYS_SIZE:-32m}
       LODB_PAGE_CACHE_INACTIVE: ${LODB_PAGE_CACHE_INACTIVE:-24h}
       # Raised by hand only, the purge of the past patches' pages (docs/guides/configuration.md):
-      # 3 since their head points to the latest patch's canonical (ADR 0005, amendment of
-      # 2026-10-14), which the pages cached before do not.
+      # the chrome, the CSP or the /api contract changed visibly, or pages of the served epoch were
+      # rendered again in place (a new fingerprint scheme). Serving another epoch of the store
+      # (LODB_ARCHIVE_SERVE_EPOCH, the key's second part) purges it already: the switch to one
+      # indexed page per state (2026-10-22) leaves it at 3.
       LODB_ARCHIVE_EPOCH: ${LODB_ARCHIVE_EPOCH:-3}
       # The past patches' cache is the hot copy of the object store (ADR 0011): every page
       # kept at its first request, for months, within 20 GB of disk.
@@ -471,8 +500,9 @@ services:
       start_period: 30s
 
 volumes:
-  # Created by the api container first (depends_on order), which seeds it with its own
-  # /srv/storage: the volume is then owned by the API's non-root user. Not named `storage`:
+  # Created by the states container first (depends_on order), which seeds it with the API
+  # image's /srv/storage, read-only mount or not: the volume is then owned by the API's
+  # non-root user. Not named `storage`:
   # on a host, the legacy stack's volume of that name (same project, owned by www-data)
   # would be reused and stay unwritable; it is kept as is for the rollback.
   ddragon:
@@ -491,8 +521,8 @@ volumes:
 
 networks:
   # The stack's own network (`default`, implicit) carries the HTTP traffic: nginx, the SSR
-  # server and the API. Postgres sits on `data` alone, with the API and migrate: the two
-  # services that face the clients cannot reach the database. A served host makes `data`
-  # internal, without any route out (compose.deploy.yaml); here it keeps one, so that the
-  # dev overlay can publish Postgres's port.
+  # server and the API. Postgres sits on `data` alone, with the API and the one-shots migrate
+  # and states: the two services that face the clients cannot reach the database. A served
+  # host makes `data` internal, without any route out (compose.deploy.yaml); here it keeps
+  # one, so that the dev overlay can publish Postgres's port.
   data: {}

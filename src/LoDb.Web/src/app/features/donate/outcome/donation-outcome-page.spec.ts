@@ -82,7 +82,7 @@ describe('DonationOutcomePage', () => {
     expect(apply).toHaveBeenLastCalledWith({
       title,
       titleFormat: 'account',
-      kind: 'donation-return',
+      kind: 'noindex',
       path: 'donate',
     });
     expect(document.head.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe(

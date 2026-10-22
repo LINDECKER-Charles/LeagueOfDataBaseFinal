@@ -28,6 +28,12 @@ internal sealed record PrerenderScopeView
     /// <summary>The types of page rendered; null for all four.</summary>
     public IReadOnlyList<string>? PageTypes { get; init; }
 
+    /// <summary>
+    /// <c>openers</c> when only the patch page and the openers of the index are rendered; null
+    /// for every page.
+    /// </summary>
+    public string? Pages { get; init; }
+
     /// <summary>The versions rendered first, in this order (100 at most).</summary>
     public required IReadOnlyList<string> Priority { get; init; }
 

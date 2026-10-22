@@ -25,7 +25,7 @@ export class CatalogueHead {
       await firstValueFrom(this.transloco.load(scoped)).catch(() => undefined);
       const texts: CatalogueTexts = {
         seo: (key, params) => this.transloco.translate(key, params, scoped),
-        main: (key) => this.transloco.translate(key, {}, locale),
+        main: (key, params) => this.transloco.translate(key, params, locale),
       };
       await this.seo.apply(build(texts));
     });

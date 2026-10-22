@@ -1,5 +1,9 @@
 # Lot 3 — Web public
 
+> **Historique** : spécification de construction de septembre 2026, exécutée (bascule le
+> 2026-10-04). Les règles en vigueur sont dans [`AGENTS.md`](../../../AGENTS.md) et les
+> [ADR](../adr/) ; plusieurs choix de ce lot ont changé depuis, par amendement daté.
+
 Objectif du lot : toutes les pages publiques en Angular SSR, sous les nouvelles URLs
 localisées, avec le design system, l'i18n au runtime, le SEO complet, le cache HTTP
 partagé, la PWA et la redirection des anciennes URLs.

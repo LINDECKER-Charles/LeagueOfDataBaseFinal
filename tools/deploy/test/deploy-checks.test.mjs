@@ -293,6 +293,23 @@ describe("_deploy.yml, the pass's renderer in the deploy", () => {
   });
 });
 
+describe('_deploy.yml, the index of states in the deploy', () => {
+  const lines = readFileSync(WORKFLOW, 'utf8').split(/\r?\n/);
+  const lineOf = (text, from = 0) =>
+    lines.findIndex((line, index) => index >= from && line.includes(text));
+
+  // The index is caught up while the running stack serves, its failure stopping the job then.
+  it('builds the index after the migrations, before the maintenance page and up', () => {
+    const migrate = lineOf('docker compose run --rm migrate');
+    const states = lineOf('docker compose run --rm --no-deps states');
+    const maintenance = lineOf('maintenance_on', migrate);
+    const up = lineOf('docker compose up -d --no-build --remove-orphans');
+    assert.ok(migrate > 0 && migrate < states, 'after the migrations');
+    assert.ok(states < maintenance, 'before the maintenance page');
+    assert.ok(maintenance < up, 'the page then up');
+  });
+});
+
 describe("_deploy.yml, the edge's secret", () => {
   const EDGE_SECRET = /^[0-9a-f]{64}$/;
   const secretOf = (dir) => read(dir, '.deploy', 'secrets', 'LODB_EDGE_SECRET').trim();

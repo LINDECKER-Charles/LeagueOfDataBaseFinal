@@ -1,8 +1,20 @@
 {
   "title": "Patch-előzmények",
-  "description": "A Data Dragon által listázott összes League of Legends patch, mindegyik a bajnokaival, tárgyaival, rúnáival és idéző varázslataival, ahogyan abban a patchben voltak.",
-  "intro": "A Data Dragon által listázott összes patch, a legújabbtól kezdve. Mindegyik megnyitja a bajnokait, tárgyait, rúnáit és idéző varázslatait, ahogyan akkoriban voltak.",
+  "description": "A Data Dragon által listázott összes League of Legends patch, mindegyik a változásaival és a bajnokaival, tárgyaival, rúnáival és idéző varázslataival, ahogyan abban a patchben voltak.",
+  "intro": "A Data Dragon által listázott összes patch, a legújabbtól kezdve. Mindegyik megnyitja a változásait, majd a bajnokait, tárgyait, rúnáit és idéző varázslatait, ahogyan akkoriban voltak.",
   "group": "{{ major }}.x patchek",
   "latest": "Aktuális",
-  "empty": "Jelenleg nincs listázott patch."
+  "empty": "Jelenleg nincs listázott patch.",
+  "changes_link": "Változások",
+  "changes": {
+    "title": "{{ version }} patch: változások",
+    "description": "Mit változtatott a League of Legends {{ version }} patch a {{ previous }} patchhez képest: módosított, új, visszatért vagy eltávolított bajnokok, tárgyak, rúnák és idéző varázslatok.",
+    "description_empty": "A League of Legends {{ version }} patch egyetlen bajnokot, tárgyat, rúnát vagy idéző varázslatot sem változtatott a {{ previous }} patchhez képest.",
+    "intro": "Mit változtatott a {{ version }} patch a {{ previous }} patchhez képest, a Riot Data Dragon adatai alapján.",
+    "empty": "Ez a patch semmit sem változtatott abból, amit az enciklopédia mutat.",
+    "changed": "Módosítva",
+    "new": "Új",
+    "returned": "Visszatért",
+    "retired": "Eltávolítva"
+  }
 }

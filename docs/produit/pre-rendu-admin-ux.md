@@ -1,5 +1,11 @@
 # Écran de pré-rendu : refonte de l'expérience d'administration
 
+> **Livrée** le 2026-10-21 (PR #87, en prod par #93) : l'écran décrit ici est celui de
+> `features/admin/panels/management/prerender/`. Les passages « Aujourd'hui » (§ 0 et les
+> constats des lots) décrivent l'écran et le code d'avant la refonte. La vitesse réglable et la file
+> automatique (2026-10-22) l'ont complété : leur bloc est décrit dans la
+> [spécification du catalogue pré-rendu](pre-rendu-catalogue-cdn.md), lot 2.
+
 Spécification de conception du 21 octobre 2026 pour la page `/admin/prerender` (« Précalcul du
 catalogue »). Elle complète le lot 2 de la [spécification du catalogue
 pré-rendu](pre-rendu-catalogue-cdn.md) (§ 4, « Administration ») et l'[ADR

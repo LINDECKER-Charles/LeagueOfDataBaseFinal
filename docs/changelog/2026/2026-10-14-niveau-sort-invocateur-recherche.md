@@ -2,7 +2,7 @@
 date: 2026-10-14
 type: fix
 scope: front
-title: Les résultats de recherche d'un sort d'invocateur disent à quel niveau il se débloque
+title: La recherche d'un sort d'invocateur dit à quel niveau il se débloque
 summary: La description d'une fiche de sort d'invocateur dans les moteurs de recherche cite le niveau d'invocateur qui le débloque, dans les 21 langues.
 tags: [seo, i18n]
 ---

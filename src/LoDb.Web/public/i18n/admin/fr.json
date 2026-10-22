@@ -762,7 +762,8 @@
         "locales": "{count, plural, one {# langue} other {# langues}}",
         "types_all": "tous types",
         "priority": "{count, plural, one {# prioritaire} other {# prioritaires}}",
-        "skip": "manques seulement"
+        "skip": "manques seulement",
+        "openers": "ouvreurs d'abord"
       },
       "units": {
         "title": "{version} dans la passe n°{id}",
@@ -1180,7 +1181,8 @@
         "standby_exists": "L'epoch {epoch} contient déjà des pages non servies : continuez-la plutôt que d'en ouvrir une nouvelle.",
         "default_estimate": "Aucune mesure : l'estimation est grossière.",
         "priority_capped": "Au-delà de 100, les versions sont cochées sans priorité.",
-        "nothing": "Rien à rendre : tout ce qui est sélectionné est déjà complet dans l'epoch {epoch}."
+        "nothing": "Rien à rendre : tout ce qui est sélectionné est déjà complet dans l'epoch {epoch}.",
+        "openers": "Passe « ouvreurs d'abord » : lancez ensuite une passe sur toutes les pages ; les patchs promus entre-temps attendent sa fin."
       },
       "errors": {
         "versions": {
@@ -1220,7 +1222,15 @@
       "session": "Session expirée : reconnectez-vous, puis relancez.",
       "done": "Passe n°{id} lancée sur l'epoch {epoch} : {units, plural, one {# unité} other {# unités}}{skipped, plural, =0 {} one {, # déjà complète ignorée} other {, # déjà complètes ignorées}}.",
       "done_ignored": "{count, plural, one {# version ignorée, absente} other {# versions ignorées, absentes}} des anciens patchs : {versions}.",
-      "season_count": "{count, plural, one {# patch} other {# patchs}} · {selected, plural, =0 {aucun sélectionné} one {# sélectionné} other {# sélectionnés}}"
+      "season_count": "{count, plural, one {# patch} other {# patchs}} · {selected, plural, =0 {aucun sélectionné} one {# sélectionné} other {# sélectionnés}}",
+      "pages": {
+        "title": "Pages",
+        "every_title": "Toutes les pages",
+        "every_body": "Les listes, la page de patch et toutes les fiches de chaque patch.",
+        "openers_title": "Ouvreurs d'abord",
+        "openers_body": "La page de patch et les fiches qui ouvrent un état à ce patch : les pages qui peuvent être indexées.",
+        "openers_note": "Cette passe laisse toutes les autres pages à la suivante ; les patchs promus pendant qu'elle tourne attendent sa fin, et elle ne rend jamais une epoch complète."
+      }
     },
     "coverage": {
       "epoch_label": "Epoch lue",
@@ -1241,7 +1251,8 @@
         "pages": "Pages",
         "volume": "Volume",
         "failed": "Échecs",
-        "last": "Dernière écriture (UTC)"
+        "last": "Dernière écriture (UTC)",
+        "indexed": "Index (ouvreurs · figées · révisables)"
       },
       "season_select": "Sélectionner la saison {season}",
       "row_select": "Sélectionner {version}",
@@ -1253,7 +1264,8 @@
       "error": "Couverture indisponible ({reason}).",
       "retry": "Réessayer",
       "empty": "Aucun ancien patch.",
-      "season_counts": "{versions, plural, one {# patch} other {# patchs}} · {complete, plural, one {# complet} other {# complets}}{missing, plural, =0 {} one { · # à compléter} other { · # à compléter}}"
+      "season_counts": "{versions, plural, one {# patch} other {# patchs}} · {complete, plural, one {# complet} other {# complets}}{missing, plural, =0 {} one { · # à compléter} other { · # à compléter}}",
+      "indexed": "{openers} · {frozen} · {revisable}"
     },
     "costs": {
       "title": "Ce que le stockage garde",
@@ -1422,6 +1434,28 @@
         "cost": "Coût",
         "cost_value": "+ {euros} / mois de stockage pour ces pages · VPS déjà payé : aucun surcoût, la passe prend {share} de son CPU"
       }
+    },
+    "revision": {
+      "title": "File des états clos",
+      "lede": "À chaque promotion, les pages des états qu'elle clôt se recalculent ici, figées, dans l'epoch servie et celle de la passe active : aucune passe à lancer.",
+      "states": {
+        "active": "active",
+        "dormant": "en veille"
+      },
+      "why": {
+        "dormant": "En veille tant que le stockage n'est pas configuré sur cet hôte."
+      },
+      "figures": {
+        "pending": "En attente",
+        "due": "{count, plural, one {# due maintenant} other {# dues maintenant}}",
+        "hour": "Écrites (1 h)",
+        "day": "Écrites (24 h)",
+        "failed": "En échec",
+        "skipped": "{count, plural, one {# page ignorée} other {# pages ignorées}}"
+      },
+      "next": "Prochaine page due : {at} UTC · clôtures prises jusqu'au {closed} UTC",
+      "epoch": "Epoch {epoch}{served, select, true { (servie)} other {}} : {pending} en attente · {done} écrites · {failed} en échec",
+      "empty": "La file est vide."
     }
   },
   "scaleway_bill": {

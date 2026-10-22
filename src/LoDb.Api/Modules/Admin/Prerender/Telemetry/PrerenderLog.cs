@@ -94,4 +94,12 @@ internal static partial class PrerenderLog
         Message = "{Version} left the latest rank while pass {PassId}, restricted to one type of"
             + " page, is active: its units join the next pass the reconciliation opens.")]
     public static partial void PromotionDeferred(ILogger logger, string version, long passId);
+
+    [LoggerMessage(
+        EventName = "prerender.promotion.index_behind",
+        Level = LogLevel.Warning,
+        Message = "The index of states covers up to {CoverageEnd}, not {Version} yet: the patch"
+            + " it replaced gets its units and the states it closed are enqueued once it does,"
+            + " by the reconciliation.")]
+    public static partial void IndexBehind(ILogger logger, string version, string coverageEnd);
 }

@@ -51,6 +51,7 @@ internal static class PassViews
         Newest = scope.Newest?.Value,
         Locales = scope.Locales?.Select(UiLocales.Code).ToList(),
         PageTypes = scope.PageTypes?.Select(CanonicalPath.SegmentOf).ToList(),
+        Pages = scope.Pages == PassPages.Openers ? PassScopeJson.OpenersPages : null,
         Priority = [.. scope.Priority.Select(static version => version.Value)],
         SkipComplete = scope.SkipComplete,
     };

@@ -1,8 +1,20 @@
 {
   "title": "Lịch sử phiên bản",
-  "description": "Mọi phiên bản Liên Minh Huyền Thoại mà Data Dragon liệt kê, mỗi phiên bản kèm tướng, trang bị, ngọc bổ trợ và phép bổ trợ đúng như trong phiên bản đó.",
-  "intro": "Mọi phiên bản mà Data Dragon liệt kê, từ mới nhất. Mỗi phiên bản mở ra tướng, trang bị, ngọc bổ trợ và phép bổ trợ đúng như lúc đó.",
+  "description": "Mọi phiên bản Liên Minh Huyền Thoại mà Data Dragon liệt kê, mỗi phiên bản kèm những thay đổi của nó cùng tướng, trang bị, ngọc bổ trợ và phép bổ trợ đúng như trong phiên bản đó.",
+  "intro": "Mọi phiên bản mà Data Dragon liệt kê, từ mới nhất. Mỗi phiên bản mở ra những thay đổi của nó, rồi đến tướng, trang bị, ngọc bổ trợ và phép bổ trợ đúng như lúc đó.",
   "group": "Phiên bản {{ major }}.x",
   "latest": "Hiện tại",
-  "empty": "Hiện chưa có phiên bản nào được liệt kê."
+  "empty": "Hiện chưa có phiên bản nào được liệt kê.",
+  "changes_link": "Thay đổi",
+  "changes": {
+    "title": "Thay đổi của phiên bản {{ version }}",
+    "description": "Những gì phiên bản {{ version }} của Liên Minh Huyền Thoại đã thay đổi so với phiên bản {{ previous }}: tướng, trang bị, ngọc bổ trợ và phép bổ trợ được thay đổi, mới, trở lại hoặc bị gỡ.",
+    "description_empty": "Phiên bản {{ version }} của Liên Minh Huyền Thoại không thay đổi tướng, trang bị, ngọc bổ trợ hay phép bổ trợ nào so với phiên bản {{ previous }}.",
+    "intro": "Những gì phiên bản {{ version }} đã thay đổi so với phiên bản {{ previous }}, theo dữ liệu Data Dragon của Riot.",
+    "empty": "Phiên bản này không thay đổi gì trong những nội dung mà bách khoa hiển thị.",
+    "changed": "Thay đổi",
+    "new": "Mới",
+    "returned": "Trở lại",
+    "retired": "Bị gỡ"
+  }
 }

@@ -5,6 +5,7 @@ import { previewImage } from '../../../../core/seo/images/preview-image';
 import type { SeoPage } from '../../../../core/seo/seo-page';
 import type { CatalogueTexts } from '../../shared/codex/head/catalogue-texts';
 import { detailTrail } from '../../shared/codex/head/detail-trail';
+import { stateHeadOf } from '../../shared/codex/state/head/state-head-of';
 
 /** The head of a rune path page; its preview is the path's own mark, as on the legacy site. */
 export function runeHeadOf(entry: CatalogueEntry<RuneTreeDetails>, texts: CatalogueTexts): SeoPage {
@@ -19,11 +20,15 @@ export function runeHeadOf(entry: CatalogueEntry<RuneTreeDetails>, texts: Catalo
   };
   return {
     title: texts.seo('rune.detail.title', { name }),
-    description: texts.seo('rune.detail.description', { name, version: context.version }),
+    ...stateHeadOf(
+      entry,
+      texts,
+      texts.seo('rune.detail.description', { name, version: context.version }),
+    ),
     locale: context.locale,
     path: details.canonicalPath,
     version: context.pinned ? context.version : null,
-    canonical: details.canonical ?? null,
+    canonical: details.canonical,
     image: image.status === 'present' && image.url ? image.url : previewImage('runes'),
     jsonLd: (urls) => [detailTrail(trail, urls), runePathJsonLd(details, urls)],
   };

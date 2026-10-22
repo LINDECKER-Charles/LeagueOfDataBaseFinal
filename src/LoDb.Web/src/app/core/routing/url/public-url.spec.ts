@@ -1,5 +1,6 @@
 import { formatPublicUrl } from './format-public-url';
 import { isCatalogueRoute } from './is-catalogue-route';
+import { isVersionedRoute } from './is-versioned-route';
 import { parsePublicUrl } from './parse-public-url';
 
 // Stands for the pattern of /api/meta, which the specs of core/api/meta cover.
@@ -75,7 +76,19 @@ describe('URL grammar (ADR 0005)', () => {
     [['trends'], false],
     [['u', 'faker'], false],
     [['Champions'], false],
+    [['changes'], false],
   ])('tells whether %j is a catalogue page', (page, expected) => {
     expect(isCatalogueRoute(page)).toBe(expected);
+  });
+
+  it.each([
+    [['champions'], true],
+    [['items', '1036-long-sword'], true],
+    [['changes'], true],
+    [['changes', 'champions'], false],
+    [['patches'], false],
+    [[], false],
+  ])('tells whether %j carries its version in its path', (page, expected) => {
+    expect(isVersionedRoute(page)).toBe(expected);
   });
 });

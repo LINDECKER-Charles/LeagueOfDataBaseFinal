@@ -1,0 +1,293 @@
+# 🏗️ Architecture du projet
+
+> **Ancienne stack (Symfony + Go + Vue), archivée.** Ce document décrit le site d'avant la
+> bascule du 2026-10-04 et ne s'applique pas à la stack en service. Version en vigueur :
+> [`docs/architecture/architecture.md`](../../../docs/architecture/architecture.md).
+
+## Vue d'ensemble
+
+League of Database utilise une architecture modulaire basée sur Symfony 7, organisée autour de services spécialisés et d'une séparation claire des responsabilités.
+
+## 📁 Structure du projet
+
+```
+league-of-database/
+├── app/                          # Application Symfony principale
+│   ├── src/
+│   │   ├── Controller/          # Contrôleurs MVC
+│   │   ├── Service/            # Services métier
+│   │   │   ├── API/           # Gestionnaires de données externes
+│   │   │   ├── Client/         # Gestion des clients et sessions
+│   │   │   └── Tools/         # Utilitaires et helpers
+│   │   ├── Dto/               # Data Transfer Objects
+│   │   └── EventListener/    # Écouteurs d'événements
+│   ├── templates/             # Templates Twig
+│   ├── public/               # Assets publics et uploads
+│   └── config/               # Configuration Symfony
+├── go/                      # Micro-services Go (un module par service)
+│   ├── fetcher/            # Passerelle de fetch Data Dragon / CommunityDragon
+│   └── api/                # API REST v1 publique (payante)
+└── docs/                    # Documentation (voir docs/README.md)
+    ├── architecture/        # Fonctionnement interne des sous-systèmes
+    ├── guides/             # Installation, exploitation, opérations
+    ├── audits/            # Index public ; les audits datés restent privés
+    ├── produit/           # SEO technique
+    └── changelog/         # Journal technique interne
+```
+
+## 🔧 Architecture des services
+
+### Hiérarchie des services
+
+```mermaid
+graph TD
+    A[AbstractManager] --> B[SummonerManager]
+    A --> C[ChampionManager]
+    A --> D[ItemManager]
+    A --> E[RuneManager]
+    
+    F[ClientManager] --> G[VersionManager]
+    H[UploadManager] --> I[APICaller]
+    
+    J[UrlGenerator] --> K[ClientData DTO]
+```
+
+### Services principaux
+
+#### 🎯 AbstractManager
+**Rôle** : Classe abstraite de base pour tous les gestionnaires de données
+- Définit les méthodes communes (cache, téléchargement, pagination)
+- Implémente le pattern Template Method
+- Gère la logique de cache avec hard links
+
+#### 🏆 ChampionManager
+**Rôle** : Gestion des données des champions
+- Hérite d'`AbstractManager`
+- Implémente `CategoriesInterface`
+- Méthodes spécialisées : `getByName()`, `searchByName()`, `getImages()` — projection par
+  défaut **indexée par id** (champions, objets, sorts) ; seules les runes gardent leur
+  forme d'arbre
+
+#### ⚔️ ItemManager
+**Rôle** : Gestion des objets du jeu
+- Structure similaire au ChampionManager
+- Gestion des images et métadonnées des objets — `getImages()` indexé par **id**, jamais
+  par nom : les jumeaux League of Legends Classic partagent leur nom (`1004` / `771004`)
+- Support de la recherche et pagination
+- Édition (`Service/API/Edition`) : implémente `EditionAwareInterface` (`editionOf`,
+  `counterpart`) ; règle objet = id `^77\d{4}$` (les flags `maps` sont incohérents)
+
+#### 🔮 SummonerManager
+**Rôle** : Gestion des sorts d'invocateur
+- Premier manager implémenté
+- Modèle de référence pour les autres managers
+- Gestion complète du cycle de vie des données
+- Édition : implémente `EditionAwareInterface` ; sort Classic = mode `JADE`
+  (`SummonerFlash` ↔ `SummonerFlash_Jade`)
+
+#### 🎨 RuneManager
+**Rôle** : Gestion des runes reforgées
+- Gestion des arbres de runes
+- Support des images et descriptions
+- Intégration avec le système de cache
+
+### Services utilitaires
+
+#### 👤 ClientManager
+**Rôle** : Gestion des préférences utilisateur
+- Détection automatique de la langue navigateur
+- Gestion des sessions et cookies
+- Hydratation des données client
+
+#### 📊 VersionManager
+**Rôle** : Gestion des versions et langues
+- Récupération des versions disponibles depuis Data Dragon
+- Validation des versions et langues
+- Cache des métadonnées de version
+
+#### 📁 UploadManager
+**Rôle** : Gestion du stockage local
+- Sauvegarde des JSON et images
+- Optimisation avec hard links
+- Gestion des répertoires par version/langue
+
+#### 🌐 APICaller
+**Rôle** : Client HTTP minimaliste
+- Communication avec l'API Data Dragon
+- Gestion des erreurs réseau
+- Cache des réponses HTTP
+
+## 🎨 Architecture frontend
+
+### Templates Twig
+
+```
+templates/
+├── base.html.twig           # Template de base
+├── partials/               # Composants réutilisables
+│   ├── header.html.twig
+│   ├── navigation.html.twig
+│   └── pagination.html.twig
+├── home/                   # Pages d'accueil
+├── champion/               # Pages champions
+├── item/                   # Pages objets
+├── summoner/               # Pages sorts d'invocateur
+└── rune/                   # Pages runes
+```
+
+### Assets et styles
+
+- **Tailwind CSS 4.1** : Framework CSS utilitaire
+- **Stimulus** : Framework JavaScript léger
+- **Turbo** : Navigation rapide sans rechargement
+- **Webpack Encore** : Compilation des assets
+
+## 🔄 Flux de données
+
+### 1. Initialisation
+```mermaid
+sequenceDiagram
+    participant U as Utilisateur
+    participant C as ClientManager
+    participant V as VersionManager
+    participant M as Manager
+    
+    U->>C: Accès à l'application
+    C->>V: Récupération versions/langues
+    V->>C: Retour métadonnées
+    C->>U: Redirection vers setup si nécessaire
+```
+
+### 2. Chargement des données
+```mermaid
+sequenceDiagram
+    participant C as Controller
+    participant M as Manager
+    participant U as UploadManager
+    participant A as APICaller
+    
+    C->>M: Demande de données
+    M->>U: Vérification cache local
+    alt Cache disponible
+        U->>M: Retour données cachées
+    else Cache indisponible
+        M->>A: Appel API Data Dragon
+        A->>M: Retour données JSON
+        M->>U: Sauvegarde en cache
+    end
+    M->>C: Retour données formatées
+```
+
+### 3. Gestion des images
+```mermaid
+sequenceDiagram
+    participant M as Manager
+    participant U as UploadManager
+    participant A as APICaller
+    
+    M->>U: Demande d'image
+    U->>U: Vérification existence
+    alt Image existe
+        U->>M: Retour chemin local
+    else Image manquante
+        M->>A: Téléchargement depuis DDragon
+        A->>U: Retour binaire image
+        U->>U: Vérification doublons (hard link)
+        U->>M: Retour chemin local
+    end
+```
+
+## 🗄️ Système de stockage
+
+### Architecture du stockage
+
+Les données et images Data Dragon vivent en fichiers sur le volume Docker `storage`,
+monté sur `/srv/storage` (`STORAGE_DIR`) : en lecture-écriture pour `php` (Flysystem,
+adaptateur local), en lecture seule pour `nginx` et `go-api`.
+
+```
+/srv/storage/
+├── blobs/{sha256}.{ext}               # Images adressées par contenu (+ sibling .webp)
+├── data/{version}/{lang}/{type}.json  # Datasets Data Dragon
+├── manifest/{version}/{type}.json     # nom → chemin cdn (null = absence définitive)
+├── analytics/daily/{Y-m-d}.json       # Agrégats analytics (cf. analytics.md)
+└── audit/{Y-m-d}.ndjson               # Journal d'audit archivé (journées closes)
+```
+
+### Optimisations
+
+1. **Adressage par contenu** : une image identique entre versions n'est stockée qu'une fois (clé = SHA-256 des octets)
+2. **Écritures atomiques** : `AtomicWriteAdapter` écrit dans un fichier caché `.staging/` puis le `rename()` en place — nginx, `go-api` et les requêtes concurrentes ne lisent jamais un fichier partiel
+3. **Service direct par nginx** : `/cdn/blobs/` est un `alias` vers le disque (`Cache-Control: public, immutable`, 1 an) ; tout autre chemin `/cdn/*` répond 404
+4. **Manifeste en read-merge-write** : les ajouts concurrents (loader SSE ↔ flush `kernel.terminate`) ne s'écrasent pas
+
+## 🔌 Intégration API
+
+### Data Dragon Integration
+
+```php
+// Exemple d'intégration
+$data = $this->aPICaller->call(
+    "https://ddragon.leagueoflegends.com/cdn/{$version}/data/{$lang}/champion.json"
+);
+```
+
+### Endpoints supportés
+
+- **Champions** : `/cdn/{version}/data/{lang}/champion.json`
+- **Items** : `/cdn/{version}/data/{lang}/item.json`
+- **Summoner Spells** : `/cdn/{version}/data/{lang}/summoner.json`
+- **Runes** : `/cdn/{version}/data/{lang}/runesReforged.json`
+- **Images** : `/cdn/{version}/img/{type}/{name}.png`
+
+## 👤 Comptes & contenus utilisateur
+
+Les contenus créés par les joueurs vivent dans **PostgreSQL 17** via **Doctrine ORM** —
+séparation stricte avec les données Data Dragon, qui restent hors base (volume `storage`).
+
+- **Entités** : `users` (identité, favoris par type de ressource) et `builds`
+  (builds de champion ; colonnes **JSONB** pour les runes et les étapes d'objets).
+- **Authentification** : `form_login` Symfony (CSRF stateless), *remember-me* cookie
+  et *login throttling* natif contre le brute-force.
+- **Pickers** `/api/picker/*` : endpoints JSON qui projettent côté serveur les données
+  Data Dragon (id, nom, image) pour la recherche de favoris/builds — le client ne
+  télécharge jamais les datasets complets.
+- **Partage de build** : URL capacité `/b/{token}` (token opaque non devinable) —
+  le préfixe `/build/` étant réservé aux assets Vite par nginx.
+- **Dons** : Stripe Checkout héberge tout le parcours de paiement ; aucune donnée
+  bancaire ni transaction persistée localement (le dashboard Stripe fait foi),
+  webhook signé `POST /webhooks/stripe` pour la traçabilité.
+
+## 🚀 Déploiement
+
+### Environnements
+
+- **Development** : Symfony CLI + Webpack 
+- **Production** : Appache
+
+### CI/CD Pipeline
+
+```yaml
+# GitHub Actions
+- Installation PHP 8.2+
+- Installation dépendances Composer
+- Lint YAML/Twig/Container
+- Tests PHPUnit
+- Build assets production
+- Déploiement automatique
+```
+
+## 📈 Performance et scalabilité
+
+### Optimisations actuelles
+
+1. **Stockage intelligent** : Réduction des appels API
+2. **Hard links** : Économie d'espace disque
+3. **Pagination** : Limitation des données chargées
+4. **Compression** : Optimisation des assets
+
+### Améliorations futures
+
+1. **Base de données** : Persistance des données fréquentes
+2. **Queue system** : Traitement asynchrone
+3. **CDN** : Distribution des images

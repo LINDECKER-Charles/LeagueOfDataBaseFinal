@@ -8,7 +8,9 @@ using LoDb.Infrastructure.Jobs;
 using LoDb.Infrastructure.PageStore;
 using LoDb.Infrastructure.Persistence;
 using LoDb.Infrastructure.Persistence.Prerender;
+using LoDb.Ingestion.Catalog.States;
 using LoDb.Testing;
+using LoDb.Testing.States;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,8 +21,9 @@ using Microsoft.Extensions.Logging.Testing;
 namespace LoDb.Api.Tests.Prerender.Support;
 
 /// <summary>
-/// The pass as the API registers it, on a database of its own: its SSR, its catalog and, unless
-/// a real one is given, its store replaced by fakes; its clock never waits.
+/// The pass as the API registers it, on a database of its own: its SSR, its catalog, its index
+/// of states and, unless a real one is given, its store replaced by fakes; its clock never
+/// waits.
 /// </summary>
 internal sealed class PrerenderHarness : IAsyncDisposable
 {
@@ -38,6 +41,7 @@ internal sealed class PrerenderHarness : IAsyncDisposable
         Catalog = parts.Catalog;
         Clock = parts.Clock;
         Store = parts.Store;
+        Index = parts.Index;
     }
 
     public TestDatabase Database { get; }
@@ -53,6 +57,9 @@ internal sealed class PrerenderHarness : IAsyncDisposable
 
     /// <summary>The store in memory; null when the test gave a real one.</summary>
     public FakePageStore? Store { get; }
+
+    /// <summary>The index of states, empty until the test sets its snapshot.</summary>
+    public InMemoryEntityStateIndex Index { get; }
 
     public FakeLogCollector Logs => _services.GetFakeLogCollector();
 
@@ -151,6 +158,7 @@ internal sealed class PrerenderHarness : IAsyncDisposable
             .AddLoDbJobs(configuration)
             .AddAdminPrerender(configuration);
         services.Replace(ServiceDescriptor.Singleton<IPrerenderCatalog>(parts.Catalog));
+        services.AddSingleton<IEntityStateIndex>(parts.Index);
         if (parts.Store is { } store)
         {
             services.Replace(ServiceDescriptor.Singleton<IPageStore>(store));
@@ -168,5 +176,7 @@ internal sealed class PrerenderHarness : IAsyncDisposable
         public FakeCatalog Catalog { get; } = new();
 
         public InstantClock Clock { get; } = new();
+
+        public InMemoryEntityStateIndex Index { get; } = new();
     }
 }

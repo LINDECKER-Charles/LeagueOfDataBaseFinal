@@ -83,7 +83,7 @@ internal sealed class DemandDrain(
         }
         finally
         {
-            regulator.EndQueue();
+            regulator.EndQueue(LockName);
         }
     }
 
@@ -91,7 +91,7 @@ internal sealed class DemandDrain(
     {
         while (await queue.NextAsync(BatchSize, cancellationToken) is { Count: > 0 } rows)
         {
-            regulator.BeginQueue();
+            regulator.BeginQueue(LockName);
             var started = clock.GetTimestamp();
             var tally = await RunBatchAsync(rows, epoch, cancellationToken);
             Log(tally, epoch, (long)clock.GetElapsedTime(started).TotalMilliseconds);

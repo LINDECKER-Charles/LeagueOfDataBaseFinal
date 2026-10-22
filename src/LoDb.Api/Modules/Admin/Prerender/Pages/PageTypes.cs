@@ -34,6 +34,11 @@ internal static class PageTypes
     /// The paths of <paramref name="paths"/> of one of <paramref name="types"/>, each list then
     /// its entities, in their order; all of them when <paramref name="types"/> is null.
     /// </summary>
+    /// <remarks>
+    /// The patch page (<c>changes</c>) is of no type: any filter leaves it out, so that only a
+    /// unit over every type renders it, and the four bits of <see cref="TypeMask"/> still say
+    /// what an epoch holds.
+    /// </remarks>
     public static IReadOnlyList<string> Keep(
         IReadOnlyList<string> paths,
         IReadOnlyList<ResourceType>? types)

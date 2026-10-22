@@ -59,7 +59,10 @@ public sealed class LegacyStoredOnlyTests(LegacyApiFixture api)
     {
         await StoreAsync();
         var reader = new LatestUnread(api.Services.GetRequiredService<ICatalogReader>());
-        var resolver = new LegacyResolver(reader, NullLogger<LegacyResolver>.Instance);
+        var resolver = new LegacyResolver(
+            reader,
+            api.States,
+            NullLogger<LegacyResolver>.Instance);
 
         var answer = await resolver.ResolveAsync(
             new LegacyRequest(oldPath, null, null),

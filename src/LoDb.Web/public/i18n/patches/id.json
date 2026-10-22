@@ -1,8 +1,20 @@
 {
   "title": "Riwayat patch",
-  "description": "Semua patch League of Legends yang tercantum di Data Dragon, masing-masing dengan champion, item, rune, dan summoner spell seperti pada patch tersebut.",
-  "intro": "Semua patch yang tercantum di Data Dragon, dari yang terbaru. Setiap patch membuka champion, item, rune, dan summoner spell-nya seperti pada saat itu.",
+  "description": "Semua patch League of Legends yang tercantum di Data Dragon, masing-masing dengan perubahannya serta champion, item, rune, dan summoner spell seperti pada patch tersebut.",
+  "intro": "Semua patch yang tercantum di Data Dragon, dari yang terbaru. Setiap patch membuka perubahannya, lalu champion, item, rune, dan summoner spell-nya seperti pada saat itu.",
   "group": "Patch {{ major }}.x",
   "latest": "Terkini",
-  "empty": "Belum ada patch yang tercantum."
+  "empty": "Belum ada patch yang tercantum.",
+  "changes_link": "Perubahan",
+  "changes": {
+    "title": "Perubahan patch {{ version }}",
+    "description": "Apa yang diubah patch {{ version }} League of Legends dibandingkan patch {{ previous }}: champion, item, rune, dan summoner spell yang diubah, baru, kembali, atau dihapus.",
+    "description_empty": "Patch {{ version }} League of Legends tidak mengubah champion, item, rune, maupun summoner spell apa pun dibandingkan patch {{ previous }}.",
+    "intro": "Apa yang diubah patch {{ version }} dibandingkan patch {{ previous }}, berdasarkan data Data Dragon dari Riot.",
+    "empty": "Patch ini tidak mengubah apa pun yang ditampilkan ensiklopedia.",
+    "changed": "Diubah",
+    "new": "Baru",
+    "returned": "Kembali",
+    "retired": "Dihapus"
+  }
 }

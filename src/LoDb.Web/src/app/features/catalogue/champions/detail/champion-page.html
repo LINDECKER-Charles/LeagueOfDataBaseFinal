@@ -107,12 +107,7 @@
   </div>
 
   <div class="relative mx-auto mt-14 max-w-7xl">
-    <lodb-previous-patches
-      class="mb-14"
-      [context]="context()"
-      [path]="details().canonicalPath"
-      [canonical]="details().canonical"
-    />
+    <lodb-entity-state class="mb-14" [context]="context()" [details]="details()" />
     <!-- Once the page is idle: the pager measures itself once hydrated, out of sight, and
          a click never lands while it hydrates (docs/architecture/pieges.md). -->
     @defer (on immediate; hydrate on idle) {

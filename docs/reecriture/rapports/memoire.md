@@ -1,5 +1,9 @@
 # Mémoire de la stack `lodb-next`
 
+> **Historique** : relevés de construction (septembre 2026) sur la stack `lodb-next`, qui
+> n'existe plus. Les limites mémoire en vigueur sont dans
+> [`compose.deploy.yaml`](../../../compose.deploy.yaml).
+
 Relevés `docker stats --no-stream` (colonne `MEM USAGE`) de la stack `lodb-next`. Ils sont
 la base des limites mémoire de `compose.next.deploy.yaml` (règle du plan, §5.4 : deux
 fois le pic observé), que L8.1 fixe définitivement. Les jalons ajoutent ici les pics

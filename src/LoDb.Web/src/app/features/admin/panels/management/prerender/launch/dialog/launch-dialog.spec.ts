@@ -171,6 +171,7 @@ describe('LaunchDialog', () => {
       versions: ['16.18.1'],
       locales: null,
       pageTypes: null,
+      pages: null,
       priority: null,
       skipComplete: true,
     });

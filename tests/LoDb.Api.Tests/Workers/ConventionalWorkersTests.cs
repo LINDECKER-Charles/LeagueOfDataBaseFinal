@@ -39,7 +39,6 @@ public sealed class ConventionalWorkersTests
         [
             typeof(AuthenticatorSecretsJob),
             typeof(RefreshFamilyPurgeJob),
-            typeof(UnverifiedAccountPurgeJob),
             typeof(AnalyticsRetentionJob),
             typeof(AnalyticsRollupJob),
             typeof(AnalyticsWriterWorker),
@@ -47,6 +46,7 @@ public sealed class ConventionalWorkersTests
             typeof(AuditRetentionJob),
             typeof(CreditExpiryJob),
             typeof(ArtVariantsJob),
+            typeof(CatalogStatesReconcileJob),
             typeof(LatestCatalogWarmer),
             typeof(OnDemandIngestionWorker),
             typeof(PatchWatchJob),
@@ -57,6 +57,7 @@ public sealed class ConventionalWorkersTests
             typeof(PrerenderDemandWorker),
             typeof(PrerenderPaceWorker),
             typeof(PrerenderReconcileJob),
+            typeof(PrerenderRevisionWorker),
             typeof(PrerenderWorker),
             typeof(CspReportSummaryWorker),
         ];

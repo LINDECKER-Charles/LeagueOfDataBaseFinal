@@ -1,5 +1,9 @@
 # Lots 9 et 10 — Apps desktop et Android
 
+> **Historique** : spécification de construction de septembre 2026, exécutée (bascule le
+> 2026-10-04). Les règles en vigueur sont dans [`AGENTS.md`](../../../AGENTS.md) et les
+> [ADR](../adr/) ; plusieurs choix de ce lot ont changé depuis, par amendement daté.
+
 Objectif des lots : deux coquilles minces qui embarquent le build `shell` du front, parlent
 à l'API distante et se mettent à jour elles-mêmes. Ils peuvent démarrer dès les fondations
 du lot 3, L4.5 (socle d'authentification front) et L6.2 (table de la politique client) ;

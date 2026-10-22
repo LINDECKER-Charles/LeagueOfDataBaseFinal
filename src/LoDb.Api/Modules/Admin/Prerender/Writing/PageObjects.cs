@@ -10,8 +10,15 @@ namespace LoDb.Api.Modules.Admin.Prerender.Writing;
 /// nginx sets again when it serves it (ADR 0011).
 /// </summary>
 /// <remarks>
+/// <para>
+/// The caching is the page's own <c>Cache-Control</c>, that of its class: nginx keeps the
+/// object in its hot cache as long as it says (a year for a closed state's page, an hour for
+/// the open state's) and gives the client the class it names.
+/// </para>
+/// <para>
 /// Neither <c>Vary</c> nor <c>Content-Length</c> is kept: nginx answers one copy whatever the
 /// client accepts, and the store knows the length. The other headers are nginx's own.
+/// </para>
 /// </remarks>
 internal static class PageObjects
 {
@@ -20,7 +27,8 @@ internal static class PageObjects
 
     private const string ReportingEndpoints = "Reporting-Endpoints";
 
-    // Only an HTML page is ever marked archived: the type it would have, were it not sent.
+    // Only an HTML page is ever marked with a stored class: the type it would have, were it not
+    // sent.
     private const string Html = "text/html; charset=utf-8";
 
     // The page's own headers, which depend on its scripts (CSP) or its images (preconnect).

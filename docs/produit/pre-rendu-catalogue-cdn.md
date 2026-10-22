@@ -1,5 +1,25 @@
 # Catalogue pré-rendu : stockage objet et CDN
 
+> **État des lots au 2026-10-22**
+>
+> | Lot | État |
+> |---|---|
+> | 0 — Décision écrite | fait : [ADR 0011](../reecriture/adr/0011-catalogue-pre-rendu-et-cdn.md) (2026-10-20) |
+> | 1 — Stockage | fait, en prod le 2026-10-21 (PR #85, #93) |
+> | 2 — Passe de précalcul | fait, en prod le 2026-10-21 ; capacité adaptative (PR #94, en prod par #96), file automatique (PR #98) et vitesse réglable (PR #97), en prod le 2026-10-22 (#99) |
+> | 3 — nginx sert depuis le stockage | fait, en prod le 2026-10-21 (PR #85, #91), la lecture derrière `LODB_PAGES_STORE_ENABLED` |
+> | 4 — CDN Cloudflare (4a `infra-vps`, 4b DNS, 4c LoDb) | **non commencé** ; date à fixer |
+> | 5 — Mesure de l'effet | à relever, 7 jours après la lecture du stockage en prod |
+> | 6 — Alléger les pages | plus tard |
+>
+> Le cap d'indexation a changé depuis cette spécification : une page indexée par état
+> ([`seo-une-page-par-etat.md`](seo-une-page-par-etat.md), décidée le 2026-10-22, en vigueur
+> dans le code, en prod à sa bascule ; [ADR 0011](../reecriture/adr/0011-catalogue-pre-rendu-et-cdn.md),
+> amendement du 2026-10-22). Elle change ici ce que la passe stocke (les classes `archived` et
+> `revisable`), les pages d'une version (la page de patch), la `Cache-Control` que nginx
+> donne et garde, et ajoute la file des états clos et la passe « ouvreurs d'abord » ; les
+> passages concernés portent une note datée.
+
 Chantier décidé le 20 octobre 2026. Toutes les pages des anciens patchs sont calculées une
 fois, rangées dans un stockage objet (Scaleway, Paris), et le site ne fait plus que les
 servir. Un CDN (Cloudflare) les rapproche des visiteurs du monde entier. Le rendu SSR ne
@@ -73,7 +93,7 @@ TLS, requête), même sur une page gardée : de l'ordre de 0,25 s depuis New Yor
 | **Précalcul complet dans un stockage objet Scaleway** | **Retenue.** Région `fr-par`, classe One Zone posée à chaque écriture : Scaleway n'a pas de classe par défaut par stockage, et un objet écrit sans classe est Multi-AZ, deux fois plus cher. Environ 1,25 €/mois pour 155 Go (prix du 1ᵉʳ juin 2026), le double tant que deux epochs coexistent. Les requêtes et l'entrée sont incluses ; 75 Go de sortie sont gratuits par mois, puis 0,01 €/Go : ~2,75 €/mois si chaque demande d'ancien patch atteignait le stockage. Une zone perdue ne perd rien, puisque toutes les pages peuvent être recalculées. |
 | Cloudflare R2 + Worker (servir le stockage depuis le CDN) | **Écartée pour l'instant.** Environ 5 $ par mois de Workers en plus, et ~15 $ d'écritures à l'amorçage. Elle reviendrait si le VPS devait ne plus voir du tout les anciens patchs. |
 | **CDN devant le site** | **Retenue.** Cloudflare Free : bande passante illimitée, purge par préfixe ou complète sur tous les plans depuis avril 2025. Il supprime la distance ; le stockage supprime le rendu. Les deux sont nécessaires : un CDN seul garde mal 4 millions d'adresses peu demandées, et chacun de ses ratés doit rester peu coûteux à l'origine. |
-| `noindex` ou `Disallow` des anciens patchs | **Écartée**, comme dans la spécification précédente : la règle des canoniques (amendement du 2026-10-14 de l'ADR 0005) suffit. |
+| `noindex` ou `Disallow` des anciens patchs | **Écartée**, comme dans la spécification précédente : la règle des canoniques (amendement du 2026-10-14 de l'ADR 0005) suffit. *Le 2026-10-22, cette règle devient celle des états (amendement du 2026-10-22) : toujours ni `noindex` ni `Disallow` ; chaque état a une page indexée, son ouvreur, et les autres versions la désignent.* |
 | Pré-rendre les pages `?page=N` des listes | **Remise à plus tard.** 8 % de pages en plus, 0,3 % des requêtes gardées. Une adresse avec une query reste rendue par le SSR et gardée par nginx. |
 | Alléger les pages avant le précalcul | **Remise à plus tard** (lot 6) : le stockage n'est plus la contrainte. À faire avant une seconde passe complète. |
 | Staging rempli comme la prod | **Écartée.** Le staging reste presque vide : aucune passe automatique, des passes manuelles sur un petit périmètre, des objets qui expirent après 14 jours. Ses limites (`web-ssr` à 0,25 CPU) ne disent rien du débit de la prod. |
@@ -111,7 +131,10 @@ Règles :
   l'envoie, c'est-à-dire le corps compressé en gzip une fois (`src/server/compression`).
   Sur la voie `prerender` seulement, le SSR la marque `X-LoDb-Cache-Class: archived` quand
   sa `Cache-Control` est celle de la classe : l'API ne réécrit pas la constante en C#. Jamais
-  une 503, une 5xx, une 404 ni une 301.
+  une 503, une 5xx, une 404 ni une 301. *Remplacé le 2026-10-22 : la `200` de classe
+  `archived` (page figée, état clos) ou `revisable` (page de l'état ouvert, une heure), chacune
+  marquée de sa classe ; toute autre marque reste `skipped`. La page garde sa `Cache-Control`
+  dans l'objet.*
 - **Les en-têtes propres à la page voyagent avec elle** :
   - en en-têtes de l'objet, tels que le SSR les envoie : `Content-Type`,
     `Content-Encoding: gzip`, `Cache-Control` ;
@@ -271,7 +294,8 @@ révise renvoient vers elle par un amendement daté :
     (`${LODB_ARCHIVE_SERVE_EPOCH}`), `__AutoEnqueueOnPromotion` (faux au staging ; faux en prod
     jusqu'à la fin de la passe complète, puis vrai), `__AllowInsecureEndpoint` (développement).
     Vides, elles laissent la tâche en sommeil : `Add*` ne fait aucune I/O ;
-  - nginx : `LODB_PAGES_STORE_ENABLED` (`0` par défaut : en local et en CI, rien ne change),
+  - nginx : `LODB_PAGES_STORE_ENABLED` (`0` par défaut dans `compose.yaml` et l'image ; la pile
+    de développement et les E2E de la CI l'allument sur le stockage simulé),
     `LODB_PAGES_STORE_SCHEME`, `_HOST`, `_PORT`, `_BUCKET`, et l'epoch servie
     (`LODB_ARCHIVE_SERVE_EPOCH`) ;
   - SSR : le budget de la voie `prerender` (lot 2).
@@ -293,7 +317,13 @@ sitemaps d'une version ne gardent que ses fiches canoniques chez elle
 `EntityPaths` et `SitePages.Lists`, tirés dans une seule fonction interne
 (`Modules/Seo/Pages/VersionPages.cs`) que les sitemaps et la passe partagent. Le précalcul
 ne peut ainsi pas s'écarter des liens du site. Une version épinglée n'a ni accueil ni page
-`patches` (`tools/routing/check-urls.sh` en attend une 404).
+`patches` (`tools/routing/check-urls.sh` en attend une 404). *Remplacé le 2026-10-22 : les
+sitemaps d'une version se lisent dans l'index des états (sa page de patch et les ouvreurs de
+ses états clos), et `VersionPages.Of` donne, dans cet ordre figé, les 4 listes, la page de
+patch (`changes`, toujours listée ; une version qui n'en a pas répond 404, sautée), puis les
+entités, tirées de `ListedEntities` (`LoDb.Ingestion`), le prédicat que l'index partage. La
+page de patch n'est pas un type de page : une unité qui couvre tous les types la rend, un
+filtre de type l'écarte.*
 
 **Ordre.** Par (version, langue) : l'API charge chaque catalogue une fois pour toutes ses
 pages, environ 8 450 chargements pour toute la passe, au lieu d'un par page. L'alerte
@@ -357,8 +387,8 @@ conteneur à elle, `http://lodb-web-ssr-prerender:4000`, et non plus celui des v
 
 **Écriture.** Un `PUT` par page, avec les en-têtes et les métadonnées du § 3, en classe
 `ONEZONE_IA`. Un `PUT` est atomique pour un objet. L'API n'écrit qu'une `200` marquée
-`X-LoDb-Cache-Class: archived`, compressée en gzip et dont le build (`X-LoDb-Build`) est
-déjà copié (§ 3) ; une 301 ou une 404 est comptée `skipped`, pas en échec. Une 503 fait
+`X-LoDb-Cache-Class: archived` (*ou `revisable`, depuis le 2026-10-22*), compressée en gzip et
+dont le build (`X-LoDb-Build`) est déjà copié (§ 3) ; une 301 ou une 404 est comptée `skipped`, pas en échec. Une 503 fait
 reculer la tâche selon son `Retry-After`. Une page en échec est retentée plus tard dans la
 passe, puis comptée en échec. Le stockage est joint par un client nommé à lui
 (`page-store`), avec sa propre allow-list, sans redirection : jamais en élargissant
@@ -923,7 +953,12 @@ Dans la location des versions épinglées (`sites/site.conf`), derrière
   - les en-têtes du § 3 reposés depuis `$upstream_http_x_amz_meta_*`, y compris sur une
     copie servie par le cache (`HIT`) ;
   - la `Cache-Control` de la classe `archived`, posée par nginx
-    (`proxy_ignore_headers Cache-Control Expires`, `proxy_cache_valid 200 365d`) ;
+    (`proxy_ignore_headers Cache-Control Expires`, `proxy_cache_valid 200 365d`) ; *remplacé
+    le 2026-10-22 : celle de la classe de l'objet (`revisable` pour un objet qui porte
+    exactement sa valeur, `archived` sinon, `$lodb_pinned_cache_control`), et le cache chaud
+    garde la page autant que dit sa `Cache-Control` (`s-maxage`, `stale-while-revalidate`) ;
+    `proxy_cache_valid 200 365d` ne vaut plus qu'en repli, et les bundles gardent l'année
+    (`bundles.conf`)* ;
   - `X-LoDb-Source: cache|store|ssr` : un stockage injoignable qui renvoie sans bruit vers
     le SSR devient visible dans le journal de l'edge.
 
@@ -1088,7 +1123,9 @@ LCP et le CLS sont mesurés avant et après.
 ## 5. Ce qui ne change pas
 
 - Le dernier patch, sa zone `lodb_pages` et ses budgets de rendu.
-- La grammaire d'URL, les canoniques (amendement du 2026-10-14) et les sitemaps.
+- La grammaire d'URL, les canoniques (amendement du 2026-10-14) et les sitemaps. *Remplacé le
+  2026-10-22 : les canoniques et les sitemaps suivent la règle par état ; la grammaire gagne le
+  segment `changes`.*
 - Le SSR : aucun cookie lu, aucun secret détenu.
 - La voie épinglée du SSR, qui devient le repli.
 - `LODB_ARCHIVE_EPOCH` reste la purge d'urgence du cache nginx ; l'epoch servie est celle
@@ -1130,8 +1167,8 @@ Selon `docs/guides/tests.md`, au plus près de la couche qui porte le comporteme
     au démarrage ; un total abaissé avec les valeurs par défaut de la voie démarre, la voie
     ramenée sous lui ;
   - sans l'en-tête, une requête reste dans sa voie ;
-  - la marque de la classe `archived` et l'en-tête `X-LoDb-Build`, sur la voie `prerender`
-    seulement ;
+  - la marque de la classe `archived` (et `revisable`, depuis le 2026-10-22) et l'en-tête
+    `X-LoDb-Build`, sur la voie `prerender` seulement ;
   - `/_lodb/build-files` répond 404 sans l'en-tête ;
   - `GET /load` : ses champs, cumulés ; la fenêtre du retard de la boucle d'événements
     tourne toutes les 30 s ; une lecture de `/load` ne remet rien à zéro de ce que lit
@@ -1147,8 +1184,8 @@ Selon `docs/guides/tests.md`, au plus près de la couche qui porte le comporteme
   - la liste des pages d'une (version, langue) : les 4 listes et toutes les entités
     listées, les sitemaps inchangés ;
   - l'ordre de passage ;
-  - seule une `200` marquée `archived` et compressée est écrite, avec ses métadonnées ; une
-    301 ou une 404 est sautée ;
+  - seule une `200` marquée `archived` (ou `revisable`, depuis le 2026-10-22) et compressée
+    est écrite, avec ses métadonnées ; une 301 ou une 404 est sautée ;
   - le build copié avant ses pages, une seule fois ; une page d'un build inconnu
     (`X-LoDb-Build` absent de `prerender_build`) déclenche la copie avant son `PUT`, et une
     empreinte qui change entre la page et la liste fait rendre la page de nouveau ;
@@ -1209,7 +1246,7 @@ Selon `docs/guides/tests.md`, au plus près de la couche qui porte le comporteme
 Selon `AGENTS.md` : conventions, garde-fous, un commit par changement cohérent, aucune ligne
 d'attribution. Pas de push sur `dev`, `test` ni `main`.
 
-1. **Cette branche (`feat/pre-rendu-catalogue`)** : lots 0 à 3, une pull request vers `dev`
+1. **La branche `feat/pre-rendu-catalogue`** (fusionnée, PR #85) : lots 0 à 3, une pull request vers `dev`
    avec une CI verte. Avant la PR, sur la pile locale :
    - une passe sur quelques (version, langue) va au bout ;
    - nginx sert les pages depuis le stockage simulé ;

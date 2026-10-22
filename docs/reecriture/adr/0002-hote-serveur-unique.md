@@ -4,6 +4,8 @@
 - **Remplace** : `go/fetcher` (passerelle d'egress) et `go/api` (API publique payante)
 - **Amendement** : le 2026-10-20, un second hôte sortant, le stockage objet des pages
   pré-rendues, derrière son propre client nommé (voir § « Amendement du 2026-10-20 »).
+- **Suivi** (2026-10-22) : d'autres hôtes sortants ont suivi, chacun derrière son client
+  nommé ; la liste est au § « Hôtes sortants ».
 
 ## Contexte
 
@@ -98,7 +100,7 @@ pas par l'egress Data Dragon :
 
 - **Client nommé `page-store`**, à part de `ddragon`. Son allow-list ne contient que l'hôte
   de `LoDb__Prerender__Endpoint` (`s3.fr-par.scw.cloud`), en https ; `AllowInsecureEndpoint`
-  n'admet le http qu'en développement (MinIO). `LoDb:Egress:AllowedHosts` n'est jamais
+  n'admet le http qu'en développement (moto) et en test (MinIO). `LoDb:Egress:AllowedHosts` n'est jamais
   élargi : les deux politiques restent séparées et testées à part.
 - Un `DelegatingHandler` épingle l'hôte, sur le modèle d'`UmamiHostHandler` ; aucune
   redirection suivie, aucun cookie, `AutomaticDecompression = None` (le corps est déjà en
@@ -121,5 +123,26 @@ pas par l'egress Data Dragon :
   (`X-LoDb-Source: ssr`).
 - Options vides = client et tâche en sommeil : `Add*` ne fait aucune I/O et ne lève rien.
 
-Les appels de la passe au SSR (`http://lodb-web-ssr:4000`) restent sur le réseau de la pile :
-ce n'est pas de l'egress.
+Les appels de la passe au SSR restent sur le réseau de la pile : ce n'est pas de l'egress.
+Depuis le 2026-10-21, la passe a son propre SSR, `http://lodb-web-ssr-prerender:4000`
+([ADR 0011](0011-catalogue-pre-rendu-et-cdn.md), amendement du 2026-10-21).
+
+## Hôtes sortants (au 2026-10-22)
+
+Chaque client HTTP sortant a son client nommé, sauf le backchannel OAuth de Google ; aucun ne
+passe par l'allow-list de `ddragon`, qui reste réservée à Data Dragon et CommunityDragon. Un
+nouvel hôte sortant prend son propre client et rejoint cette table.
+
+| Client | Hôte | Usage | Code |
+|---|---|---|---|
+| `ddragon` | `ddragon.leagueoflegends.com`, `raw.communitydragon.org` | ingestion | `src/LoDb.Ingestion/Egress/` |
+| `page-store` | hôte de `LoDb__Prerender__Endpoint` (`s3.fr-par.scw.cloud`) | écriture des pages pré-rendues | `src/LoDb.Infrastructure/PageStore/` |
+| Umami | hôte du tableau de bord (`LoDb__Audience__Host`) | tirage de l'audience ([ADR 0012](0012-audience-umami.md)) | `src/LoDb.Infrastructure/Audience/` (`UmamiHostHandler`) |
+| facturation Scaleway | `api.scaleway.com` | coût réel au panneau d'administration | `src/LoDb.Api/Modules/Admin/Scaleway/` |
+| IndexNow | `api.indexnow.org` | URL changées à chaque promotion | `src/LoDb.Api/Modules/Seo/IndexNow/` |
+| Stripe | API de Stripe (SDK `StripeClient`) | paiements de l'API publique et dons | `src/LoDb.Api/Modules/Billing/Checkout/` |
+| Google OAuth | points de jeton et d'identité de Google | connexion Google | `src/LoDb.Api/Modules/Accounts/Google/` (backchannel du handler, pas de client nommé) |
+| SMTP | `LoDb__Mail__Host` | e-mails des comptes, par l'outbox | `src/LoDb.Infrastructure/Outbox/Smtp/` |
+
+Sur le réseau de la pile, hors egress : les SSR (rendus de la passe, `GET /load`,
+`GET /refused` sur leur port de métriques).

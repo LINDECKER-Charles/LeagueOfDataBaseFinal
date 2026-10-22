@@ -84,18 +84,54 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   qu'une montée de version peut déplacer.
 - Points d'accroche de `app.config.ts` : chaque propriétaire remplit son dossier
   (`core/auth`, `core/analytics`, `core/update`) sans toucher `app.config.ts` ni `app.html`.
-- **Historique des patchs** (`/{locale}/patches`) : quatre liens par version listée, des
-  centaines de versions. Balisage nu et `ViewEncapsulation.None` voulus (l'attribut
-  d'encapsulation pesait un tiers de la page) : ni attribut, ni classe, ni pipe par lien.
-  L'index des sitemaps n'annonce que le dernier patch (`LoDb__Seo__SitemapVersionWindow`,
-  `0`) ; le sitemap d'un ancien patch reste servi, mais ne liste que les fiches des entités
-  dont c'est la dernière version, souvent aucune : un `urlset` vide n'est pas une
-  régression. La fiche d'un ancien patch est canonique au dernier patch, sans hreflang ni
-  JSON-LD, ou `noindex, follow` avant la dernière version d'une entité retirée (ADR 0005,
-  amendement du 2026-10-14) : voulu. Les visiteurs atteignent les anciens patchs par cette
-  page et le bloc « Dans les patchs précédents » des fiches, qui ne chargent aucun catalogue.
-  Une ancienne URL du site qui nomme une version perd cette version dans sa 301 (URL courte,
-  liste nue) tant que l'entité existe au dernier patch : voulu (amendement du 2026-10-16).
+- **Historique des patchs** (`/{locale}/patches`) : par version listée, sa page de
+  changements quand elle en a une, puis ses quatre listes, des centaines de versions.
+  Balisage nu et `ViewEncapsulation.None` voulus (l'attribut d'encapsulation pesait un tiers
+  de la page) : ni attribut, ni classe, ni pipe par lien. Une fiche d'ancien patch est
+  indexée une fois par état (ADR 0005, amendement du 2026-10-22) : l'ouvreur d'un état clos
+  est sa propre canonique, les autres versions de l'état désignent l'ouvreur dans la même
+  langue, sans hreflang ni JSON-LD, et une version de l'état ouvert désigne l'URL courte :
+  voulu, « Autre page avec balise canonique correcte » monte dans la Search Console.
+  L'API décide la canonique (`StateView`) depuis l'index des états et le dernier patch du
+  lecteur de catalogues, jamais celui de l'index : une page à ce patch est toujours sa
+  propre canonique. Une version que l'index ne couvre pas encore (index en retard sur une
+  promotion) compte comme l'état ouvert ; hors de l'index (plus ancienne que sa couverture,
+  listée après le dernier patch, avant toute promotion), la règle résiduelle donne l'URL
+  courte si le dernier patch tient l'entité, sinon la page elle-même. Index illisible et pas
+  de copie en mémoire : la fiche et `…/changes` répondent 503 avec `Retry-After`. Le
+  `{version}.xml` d'un ancien patch ne liste que sa page de changements et les ouvreurs de
+  ses états clos : un `urlset` vide reste servi, mais l'index des sitemaps ne l'annonce
+  pas. Le bloc « Historique » se lit dans l'index seul ; l'ouvreur lit en plus le catalogue
+  de la dernière version de l'état précédent, dans sa langue : épinglé, il répond 503 tant
+  que ce catalogue n'est pas stocké, jamais rendu sans son bloc ; l'URL courte sort alors
+  sans le bloc. Le bloc liste toujours les champs que l'index marque changés, même sans
+  valeur dans la langue de la page. Si Data Dragon ne livrait pas encore cette langue à la
+  version comparée, son catalogue tient l'en_US : seuls les nombres, codes, ids et chaînes par
+  rang des sorts y gardent leur valeur avant, un texte ou un nom s'affiche avec sa seule
+  valeur après (voulu, `ComparedProjection`). Une ancienne URL du site qui nomme une version
+  mène à la canonique de la page qu'elle nommait : l'ouvreur de l'état clos, avec le slug de
+  cette version, ou l'URL courte de l'état ouvert ; sans version, un champion, un objet ou
+  un sort absent du dernier patch mène à l'ouvreur de son dernier état. Une voie de runes
+  absente du dernier patch garde la règle du 2026-10-16 (sa page épinglée de la version
+  nommée, 404 sans version) : l'ancien site la nommait par sa clé, que seul le catalogue du
+  dernier patch traduit en id pour l'index (amendements du 2026-10-16 et du 2026-10-22).
+  L'index des sitemaps n'annonce, après les `latest.xml`, que les sitemaps des versions
+  couvertes passées dont le fichier n'est pas vide (~8 440 entrées au plus), lus dans la copie
+  de l'index sans catalogue ; une version pas encore couverte (index en retard), plus récente
+  que le dernier patch ou d'avant toute promotion répond 404, et `latest.xml` n'ajoute
+  `/{locale}/changes` que si l'index couvre le dernier patch et qu'il a changé quelque chose.
+  Une page figée (état clos) ne lie que des URL versionnées, sauf « Dans le dernier patch »,
+  qui devient une 404 si l'entité est retirée ensuite, et « Changé au patch X » mène à une 301
+  tant que X est le dernier patch : voulu. Une page révisable (état ouvert) ne nomme aucune
+  version qu'une promotion change (« depuis le patch X »). Le premier état d'une entité au
+  début de la couverture est `baseline` : ni résumé, ni pastille, ni bloc. Les blocs ne lisent
+  que la réponse de la fiche, jamais `/api/meta` (les specs des fiches ne la fournissent
+  plus). Une page de patch (`/{locale}/[{version}/]changes`) n'existe pas pour la
+  première version couverte ni hors de l'index : sur elle, la version mémorisée ou choisie dans
+  le sélecteur ne s'applique qu'entre `oldestChangesVersion` et `newestChangesVersion` (la fin
+  de la couverture : le dernier patch, sauf tant que l'index est en retard sur sa promotion ;
+  `core/api/meta/has-changes-page.ts`, la règle de `/patches`), sinon la page reste sur le
+  dernier patch.
 - Une page qui oublie `Seo.apply` n'a ni canonique ni hreflang. Une clé `about.*`, `api.*`
   ou `seo.*` n'est traduite que si un ancêtre fournit son scope (`provideTranslocoScope`) ;
   sinon la clé brute sort dans le HTML, sans erreur. Le chrome (en-tête, pied de page) n'en
@@ -162,6 +198,16 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
 
 - `/readyz` se lit sur l'API (18081 ou `lodb-api:8080`) et, par nginx, sur le sous-domaine `api.`
   seulement (1 requête/s par adresse, sonde externe) ; demandé au site, il part au SSR (404).
+- **Deux captures sans autorisation, voulues** : la balise (`POST /api/analytics/view`,
+  `BeaconEndpoint.cs`) et le point d'accès du miroir de nginx (`MirrorEndpoint.cs`) portent
+  `.AllowAnonymous()`. `sendBeacon` ne peut pas envoyer le jeton XSRF : la balise vérifie
+  l'`Origin` elle-même, et le miroir n'est joignable que par nginx. Ce sont les seules
+  exceptions à « jamais `AllowAnonymous` » d'`AGENTS.md`, tenues fermées par
+  `tests/LoDb.Api.Tests/Hosting/AnonymousEndpointsTests.cs` ; elles partent avec la mesure
+  maison ([ADR 0012](../reecriture/adr/0012-audience-umami.md)).
+- **`UsageFlusher` tourne même avec `LoDb:Workers:Enabled=false`** : le métrage de `/v1`
+  (`Modules/PublicApi/Metering/`) est enregistré par le module, hors de `Workers/`, sinon
+  `api_usage` ne serait jamais alimenté.
 - En local, les URLs absolues perdent le port (nginx transmet `Host: $host`) : l'origine
   canonique se fixe par `LoDb__Seo__CanonicalOrigin` et `LoDb__Accounts__SiteOrigin`.
 - **Pool Postgres** : `Maximum Pool Size=32;Timeout=5` dans la chaîne de connexion. Une
@@ -170,8 +216,8 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   compté par `lodb_db_unavailable_total`. Npgsql ne donne au pool épuisé ni type ni code :
   son message est reconnu par son texte, et `DatabaseFailureTests` le revérifie sur un vrai
   pool à chaque montée de version.
-- **Rôle Postgres de l'API** : l'API se connecte comme `lodb_app` (lignes seulement, 15 s par
-  requête), `migrate` comme le superutilisateur ([`configuration.md`](../guides/configuration.md)
+- **Rôle Postgres de l'API** : l'API et le one-shot `states` (index des états) se connectent
+  comme `lodb_app` (lignes seulement, 15 s par requête), `migrate` comme le superutilisateur ([`configuration.md`](../guides/configuration.md)
   § 4.3). Un `42501` (`permission denied`, `must be owner`) d'une commande lancée dans le
   conteneur `api` est voulu : ce qui change le schéma passe par `migrate`
   (`docker compose run --rm migrate …`), jamais par l'API ni par un droit accordé à la main,
@@ -196,7 +242,8 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   `lodb_network_gate_refusals_total`, sans log. Un conteneur d'un réseau partagé
   (`observability`) ne joint que le port 9464. Un nouveau service qui appelle l'API doit
   être sur le réseau `default` de la stack.
-- **Postgres sur le seul réseau `data`**, avec `api` et `migrate` (interne sur un hôte : aucune
+- **Postgres sur le seul réseau `data`**, avec `api` et les one-shots `migrate` et `states`
+  (interne sur un hôte : aucune
   route vers l'extérieur) : nginx et le SSR ne joignent pas la base, et l'API répond un 404 à
   un pair de `data` (ce n'est pas le réseau de `KnownProxyNetworks`). Un nouveau service qui
   lit la base rejoint `data` et appelle `lodb-postgres` ; un outil local passe par le port
@@ -211,8 +258,11 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   catalogue ouvert ; les images restantes restent en attente et les listes les confient à
   la file de fond. Un catalogue qui ne s'ouvre pas et un flux expiré finissent toujours
   `failed`, en gardant les comptes atteints.
-- Une URL de l'ancien site sur une version non stockée répond `302` vers la liste de la
-  version, sans rien ingérer : voulu (une entrée retirée du jeu ne devient pas une 404).
+- Une URL de l'ancien site qui nomme une version où l'index des états n'a pas l'entité, pour
+  une entité absente du dernier patch et une version non stockée, répond `302` vers la liste
+  de la version, sans rien ingérer : voulu (une entrée retirée du jeu ne devient pas une
+  404). Une entité que l'index connaît à cette version mène à sa canonique sans ouvrir aucun
+  catalogue que celui du dernier patch.
 - **E-mails** : le modèle d'un `EmailMessage` s'écrit avec `EmailModelKeys`, jamais en
   littéral (sinon `dead` dès le premier essai). L'outbox n'envoie rien sans
   `LoDb:Mail:Host` : voulu. En local, Mailpit sur http://localhost:18025.
@@ -221,10 +271,8 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   les messages restent `pending` avec 0 tentative jusqu'à ce que l'heure libère une place.
   Un e-mail « qui n'arrive pas » se cherche d'abord dans la jauge `lodb_outbox_deferred` et
   le journal `outbox.hourly_cap.reached` ; un lien retenu plus d'une heure arrive expiré.
-- **Comptes non vérifiés effacés après 7 jours** (tâche `accounts.unverified_purge`, horaire),
-  sauf build, clé API, don, rôle, bannissement, soutien ou connexion Google : un compte de
-  test non vérifié d'une pile locale qui tourne depuis une semaine disparaît, c'est voulu.
-  Le renvoi de l'e-mail de vérification est limité à 5 par compte, puis 1 par jour.
+- **Renvoi de l'e-mail de vérification** limité à 5 par compte, puis 1 par jour : un compte
+  non vérifié n'est jamais effacé d'office (purge retirée le 2026-10-22).
 - **Hôtes de l'API** (`AllowedHosts`, posé par `compose.deploy.yaml`) : un `Host` absent de la
   liste reçoit un `400`. Un nouvel appelant interne (service, sonde) doit utiliser un nom
   listé (`lodb-api`, `localhost`, `127.0.0.1`) ; le port 9464 n'est pas filtré, la collecte
@@ -299,8 +347,8 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   (sous la 4g : poster sans vidéo, liste différée). Un clic sur un onglet ne fait défiler que
   l'onglet : la scène du clip peut rester sous l'écran, d'où un `scrollIntoViewIfNeeded` sur
   elle avant d'attendre la vidéo.
-- `disclosure.spec.ts` échoue parfois en suite complète, jamais seul : relancer n'est pas
-  une correction.
+- `disclosure.spec.ts` (Vitest, `core/layout/disclosure/`, pas un E2E) échoue parfois en
+  suite complète, jamais seul : relancer n'est pas une correction.
 - **Bornes du SSR relevées en dev** (`compose.override.yaml`, jamais
   `compose.deploy.yaml`) : toute la suite arrive d'une adresse et ouvre les anciens patchs
   bien plus vite qu'un hôte servi ne les admet. Admission : `LODB_RENDER_MAX_IN_FLIGHT`,
@@ -312,6 +360,13 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   première visite d'un patch attend son ingestion. Une 503 ou une 502 du SSR en E2E se
   cherche d'abord là.
 - Les instantanés de `tests/LoDb.E2E/test-results/` sont écrasés au passage suivant.
+- **L'index des états d'une stack neuve ne couvre que son dernier patch.** Le service `states`
+  tourne avant toute promotion, la première promotion indexe ce qu'elle trouve, et un ancien
+  patch ingéré ensuite à la demande n'y entre pas : seule la commande `catalog states build`
+  reconstruit quand le début de la couverture recule. Les specs qui choisissent leurs pages par
+  l'état (`support/states.ts`) échouent alors en le disant, et `check-urls.sh` saute ses lignes
+  d'états : `tools/states/index-past-patches.sh` d'abord, comme la CI
+  ([`developpement.md`](../guides/developpement.md)).
 - **Débits par adresse de nginx relevés** : toute la suite arrive sous une seule adresse (la
   passerelle Docker), plus vite qu'un visiteur. `compose.override.yaml` relève
   `LODB_PAGES_*`, `LODB_API_READS_*`, `LODB_LEGACY_*` et `LODB_SITEMAPS_*` (débit et rafale) ;
@@ -327,7 +382,9 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
 
 ## Infra et déploiement
 
-- Variables Compose préfixées **`LODB_`**. En dev, les images s'appellent
+- Toute nouvelle variable Compose est préfixée **`LODB_`** ; les plus anciennes
+  (`IMAGE_TAG`, `REGISTRY`, `APP_REVISION`, `CONTACT_RECIPIENT`…) gardent leur nom, comme
+  toutes les conventions devops de la bascule. En dev, les images s'appellent
   `<projet>-<service>` : un emplacement n'écrase pas les images de la stack locale.
 - **`!reset` et l'ordre des fichiers** : Compose ignore un `!reset` placé après un autre
   fichier qui touche déjà l'`environment` du même service. Les `!reset null` de
@@ -435,12 +492,17 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   `snippets/pages-store/pages.conf`, `snippets/archive-cache.conf`) : le cache chaud
   `lodb_archive` d'abord, puis le stockage objet (ADR 0011), puis le SSR. Clé **sans
   révision**, préfixée par les deux epochs (`LODB_ARCHIVE_EPOCH.LODB_ARCHIVE_SERVE_EPOCH`,
-  § « Catalogue pré-rendu » ci-dessous). Elles survivent aux déploiements et gardent jusqu'à
-  un an le chrome, la CSP et les bundles du build qui les a rendues (`s-maxage` d'un an de la
-  classe `archived`, tant que la page est demandée avant ses 90 jours d'inactivité, puis une
-  dernière copie périmée servie pendant son rafraîchissement) : voulu. Monter
+  § « Catalogue pré-rendu » ci-dessous). Elles survivent aux déploiements et gardent le
+  chrome, la CSP et les bundles du build qui les a rendues aussi longtemps que leur
+  `Cache-Control` le dit (`snippets/pages-store/pages.conf` suit l'objet du stockage) : un an
+  pour une page d'état clos (`archived`), une heure pour une page de l'état ouvert
+  (`revisable`), tant que la page est demandée avant ses 90 jours d'inactivité, puis une
+  dernière copie périmée servie pendant son rafraîchissement : voulu. `proxy_cache_valid 200
+  365d` ne vaut plus qu'en repli, pour un objet sans `Cache-Control` ; les bundles
+  (`bundles.conf`) gardent l'année quoi que dise leur objet. Monter
   `LODB_ARCHIVE_EPOCH` quand le chrome, la CSP ou le contrat `/api` changent de façon visible,
-  et après tout correctif de sécurité du front. Elle ne vide que le cache : une fois que nginx
+  après tout correctif de sécurité du front, et après des pages recalculées en place dans
+  l'epoch servie (nouveau schéma d'empreinte). Elle ne vide que le cache : une fois que nginx
   lit le stockage (`LODB_PAGES_STORE_ENABLED=1`), la requête suivante y reprend la page d'avant,
   chrome, CSP et bundles compris. Le changement passe alors par une passe sur une epoch neuve
   et la bascule de `LODB_ARCHIVE_SERVE_EPOCH`, tout de suite pour un correctif de sécurité
@@ -525,6 +587,118 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   `assets/messages.js` (21 locales), ses couleurs et ses faces recopient `src/styles`
   (`tools/nginx/test/maintenance-sources.test.mjs` tient l'accord) : un jeton de thème changé
   côté site se recopie là, sinon le test échoue.
+- **`states` passe avant la page de maintenance.** Le job lance `docker compose run --rm
+  migrate`, puis `docker compose run --rm --no-deps states` (`catalog states build`), puis
+  seulement `maintenance_on` et `up` (`tools/deploy/test/deploy-checks.test.mjs` tient cet
+  ordre). L'ancienne pile sert pendant la construction (les tables de l'index sont additives,
+  l'image en place les ignore), un échec arrête le job pendant qu'elle sert encore, et le
+  passage de `states` dans `up` ne fait plus rien. `--no-deps` : `migrate` vient de tourner.
+  Jamais `--ingest-missing` au déploiement : `states` monte `ddragon` en lecture seule.
+- **Data Dragon injoignable au déploiement** : `catalog states build` lit la liste des versions
+  de Data Dragon (le cache de l'hôte n'est qu'en mémoire), sauf tant qu'aucune version n'est
+  promue. Une génération de l'index est courante : il ne l'attend pas (code 0, ligne
+  `states.build.deferred`) et l'API sert l'index en retard jusqu'à sa réconciliation. **Aucune**
+  n'est courante (premier déploiement de la règle par état, nouveau schéma d'empreinte) : code 1
+  (`states.build.failed`), le déploiement s'arrête avant la page de maintenance. Voulu : une API
+  qui démarrerait sur un index vide servirait la règle résiduelle partout, sans historique dans
+  les sitemaps ; ne pas « corriger » en différant.
+
+## Index des états d'entité
+
+L'index qui décide la page indexée de chaque fiche d'ancien patch
+([spécification](../produit/seo-une-page-par-etat.md), ADR 0005 et ADR 0003, amendements du
+2026-10-22) : tables `catalog_state_*`, écrites par `LoDb.Ingestion/Catalog/States/`.
+
+- **Ce qui change l'empreinte change l'index.** L'empreinte d'une entité
+  (`EntityFingerprint`, schéma `FingerprintScheme.Current`) se calcule sur les entrées du
+  domaine du catalogue en_US **stocké**, vues par les projections de
+  `LoDb.Domain/States/Projections/`. Changer une projection, un gabarit de `ChangeField`,
+  `DdragonText.PlainText` ou la sérialisation, c'est monter `FingerprintScheme.Current` : une
+  génération neuve, puis les pages des états qui changent pré-calculées de nouveau
+  (spécification, § 3.7). Un **mapper d'ingestion** qui change les entrées stockées change
+  l'entrée de l'empreinte **sans** changer de schéma : réingérer l'en_US de toutes les versions
+  (ou neutraliser l'écart dans la projection), puis `catalog states build --rebuild`. Sinon les
+  versions ingérées avant et après le changement s'opposent, et la frontière ouvre de faux
+  états.
+- **Balisage, traduction, icône : aucun état.** `PlainText` lit un texte comme la page :
+  `<br>`, `<hr>` et les deux bouts de `li`, `p`, `ul`, `ol`, `maintext`, `stats`, `rules`,
+  `flavortext` font un saut de ligne, les autres balises et les commentaires disparaissent, un
+  `<` qui n'ouvre pas de balise reste du texte, les entités sont décodées, les blancs réduits et
+  les sauts répétés repliés : un `<br>` de plus ou de moins n'ouvre rien. L'empreinte ne lit que
+  l'en_US (une traduction corrigée seule n'ouvre rien) et aucune image (une icône redessinée
+  non plus). Voulu.
+- **Chromas comptées comme skins** (limite acceptée le 2026-10-22). Data Dragon liste les
+  chromas parmi les skins ; l'ingestion les retire d'après le catalogue des chromas de
+  CommunityDragon (celui du patch, sinon `latest`, sinon aucun : `ChromaSkins.Without`). Un patch
+  ingéré avant que CommunityDragon connaisse une nouvelle chroma ouvre donc un état pour elle
+  seule (`skins`, `skin.<id>.name`), refermé par le patch suivant qui la filtre ; CommunityDragon
+  injoignable, toute chroma compte comme un skin. `ChromaSourcePairTests` épingle ce
+  comportement. Correctif prévu, pas fait : lire `parentSkin` de Data Dragon dans le mapper des
+  skins, réingérer l'en_US, puis `catalog states build --rebuild` (point précédent).
+- **Champions réduits à leur résumé** (vieilles versions sans `championFull`, fichier en 403) :
+  sorts, passif, lore et skins vides ; l'empreinte voit tout disparaître puis revenir, deux
+  états de plus. Accepté.
+- **Premier état au début de la couverture : `baseline`.** Il n'a été comparé à rien : l'API
+  le dit `baseline` (`EntityStateSnapshot.KindOf`), sans `changes`, et la fiche n'affiche ni
+  résumé, ni pastille, ni bloc ; la version de début n'a pas de page de patch (404). L'index,
+  lui, le range comme un état nouveau (`previous_opener_version` nul). Les runes n'ont aucun
+  état avant 7.22.1 : un jeu définitivement absent n'étend ni n'interrompt un état.
+- **Clé repliée, chemin de l'ouvreur.** La clé d'une entité est son id en minuscules
+  (`EntityKey` : `FiddleSticks` et `Fiddlesticks` sont une seule entité) ; le chemin stocké
+  garde la casse et le slug de la version ouvreuse. Toute lecture replie de même ; la file des
+  états clos rend chaque version sous la graphie de son propre catalogue.
+- **Écrit avec le rôle de l'API** (`lodb_app` : lignes seulement, 15 s par requête), une
+  transaction par version, sous le verrou consultatif `catalog:states`, essayé toutes les
+  0,5 s : 1 minute pour la commande (puis code 1), 5 s pour la promotion et la réconciliation,
+  qui rendent la main sans échec (`states.update.locked`). Ne pas relever le délai du rôle pour
+  une reconstruction : elle avance version par version et reprend où elle s'est arrêtée.
+- **Générations.** Une reconstruction écrit une génération neuve à côté de la courante, la rend
+  courante en une transaction, puis supprime l'ancienne ; l'API ne lit que la génération
+  courante du schéma qu'elle compile, et celles d'un autre schéma ne sont jamais touchées (une
+  image précédente lit la sienne). Une génération en attente au même début de couverture
+  reprend, les autres sont supprimées, `--rebuild` les supprime toutes. **Seule la commande**
+  reconstruit quand le début de la couverture recule : la promotion et la réconciliation ne
+  construisent que si aucune génération n'est courante, et ne font sinon qu'étendre. Un début
+  qui avance n'est jamais un historique plus court : une version listée après la fin de la
+  génération courante sans son en_US (la promotion qui l'a sautée n'a pas pu l'ingérer) la
+  laisse en retard (`states.coverage.interrupted`), jusqu'à ce que la promotion suivante ou la
+  réconciliation l'ingère et l'étende ; ne pas « corriger » en reconstruisant depuis la version
+  d'après, ce qui jetterait tout l'historique sans retour.
+- **Couverture** : la plus longue suite de versions listées (liste de Data Dragon, plus le
+  dernier patch promu) dont les jeux en_US sont stockés, jusqu'au dernier patch promu. Au
+  premier passage ou avec `--rebuild`, une version listée sans son en_US coupe la couverture :
+  les plus anciennes sortent de l'index et passent à la règle résiduelle (canonique sur l'URL
+  courte, aucun historique), sans erreur. Une génération courante, elle, ne raccourcit jamais
+  (« Générations » ci-dessus) : une version manquante dans sa couverture la laisse telle
+  quelle, une après sa fin la laisse en retard. Le remède : `ingest --version <v> --languages
+  en_US`, ou `catalog states build --ingest-missing` dans un conteneur qui écrit `ddragon`
+  (`docker compose run --rm --no-deps api catalog states build --ingest-missing`). Une version
+  dont les quatre jeux sont définitivement absents est sautée, comme non listée.
+- **Copie en mémoire, une par processus**, chargée à la première lecture ; son repère
+  (génération, fin de couverture) est relu au plus toutes les `LoDb:Catalog:VersionsLifetime`
+  (1 min) : un autre processus voit une promotion jusqu'à une minute après celui qui a écrit.
+  Base injoignable : la copie tenue reste servie, revérifiée une durée plus tard. Aucune copie :
+  503 `state-index-unavailable` avec `Retry-After` (fiche, `…/changes`, anciennes URL,
+  `/sitemap.xml`, `latest.xml` et `{version}.xml`), ligne `states.copy.failed` et compteur
+  `lodb_states_unavailable_total` ; `/api/meta` répond quand même, sans `oldestChangesVersion`
+  ni `newestChangesVersion` (`catalog.meta.degraded`).
+- **Première construction dans l'API** : sans aucune génération (pile locale neuve, E2E), la
+  première promotion construit tout l'index dans le processus de l'API, sous ses limites. Sur
+  un hôte, `states` passe à chaque déploiement : n'arrive pas.
+- **Ordre de la promotion** : les écouteurs s'exécutent par étape (`PromotionStage` :
+  `StateIndex`, `Prerender`, `Announce`), triés de façon stable par `VersionIngestion`, quel que
+  soit leur ordre d'enregistrement ; un nouvel écouteur déclare son étape
+  (`PromotionListenerTests`). Le précalcul et IndexNow lisent dans l'index ce que la promotion a
+  changé ; s'il ne couvre pas encore la version, ils journalisent et s'arrêtent
+  (`prerender.promotion.index_behind`, `seo.indexnow.unindexed`). La réconciliation de l'index
+  (`catalog.states.reconcile`, 10 min) puis celle du précalcul (`prerender.reconcile`, 30 min)
+  rattrapent ; IndexNow, jamais (les sitemaps datés prennent le relais).
+- **Ouvreur épinglé et budget à froid** : l'ouvreur d'un ancien patch lit aussi le catalogue
+  de la dernière version de l'état précédent, dans sa langue. Non stocké, ce catalogue consomme
+  le budget des visiteurs (`LoDb:Ingestion:ColdDatasetsPerMinute`, 6 par minute) ; au-delà,
+  la fiche répond 503 `catalog-pending` avec `Retry-After`, jamais rendue ni stockée sans son
+  bloc. Une passe d'ouvreurs sur des versions dont l'en_US seul est stocké se voit en 503
+  retentées : voulu. L'URL courte, elle, sort sans le bloc.
 
 ## Catalogue pré-rendu et CDN (ADR 0011)
 
@@ -543,7 +717,10 @@ stockage objet, puis lues par nginx
   la bascule est une variable d'`ENV_*` et un redéploiement, aucun point d'accès ne la fait
   (le panneau donne la consigne). L'epoch `0` est celle des sondes de `scaleway-bucket.sh
   verifier`, jamais d'une passe ; la première passe de prod écrit l'epoch `1`, servie pendant
-  qu'elle se remplit.
+  qu'elle se remplit. La règle par état se sert dans l'epoch `2` : à son déploiement, seule
+  `LODB_ARCHIVE_SERVE_EPOCH` passe à `2` (ce qui purge déjà le cache chaud), et
+  `LODB_ARCHIVE_EPOCH` reste à `3` ; l'epoch `2` part vide et se remplit par les passes et la
+  file de la demande, jamais en relisant l'epoch `1`, qui porte l'ancienne règle.
 - **Repli vers le SSR, sans bruit.** Toute réponse du stockage autre qu'un objet (`404` pour
   une page absente, `403` pour une politique ou une adresse en cause, `429`, `5xx`, connexion
   au-delà d'1 s, lecture au-delà de 3 s) renvoie à `@lodb_pinned_ssr`, la voie épinglée
@@ -566,7 +743,7 @@ stockage objet, puis lues par nginx
   interroge le stockage comme avant ; une lecture qui échoue garde la dernière valeur, sans
   ligne de log. Juste après une promotion, l'ancien dernier patch peut encore aller au SSR
   jusqu'à 30 s, sans plus de mal qu'un rendu ; le SSR lui-même le redirige parfois plus
-  longtemps (sa copie de `/api/meta` vit quelques minutes). La lecture ne coûte qu'aux
+  longtemps (sa copie de `/api/meta` vit jusqu'à 60 s, `LODB_API_META_TTL_SECONDS`). La lecture ne coûte qu'aux
   requêtes que le stockage aurait reçues (second `if`, après celui de `$lodb_store_page`) :
   jamais à une autre route, ni stockage coupé. L'API est jointe par son alias `lodb-api:8080`,
   jamais à travers le site.
@@ -603,15 +780,21 @@ stockage objet, puis lues par nginx
   son nom, jamais par motif (`snippets/pages-store/answer.conf`) : une métadonnée ajoutée par la
   passe s'ajoute là, et se repose dans `archive-cache.conf`, sinon elle sort chez le client.
   Une réponse du stockage, reconnue à sa métadonnée `lodb-build`, reçoit de nginx le type
-  `text/html`, la `Cache-Control` de la classe `archived` et, si son objet n'a pas de CSP, une
-  politique stricte : jamais aucune. `ETag`, `Last-Modified` et `Accept-Ranges` décrivent
+  `text/html`, la `Cache-Control` de sa classe (`$lodb_pinned_cache_control`, une `map` sur
+  `lodb-build` et la `Cache-Control` de l'objet : `revisable` pour un objet qui porte
+  exactement sa valeur, `archived` pour tout autre) et, si son objet n'a pas de CSP, une
+  politique stricte : jamais aucune. La valeur `revisable` s'écrit deux fois dans
+  `sites/site.conf` (reconnue et donnée) et doit rester celle de `cache-control.ts`
+  (`tools/nginx/test/archived-cache-control.test.mjs`) : une valeur changée d'un seul côté
+  fait servir un an une page révisable. `ETag`, `Last-Modified` et `Accept-Ranges` décrivent
   l'objet gzip, pas la réponse (un client sans gzip reçoit d'autres octets) : masqués aussi,
   voulu. Une requête conditionnelle reçoit donc la page en `200`, jamais un `304`, et un `Range`
   la page entière ; les bundles hachés de `/build/`, servis sous le même fichier, perdent aussi
   ceux du SSR (immuables, jamais revalidés). Ne pas les « rétablir ».
 - **Clé du stockage tirée d'une `map` stricte, jamais de l'URI brute.** `$lodb_store_page`
   (`sites/site.conf`) se construit sur `$lodb_request_path`, le chemin tel qu'envoyé, par une
-  expression qui ne laisse passer que les 4 listes et les fiches d'une version, en `GET` ou
+  expression qui ne laisse passer que les 4 listes, la page de patch
+  (`/{locale}/{version}/changes`, rien au-dessous) et les fiches d'une version, en `GET` ou
   `HEAD`, sans query ; tout le reste va au SSR sans interroger le stockage. Un `proxy_pass` à
   variable ne normalise pas l'URI : ni `$uri` ni `$request_uri` n'y entrent. Un nouveau type
   de page de la grammaire (`src/LoDb.Domain/Paths`) s'ajoute aussi à cette `map`, sinon ses
@@ -652,6 +835,9 @@ stockage objet, puis lues par nginx
   bucket absent) : la passe se met en pause, la page n'est comptée nulle part. La sonde
   `verifier` lit en IPv4 seulement (`curl -4`) : l'hôte joint aussi Scaleway en IPv6, d'où la
   politique répond `403`.
+- *Les deux points suivants valent pour le CDN, prévu mais pas encore construit (lot 4 de la
+  [spécification](../produit/pre-rendu-catalogue-cdn.md)) : rien de Cloudflare n'est dans le
+  dépôt au 2026-10-22.*
 - **`/` jamais en cache au CDN** (lot 4) : sa `302` dépend d'`Accept-Language` et du cookie
   `lod_prefs`, et Cloudflare ne distingue pas les réponses selon `Accept-Language`. La règle
   « jamais en cache » (`/`, `/api/`, `/v1/`, `/webhooks/`, `/admin`, `/b/`, `/u/`, `/healthz`,
@@ -669,6 +855,45 @@ stockage objet, puis lues par nginx
   sans durée. Les unités finies avant la migration reçoivent `ended_at = updated_at` ; une unité
   finie par l'image précédente après un retour à elle n'en a pas, et manque à la liste des échecs
   du moniteur (la matrice, lue par l'état, la montre).
+- **Pages révisables, recalculées page par page.** Une page d'ancien patch de l'état ouvert
+  d'une entité désigne l'URL courte ; quand une promotion clôt cet état, sa canonique, son
+  titre et son historique changent. Le SSR la marque `revisable` (une heure), la passe la
+  stocke ainsi, et la file des états clos (`prerender_revision`) la recalcule après la
+  promotion, dans l'epoch servie, dans celle de la passe active et dans toute epoch plus
+  récente remplie par une passe terminée (en attente de sa bascule) : chaque version de chaque
+  état clos (celle qui vient de quitter le dernier patch comprise), dans les 21 langues, due
+  21 minutes après (`2 × LoDb:Catalog:VersionsLifetime` + 1 min, le temps que tous les
+  processus lisent l'index qui la couvre). La copie révisable d'avant peut encore être servie
+  environ deux heures après le nouveau rendu (`s-maxage`, puis `stale-while-revalidate`) :
+  voulu. Une page recalculée qui revient `revisable` compte comme un essai raté : nouvel essai
+  5 minutes après, échec définitif au troisième, montré au pupitre. Le recalcul suit la
+  graphie du catalogue de chaque version (`FiddleSticks` puis `Fiddlesticks`), pas celle de
+  l'ouvreur. Cette file ne dépend pas de `AutoEnqueueOnPromotion` : elle tourne dès que le
+  stockage est configuré, staging compris.
+- **Rien du précalcul ne part sur un index en retard.** Tant que l'index des états ne couvre
+  pas le patch promu, ni l'unité du patch remplacé ni la file des états clos ne démarrent
+  (`prerender.promotion.index_behind`, toutes les 30 min tant qu'il est en retard) : rendues
+  sur cet index, leurs pages garderaient pour de bon l'état ouvert. `prerender.reconcile` les
+  ajoute une fois l'index rattrapé. Une génération neuve de l'index (reconstruction) est de
+  l'historique : ses clôtures ne sont pas mises en file (`prerender.revision.generation`),
+  sauf celles d'après la couverture que le producteur a lue en dernier (la marque la garde,
+  `covered_through`) : celles des promotions qu'aucun passage n'a vues, toutes, quelle que
+  soit leur date. Une reconstruction qui passe la fin d'un index resté en retard date ce
+  qu'elle y clôt après son `built_at`, mais garde la date d'une clôture qu'une extension de
+  l'index en retard avait déjà faite : choisies par leur date, ces clôtures ne seraient jamais
+  recalculées. Au tout premier passage, sans couverture lue, seules les clôtures de la
+  dernière promotion datées après le `built_at` sont mises en file.
+- **Ordre des pages d'une version figé** (`VersionPages.Of`) : les quatre listes, puis la page
+  de patch (`changes`, toujours listée : une version sans page de patch répond 404, comptée
+  `skipped`), puis les entités. Une passe reprend à son curseur dans cet ordre : un
+  déploiement qui le change décale toute passe active, qu'on **annule au pupitre avant**. La
+  page de patch n'est pas un type de page (`TypeMask` garde quatre bits) : toute unité qui
+  couvre tous les types la rend, tout filtre de type l'écarte.
+- **Passe « ouvreurs d'abord »** (`{"pages":"openers"}`) : chaque unité rend la page de patch
+  et les ouvreurs de tout état (ouvert ou clos) à sa version, lus dans l'index. Elle ne
+  complète jamais une epoch et aucune promotion ne la rejoint : les unités d'un patch promu
+  pendant qu'elle tourne attendent sa fin (`prerender.promotion.deferred`) ; une passe entière
+  `{}` doit suivre. La commande `prerender unit` ne la propose pas.
 - **Le périmètre d'une passe reste lisible par l'image d'avant les listes.** `prerender_pass.scope`
   porte les listes (`versions`, `locales`, `pageTypes`) **et** les anciens champs qui peuvent les
   dire (`PassScopeJson`) : les bornes `oldest`/`newest` d'une liste de versions, `locale` et
@@ -678,7 +903,8 @@ stockage objet, puis lues par nginx
   qu'un retour à cette image reste possible. Ce qu'ils ne disent pas, elle le lit plus large :
   plusieurs langues ou plusieurs types sur les 21 et les 4, une liste de versions trouée (toute
   la plage entre ses bornes). Avant un tel retour, annuler la passe active si son périmètre
-  est de cette forme.
+  est de cette forme. Même règle pour `pages: "openers"`, que l'image d'avant la règle par
+  état ignore : elle lirait la passe entière, et la croirait capable de compléter l'epoch.
 - **Pas d'index sur `prerender_unit.updated_at`.** Il est réécrit à chaque page : l'indexer
   couperait les mises à jour HOT de la table, quatre millions de fois par passe. Ce qui doit être
   lu par ordre de fin passe par `ended_at`, écrit une fois, et son index partiel.
@@ -733,6 +959,7 @@ stockage objet, puis lues par nginx
   un écart SEO nouveau reçoit une règle dans `tools/seo-diff/lib/rules.mjs`.
 - Les outils de comparaison (`seo-diff`, `lighthouse`, `builds-parity`) appellent encore
   `next` le côté « nouvelle stack » : ils disparaissent à la décommission avec `legacy/`.
-- **Documents historiques** (`docs/reecriture/{plan-*,heritage,adr,implementation,
-  rapports}`) : ils gardent les noms de leur époque (`lodb-next`, `tools/next/`…) ; on ne
-  les réécrit pas.
+- **Documents historiques** (`docs/reecriture/{plan-*,heritage,implementation,rapports}`) :
+  ils gardent les noms de leur époque (`lodb-next`, `tools/next/`…) ; on ne les réécrit pas.
+  Les **ADR** ne sont pas historiques : ils font foi, et une décision qui change s'y ajoute
+  en amendement daté, sans réécrire le texte d'origine.

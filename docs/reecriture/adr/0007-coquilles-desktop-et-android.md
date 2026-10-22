@@ -3,6 +3,10 @@
 - **Statut** : acceptée — 2026-09-24
 - **Remplace** : l'APK TWA prévu (jamais finalisé : `assetlinks.json` contient encore des
   placeholders), cf. [`packaging-apk.md`](../../../legacy/docs/guides/packaging-apk.md)
+- **Suivi** (2026-10-22) : la vérification de deux jours (point 4 de la décision desktop) a
+  eu lieu le 2026-09-26 et confirme Photino ([rapport](../rapports/spike-desktop.md)). Aucune
+  release des apps n'est encore publiée ([`release-desktop.md`](../../guides/release-desktop.md),
+  [`release-android.md`](../../guides/release-android.md)).
 
 ## Contexte
 

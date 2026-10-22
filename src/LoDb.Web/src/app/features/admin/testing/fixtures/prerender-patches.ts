@@ -52,6 +52,7 @@ const REPORT: PrerenderPatchesReport = {
       failedPages: 2,
       pagesPerLocale: 1_140,
       lastEndedAt: '2026-10-21T08:30:40+00:00',
+      indexed: { openers: 87, frozen: 1_012, revisable: 41 },
     },
   ],
   coverage: {

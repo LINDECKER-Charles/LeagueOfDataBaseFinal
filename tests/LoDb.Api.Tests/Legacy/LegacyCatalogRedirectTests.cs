@@ -3,6 +3,8 @@ namespace LoDb.Api.Tests.Legacy;
 /// <summary>
 /// The catalog rows of the 301 table (plan-migration.md): lists and details, with and without
 /// <c>?lang=</c> and version. 16.19.1 is the latest recorded version, 16.18.1 the one before.
+/// The index of states is empty here: where it lands a version named is
+/// <c>LegacyStateRedirectTests</c>'.
 /// </summary>
 /// <remarks>
 /// The forms of the old paths are LegacyPathParserTests', the choice of locale and version
@@ -29,16 +31,16 @@ public sealed class LegacyCatalogRedirectTests(LegacyApiFixture api)
     public async Task DetailLandsOnTheCanonicalPath(string oldUrl, string newUrl) =>
         Assert.Equal(newUrl, await api.LocationOfAsync(oldUrl));
 
-    // An entry still in the game: its pinned page is canonical to the short URL, so the
-    // redirect lands there, whatever version the old URL named.
+    // An entry still in the game, without a state at the version named: the redirect lands on
+    // its short URL.
     [Theory]
     [InlineData("/16.18.1/object/1004?lang=fr_FR", "/fr/items/1004-faerie-charm")]
     [InlineData("/champion/Teemo?version=16.18.1", "/en/champions/Teemo")]
     public async Task DetailOfAPastVersionLandsOnTheShortUrl(string oldUrl, string newUrl) =>
         Assert.Equal(newUrl, await api.LocationOfAsync(oldUrl));
 
-    // 3001 was Abyssal Mask in 7.22.1, Evenshroud now: the latest slug, so no second hop
-    // from a pinned slug to its own.
+    // 3001 was Abyssal Mask in 7.22.1, Evenshroud now: without a state at 7.22.1, the latest
+    // slug, so no second hop from a pinned slug to its own.
     [Fact]
     public async Task RenamedEntryLandsOnTheLatestSlugInOneHop() =>
         Assert.Equal("/en/items/3001-evenshroud", await api.LocationOfAsync("/7.22.1/object/3001"));

@@ -1,5 +1,6 @@
 {
   "versioned_suffix": "(Patch {{ version }})",
+  "state_range_suffix": "(Patches {{ first }} bis {{ last }})",
   "home": {
     "title": "League Of Data Base — die League-of-Legends-Enzyklopädie",
     "description": "Champions, Gegenstände, Runen und Beschwörerzauber von League of Legends für Patch {{ version }} — Werte, Fähigkeiten und Details in 21 Sprachen."
@@ -98,5 +99,11 @@
       "title": "Häufig gestellte Fragen",
       "description": "Antworten zu League Of Data Base: was es ist, woher die League-of-Legends-Daten stammen, wie oft sie aktualisiert werden und ob ein Konto nötig ist."
     }
+  },
+  "state": {
+    "summary": "Geändert in Patch {{ version }}: {{ fields }}.",
+    "summary_more": "Geändert in Patch {{ version }}: {{ fields }} …",
+    "summary_new": "Neu in Patch {{ version }}.",
+    "summary_returned": "Zurück in Patch {{ version }}."
   }
 }

@@ -61,7 +61,13 @@ public sealed class SeoFileTests
             llms,
             StringComparison.Ordinal);
         Assert.Contains(
-            "(https://league-of-data-base.com/en/patches): Every game patch",
+            "- [https://league-of-data-base.com/en/changes]"
+                + "(https://league-of-data-base.com/en/changes): What the latest patch changed",
+            llms,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "(https://league-of-data-base.com/en/patches): Every game patch, each linking its"
+                + " page of changes and its four lists as they were\n",
             llms,
             StringComparison.Ordinal);
         Assert.Contains(

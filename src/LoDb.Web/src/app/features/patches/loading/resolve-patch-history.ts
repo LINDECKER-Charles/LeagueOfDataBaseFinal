@@ -18,5 +18,11 @@ export const resolvePatchHistory: ResolveFn<PatchHistory> = async (route) => {
   const requested = route.paramMap.get('locale');
   const locale = isLocale(requested) ? requested : DEFAULT_LOCALE;
   const meta = await firstValueFrom(meta$);
-  return { locale, latest: meta.latest ?? null, versions: meta.versions };
+  return {
+    locale,
+    latest: meta.latest ?? null,
+    versions: meta.versions,
+    oldestChangesVersion: meta.oldestChangesVersion,
+    newestChangesVersion: meta.newestChangesVersion,
+  };
 };

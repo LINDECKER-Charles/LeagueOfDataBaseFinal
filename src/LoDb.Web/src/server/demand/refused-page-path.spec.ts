@@ -4,6 +4,7 @@ describe('refusedPagePathOf', () => {
   it.each([
     ['/fr/15.13.1/champions', '/fr/15.13.1/champions'],
     ['/fr/15.13.1/items/1036-long-sword', '/fr/15.13.1/items/1036-long-sword'],
+    ['/fr/15.13.1/changes', '/fr/15.13.1/changes'],
     [
       '/zh-hans/0.151.101/summoners/SummonerFlash_Jade',
       '/zh-hans/0.151.101/summoners/SummonerFlash_Jade',
@@ -34,6 +35,7 @@ describe('refusedPagePathOf', () => {
     ['an unknown locale', '/xx/15.13.1/champions'],
     ['an unknown kind of page', '/fr/15.13.1/patches/notes'],
     ['a page below an entity', '/fr/15.13.1/items/1036/extra'],
+    ['a page below the patch page', '/fr/15.13.1/changes/items'],
     ['a malformed escape', '/fr/15.13.1/items/%E0%A4%A'],
     ['a segment outside the ids and slugs', '/fr/15.13.1/champions/%3Cscript%3E'],
     ['the latest page by query', '/fr/champions?version=15.13.1'],

@@ -17,6 +17,11 @@ export interface LaunchPreset {
   readonly epoch: number | null;
   /** Whether the units already complete in that epoch are left out. */
   readonly skipComplete: boolean;
+  /**
+   * `openers` for the patch page and the openers of the index alone (`OPENERS_PAGES`); every
+   * page when absent or null.
+   */
+  readonly pages?: string | null;
   /** The pass it was prefilled from, which the summary names; null otherwise. */
   readonly fromPass: number | null;
 }

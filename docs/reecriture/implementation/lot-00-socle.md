@@ -1,5 +1,9 @@
 # Lot 0 — Socle
 
+> **Historique** : spécification de construction de septembre 2026, exécutée (bascule le
+> 2026-10-04). Les règles en vigueur sont dans [`AGENTS.md`](../../../AGENTS.md) et les
+> [ADR](../adr/) ; plusieurs choix de ce lot ont changé depuis, par amendement daté.
+
 Objectif du lot : une solution .NET et un workspace Angular qui se construisent, se testent,
 tournent en conteneurs et passent en CI, avec l'observabilité en place dès le départ et
 tous les points d'accroche dont les lots suivants ont besoin pour travailler en parallèle.

@@ -20,6 +20,7 @@ import {
 } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { API_BASE_URL } from '../../api/api-base-url';
+import type { EntityState } from '../../api/generated/models/entity-state';
 import { localeGuard } from '../../i18n/locale-guard';
 import { catalogMetaOf } from '../../testing/catalog-meta-of';
 import { handleNavigationError } from '../failure/handle-navigation-error';
@@ -90,8 +91,23 @@ const UNKNOWN_ENTITY: Answer = {
   body: { status: 404, code: 'unknown-entity' },
 };
 
-function details(canonicalPath: string): Answer {
-  return { status: HttpStatusCode.Ok, body: { canonicalPath, version: LATEST } };
+function details(canonicalPath: string, state: EntityState | null = null): Answer {
+  return { status: HttpStatusCode.Ok, body: { canonicalPath, version: LATEST, state } };
+}
+
+// The state of an entity opened at OLDER: open, or closed at the version before the latest.
+function stateOf(isOpen: boolean): EntityState {
+  const opener = { version: OLDER, path: 'items/1036-long-sword' };
+  return {
+    openerVersion: OLDER,
+    lastVersion: isOpen ? null : '16.18.1',
+    isOpen,
+    isOpener: true,
+    kind: 'changed',
+    changedFields: [],
+    openerLink: opener,
+    canonical: isOpen ? { version: null, path: opener.path } : opener,
+  };
 }
 
 // The simulated API: known URLs answer from the table, any other detail is unknown.
@@ -240,10 +256,38 @@ describe('catalogue details (resolveCatalogueEntry)', () => {
 
     expect(leaf.data['entry']).toEqual({
       context: { locale: 'en', version: LATEST, pinned: false, language: 'en_GB' },
-      details: { canonicalPath: 'items/1036-long-sword', version: LATEST },
+      details: { canonicalPath: 'items/1036-long-sword', version: LATEST, state: null },
     });
     expect(init.status).toBe(HttpStatusCode.Ok);
     expect(requested).toEqual(['/api/meta', url]);
+  });
+
+  it('caches a page of the latest version thirty minutes, whatever its state', async () => {
+    const { init } = await visit('/en/items/1036-long-sword', {
+      [LONG_SWORD]: details('items/1036-long-sword', stateOf(false)),
+    });
+
+    expect(headerOf(init, 'Cache-Control')).toBe(
+      'public, max-age=0, s-maxage=1800, stale-while-revalidate=86400',
+    );
+  });
+
+  // The class by state (docs/produit/seo-une-page-par-etat.md, § 3.7): a closed state's page
+  // never changes again; the open state's, or one whose state is unknown, changes once.
+  it.each([
+    ['closed', stateOf(false), 'public, max-age=3600, s-maxage=31536000'],
+    ['open', stateOf(true), 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=3600'],
+    ['unknown', null, 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=3600'],
+  ])('caches a pinned page of a %s state by its class', async (_kind, state, cacheControl) => {
+    const { init } = await visit(`/en/${OLDER}/items/1036-long-sword`, {
+      [`/api/catalog/${OLDER}/en_US/items/1036-long-sword`]: details(
+        'items/1036-long-sword',
+        state,
+      ),
+    });
+
+    expect(init.status).toBe(HttpStatusCode.Ok);
+    expect(headerOf(init, 'Cache-Control')).toBe(cacheControl);
   });
 
   it('adds a missing slug with a 301, the id deciding', async () => {

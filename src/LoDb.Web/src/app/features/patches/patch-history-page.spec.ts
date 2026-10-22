@@ -25,9 +25,18 @@ const CATALOGUES: Record<string, Translation> = {
   'patches/fr': PATCHES_CATALOGUES.fr,
 };
 
-// Only what the page reads of `/api/meta`.
-function metaOf(latest: string | null, versions: readonly string[]): Partial<CatalogMeta> {
-  return { latest, versions: [...versions] };
+// The oldest version with a page of changes: every one from it up to the newest has one, the
+// latest unless the index lags behind its promotion.
+const OLDEST_CHANGES = '15.24.1';
+
+// Only what the page reads of `/api/meta`, over an index that covers the latest version.
+function metaOf(
+  latest: string | null,
+  versions: readonly string[],
+  oldestChangesVersion: string | null = OLDEST_CHANGES,
+): Partial<CatalogMeta> {
+  const newestChangesVersion = oldestChangesVersion && latest;
+  return { latest, versions: [...versions], oldestChangesVersion, newestChangesVersion };
 }
 
 async function visit(meta: Partial<CatalogMeta>) {
@@ -87,10 +96,48 @@ describe('PatchHistoryPage', () => {
     const { page } = await visit(metaOf(LATEST, VERSIONS));
     const rows = page.querySelectorAll('tbody tr');
 
-    expect(hrefsOf(rows[0])).toEqual(LISTS.map((list) => `/fr/${list}`));
+    expect(hrefsOf(rows[0])).toEqual(['/fr/changes', ...LISTS.map((list) => `/fr/${list}`)]);
     expect(hrefsOf(rows[4])).toEqual(LISTS.map((list) => `/fr/0.151.2/${list}`));
     expect(rows[0]?.querySelector('th .hx-chip-hex')?.textContent?.trim()).toBe('Actuel');
     expect(rows[1]?.querySelector('th .hx-chip-hex')).toBeNull();
+  });
+
+  it('links the changes of each version that has a page of them first', async () => {
+    const { page } = await visit(metaOf(LATEST, VERSIONS));
+    const firsts = Array.from(page.querySelectorAll('tbody tr'), (row) =>
+      row.querySelector('td a')?.getAttribute('href'),
+    );
+
+    expect(firsts).toEqual([
+      '/fr/changes',
+      '/fr/16.18.1/changes',
+      '/fr/15.24.1/changes',
+      '/fr/3.6.14/champions',
+      '/fr/0.151.2/champions',
+    ]);
+  });
+
+  it('links no page of changes for a version listed after the latest', async () => {
+    const { page } = await visit(metaOf(LATEST, ['16.20.1', ...VERSIONS]));
+
+    expect(hrefsOf(page.querySelector('tbody tr'))).toEqual(
+      LISTS.map((list) => `/fr/16.20.1/${list}`),
+    );
+  });
+
+  it('links no page of changes past the end of an index left behind the promotion', async () => {
+    const { page } = await visit({ ...metaOf(LATEST, VERSIONS), newestChangesVersion: '16.18.1' });
+    const firsts = Array.from(page.querySelectorAll('tbody tr'), (row) =>
+      row.querySelector('td a')?.getAttribute('href'),
+    );
+
+    expect(firsts.slice(0, 2)).toEqual(['/fr/champions', '/fr/16.18.1/changes']);
+  });
+
+  it('links no page of changes while the index covers fewer than two versions', async () => {
+    const { page } = await visit(metaOf(LATEST, VERSIONS, null));
+
+    expect(hrefsOf(page.querySelector('tbody tr'))).toEqual(LISTS.map((list) => `/fr/${list}`));
   });
 
   it('names each link by its list, in the row headed by its version', async () => {
@@ -101,6 +148,7 @@ describe('PatchHistoryPage', () => {
     expect(row?.querySelector('th')?.getAttribute('scope')).toBe('row');
     expect(row?.querySelector('th')?.textContent?.trim()).toBe('16.18.1');
     expect(links.map((link) => link.textContent?.trim())).toEqual([
+      'Changements',
       'Champions',
       'Objets',
       'Runes',

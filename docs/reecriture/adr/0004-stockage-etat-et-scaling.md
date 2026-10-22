@@ -5,8 +5,19 @@
   d'images**, les **analytics** et l'**audit** y entrent. Les **contenus** Data Dragon
   (JSON, images) restent hors base.
 - **Amendement** : le 2026-10-20, nginx sert aussi des pages et des bundles depuis un
-  stockage objet, adressé par chemin et à part d'`IBlobStore` ; MinIO pour les tests et le
-  développement seulement (voir § « Amendement du 2026-10-20 »).
+  stockage objet, adressé par chemin et à part d'`IBlobStore` ; MinIO pour les tests, moto
+  pour la pile de développement (voir § « Amendement du 2026-10-20 »).
+- **Suivi** (2026-10-22), écarts entre le texte et le code :
+  - les blobs vivent sur le volume **`ddragon`**, monté sur `/srv/storage`. `storage` est le
+    volume de l'ancienne stack, gardé intact pour le retour arrière, puis exporté et supprimé
+    à la décommission ([`bascule.md`](../bascule.md), § 10) : ne jamais le purger ;
+  - l'IP et le user-agent ne sont plus écrits dans `analytics_event` ; ceux des lignes d'avant
+    sont effacés à 30 jours ;
+  - `/v1/trends` lit les agrégats Umami (`audience_entity_daily`) à partir d'une date de
+    bascule ([ADR 0012](0012-audience-umami.md)) ;
+  - une exception à « pas de session serveur » : les familles de jetons de rafraîchissement
+    des apps ([ADR 0009](0009-identite-authentification-sessions.md), amendement du
+    2026-10-11).
 
 ## Contexte
 
@@ -31,7 +42,7 @@ affaire de configuration.
 ### Contenus Data Dragon : fichiers, écritures atomiques
 
 - **Blobs** : `IBlobStore`, adressés par contenu (`blobs/{sha256}.{ext}` + voisin
-  `.webp`). L'implémentation v1 écrit sur le volume `storage`, avec des **écritures
+  `.webp`). L'implémentation v1 écrit sur le volume local (`ddragon`, voir Suivi), avec des **écritures
   atomiques** : fichier temporaire sur le même volume, puis `File.Move` (rename). Une
   implémentation S3 est possible le jour où il y a N hôtes.
 - **Datasets** : fichiers JSON normalisés et immuables par (version, langue, type),
@@ -62,7 +73,8 @@ ressource n'a jamais été tentée. Une erreur transitoire n'y est jamais écrit
   Redis (L2) ne s'ajoute que si l'on passe à N instances.
 - **Pas de session serveur.** Les préférences passent par l'URL (version, locale) et
   des cookies (thème, variante de langue), cf.
-  [ADR 0009](0009-identite-authentification-sessions.md).
+  [ADR 0009](0009-identite-authentification-sessions.md). *Exception depuis le 2026-10-11 :
+  les familles de jetons de rafraîchissement des apps (ADR 0009, amendement du 2026-10-11).*
 - **Rate limiting natif** (en mémoire). Il faudra un limiteur distribué (Redis) le jour
   des N instances. L'anti-bruteforce du login passe par le **lockout d'Identity**,
   stocké en base : il survit aux déploiements.
@@ -101,18 +113,21 @@ par environnement.
 
 - **nginx ne sert plus seulement `/cdn/blobs/`** : il lit aussi `pages/{epoch}/…` pour les
   versions épinglées et `build/…` pour un bundle que le SSR ne connaît plus, depuis ce
-  stockage, avec le SSR en repli. Du volume `storage`, nginx n'expose toujours que `blobs/`.
+  stockage, avec le SSR en repli. Du volume des blobs (`ddragon`), nginx n'expose toujours
+  que `blobs/`.
 - **Un stockage à part d'`IBlobStore`** : `IPageStore`, adressé par chemin (le chemin
   canonique de la page sous une epoch), pas par contenu. Une page n'est pas un contenu Data
   Dragon : elle se recalcule, ne se partage pas entre pages et se retire par epoch entière.
-  `IBlobStore` et le volume `storage` ne changent pas.
+  `IBlobStore` et le volume des blobs ne changent pas.
 - **Atomicité** : un `PUT` est atomique pour un objet, comme le `File.Move` des blobs ; un
   bundle s'écrit avec `If-None-Match: *` et ne se remplace jamais.
 - **Postgres** reçoit l'état de la passe : `prerender_pass` (une seule active, index unique
   partiel), `prerender_unit` (compteurs de pages et d'octets, curseur), `prerender_build`.
   Le stockage n'est jamais listé pour compter.
-- **MinIO** sert aux tests (Testcontainers, conteneur générique épinglé par empreinte) et à
-  la pile de développement (`pages-store`) seulement. Le rejet de MinIO en production
+- **MinIO** sert aux tests seulement (Testcontainers, conteneur générique épinglé par
+  empreinte). La pile de développement simule le stockage avec moto (`pages-store`,
+  `compose.override.yaml`) : les images officielles de MinIO ne sont plus publiées ; les tests
+  tirent celle d'un fork communautaire, épinglée par empreinte. Le rejet de MinIO en production
   (§ « Alternatives écartées ») tient toujours : le stockage de prod est un service géré, et
   son comportement réel (lecture anonyme par adresse, métadonnées rendues) est prouvé par la
   sonde du script, pas par la CI.

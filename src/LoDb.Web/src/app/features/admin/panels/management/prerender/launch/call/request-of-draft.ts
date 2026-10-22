@@ -2,6 +2,7 @@ import type { PassRequest } from '../../../../../../../core/api/generated/models
 import type { PrerenderPatchesReport } from '../../../../../../../core/api/generated/models/prerender-patches-report';
 import { RESOURCE_TYPE } from '../../../../../../../core/api/generated/models/resource-type-array';
 import { LOCALES } from '../../../../../../../core/i18n/locales';
+import { OPENERS_PAGES } from '../../common/patches/openers-pages';
 import type { LaunchDraft } from '../dialog/launch-draft';
 
 // A list covering everything it may name is no restriction: the API stores it as null.
@@ -14,8 +15,8 @@ function restricted(chosen: readonly string[], every: readonly string[]): string
  * The body of the launch (§ 3.6): the epoch always explicit, so that a switch while the
  * dialog is open does not move the target; the versions newest first, or null when every
  * older patch is ticked and the pass stays whole; the locales and the types in their order,
- * null when all; the priorities in their order, null when none; `skipComplete` never on a new
- * epoch, which holds nothing.
+ * null when all; the pages, `openers` or null for every one; the priorities in their order,
+ * null when none; `skipComplete` never on a new epoch, which holds nothing.
  */
 export function requestOfDraft(draft: LaunchDraft, patches: PrerenderPatchesReport): PassRequest {
   const { selected, priority } = draft.selection;
@@ -26,6 +27,7 @@ export function requestOfDraft(draft: LaunchDraft, patches: PrerenderPatchesRepo
     versions: ticked.length === versions.length ? null : ticked,
     locales: restricted(draft.locales, LOCALES),
     pageTypes: restricted(draft.pageTypes, RESOURCE_TYPE),
+    pages: draft.isOpenersFirst ? OPENERS_PAGES : null,
     priority: priority.length > 0 ? [...priority] : null,
     skipComplete: draft.skipComplete && draft.epochKind !== 'new',
   };

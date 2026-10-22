@@ -1,5 +1,9 @@
 # Lot 5 — Builds et tendances
 
+> **Historique** : spécification de construction de septembre 2026, exécutée (bascule le
+> 2026-10-04). Les règles en vigueur sont dans [`AGENTS.md`](../../../AGENTS.md) et les
+> [ADR](../adr/) ; plusieurs choix de ce lot ont changé depuis, par amendement daté.
+
 Objectif du lot : les builds (règles, éditeur, partage, import sur un autre patch, votes) et
 la page des tendances, à parité.
 
