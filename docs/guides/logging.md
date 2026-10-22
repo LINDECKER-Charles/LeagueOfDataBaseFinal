@@ -1,265 +1,179 @@
-# 🪵 Journalisation applicative — quoi écrire, et sous quelle forme
+# Journalisation applicative — la convention
 
-Ce guide fixe **ce qu'on écrit** dans les logs applicatifs. Il complète
-[`observabilite.md`](observabilite.md), qui décrit le transport : côté code on ne
-choisit ni le transport ni la rétention, seulement le contenu.
+Ce guide fixe ce que l'API et le SSR écrivent dans leurs logs, et sous quelle forme. Le code
+fait foi : `src/LoDb.Api/Hosting/Logging/JsonLineConsoleFormatter.cs` pour l'API,
+`src/LoDb.Web/src/server/create-logger.ts` pour le SSR ; en cas d'écart, la page se corrige.
+Le transport et les requêtes : [`observabilite.md`](observabilite.md). Les métriques :
+[`metriques.md`](metriques.md). Décision : [ADR 0010](../reecriture/adr/0010-observabilite-tests-ci.md).
 
----
+## Où vont les logs
 
-## Les trois contraintes de la chaîne
+- **stdout, une ligne JSON par événement**, et rien d'autre. Le driver `json-file`
+  (`x-logging` de `compose.yaml`) les garde, Vector les collecte ; un fichier n'est jamais lu.
+- `api` et `migrate` (même image) écrivent par `AddLoDbJsonConsole()`
+  (`Hosting/Logging/LoggingRegistration.cs`), posé par `AddLoDbCommon` pour l'hôte web comme
+  pour les commandes. `web-ssr` et `web-ssr-prerender` écrivent par `createLogger()` (pino).
+- `nginx` et `postgres` écrivent du texte, hors de cette convention : nginx ses seules
+  erreurs (`error_log … warn`, `access_log off` dans `docker/nginx/nginx.conf`, l'edge
+  journalise les requêtes) ; Postgres les requêtes de plus de 500 ms, sans leurs paramètres
+  (`log_min_duration_statement`, `log_parameter_max_length=0` dans `compose.yaml`).
+- **Vector ne parse pas le JSON applicatif** et devine le niveau par regex sur le texte brut
+  ([`observabilite.md`](observabilite.md#le-piège-du-niveau-deviné)). La clé d'événement,
+  sous-chaîne exacte de la ligne, est donc le seul point d'agrégation fiable.
 
-1. **Vector ne lit que `stdout` / `stderr`.** Un log écrit dans un fichier n'est jamais
-   collecté.
-2. **Vector ne parse aucun JSON applicatif.** Il devine `level` par regex sur le texte
-   brut.
-3. **`stack`, `service`, `container`, `stream` sont les champs de flux**, l'axe
-   d'indexation. Pour un log applicatif, Vector ne produit rien d'autre : `channel`,
-   `level_name` et tout le contexte n'existent que comme texte dans `_msg`.
+## La ligne
 
-Conséquence directe : **la clé d'événement est le seul point d'agrégation fiable.**
+| Rôle | API (`api`, `migrate`) | SSR (`web-ssr`, `web-ssr-prerender`) |
+|---|---|---|
+| Horodatage UTC | `Timestamp` (`2026-09-26T08:30:15.250Z`) | `time` (ISO 8601) |
+| Niveau | `LogLevel` : `Information`, `Warning`, `Error`, `Critical` | `level` : `info`, `warn`, `error` |
+| Clé d'événement | `EventName` (`EventId.Name`) | `msg` |
+| Corrélation | `trace_id`, `span_id` | `trace_id` |
+| Contexte | `State` : les propriétés du gabarit ; `Message` : le gabarit rendu | champs à la racine |
+| Exception | `Exception`, seulement s'il y en a une | `exception`, seulement s'il y en a une |
 
----
+L'API écrit aussi `EventId` et `Category`. Le formateur intégré de .NET perd `EventId.Name`
+et range le `trace_id` dans un tableau de scopes : d'où un formateur propre, qui laisse de
+côté les autres scopes (celui de la requête porte le chemin). Une ligne du SSR :
+
+```json
+{"level":"info","time":"2026-10-22T08:30:15.250Z","method":"GET","status":200,"duration_ms":42,"trace_id":"4bf92f3577b34da6a3ce929d0e0e4736","msg":"http.request.served"}
+```
+
+**`trace_id`** : nginx pose un `traceparent` neuf sur chaque requête relayée
+(`docker/nginx/snippets/proxy-headers.conf`), le SSR le relaie à l'API. Côté API, il est
+présent quand une activité est en cours — une requête HTTP — et absent sinon (tâches de fond,
+commandes) ; le test `RecordWithoutExceptionOrActivityCarriesNeitherField` le garde. Côté SSR,
+seule `http.request.served` le porte (`request-logging.ts`).
 
 ## La clé d'événement
 
-Un message de log est une **clé pointée `domaine.sujet.résultat`**, jamais une phrase.
+Une clé pointée **`domaine.sujet.resultat`**, en minuscules, segments en `snake_case`,
+jamais une phrase. Elle se lit comme un filtre de plus en plus fin : `"prerender."` donne
+tout le domaine, `"prerender.pace."` tout le sujet.
 
 ```
-catalog.page.unavailable
-catalog.fetch_batch.unresolved
-ingest.deferred_task.failed
-mail.send.failed
-stripe.webhook.signature_invalid
+database.pool.exhausted      catalog.read.failed       jobs.schedule.failed
+prerender.ssr.unreachable    seo.indexnow.submitted    http.request.served
 ```
 
-Dans VictoriaLogs la clé est une sous-chaîne exacte de `_msg` : elle se compte et se
-groupe.
+- La clé est un **littéral du code**, jamais construite à partir d'une donnée. Seule
+  exception : le miroir d'audit écrit `audit.<action>` (`audit.user.login_failed`), l'action
+  venant de l'énumération fermée `AuditAction`, écrite par `AuditVocabulary`
+  (`src/LoDb.Infrastructure/Audit/Journal/AuditMirror.cs`).
+- Une clé citée par une alerte ou une recherche ne se renomme pas.
+- Ce qui varie va dans le contexte, pas dans la clé. Côté API, le `Message` est rendu avec
+  ses valeurs : on cherche par `EventName`, jamais par le texte du message.
 
-```logsql
-_time:24h stack:lodb-prod service:php "catalog.page.unavailable" | count()
+## Déclarer un événement
+
+**C#** : une méthode `[LoggerMessage]` d'une classe `partial` — la classe qui journalise, ou
+une classe `…Log` du module (`IngestionLog.cs`, `PrerenderLog.cs`) —, avec la clé, le niveau
+et un gabarit en anglais. Jamais de chaîne interpolée : elle viderait `State`.
+
+```csharp
+[LoggerMessage(
+    EventName = "ingest.version.completed",
+    Level = LogLevel.Information,
+    Message = "Ingested version {Version} in {DurationMs} ms: {Datasets} datasets and"
+        + " {Images} images written, promoted {Promoted}.")]
+public static partial void VersionCompleted(
+    ILogger logger, string version, long durationMs, int datasets, int images, bool promoted);
 ```
 
-Une phrase (« Erreur lors de la récupération des versions Riot ») n'est ni stable ni
-groupable, et elle change au premier reformulage. Les trois segments se lisent de
-gauche à droite comme un filtre de plus en plus fin : `"catalog."` donne tout le
-domaine, `"catalog.fetch_batch."` tout le sujet.
+Un niveau qui dépend de la cause passe en paramètre `LogLevel level` : `IngestionLog.cs`
+écrit `ingest.version.failed` en `Warning` pour une panne amont (`EgressException`), en
+`Error` sinon. Seul `AuditMirror` appelle `logger.Log` directement, sa clé suivant l'action.
 
-**Deux exceptions assumées.** Le miroir du journal d'audit émet `audit.<AuditAction>`
-(ex. `audit.user.login_failed`) : `AuditAction` est un contrat on-disk fermé, on ne le
-reformule pas pour faire joli dans les logs. Et les clés déjà en place sur le chemin
-argent sont préfixées `stripe.` (`stripe.api.*`, `stripe.checkout.*`) alors que leur
-canal s'appelle `billing` : on **ne les renomme pas** — le préfixe désigne le
-prestataire, ce qui reste juste, et un renommage casserait les recherches existantes.
-Toute nouvelle clé de ce domaine suit `stripe.`.
+**SSR** : le logger de `createLogger()`, objet de champs d'abord, clé en message ; champs en
+`snake_case`.
 
----
-
-## Le contexte
-
-Tout ce qui varie va dans le **contexte PSR-3**, jamais dans le message.
-
-```php
-// NON — la clé n'existe plus, chaque ligne est unique
-$this->logger->warning("Version {$version} indisponible");
-
-// OUI
-$this->logger->warning('catalog.page.unavailable', [
-    'version' => $version,
-    'lang' => $lang,
-    'exception' => $e,
-]);
+```ts
+logger.warn({ interval_seconds: INTERVAL_SECONDS, admitted, refused }, 'ssr.admission.summary');
 ```
 
-Pas d'interpolation `{placeholder}` non plus. monolog-bundle active
-`PsrLogMessageProcessor` **par défaut** sur tout handler non imbriqué : un `{version}`
-laissé dans un message y serait réécrit *en silence*, et la clé d'agrégation
-disparaîtrait sans que personne le voie. Les quatre handlers de production déclarent
-donc `process_psr_3_messages: false` — la violation devient un littéral visible. Si un
-handler venait à être ajouté sans cette clé, l'interdiction ci-dessus redeviendrait la
-seule protection.
+## Les exceptions
 
-Le modèle déjà en place dans le dépôt est `App\Service\PublicApi\ApiEntitlementApplier` :
-huit appels, tous en clé pointée, à contexte scalaire ou vide, avec un docblock qui
-porte la règle PII (« Logs carry internal ids only — never customer identity »).
+L'exception passe **en objet**, jamais son seul message :
 
-### L'exception passe sous la clé `exception`, en objet
+- **C#** : un paramètre `Exception exception` de la méthode `[LoggerMessage]`. Le formateur
+  écrit `Exception` = `exception.ToString()` (type, message, pile, causes), échappé sur une
+  ligne. Ce message est donc écrit : quand il peut citer une donnée personnelle, on n'écrit
+  que le type (`{ErrorType} {SqlState}` de `analytics.views.write_failed`). Quand la cause
+  est connue et le volume fort, on l'omet : `database.pool.exhausted` ne porte pas de pile.
+- **SSR** : `{ exception: error }`. Le sérialiseur de `create-logger.ts` n'en garde que
+  `class` (le `name`, les constructeurs étant minifiés) et `code` (`ECONNREFUSED`…), jamais
+  le message, qui peut citer l'URL demandée. Jamais `console.error` : la pile multi-lignes
+  d'Angular ou d'Express deviendrait autant d'événements sans clé, d'où `SsrErrorHandler`
+  et `failureHandler`.
 
-`['exception' => $e]` — l'objet `Throwable`, pas `$e->getMessage()`. Ce que
-`JsonFormatter` en écrit :
+## Aucune clé `error`
 
-```json
-"exception": {
-  "class": "RuntimeException",
-  "message": "go-fetcher: upstream status 503 for …",
-  "code": 0,
-  "file": "/var/www/html/src/Service/Tools/GoFetcherClient.php:200",
-  "previous": { "class": "…", "message": "…", "code": 0, "file": "…" }
-}
-```
+Vector classe en `error` toute ligne dont le texte brut contient le mot `error`,
+`exception` ou `critical` (`\b…\b`, sans casse). Un champ nommé `error` — un `{Error}` dans
+un gabarit C# devient la clé `"Error"` de `State` — ou une valeur libre qui contient ce mot
+fait passer un `Warning` pour une erreur, et le tableau de bord ment. Même piège avec
+`fatal` et `panic`. Nommer le champ par ce qu'il porte : `{ErrorCode}` de
+`outbox.message.retried`, `{ErrorType}` (la regex exige un mot entier).
 
-- `trace` est **retiré** (`includeStacktraces` est faux sur le service
-  `monolog.formatter.json`). On ne l'active pas — voir la troncature ci-dessous.
-- La chaîne `previous` est suivie récursivement.
-- `getMessage()` seul perdrait la classe, le `fichier:ligne` et la cause, c'est-à-dire
-  tout ce qui permet de dédupliquer deux occurrences.
-
-#### La seule exception : le canal `mail`
-
-`['exception' => $e]` écrit `$e->getMessage()` **verbatim**, et sur le chemin de remise
-ce message n'est pas le nôtre :
-
-- `SmtpTransport::assertResponseCode()` y recopie la réponse brute du relais, et un refus
-  renvoie l'adresse du destinataire telle quelle
-  (`550 5.1.1 <player@example.com>: Recipient address rejected`) ;
-- `EsmtpTransport` y met l'identifiant du `MAILER_DSN` en cas d'échec d'authentification.
-
-Une adresse — ou un identifiant d'authentification — atterrirait donc dans un index
-cherchable 90 jours. L'interdiction de donnée personnelle **prime sur** la convention de
-portage de l'exception : `App\Service\Mail\DeliveryFailure` remplace l'objet par
-`exception_class` + `exception_code` + `exception_at`. La classe sépare un relais mort
-d'un destinataire refusé, le `fichier:ligne` sépare la commande SMTP en cause ; seul le
-texte libre disparaît, et le relais le conserve de son côté.
-
-Le test qui garde cette règle doit s'exécuter sur ce que **Monolog** écrirait, pas sur un
-`json_encode()` du contexte : le message d'un `Throwable` est `protected`, donc
-`json_encode(new RuntimeException('x@y.z'))` rend `{}` alors que le normaliseur de Monolog
-le lit. Une assertion sur `json_encode` passe inconditionnellement et ne garde rien.
-
-### Le plafond FPM : 8192 octets par ligne
-
-L'image php-fpm de base impose `log_limit = 8192` — le lot 1a le relève à 65536, mais
-la contrainte de conception reste. `Monolog\LogRecord::toArray()` sérialise dans cet
-ordre :
-
-```
-message, context, level, level_name, channel, datetime, extra
-```
-
-Le contexte est **en deuxième position**. Une ligne trop longue ne perd donc pas son
-contexte : elle perd `level`, `level_name`, `channel` et `datetime`, et le JSON reste
-ouvert. **Un contexte volumineux détruit la ligne entière, pas seulement sa fin.**
-
-D'où :
-
-- pas de payload dans le contexte (corps de réponse, dump de dataset, tableau
-  d'entrées) — un **compte** et un **identifiant**, jamais les données ;
-- pas de `include_stacktraces: true` sur un handler stderr ;
-- ce qui est volumineux par nature reste dans le NDJSON sous `var/state/`.
-
----
+Le champ d'exception est l'écart assumé : indispensable, il tire la ligne vers `error`. Un
+`Warning` qui porte une exception (`jobs.schedule.failed`, `ingest.listener.failed`) sort
+donc en `error` dans Grafana. C'est pourquoi le formateur ne l'écrit que s'il existe, et
+pourquoi **aucune alerte ne se construit sur le niveau** : on alerte sur la clé.
 
 ## Les niveaux
 
-| Niveau | Quand | Ancrage dans le dépôt |
+| Niveau | Quand | Dans le code |
 |---|---|---|
-| `critical` | L'argent, la sécurité ou l'intégrité légale est en jeu et rien ne se répare seul. | `STRIPE_WEBHOOK_SECRET` vide en prod : le webhook répond 503 à **tous** les appels, Stripe finit par désactiver l'endpoint, les crédits achetés ne sont jamais appliqués. |
-| `error` | Une requête n'a pas pu être servie comme prévu, et la cause est chez nous ou inconnue. | `searchResponse()` qui répond 503 — ce endpoint n'est appelé que par notre propre front, avec une sélection déjà validée. Idem un lot go-fetcher où **aucune** URL n'a été résolue. |
-| `warning` | Dégradé, mais l'application s'est comportée correctement : le visiteur garde quelque chose d'utilisable, ou la cause est une panne amont transitoire. C'est le **volume** qui fait signal. | `redirectToHomeWithError()`, `HomeController::preview()` (une section vide sur quatre), `DeferredImageIngestor::flush()` (la prochaine visite réessaie). |
-| `info` | Un événement métier **qui change un état** a réussi et doit être retrouvable après coup. | `stripe.api.credits_added`, `stripe.api.plan_activated`, miroir d'audit d'un `AuditOutcome::Success`. Un `Failure` ou un `Denied` sort en `warning`. |
-| `debug` | Interdit en prod applicatif. | — |
+| `Critical` | une fonction est cassée jusqu'à ce qu'un humain agisse, rien ne se répare seul | `billing.webhook.unconfigured` (503 à chaque événement Stripe), `dataprotection.certificate.missing`, `audit.journal.write_failed` |
+| `Error` | la cause est chez nous ou inconnue | `database.server.unavailable` (500), `jobs.run.failed`, `fetch.allowlist.refused`, `ssr.render.failed` |
+| `Warning` | dégradé mais attendu : panne amont transitoire, délestage ; le volume fait signal | `database.pool.exhausted` (503), `catalog.read.failed` (Data Dragon), `prerender.ssr.unreachable`, `fetch.batch.degraded` |
+| `Information` | un changement d'état réussi, à retrouver après coup, ou la synthèse d'un lot | `seo.indexnow.submitted`, `ingest.version.completed`, `jobs.run.succeeded` |
+| `Debug` | jamais émis en prod (`Default: Information`, `appsettings.json`) | `http.request.rejected`, `CommandExecuted` d'EF Core (`LoDbDataSource.cs`) |
 
-`alert` et `emergency` ne sont pas utilisés : cinq niveaux suffisent, et une échelle
-qu'on n'arbitre pas devient du bruit. `notice` n'est pas employé **par le code
-applicatif** non plus, mais il n'est pas libre pour autant : c'est le seuil du handler
-always-on, et le mapping `framework.exceptions` du lot 1a y range les 429 des
-rate-limiters. Ne pas s'en servir comme d'un « info un peu important ».
+- **Un 4xx n'est pas une erreur** : c'est la requête du client qui est en cause.
+  `http.request.served` sort en `info` sous 500, en `warn` pour un 503 (délestage voulu), en
+  `error` pour les autres 5xx (`request-logging.ts`). Une requête illisible
+  (`BadHttpRequestException`) donne `http.request.rejected`, en `Debug`.
+- Le miroir d'audit sort en `Information` pour un succès, en `Warning` sinon.
 
----
+## Une ligne de synthèse par lot
 
-## ⛔ Interdictions
+Jamais une ligne par URL, par fichier ou par page : une par lot, avec ses comptes.
 
-### 1. Aucune clé de contexte nommée `error`
-
-C'est le piège le plus concret, et il existe **aujourd'hui** dans le dépôt :
-
-```php
-// app/src/Controller/Billing/ApiBillingController.php:108
-$this->logger->warning('stripe.api.session_failed', ['error' => $e->getMessage()]);
-
-// app/src/Controller/Billing/DonationController.php:85
-$this->logger->warning('stripe.checkout.session_failed', ['error' => $e->getMessage()]);
-
-// app/src/Controller/Billing/StripeWebhookController.php:87 — déjà en `error`,
-// mais la clé de contexte reste à renommer
-$this->logger->error('stripe.webhook.handler_failed', [
-    'event' => $event->id, 'type' => $event->type, 'error' => $e->getMessage(),
-]);
-```
-
-Les deux premières sont émises en **warning**. Le JSON produit contient
-`{"context":{"error":"…"}}`, donc le texte brut contient le mot `error`, donc la regex
-de Vector les classe en **`level=error`**. Un warning devient une erreur, et le tableau
-de bord ment. Même piège avec `critical`, `fatal`, `panic` — comme clé **ou** comme
-valeur de chaîne libre.
-
-La clé `exception` est l'exception assumée : elle est indispensable, et on sait qu'elle
-tire la ligne vers `level=error`. On l'accepte, **et on ne construit aucune alerte sur
-`level`**.
-
-### 2. Aucune donnée personnelle
-
-Pas d'email, pas d'IP, pas de token, pas de mot de passe, pas de texte saisi par un
-visiteur. Un log applicatif part dans un index cherchable 90 jours, hors du périmètre
-de rétention déclaré. On écrit à la place un **id interne** (`user_id`, `api_key_id`,
-`build_id`) qui permet de rejoindre la donnée réelle là où elle est légalement
-conservée.
-
-### 3. Aucun message multi-lignes
-
-Vector fabrique un événement par ligne. Un message contenant `\n` devient N événements,
-dont N-1 sans clé et sans niveau. C'est aussi pour cela que la stack trace ne va pas
-dans le message.
-
----
-
-## Les canaux
-
-Le canal ne sert pas à chercher (Vector ne le voit pas comme un champ) : il sert à
-**router**. En prod, ce qui n'est pas sur un canal métier n'atteint `stderr` qu'à
-partir de `notice` ; les canaux métier, eux, sont émis dès `info` par le handler
-`business`.
-
-| Canal | Périmètre |
+| Clé | Une ligne par |
 |---|---|
-| `audit` | miroir du journal légal (`AuditLogger`), échec d'écriture de `AuditLogStore` |
-| `billing` | tout le chemin argent : checkout, webhook, entitlements, dons |
-| `catalog` | lecture Data Dragon : pages ressources, recherche, `GoFetcherClient`, `VersionManager` |
-| `ingest` | écritures vers le stockage (volume `storage`) : warm du loader, images différées |
-| `mail` | remise sortante |
-| `app` (défaut) | le reste — n'apparaît en prod qu'à partir de `notice` |
+| `prerender.unit.completed` | (version, langue) de la passe de précalcul |
+| `prerender.demand.drained` | lot de la file automatique |
+| `seo.indexnow.submitted` | version soumise (`{Urls}`, `{Requests}`) |
+| `fetch.batch.degraded` | lot de téléchargements (`{Failed} of {Batch}`) |
+| `web.csp.violated`, `ssr.admission.summary` | intervalle (une minute) |
 
-### Injection
+Un rendu refusé par l'admission et une page réussie de la passe n'ont pas de ligne
+`http.request.served` : les synthèses et `lodb_ssr_renders_total` les comptent.
 
-Sur une classe concrète, l'attribut suffit :
+## Aucune donnée personnelle
 
-```php
-#[WithMonologChannel('billing')]
-final class StripeWebhookController extends AbstractController
+Ni adresse IP, ni e-mail, ni token, ni mot de passe, ni texte saisi, ni chemin ou query :
+un chemin peut porter un nom d'utilisateur (`/u/…`) ou un jeton de partage (`/b/…`). On
+écrit un identifiant interne (`{AdminId}`, `ActorId`) qui rejoint la donnée là où elle est
+conservée. Le miroir d'audit part d'une liste autorisée : ni l'adresse ni l'identifiant tapé
+d'une connexion échouée n'y passent (`AuditMirror.cs`).
+
+## Cardinalité
+
+Les champs de flux (`stack`, `service`, `container`, `stream`) sont posés par Vector : le
+code n'en ajoute aucun. Le jeu des clés reste fermé, pour que `stats by` sur une clé ait un
+sens ; une version, une langue ou un identifiant va dans un champ, jamais dans la clé. Pour
+les labels de métriques, la règle est plus stricte : [`metriques.md`](metriques.md#règle-de-cardinalité).
+
+## Interroger et tester
+
+```logsql
+stack:lodb-prod service:api _time:24h "catalog.read.failed" | stats count() lignes
 ```
 
-> ⚠️ **Un attribut de classe n'est pas hérité.** `AttributeAutoconfigurationPass` lit
-> `ReflectionClass::getAttributes()`, qui ne remonte pas la hiérarchie : le poser sur
-> une base abstraite n'a **aucun effet** sur ses sous-classes. Pour
-> `AbstractResourceController` et consorts, passer par le **nom de l'argument**, alias
-> enregistré par `LoggerChannelPass` :
->
-> ```php
-> public function __construct(
->     private readonly LoggerInterface $catalogLogger,
-> ) {}
-> ```
-
----
-
-## Tests
-
-`AGENTS.md` impose que toute feature s'accompagne de tests. Pour la journalisation, on
-teste le **comportement**, jamais le texte exact du message :
-
-- qu'un chemin d'échec émet bien un enregistrement (et à quel niveau) ;
-- qu'un log n'altère pas le flux de contrôle — une page en panne redirige toujours,
-  une ingestion différée avale toujours son exception ;
-- que le miroir d'audit **n'émet jamais** `ip` ni `meta.identifier`.
-
-Ce dernier est le test le plus important du lot : il garde une garantie RGPD qu'une
-relecture de code ne rattraperait pas.
+Autres requêtes : [`observabilite.md`](observabilite.md#interroger). Les tests vérifient
+le comportement, pas le texte : la clé et le niveau émis sur un chemin d'échec
+(`log.Id.Name == "jobs.run.failed"` avec `FakeLoggerProvider`, `PeriodicJobTests.cs`), la
+forme de la ligne (`JsonLineConsoleFormatterTests.cs`, `request-logging.spec.ts`).
