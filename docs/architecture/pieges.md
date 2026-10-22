@@ -162,6 +162,16 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
 
 - `/readyz` se lit sur l'API (18081 ou `lodb-api:8080`) et, par nginx, sur le sous-domaine `api.`
   seulement (1 requête/s par adresse, sonde externe) ; demandé au site, il part au SSR (404).
+- **Deux captures sans autorisation, voulues** : la balise (`POST /api/analytics/view`,
+  `BeaconEndpoint.cs`) et le point d'accès du miroir de nginx (`MirrorEndpoint.cs`) portent
+  `.AllowAnonymous()`. `sendBeacon` ne peut pas envoyer le jeton XSRF : la balise vérifie
+  l'`Origin` elle-même, et le miroir n'est joignable que par nginx. Ce sont les seules
+  exceptions à « jamais `AllowAnonymous` » d'`AGENTS.md`, tenues fermées par
+  `tests/LoDb.Api.Tests/Hosting/AnonymousEndpointsTests.cs` ; elles partent avec la mesure
+  maison ([ADR 0012](../reecriture/adr/0012-audience-umami.md)).
+- **`UsageFlusher` tourne même avec `LoDb:Workers:Enabled=false`** : le métrage de `/v1`
+  (`Modules/PublicApi/Metering/`) est enregistré par le module, hors de `Workers/`, sinon
+  `api_usage` ne serait jamais alimenté.
 - En local, les URLs absolues perdent le port (nginx transmet `Host: $host`) : l'origine
   canonique se fixe par `LoDb__Seo__CanonicalOrigin` et `LoDb__Accounts__SiteOrigin`.
 - **Pool Postgres** : `Maximum Pool Size=32;Timeout=5` dans la chaîne de connexion. Une
@@ -297,8 +307,8 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   (sous la 4g : poster sans vidéo, liste différée). Un clic sur un onglet ne fait défiler que
   l'onglet : la scène du clip peut rester sous l'écran, d'où un `scrollIntoViewIfNeeded` sur
   elle avant d'attendre la vidéo.
-- `disclosure.spec.ts` échoue parfois en suite complète, jamais seul : relancer n'est pas
-  une correction.
+- `disclosure.spec.ts` (Vitest, `core/layout/disclosure/`, pas un E2E) échoue parfois en
+  suite complète, jamais seul : relancer n'est pas une correction.
 - **Bornes du SSR relevées en dev** (`compose.override.yaml`, jamais
   `compose.deploy.yaml`) : toute la suite arrive d'une adresse et ouvre les anciens patchs
   bien plus vite qu'un hôte servi ne les admet. Admission : `LODB_RENDER_MAX_IN_FLIGHT`,
@@ -325,7 +335,9 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
 
 ## Infra et déploiement
 
-- Variables Compose préfixées **`LODB_`**. En dev, les images s'appellent
+- Toute nouvelle variable Compose est préfixée **`LODB_`** ; les plus anciennes
+  (`IMAGE_TAG`, `REGISTRY`, `APP_REVISION`, `CONTACT_RECIPIENT`…) gardent leur nom, comme
+  toutes les conventions devops de la bascule. En dev, les images s'appellent
   `<projet>-<service>` : un emplacement n'écrase pas les images de la stack locale.
 - **`!reset` et l'ordre des fichiers** : Compose ignore un `!reset` placé après un autre
   fichier qui touche déjà l'`environment` du même service. Les `!reset null` de
@@ -564,7 +576,7 @@ stockage objet, puis lues par nginx
   interroge le stockage comme avant ; une lecture qui échoue garde la dernière valeur, sans
   ligne de log. Juste après une promotion, l'ancien dernier patch peut encore aller au SSR
   jusqu'à 30 s, sans plus de mal qu'un rendu ; le SSR lui-même le redirige parfois plus
-  longtemps (sa copie de `/api/meta` vit quelques minutes). La lecture ne coûte qu'aux
+  longtemps (sa copie de `/api/meta` vit jusqu'à 60 s, `LODB_API_META_TTL_SECONDS`). La lecture ne coûte qu'aux
   requêtes que le stockage aurait reçues (second `if`, après celui de `$lodb_store_page`) :
   jamais à une autre route, ni stockage coupé. L'API est jointe par son alias `lodb-api:8080`,
   jamais à travers le site.
@@ -650,6 +662,9 @@ stockage objet, puis lues par nginx
   bucket absent) : la passe se met en pause, la page n'est comptée nulle part. La sonde
   `verifier` lit en IPv4 seulement (`curl -4`) : l'hôte joint aussi Scaleway en IPv6, d'où la
   politique répond `403`.
+- *Les deux points suivants valent pour le CDN, prévu mais pas encore construit (lot 4 de la
+  [spécification](../produit/pre-rendu-catalogue-cdn.md)) : rien de Cloudflare n'est dans le
+  dépôt au 2026-10-22.*
 - **`/` jamais en cache au CDN** (lot 4) : sa `302` dépend d'`Accept-Language` et du cookie
   `lod_prefs`, et Cloudflare ne distingue pas les réponses selon `Accept-Language`. La règle
   « jamais en cache » (`/`, `/api/`, `/v1/`, `/webhooks/`, `/admin`, `/b/`, `/u/`, `/healthz`,
@@ -731,6 +746,7 @@ stockage objet, puis lues par nginx
   un écart SEO nouveau reçoit une règle dans `tools/seo-diff/lib/rules.mjs`.
 - Les outils de comparaison (`seo-diff`, `lighthouse`, `builds-parity`) appellent encore
   `next` le côté « nouvelle stack » : ils disparaissent à la décommission avec `legacy/`.
-- **Documents historiques** (`docs/reecriture/{plan-*,heritage,adr,implementation,
-  rapports}`) : ils gardent les noms de leur époque (`lodb-next`, `tools/next/`…) ; on ne
-  les réécrit pas.
+- **Documents historiques** (`docs/reecriture/{plan-*,heritage,implementation,rapports}`) :
+  ils gardent les noms de leur époque (`lodb-next`, `tools/next/`…) ; on ne les réécrit pas.
+  Les **ADR** ne sont pas historiques : ils font foi, et une décision qui change s'y ajoute
+  en amendement daté, sans réécrire le texte d'origine.
