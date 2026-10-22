@@ -33,7 +33,9 @@ internal sealed class FakeCatalog : IPrerenderCatalog
     /// </summary>
     public Dictionary<PatchVersion, DateTimeOffset> PinnedFrom { get; } = [];
 
-    /// <summary>The openers of a version in the index, as the test sets them; none by default.</summary>
+    /// <summary>
+    /// The openers of a version in the index, as the test sets them; none by default.
+    /// </summary>
     public Dictionary<PatchVersion, IReadOnlySet<string>> Openers { get; } = [];
 
     /// <summary>How long the servers take to see a promotion; 21 minutes, as by default.</summary>

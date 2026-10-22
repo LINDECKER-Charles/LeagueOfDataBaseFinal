@@ -30,7 +30,8 @@ internal static class IndexedPages
         var counts = new Dictionary<PatchVersion, IndexedPageCounts>();
         for (var position = 0; position < versions.Count; position++)
         {
-            (closedHere, openHere) = (closedHere + frozen[position], openHere + revisable[position]);
+            closedHere += frozen[position];
+            openHere += revisable[position];
             counts[versions[position]] = new IndexedPageCounts(
                 OpenersOf(snapshot, versions[position]),
                 closedHere,
