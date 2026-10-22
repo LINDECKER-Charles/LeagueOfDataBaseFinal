@@ -160,7 +160,8 @@ state_class() {
 # Whether the API has a page of changes for a version (none for the first version its index
 # covers, nor outside it).
 has_changes_page() {
-  [ "$(curl -sS -o /dev/null -w '%{http_code}' --max-time 300 "$BASE/api/catalog/$1/en_US/changes")" = 200 ]
+  local url="$BASE/api/catalog/$1/en_US/changes"
+  [ "$(curl -sS -o /dev/null -w '%{http_code}' --max-time 300 "$url")" = 200 ]
 }
 
 # ── The catalogue must hold a version ────────────────────────────────────────────────
@@ -228,7 +229,9 @@ row "/en/$older/$older_item" 200 "$(state_class "$older")" - -
 # ── Pinned pages by the state of their entity: the item's history, as the API renders it ──
 history="$(item_details "$latest" | jq -c '.history')"
 # The opener of a closed state, under its canonical: frozen.
-frozen="$(jq -r 'map(select(.lastVersion != null))[0] // empty | "\(.link.version)/\(.link.path)"' <<<"$history")"
+frozen="$(jq -r \
+  'map(select(.lastVersion != null))[0] // empty | "\(.link.version)/\(.link.path)"' \
+  <<<"$history")"
 # The opener of the open state, when older than the latest: revisable, its path unchanged since.
 revisable="$(jq -r --arg latest "$latest" \
   'map(select(.lastVersion == null and .openerVersion != $latest))[0] // empty
