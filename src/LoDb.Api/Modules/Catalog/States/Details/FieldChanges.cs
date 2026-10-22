@@ -9,15 +9,17 @@ namespace LoDb.Api.Modules.Catalog.States.Details;
 internal static class FieldChanges
 {
     /// <summary>
-    /// The field of <paramref name="diff"/>: a text by its segments alone, any other kind by
-    /// its values, each entity among them named.
+    /// The field of <paramref name="diff"/>, each entity among its values named.
     /// </summary>
+    /// <remarks>
+    /// The values and segments are the engine's as they are: it leaves the values of a text
+    /// empty, its diff being its segments, and the segments of any other kind.
+    /// </remarks>
     public static FieldChange Of(FieldDiff diff, EntityNames names)
     {
         ArgumentNullException.ThrowIfNull(diff);
         ArgumentNullException.ThrowIfNull(names);
         var template = ChangeFields.Of(diff.Key.Field);
-        var isText = template.Kind == FieldKind.Text;
         return new FieldChange
         {
             Field = diff.Key.Field,
@@ -26,9 +28,9 @@ internal static class FieldChanges
                 names.SubjectOf(diff.Key) ?? diff.SubjectName),
             Kind = template.Kind,
             ValueKind = template.Values,
-            Before = isText ? [] : ValuesOf(diff.Key, diff.Before, names),
-            After = isText ? [] : ValuesOf(diff.Key, diff.After, names),
-            Segments = isText ? diff.Segments : [],
+            Before = ValuesOf(diff.Key, diff.Before, names),
+            After = ValuesOf(diff.Key, diff.After, names),
+            Segments = diff.Segments,
         };
     }
 

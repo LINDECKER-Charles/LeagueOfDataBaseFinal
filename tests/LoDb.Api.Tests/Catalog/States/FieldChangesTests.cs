@@ -9,7 +9,7 @@ namespace LoDb.Api.Tests.Catalog.States;
 /// <summary>
 /// A field the diff engine compared, as the API writes it, over the recorded catalogs: what a
 /// value or a subject designates by id is named in the page's language, by the catalog
-/// compared to when the page's lacks it; a text travels by its segments alone.
+/// compared to when the page's lacks it.
 /// </summary>
 [Collection(StateApiGroup.Name)]
 public sealed class FieldChangesTests(StateApiFixture api)
@@ -86,29 +86,6 @@ public sealed class FieldChangesTests(StateApiFixture api)
         Assert.Equal("Press the Attack", keystones.Before.Single().Label);
         Assert.Null(keystones.Subject?.Name);
         Assert.Equal("New", unknown.Subject?.Name);
-    }
-
-    [Fact]
-    public async Task TextTravelsByItsSegmentsAlone()
-    {
-        var names = new EntityNames(TrinityForce, await api.CatalogAsync("16.19.1", "en_US"), null);
-        TextSegment[] segments =
-        [
-            new() { Kind = SegmentKind.Same, Text = "Grants " },
-            new() { Kind = SegmentKind.Added, Text = "more" },
-        ];
-
-        var plaintext = FieldChanges.Of(
-            Diff(FieldKey.Of(ChangeField.Plaintext), ["Grants"], ["Grants more"]) with
-            {
-                Segments = segments,
-            },
-            names);
-
-        Assert.Equal((FieldKind.Text, ValueKind.Text), (plaintext.Kind, plaintext.ValueKind));
-        Assert.Empty(plaintext.Before);
-        Assert.Empty(plaintext.After);
-        Assert.Equal(segments, plaintext.Segments);
     }
 
     private static FieldDiff Diff(FieldKey key, string[] before, string[] after) => new()
