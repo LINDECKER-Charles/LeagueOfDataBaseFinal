@@ -1,17 +1,17 @@
+import { PATCH_CHANGES_PATH } from '../../app/core/routing/patch-changes-path';
 import { decodeSegment } from '../../app/core/routing/url/decode-segment';
 import { parsePublicUrl } from '../../app/core/routing/url/parse-public-url';
 import { isVersionShaped } from '../routing/is-version-shaped';
 
-// The page of what a patch changed, which has no page below it (VersionPages, in the API).
-const PATCH_PAGE = 'changes';
 // The four lists of a patch, the first segment of every entity page (CanonicalPath), and the
-// patch page: the first segment of every page the pass stores.
+// page of what a patch changed, which has no page below it: the first segment of every page
+// the pass stores.
 const PAGE_TYPES: ReadonlySet<string> = new Set([
   'champions',
   'items',
   'runes',
   'summoners',
-  PATCH_PAGE,
+  PATCH_CHANGES_PATH,
 ]);
 // A list, or a list and one entity: `/fr/15.13.1/items/1036-long-sword` at most.
 const MAX_PAGE_SEGMENTS = 2;
@@ -51,5 +51,5 @@ export function refusedPagePathOf(url: string): string | null {
 function isStoredPage(segments: readonly (string | null)[]): boolean {
   const isPage = segments.every((segment) => segment !== null && PAGE_SEGMENT.test(segment));
   const type = segments[0] as string;
-  return isPage && PAGE_TYPES.has(type) && (type !== PATCH_PAGE || segments.length === 1);
+  return isPage && PAGE_TYPES.has(type) && (type !== PATCH_CHANGES_PATH || segments.length === 1);
 }
