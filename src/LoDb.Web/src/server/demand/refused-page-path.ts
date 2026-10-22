@@ -26,9 +26,10 @@ const MAX_PATH_LENGTH = 160;
 /**
  * The page of an older patch a refused render asked for, as `/{locale}/{version}/{page}`, its
  * patch page (`changes`) included: decoded as the router reads it, without its query, its
- * fragment nor a trailing slash, so that every spelling of one page counts once. Null for anything else: a page of the latest
- * patch, the home, a URL outside the page grammar. The API still checks it against the
- * catalogue of its version: this only keeps junk from filling the table.
+ * fragment nor a trailing slash, so that every spelling of one page counts once. Null for
+ * anything else: a page of the latest patch, the home, a URL outside the page grammar. The API
+ * still checks it against the catalogue of its version: this only keeps junk from filling the
+ * table.
  */
 export function refusedPagePathOf(url: string): string | null {
   const { locale, version, page } = parsePublicUrl(url, isVersionShaped);
