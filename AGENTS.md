@@ -209,6 +209,7 @@ npm ci --prefix src/LoDb.Web
 npm --prefix src/LoDb.Web run lint           # puis typecheck, test, build:web, build:shell
 npm --prefix src/LoDb.Web run api:check      # le client généré suit le contrat
 docker compose -p lodb-dev -f compose.yaml -f compose.override.yaml up -d --build --wait
+bash tools/states/index-past-patches.sh      # stack neuve : indexe les patchs d'avant le dernier
 npm --prefix tests/LoDb.E2E test             # stack lodb-dev démarrée
 bash tools/routing/check-urls.sh             # grammaire d'URL de l'ADR 0005
 ```
