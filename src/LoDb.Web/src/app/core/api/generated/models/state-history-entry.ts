@@ -11,6 +11,11 @@ import { EntityChangeKind } from '../models/entity-change-kind';
  */
 export interface StateHistoryEntry {
   changedFields: Array<ChangedField>;
+
+  /**
+   * How the state began; baseline for an entity's first state at the start of the index's
+   * coverage, compared to nothing.
+   */
   kind: EntityChangeKind;
 
   /**

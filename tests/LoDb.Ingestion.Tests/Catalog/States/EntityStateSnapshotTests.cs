@@ -108,6 +108,19 @@ public sealed class EntityStateSnapshotTests
     }
 
     [Fact]
+    public void FirstStateAtTheCoverageStartComparesNothing()
+    {
+        var states = Snapshot.StatesOf(MoltenEdge);
+        var later = State(new IndexedEntity(ResourceType.Items, "6672"), "90.3.1", null);
+
+        Assert.Equal(EntityChangeKind.Baseline, Snapshot.KindOf(states[0]));
+        Assert.Equal(EntityChangeKind.Changed, Snapshot.KindOf(states[1]));
+        Assert.Equal(EntityChangeKind.Returned, Snapshot.KindOf(Snapshot.StatesOf(Garen)[1]));
+        Assert.Equal(EntityChangeKind.New, Snapshot.KindOf(later));
+        Assert.Equal(EntityChangeKind.New, states[0].Kind);
+    }
+
+    [Fact]
     public void PromotionReplacedTheNewestVersionPromotedBeforeItWhateverWasListedBetween()
     {
         var skipped = EntityStateSnapshot.Of(

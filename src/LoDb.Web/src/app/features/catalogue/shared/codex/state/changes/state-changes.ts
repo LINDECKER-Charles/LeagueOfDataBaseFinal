@@ -5,8 +5,8 @@ import { injectTranslate } from '../../texts/inject-translate';
 import type { SubjectNames } from '../labels/subject-names';
 import { changeRowsOf } from './change-rows-of';
 
-/** The block's heading for each way a state opens. */
-const TITLE_KEYS: Readonly<Record<EntityChanges['kind'], string>> = {
+/** The block's heading for each way a state opens; a baseline one has no block. */
+const TITLE_KEYS: Readonly<Record<Exclude<EntityChanges['kind'], 'baseline'>, string>> = {
   changed: 'detail.changes.title',
   new: 'detail.changes.new',
   returned: 'detail.changes.returned',
@@ -67,7 +67,10 @@ export class StateChanges {
   readonly names = input<SubjectNames>();
 
   private readonly translate = injectTranslate();
-  protected readonly title = computed(() => this.translate()(TITLE_KEYS[this.changes().kind]));
+  protected readonly title = computed(() => {
+    const kind = this.changes().kind;
+    return kind === 'baseline' ? '' : this.translate()(TITLE_KEYS[kind]);
+  });
   protected readonly compared = computed(() => {
     const version = this.changes().comparedVersion;
     return version === null ? null : this.translate()('detail.changes.compared', { version });

@@ -79,6 +79,15 @@ describe('stateHeadOf', () => {
     expect(head.description).toBe(`${summary} ${DESCRIPTION}`);
   });
 
+  it('names the run of patches of a state opened at the start of the index, no change told', () => {
+    const head = stateHeadOf(entryOf(stateOf('11.9.1', { kind: 'baseline' })), TEXTS, DESCRIPTION);
+
+    expect(head).toEqual({
+      description: DESCRIPTION,
+      titlePatches: { first: '11.5.1', last: '11.9.1' },
+    });
+  });
+
   it.each([
     ['the open state', entryOf(stateOf(null))],
     ['a state it did not open', entryOf(stateOf('11.9.1', { isOpener: false }))],

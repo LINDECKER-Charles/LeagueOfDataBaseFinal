@@ -63,7 +63,7 @@ internal static class DetailStates
             LastVersion = state.Last?.Value,
             IsOpen = state.IsOpen,
             IsOpener = standing.IsOpener,
-            Kind = state.Kind,
+            Kind = view.Snapshot.KindOf(state),
             ChangedFields = ChangedFieldList.Of(state.ChangedFields, names),
             OpenerLink = CanonicalLink.Of(view.OpenerLinkOf(state, entity.Path)),
             Canonical = CanonicalLink.Of(view.LinkOf(state, entity.Path)),
@@ -79,7 +79,7 @@ internal static class DetailStates
         {
             OpenerVersion = state.Opener.Value,
             LastVersion = state.Last?.Value,
-            Kind = state.Kind,
+            Kind = view.Snapshot.KindOf(state),
             ChangedFields = ChangedFieldList.Of(state.ChangedFields, null),
             Link = CanonicalLink.Of(view.LinkOf(state, entity.Path)),
         };

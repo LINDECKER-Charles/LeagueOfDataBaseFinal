@@ -9,5 +9,6 @@ import { EntityChangeKind } from './entity-change-kind';
 export const ENTITY_CHANGE_KIND: EntityChangeKind[] = [
   'new',
   'changed',
-  'returned'
+  'returned',
+  'baseline'
 ];

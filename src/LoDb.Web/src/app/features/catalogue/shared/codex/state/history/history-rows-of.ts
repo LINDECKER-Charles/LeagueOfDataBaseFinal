@@ -27,6 +27,8 @@ function kindOf(entry: StateHistoryEntry, translate: Translate): string | null {
       return translate('detail.history.new');
     case 'returned':
       return translate('detail.history.returned');
+    // A state opened at the start of the index was compared to nothing: no chip.
+    case 'baseline':
     case 'changed':
       return null;
   }

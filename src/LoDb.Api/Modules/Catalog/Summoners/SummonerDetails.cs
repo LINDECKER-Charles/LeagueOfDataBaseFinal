@@ -50,7 +50,7 @@ internal sealed record SummonerDetails
 
     /// <summary>
     /// What the page's state changed: on its opener, and on the short URL when the open state
-    /// opened at the latest version; null otherwise.
+    /// opened at the latest version; null otherwise, and for a state of kind baseline.
     /// </summary>
     public required EntityChanges? Changes { get; init; }
 

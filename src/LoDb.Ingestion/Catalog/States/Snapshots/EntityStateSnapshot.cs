@@ -1,5 +1,6 @@
 using System.Collections.Frozen;
 using LoDb.Domain.Catalog;
+using LoDb.Domain.States;
 using LoDb.Domain.Versions;
 
 namespace LoDb.Ingestion.Catalog.States.Snapshots;
@@ -101,6 +102,19 @@ public sealed class EntityStateSnapshot
         return version > end && states.Count > 0 && states[^1] is { IsOpen: true } open
             ? new StateLocation { Kind = StateLocationKind.Lagging, State = open }
             : StateLocation.Outside;
+    }
+
+    /// <summary>
+    /// How <paramref name="state"/> begins as its pages tell it: an entity's first state opened
+    /// at the coverage start is <see cref="EntityChangeKind.Baseline"/>, compared to nothing
+    /// (it may be older than the coverage); any other, the state's own kind.
+    /// </summary>
+    public EntityChangeKind KindOf(IndexedState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        return state.PreviousOpener is null && state.Opener == Coverage.Start
+            ? EntityChangeKind.Baseline
+            : state.Kind;
     }
 
     /// <summary>The entity's state after <paramref name="state"/>; null for its last one.</summary>

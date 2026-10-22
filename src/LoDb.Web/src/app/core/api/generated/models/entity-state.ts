@@ -26,6 +26,11 @@ export interface EntityState {
    * Whether the page's version is the opener.
    */
   isOpener: boolean;
+
+  /**
+   * How the state began; baseline for an entity's first state at the start of the index's
+   * coverage, compared to nothing.
+   */
   kind: EntityChangeKind;
 
   /**

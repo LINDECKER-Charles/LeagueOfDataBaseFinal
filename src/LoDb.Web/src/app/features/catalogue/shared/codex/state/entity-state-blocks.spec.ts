@@ -214,6 +214,23 @@ describe('EntityStateBlocks', () => {
     ]);
   });
 
+  // The coverage starts at 10.1.1: nothing before it was compared.
+  it('tells no change and no chip for a state opened at the start of the index', async () => {
+    const block = await render('10.1.1', {
+      state: { ...stateOf('10.1.1', '10.1.1', '10.1.1'), kind: 'baseline', changedFields: [] },
+      history: [{ ...FROZEN_HISTORY[1]!, kind: 'baseline' }],
+      next: { kind: 'changed', version: '11.5.1', link: at('11.5.1') },
+      changes: { kind: 'baseline', comparedVersion: null, fields: [] },
+    });
+
+    expect(Array.from(block.querySelectorAll('h2'), (title) => textOf(title))).toEqual(['History']);
+    expect(block.querySelector('.hx-chip-hex')).toBeNull();
+    expect(Array.from(block.querySelectorAll('ol li'), (row) => textOf(row))).toEqual([
+      'Changed in patch 11.5.1',
+      'Patch 10.1.1',
+    ]);
+  });
+
   it('says nothing of a page outside the index but where its entity is now', async () => {
     const block = await render('3.6.14', { presentInLatest: true });
 

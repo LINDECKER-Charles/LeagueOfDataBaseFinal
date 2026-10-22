@@ -94,6 +94,28 @@ public sealed class DetailStateTests : IDisposable
         Assert.Equal(0, changes.GetProperty("fields").GetArrayLength());
     }
 
+    // Teemo opens the coverage when it starts at 16.18.1: nothing before it was compared, so
+    // the page tells no change, nor that Teemo is new.
+    [Fact]
+    public async Task OpenerAtTheCoverageStartTellsNoChange()
+    {
+        api.Seed([Previous, Latest], [TestStates.Closed(Teemo, Previous, Previous)]);
+
+        var teemo = await api.GetJsonAsync("/api/catalog/16.18.1/en_US/champions/Teemo");
+
+        Assert.Equal("baseline", teemo.GetProperty("state").Text("kind"));
+        Assert.Equal(["baseline"], teemo.Pluck("history", "kind"));
+        Assert.True(teemo.IsNull("changes"));
+    }
+
+    [Fact]
+    public async Task HistoryTellsTheStatesOpenedAtTheCoverageStartAsBaseline()
+    {
+        var garen = await api.GetJsonAsync("/api/catalog/16.19.1/en_US/champions/Garen");
+
+        Assert.Equal(["changed", "baseline"], garen.Pluck("history", "kind"));
+    }
+
     // Unchanged since 16.18.1: the state names its fields in the page's language, links its
     // opener's versioned URL, and lists the history on the short URL, its open range unnamed.
     [Fact]

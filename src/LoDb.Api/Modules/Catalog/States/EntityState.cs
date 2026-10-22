@@ -23,6 +23,10 @@ internal sealed record EntityState
     /// <summary>Whether the page's version is the opener.</summary>
     public required bool IsOpener { get; init; }
 
+    /// <summary>
+    /// How the state began; baseline for an entity's first state at the start of the index's
+    /// coverage, compared to nothing.
+    /// </summary>
     public required EntityChangeKind Kind { get; init; }
 
     /// <summary>The fields the opener changed; none for a new entity.</summary>

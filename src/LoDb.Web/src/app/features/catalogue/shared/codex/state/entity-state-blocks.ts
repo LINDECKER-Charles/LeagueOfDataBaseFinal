@@ -27,7 +27,7 @@ import type { StatefulDetails } from './stateful-details';
         >
       </p>
     }
-    @if (details().changes; as changes) {
+    @if (shownChanges(); as changes) {
       <lodb-state-changes
         class="mb-14"
         [changes]="changes"
@@ -55,6 +55,12 @@ export class EntityStateBlocks {
   private readonly linkTo = injectStateLink();
   protected readonly names = computed(() => subjectNamesOf(this.details()));
   protected readonly latestLabel = computed(() => this.translate()('detail.history.latest'));
+  // A state opened at the start of the index was compared to nothing: the API sends no
+  // changes for it, and a page never shows them.
+  protected readonly shownChanges = computed(() => {
+    const changes = this.details().changes;
+    return changes?.kind === 'baseline' ? null : changes;
+  });
 
   // The entity at the latest patch: the open state's canonical path, or the page's own, the
   // id deciding (a renamed entity answers its slug's 301 there).

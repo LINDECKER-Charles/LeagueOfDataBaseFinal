@@ -20,5 +20,9 @@ export interface EntityChanges {
    * The fields changed; none for a new entity.
    */
   fields: Array<FieldChange>;
+
+  /**
+   * How the state began: never baseline, which has no changes to tell.
+   */
   kind: EntityChangeKind;
 }

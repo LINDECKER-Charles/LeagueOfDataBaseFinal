@@ -9222,7 +9222,7 @@
                 "type": "null"
               },
               {
-                "description": "What the page's state changed: on its opener, and on the short URL when the open state\nopened at the latest version; null otherwise.",
+                "description": "What the page's state changed: on its opener, and on the short URL when the open state\nopened at the latest version; null otherwise, and for a state of kind baseline.",
                 "$ref": "#/components/schemas/EntityChanges"
               }
             ]
@@ -10247,10 +10247,11 @@
         "enum": [
           "new",
           "changed",
-          "returned"
+          "returned",
+          "baseline"
         ],
         "type": "string",
-        "description": "How a state of an entity begins, as its opener shows it (« Nouveau dans ce patch »,\n« Ce qui a changé dans ce patch », « De retour »)."
+        "description": "How a state of an entity begins, as its opener shows it (« Nouveau dans ce patch »,\n« Ce qui a changé dans ce patch », « De retour », nothing at the start of the coverage)."
       },
       "EntityChanges": {
         "required": [
@@ -10261,6 +10262,7 @@
         "type": "object",
         "properties": {
           "kind": {
+            "description": "How the state began: never baseline, which has no changes to tell.",
             "$ref": "#/components/schemas/EntityChangeKind"
           },
           "comparedVersion": {
@@ -10348,6 +10350,7 @@
             "description": "Whether the page's version is the opener."
           },
           "kind": {
+            "description": "How the state began; baseline for an entity's first state at the start of the index's\ncoverage, compared to nothing.",
             "$ref": "#/components/schemas/EntityChangeKind"
           },
           "changedFields": {
@@ -11066,7 +11069,7 @@
                 "type": "null"
               },
               {
-                "description": "What the page's state changed: on its opener, and on the short URL when the open state\nopened at the latest version; null otherwise.",
+                "description": "What the page's state changed: on its opener, and on the short URL when the open state\nopened at the latest version; null otherwise, and for a state of kind baseline.",
                 "$ref": "#/components/schemas/EntityChanges"
               }
             ]
@@ -14927,7 +14930,7 @@
                 "type": "null"
               },
               {
-                "description": "What the page's state changed: on its opener, and on the short URL when the open state\nopened at the latest version; null otherwise.",
+                "description": "What the page's state changed: on its opener, and on the short URL when the open state\nopened at the latest version; null otherwise, and for a state of kind baseline.",
                 "$ref": "#/components/schemas/EntityChanges"
               }
             ]
@@ -15581,6 +15584,7 @@
             "description": "The last version of a closed state; null while open (« depuis le patch X »)."
           },
           "kind": {
+            "description": "How the state began; baseline for an entity's first state at the start of the index's\ncoverage, compared to nothing.",
             "$ref": "#/components/schemas/EntityChangeKind"
           },
           "changedFields": {
@@ -16046,7 +16050,7 @@
                 "type": "null"
               },
               {
-                "description": "What the page's state changed: on its opener, and on the short URL when the open state\nopened at the latest version; null otherwise.",
+                "description": "What the page's state changed: on its opener, and on the short URL when the open state\nopened at the latest version; null otherwise, and for a state of kind baseline.",
                 "$ref": "#/components/schemas/EntityChanges"
               }
             ]

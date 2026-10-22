@@ -16,6 +16,10 @@ internal sealed record StateHistoryEntry
     /// </summary>
     public required string? LastVersion { get; init; }
 
+    /// <summary>
+    /// How the state began; baseline for an entity's first state at the start of the index's
+    /// coverage, compared to nothing.
+    /// </summary>
     public required EntityChangeKind Kind { get; init; }
 
     public required IReadOnlyList<ChangedField> ChangedFields { get; init; }

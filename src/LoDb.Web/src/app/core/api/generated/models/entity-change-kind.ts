@@ -4,7 +4,7 @@
 
 /**
  * How a state of an entity begins, as its opener shows it (« Nouveau dans ce patch »,
- * « Ce qui a changé dans ce patch », « De retour »).
+ * « Ce qui a changé dans ce patch », « De retour », nothing at the start of the coverage).
  */
-export type EntityChangeKind = 'new' | 'changed' | 'returned';
+export type EntityChangeKind = 'new' | 'changed' | 'returned' | 'baseline';
 

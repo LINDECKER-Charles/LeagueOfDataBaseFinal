@@ -8,6 +8,7 @@ namespace LoDb.Api.Modules.Catalog.States;
 /// </summary>
 internal sealed record EntityChanges
 {
+    /// <summary>How the state began: never baseline, which has no changes to tell.</summary>
     public required EntityChangeKind Kind { get; init; }
 
     /// <summary>

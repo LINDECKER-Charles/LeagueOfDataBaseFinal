@@ -11,7 +11,8 @@ const MAX_LABELS = 3;
  * What the patch of a state's opener did to the entity, opening its description: the first
  * fields it changed ("Changed in patch 11.5.1: Health, Armor, Q cooldown…"), or that the
  * entity is new or back. Its blocks, the history and the patch's page name the same fields.
- * Null for a page that opens no state, or a change without a field to name.
+ * Null for a page that opens no state, a state opened at the start of the index (compared to
+ * nothing), or a change without a field to name.
  */
 export function changeSummaryOf(
   entry: CatalogueEntry<StatefulDetails>,
@@ -19,7 +20,7 @@ export function changeSummaryOf(
 ): string | null {
   const { context, details } = entry;
   const state = details.state;
-  if (state === null || !state.isOpener) {
+  if (state === null || !state.isOpener || state.kind === 'baseline') {
     return null;
   }
   const version = state.openerVersion;

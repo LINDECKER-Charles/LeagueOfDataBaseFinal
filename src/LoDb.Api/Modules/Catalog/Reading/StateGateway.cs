@@ -1,6 +1,7 @@
 using LoDb.Api.Modules.Catalog.Http;
 using LoDb.Api.Modules.Catalog.States.Details;
 using LoDb.Domain.Languages;
+using LoDb.Domain.States;
 using LoDb.Domain.Versions;
 using LoDb.Ingestion.Catalog;
 using LoDb.Ingestion.Catalog.Reading;
@@ -29,7 +30,8 @@ namespace LoDb.Api.Modules.Catalog.Reading;
 /// acceptable for the latest version; a pinned opener never does: it answers 503 and is never
 /// stored without its block. Where Data Dragon did not ship the page's language yet at that
 /// version, that catalog holds en_US: the block then compares only what reads the same in
-/// every language (<see cref="ComparedProjection"/>).
+/// every language (<see cref="ComparedProjection"/>). An entity's first state at the start of
+/// the coverage was compared to nothing and has no changes to tell.
 /// </para>
 /// </remarks>
 internal sealed partial class StateGateway(
@@ -109,6 +111,11 @@ internal sealed partial class StateGateway(
         CancellationToken cancellationToken)
     {
         var held = opener.Standing.State!;
+        if (opener.View.Snapshot.KindOf(held) == EntityChangeKind.Baseline)
+        {
+            return StateRead.Read(state);
+        }
+
         if (opener.View.PreviousOf(held) is not { Last: { } compared })
         {
             return StateRead.Read(state with { Changes = StateChanges.Uncompared(held) });
