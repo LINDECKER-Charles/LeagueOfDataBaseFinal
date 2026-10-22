@@ -31,11 +31,19 @@ public sealed class SeoApiFixture(PostgresContainerFixture postgres) : IAsyncLif
     private ApiFactory? _factory;
     private HttpClient? _client;
     private IServiceProvider? _services;
+    private IReadOnlyList<FakeIndexNow.Submission>? _promotion;
 
     public static CancellationToken Token => TestContext.Current.CancellationToken;
 
-    /// <summary>What the IndexNow endpoint received.</summary>
+    /// <summary>What the IndexNow endpoint received, the submissions of tests included.</summary>
     public FakeIndexNow IndexNow { get; } = new();
+
+    /// <summary>
+    /// What the promotion of 16.19.1 submitted, read before any test submits more: the tests of
+    /// the collection run in any order.
+    /// </summary>
+    public IReadOnlyList<FakeIndexNow.Submission> PromotionSubmissions =>
+        _promotion ?? throw new InvalidOperationException("The fixture is not initialized.");
 
     /// <summary>
     /// The index of states the API reads, set before the promotion: a test may make it
@@ -75,6 +83,7 @@ public sealed class SeoApiFixture(PostgresContainerFixture postgres) : IAsyncLif
             }));
         _services = host.Services;
         await IngestAsync(host.Services);
+        _promotion = IndexNow.Submissions;
 
         // The redirects are what the tests check: never follow them.
         _client = host.CreateClient(new WebApplicationFactoryClientOptions

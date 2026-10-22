@@ -31,7 +31,7 @@ public sealed class IndexNowApiTests(SeoApiFixture api)
     [Fact]
     public void PromotionSubmitsThePagesOfThePatchInEveryLocale()
     {
-        var submissions = api.IndexNow.Submissions;
+        var submissions = api.PromotionSubmissions;
 
         Assert.NotEmpty(submissions);
         Assert.All(submissions, static submission =>
@@ -58,7 +58,7 @@ public sealed class IndexNowApiTests(SeoApiFixture api)
     [Fact]
     public void PromotionSubmitsThePagesOfChangesAndTheClosedOpenersLast()
     {
-        var urls = UrlsOf(api.IndexNow.Submissions);
+        var urls = UrlsOf(api.PromotionSubmissions);
         var trinity = $"{Origin}/fr/{SeoStates.Previous}/items/3078-trinity-force";
 
         Assert.Contains($"{Origin}/fr/changes", urls);
@@ -78,7 +78,8 @@ public sealed class IndexNowApiTests(SeoApiFixture api)
     [Fact]
     public async Task WithoutKeyThePromotionLogsWhatItWouldSubmit()
     {
-        var promotion = api.IndexNow.Submissions;
+        var promotion = api.PromotionSubmissions;
+        var sent = api.IndexNow.Submissions.Count;
         var logger = new FakeLogger<IndexNowSubmitter>();
         var submitter = SubmitterOf(new SeoOptions { CanonicalOrigin = Origin }, logger);
 
@@ -90,7 +91,7 @@ public sealed class IndexNowApiTests(SeoApiFixture api)
         Assert.Equal(Text(promotion.Count), line.GetStructuredStateValue("Requests"));
         Assert.Equal(Text(2 * UiLocales.All.Count), line.GetStructuredStateValue("PatchPages"));
         Assert.Equal(Text(UiLocales.All.Count), line.GetStructuredStateValue("Openers"));
-        Assert.Equal(promotion.Count, api.IndexNow.Submissions.Count);
+        Assert.Equal(sent, api.IndexNow.Submissions.Count);
     }
 
     [Fact]
