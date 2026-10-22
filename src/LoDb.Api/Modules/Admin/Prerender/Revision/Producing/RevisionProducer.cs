@@ -29,7 +29,8 @@ namespace LoDb.Api.Modules.Admin.Prerender.Revision.Producing;
 /// <para>
 /// A generation the watermark does not name (the first run, a rebuild of the index) is
 /// history: its closures are what the passes render, never enqueued, but for those after the
-/// version the last promotion replaced, which that promotion made on the generation itself.
+/// version the last promotion replaced, which that promotion made on the generation itself, or
+/// which a rebuild that walked past an index left behind the promotions dated after its build.
 /// A copy of the index older than the watermark's generation (a rebuild another process read
 /// first) moves nothing.
 /// </para>
@@ -78,8 +79,8 @@ internal sealed class RevisionProducer(
             return 0;
         }
 
-        var since = SinceOf(mark, snapshot, leaving);
-        var closed = snapshot.States.Where(state => state.ClosedAt > since).ToList();
+        var due = DueOf(mark, snapshot, leaving);
+        var closed = snapshot.States.Where(due.Includes).ToList();
         var enqueue = new RevisionEnqueue
         {
             Pages = ClosedStatePages.Of(closed, snapshot.Coverage),
@@ -88,16 +89,17 @@ internal sealed class RevisionProducer(
             DueAt = clock.GetUtcNow() + catalog.SettlingDelay,
         };
         var rows = await RevisionRows.EnqueueAsync(db, enqueue, cancellationToken);
-        var through = closed.Select(static state => state.ClosedAt).Append(since).Max()!.Value;
+        var through = closed.Select(static state => state.ClosedAt).Append(due.Since).Max()!.Value;
         await RevisionMark.MoveAsync(db, MarkOf(snapshot, through), cancellationToken);
         await transaction.CommitAsync(cancellationToken);
-        Report(new Produced(enqueue, closed.Count, since, snapshot.Generation!.Id, rows));
+        Report(new Produced(enqueue, closed.Count, due.Since, snapshot.Generation!.Id, rows));
         return rows;
     }
 
-    // Where the closures to enqueue start: the watermark of its generation; for another one,
-    // what that generation closed before the last promotion, or when it was built.
-    private DateTimeOffset SinceOf(
+    // The closures to enqueue: past the watermark of its generation; for another one, past
+    // what that generation closed before the last promotion, or when it was built, and those
+    // of the last promotion dated after the build.
+    private DueClosures DueOf(
         PrerenderRevisionWatermark mark,
         EntityStateSnapshot snapshot,
         PatchVersion? leaving)
@@ -105,7 +107,7 @@ internal sealed class RevisionProducer(
         var generation = snapshot.Generation!;
         if (mark.GenerationId == generation.Id)
         {
-            return mark.ClosedThrough;
+            return new DueClosures(mark.ClosedThrough, null);
         }
 
         var history = snapshot.States
@@ -114,7 +116,8 @@ internal sealed class RevisionProducer(
             .Append(generation.BuiltAt)
             .Max()!.Value;
         RevisionLog.NewGeneration(logger, generation.Id, history);
-        return history;
+        var lastPromotion = leaving is null ? null : new LastPromotion(leaving, generation.BuiltAt);
+        return new DueClosures(history, lastPromotion);
     }
 
     // The served epoch, and the one the active pass writes when it is another.
@@ -161,6 +164,20 @@ internal sealed class RevisionProducer(
             epochs,
             run.Enqueue.DueAt);
     }
+
+    // The closures past Since, and those of the last promotion closed after the build of a
+    // generation the watermark does not name: a rebuild that walked past an index left behind
+    // the promotions dates them alike with the earlier ones it walked.
+    private sealed record DueClosures(DateTimeOffset Since, LastPromotion? LastPromotion)
+    {
+        public bool Includes(IndexedState state) =>
+            state.ClosedAt > Since
+            || (LastPromotion is { } promotion && state.Last is { } last
+                && last >= promotion.Leaving && state.ClosedAt > promotion.BuiltAt);
+    }
+
+    // The version the last promotion replaced, and when the generation was built.
+    private sealed record LastPromotion(PatchVersion Leaving, DateTimeOffset BuiltAt);
 
     // What one run wrote, for its line and its metric.
     private sealed record Produced(

@@ -872,7 +872,10 @@ stockage objet, puis lues par nginx
   sur cet index, leurs pages garderaient pour de bon l'état ouvert. `prerender.reconcile` les
   ajoute une fois l'index rattrapé. Une génération neuve de l'index (reconstruction) est de
   l'historique : ses clôtures ne sont pas mises en file (`prerender.revision.generation`),
-  seules celles de la dernière promotion le sont.
+  seules celles de la dernière promotion le sont. Une reconstruction qui passe la fin d'un
+  index resté en retard date ce qu'elle y clôt après son `built_at` (les dates de l'ancienne
+  génération sont gardées pour le reste) : sans quoi ces clôtures, datées comme l'historique,
+  ne seraient jamais recalculées.
 - **Ordre des pages d'une version figé** (`VersionPages.Of`) : les quatre listes, puis la page
   de patch (`changes`, toujours listée : une version sans page de patch répond 404, comptée
   `skipped`), puis les entités. Une passe reprend à son curseur dans cet ordre : un

@@ -141,6 +141,36 @@ public sealed class RevisionProducerTests(PostgresContainerFixture postgres)
         Assert.Equal(2L, (await rig.WatermarkAsync())!.GenerationId);
     }
 
+    // The index lagged behind two promotions, then a rebuild walked past both: it dates their
+    // closures alike, after its build. Those of the last promotion are enqueued all the same.
+    [Fact]
+    public async Task RebuildPastALaggingIndexEnqueuesWhatTheLastPromotionClosed()
+    {
+        await using var rig = await RevisionRig.StartAsync(postgres);
+        await rig.SettleAsync();
+        var walkedAt = RevisionRig.BuiltAt.AddSeconds(1);
+        var earlier = RevisionRig.Closed(
+            "16.8.1",
+            "16.9.1",
+            walkedAt,
+            new IndexedEntity(ResourceType.Items, "3078"));
+        var last = RevisionRig.Closed(
+            "16.9.1",
+            "16.10.1",
+            walkedAt,
+            new IndexedEntity(ResourceType.Items, "3001"));
+        rig.Index(2, earlier, last);
+
+        await rig.ProduceAsync();
+
+        var rows = await rig.RowsAsync();
+        Assert.All(rows, static row => Assert.EndsWith(
+            "/items/3001-long-sword",
+            row.Path,
+            StringComparison.Ordinal));
+        Assert.Equal(2 * UiLocales.All.Count, rows.Count);
+    }
+
     [Fact]
     public async Task FirstRunTakesTheGenerationAsHistory()
     {

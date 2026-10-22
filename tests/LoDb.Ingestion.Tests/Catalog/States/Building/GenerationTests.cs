@@ -79,6 +79,33 @@ public sealed class GenerationTests(PostgresContainerFixture postgres)
         Assert.True(promoted[0] > built.BuiltAt);
     }
 
+    // The promotions of 90.4.1 and 90.5.1 left the index behind at 90.3.1, then a rebuild
+    // walked past it: what it closed there (Boots, retired at 90.4.1) is dated after its build,
+    // as the extensions would have; the earlier closures keep their dates.
+    [Fact]
+    public async Task RebuildDatesWhatItClosesPastALaggingEndAfterItsBuild()
+    {
+        await using var index = await StateIndexHarness.CreateAsync(postgres, Versions);
+        await StoreHistoryAsync(index);
+        await index.PromoteAsync("90.3.1");
+        await index.BuildAsync();
+        var lagging = (await index.GenerationsAsync()).Single();
+        await index.PromoteAsync("90.4.1");
+        await index.PromoteAsync("90.5.1");
+
+        await index.RebuildAsync();
+
+        var rebuilt = (await index.GenerationsAsync()).Single();
+        var closed = (await index.StatesAsync()).Where(static state => state.ClosedAt is not null)
+            .ToList();
+        Assert.All(
+            closed.Where(static state => state.LastVersion != "90.3.1"),
+            state => Assert.Equal(lagging.BuiltAt, state.ClosedAt));
+        var boots = Assert.Single(closed, static state => state.LastVersion == "90.3.1");
+        Assert.Equal(Boots, boots.EntityKey);
+        Assert.True(boots.ClosedAt > rebuilt.BuiltAt);
+    }
+
     [Fact]
     public async Task BuildDoesNothingOnceTheIndexCoversTheLatestVersion()
     {

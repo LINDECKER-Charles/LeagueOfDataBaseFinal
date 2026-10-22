@@ -965,8 +965,10 @@ lui. Elles l'emportent sur les sections citées ; les ADR en reprennent l'essent
 - **Marque** : sur une génération que la marque ne nomme pas (premier passage,
   reconstruction), le producteur part du plus tardif de `built_at` et du dernier `closed_at`
   des états clos avant la version qui part : il ne met en file que les clôtures de la dernière
-  promotion (`prerender.revision.generation`). Une copie de l'index plus ancienne que la
-  génération de la marque ne fait rien. Une ligne déjà en file pour la même page et la même
+  promotion (`prerender.revision.generation`). Une reconstruction qui passe la fin d'un index
+  resté en retard sur les promotions date ce qu'elle y clôt après son `built_at`, comme les
+  extensions qu'elle remplace : les clôtures de la dernière promotion sont mises en file quand
+  même. Une copie de l'index plus ancienne que la génération de la marque ne fait rien. Une ligne déjà en file pour la même page et la même
   epoch repasse en attente.
 - **Epochs** : l'epoch servie et celle de la passe active ; une epoch remplie par une passe
   terminée, ni servie ni écrite, ne reçoit pas les clôtures d'ici sa bascule.

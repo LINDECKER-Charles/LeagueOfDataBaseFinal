@@ -33,6 +33,9 @@ internal sealed class StateIndexUpdater(
     private static readonly TimeSpan BuildLockWait = TimeSpan.FromMinutes(1);
     private static readonly TimeSpan LockWait = TimeSpan.FromSeconds(5);
 
+    // The finest step Postgres keeps of a date.
+    private static readonly TimeSpan DateStep = TimeSpan.FromMicroseconds(1);
+
     public async Task<StateIndexReport> UpdateAsync(
         StateIndexRequest request,
         CancellationToken cancellationToken)
@@ -210,7 +213,8 @@ internal sealed class StateIndexUpdater(
         return resumed;
     }
 
-    // A rebuild dates the states the current generation closed alike as it did.
+    // A rebuild dates the states the current generation closed alike as it did, and those it
+    // closes past that generation's end, behind the promotions, after its own date.
     private async Task<ClosingDates> ClosingAsync(
         CatalogStateGeneration? current,
         DateTimeOffset rebuiltAt,
@@ -222,11 +226,19 @@ internal sealed class StateIndexUpdater(
         }
 
         var states = await store.StatesAsync(current.Id, cancellationToken).ConfigureAwait(false);
-        return ClosingDates.Keeping(
+        var dates = ClosingDates.Keeping(
             states.Where(static state => state.Last is not null)
                 .Select(static state => (ClosedOf(state), state.ClosedAt!.Value)),
             rebuiltAt);
+        var walkedAt = StrictlyAfter(timeProvider.GetUtcNow(), rebuiltAt);
+        return current.LastVersion is { } end
+            ? dates.After(PatchVersion.Parse(end), walkedAt)
+            : dates;
     }
+
+    // Strictly after the rebuild's date, as stored, even on a clock that has not moved since.
+    private static DateTimeOffset StrictlyAfter(DateTimeOffset moment, DateTimeOffset rebuiltAt) =>
+        moment > rebuiltAt ? moment : rebuiltAt + DateStep;
 
     private async Task<GenerationCursor?> ExtendAsync(
         UpdatePlan plan,

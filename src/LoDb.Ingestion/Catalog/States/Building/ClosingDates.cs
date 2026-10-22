@@ -1,4 +1,5 @@
 using LoDb.Domain.Catalog;
+using LoDb.Domain.Versions;
 
 namespace LoDb.Ingestion.Catalog.States.Building;
 
@@ -9,19 +10,25 @@ namespace LoDb.Ingestion.Catalog.States.Building;
 /// </summary>
 /// <remarks>
 /// A rebuild keeps the date of a state whose resource, key, opener, last version and
-/// fingerprint are unchanged: the sitemaps then announce no page that did not change.
+/// fingerprint are unchanged: the sitemaps then announce no page that did not change. One that
+/// walks past the end of the previous generation, left behind the promotions, dates what it
+/// closes there as the extensions it stands in for would have: after the rebuild's own date,
+/// which the queue of the closed states takes for the end of the history.
 /// </remarks>
 internal sealed class ClosingDates
 {
     private readonly IReadOnlyDictionary<Identity, DateTimeOffset> kept;
     private readonly DateTimeOffset otherwise;
+    private readonly PastEnd? pastEnd;
 
     private ClosingDates(
         IReadOnlyDictionary<Identity, DateTimeOffset> kept,
-        DateTimeOffset otherwise)
+        DateTimeOffset otherwise,
+        PastEnd? pastEnd = null)
     {
         this.kept = kept;
         this.otherwise = otherwise;
+        this.pastEnd = pastEnd;
     }
 
     /// <summary>Every state closed at <paramref name="moment"/>.</summary>
@@ -46,10 +53,22 @@ internal sealed class ClosingDates
         return new ClosingDates(dates, rebuiltAt);
     }
 
+    /// <summary>
+    /// The same dates, but <paramref name="moment"/> for a state closed at or after
+    /// <paramref name="end"/>, the previous generation's last version, that it did not close.
+    /// </summary>
+    public ClosingDates After(PatchVersion end, DateTimeOffset moment) =>
+        new(kept, otherwise, new PastEnd(end, moment));
+
     public DateTimeOffset Of(ClosedState state)
     {
         ArgumentNullException.ThrowIfNull(state);
-        return kept.TryGetValue(IdentityOf(state), out var closedAt) ? closedAt : otherwise;
+        if (kept.TryGetValue(IdentityOf(state), out var closedAt))
+        {
+            return closedAt;
+        }
+
+        return pastEnd is { } past && state.Last >= past.End ? past.Moment : otherwise;
     }
 
     private static Identity IdentityOf(ClosedState state) => new(
@@ -58,6 +77,8 @@ internal sealed class ClosingDates
         state.Opener.Value,
         state.Last.Value,
         state.Fingerprint);
+
+    private sealed record PastEnd(PatchVersion End, DateTimeOffset Moment);
 
     private sealed record Identity(
         ResourceType Resource,
