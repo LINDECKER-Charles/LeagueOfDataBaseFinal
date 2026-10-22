@@ -25,7 +25,7 @@ export interface LaunchDraft {
    * Whether only the patch page and the openers of the index are rendered, the pages that may
    * be indexed, before a pass over every page.
    */
-  readonly openersFirst: boolean;
+  readonly isOpenersFirst: boolean;
   readonly fromPass: number | null;
   /**
    * Whether the ticks are read from the coverage yet: 'all', 'incomplete' and the lists wait
@@ -84,7 +84,7 @@ export function draftOf(
     epoch,
     epochKind: kindOf(report, epoch),
     skipComplete: preset.skipComplete,
-    openersFirst: preset.pages === OPENERS_PAGES,
+    isOpenersFirst: preset.pages === OPENERS_PAGES,
     fromPass: preset.fromPass,
     isResolved: patches !== null,
     isPriorityCapped: false,

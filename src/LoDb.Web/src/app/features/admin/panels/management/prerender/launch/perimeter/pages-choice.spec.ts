@@ -2,10 +2,10 @@ import { TestBed } from '@angular/core/testing';
 import { configureAdminTestBed } from '../../../../../testing/admin-test-bed';
 import { PagesChoice } from './pages-choice';
 
-function render(openersFirst: boolean) {
+function render(isOpenersFirst: boolean) {
   configureAdminTestBed();
   const fixture = TestBed.createComponent(PagesChoice);
-  fixture.componentRef.setInput('openersFirst', openersFirst);
+  fixture.componentRef.setInput('isOpenersFirst', isOpenersFirst);
   fixture.detectChanges();
   const changes: boolean[] = [];
   fixture.componentInstance.changed.subscribe((value) => changes.push(value));

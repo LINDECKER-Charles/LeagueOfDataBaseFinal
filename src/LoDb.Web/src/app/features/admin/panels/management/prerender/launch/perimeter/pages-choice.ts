@@ -27,7 +27,7 @@ import { AdminTextPipe } from '../../../../../shared/admin-text-pipe';
                 type="radio"
                 name="launch-pages"
                 class="size-4 shrink-0 accent-hex scheme-dark"
-                [checked]="choice.isOpeners === openersFirst()"
+                [checked]="choice.isOpeners === isOpenersFirst()"
                 (change)="changed.emit(choice.isOpeners)"
               />
               {{ 'admin.prerender.launcher.pages.' + choice.key + '_title' | adminText }}
@@ -38,7 +38,7 @@ import { AdminTextPipe } from '../../../../../shared/admin-text-pipe';
           </label>
         }
       </div>
-      @if (openersFirst()) {
+      @if (isOpenersFirst()) {
         <p class="mt-2 text-[0.85rem] text-gold" data-pages-openers>
           {{ 'admin.prerender.launcher.pages.openers_note' | adminText }}
         </p>
@@ -49,7 +49,7 @@ import { AdminTextPipe } from '../../../../../shared/admin-text-pipe';
 })
 export class PagesChoice {
   /** Whether the openers are rendered alone, before a pass over every page. */
-  readonly openersFirst = input.required<boolean>();
+  readonly isOpenersFirst = input.required<boolean>();
   /** The choice once the operator picks a card. */
   readonly changed = output<boolean>();
 

@@ -27,7 +27,7 @@ export function requestOfDraft(draft: LaunchDraft, patches: PrerenderPatchesRepo
     versions: ticked.length === versions.length ? null : ticked,
     locales: restricted(draft.locales, LOCALES),
     pageTypes: restricted(draft.pageTypes, RESOURCE_TYPE),
-    pages: draft.openersFirst ? OPENERS_PAGES : null,
+    pages: draft.isOpenersFirst ? OPENERS_PAGES : null,
     priority: priority.length > 0 ? [...priority] : null,
     skipComplete: draft.skipComplete && draft.epochKind !== 'new',
   };

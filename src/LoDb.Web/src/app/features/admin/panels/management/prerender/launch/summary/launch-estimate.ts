@@ -91,7 +91,7 @@ function addedShare(
 // The pages a unit of the patch lists: every page, measured or guessed; for an openers pass,
 // its openers in the index, none for a patch the index does not cover.
 function perUnitOf(draft: LaunchDraft, row: PrerenderPatchRow, report: PrerenderPatchesReport) {
-  return draft.openersFirst
+  return draft.isOpenersFirst
     ? (row.indexed?.openers ?? 0)
     : pagesPerLocaleOf(row.version, report.patches).pages;
 }

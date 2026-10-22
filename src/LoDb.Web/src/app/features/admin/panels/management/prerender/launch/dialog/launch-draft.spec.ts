@@ -30,11 +30,11 @@ describe('draftOf', () => {
     expect(draft.pageTypes).toEqual(['champions', 'items', 'runes', 'summoners']);
     expect(draft).toMatchObject({ epoch: 2, epochKind: 'served', skipComplete: true });
     expect(draft).toMatchObject({ isResolved: true, origin: 'header', fromPass: null });
-    expect(draft.openersFirst).toBe(false);
+    expect(draft.isOpenersFirst).toBe(false);
   });
 
   it('opens on the openers alone when the preset rendered them so', () => {
-    expect(draftOf({ ...HEADER, pages: 'openers' }, REPORT, PATCHES).openersFirst).toBe(true);
+    expect(draftOf({ ...HEADER, pages: 'openers' }, REPORT, PATCHES).isOpenersFirst).toBe(true);
   });
 
   it('waits for the coverage before ticking anything', () => {

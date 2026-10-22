@@ -15,7 +15,7 @@ function draft(changes: Partial<LaunchDraft> = {}, ticked = ['16.19.1', '16.18.1
     epoch: 2,
     epochKind: 'served',
     skipComplete: true,
-    openersFirst: false,
+    isOpenersFirst: false,
     fromPass: null,
     isResolved: true,
     isPriorityCapped: false,
@@ -37,7 +37,7 @@ describe('requestOfDraft', () => {
   });
 
   it('asks for the openers alone when they go first', () => {
-    expect(requestOfDraft(draft({ openersFirst: true }), PATCHES).pages).toBe('openers');
+    expect(requestOfDraft(draft({ isOpenersFirst: true }), PATCHES).pages).toBe('openers');
   });
 
   it('lists the versions newest first when some only are ticked', () => {

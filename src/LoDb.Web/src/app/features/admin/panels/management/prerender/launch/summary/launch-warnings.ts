@@ -50,10 +50,10 @@ const RULES: readonly Rule[] = [
   (draft, _, report) =>
     draft.pageTypes.length < RESOURCE_TYPE.length &&
     report.enqueuesPromotions &&
-    !draft.openersFirst
+    !draft.isOpenersFirst
       ? gold('types')
       : null,
-  (draft) => (draft.openersFirst ? gold('openers') : null),
+  (draft) => (draft.isOpenersFirst ? gold('openers') : null),
   (draft) => (draft.epochKind === 'served' ? null : gold('new_epoch', { epoch: draft.epoch })),
   (draft, _, report) => {
     const standby = report.storage.epochs.find((volume) => volume.state === STANDBY);
