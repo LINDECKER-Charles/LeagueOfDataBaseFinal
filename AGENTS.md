@@ -4,11 +4,33 @@ Encyclopédie League of Legends (champions, objets, runes, sorts d'invocateur) p
 version et chaque langue de **Data Dragon**, plus CommunityDragon pour les chromas. Un seul
 front sert le web, le desktop et Android. Ce fichier fixe l'architecture, les règles de code
 et les conventions du dépôt ; il complète les préférences globales de l'agent sans les
-redire.
+redire. Claude Code le lit par `CLAUDE.md`, qui ne fait que l'importer : ne pas le supprimer.
 
-L'ancienne version (Symfony + Go + Vue) est **archivée sous `legacy/`** ; ses règles sont
-dans [`legacy/AGENTS.md`](legacy/AGENTS.md). On n'y touche pas, sauf correctif exigé par la
-prod avant la bascule ([runbook](docs/reecriture/bascule.md)).
+La prod tourne sur cette stack depuis la **bascule du 2026-10-04**. L'ancienne version
+(Symfony + Go + Vue) est **archivée sous `legacy/`**, ses règles dans
+[`legacy/AGENTS.md`](legacy/AGENTS.md) : on n'y touche pas. Elle part à la décommission, après
+le *contract* ([runbook](docs/reecriture/bascule.md), état en tête).
+
+## Cap et sources qui font foi
+
+**Cap** : maximiser le trafic organique, donc un site correctement indexé. LoDb est une base
+de données : chaque contenu distinct (chaque état d'une entité, chaque patch) doit être
+trouvable et avoir une page indexée, une seule. Entre deux options, celle qui sert
+l'indexation et le trafic l'emporte ; on pose la règle propre plutôt qu'attendre une
+fenêtre de mesure. Règle SEO en vigueur et cible :
+[`seo-indexabilite.md`](docs/produit/seo-indexabilite.md).
+
+| Sujet | Fait foi | Historique, ne s'applique plus tel quel |
+|---|---|---|
+| Règles de code, invariants, commits | ce fichier | `legacy/AGENTS.md` (ancienne stack) |
+| Décisions | ADR [`docs/reecriture/adr/`](docs/reecriture/adr/) et leurs amendements datés : le plus récent l'emporte, l'état d'un amendement est en tête de l'ADR | plans, lots et rapports de `docs/reecriture/` (construction de septembre 2026) |
+| Vue d'ensemble | [`architecture.md`](docs/architecture/architecture.md) | le schéma de `docs/reecriture/README.md` |
+| Comportements voulus | [`pieges.md`](docs/architecture/pieges.md) | — |
+| Exploitation | `docs/guides/` | `legacy/docs/` |
+| Bascule, retour arrière, *contract* | [`bascule.md`](docs/reecriture/bascule.md) | — |
+
+Une décision qui change s'écrit en amendement daté de son ADR, et les documents qui la
+citent se mettent à jour dans le même commit.
 
 ## Changelog : une entrée par changement visible
 
@@ -21,10 +43,13 @@ contexte technique sous `## Technique`.
 - ✅ feature, bug visible, perf ou UX perceptible, devops visible (disponibilité, sécurité).
 - ❌ refacto interne, tests, lint, formatage, dépendances sans effet.
 - L'entrée part **dans le commit** du changement ; deux changements, deux entrées.
+- Un changement qui remplace le comportement d'une entrée pas encore publiée lui ajoute une
+  note « Remplacé » ; la release publie le dernier état.
 - Release : synthèse manuelle vers
-  `src/LoDb.Web/src/app/features/editorial/changelog/published/`, puis archivage dans
-  `docs/changelog/archived/YYYY/` ([`README`](docs/changelog/README.md)). Les entrées de la
-  bascule sont des brouillons : [`changelog-bascule/`](docs/reecriture/changelog-bascule/README.md).
+  `src/LoDb.Web/src/app/features/editorial/changelog/published/` (releases + `manifest.json`),
+  puis archivage dans `docs/changelog/archived/YYYY/` ([`README`](docs/changelog/README.md)).
+  Seul brouillon de la bascule restant, `applications` attend la première release des apps :
+  [`changelog-bascule/`](docs/reecriture/changelog-bascule/README.md).
 
 ## Stack
 
@@ -34,17 +59,21 @@ contexte technique sous `## Technique`.
 | Données | PostgreSQL 17 + EF Core ; blobs Data Dragon adressés par contenu (volume `ddragon`) |
 | Web | Angular 22 en SSR (Node 24), locale dans l'URL (`/{locale}/…`), 21 langues |
 | Desktop / Android | Photino + Velopack / Capacitor 8 + live update signé |
-| Frontal | nginx (cache des pages, `/cdn/blobs/`) derrière l'edge Caddy du VPS (`infra-vps`) |
-| Observabilité | OpenTelemetry, logs JSON d'une ligne, `/metrics` (port 9464) |
+| Frontal | nginx (cache des pages, `/cdn/blobs/`, pages des anciens patchs lues dans un stockage objet Scaleway) derrière l'edge Caddy du VPS (`infra-vps`) ; CDN Cloudflare prévu, pas construit |
+| Précalcul | pages des anciens patchs rendues une fois par un SSR dédié (`web-ssr-prerender`) et rangées dans le stockage objet (ADR 0011) |
+| Observabilité, audience | OpenTelemetry, logs JSON d'une ligne, `/metrics` (port 9464) ; audience Umami (ADR 0012) |
 
-Décisions : [`docs/reecriture/README.md`](docs/reecriture/README.md) et ses ADR 0001 à 0010.
+Décisions : [`docs/reecriture/README.md`](docs/reecriture/README.md) et ses ADR 0001 à 0012.
 
 ```
 compose.yaml  compose.override.yaml (dev)  compose.deploy.yaml (hôtes)
+compose.staging.yaml  compose.staging-auth.yaml (staging)
+compose.umami.yaml  compose.sauvegarde.yaml (prod)
 .env.staging.example  .env.prod.example        docker/{api,web-ssr,nginx,android-build}/
 src/LoDb.Domain/          pur, sans I/O : versions, langues, éditions, chemins canoniques
 src/LoDb.Ingestion/       Egress/ Ddragon/ Pipeline/ Catalog/ …
-src/LoDb.Infrastructure/  Persistence/ Storage/ Jobs/ Outbox/ Audit/ Analytics/ DataProtection/
+src/LoDb.Infrastructure/  Persistence/ Storage/ PageStore/ Jobs/ Locks/ Outbox/ Audit/ Analytics/
+                          Audience/ DataProtection/
 src/LoDb.Api/             Program.cs Hosting/ Cli/<Zone>/ Workers/<Zone>/ Modules/<M>/ openapi/
 src/LoDb.Web/             Angular : src/app/{core,ui,features}  src/server/  public/i18n/
 src/LoDb.Desktop/         coquille desktop
@@ -54,7 +83,8 @@ tools/                    contrat, i18n, fixtures, releases, bascule, parité
 
 Références : `Api` → `Ingestion` → `Infrastructure` → `Domain`. Les modules
 (`Add<Module>`/`Map<Module>`) et les zones (`AddLoDb<Zone>`) sont pré-enregistrés :
-`Program.cs` ne change pas, un chantier ne remplit que son fichier.
+`Program.cs` ne change pas, un changement ne remplit que le fichier de son module ou de sa
+zone.
 
 ### Environnements
 
@@ -62,12 +92,13 @@ Références : `Api` → `Ingestion` → `Infrastructure` → `Domain`. Les modu
 |---|---|---|---|
 | local | `lodb-dev` (emplacements `-e1`, `-e2`) | aucun | `docker compose` sur le poste |
 | staging | `lodb-staging`, `:staging` | `.env.staging` → `ENV_STAGING` | push `dev` → checks → merge `dev`→`test` → build → `test.league-of-data-base.com` |
-| prod | `lodb-prod`, `:prod` `:latest` | `.env.prod` → `ENV_PROD` | merge manuel `test`→`main` → retag `:staging`→`:prod`, sans rebuild |
+| prod | `lodb-prod`, `:prod` `:latest` | `.env.prod` → `ENV_PROD` | merge manuel `test`→`main` → les digests `:staging-validated` (ceux qui ont passé le staging) promus en `:prod` et `:latest`, sans rebuild |
 
 Hôtes : secrets `STAGING_*` / `PROD_*` (`SSH_KEY`, `HOST`, `PATH`, `SSH_USER`,
-`DATA_PROTECTION_PFX`). La stack prend la place de l'ancienne dans le même projet : volume
-`pgdata` repris et migré par `migrate`, blobs dans `ddragon` (l'ancien `storage` reste
-intact). Détail : [`configuration.md`](docs/guides/configuration.md).
+`DATA_PROTECTION_PFX` ; `SSH_KNOWN_HOSTS` optionnel). La stack a pris la place de l'ancienne
+dans le même projet : volume `pgdata` repris et migré par `migrate`, blobs dans `ddragon`.
+L'ancien volume `storage` reste intact jusqu'à la décommission : ne jamais le purger.
+Détail : [`configuration.md`](docs/guides/configuration.md).
 
 ## Invariants d'architecture (ADR)
 
@@ -78,25 +109,36 @@ intact). Détail : [`configuration.md`](docs/guides/configuration.md).
 - **`Add*` et `Map*` ne font aucune I/O et ne lèvent rien** (la génération OpenAPI exécute
   `Program` sans configuration). Sous-commandes `ICliCommand` sous `Cli/<Zone>/`, tâches
   `BackgroundService` sous `Workers/<Zone>/`, découvertes par convention ;
-  `LoDb:Workers:Enabled=false` coupe toutes les tâches.
+  `LoDb:Workers:Enabled=false` coupe toutes ces tâches (pas le métrage de `/v1`, voulu :
+  pièges).
 - **Tâches périodiques** (ADR 0003) : `PeriodicTimer` + verrou consultatif Postgres, files
   `Channel<T>` bornées, **une ligne de synthèse par lot**, jamais une par URL.
-- **Stockage** (ADR 0004) : blobs derrière `IBlobStore`, adressés par contenu, écrits de
-  façon **atomique** (temporaire sur le même volume, puis `File.Move`) ; nginx ne sert que
-  `/cdn/blobs/`. Manifeste, analytics, audit et clés Data Protection en Postgres
-  (`absent` = absence définitive). **Aucune session serveur**.
+- **Stockage** (ADR 0004, 0011) : blobs derrière `IBlobStore`, adressés par contenu, écrits
+  de façon **atomique** (temporaire sur le même volume, puis `File.Move`) ; du volume, nginx
+  ne sert que `/cdn/blobs/`. Les pages pré-rendues et leurs bundles vont dans le stockage
+  objet (`IPageStore`, adressé par chemin), que nginx lit pour les anciens patchs. Manifeste,
+  analytics, audit et clés Data Protection en Postgres (`absent` = absence définitive).
+  **Aucune session serveur**, sauf les familles de jetons de rafraîchissement des apps
+  (ADR 0009).
+- **Hôtes sortants** (ADR 0002) : chacun derrière son client nommé (exception : le backchannel
+  OAuth de Google), jamais par l'allow-list de `ddragon`.
 - **Objets et sorts indexés par id, jamais par nom** (jumeaux homonymes de l'édition Classic).
 - **SSR** (ADR 0005) : **aucun cookie** lu, **aucun secret** détenu. Locale en préfixe
-  d'URL ; l'id fait foi, le slug est décoratif (301 vers la canonique).
+  d'URL ; l'id fait foi, le slug est décoratif (301 vers la canonique). La canonique des
+  fiches et les sitemaps suivent une seule règle, `CanonicalReferences` (`LoDb.Ingestion`), que
+  l'API transmet au SSR ; celle des listes est dans `catalogue-list-seo.ts`.
 - **Front** (ADR 0006) : uniquement le **client généré** depuis OpenAPI. Aucun
   `if (platform)` hors de `core/platform/`, aucun kit UI, pas de NgRx.
-- **Persistance** : migrations EF **additives** tant qu'un retour à l'ancienne stack reste
-  possible, jusqu'au *contract* (runbook § 9). Une base Doctrine est d'abord marquée à
+- **Persistance** : migrations EF **additives** jusqu'au *contract* (runbook § 9, au plus
+  tôt le 2026-11-03, sur décision explicite). Une base Doctrine est d'abord marquée à
   `Baseline` par `migrate`.
 - **Identité** (ADR 0009) : hash argon2id PHC, lisibles par `password_verify` de PHP.
-  Jamais `AllowAnonymous` : les politiques portent le garde XSRF et `Origin`.
-- **Observabilité** (ADR 0010) : logs JSON d'**une ligne** avec `trace_id`, `EventName` en
-  `domaine.sujet.resultat`, **aucune clé `error`**, aucune donnée personnelle. `/metrics`
+  Jamais `AllowAnonymous` : les politiques portent le garde XSRF et `Origin`. Seules
+  exceptions, voulues : les deux captures de la mesure maison (balise et miroir, pièges,
+  ADR 0012).
+- **Observabilité** (ADR 0010) : logs JSON d'**une ligne**, `trace_id` pendant une trace,
+  `EventName` en `domaine.sujet.resultat`, **aucune clé `error`**, aucune donnée personnelle
+  ([`logging.md`](docs/guides/logging.md)). `/metrics`
   sur 9464, **jamais routé ni publié**. `/healthz` ne dépend de rien ; `/readyz` vérifie
   Postgres et le stockage.
 - **Apps** (ADR 0007, 0008) : Photino derrière `IDesktopShell` ; Capacitor 8, live update
@@ -166,19 +208,21 @@ npm ci --prefix src/LoDb.Web
 npm --prefix src/LoDb.Web run lint           # puis typecheck, test, build:web, build:shell
 npm --prefix src/LoDb.Web run api:check      # le client généré suit le contrat
 docker compose -p lodb-dev -f compose.yaml -f compose.override.yaml up -d --build --wait
-npm --prefix tests/LoDb.E2E test             # stack démarrée (LODB_E2E_BASE_URL sinon)
+npm --prefix tests/LoDb.E2E test             # stack lodb-dev démarrée
 bash tools/routing/check-urls.sh             # grammaire d'URL de l'ADR 0005
 ```
 
 Selon ce qui est touché : `node --test 'tools/<outil>/test/*.test.mjs'` ;
-`docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint` pour les workflows ;
-`docker compose --env-file .env.staging.example -f compose.yaml -f compose.deploy.yaml
-config --quiet` pour la surcouche des hôtes. Détail :
-[`developpement.md`](docs/guides/developpement.md).
+`docker run --rm -v "$PWD:/repo" -w /repo rhysd/actionlint:1.7.12` (la version de `ci.yml`)
+pour les workflows ; pour la surcouche des hôtes, avec les trois variables que pose le job
+de déploiement : `LODB_STACK_SUBNET=10.231.2.0/24 LODB_EDGE_CIDR=172.18.0.0/16
+LODB_EDGE_SECRET=check docker compose --env-file .env.staging.example -f compose.yaml -f
+compose.deploy.yaml config --quiet`. Détail : [`developpement.md`](docs/guides/developpement.md).
 
 - **Stack locale `lodb-dev`** : 18080 nginx, 18081 API, 18082 SSR, 15432 Postgres, 18025
-  Mailpit. Emplacements `lodb-dev-e1`/`-e2` (181xx, 182xx) pour un worktree, supprimés
-  (`down -v`) avant de rendre.
+  Mailpit. Emplacements `lodb-dev-e1`/`-e2` (181xx et 182xx, Postgres 15532 et 15632) pour un
+  worktree, supprimés (`down -v`) avant de rendre ; leurs E2E posent `LODB_E2E_BASE_URL`,
+  `LODB_E2E_COMPOSE_PROJECT` et `LODB_E2E_MAIL_URL` ensemble.
 - **Ne jamais toucher** aux conteneurs `chewb-*`, `laforce-*` et `grafana/mcp-grafana`, ni à
   leurs ports (3307, 33306, 21200 à 21213). Le port 9464 n'est jamais publié.
 - **Pièges connus** (comportements voulus, à ne pas « corriger ») :
@@ -201,7 +245,8 @@ chemins explicites ; aucune ligne d'attribution. Branches : `type/description-co
 | `src/LoDb.Api/Modules/<Module>/**` | `back/<module>` (minuscules) |
 | `src/LoDb.Api/**` (autres) | `back/host` |
 | `src/LoDb.Web/src/app/features/<feature>/**` | `front/<feature>` |
-| `src/LoDb.Web/src/app/{core,ui}/**`, `src/styles/**` | `front/core`, `front/ui` |
+| `src/LoDb.Web/src/app/core/**`, `src/LoDb.Web/src/server/**` (SSR) | `front/core` |
+| `src/LoDb.Web/src/app/ui/**`, `src/LoDb.Web/src/styles/**` | `front/ui` |
 | `…/features/editorial/changelog/published/**` (+ archivage `docs/changelog/**`) | `changelog` |
 | `src/LoDb.Web/public/i18n/**` | `i18n` |
 | `src/LoDb.Web/android/**` | `android` |
@@ -211,12 +256,14 @@ chemins explicites ; aucune ligne d'attribution. Branches : `type/description-co
 | `docker/**`, `compose*.yaml`, `.env.*.example` | `infra` |
 | `tools/**` | `tools` |
 | `.github/**` | `ci` |
-| `docs/**`, `README.md`, `CONTRIBUTING.md`, `AGENTS.md` | `docs` |
+| `docs/**`, `README.md`, `CONTRIBUTING.md`, `AGENTS.md`, `CLAUDE.md` | `docs` |
 | `legacy/**` | `legacy` |
-| `LoDb.slnx`, `Directory.*.props`, `global.json`, `.editorconfig`, lockfiles | sans scope (`build` ou `chore`) |
+| `LoDb.slnx`, `Directory.*.props`, `global.json`, `.editorconfig`, lockfiles | sans scope (`build` ou `chore`) ; Dependabot écrit `build(deps)` et `build(deps-dev)` |
 
 ## Références
 
+[`architecture.md`](docs/architecture/architecture.md) (vue d'ensemble) ·
+[`seo-indexabilite.md`](docs/produit/seo-indexabilite.md) (SEO : règle en vigueur, cible) ·
 [`developpement.md`](docs/guides/developpement.md) (commandes, ports, dépannage) ·
 [`configuration.md`](docs/guides/configuration.md) (secrets et `.env`) ·
 [`github-actions-secrets.md`](docs/guides/github-actions-secrets.md) (pipeline) ·
