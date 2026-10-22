@@ -250,7 +250,8 @@ services:
       LODB_FRONT_BUILDS_DIR: /srv/front-builds
     volumes:
       # Bundles of the builds served lately; the deploy job purges those no build shipped for
-      # 30 days (.github/workflows/_deploy.yml).
+      # LODB_FRONT_BUILDS_RETENTION_DAYS (400 by default, 395 at least;
+      # .github/workflows/_deploy.yml).
       - front-builds:/srv/front-builds
     networks:
       default:
