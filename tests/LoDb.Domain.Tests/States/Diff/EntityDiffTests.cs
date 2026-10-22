@@ -100,6 +100,47 @@ public sealed class EntityDiffTests
             change.Segments);
     }
 
+    [Fact]
+    public void ATextGoneIsAllRemoved()
+    {
+        var before = OrbOfDeception("Lance son orbe.");
+
+        var change = Assert.Single(EntityDiff.Compare(
+            ChampionProjection.Of(Ahri(before)),
+            ChampionProjection.Of(Ahri(before with { Description = string.Empty })),
+            Scope("spell.q.description")));
+
+        Assert.Equal("Orbe d'illusion", change.SubjectName);
+        Assert.Equal(
+            [new TextSegment { Kind = SegmentKind.Removed, Text = "Lance son orbe." }],
+            change.Segments);
+    }
+
+    [Fact]
+    public void ASpellGoneIsNamedFromBefore()
+    {
+        var before = ChampionProjection.Of(Ahri(OrbOfDeception("Lance son orbe.")));
+        var after = ChampionProjection.Of(
+            ChampionSamples.Detail(ChampionSamples.Named("Ahri", "Ahri"), [], []));
+
+        var changes = EntityDiff.Compare(before, after, Scope("spell.q.name", "spell.q.cooldown"));
+
+        Assert.Equal(
+            [
+                ("spell.q.name", "Orbe d'illusion", string.Empty),
+                ("spell.q.cooldown", "7", string.Empty),
+            ],
+            changes.Select(Values));
+        Assert.All(changes, static change => Assert.Equal("Orbe d'illusion", change.SubjectName));
+    }
+
+    private static ChampionSpell OrbOfDeception(string description) =>
+        ChampionSamples.Spell("AhriQ", "7") with
+        {
+            Name = "Orbe d'illusion",
+            Description = description,
+        };
+
     private static ChampionDetail Ahri(ChampionSpell spell) =>
         ChampionSamples.Detail(ChampionSamples.Named("Ahri", "Ahri"), [spell], []);
 

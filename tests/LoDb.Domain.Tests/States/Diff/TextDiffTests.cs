@@ -9,6 +9,8 @@ namespace LoDb.Domain.Tests.States.Diff;
 /// </summary>
 public sealed class TextDiffTests
 {
+    private const int RewrittenWords = 700;
+
     [Fact]
     public void WordsAddedShowAsOneSegment()
     {
@@ -38,6 +40,7 @@ public sealed class TextDiffTests
     [Theory]
     [InlineData("zh_CN", "获得30护甲", "获得35护甲")]
     [InlineData("ja_JP", "物理防御30を得る", "物理防御35を得る")]
+    [InlineData("th_TH", "ได้รับเกราะ30หน่วย", "ได้รับเกราะ35หน่วย")]
     public void UnspacedLanguagesSplitByTextElement(string code, string before, string after)
     {
         var segments = TextDiff.Of(before, after, DdragonLanguage.Parse(code));
@@ -57,6 +60,25 @@ public sealed class TextDiffTests
     }
 
     [Fact]
+    public void AMiddleRewrittenBeyondTheTableIsRemovedThenAdded()
+    {
+        // 700 words a side: some 1,400 tokens each, past the million cells of the table.
+        var before = Rewritten("old");
+        var after = Rewritten("new");
+
+        var segments = TextDiff.Of(before, after, DdragonLanguage.EnUs);
+
+        Assert.Equal(
+            [
+                Same("Opening "),
+                Removed(Words("old")),
+                Added(Words("new")),
+                Same(" closing."),
+            ],
+            segments);
+    }
+
+    [Fact]
     public void EqualTextsAreOneSameSegment()
     {
         Assert.Equal(
@@ -69,6 +91,12 @@ public sealed class TextDiffTests
     {
         Assert.Equal([Added("New.")], TextDiff.Of(string.Empty, "New.", DdragonLanguage.EnUs));
     }
+
+    private static string Rewritten(string prefix) => $"Opening {Words(prefix)} closing.";
+
+    private static string Words(string prefix) => string.Join(
+        ' ',
+        Enumerable.Range(0, RewrittenWords).Select(index => prefix + index));
 
     // The text one side reads: every segment but those of the other side.
     private static IEnumerable<string> Kept(
