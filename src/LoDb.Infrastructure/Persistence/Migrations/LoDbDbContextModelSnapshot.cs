@@ -1663,6 +1663,117 @@ namespace LoDb.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("LoDb.Infrastructure.Persistence.Prerender.Revision.PrerenderRevisionPage", b =>
+                {
+                    b.Property<string>("Path")
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)")
+                        .HasColumnName("path");
+
+                    b.Property<int>("Epoch")
+                        .HasColumnType("integer")
+                        .HasColumnName("epoch");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("attempts");
+
+                    b.Property<DateTimeOffset>("DueAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("due_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<DateTimeOffset>("EnqueuedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("enqueued_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<string>("Locale")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("locale");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("reason");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("state");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<string>("Version")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("version");
+
+                    b.Property<DateTimeOffset?>("WrittenAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("written_at");
+
+                    b.HasKey("Path", "Epoch")
+                        .HasName("pk_prerender_revision");
+
+                    b.HasIndex("DueAt")
+                        .HasDatabaseName("ix_prerender_revision_next")
+                        .HasFilter("state = 'pending'");
+
+                    b.HasIndex("WrittenAt")
+                        .HasDatabaseName("ix_prerender_revision_written")
+                        .HasFilter("written_at IS NOT NULL");
+
+                    b.ToTable("prerender_revision", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_prerender_revision_attempts", "attempts >= 0");
+
+                            t.HasCheckConstraint("ck_prerender_revision_epoch", "epoch > 0");
+
+                            t.HasCheckConstraint("ck_prerender_revision_state", "state IN ('pending', 'rendering', 'done', 'failed', 'skipped')");
+                        });
+                });
+
+            modelBuilder.Entity("LoDb.Infrastructure.Persistence.Prerender.Revision.PrerenderRevisionWatermark", b =>
+                {
+                    b.Property<short>("Id")
+                        .HasColumnType("smallint")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("ClosedThrough")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("closed_through");
+
+                    b.Property<long>("GenerationId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("generation_id");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.HasKey("Id")
+                        .HasName("pk_prerender_revision_watermark");
+
+                    b.ToTable("prerender_revision_watermark", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_prerender_revision_watermark_singleton", "id = 1");
+                        });
+                });
+
             modelBuilder.Entity("LoDb.Infrastructure.Persistence.PublicApi.ApiCreditGrant", b =>
                 {
                     b.Property<long>("Id")
@@ -1885,6 +1996,207 @@ namespace LoDb.Infrastructure.Persistence.Migrations
                     b.ToTable("periodic_job", (string)null);
                 });
 
+            modelBuilder.Entity("LoDb.Infrastructure.Persistence.States.CatalogEntityState", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.PrimitiveCollection<string[]>("ChangedFields")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text[]")
+                        .HasColumnName("changed_fields")
+                        .HasDefaultValueSql("'{}'::text[]");
+
+                    b.Property<DateTimeOffset?>("ClosedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("closed_at");
+
+                    b.Property<string>("EntityKey")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("entity_key");
+
+                    b.Property<string>("Fingerprint")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character(64)")
+                        .HasColumnName("fingerprint")
+                        .IsFixedLength();
+
+                    b.Property<long>("GenerationId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("generation_id");
+
+                    b.Property<bool>("IsReturn")
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_return");
+
+                    b.Property<string>("LastVersion")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("last_version");
+
+                    b.Property<string>("OpenerVersion")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("opener_version");
+
+                    b.Property<string>("Path")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("character varying(160)")
+                        .HasColumnName("path");
+
+                    b.Property<string>("PreviousOpenerVersion")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("previous_opener_version");
+
+                    b.Property<string>("Resource")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("resource");
+
+                    b.HasKey("Id")
+                        .HasName("pk_catalog_entity_state");
+
+                    b.HasIndex("GenerationId", "ClosedAt")
+                        .HasDatabaseName("ix_catalog_entity_state_closed")
+                        .HasFilter("closed_at IS NOT NULL");
+
+                    b.HasIndex("GenerationId", "Resource", "EntityKey")
+                        .IsUnique()
+                        .HasDatabaseName("ux_catalog_entity_state_open")
+                        .HasFilter("closed_at IS NULL");
+
+                    b.HasIndex("GenerationId", "Resource", "EntityKey", "OpenerVersion")
+                        .IsUnique()
+                        .HasDatabaseName("ux_catalog_entity_state_opener");
+
+                    b.ToTable("catalog_entity_state", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_catalog_entity_state_closed", "(closed_at IS NULL) = (last_version IS NULL)");
+
+                            t.HasCheckConstraint("ck_catalog_entity_state_fingerprint", "fingerprint ~ '^[0-9a-f]{64}$'");
+
+                            t.HasCheckConstraint("ck_catalog_entity_state_new", "previous_opener_version IS NOT NULL OR cardinality(changed_fields) = 0");
+
+                            t.HasCheckConstraint("ck_catalog_entity_state_resource", "resource IN ('champions', 'items', 'runes', 'summoners')");
+
+                            t.HasCheckConstraint("ck_catalog_entity_state_return", "NOT is_return OR previous_opener_version IS NOT NULL");
+                        });
+                });
+
+            modelBuilder.Entity("LoDb.Infrastructure.Persistence.States.CatalogStateGeneration", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset>("BuiltAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("built_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<string>("FirstVersion")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("first_version");
+
+                    b.Property<bool>("IsCurrent")
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("is_current");
+
+                    b.Property<string>("LastVersion")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("last_version");
+
+                    b.Property<int>("OpenStateCount")
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("open_state_count");
+
+                    b.Property<int>("Scheme")
+                        .HasColumnType("integer")
+                        .HasColumnName("scheme");
+
+                    b.Property<int>("StateCount")
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("state_count");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.HasKey("Id")
+                        .HasName("pk_catalog_state_generation");
+
+                    b.HasIndex("Scheme")
+                        .IsUnique()
+                        .HasDatabaseName("ux_catalog_state_generation_current")
+                        .HasFilter("is_current");
+
+                    b.ToTable("catalog_state_generation", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_catalog_state_generation_counters", "state_count >= 0 AND open_state_count >= 0 AND open_state_count <= state_count");
+
+                            t.HasCheckConstraint("ck_catalog_state_generation_scheme", "scheme > 0");
+                        });
+                });
+
+            modelBuilder.Entity("LoDb.Infrastructure.Persistence.States.CatalogStateVersion", b =>
+                {
+                    b.Property<long>("GenerationId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("generation_id");
+
+                    b.Property<string>("Version")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("version");
+
+                    b.Property<DateTimeOffset>("IndexedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("indexed_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<int>("Ordinal")
+                        .HasColumnType("integer")
+                        .HasColumnName("ordinal");
+
+                    b.HasKey("GenerationId", "Version")
+                        .HasName("pk_catalog_state_version");
+
+                    b.HasIndex("GenerationId", "Ordinal")
+                        .IsUnique()
+                        .HasDatabaseName("ux_catalog_state_version_ordinal");
+
+                    b.ToTable("catalog_state_version", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_catalog_state_version_ordinal", "ordinal >= 0");
+                        });
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.DataProtection.EntityFrameworkCore.DataProtectionKey", b =>
                 {
                     b.Property<int>("Id")
@@ -2064,6 +2376,26 @@ namespace LoDb.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_f47e0aa08be312b3");
 
                     b.Navigation("ApiKey");
+                });
+
+            modelBuilder.Entity("LoDb.Infrastructure.Persistence.States.CatalogEntityState", b =>
+                {
+                    b.HasOne("LoDb.Infrastructure.Persistence.States.CatalogStateGeneration", null)
+                        .WithMany()
+                        .HasForeignKey("GenerationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_catalog_entity_state_catalog_state_generation_generation_id");
+                });
+
+            modelBuilder.Entity("LoDb.Infrastructure.Persistence.States.CatalogStateVersion", b =>
+                {
+                    b.HasOne("LoDb.Infrastructure.Persistence.States.CatalogStateGeneration", null)
+                        .WithMany()
+                        .HasForeignKey("GenerationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_catalog_state_version_catalog_state_generation_generation_id");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<int>", b =>
