@@ -665,13 +665,15 @@ L'index qui décide la page indexée de chaque fiche d'ancien patch
   réconciliation l'ingère et l'étende ; ne pas « corriger » en reconstruisant depuis la version
   d'après, ce qui jetterait tout l'historique sans retour.
 - **Couverture** : la plus longue suite de versions listées (liste de Data Dragon, plus le
-  dernier patch promu) dont les jeux en_US sont stockés, jusqu'au dernier patch promu. Une
-  version listée sans son en_US coupe la couverture : les plus anciennes sortent de l'index et
-  passent à la règle résiduelle (canonique sur l'URL courte, aucun historique), sans erreur. Le
-  remède : `ingest --version <v> --languages en_US`, ou `catalog states build --ingest-missing`
-  dans un conteneur qui écrit `ddragon` (`docker compose run --rm --no-deps api catalog states
-  build --ingest-missing`). Une version dont les quatre jeux sont définitivement absents est
-  sautée, comme non listée.
+  dernier patch promu) dont les jeux en_US sont stockés, jusqu'au dernier patch promu. Au
+  premier passage ou avec `--rebuild`, une version listée sans son en_US coupe la couverture :
+  les plus anciennes sortent de l'index et passent à la règle résiduelle (canonique sur l'URL
+  courte, aucun historique), sans erreur. Une génération courante, elle, ne raccourcit jamais
+  (« Générations » ci-dessus) : une version manquante dans sa couverture la laisse telle
+  quelle, une après sa fin la laisse en retard. Le remède : `ingest --version <v> --languages
+  en_US`, ou `catalog states build --ingest-missing` dans un conteneur qui écrit `ddragon`
+  (`docker compose run --rm --no-deps api catalog states build --ingest-missing`). Une version
+  dont les quatre jeux sont définitivement absents est sautée, comme non listée.
 - **Copie en mémoire, une par processus**, chargée à la première lecture ; son repère
   (génération, fin de couverture) est relu au plus toutes les `LoDb:Catalog:VersionsLifetime`
   (1 min) : un autre processus voit une promotion jusqu'à une minute après celui qui a écrit.
