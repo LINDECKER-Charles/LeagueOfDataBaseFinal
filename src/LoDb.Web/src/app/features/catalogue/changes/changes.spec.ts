@@ -239,6 +239,12 @@ describe("the page of a patch's changes", () => {
     expect(page?.querySelector('[role="listitem"] p')?.textContent?.trim()).toBe(
       'Q : temps de recharge, Prix total',
     );
+    const icons = page?.querySelectorAll('[role="listitem"] lodb-catalogue-image') ?? [];
+    expect(Array.from(icons, (icon) => icon.getAttribute('aria-hidden'))).toEqual([
+      'true',
+      'true',
+      'true',
+    ]);
   });
 
   it('heads a past patch with its own canonical, indexable when it changed something', async () => {

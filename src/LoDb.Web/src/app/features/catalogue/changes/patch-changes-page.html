@@ -33,8 +33,10 @@
         <div role="list" class="grid gap-3 sm:grid-cols-2">
           @for (entry of group.entries; track entry.id) {
             <div role="listitem" class="flex items-start gap-3">
+              <!-- Decorative: the link beside it names the entry, read once. -->
               <lodb-catalogue-image
                 class="size-10 rounded"
+                aria-hidden="true"
                 [image]="entry.image"
                 [name]="entry.name"
                 [size]="iconSize"
