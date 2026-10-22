@@ -54,7 +54,7 @@ s'appliquent pas à la stack en service.
 | Doc | Contenu |
 |---|---|
 | [seo-indexabilite.md](produit/seo-indexabilite.md) | **Fait foi pour le SEO** : cap, règle en vigueur dans le code, règle décidée, mesure, chronologie |
-| [seo-une-page-par-etat.md](produit/seo-une-page-par-etat.md) | Spécification de la règle « une page indexée par état » (décidée le 2026-10-22, pas encore implémentée) |
+| [seo-une-page-par-etat.md](produit/seo-une-page-par-etat.md) | Spécification de la règle « une page indexée par état » (décidée le 2026-10-22, implémentation en cours) |
 | [seo-anciens-patchs.md](produit/seo-anciens-patchs.md) | Diagnostic de la désindexation d'août et demande du 2026-10-14 (réalisée) |
 | [pre-rendu-catalogue-cdn.md](produit/pre-rendu-catalogue-cdn.md) | Spécification du catalogue pré-rendu et du CDN : lots, réglages, tests ; état des lots en tête |
 | [pre-rendu-admin-ux.md](produit/pre-rendu-admin-ux.md) | Spécification de l'écran `/admin/prerender` (livrée le 2026-10-21) |

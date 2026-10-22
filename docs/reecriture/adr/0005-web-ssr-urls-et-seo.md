@@ -28,7 +28,8 @@
     et un CDN se place devant le site (voir § « Amendement du 2026-10-20 ») ;
   - le 2026-10-22, une page indexée par état d'entité : chaque suite de patchs où une fiche ne
     change pas a une page indexée, son premier patch ; chaque patch a sa page de changements,
-    et l'index des sitemaps annonce toutes les versions (voir § « Amendement du 2026-10-22 »).
+    et l'index des sitemaps annonce de nouveau les versions passées (voir § « Amendement du
+    2026-10-22 »).
     Il remplace l'amendement du 2026-10-14 pour les canoniques et les sitemaps, **à sa
     bascule** : décidé, pas encore implémenté.
 
@@ -129,8 +130,8 @@ nginx. Le mode de rendu est choisi route par route :
 - **hreflang** entre les 21 locales + `x-default` (nouveau).
 - **Sitemaps par locale**. Aujourd'hui (amendement du 2026-10-14), l'index n'annonce que les
   `latest.xml` des 21 langues ; à la bascule de l'amendement du 2026-10-22, celui d'une
-  version passée liste sa page de changements et les fiches indexées chez elle, et l'index les
-  annonce tous.
+  version passée liste sa page de changements et les fiches indexées chez elle, et l'index
+  annonce tous ceux qui ne sont pas vides.
 - JSON-LD conservé à l'identique : `@graph` du site, BreadcrumbList, VideoGame,
   PropertyValue pour les stats (jamais Product ou Offer), ItemList, ProfilePage, FAQPage,
   Dataset… Encodage sûr contre la XSS, champs vides retirés.
@@ -403,7 +404,8 @@ Google. Celle du 2026-07-18 indexait chaque patch : ~200 000 pages par langue su
 site, qui n'avait qu'une langue par hôte, et ~4,2 millions sur la nouvelle pile en 21 langues
 (du 4 au 11 octobre). Dans les deux cas, **~85 % sont la copie exacte de la page de la version
 d'avant** (mesure du 22 octobre 2026 sur Data Dragon : 13,5 % des pages d'objets diffèrent de
-la version précédente, 17,7 % des pages de champions, 6,8 % des sorts). La chute d'août,
+la version précédente, 17,7 % des pages de champions, 6,8 % des sorts ; mesure sur le JSON
+brut, donc des majorants). La chute d'août,
 survenue sur l'ancien site, est venue de ces copies, pas du volume. La charge
 qui justifiait la fenêtre du 2026-10-11 est désormais tenue par le stockage pré-rendu et la
 file de la demande ([ADR 0011](0011-catalogue-pre-rendu-et-cdn.md)). Constat, mesures et
@@ -417,49 +419,72 @@ détail : [spécification](../../produit/seo-une-page-par-etat.md).
 
 **Décision : une page indexée par état.**
 
-- **État** : la suite des versions listées consécutives où une entité existe avec la même
-  **empreinte**, condensé pur de son contenu propre dans le catalogue en_US (images
+- **État** : la suite des versions listées consécutives où une entité existe (a une fiche)
+  avec la même **empreinte** : SHA-256 de ce que sa fiche affiche d'elle-même dans le
+  catalogue en_US stocké (projection des entrées du domaine, textes sans balises, images
   ignorées), versionné par un numéro de schéma. Son **ouvreur** est sa première version.
-  L'état qui contient le dernier patch est **ouvert**, les autres sont **clos**.
-- **Index des états** en Postgres, construit une fois par une commande, puis mis à jour à
-  chaque promotion **avant tout autre écouteur**, et réparé au démarrage du worker.
-- **Canoniques** :
-  - l'URL courte pour le dernier patch et pour les pages d'anciens patchs de l'état ouvert ;
+  L'état qui contient le dernier patch est **ouvert**, les autres sont **clos**. La clé d'une
+  entité est son id replié en minuscules (Data Dragon a changé la casse d'ids de champions).
+- **Index des états** en Postgres, par générations : construit par une commande, puis
+  étendu à chaque promotion par le **premier** écouteur, dans un ordre que les écouteurs
+  déclarent eux-mêmes (ADR 0003, amendement du 2026-10-22), et rattrapé par une tâche
+  périodique toutes les 10 minutes. Il couvre la plus longue suite de versions listées dont
+  l'en_US est stocké et qui finit au dernier patch ; chaque processus en tient une copie en
+  mémoire qui se recharge d'elle-même.
+- **Canoniques** (le dernier patch est celui du lecteur de catalogues, jamais celui de
+  l'index) :
+  - l'URL courte pour le dernier patch et pour les pages d'anciens patchs de l'état ouvert,
+    ou d'une version que l'index ne couvre pas encore ;
   - pour l'ouvreur d'un état clos, lui-même, avec hreflang et JSON-LD ;
-  - pour les autres versions d'un état clos, l'ouvreur.
+  - pour les autres versions d'un état clos, l'ouvreur ;
+  - hors de la couverture (version plus ancienne, listée après le dernier patch, ou avant
+    toute promotion) : la règle résiduelle, celle du 2026-10-14 pour une version non promue
+    (l'URL courte si le dernier patch porte l'entité, sinon la page elle-même).
 
-  Les listes, les variantes régionales et les versions non promues ne changent pas. Une
-  entité retirée n'est plus un cas à part : le `noindex, follow` de ses fiches antérieures
-  disparaît. Un id réutilisé change d'empreinte, donc d'état.
+  `canonical` est toujours présent sur une fiche. Les listes et les variantes régionales ne
+  changent pas. Une entité retirée n'est plus un cas à part : le `noindex, follow` de ses
+  fiches antérieures disparaît. Un id réutilisé change d'empreinte, donc d'état.
 - **Contenu** :
-  - l'ouvreur montre « Ce qui a changé dans ce patch » (différence avec l'état précédent,
-    dans la langue de la page) ;
+  - l'ouvreur montre « Ce qui a changé dans ce patch » : les champs que l'index marque
+    changés, avec les valeurs de la langue de la page ;
   - les autres versions montrent « Inchangé depuis le patch X » ;
-  - « Historique » remplace « Dans les patchs précédents » ;
-  - l'ouvreur d'un état clos porte la plage de l'état dans son titre.
+  - « Historique » remplace « Dans les patchs précédents » ; la plage de l'état ouvert ne
+    nomme pas le dernier patch (« depuis le patch X ») ;
+  - l'ouvreur d'un état clos porte la plage de l'état dans son titre, à la place du suffixe
+    de version.
 - **Page de patch** `/{locale}/{version}/changes`, et `/{locale}/changes` pour le dernier
-  patch : ce que la version a changé. `/{locale}/patches` y mène.
-- **Sitemaps** : l'index annonce les `latest.xml`, puis le `{version}.xml` de chaque version
-  passée, dans les 21 langues (~8 440 entrées). Un fichier de version liste sa page de patch
-  et les ouvreurs de ses états clos. `lastmod` donne le moment où une page est devenue
+  patch : ce que la version a changé. Elle existe pour chaque version couverte sauf la
+  première (404). `noindex, follow` si la version n'a rien changé. `/{locale}/patches` y mène.
+- **Sitemaps** : l'index annonce les `latest.xml`, puis les 21 `{version}.xml` de chaque
+  version couverte passée dont le fichier n'est pas vide (~8 440 entrées au plus). Un
+  fichier de version liste sa page de patch et les ouvreurs de ses états clos ; il se calcule
+  depuis l'index seul, sans catalogue. `lastmod` donne le moment où une page est devenue
   indexable ; aucune date de sortie de patch n'est devinée.
   `LoDb__Seo__SitemapVersionWindow` disparaît.
-- **Pages figées et révisables** : une page d'un état clos ne lie que des URL versionnées et
-  ne change plus (classe `archived`). Une page d'ancien patch de l'état ouvert prend la
-  classe `revisable` (un jour) et se pré-calcule de nouveau quand la promotion clôt son état
-  (ADR 0011, amendement du 2026-10-22).
+- **Pages figées et révisables** : une page d'un état clos ne lie que des URL versionnées
+  (sauf « Dans le dernier patch ») et ne change plus (classe `archived`). Une page d'ancien
+  patch de l'état ouvert prend la classe `revisable` (une heure) et se pré-calcule de
+  nouveau, page par page, quand une promotion clôt son état (ADR 0011, amendement du
+  2026-10-22).
 - **À la promotion, dans cet ordre** :
   1. l'index ;
-  2. le pré-calcul (version qui part, états clos, pages de patch) ;
-  3. IndexNow (URL courtes changées, ouvreurs devenus indexables, pages de patch).
+  2. le pré-calcul (l'unité de la version qui part, avec sa page de patch ; la file des
+     pages des états clos) ;
+  3. IndexNow (toutes les URL courtes comme avant, les ouvreurs que la promotion a clos, les
+     pages de patch qui ont changé quelque chose).
+
+  Les étapes 2 et 3 lisent dans l'index ce qui a changé.
 - **Redirections héritées** (amendement du 2026-10-16) : une ancienne URL qui nomme une
   version mène à la canonique de sa cible selon cette règle, l'ouvreur de son état ou l'URL
-  courte.
+  courte ; sans état à cette version, l'URL courte si le dernier patch porte l'id, sinon la
+  302 vers la liste. Sans version, une entité retirée mène à l'ouvreur de son dernier état.
 - **Bascule d'un seul coup** : ni interrupteur, ni coexistence des deux règles. Le
   changement qui porte cette règle retire `CanonicalReferences` et `CanonicalReader`, et son
-  déploiement est la bascule. L'index se construit avant que l'API serve, par un service de
-  déploiement lancé après `migrate`. Retour arrière : un revert, avec l'epoch 1 du stockage
-  gardée deux semaines (ADR 0011, amendement du 2026-10-22).
+  déploiement est la bascule. L'index se construit avant que l'API serve : le service
+  `states` est lancé par le déploiement après `migrate` et avant la page de maintenance.
+  Aucun envoi IndexNow à la bascule : les sitemaps annoncent l'historique. Retour arrière :
+  un revert, avec l'epoch 1 du stockage gardée deux semaines (ADR 0011, amendement du
+  2026-10-22).
 
 **Mesure** (propriétaire), dans la Search Console, 2, 4 et 8 semaines après la bascule,
 comparée au relevé du jour de la bascule :

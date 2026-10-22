@@ -23,9 +23,9 @@
   - le 2026-10-22, la vitesse d'une passe se règle à la main, sous un frein d'urgence, sur
     plusieurs moteurs (voir § « Amendement du 2026-10-22 — vitesse réglable ») ;
   - le 2026-10-22 encore, le stockage garde aussi des pages révisables, celles des anciens
-    patchs dont l'état est encore ouvert, pré-calculées de nouveau quand une promotion le
-    clôt ; la passe sert d'abord les pages indexables (voir § « Amendement du 2026-10-22 —
-    pages révisables »). Décidé, pas encore implémenté.
+    patchs dont l'état est encore ouvert, pré-calculées de nouveau page par page quand une
+    promotion le clôt ; une passe peut se limiter aux ouvreurs (voir § « Amendement du
+    2026-10-22 — pages révisables »). Décidé, pas encore implémenté.
 - **Remplace** : la spécification du cache recyclé de 68 Go, interrompue et jamais
   publiée
 - **Détail** : [spécification](../../produit/pre-rendu-catalogue-cdn.md) (lots, réglages,
@@ -335,29 +335,47 @@ l'ADR 0005 (amendement du 2026-10-22).*
 
 L'[ADR 0005](0005-web-ssr-urls-et-seo.md) (amendement du 2026-10-22) indexe une page par état
 d'entité. La page d'un ancien patch n'est donc plus immuable dans tous les cas. Celle d'un
-état **clos** ne change plus jamais. Celle d'un état **ouvert**, celui du dernier patch, a
-pour canonique l'URL courte jusqu'à ce que l'entité change : sa canonique, son titre et son
-historique changent alors. Cela concerne 5 à 15 % des pages épinglées, et environ
-24 000 pages par promotion ([spécification](../../produit/seo-une-page-par-etat.md), § 1.2).
+état **clos** ne change plus (pour un schéma d'empreinte donné). Celle d'un état **ouvert**,
+celui du dernier patch, a pour canonique l'URL courte jusqu'à ce que l'entité change : sa
+canonique, son titre et son historique changent alors. Cela concerne 5 à 15 % des pages
+épinglées, et au plus ~24 000 pages par promotion
+([spécification](../../produit/seo-une-page-par-etat.md), § 1.2, des majorants).
 
 - **Deux classes dans le stockage** : `archived` (un an) pour une page figée, `revisable`
-  (`s-maxage` d'un jour, `stale-while-revalidate` d'un jour) pour une page révisable. Le SSR
-  choisit la classe selon l'état que l'API rend, et la passe écrit les deux. nginx applique
-  la classe de l'objet quand c'est l'une des deux, et `archived` pour un objet sans classe ; il
-  n'impose plus `archived` à toute réponse du stockage. La ligne « Ce qui est stocké » vaut
-  pour les deux classes.
-- **À chaque promotion**, après la mise à jour de l'index des états, le pré-calcul refait
-  dans l'epoch servie :
-  - les pages des états que la promotion a clos, dans les 21 langues ;
-  - les pages de patch concernées ;
-  - et, comme avant, l'unité de la version qui quitte le dernier patch.
+  (`public, max-age=3600, s-maxage=3600, stale-while-revalidate=3600`) pour une page
+  révisable. Le SSR choisit la classe selon l'état que l'API rend ; un état inconnu sur une
+  version épinglée donne `revisable`, jamais `archived`. Les verdicts de la passe admettent
+  les deux marques, et la ligne « Ce qui est stocké » vaut pour les deux classes.
+- **nginx** : pour les pages, le cache chaud suit la `Cache-Control` de l'objet
+  (`s-maxage`, `stale-while-revalidate`) ; l'année forcée ne vaut plus qu'en repli, pour un
+  objet sans `Cache-Control`, et reste pour les bundles. L'en-tête envoyé au client vaut
+  `revisable` pour un objet révisable, `archived` par défaut. nginx n'impose plus `archived`
+  à toute réponse du stockage.
+- **À chaque promotion**, après la mise à jour de l'index des états :
+  - les pages des états que la promotion a clos (toutes leurs versions, dans les 21 langues)
+    entrent dans une **file par page** (`prerender_revision`), pour l'epoch servie et pour
+    celle qu'écrit la passe active si elle diffère. Un worker la vide par le chemin de la file
+    de la demande, en partageant ses places de rendu, et ne rend une page qu'une fois que
+    l'API qui sert voit sa clôture. Cette file ne dépend pas de
+    `LoDb__Prerender__AutoEnqueueOnPromotion` : elle tourne dès que le stockage est
+    configuré, staging compris (ADR 0003, amendement du 2026-10-22) ;
+  - comme avant, l'unité de la version qui quitte le dernier patch, sous
+    `AutoEnqueueOnPromotion` ; elle porte la seule page de patch qu'une promotion change.
 
-  Les copies de nginx et du CDN de ces pages expirent en un jour au plus.
-- **Ordre de la passe** : d'abord les pages indexables de toutes les versions (ouvreurs
-  d'états clos, pages de patch), puis les autres. La file de la demande garde sa priorité.
-- **Epoch 2** : elle devient l'epoch d'écriture et l'epoch servie au déploiement qui porte
-  la nouvelle règle, avec `LODB_ARCHIVE_EPOCH` monté. La passe la remplit dans l'ordre
-  ci-dessus. Une page absente part au SSR, puis à la file de la demande. L'epoch 1 est gardée
-  deux semaines pour un retour arrière, puis retirée (`retire-pages-1`).
+  Les copies de nginx de ces pages expirent en deux heures environ (celles du CDN aussi, une
+  fois construit).
+- **La passe** : une passe peut se limiter aux ouvreurs de chaque version (périmètre
+  `pages: "openers"`, plus la page de patch), lancée avant la passe entière ; une promotion
+  ne la rejoint jamais. La page de patch n'est pas un type de page : toute unité qui couvre
+  tous les types la rend, et l'ordre des pages d'une version (listes, page de patch, entités)
+  est figé. La file de la demande garde sa priorité et admet la page de patch.
+- **Epoch 2** : au déploiement qui porte la nouvelle règle, `LODB_ARCHIVE_SERVE_EPOCH=2`,
+  seule valeur changée. Changer l'epoch servie purge déjà le cache chaud, et aucune variable
+  ne règle d'epoch d'écriture : les passes sont lancées au pupitre sur l'epoch 2, ouvreurs
+  d'abord. Une page absente part au SSR, puis à la file de la demande : ~11 h pour les
+  ouvreurs, ~3 jours pour le reste, accepté (relire l'epoch 1 ferait coexister les deux
+  règles), et la part de 503 servies à Googlebot est suivie pendant la passe. L'epoch 1 est
+  gardée deux semaines pour un retour arrière, puis retirée par
+  `tools/prerender/scaleway-bucket.sh` (`RETIRED_EPOCHS=1`, règle `retire-pages-1`).
 - **Conséquence** : la classe `archived` ne garde plus que des pages vraiment immuables. Une
-  page révisable coûte une relecture du stockage par jour au plus.
+  page révisable coûte une relecture du stockage par heure au plus.

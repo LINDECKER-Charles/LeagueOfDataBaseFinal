@@ -52,7 +52,7 @@ Comportements voulus à ne pas « corriger » : [`pieges.md`](../architecture/pi
 
 ## Règle décidée : une page indexée par état
 
-Décidée le 2026-10-22, **pas encore implémentée** : [spécification](seo-une-page-par-etat.md)
+Décidée le 2026-10-22, **implémentation en cours** : [spécification](seo-une-page-par-etat.md)
 (lots L0 à L7), ADR 0005 et ADR 0011, amendements du 2026-10-22.
 
 - Un **état** est une suite de patchs consécutifs où la fiche d'une entité ne change pas
@@ -60,13 +60,14 @@ Décidée le 2026-10-22, **pas encore implémentée** : [spécification](seo-une
   page indexée de l'état ; les autres patchs de l'état ont l'ouvreur pour canonique, et ceux
   de l'état en cours l'URL courte.
 - Chaque patch a sa page de changements (`/{locale}/[{version}/]changes`), et l'index des
-  sitemaps annonce de nouveau toutes les versions.
+  sitemaps annonce de nouveau les versions passées qui ont une page indexée.
 - ~600 000 pages indexables, chacune distincte ; plus de cas à part pour une entité retirée.
 - **Bascule d'un seul coup** : ni interrupteur ni coexistence des deux règles ; le déploiement
   du changement qui porte la règle est la bascule. L'index des états se construit avant que
-  l'API serve, l'epoch 2 du stockage devient l'epoch servie et la passe la remplit, pages
-  indexables d'abord ; IndexNow annonce les ouvreurs et les pages de patch. Retour arrière :
-  un revert, l'epoch 1 gardée deux semaines.
+  l'API serve, l'epoch 2 du stockage devient l'epoch servie et la passe la remplit, ouvreurs
+  d'abord. Aucun envoi IndexNow à la bascule : les sitemaps annoncent l'historique, puis
+  IndexNow annonce à chaque promotion les ouvreurs qu'elle clôt et les pages de patch.
+  Retour arrière : un revert, l'epoch 1 gardée deux semaines.
 
 Tant que ce changement n'est pas déployé, la règle en vigueur est celle du tableau ci-dessus.
 À la bascule, ce document change de règle en vigueur et la chronologie la note.
