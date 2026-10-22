@@ -11,10 +11,11 @@ tags: [seo]
 > un ancien lien qui nomme un patch ne mène plus à la fiche du patch en cours dès qu'elle
 > existe : il mène à la page indexée de ce que ce patch montrait, celle du patch qui a
 > ouvert cet état (avec le nom de l'époque), ou à la fiche du patch en cours si cet état
-> dure encore. Un champion, un objet, une rune ou un sort retiré du jeu mène à la page du
-> patch qui a ouvert son dernier état, même sans patch nommé. La liste du patch en cours, la
-> 302 vers la liste d'un patch non stocké et la réponse d'attente tant que le catalogue du
-> dernier patch n'est pas lu valent toujours.
+> dure encore. Un champion, un objet ou un sort retiré du jeu mène à la page du patch qui a
+> ouvert son dernier état, même sans patch nommé ; une voie de runes absente du patch en
+> cours garde la règle ci-dessous. La liste du patch en cours, la 302 vers la liste d'un
+> patch non stocké et la réponse d'attente tant que le catalogue du dernier patch n'est pas
+> lu valent toujours.
 
 ## Ce qui change
 

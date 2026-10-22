@@ -110,9 +110,11 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   rang des sorts y gardent leur valeur avant, un texte ou un nom s'affiche avec sa seule
   valeur après (voulu, `ComparedProjection`). Une ancienne URL du site qui nomme une version
   mène à la canonique de la page qu'elle nommait : l'ouvreur de l'état clos, avec le slug de
-  cette version, ou l'URL courte de l'état ouvert ; sans version, une entité absente du
-  dernier patch mène à l'ouvreur de son dernier état (amendements du 2026-10-16 et du
-  2026-10-22).
+  cette version, ou l'URL courte de l'état ouvert ; sans version, un champion, un objet ou
+  un sort absent du dernier patch mène à l'ouvreur de son dernier état. Une voie de runes
+  absente du dernier patch garde la règle du 2026-10-16 (sa page épinglée de la version
+  nommée, 404 sans version) : l'ancien site la nommait par sa clé, que seul le catalogue du
+  dernier patch traduit en id pour l'index (amendements du 2026-10-16 et du 2026-10-22).
 - Une page qui oublie `Seo.apply` n'a ni canonique ni hreflang. Une clé `about.*`, `api.*`
   ou `seo.*` n'est traduite que si un ancêtre fournit son scope (`provideTranslocoScope`) ;
   sinon la clé brute sort dans le HTML, sans erreur. Le chrome (en-tête, pied de page) n'en
