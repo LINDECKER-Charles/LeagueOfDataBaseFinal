@@ -48,6 +48,10 @@ services:
   migrate:
     cpu_shares: 128
 
+  # The index of states builds on the host beside the production visitors: the staging weight.
+  states:
+    cpu_shares: 128
+
   web-ssr:
     environment:
       # Render admission (src/server/admission) at the scale of a quarter of a core. The

@@ -49,6 +49,8 @@ const NGINX_UPSTREAM = '{{upstreams 8080}}';
 const NGINX_TEMP = '/var/cache/nginx/temp';
 // The staging share of the host: about three quarters of a core.
 const STAGING_CORES = 0.75;
+// The staging one-shots' weight, under the production visitors they run beside.
+const STAGING_ONE_SHOT_SHARES = 128;
 const HASH = '$2a$14$jM2G4xK0ZDa8W6PF31H9BOKCv81PEwu/7g692HVRaN72tRoi1jH52';
 const AUTH_ENV = `LODB_STAGING_BASIC_AUTH_USER=tester\nLODB_STAGING_BASIC_AUTH_HASH='${HASH}'\n`;
 const OPEN_PATHS = '/api/* /v1/* /webhooks/* /healthz /build/* /cdn/blobs/* /u/*';
@@ -216,6 +218,9 @@ describe('served overlays through Compose',
       for (const name of RUNNING) {
         assert.ok(staging[name].cpu_shares < prod[name].cpu_shares, `${name} weighs less`);
         assert.ok(Number(limitsOf(staging[name]).cpus) < Number(limitsOf(prod[name]).cpus));
+      }
+      for (const name of ONE_SHOTS) {
+        assert.equal(staging[name].cpu_shares, STAGING_ONE_SHOT_SHARES, `${name} weighs less`);
       }
       const api = staging.api.environment;
       assert.equal(api.LoDb__Ingestion__SyncConcurrency, '1');
