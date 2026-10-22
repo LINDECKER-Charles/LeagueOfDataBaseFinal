@@ -2,6 +2,7 @@ using LoDb.Api.Modules.Catalog.Reading;
 using LoDb.Api.Modules.Catalog.Shared;
 using LoDb.Api.Modules.Catalog.States;
 using LoDb.Api.Modules.Catalog.States.Details;
+using LoDb.Domain.Catalog.Champions;
 using LoDb.Domain.Catalog.Items;
 using LoDb.Domain.Editions;
 using LoDb.Domain.Text;
@@ -94,8 +95,7 @@ internal sealed record ItemDetails
         ArgumentNullException.ThrowIfNull(page);
         ArgumentNullException.ThrowIfNull(images);
         var catalog = page.Catalog;
-        var item = page.Item;
-        var profile = ProfileOf(item, catalog, images);
+        var profile = ProfileOf(page.Item, catalog, images);
         return new ItemDetails
         {
             Version = catalog.Version.Value,
@@ -109,21 +109,23 @@ internal sealed record ItemDetails
             IsPresentInLatest = false,
             Changes = null,
             Profile = profile,
-            Description = DdragonText.Clean(item.Description),
-            AvailableMaps = ItemEdition.ClaimableMapIds(item.Id, item.Maps),
-            RequiredChampion = page.RequiredChampion is { } bound
-                ? EntityLink.Of(bound, catalog, images)
-                : null,
-            RequiredAlly = page.RequiredAlly is { } ally
-                ? EntityLink.Of(ally, catalog, images)
-                : null,
+            Description = DdragonText.Clean(page.Item.Description),
+            AvailableMaps = ItemEdition.ClaimableMapIds(page.Item.Id, page.Item.Maps),
+            RequiredChampion = LinkOf(page.RequiredChampion, catalog, images),
+            RequiredAlly = LinkOf(page.RequiredAlly, catalog, images),
             Recipe = page.Recipe is { } recipe ? RecipeStep.Of(recipe, page, images) : null,
-            Depth = item.Depth,
+            Depth = page.Item.Depth,
             Upgrades =
                 [.. page.Upgrades.Select(upgrade => ItemUpgrade.Of(upgrade, catalog, images))],
-            Neighbours = ItemList.NeighboursOf(item, catalog),
+            Neighbours = ItemList.NeighboursOf(page.Item, catalog),
         };
     }
+
+    private static EntityLink? LinkOf(
+        ChampionDetail? champion,
+        CatalogSnapshot catalog,
+        ImageSet images) =>
+        champion is null ? null : EntityLink.Of(champion, catalog, images);
 
     // The page prints the description in full below its hero: the hero's lead is the
     // plaintext alone, as on the legacy page, never that description a second time.
