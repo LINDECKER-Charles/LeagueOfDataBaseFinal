@@ -76,6 +76,35 @@ public sealed class SitemapIndexTests
     }
 
     [Fact]
+    public void LaggingIndexAnnouncesItsEndAsPastAndNoPageOfChangesForTheLatest()
+    {
+        var lagging = SeoStates.Lagging();
+        var latest = LatestPatch.Of(
+            PatchVersion.Parse(SeoStates.Latest),
+            SeoStates.LatestPromotedAt,
+            lagging);
+        var count = UiLocales.All.Count;
+
+        var entries = SitemapLocations.Index(Origin, latest, lagging).ToList();
+        var shortPrefix = SitePages.Prefix(Origin, UiLocale.De, null);
+        var pages = SitemapLocations.Latest(shortPrefix, null, latest)
+            .Select(static entry => entry.Location);
+
+        Assert.False(latest.HasChanges);
+        Assert.Equal(4 * count, entries.Count);
+        Assert.Equal(
+            new SitemapEntry($"{Origin}/sitemaps/ar/16.18.1.xml", SeoStates.LatestPromotedAt),
+            entries[count]);
+        Assert.Equal(
+            [new SitemapEntry($"{Origin}/de/16.18.1/changes", SeoStates.LatestPromotedAt)],
+            SitemapLocations.Version(
+                SitePages.Prefix(Origin, UiLocale.De, PatchVersion.Parse(SeoStates.Previous)),
+                PatchVersion.Parse(SeoStates.Previous),
+                lagging));
+        Assert.DoesNotContain($"{Origin}/de/changes", pages);
+    }
+
+    [Fact]
     public void PastVersionDatesItsPatchPageByThePromotionThatMadeItPast()
     {
         var entries = VersionOf(SeoStates.Previous);

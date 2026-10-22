@@ -43,6 +43,12 @@ public static class SeoStates
     private static readonly IndexedEntity MoltenEdge = new(ResourceType.Items, "3371");
     private static readonly IndexedEntity Trinity = new(ResourceType.Items, "3078");
 
+    private static readonly PromotedVersion[] Promotions =
+    [
+        new(PatchVersion.Parse(Previous), TestStates.BuiltAt.AddDays(-1)),
+        new(PatchVersion.Parse(Latest), LatestPromotedAt),
+    ];
+
     public static EntityStateSnapshot Snapshot() =>
         TestStates.Snapshot(
             [Start, Unchanged, Archived, Previous, Latest],
@@ -59,10 +65,25 @@ public static class SeoStates
                 },
                 Changed(TestStates.Open(Trinity, Latest), Previous),
             ],
+            Promotions);
+
+    /// <summary>
+    /// The same history while the index lags a version behind the catalog: it ends at
+    /// <see cref="Previous"/>, which still holds Boots and Trinity Force open, although
+    /// <see cref="Latest"/> is promoted.
+    /// </summary>
+    public static EntityStateSnapshot Lagging() =>
+        TestStates.Snapshot(
+            [Start, Unchanged, Archived, Previous],
             [
-                new PromotedVersion(PatchVersion.Parse(Previous), TestStates.BuiltAt.AddDays(-1)),
-                new PromotedVersion(PatchVersion.Parse(Latest), LatestPromotedAt),
-            ]);
+                TestStates.Open(Ahri, Start),
+                TestStates.Closed(Boots, Start, Archived) with { Path = "items/1001-boots" },
+                Changed(TestStates.Open(Boots, Previous), Start),
+                TestStates.Closed(MoltenEdge, Archived, Archived)
+                    with { Path = "items/3371-molten-edge" },
+                TestStates.Open(Trinity, Previous) with { Path = "items/3078-trinity-force" },
+            ],
+            Promotions);
 
     private static IndexedState Changed(IndexedState state, string previousOpener) =>
         state with

@@ -174,6 +174,48 @@ public sealed class SitemapApiTests(SeoApiFixture api)
     }
 
     [Fact]
+    public async Task LaggingIndexAnnouncesItsEndAndNoPageOfChangesForTheLatest()
+    {
+        api.States.Snapshot = SeoStates.Lagging();
+        try
+        {
+            using var index = await api.GetAsync("/sitemap.xml");
+            using var latest = await api.GetAsync("/sitemaps/fr/latest.xml");
+            var dates = DatesOf(SitemapXmlTests.Parse(await BodyAsync(index)));
+            var pages = SitemapXmlTests.Locations(SitemapXmlTests.Parse(await BodyAsync(latest)));
+
+            Assert.Equal(
+                Lastmod(SeoStates.LatestPromotedAt),
+                dates[$"{Origin}/sitemaps/fr/{SeoStates.Previous}.xml"]);
+            Assert.Equal(HttpStatusCode.OK, latest.StatusCode);
+            Assert.Contains($"{Origin}/fr/patches", pages);
+            Assert.DoesNotContain($"{Origin}/fr/changes", pages);
+        }
+        finally
+        {
+            api.States.Snapshot = SeoStates.Snapshot();
+        }
+    }
+
+    [Fact]
+    public async Task VersionBetweenTheIndexEndAndTheLatestIsMissing()
+    {
+        api.States.Snapshot = TestStates.Snapshot(
+            [SeoStates.Start, SeoStates.Unchanged, SeoStates.Archived],
+            []);
+        try
+        {
+            using var response = await api.GetAsync($"/sitemaps/en/{SeoStates.Previous}.xml");
+
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        }
+        finally
+        {
+            api.States.Snapshot = SeoStates.Snapshot();
+        }
+    }
+
+    [Fact]
     public async Task UnavailableIndexStillRedirectsAndRefusesWhatItNeedsNot()
     {
         api.States.IsUnavailable = true;
