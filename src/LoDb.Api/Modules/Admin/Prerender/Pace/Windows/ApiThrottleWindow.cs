@@ -14,6 +14,22 @@ internal sealed class ApiThrottleWindow(TimeProvider clock)
 
     public void Add(CgroupCpuSample sample) => _samples.Add((clock.GetTimestamp(), sample));
 
+    /// <summary>
+    /// The cores the API used over the last minute; null before two samples or when a counter
+    /// went back.
+    /// </summary>
+    public double? Cores()
+    {
+        if (_samples.Span(PaceTiming.ShortWindowSamples) is not var (earlier, latest))
+        {
+            return null;
+        }
+
+        var wall = clock.GetElapsedTime(earlier.At, latest.At).TotalMicroseconds;
+        var used = latest.Sample.UsageMicroseconds - earlier.Sample.UsageMicroseconds;
+        return wall > 0 && used >= 0 ? used / wall : null;
+    }
+
     /// <summary>The throttled share; null before two samples or when a counter went back.</summary>
     public double? Share()
     {

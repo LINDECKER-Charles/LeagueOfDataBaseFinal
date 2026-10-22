@@ -24,6 +24,8 @@ public sealed class MigrationCommandsTests(PostgresContainerFixture postgres)
     private const string PrerenderPasses = "20261020124135_PrerenderPasses";
     private const string PrerenderBuildSizes = "20261020142031_PrerenderBuildSizes";
     private const string PrerenderDiagnostics = "20261020235519_PrerenderDiagnostics";
+    private const string PrerenderDemand = "20261021213406_PrerenderDemand";
+    private const string PrerenderPaceSetting = "20261021213445_PrerenderPaceSetting";
     private const string EfHistory = "__EFMigrationsHistory";
 
     private static readonly string UnlimitedAppRoleConnections =
@@ -46,7 +48,8 @@ public sealed class MigrationCommandsTests(PostgresContainerFixture postgres)
             [
                 Baseline, Lot1, Lot4, Lot6, PaymentStates, QueryStatistics, IdentifierScrub,
                 RefreshFamilies, AudienceEntityDaily, BackupRuns, PrerenderPasses,
-                PrerenderBuildSizes, PrerenderDiagnostics,
+                PrerenderBuildSizes, PrerenderDiagnostics, PrerenderDemand,
+                PrerenderPaceSetting,
             ],
             await database.AppliedMigrationsAsync(Cancellation));
     }

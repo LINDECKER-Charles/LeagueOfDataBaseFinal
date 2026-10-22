@@ -1,6 +1,7 @@
 using System.Net;
 using LoDb.Api.Modules.Admin.Prerender.Builds;
 using LoDb.Api.Modules.Admin.Prerender.Coverage;
+using LoDb.Api.Modules.Admin.Prerender.Demand;
 using LoDb.Api.Modules.Admin.Prerender.Options;
 using LoDb.Api.Modules.Admin.Prerender.Pace;
 using LoDb.Api.Modules.Admin.Prerender.Pages;
@@ -8,6 +9,7 @@ using LoDb.Api.Modules.Admin.Prerender.Passes;
 using LoDb.Api.Modules.Admin.Prerender.Passes.Planning;
 using LoDb.Api.Modules.Admin.Prerender.Promotion;
 using LoDb.Api.Modules.Admin.Prerender.Rendering;
+using LoDb.Api.Modules.Admin.Prerender.Rendering.Renderers;
 using LoDb.Api.Modules.Admin.Prerender.Telemetry;
 using LoDb.Api.Modules.Admin.Prerender.Units;
 using LoDb.Api.Modules.Admin.Prerender.Writing;
@@ -20,8 +22,8 @@ namespace LoDb.Api.Modules.Admin.Prerender;
 
 /// <summary>
 /// Registrations of the pre-rendering of the catalogue (ADR 0011): its settings, the page
-/// store, the <c>prerender-ssr</c> client, the pass's services, the regulator of its pace
-/// and its share of each promotion.
+/// store, the <c>prerender-ssr</c> client, the pass's services, the regulator of its pace,
+/// its share of each promotion and the automatic queue of the refused pages.
 /// </summary>
 /// <remarks>
 /// Neither I/O nor throw, with an empty configuration as well (the OpenAPI generation builds
@@ -57,6 +59,7 @@ internal static class PrerenderRegistration
         AddPromotion(services);
         AddSsrClient(services);
         services.AddPrerenderPace();
+        services.AddPrerenderDemand(configuration);
         return services;
     }
 
@@ -95,8 +98,13 @@ internal static class PrerenderRegistration
 
     // Toward the SSR alone, on the stack network: no redirect followed (a 301 is a page the
     // pass skips), no cookie, bodies left gzip as the store keeps them, and no log line per
-    // request, four million of them in a pass.
-    private static void AddSsrClient(IServiceCollection services) =>
+    // request, four million of them in a pass. Spread over the renderers when several.
+    private static void AddSsrClient(IServiceCollection services)
+    {
+        services.TryAddSingleton<IRendererDns, RendererDns>();
+        services.TryAddSingleton<RendererAddresses>();
+        services.TryAddSingleton<RendererSlots>();
+        services.TryAddTransient<RendererSpreadHandler>();
         services.AddHttpClient(SsrClient.ClientName)
             .ConfigureHttpClient(static (provider, client) =>
                 Configure(client, provider.GetRequiredService<IOptions<PrerenderOptions>>().Value))
@@ -106,7 +114,9 @@ internal static class PrerenderRegistration
                 UseCookies = false,
                 AutomaticDecompression = DecompressionMethods.None,
             })
+            .AddHttpMessageHandler<RendererSpreadHandler>()
             .RemoveAllLoggers();
+    }
 
     // The pass renders each page as a visitor of the public host would get it: the SSR trusts
     // these two proxy headers for the origin of the canonical and hreflang links. The Host is

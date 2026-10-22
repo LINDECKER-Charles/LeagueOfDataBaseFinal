@@ -50,6 +50,13 @@ internal static partial class PaceLog
     public static partial void Fixed(ILogger logger, int rendersPerMinute);
 
     [LoggerMessage(
+        EventName = "prerender.pace.setting_applied",
+        Level = LogLevel.Information,
+        Message = "The pre-rendering pace is now {Mode}, its manual target {RendersPerMinute}"
+            + " renders a minute (set from the admin).")]
+    public static partial void SettingApplied(ILogger logger, string mode, int rendersPerMinute);
+
+    [LoggerMessage(
         EventName = "prerender.pace.signal_lost",
         Level = LogLevel.Warning,
         Message = "The pace regulator cannot read {Source}: the pass keeps to its floor while it"

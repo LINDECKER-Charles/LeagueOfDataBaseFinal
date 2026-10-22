@@ -11,6 +11,9 @@ internal sealed record PaceSnapshot
 
     public required PaceMode Mode { get; init; }
 
+    /// <summary>Whether the operator's manual target drives the drain.</summary>
+    public bool IsManual { get; init; }
+
     public required PaceState State { get; init; }
 
     /// <summary>The allowance in force now: 0 while held, the floor once stale.</summary>

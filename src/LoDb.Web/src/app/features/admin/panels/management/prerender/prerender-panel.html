@@ -54,6 +54,9 @@
 
   <lodb-prerender-kpis [report]="data" />
 
+  <lodb-demand-block class="mt-6" />
+  <lodb-speed-block class="mt-6" [report]="data" />
+
   <lodb-tabs class="mt-6" [label]="'admin.prerender.overview.tabs.label' | adminText">
     <lodb-tab
       key="prerender-coverage"

@@ -74,11 +74,24 @@ internal sealed class PrerenderOptions
     public int RendersPerMinute { get; set; } = DefaultRendersPerMinute;
 
     /// <summary>
-    /// Pages of a unit rendered and written at once, within the pace above: at most the SSR's
-    /// <c>LODB_PRERENDER_MAX_IN_FLIGHT</c>, beyond which it refuses them. A page waits on the
-    /// render, then on the store and the database: alone, the pass would never reach its pace.
+    /// The most pages of a unit rendered and written at once, within the pace above. A page
+    /// waits on the render, then on the store and the database: alone, the pass would never
+    /// reach its pace. The window follows the pace under this bound (<c>InFlightWidth</c>), and
+    /// the renderers' lanes, spread over, admit it (compose.yaml).
     /// </summary>
     public int MaxInFlight { get; set; } = DefaultMaxInFlight;
+
+    /// <summary>
+    /// The renderers behind <see cref="SsrBaseUrl"/>: the replicas of web-ssr-prerender
+    /// (<c>LODB_PRERENDER_RENDERERS</c>), which share its name on the stack network. Above one,
+    /// the pass resolves the name and spreads its requests over every address, the least busy
+    /// first (<c>RendererSpreadHandler</c>), and the admin reads each one's load. One keeps the
+    /// name as it is.
+    /// </summary>
+    public int Renderers { get; set; } = 1;
+
+    /// <summary>Whether the pass spreads its renders over several renderers.</summary>
+    public bool SpreadsRenders => Renderers > 1;
 
     /// <summary>The adaptive pace (<c>LoDb:Prerender:Pace</c>).</summary>
     public PaceOptions Pace { get; set; } = new();

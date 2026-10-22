@@ -1,35 +1,47 @@
 using LoDb.Api.Modules.Admin.Prerender.Options;
 using LoDb.Api.Modules.Admin.Prerender.Pace.Decision;
+using LoDb.Api.Modules.Admin.Prerender.Pace.Manual;
 using LoDb.Api.Modules.Admin.Prerender.Pace.Telemetry;
 using Microsoft.Extensions.Options;
 
 namespace LoDb.Api.Modules.Admin.Prerender.Pace;
 
 /// <summary>
-/// The pace of the pass on this instance: the renders a minute <c>RenderPacer</c> lets it
-/// start, set by the regulator's decisions while the engine drains a pass here, the fixed pace
-/// otherwise.
+/// The pace of the pre-rendering on this instance: the renders a minute <c>RenderPacer</c> lets
+/// the pass and the automatic queue start together, set by the regulator's decisions while the
+/// engine drains a pass or the queue drains pages here (adaptive), or by the operator's target
+/// (manual, <see cref="PaceSettings"/>), the fixed pace otherwise.
 /// </summary>
 /// <remarks>
 /// <para>
-/// Driven only from <c>PrerenderEngine.RunAsync</c>, under the pass's lock: the command line
-/// drains a unit at the fixed pace, as does an instance whose background tasks are off. Held in
-/// memory, as the engine's pulse: each drain starts again at the floor.
+/// Driven from <c>PrerenderEngine.RunAsync</c>, under the pass's lock, and from the queue's
+/// drain, under its own (<see cref="BeginQueue"/>): the command line drains a unit at the fixed
+/// pace, as does an instance whose background tasks are off. Held in memory, as the engine's
+/// pulse: each pass starts again at the floor, or at the target; the queue joins a pace already
+/// driven as it is, and the pace stops once neither drives it.
 /// </para>
 /// <para>
+/// A new target applies at once; a change of mode at the next decision, within 30 s.
 /// Fail-safe: an allowance no decision renewed for <see cref="PaceTiming.Stale"/> (the sampler
-/// stopped) falls back to the floor, never to the faster fixed pace.
+/// stopped, and with it the manual mode's brake) falls back to the floor, never to the faster
+/// fixed pace nor to the target.
 /// </para>
 /// </remarks>
 internal sealed class PaceRegulator
 {
+    // The pass id of a pace the queue drives alone.
+    private const long NoPass = 0;
+
     private readonly Lock _gate = new();
     private readonly IOptions<PrerenderOptions> _options;
+    private readonly PaceSettings _settings;
     private readonly TimeProvider _clock;
     private readonly PaceChanges _changes;
     private readonly ILogger<PaceRegulator> _logger;
     private PaceMemory? _memory;
     private long _passId;
+    private bool _isPassDriving;
+    private bool _isQueueDriving;
     private long? _fixedPassId;
     private long _drive;
     private DateTimeOffset _decidedAt;
@@ -37,17 +49,18 @@ internal sealed class PaceRegulator
 
     public PaceRegulator(
         IOptions<PrerenderOptions> options,
+        PaceSettings settings,
         TimeProvider clock,
         PaceMetrics metrics,
         ILogger<PaceRegulator> logger)
     {
         ArgumentNullException.ThrowIfNull(metrics);
-        (_options, _clock, _logger) = (options, clock, logger);
+        (_options, _settings, _clock, _logger) = (options, settings, clock, logger);
         _changes = new PaceChanges(metrics, logger);
         metrics.Follow(Snapshot);
     }
 
-    /// <summary>Whether the engine drains a pass here now.</summary>
+    /// <summary>Whether the engine drains a pass, or the queue its pages, here now.</summary>
     public bool IsDriven
     {
         get
@@ -70,10 +83,9 @@ internal sealed class PaceRegulator
         bool isNewFixedPass;
         lock (_gate)
         {
-            _memory = options.Pace.IsAdaptive
-                ? PaceMemory.Start(now, options.Pace.MinRendersPerMinute)
-                : PaceMemory.Fixed(now, options.RendersPerMinute);
+            _memory = FirstMemory(now);
             (_passId, _decidedAt, _hostBusy) = (passId, now, null);
+            _isPassDriving = true;
             isNewFixedPass = !options.Pace.IsAdaptive && _fixedPassId != passId;
             _fixedPassId = options.Pace.IsAdaptive ? null : passId;
             Interlocked.Increment(ref _drive);
@@ -86,12 +98,48 @@ internal sealed class PaceRegulator
         }
     }
 
-    /// <summary>The engine stopped draining: the fixed pace applies again.</summary>
+    /// <summary>
+    /// The engine stopped draining: the fixed pace applies again, unless the queue drives.
+    /// </summary>
     public void End()
     {
         lock (_gate)
         {
-            _memory = null;
+            (_isPassDriving, _passId) = (false, NoPass);
+            _memory = _isQueueDriving ? _memory : null;
+        }
+    }
+
+    /// <summary>
+    /// The queue drains pages: from the floor, or the target, unless a pass already drives the
+    /// pace, which it then shares as it is. Called again, it changes nothing.
+    /// </summary>
+    public void BeginQueue()
+    {
+        var now = _clock.GetUtcNow();
+        lock (_gate)
+        {
+            _isQueueDriving = true;
+            if (_memory is not null)
+            {
+                return;
+            }
+
+            _memory = FirstMemory(now);
+            (_passId, _decidedAt, _hostBusy) = (NoPass, now, null);
+            Interlocked.Increment(ref _drive);
+        }
+    }
+
+    /// <summary>
+    /// The queue stopped draining: the fixed pace applies again, unless a pass drives.
+    /// </summary>
+    public void EndQueue()
+    {
+        lock (_gate)
+        {
+            _isQueueDriving = false;
+            _memory = _isPassDriving ? _memory : null;
         }
     }
 
@@ -104,7 +152,10 @@ internal sealed class PaceRegulator
         }
     }
 
-    /// <summary>Applies one evaluation of the signals, while driven in adaptive mode.</summary>
+    /// <summary>
+    /// Applies one evaluation of the signals while driven, adaptive or manual: the fixed mode
+    /// reads none.
+    /// </summary>
     public void Decide(PaceEvaluation evaluation)
     {
         ArgumentNullException.ThrowIfNull(evaluation);
@@ -118,14 +169,16 @@ internal sealed class PaceRegulator
             }
 
             before = memory;
-            after = PaceDecision.Next(memory, evaluation, _options.Value.Pace);
+            after = Next(memory, evaluation);
             (_memory, _decidedAt, _hostBusy) = (after, evaluation.At, evaluation.Board.HostBusy);
         }
 
-        _changes.Note(before, after, evaluation.Board.Worst);
+        _changes.Note(before, after, after.IsManual
+            ? ManualDecision.ReadingOf(after, evaluation.Board)
+            : evaluation.Board.Worst);
     }
 
-    /// <summary>The regulator now; null when no pass drains here.</summary>
+    /// <summary>The regulator now; null when neither a pass nor the queue drains here.</summary>
     public PaceSnapshot? Snapshot()
     {
         lock (_gate)
@@ -139,6 +192,7 @@ internal sealed class PaceRegulator
             {
                 PassId = _passId,
                 Mode = _options.Value.Pace.Mode,
+                IsManual = memory.IsManual,
                 State = memory.State,
                 RendersPerMinute = AllowanceOf(memory, _clock.GetUtcNow()),
                 Reason = memory.Reason,
@@ -149,6 +203,29 @@ internal sealed class PaceRegulator
         }
     }
 
+    private PaceMemory FirstMemory(DateTimeOffset now)
+    {
+        var options = _options.Value;
+        return !options.Pace.IsAdaptive ? PaceMemory.Fixed(now, options.RendersPerMinute)
+            : _settings.IsManual ? PaceMemory.Manual(now, _settings.ManualTarget)
+            : PaceMemory.Start(now, options.Pace.MinRendersPerMinute);
+    }
+
+    // Back from manual to adaptive, the regulator climbs from the floor again; a manual
+    // memory held by the brake keeps its hold, the adaptive rule then releasing it.
+    private PaceMemory Next(PaceMemory memory, PaceEvaluation evaluation)
+    {
+        var pace = _options.Value.Pace;
+        if (_settings.IsManual)
+        {
+            return ManualDecision.Next(memory, evaluation, _settings.ManualTarget);
+        }
+
+        return memory.State == PaceState.Manual
+            ? PaceMemory.Start(evaluation.At, pace.MinRendersPerMinute)
+            : PaceDecision.Next(memory with { IsManual = false }, evaluation, pace);
+    }
+
     private int AllowanceOf(PaceMemory? memory, DateTimeOffset now)
     {
         var options = _options.Value;
@@ -157,8 +234,18 @@ internal sealed class PaceRegulator
             return options.RendersPerMinute;
         }
 
-        return now - _decidedAt > PaceTiming.Stale
-            ? options.Pace.MinRendersPerMinute
-            : memory.Allowance;
+        if (now - _decidedAt > PaceTiming.Stale)
+        {
+            return options.Pace.MinRendersPerMinute;
+        }
+
+        return memory.State switch
+        {
+            PaceState.Held => 0,
+            PaceState.Manual => _settings.IsManual
+                ? _settings.ManualTarget
+                : options.Pace.MinRendersPerMinute,
+            _ => memory.Allowance,
+        };
     }
 }

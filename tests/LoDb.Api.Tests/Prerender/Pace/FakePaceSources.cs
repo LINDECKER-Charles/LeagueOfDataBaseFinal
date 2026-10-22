@@ -1,5 +1,8 @@
+using System.Net;
+using LoDb.Api.Modules.Admin.Prerender.Pace.Manual;
 using LoDb.Api.Modules.Admin.Prerender.Pace.Readings;
 using LoDb.Api.Modules.Admin.Prerender.Pace.Readings.Load;
+using LoDb.Api.Modules.Admin.Prerender.Rendering.Renderers;
 
 namespace LoDb.Api.Tests.Prerender.Pace;
 
@@ -7,7 +10,8 @@ namespace LoDb.Api.Tests.Prerender.Pace;
 /// Every source of the regulator, scripted: a host busy at <see cref="HostBusy"/>, an API never
 /// throttled, two calm SSRs unless the test says otherwise; each read counted.
 /// </summary>
-internal sealed class FakePaceSources : IHostCpuReader, ICgroupCpuReader, ISsrLoadReader
+internal sealed class FakePaceSources
+    : IHostCpuReader, ICgroupCpuReader, ISsrLoadReader, IPaceSettingSource, IRendererDns
 {
     private const long TicksPerSample = 1000;
 
@@ -31,6 +35,17 @@ internal sealed class FakePaceSources : IHostCpuReader, ICgroupCpuReader, ISsrLo
     public int CgroupReads { get; private set; }
 
     public int LoadReads { get; private set; }
+
+    /// <summary>The stored setting; null as on a stack where none was ever set.</summary>
+    public PaceSetting? Stored { get; set; }
+
+    public int SettingReads { get; private set; }
+
+    /// <summary>The renderers' addresses the DNS answers.</summary>
+    public IReadOnlyList<IPAddress> Renderers { get; set; } = [];
+
+    /// <summary>Each renderer's load by address; a missing one reads as unreachable.</summary>
+    public Dictionary<string, SsrLoad> RendererLoads { get; } = new(StringComparer.Ordinal);
 
     public static SsrLoad LoadOf(long renders, long refused)
     {
@@ -73,6 +88,21 @@ internal sealed class FakePaceSources : IHostCpuReader, ICgroupCpuReader, ISsrLo
     {
         ArgumentNullException.ThrowIfNull(url);
         LoadReads++;
+        if (IPAddress.TryParse(url.Host, out _))
+        {
+            return Task.FromResult(RendererLoads.GetValueOrDefault(url.Host));
+        }
+
         return Task.FromResult(url.Host == "lodb-web-ssr" ? Visitors : Pass);
     }
+
+    Task<PaceSetting?> IPaceSettingSource.ReadAsync(CancellationToken cancellationToken)
+    {
+        SettingReads++;
+        return Task.FromResult(Stored);
+    }
+
+    public Task<IReadOnlyList<IPAddress>> ResolveAsync(
+        string host,
+        CancellationToken cancellationToken) => Task.FromResult(Renderers);
 }

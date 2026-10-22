@@ -6,12 +6,15 @@ namespace LoDb.Api.Modules.Admin.Prerender.Http.Views.Progress;
 /// </summary>
 internal sealed record PrerenderPaceView
 {
-    /// <summary><c>adaptive</c>, or <c>fixed</c> when the regulation is off.</summary>
+    /// <summary>
+    /// <c>adaptive</c>, <c>manual</c> (the operator's target from the admin), or <c>fixed</c>
+    /// when the regulation is off.
+    /// </summary>
     public required string Mode { get; init; }
 
     /// <summary>
-    /// <c>starting</c>, <c>climbing</c>, <c>steady</c>, <c>slowed</c>, <c>held</c> or
-    /// <c>fixed</c>.
+    /// <c>starting</c>, <c>climbing</c>, <c>steady</c>, <c>slowed</c>, <c>held</c>,
+    /// <c>fixed</c> or <c>manual</c>.
     /// </summary>
     public required string State { get; init; }
 
@@ -28,8 +31,8 @@ internal sealed record PrerenderPaceView
     /// What limits the pace, the worst signal or the regulator's own rule: <c>warming-up</c>,
     /// <c>ceiling</c>, <c>host-cpu</c>, <c>host-cpu-sustained</c>, <c>host-steal</c>,
     /// <c>visitors-ssr</c>, <c>visitors-refused</c>, <c>api-cpu</c>, <c>pass-latency</c>,
-    /// <c>pass-ssr-pressure</c>, <c>signal-missing</c> or <c>fixed</c>; null while it climbs
-    /// freely.
+    /// <c>pass-ssr-pressure</c>, <c>signal-missing</c>, <c>fixed</c> or <c>manual</c>; null while
+    /// it climbs freely.
     /// </summary>
     public string? Reason { get; init; }
 

@@ -1,0 +1,190 @@
+<lodb-admin-card [heading]="'admin.prerender.speed.title' | adminText" data-speed>
+  @if (speed.value(); as data) {
+    @let limits = data.limits;
+    <p class="m-0 mb-4 text-[0.9rem] text-text-muted">
+      {{ 'admin.prerender.speed.lede' | adminText }}
+    </p>
+    @if (!data.isConfigured) {
+      <p class="m-0 mb-4 text-[0.9rem]" data-speed-dormant>
+        {{ 'admin.prerender.speed.dormant' | adminText }}
+      </p>
+    }
+    @if (data.isFixed) {
+      <p class="m-0 mb-4 text-[0.9rem] text-warn" data-speed-fixed>
+        {{ 'admin.prerender.speed.fixed' | adminText }}
+      </p>
+    }
+
+    <fieldset class="m-0 border-0 p-0" [disabled]="data.isFixed || busy()">
+      <legend class="mb-2 text-[0.9rem] text-gold-bright">
+        {{ 'admin.prerender.speed.mode.label' | adminText }}
+      </legend>
+      <div class="grid gap-3 sm:grid-cols-2" role="radiogroup">
+        <label
+          class="flex cursor-pointer flex-col gap-1.5 border border-gold/28 p-3 has-checked:border-hex has-checked:bg-hex/5"
+          data-mode="adaptive"
+        >
+          <span class="flex items-center gap-2 text-gold-bright">
+            <input
+              type="radio"
+              name="prerender-speed-mode"
+              class="size-4 shrink-0 accent-hex scheme-dark"
+              [checked]="!isManual()"
+              (change)="choose('adaptive')"
+            />
+            {{ 'admin.prerender.speed.mode.adaptive' | adminText }}
+          </span>
+          <span class="readout-text">
+            {{
+              'admin.prerender.speed.mode.adaptive_hint'
+                | adminText: { min: limits.minRendersPerMinute, max: limits.maxRendersPerMinute }
+            }}
+          </span>
+        </label>
+        <label
+          class="flex cursor-pointer flex-col gap-1.5 border border-gold/28 p-3 has-checked:border-hex has-checked:bg-hex/5"
+          data-mode="manual"
+        >
+          <span class="flex items-center gap-2 text-gold-bright">
+            <input
+              type="radio"
+              name="prerender-speed-mode"
+              class="size-4 shrink-0 accent-hex scheme-dark"
+              [checked]="isManual()"
+              (change)="choose('manual')"
+            />
+            {{ 'admin.prerender.speed.mode.manual' | adminText }}
+          </span>
+          <span class="readout-text">{{
+            'admin.prerender.speed.mode.manual_hint' | adminText
+          }}</span>
+        </label>
+      </div>
+
+      @if (isManual()) {
+        <label class="mt-4 flex flex-col gap-2" for="prerender-speed-rate">
+          <span class="text-[0.9rem] text-gold-bright">
+            {{ 'admin.prerender.speed.rate.label' | adminText }}
+            <span class="text-text-muted">
+              {{
+                'admin.prerender.speed.rate.range'
+                  | adminText: { min: step, max: limits.manualMaxRendersPerMinute }
+              }}
+            </span>
+          </span>
+          <span class="flex flex-wrap items-center gap-3">
+            <input
+              class="min-w-0 flex-1 accent-hex"
+              type="range"
+              [min]="step"
+              [max]="limits.manualMaxRendersPerMinute"
+              [step]="step"
+              [value]="pace()"
+              [attr.aria-label]="'admin.prerender.speed.rate.label' | adminText"
+              (input)="typed($event)"
+            />
+            <input
+              id="prerender-speed-rate"
+              lodbField
+              class="w-28"
+              type="number"
+              inputmode="numeric"
+              min="1"
+              [max]="limits.manualMaxRendersPerMinute"
+              [value]="pace()"
+              (change)="typed($event)"
+              data-speed-rate
+            />
+            <span class="text-[0.9rem] text-text-muted">
+              {{ 'admin.prerender.speed.rate.unit' | adminText }}
+            </span>
+          </span>
+        </label>
+        <p class="m-0 mt-3 border-s-2 border-warn ps-3 text-[0.85rem]" data-speed-brake>
+          {{
+            'admin.prerender.speed.brake'
+              | adminText
+                : {
+                    hold: limits.holdMinutes,
+                    minutes: limits.brakeMinutes,
+                    busy: limits.brakeHostBusy * 100,
+                  }
+          }}
+        </p>
+      }
+
+      <div class="mt-4 flex flex-wrap items-center justify-end gap-3">
+        @if (outcome(); as said) {
+          <span
+            class="me-auto text-[0.85rem]"
+            [class.text-warn]="said.tone === 'alert'"
+            role="status"
+            data-speed-outcome
+            >{{ said.text }}</span
+          >
+        }
+        <button
+          class="max-sm:w-full"
+          lodbButton="gold"
+          type="button"
+          [disabled]="!isChanged() || busy() || data.isFixed"
+          (click)="apply()"
+          data-speed-apply
+        >
+          {{ 'admin.prerender.speed.apply' | adminText }}
+        </button>
+      </div>
+      <p class="m-0 mt-2 text-end text-[0.8rem] text-text-muted" data-speed-applied>
+        @if (applied(); as at) {
+          {{ 'admin.prerender.speed.applied' | adminText: { at } }}
+        } @else {
+          {{ 'admin.prerender.speed.never_set' | adminText }}
+        }
+      </p>
+    </fieldset>
+
+    @if (lines(); as all) {
+      <div class="mt-6 grid gap-6 lg:grid-cols-2">
+        <section>
+          <h3 class="m-0 mb-2 text-[0.95rem] text-gold-bright">
+            {{ 'admin.prerender.speed.now.title' | adminText }}
+          </h3>
+          @if (all.now; as now) {
+            <dl class="m-0 grid gap-2" data-speed-now>
+              @for (row of now; track row.key) {
+                <div class="flex flex-col" [class.text-warn]="row.isWarning">
+                  <dt class="text-[0.8rem] text-text-muted">{{ row.label }}</dt>
+                  <dd class="m-0 text-[0.9rem]">{{ row.value }}</dd>
+                </div>
+              }
+            </dl>
+          } @else {
+            <p class="m-0 text-[0.9rem] text-text-muted">
+              {{ 'admin.prerender.speed.now.unread' | adminText }}
+            </p>
+          }
+        </section>
+        <section>
+          <h3 class="m-0 mb-2 text-[0.95rem] text-gold-bright">
+            {{
+              'admin.prerender.speed.forecast.title'
+                | adminText: { pace: isManual() ? pace() : limits.maxRendersPerMinute }
+            }}
+          </h3>
+          <dl class="m-0 grid gap-2" data-speed-forecast>
+            @for (row of all.forecast; track row.key) {
+              <div class="flex flex-col" [class.text-warn]="row.isWarning">
+                <dt class="text-[0.8rem] text-text-muted">{{ row.label }}</dt>
+                <dd class="m-0 text-[0.9rem]">{{ row.value }}</dd>
+              </div>
+            }
+          </dl>
+        </section>
+      </div>
+    }
+  } @else {
+    <p class="m-0 text-[0.9rem] text-text-muted">
+      {{ 'admin.prerender.speed.loading' | adminText }}
+    </p>
+  }
+</lodb-admin-card>

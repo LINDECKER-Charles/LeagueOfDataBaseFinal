@@ -699,6 +699,21 @@ stockage objet, puis lues par nginx
   +250 % à huit). Sa voie `prerender` et ses `LODB_PRERENDER_*` restent, inutilisées : ce n'est
   pas un levier de retour arrière. L'interrupteur est `LODB_PRERENDER_PACE_MODE=fixed`, le
   levier immédiat la pause au pupitre.
+- **Plusieurs moteurs de précalcul : un nom, plusieurs adresses.** `web-ssr-prerender` tourne
+  en `LODB_PRERENDER_RENDERERS` répliques qui partagent l'alias `lodb-web-ssr-prerender`.
+  L'API ne s'en remet pas à son pool de connexions (il collerait à la première réplique) : elle
+  résout le nom toutes les 30 s et réécrit l'adresse de chaque requête, le `Host` public gardé.
+  `LoDb__Prerender__Renderers` et `replicas` lisent la même ligne : à 1, l'API ne résout rien.
+  Pendant un déploiement, deux répliques peuvent tourner deux builds : une page rendue par
+  l'une puis un fichier de build demandé à l'autre échouent une fois et sont repris.
+- **`LODB_PRERENDER_MAX_IN_FLIGHT` ne règle plus les pages en vol de la passe.** Il nourrissait
+  aussi la voie des SSR, où une valeur au-dessus de leurs créneaux les arrête au démarrage :
+  l'API lit `LODB_PRERENDER_PAGES_IN_FLIGHT` (24), la fenêtre suit le rythme, et chaque moteur
+  admet 15 rendus simultanés. Le staging garde `1` partout.
+- **Les `503` des anciens patchs ne freinent pas le mode manuel.** Seul un refus de la voie du
+  dernier patch (`current`) est un signe que les visiteurs manquent de place ; la voie
+  `pinned` refuse au-delà de son budget même sur un hôte au repos.
+
 ## Transition (jusqu'à la décommission)
 
 - L'ancienne stack (projet local `lodb`) tourne depuis `legacy/` du dépôt principal

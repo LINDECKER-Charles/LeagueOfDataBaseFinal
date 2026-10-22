@@ -19,6 +19,15 @@ internal sealed class PaceOptions
     /// <summary>The step in production: from the floor to the ceiling in 7 minutes.</summary>
     public const int DefaultStepRendersPerMinute = 30;
 
+    /// <summary>
+    /// The hard maximum of the manual target in production: two renderers at a core each, at
+    /// about 0.1 s of CPU a page (measured 2026-10-21), with half of each core spare.
+    /// </summary>
+    public const int DefaultManualMaxRendersPerMinute = 600;
+
+    /// <summary>The CPU quota of one renderer on a host (compose.deploy.yaml).</summary>
+    public const double DefaultRendererCpus = 1.0;
+
     /// <summary>Adaptive by default; <see cref="PaceMode.Fixed"/> is the kill switch.</summary>
     public PaceMode Mode { get; set; } = PaceMode.Adaptive;
 
@@ -49,6 +58,20 @@ internal sealed class PaceOptions
     /// aggregate line counts every CPU.
     /// </summary>
     public string? HostCpuSet { get; set; }
+
+    /// <summary>
+    /// The most the operator may ask in manual mode (the admin's speed setting): also the
+    /// budget of each renderer's lane (<c>LODB_PRERENDER_RENDERS_PER_MINUTE</c> of
+    /// web-ssr-prerender), which bounds the pass whatever it asks: kept at the ceiling or above,
+    /// or the lane refuses the adaptive pass's renders over it.
+    /// </summary>
+    public int ManualMaxRendersPerMinute { get; set; } = DefaultManualMaxRendersPerMinute;
+
+    /// <summary>
+    /// The CPU quota of one renderer (<c>cpus</c> of web-ssr-prerender): what the admin's
+    /// resources view takes as a renderer's capacity. Read, never enforced here.
+    /// </summary>
+    public double RendererCpus { get; set; } = DefaultRendererCpus;
 
     public bool IsAdaptive => Mode == PaceMode.Adaptive;
 }

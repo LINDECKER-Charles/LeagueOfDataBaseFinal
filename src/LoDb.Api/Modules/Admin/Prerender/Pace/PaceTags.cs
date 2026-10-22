@@ -31,6 +31,7 @@ internal static class PaceTags
         PaceReason.PassSsrPressure => "pass_ssr_pressure",
         PaceReason.SignalMissing => "signal_missing",
         PaceReason.Fixed => "fixed",
+        PaceReason.Manual => "manual",
         _ => throw new ArgumentOutOfRangeException(nameof(reason), reason, null),
     };
 
@@ -47,6 +48,7 @@ internal static class PaceTags
         PaceState.Slowed => "slowed",
         PaceState.Held => "held",
         PaceState.Fixed => "fixed",
+        PaceState.Manual => "manual",
         _ => throw new ArgumentOutOfRangeException(nameof(state), state, null),
     };
 
