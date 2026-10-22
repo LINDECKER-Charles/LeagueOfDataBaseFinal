@@ -1,3 +1,4 @@
+using LoDb.Infrastructure.Persistence.States;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -14,6 +15,8 @@ internal sealed class PrerenderRevisionWatermarkConfiguration
         builder.HasKey(watermark => watermark.Id);
 
         builder.Property(watermark => watermark.Id).ValueGeneratedNever();
+        builder.Property(watermark => watermark.CoveredThrough)
+            .HasMaxLength(CatalogStateGeneration.VersionMaxLength);
         builder.Property(watermark => watermark.UpdatedAt).HasDefaultValueSql("now()");
     }
 }

@@ -8,7 +8,8 @@ namespace LoDb.Infrastructure.Persistence.Prerender.Revision;
 /// <remarks>
 /// Absent until the producer first runs. Tied to a generation of the index: a rebuild's
 /// generation dates every closure it makes by the rebuild, which the producer must not take
-/// for that many promotions.
+/// for that many promotions. What it must take is told by the coverage the producer last read:
+/// a closure past it was never enqueued, whatever its date.
 /// </remarks>
 public sealed class PrerenderRevisionWatermark
 {
@@ -22,6 +23,12 @@ public sealed class PrerenderRevisionWatermark
 
     /// <summary>The <c>closed_at</c> of the last closure enqueued.</summary>
     public DateTimeOffset ClosedThrough { get; set; }
+
+    /// <summary>
+    /// The last version the index covered when the producer last ran: every closure it had
+    /// then ends before it. Null for a row written before the column.
+    /// </summary>
+    public string? CoveredThrough { get; set; }
 
     public DateTimeOffset UpdatedAt { get; set; }
 }

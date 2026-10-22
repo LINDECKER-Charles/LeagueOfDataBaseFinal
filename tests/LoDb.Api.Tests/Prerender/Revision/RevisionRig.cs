@@ -68,23 +68,31 @@ internal sealed class RevisionRig : IAsyncDisposable
 
     /// <summary>Generation <paramref name="generationId"/> over <see cref="Covered"/>.</summary>
     public void Index(long generationId, params IndexedState[] states) =>
+        IndexThrough(Latest, generationId, states);
+
+    /// <summary>
+    /// Generation <paramref name="generationId"/> over <see cref="Covered"/> up to
+    /// <paramref name="end"/>: before the promotions after it, or left behind them.
+    /// </summary>
+    public void IndexThrough(PatchVersion end, long generationId, params IndexedState[] states) =>
         Harness.Index.Snapshot = EntityStateSnapshot.Of(
             new StateIndexGeneration
             {
                 Id = generationId,
                 Scheme = 1,
                 BuiltAt = BuiltAt,
-                Versions = [.. Covered.Select(PatchVersion.Parse)],
+                Versions = [.. Covered.Select(PatchVersion.Parse).Where(version => version <= end)],
             },
             states,
             []);
 
     /// <summary>
-    /// The first run of the producer, on generation 1: its history is never enqueued.
+    /// The first run of the producer, on generation 1 up to <paramref name="end"/> (the latest
+    /// patch unless said): its history is never enqueued.
     /// </summary>
-    public async Task SettleAsync()
+    public async Task SettleAsync(PatchVersion? end = null)
     {
-        Index(1);
+        IndexThrough(end ?? Latest, 1);
         await ProduceAsync();
     }
 

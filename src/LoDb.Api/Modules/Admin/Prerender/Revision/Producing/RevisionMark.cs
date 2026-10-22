@@ -7,7 +7,8 @@ namespace LoDb.Api.Modules.Admin.Prerender.Revision.Producing;
 
 /// <summary>
 /// The watermark of the producer, <c>prerender_revision_watermark</c>: the closures of one
-/// generation of the index enqueued so far, read and moved inside the producer's transaction.
+/// generation of the index enqueued so far, and the coverage they were read from, read and
+/// moved inside the producer's transaction.
 /// </summary>
 /// <remarks>
 /// The row is locked for the transaction (<c>FOR UPDATE</c>): two producers, a promotion and a
@@ -45,7 +46,8 @@ internal static class RevisionMark
     }
 
     /// <summary>
-    /// Moves the watermark to the generation and the closure of <paramref name="to"/>.
+    /// Moves the watermark to the generation, the closure and the coverage of
+    /// <paramref name="to"/>.
     /// </summary>
     public static Task MoveAsync(
         LoDbDbContext db,
@@ -58,6 +60,7 @@ internal static class RevisionMark
             setters => setters
                 .SetProperty(mark => mark.GenerationId, to.GenerationId)
                 .SetProperty(mark => mark.ClosedThrough, to.ClosedThrough)
+                .SetProperty(mark => mark.CoveredThrough, to.CoveredThrough)
                 .SetProperty(mark => mark.UpdatedAt, to.UpdatedAt),
             cancellationToken);
     }

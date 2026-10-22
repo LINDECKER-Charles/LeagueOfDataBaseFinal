@@ -983,7 +983,7 @@ chaque page autant que dit son objet (§ 4.8). Aucune ligne du `.env` ne règle 
 
 | Élément | Valeur |
 |---|---|
-| Producteur | l'écouteur de l'étape `Prerender` de chaque promotion, puis `prerender.reconcile` (toutes les 30 min), une fois l'index des états à jour jusqu'au dernier patch ; idempotent par une marque (`prerender_revision_watermark` : génération, dernière clôture traitée) |
+| Producteur | l'écouteur de l'étape `Prerender` de chaque promotion, puis `prerender.reconcile` (toutes les 30 min), une fois l'index des états à jour jusqu'au dernier patch ; idempotent par une marque (`prerender_revision_watermark` : génération, dernière clôture traitée, fin de la couverture lue) ; sur une génération reconstruite, les clôtures d'après cette couverture, quelle que soit leur date |
 | Pages mises en file | chaque version, de l'ouvreur à la dernière, de chaque état clos depuis la marque (la version qui quitte le dernier patch comprise), dans les 21 langues, sous la graphie de chaque version |
 | Epochs | l'epoch servie (`LoDb__Prerender__ServedEpoch`), celle qu'écrit la passe active quand elle diffère, et toute epoch plus récente qu'une passe terminée a remplie (en attente de sa bascule) ; jamais celle d'une passe annulée |
 | Délai avant rendu | `2 × LoDb:Catalog:VersionsLifetime` + 1 min (21 min) : tous les processus lisent alors un index qui couvre la clôture |

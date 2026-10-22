@@ -18,7 +18,7 @@ namespace LoDb.Api.Tests.Prerender.Revision;
 /// it closed, the one it made an older patch included, in the 21 locales, due once the servers
 /// settle, for the served epoch and the active pass's; once each, through its watermark,
 /// whoever calls it; nothing while the index lags behind the promotion; a new generation of the
-/// index is history, but for its last promotion.
+/// index is history, but for the promotions since the coverage its last run read.
 /// </summary>
 public sealed class RevisionProducerTests(PostgresContainerFixture postgres)
 {
@@ -132,15 +132,18 @@ public sealed class RevisionProducerTests(PostgresContainerFixture postgres)
         Assert.Equal(2 * UiLocales.All.Count, (await rig.RowsAsync()).Count);
     }
 
+    // The producer last read the index up to 16.10.1; generation 2, a rebuild, then took the
+    // promotion of 16.11.1. What the rebuild closed before 16.10.1 is history; what that
+    // promotion closed is enqueued.
     [Fact]
-    public async Task NewGenerationIsHistoryButForWhatItsLastPromotionClosedAfterIt()
+    public async Task NewGenerationIsHistoryButForWhatThePromotionsSinceTheLastRunClosed()
     {
         await using var rig = await RevisionRig.StartAsync(postgres);
-        await rig.SettleAsync();
+        await rig.SettleAsync(RevisionRig.Leaving);
         var history = RevisionRig.Closed("16.8.1", "16.8.1", RevisionRig.BuiltAt);
         var rebuiltClosure = RevisionRig.Closed(
+            "16.8.1",
             "16.9.1",
-            "16.10.1",
             RevisionRig.BuiltAt,
             new IndexedEntity(ResourceType.Items, "3078"));
         var closedAfter = RevisionRig.Closed(
@@ -158,28 +161,68 @@ public sealed class RevisionProducerTests(PostgresContainerFixture postgres)
             row.Path,
             StringComparison.Ordinal));
         Assert.Equal(2 * UiLocales.All.Count, rows.Count);
-        Assert.Equal(2L, (await rig.WatermarkAsync())!.GenerationId);
+        var mark = await rig.WatermarkAsync();
+        Assert.Equal((2L, "16.11.1"), (mark!.GenerationId, mark.CoveredThrough));
     }
 
-    // The index lagged behind two promotions, then a rebuild walked past both: it dates their
-    // closures alike, after its build. Those of the last promotion are enqueued all the same.
-    [Fact]
-    public async Task RebuildPastALaggingIndexEnqueuesWhatTheLastPromotionClosed()
+    // The producer last read the index up to 16.9.1, which then lagged behind the promotions
+    // of 16.10.1 and 16.11.1, until a rebuild walked past both. What both closed is enqueued:
+    // 3078, closed by the first, dated after the build when the rebuild walked it, or before it
+    // when an extension of the lagging index closed it first, as 3001, closed by the last.
+    [Theory]
+    [InlineData(1)]
+    [InlineData(-3600)]
+    public async Task RebuildPastALaggingIndexEnqueuesWhatEveryPromotionSinceTheLastRunClosed(
+        int earlierClosedAfterBuild)
     {
         await using var rig = await RevisionRig.StartAsync(postgres);
-        await rig.SettleAsync();
+        await rig.SettleAsync(RevisionRig.Older);
         var walkedAt = RevisionRig.BuiltAt.AddSeconds(1);
+        var history = RevisionRig.Closed("16.8.1", "16.8.1", RevisionRig.BuiltAt);
         var earlier = RevisionRig.Closed(
             "16.8.1",
             "16.9.1",
-            walkedAt,
+            RevisionRig.BuiltAt.AddSeconds(earlierClosedAfterBuild),
             new IndexedEntity(ResourceType.Items, "3078"));
         var last = RevisionRig.Closed(
             "16.9.1",
             "16.10.1",
             walkedAt,
             new IndexedEntity(ResourceType.Items, "3001"));
-        rig.Index(2, earlier, last);
+        rig.Index(2, history, earlier, last);
+
+        await rig.ProduceAsync();
+
+        var rows = await rig.RowsAsync();
+        Assert.Equal(4 * UiLocales.All.Count, rows.Count);
+        Assert.Equal(
+            [
+                ("16.10.1", "3001-long-sword"), ("16.8.1", "3078-long-sword"),
+                ("16.9.1", "3001-long-sword"), ("16.9.1", "3078-long-sword"),
+            ],
+            rows.Select(static row => (row.Version, row.Path[(row.Path.LastIndexOf('/') + 1)..]))
+                .Distinct()
+                .Order());
+    }
+
+    // No run read the index yet: a generation is history but for what its last promotion
+    // closed after the build.
+    [Fact]
+    public async Task FirstRunIsHistoryButForWhatTheLastPromotionClosedAfterTheBuild()
+    {
+        await using var rig = await RevisionRig.StartAsync(postgres);
+        var history = RevisionRig.Closed("16.8.1", "16.8.1", RevisionRig.BuiltAt);
+        var builtClosure = RevisionRig.Closed(
+            "16.9.1",
+            "16.10.1",
+            RevisionRig.BuiltAt,
+            new IndexedEntity(ResourceType.Items, "3078"));
+        var closedAfter = RevisionRig.Closed(
+            "16.9.1",
+            "16.10.1",
+            ClosedByPromotion,
+            new IndexedEntity(ResourceType.Items, "3001"));
+        rig.Index(2, history, builtClosure, closedAfter);
 
         await rig.ProduceAsync();
 
@@ -201,7 +244,9 @@ public sealed class RevisionProducerTests(PostgresContainerFixture postgres)
 
         Assert.Equal(0, rows);
         var mark = await rig.WatermarkAsync();
-        Assert.Equal((1L, RevisionRig.BuiltAt), (mark!.GenerationId, mark.ClosedThrough));
+        Assert.Equal(
+            (1L, RevisionRig.BuiltAt, "16.11.1"),
+            (mark!.GenerationId, mark.ClosedThrough, mark.CoveredThrough));
         Assert.Contains(
             rig.Harness.Logs.GetSnapshot(),
             static record => record.Id.Name == "prerender.revision.generation");

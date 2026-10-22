@@ -29,12 +29,13 @@ namespace LoDb.Api.Modules.Admin.Prerender.Revision.Producing;
 /// whenever the store is configured, the staging included.
 /// </para>
 /// <para>
-/// A generation the watermark does not name (the first run, a rebuild of the index) is
-/// history: its closures are what the passes render, never enqueued, but for those after the
-/// version the last promotion replaced, which that promotion made on the generation itself, or
-/// which a rebuild that walked past an index left behind the promotions dated after its build.
-/// A copy of the index older than the watermark's generation (a rebuild another process read
-/// first) moves nothing.
+/// A generation the watermark does not name (a rebuild of the index, the first run) is
+/// history: its closures are what the passes render, never enqueued, but for those past the
+/// coverage the producer last read, whatever their date: the promotions no run saw, which a
+/// rebuild that walked past an index left behind them closed in place of the extensions. On
+/// the first run, with no coverage read yet, those after the version the last promotion
+/// replaced, closed after the build. A copy of the index older than the watermark's generation
+/// (a rebuild another process read first) moves nothing.
 /// </para>
 /// </remarks>
 internal sealed class RevisionProducer(
@@ -98,9 +99,8 @@ internal sealed class RevisionProducer(
         return rows;
     }
 
-    // The closures to enqueue: past the watermark of its generation; for another one, past
-    // what that generation closed before the last promotion, or when it was built, and those
-    // of the last promotion dated after the build.
+    // The closures to enqueue: past the watermark of its generation; on another one, those the
+    // producer has not seen, the others being history, which Since closes.
     private DueClosures DueOf(
         PrerenderRevisionWatermark mark,
         EntityStateSnapshot snapshot,
@@ -112,14 +112,30 @@ internal sealed class RevisionProducer(
             return new DueClosures(mark.ClosedThrough, null);
         }
 
+        var unseen = UnseenOf(mark, generation, leaving);
         var history = snapshot.States
-            .Where(state => state.Last is { } last && (leaving is null || last < leaving))
+            .Where(state => state.Last is { } last && (unseen is null || last < unseen.From))
             .Select(static state => state.ClosedAt)
             .Append(generation.BuiltAt)
             .Max()!.Value;
         RevisionLog.NewGeneration(logger, generation.Id, history);
-        var lastPromotion = leaving is null ? null : new LastPromotion(leaving, generation.BuiltAt);
-        return new DueClosures(history, lastPromotion);
+        return new DueClosures(history, unseen);
+    }
+
+    // Past the coverage the last run read, every closure, whatever date a rebuild kept or gave
+    // it; with none read yet (the first run), those after the version the last promotion
+    // replaced, closed after the build.
+    private static UnseenClosures? UnseenOf(
+        PrerenderRevisionWatermark mark,
+        StateIndexGeneration generation,
+        PatchVersion? leaving)
+    {
+        if (mark.CoveredThrough is { } covered)
+        {
+            return new UnseenClosures(PatchVersion.Parse(covered), DateTimeOffset.MinValue);
+        }
+
+        return leaving is null ? null : new UnseenClosures(leaving, generation.BuiltAt);
     }
 
     // The served epoch, the one the active pass writes, and every newer one a completed pass
@@ -144,6 +160,7 @@ internal sealed class RevisionProducer(
     {
         GenerationId = snapshot.Generation!.Id,
         ClosedThrough = through,
+        CoveredThrough = snapshot.Coverage.End?.Value,
         UpdatedAt = clock.GetUtcNow(),
     };
 
@@ -170,19 +187,19 @@ internal sealed class RevisionProducer(
             run.Enqueue.DueAt);
     }
 
-    // The closures past Since, and those of the last promotion closed after the build of a
-    // generation the watermark does not name: a rebuild that walked past an index left behind
-    // the promotions dates them alike with the earlier ones it walked.
-    private sealed record DueClosures(DateTimeOffset Since, LastPromotion? LastPromotion)
+    // The closures past Since, and, on a generation the watermark does not name, those the
+    // producer has not seen: a rebuild can date them as the history it walks, or before it.
+    private sealed record DueClosures(DateTimeOffset Since, UnseenClosures? Unseen)
     {
         public bool Includes(IndexedState state) =>
             state.ClosedAt > Since
-            || (LastPromotion is { } promotion && state.Last is { } last
-                && last >= promotion.Leaving && state.ClosedAt > promotion.BuiltAt);
+            || (Unseen is { } unseen && state.Last is { } last
+                && last >= unseen.From && state.ClosedAt > unseen.After);
     }
 
-    // The version the last promotion replaced, and when the generation was built.
-    private sealed record LastPromotion(PatchVersion Leaving, DateTimeOffset BuiltAt);
+    // What the producer has not seen of a generation: the closures that end at From or later,
+    // dated after After (the minimum: whatever their date).
+    private sealed record UnseenClosures(PatchVersion From, DateTimeOffset After);
 
     // What one run wrote, for its line and its metric.
     private sealed record Produced(

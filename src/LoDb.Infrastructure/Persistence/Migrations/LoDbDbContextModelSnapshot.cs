@@ -1755,6 +1755,11 @@ namespace LoDb.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("closed_through");
 
+                    b.Property<string>("CoveredThrough")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("covered_through");
+
                     b.Property<long>("GenerationId")
                         .HasColumnType("bigint")
                         .HasColumnName("generation_id");

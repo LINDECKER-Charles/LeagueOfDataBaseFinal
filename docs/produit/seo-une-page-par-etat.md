@@ -466,8 +466,9 @@ Le lot L0 fixe les records exacts du contrat ; leur contenu est décidé ici.
     rapprochement du précalcul, de façon idempotente), les chemins de toutes les versions de
     chaque état nouvellement clos × 21 langues, sauf la version qui quitte le dernier patch
     (son unité la couvre). Ils entrent pour l'epoch **servie** et pour l'epoch qu'écrit la
-    passe active si elle diffère. Une marque (le `closed_at` de la dernière clôture traitée,
-    petite table ou colonne, schéma du lot L0) rend le producteur idempotent entre processus.
+    passe active si elle diffère. Une marque (le `closed_at` de la dernière clôture traitée et
+    la fin de la couverture lue, petite table, § 11.5) rend le producteur idempotent entre
+    processus.
   - **Worker** : il reprend `DemandPageWriter` (build copié d'abord, mêmes verdicts, mêmes
     clés) et partage les places de rendu comme la file de la demande.
   - Une page n'est rendue qu'une fois que l'API qui sert lit un index qui couvre sa clôture
@@ -725,7 +726,7 @@ fusionnant (L1 à L6 dans cet ordre).
 
 | Lot | Contenu livré | Dépend de |
 |---|---|---|
-| **L0 Contrat** | **Tout le schéma du chantier**, en une migration additive (`20261022103012_CatalogStateIndex`) : `catalog_state_generation`, `catalog_state_version` (les versions couvertes d'une génération, leur ordre et le point de reprise d'une construction), `catalog_entity_state`, `prerender_revision` et `prerender_revision_watermark` (la marque de son producteur). **Contrat OpenAPI** : sur les fiches, `canonical` requis, `state`, `history`, `next`, `isPresentInLatest`, `changes` ; `GET …/changes` mappé, réponse en bouchon jusqu'à L3 ; `CatalogMeta.oldestChangesVersion` ; énumération `ChangeField` (46 gabarits fermés, sujet facultatif) et ses clés pointées (`FieldKey`). Records sous `Modules/Catalog/States/` et `Changes/`, client régénéré (`npm run api:generate`). **Interfaces** : `IEntityStateIndex` et `EntityStateSnapshot` (lectures du § 3.2) avec un double de test (`InMemoryEntityStateIndex`, `TestStates`) ; `PromotionStage` sur `IPromotionListener`, tri dans `NotifyAsync`, étapes déclarées par les deux écouteurs existants, test d'ordre ; prédicat d'existence partagé (`ListedEntities`, déplacé dans `LoDb.Ingestion`, que `VersionPages` appelle). **Classe `revisable`** côté front (`CacheClass`, `CACHE_CONTROL`) et `cache_of` de `check-urls.sh` | — |
+| **L0 Contrat** | **Tout le schéma du chantier**, en une migration additive (`20261022103012_CatalogStateIndex`) : `catalog_state_generation`, `catalog_state_version` (les versions couvertes d'une génération, leur ordre et le point de reprise d'une construction), `catalog_entity_state`, `prerender_revision` et `prerender_revision_watermark` (la marque de son producteur, dont la couverture lue s'ajoute ensuite par `20261022144136_PrerenderRevisionCoverage`). **Contrat OpenAPI** : sur les fiches, `canonical` requis, `state`, `history`, `next`, `isPresentInLatest`, `changes` ; `GET …/changes` mappé, réponse en bouchon jusqu'à L3 ; `CatalogMeta.oldestChangesVersion` ; énumération `ChangeField` (46 gabarits fermés, sujet facultatif) et ses clés pointées (`FieldKey`). Records sous `Modules/Catalog/States/` et `Changes/`, client régénéré (`npm run api:generate`). **Interfaces** : `IEntityStateIndex` et `EntityStateSnapshot` (lectures du § 3.2) avec un double de test (`InMemoryEntityStateIndex`, `TestStates`) ; `PromotionStage` sur `IPromotionListener`, tri dans `NotifyAsync`, étapes déclarées par les deux écouteurs existants, test d'ordre ; prédicat d'existence partagé (`ListedEntities`, déplacé dans `LoDb.Ingestion`, que `VersionPages` appelle). **Classe `revisable`** côté front (`CacheClass`, `CACHE_CONTROL`) et `cache_of` de `check-urls.sh` | — |
 | **L1 Domaine** | Projections et empreintes par ressource, `DdragonText.PlainText`, SHA-256 et `FingerprintScheme`, `ChampionStats` descendu dans `LoDb.Domain` (`ChampionStatRows`), moteur de différences (découpage par langue), purs, dans `LoDb.Domain` ; tests du § 8 (domaine, paires réelles) | L0 |
 | **L2 Index** | Couverture, générations, commande `catalog states build`, routine d'extension, écouteur `StateIndex`, verrou, tâche de réconciliation, politique de rechargement de la copie en mémoire, service `states` (`compose.yaml`, `compose.deploy.yaml` dont le retrait de la ligne `LoDb__Seo__SitemapVersionWindow` pour L4, `_deploy.yml` et son commentaire d'ordre, tests de surcouche et de secrets), métriques et lignes de synthèse | L0, L1 |
 | **L3 API** | Service des canoniques `StateView` (règle par état et règle résiduelle, `LoDb.Ingestion/Catalog/States/Canonicals/`) ; `StateGateway` remplace `CanonicalGateway` ; champs des fiches, 503 `catalog-pending` d'un ouvreur épinglé sans catalogue de comparaison ; point d'accès des changements ; plus ancienne page de patch dans `CatalogMeta` ; redirections héritées. Documents : invariant SSR d'`AGENTS.md`, paragraphe « Historique des patchs » et 302 héritée de `pieges.md`, notes « Remplacé » du changelog du 2026-10-14 (une fiche par entité) et du 2026-10-16 | L0, L1 ; L2 pour les vraies données (le double avant) |
@@ -966,14 +967,18 @@ lui. Elles l'emportent sur les sections citées ; les ADR en reprennent l'essent
   tout) ; `prerender.reconcile` les ajoute une fois l'index rattrapé.
 - **Attendre l'index** : par l'échéance des lignes (`due_at` = maintenant +
   `2 × VersionsLifetime` + 1 min, 21 min), pas par le repère de l'index lu par l'API.
-- **Marque** : sur une génération que la marque ne nomme pas (premier passage,
-  reconstruction), le producteur part du plus tardif de `built_at` et du dernier `closed_at`
-  des états clos avant la version qui part : il ne met en file que les clôtures de la dernière
-  promotion (`prerender.revision.generation`). Une reconstruction qui passe la fin d'un index
-  resté en retard sur les promotions date ce qu'elle y clôt après son `built_at`, comme les
-  extensions qu'elle remplace : les clôtures de la dernière promotion sont mises en file quand
-  même. Une copie de l'index plus ancienne que la génération de la marque ne fait rien. Une
-  ligne déjà en file pour la même page et la même epoch repasse en attente.
+- **Marque** : la génération lue, le `closed_at` de la dernière clôture traitée et la fin de
+  la couverture lue (`covered_through`). Sur une génération que la marque ne nomme pas
+  (reconstruction), le producteur met en file les clôtures d'après cette couverture, quelle
+  que soit leur date : celles des promotions qu'aucun passage n'a vues, toutes, comme les
+  extensions que la reconstruction remplace les auraient données. Elle les date après son
+  `built_at` quand elle passe la fin d'un index resté en retard, ou garde la date d'une
+  extension de l'index en retard ; le reste est de l'historique
+  (`prerender.revision.generation`). Au premier passage, sans couverture lue, le producteur
+  part du plus tardif de `built_at` et du dernier `closed_at` des états clos avant la version
+  qui part, et ne met en file que les clôtures de la dernière promotion datées après le
+  `built_at`. Une copie de l'index plus ancienne que la génération de la marque ne fait rien.
+  Une ligne déjà en file pour la même page et la même epoch repasse en attente.
 - **Epochs** : l'epoch servie, celle de la passe active, et toute epoch plus récente qu'une
   passe terminée a remplie, qui reçoit ainsi les clôtures jusqu'à sa bascule ; jamais celle
   d'une passe annulée.

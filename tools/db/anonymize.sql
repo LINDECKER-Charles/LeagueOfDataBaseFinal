@@ -111,6 +111,7 @@ BEGIN
           'prerender_pass.state',
           'prerender_revision.locale', 'prerender_revision.path', 'prerender_revision.reason',
           'prerender_revision.state', 'prerender_revision.version',
+          'prerender_revision_watermark.covered_through',
           'prerender_unit.failure', 'prerender_unit.locale', 'prerender_unit.state',
           'prerender_unit.version',
           'stripe_event.status', 'stripe_event.type',

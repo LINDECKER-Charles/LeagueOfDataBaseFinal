@@ -12,8 +12,8 @@ namespace LoDb.Ingestion.Catalog.States.Building;
 /// A rebuild keeps the date of a state whose resource, key, opener, last version and
 /// fingerprint are unchanged: the sitemaps then announce no page that did not change. One that
 /// walks past the end of the previous generation, left behind the promotions, dates what it
-/// closes there as the extensions it stands in for would have: after the rebuild's own date,
-/// which the queue of the closed states takes for the end of the history.
+/// closes there as the extensions it stands in for would have: after the rebuild's own date.
+/// The queue of the closed states does not go by these dates but by the coverage it last read.
 /// </remarks>
 internal sealed class ClosingDates
 {
