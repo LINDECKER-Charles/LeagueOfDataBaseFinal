@@ -10,7 +10,8 @@ namespace LoDb.Api.Modules.Admin.Prerender.Pages;
 /// <summary>
 /// The stored form of a <see cref="PassScope"/>, a JSON object whose fields are all optional:
 /// <c>{"versions":["16.18.1","16.12.1"],"locales":["en","fr"],"pageTypes":["items"],
-/// "priority":["16.18.1"],"skipComplete":true}</c>. <c>{}</c> is every older patch.
+/// "pages":"openers","priority":["16.18.1"],"skipComplete":true}</c>. <c>{}</c> is every older
+/// patch.
 /// </summary>
 /// <remarks>
 /// Versions, types and locales are written as the URLs spell them, so that the admin and a
@@ -20,10 +21,15 @@ namespace LoDb.Api.Modules.Admin.Prerender.Pages;
 /// image before the lists ignores the new ones and would read <c>{}</c>, every older patch,
 /// every type, every locale. A list of versions gives its bounds, one locale or one type its
 /// own field; what they cannot say (several locales or types out of all) is read wider by that
-/// image (docs/architecture/pieges.md).
+/// image (docs/architecture/pieges.md). So is <c>pages</c>, which the image before it ignores:
+/// it would read an openers pass as every page, its units' cursors in another list. Such a pass
+/// is cancelled before going back to that image.
 /// </remarks>
 internal static class PassScopeJson
 {
+    /// <summary>The <c>pages</c> of an openers scope; absent, every page.</summary>
+    public const string OpenersPages = "openers";
+
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web)
     {
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
@@ -39,6 +45,7 @@ internal static class PassScopeJson
             Newest = (scope.Newest ?? scope.Versions?.Max())?.Value,
             Locales = scope.Locales?.Select(UiLocales.Code).ToList(),
             PageTypes = scope.PageTypes?.Select(CanonicalPath.SegmentOf).ToList(),
+            Pages = scope.Pages == PassPages.Openers ? OpenersPages : null,
             Priority = scope.Priority.Count == 0
                 ? null
                 : [.. scope.Priority.Select(static version => version.Value)],
@@ -79,6 +86,7 @@ internal static class PassScopeJson
             : PatchVersion.Parse(document.Newest),
         Locales = LocalesOf(document),
         PageTypes = TypesOf(document),
+        Pages = PagesOf(document),
         Priority = [.. (document.Priority ?? []).Select(PatchVersion.Parse)],
         SkipComplete = document.SkipComplete ?? false,
     };
@@ -95,6 +103,21 @@ internal static class PassScopeJson
         var names = document.PageTypes ?? (document.PageType is { } one ? [one] : null);
         return names is null ? null : ScopeLists.TypesOf(names.Select(PageTypeOf));
     }
+
+    /// <summary>
+    /// The pages <paramref name="text"/> names: every page when null, the openers for
+    /// <see cref="OpenersPages"/>; null for any other text.
+    /// </summary>
+    public static PassPages? PagesOf(string? text) => text switch
+    {
+        null => PassPages.Every,
+        OpenersPages => PassPages.Openers,
+        _ => null,
+    };
+
+    private static PassPages PagesOf(Document document) =>
+        PagesOf(document.Pages)
+            ?? throw new FormatException($"'{document.Pages}' is not a set of pages.");
 
     private static ResourceType PageTypeOf(string text) =>
         PageTypes.TryParse(text, out var type)
@@ -117,6 +140,8 @@ internal static class PassScopeJson
         public IReadOnlyList<string>? Locales { get; init; }
 
         public IReadOnlyList<string>? PageTypes { get; init; }
+
+        public string? Pages { get; init; }
 
         public IReadOnlyList<string>? Priority { get; init; }
 

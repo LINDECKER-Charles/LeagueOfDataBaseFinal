@@ -1,5 +1,6 @@
 {
   "versioned_suffix": "({{ version }} patch)",
+  "state_range_suffix": "({{ first }}–{{ last }} patchek)",
   "home": {
     "title": "League Of Data Base — League of Legends enciklopédia",
     "description": "League of Legends hősök, tárgyak, rúnák és idézői varázslatok a(z) {{ version }} patch-hez — statisztikák, képességek és részletek 21 nyelven."
@@ -98,5 +99,11 @@
       "title": "Gyakori kérdések",
       "description": "Válaszok a League Of Data Base-ről: mi ez, honnan származnak a League of Legends adatai, milyen gyakran frissül, és kell-e hozzá fiók."
     }
+  },
+  "state": {
+    "summary": "Módosítva ({{ version }} patch): {{ fields }}.",
+    "summary_more": "Módosítva ({{ version }} patch): {{ fields }}…",
+    "summary_new": "Új ({{ version }} patch).",
+    "summary_returned": "Visszatért ({{ version }} patch)."
   }
 }

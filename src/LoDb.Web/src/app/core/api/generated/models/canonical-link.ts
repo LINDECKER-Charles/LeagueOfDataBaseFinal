@@ -3,8 +3,8 @@
 
 
 /**
- * The page search engines index for the entity of a detail (ADR 0005, amendment of
- * 2026-10-14), which the front writes as the canonical of a past version's page.
+ * A page of an entity as the front links it, or writes it as the canonical of a page: its
+ * short URL, or its page in a version (ADR 0005, amendment of 2026-10-22).
  */
 export interface CanonicalLink {
 

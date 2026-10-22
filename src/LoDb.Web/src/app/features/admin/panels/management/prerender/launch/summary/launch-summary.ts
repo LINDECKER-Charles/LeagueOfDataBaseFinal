@@ -124,6 +124,7 @@ export class LaunchSummary {
         oldestListed: versions?.at(-1) ?? null,
         locales: request.locales,
         pageTypes: request.pageTypes,
+        pages: request.pages,
         priority: request.priority ?? [],
         skipComplete: request.skipComplete ?? false,
       },

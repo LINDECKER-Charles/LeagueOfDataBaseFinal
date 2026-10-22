@@ -19,6 +19,8 @@ import { getChampionSkins } from '../fn/catalog/get-champion-skins';
 import { GetChampionSkins$Params } from '../fn/catalog/get-champion-skins';
 import { getItem } from '../fn/catalog/get-item';
 import { GetItem$Params } from '../fn/catalog/get-item';
+import { getPatchChanges } from '../fn/catalog/get-patch-changes';
+import { GetPatchChanges$Params } from '../fn/catalog/get-patch-changes';
 import { getRuneTree } from '../fn/catalog/get-rune-tree';
 import { GetRuneTree$Params } from '../fn/catalog/get-rune-tree';
 import { getSummoner } from '../fn/catalog/get-summoner';
@@ -33,6 +35,7 @@ import { listRunes } from '../fn/catalog/list-runes';
 import { ListRunes$Params } from '../fn/catalog/list-runes';
 import { listSummoners } from '../fn/catalog/list-summoners';
 import { ListSummoners$Params } from '../fn/catalog/list-summoners';
+import { PatchChanges } from '../models/patch-changes';
 import { RuneList } from '../models/rune-list';
 import { RuneTreeDetails } from '../models/rune-tree-details';
 import { searchCatalog } from '../fn/catalog/search-catalog';
@@ -397,6 +400,41 @@ export class CatalogService extends BaseService {
     const resp = this.searchCatalog$Response(params, context);
     return resp.pipe(
       map((r: StrictHttpResponse<SearchResults>): SearchResults => r.body)
+    );
+  }
+
+  /** Path part for operation `getPatchChanges()` */
+  static readonly GetPatchChangesPath = '/api/catalog/{version}/{lang}/changes';
+
+  /**
+   * What a patch changed: entities whose state opens there, and retired.
+   *
+   *
+   *
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `getPatchChanges()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  getPatchChanges$Response(params: GetPatchChanges$Params, context?: HttpContext): Observable<StrictHttpResponse<PatchChanges>> {
+    const obs = getPatchChanges(this.http, this.rootUrl, params, context);
+    return obs;
+  }
+
+  /**
+   * What a patch changed: entities whose state opens there, and retired.
+   *
+   *
+   *
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `getPatchChanges$Response()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  getPatchChanges(params: GetPatchChanges$Params, context?: HttpContext): Observable<PatchChanges> {
+    const resp = this.getPatchChanges$Response(params, context);
+    return resp.pipe(
+      map((r: StrictHttpResponse<PatchChanges>): PatchChanges => r.body)
     );
   }
 

@@ -7,6 +7,12 @@ summary: Les pages des anciens patchs restent prêtes d'une mise à jour du site
 tags: [disponibilite, performance]
 ---
 
+> **Remplacé le 2026-10-20** par [`anciens-patchs-sans-attente`](2026-10-20-anciens-patchs-sans-attente.md) :
+> les pages des anciens patchs ne restent plus prêtes « une semaine » mais viennent d'une
+> copie calculée une fois (gardée un an), et les éléments d'une version précédente restent
+> disponibles 400 jours, pas « un mois ». Le rechargement automatique sur un élément manquant
+> vaut toujours.
+
 ## Ce qui change
 
 Les pages des anciens patchs s'affichent plus vite : une fois consultées, elles restent

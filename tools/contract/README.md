@@ -101,10 +101,10 @@ sont touchés. Le script :
    n'a plus rien à appliquer ;
 4. vérifie la garde : sur une base sans historique EF, le script échoue et rien ne change.
 
-Sortie attendue, code 0 :
+Sortie attendue, code 0 (`N` : le nombre de migrations du dépôt, qui croît) :
 
 ```text
-migrate on an empty database: 4 migration(s) applied
+migrate on an empty database: N migration(s) applied
 contract.sql applied.
 Legacy tables and users.roles dropped; 7 timestamps in timestamptz(0), same instants.
 Second run: schema unchanged. migrate afterwards: 0 migration(s) applied

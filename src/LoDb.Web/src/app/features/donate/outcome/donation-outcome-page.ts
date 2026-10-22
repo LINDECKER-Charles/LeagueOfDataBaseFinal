@@ -34,7 +34,7 @@ export class DonationOutcomePage {
     applyDonateHead((translate) => ({
       title: translate(`donate.${this.outcome()}.title`),
       titleFormat: 'account',
-      kind: 'donation-return',
+      kind: 'noindex',
       path: 'donate',
     }));
   }

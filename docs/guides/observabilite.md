@@ -1,8 +1,8 @@
-# 📡 Observabilité — envoyer les logs de LODB vers Grafana
+# Observabilité — les logs de LoDb dans Grafana
 
 > **Ce que ce guide couvre.** La chaîne d'observabilité (Vector → VictoriaLogs →
 > Grafana) est déployée par le dépôt d'infrastructure `infra-vps`, hors de ce dépôt.
-> Elle capte **déjà** tous les conteneurs. Ce guide décrit comment elle fonctionne, ce
+> Elle capte tous les conteneurs. Ce guide décrit comment elle fonctionne, ce
 > que ce projet doit — et ne doit surtout pas — déclarer, et comment interroger le
 > résultat.
 >
@@ -24,8 +24,8 @@ conteneur ──stdout/stderr──> démon Docker ──API──> Vector ─�
 
 Trois propriétés à intégrer avant toute chose :
 
-1. **Vector ne lit que `stdout` / `stderr`.** Un log écrit dans un fichier — y compris
-   sous `var/state/` — n'est **jamais** collecté.
+1. **Vector ne lit que `stdout` / `stderr`.** Un log écrit dans un fichier (un volume ou un
+   tmpfs du conteneur) n'est **jamais** collecté.
 2. **Aucun conteneur n'a à se déclarer.** Vector s'abonne au flux du démon Docker :
    tout ce qui démarre est capté.
 3. **Vector ne parse aucun JSON applicatif.** Il devine le champ `level` par
@@ -37,16 +37,26 @@ Trois propriétés à intégrer avant toute chose :
 d'indexation, ce qui rend une recherche « logs de ce conteneur » instantanée. Les
 autres champs restent interrogeables (`journal:`, `classe:`, `level:`…) **quand Vector
 les produit** — c'est le cas du journal d'accès de l'edge, qui est parsé. Pour un log
-applicatif PHP, Vector ne produit rien de tel : `channel`, `level_name` et tout le
-contexte n'existent que comme texte dans `_msg`.
+applicatif de l'API ou du SSR, Vector ne produit rien de tel : `EventName`, `LogLevel`,
+`State` (API), `level`, `msg` et les champs du SSR n'existent que comme texte dans `_msg`.
+
+Les services de la stack (`compose.yaml`) : `api`, `migrate` (conteneur éphémère des
+migrations), `states` (conteneur éphémère de l'index des états d'entité), `web-ssr`,
+`web-ssr-prerender` (le SSR de la passe de précalcul), `nginx` et `postgres`. Les cinq
+premiers écrivent la ligne JSON de [`logging.md`](logging.md) ;
+`nginx` n'écrit que ses erreurs (`access_log off`, `docker/nginx/nginx.conf`) et `postgres`
+ses requêtes lentes, en texte. Les services de l'ancienne stack (`php`, `go-fetcher`,
+`go-api`, `mailer`) sont retirés au déploiement (`--remove-orphans`,
+`.github/workflows/_deploy.yml`) : une requête qui les vise ne renvoie rien, ce qui ne
+prouve pas l'absence d'erreur.
 
 ---
 
-## ⛔ Ce qu'il ne faut **pas** faire
+## Ce qu'il ne faut **pas** faire
 
 **Ne posez jamais `caddy.import: journal-acces`, ni aucune directive `log` par site.**
 
-L'edge journalise désormais **tous** les sites qu'il sert, via l'option globale
+L'edge journalise **tous** les sites qu'il sert, via l'option globale
 `servers :443 { trace }` de son Caddyfile. LODB apparaît donc dans le tableau de bord
 *Edge — trafic* **sans rien déclarer**. Poser une directive `log` sur un site fait
 basculer Caddy en mode opt-in : il place tous les **autres** sites de l'hôte dans
@@ -76,14 +86,16 @@ Vector devine `level` par regex sur le **texte brut** :
 `(?i)\bwarn(ing)?\b` → `warn`, `(?i)\b(error|exception|critical)\b` → `error`,
 `(?i)\b(fatal|panic|emerg)\b` → `fatal`.
 
-Trois conséquences mesurables :
+Conséquences sur les lignes de l'API et du SSR :
 
-- un `WARNING` dont le contexte porte une clé `error` est classé **error** — le cas
-  existe aujourd'hui dans le dépôt ;
-- un `EMERGENCY` ou un `ALERT` est classé **info** : aucun des deux mots n'est dans la
+- un `Warning` qui porte une exception est classé **error** : le champ `Exception` (API)
+  ou `exception` (SSR) contient le mot — `jobs.schedule.failed`, `ingest.listener.failed` ;
+- un champ ou une valeur libre contenant `error` fait de même, d'où la règle « aucune clé
+  `error` » de [`logging.md`](logging.md#aucune-clé-error) ;
+- un `Critical` de l'API est classé **error** comme un `Error` : `critical` est dans la
   regex ;
-- tant que l'access-log nginx en texte brut est collecté, **n'importe quel visiteur
-  pilote le niveau** via une URL contenant `error`. Le lot 1b ferme ce vecteur.
+- `Information` et `info` ne sont pas dans la regex : sans autre mot de la liste, la ligne
+  reste **info**.
 
 > **Aucune alerte, aucun taux d'erreur ne se construit sur le champ `level`.**
 > On alerte sur la **clé d'événement**, qui est une sous-chaîne exacte de `_msg`.
@@ -96,20 +108,40 @@ Le filtre de phrase est la construction la plus sûre : la clé d'événement es
 sous-chaîne exacte de `_msg`.
 
 ```logsql
-# Toutes les pannes de catalogue des dernières 24 h
-stack:lodb-prod service:php _time:24h "catalog.page.unavailable"
+# Les lectures de catalogue en échec (Data Dragon) des dernières 24 h
+stack:lodb-prod service:api _time:24h "catalog.read.failed"
 
-# Refus d'allowlist SSRF — événement de sécurité
-stack:lodb-prod service:go-fetcher _time:24h "fetch.allowlist.refused"
+# Délestage faute de connexion Postgres libre (503), et base injoignable (500)
+stack:lodb-prod service:api _time:1h ("database.pool.exhausted" OR "database.server.unavailable")
 
-# Échecs d'authentification (miroir d'audit, lot 3)
-stack:lodb-prod service:php _time:1h "audit.user.login_failed"
+# Refus d'allowlist de l'ingestion — événement de sécurité
+stack:lodb-prod service:api _time:24h "fetch.allowlist.refused"
 
-# Requêtes PHP lentes (slowlog, lot 1a)
-stack:lodb-prod service:php _time:6h "executing too slow"
+# Échecs de connexion (miroir du journal d'audit)
+stack:lodb-prod service:api _time:1h "audit.user.login_failed"
+
+# Tâches périodiques en échec, ou qui n'ont pu prendre leur verrou ni lire leur calendrier
+stack:lodb-prod service:api _time:24h ("jobs.run.failed" OR "jobs.schedule.failed")
+
+# Rendus en échec et requêtes tombées dans le gestionnaire d'erreurs du SSR
+stack:lodb-prod service:web-ssr _time:1h ("ssr.render.failed" OR "http.request.failed")
+
+# La passe de précalcul : une ligne par (version, langue), et son SSR injoignable
+stack:lodb-prod service:api _time:1d ("prerender.unit.completed" OR "prerender.ssr.unreachable")
+
+# Le dernier passage des migrations (conteneur éphémère `migrate`)
+stack:lodb-prod service:migrate _time:7d ("db.migrate.completed" OR "db.baseline.refused" OR "db.roles.applied")
+
+# L'index des états d'entité : le passage du déploiement (conteneur éphémère `states`), puis
+# ses mises à jour par la promotion et la réconciliation, et les copies illisibles de l'API
+stack:lodb-prod service:states _time:7d ("states.update.completed" OR "states.build.")
+stack:lodb-prod service:api _time:1d ("states.update." OR "states.copy.failed")
+
+# Requêtes Postgres de plus de 500 ms (texte de Postgres, jamais leurs paramètres)
+stack:lodb-prod service:postgres _time:6h "duration:"
 
 # Ce qu'un conteneur a dit pendant un pic — cadrer la fenêtre dans Grafana
-container:lodb-prod-php-1
+container:lodb-prod-api-1
 
 # Quel service est devenu bavard ?
 (stack:lodb-prod OR stack:lodb-staging) _time:1d
@@ -141,11 +173,10 @@ stack:edge service:caddy journal:acces classe:4xx _time:1h
 ```
 
 > **`unpack_json` n'est calqué sur aucun exemple qui tourne.** Le pipe
-> `| unpack_json from _msg` permettrait de filtrer sur le `level_name` réellement écrit
-> par l'application plutôt que sur le `level` deviné — mais il n'apparaît nulle part
-> dans `infra-vps`. Le banc d'essai gratuit est `go-api`, seul service qui émet déjà du
-> JSON structuré :
-> `stack:lodb-prod service:go-api _time:15m | unpack_json | fields path, status`.
+> `| unpack_json from _msg` permettrait de filtrer sur le niveau réellement écrit
+> (`LogLevel` de l'API, `level` du SSR) plutôt que sur le `level` deviné — mais il
+> n'apparaît nulle part dans `infra-vps`. Banc d'essai, sur une ligne au contenu connu :
+> `stack:lodb-prod service:web-ssr _time:15m "http.request.served" | unpack_json | fields status, duration_ms`.
 > S'il échoue, tout ce guide reste utilisable avec les filtres de phrase ci-dessus.
 
 Côté métriques, disponibles sans rien implémenter :
@@ -154,7 +185,7 @@ Côté métriques, disponibles sans rien implémenter :
 # Mémoire des conteneurs LODB
 container_memory_working_set_bytes{stack=~"lodb-.*"}
 
-# Proximité de la limite (après le lot 2)
+# Proximité de la limite mémoire (posée par `compose.deploy.yaml`)
 container_memory_working_set_bytes{stack=~"lodb-.*"}
   / container_spec_memory_limit_bytes{stack=~"lodb-.*"}
 
@@ -172,9 +203,9 @@ labels, la règle de cardinalité et des requêtes types sont dans
 
 ---
 
-## Pages des anciens patchs : ce que voit chaque source (lot 3)
+## Pages des anciens patchs : ce que voit chaque source
 
-Depuis le lot 3 du [catalogue pré-rendu](../produit/pre-rendu-catalogue-cdn.md), nginx sert
+Avec le [catalogue pré-rendu](../produit/pre-rendu-catalogue-cdn.md), nginx sert
 une page d'ancien patch (`/{locale}/{version}/…`) de trois façons : sa copie du cache chaud
 `lodb_archive`, l'objet du stockage Scaleway, ou un rendu du SSR quand le stockage n'a pas la
 page ou ne répond pas. Chaque réponse le dit dans l'en-tête **`X-LoDb-Source`** :
@@ -193,15 +224,16 @@ zéro, hors des pages avec query (`?page=N`) et des versions pas encore écrites
 
 Ce que chaque source voit de ces pages :
 
-| Source | Ce qu'elle voit après le lot 3 |
+| Source | Ce qu'elle voit |
 |---|---|
-| Journal de l'edge (`journal:acces`) | Chaque requête, comme avant, avec `cache` (tiré de `X-Cache-Status`). Il ne garde aucun autre en-tête : `source` n'existe qu'une fois `infra-vps` lit `X-Lodb-Source` (sa forme canonique en Go) dans le champ `.source` de Vector. Avant cela, un `MISS` ne dit plus « rendu » : il peut venir du stockage. |
-| Métriques du SSR (`lodb_ssr_renders_total`) | `lane="pinned"` ne compte plus que les replis vers le SSR ; ses refus (`outcome="refused"`) doivent tomber vers zéro. Les rendus de la passe sont à part, sous `lane="prerender"` ([`metriques.md`](metriques.md)). |
+| Journal de l'edge (`journal:acces`) | Chaque requête, avec `cache` (tiré de `X-Cache-Status`). Il ne garde aucun autre en-tête : `source` n'existe qu'une fois `infra-vps` lit `X-Lodb-Source` (sa forme canonique en Go) dans le champ `.source` de Vector. Tant que ce n'est pas le cas, un `MISS` ne dit pas « rendu » : il peut venir du stockage. |
+| Métriques du SSR (`lodb_ssr_renders_total`) | `lane="pinned"` compte tout rendu d'une URL à version épinglée, dans le chemin ou en `?version=` : les replis du stockage, mais aussi les 301 du dernier patch épinglé et les `?version=` ; ses refus (`outcome="refused"`) doivent rester proches de zéro. Les rendus de la passe sont à part, sous `lane="prerender"` ([`metriques.md`](metriques.md)). |
 | Métriques de l'API (`lodb_prerender_pages_total{outcome}`) | Les pages de la passe : `written`, `skipped`, `refused`, `failed`, et une ligne `prerender.unit.completed` par (version, langue). Rien de ce que nginx sert. |
 | File automatique (`lodb_prerender_demand_*`) | Les pages refusées aux visiteurs relevées sur le SSR (`captured_total{result}`), celles qui attendent (`pending`) et celles que la file a rendues (`pages_total{outcome}`), une ligne `prerender.demand.drained` par lot. Un `pending` qui ne baisse pas pendant que `captured_total{result="queued"}` monte : la file ne suit pas la demande. |
+| File des états clos (`lodb_prerender_revision_*`) | Les pages d'anciens patchs que chaque promotion fait recalculer, parce qu'elle a clos leur état (`enqueued_total`, `pending`, `pages_total{outcome}`), une ligne `prerender.revision.drained` par lot. Un `pending` qui ne redescend pas dans l'heure qui suit une promotion, ou des `failed` : des pages révisables gardent l'URL courte pour canonique. |
 | Journaux du SSR (`http.request.served`) | Les rendus servis aux visiteurs, replis compris ; aucune ligne par page de la passe, sauf ses `5xx`. Une page servie par le cache ou le stockage n'y paraît pas. |
-| Audience interne (miroir de nginx, balise) | Inchangée : le miroir ne compte jamais une version épinglée, et la passe ne passe pas par nginx. |
-| Umami | Inchangé : il mesure dans le navigateur, quelle que soit la source de la page. |
+| Audience interne (miroir de nginx, balise) | Le miroir ne compte jamais une version épinglée, et la passe ne passe pas par nginx. |
+| Umami | Il mesure dans le navigateur, quelle que soit la source de la page. |
 
 Requêtes types (le champ `source` suppose la lecture de l'en-tête par Vector) :
 
@@ -225,21 +257,23 @@ sum by (outcome, reason) (
 )
 ```
 
-Au lot 4, Cloudflare répond seul aux pages qu'il garde : l'edge, nginx et ces sources ne voient
-plus que ses ratés. Ses propres chiffres arrivent par l'exportateur d'`infra-vps`
-([spécification](../produit/pre-rendu-catalogue-cdn.md), lot 4).
+**Cloudflare est prévu, pas construit.** Au lot 4 de la
+[spécification](../produit/pre-rendu-catalogue-cdn.md), Cloudflare répondrait seul aux pages
+qu'il garde : l'edge, nginx et ces sources ne verraient plus que ses ratés, et ses propres
+chiffres arriveraient par l'exportateur d'`infra-vps`. Rien de Cloudflare n'existe dans
+`docker/`, `compose*.yaml` ni `.github/`.
 
 ---
 
-## 🔙 Dépannage
+## Dépannage
 
 | Symptôme | Cause probable | Action |
 |---|---|---|
 | Rien n'arrive dans Grafana | le conteneur n'écrit pas sur stdout/stderr | `docker compose logs --tail=20 <service>` — si c'est vide, le problème est dans l'app, pas dans la collecte |
 | `docker logs` montre les lignes, Grafana non | Vector ou VictoriaLogs à l'arrêt | côté hôte : `docker compose -f /opt/observability/compose.yaml ps` |
-| Les lignes arrivent sous le mauvais `stack` | `COMPOSE_PROJECT_NAME` absent du `.env` de l'hôte | l'ajouter au secret `ENV_*`, redéployer |
+| Le déploiement échoue sur `COMPOSE_PROJECT_NAME is '…' in the .env` | le `.env` poussé ne nomme pas `lodb-<cible>` : `_deploy.yml` refuse le déploiement avant tout changement, plutôt que de laisser les lignes partir sous un autre `stack` | corriger `COMPOSE_PROJECT_NAME` dans le secret `ENV_STAGING` ou `ENV_PROD`, relancer |
 | Staging et prod se mélangent dans un panneau | requête sans filtre `stack` | toujours préfixer `stack:lodb-prod` — les deux stacks sont co-localisés |
 | Le niveau `error` explose sans incident | `.level` deviné, ou clé de contexte `error` | filtrer sur la clé d'événement, jamais sur `level` |
-| Une ligne JSON est coupée en plein milieu | `log_limit` FPM | vérifier que `[global] log_limit = 65536` est bien dans `php-fpm.conf` ; alléger le contexte |
+| Des lignes sans clé ni JSON dans `api` ou `web-ssr` | une sortie hors du logger : `console.error`, `Console.Write`, pile multi-lignes d'un handler par défaut | corriger à la source, jamais filtrer ([`pieges.md`](../architecture/pieges.md)) ; voir [`logging.md`](logging.md#les-exceptions) |
 | Aucune série `lodb_*` pour un `stack` | `api`, `web-ssr` ou `web-ssr-prerender` hors du réseau `observability`, ou labels `prometheus.*` absents | `docker inspect <conteneur> --format '{{json .NetworkSettings.Networks}}'` ; redéployer (`compose.deploy.yaml` les pose) |
 | Le site disparaît du dashboard *Edge — trafic* | une directive `log` ou `caddy.import: journal-acces` a été réintroduite quelque part | `docker inspect <conteneur> --format '{{json .Config.Labels}}'` ; retirer le label. L'alerte `SiteAbsentDuJournalAcces` le détecte site par site |

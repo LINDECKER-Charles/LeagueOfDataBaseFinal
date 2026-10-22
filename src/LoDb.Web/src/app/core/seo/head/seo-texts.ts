@@ -4,6 +4,10 @@ export interface SeoTexts {
   readonly siteTitle: string;
   /** `base.description`, the description of a page that has none. */
   readonly siteDescription: string;
-  /** `seo.versioned_suffix` for the page's pinned version; null on a latest page. */
+  /**
+   * The patches a pinned page's title names (`seo.versioned_suffix`, or
+   * `seo.state_range_suffix` on a closed state's opener); null on a latest page, or one whose
+   * title names its patch itself.
+   */
   readonly versionedSuffix: string | null;
 }

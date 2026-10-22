@@ -4,6 +4,10 @@
 - **Révise** : la décision « SPA rejetée » citée dans
   [`packaging-apk.md`](../../../legacy/docs/guides/packaging-apk.md) (TWA de la PWA plutôt qu'un front
   embarqué)
+- **Suivi** (2026-10-22) : la prod a basculé le 2026-10-04 ([`bascule.md`](../bascule.md)).
+  `app/` et `go/` ne sont pas supprimés mais archivés sous `legacy/`, qui part à la
+  décommission, après le *contract*. Les instructions des agents vivent dans `AGENTS.md`, que
+  `CLAUDE.md` importe.
 
 ## Contexte
 

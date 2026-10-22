@@ -1,6 +1,6 @@
 namespace LoDb.Api.Modules.Billing.Catalog;
 
-/// <summary>The credit packs on sale: one euro cent a request.</summary>
+/// <summary>The credit packs on sale: one euro per thousand requests.</summary>
 internal static class ApiPacks
 {
     /// <summary>Every pack, from the smallest.</summary>

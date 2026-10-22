@@ -26,6 +26,13 @@ export interface PassRequest {
   pageTypes?: (Array<string> | null);
 
   /**
+   * `openers` for the patch page and the pages that open a state at each version, open
+   * or closed (the pages that may be indexed, rendered first); null for every page. A pass
+   * over every page follows it: a promotion never joins it, and it makes no epoch whole.
+   */
+  pages?: (string | null);
+
+  /**
    * The versions rendered first, in this order: the most asked for. At most 100.
    */
   priority?: (Array<string> | null);

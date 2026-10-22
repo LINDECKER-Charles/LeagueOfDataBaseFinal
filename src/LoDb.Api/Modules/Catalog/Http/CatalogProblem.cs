@@ -57,10 +57,24 @@ internal sealed record CatalogProblem : IResult
         "The catalog holds no such entry.",
         $"No {segment} '{id}' in this version.");
 
+    /// <summary>
+    /// The version has no page of changes: the oldest covered one, one outside the index, or
+    /// one listed after the latest.
+    /// </summary>
+    public static CatalogProblem NoPatchPage(string version) => NotFound(
+        "no-patch-page",
+        "The version has no page of changes.",
+        $"Version {version} is not a patch the index compares to the one before.");
+
     /// <summary>The catalog is queued for ingestion, or the queue refused it.</summary>
     public static CatalogProblem Pending() => Unavailable(
         "catalog-pending",
         "The catalog of this version is not ingested yet.");
+
+    /// <summary>The index of states is neither held nor readable yet.</summary>
+    public static CatalogProblem StateIndexUnavailable() => Unavailable(
+        "state-index-unavailable",
+        "The index of entity states could not be read.");
 
     public static CatalogProblem UpstreamUnavailable() => Unavailable(
         "upstream-unavailable",

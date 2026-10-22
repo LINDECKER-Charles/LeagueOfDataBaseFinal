@@ -4,8 +4,10 @@ import { TestBed } from '@angular/core/testing';
 import { type CanMatchFn, type Route, UrlSegment } from '@angular/router';
 import { API_BASE_URL } from '../../api/api-base-url';
 import { catalogMetaOf } from '../../testing/catalog-meta-of';
+import type { EntityState } from '../../api/generated/models/entity-state';
 import { cacheClassOf } from './cache-class-of';
 import { canMatchVersion } from './can-match-version';
+import { entryCacheClassOf } from './entry-cache-class-of';
 
 const META = catalogMetaOf({ versions: ['16.20.1', '16.19.1', '16.18.1', '15.14.1'] });
 
@@ -21,6 +23,21 @@ describe('cacheClassOf', () => {
 
   it('archives nothing before the first ingestion', () => {
     expect(cacheClassOf('15.14.1', { ...META, latest: null })).toBe('latest');
+  });
+});
+
+describe('entryCacheClassOf', () => {
+  const closed = { isOpen: false } as EntityState;
+  const open = { isOpen: true } as EntityState;
+
+  it.each([
+    ['16.18.1', closed, 'archived'],
+    ['16.18.1', open, 'revisable'],
+    ['16.18.1', null, 'revisable'],
+    ['16.19.1', closed, 'latest'],
+    ['16.20.1', null, 'latest'],
+  ])('keeps a detail of version %s in state %j as %s', (version, state, expected) => {
+    expect(entryCacheClassOf(version, META, state)).toBe(expected);
   });
 });
 

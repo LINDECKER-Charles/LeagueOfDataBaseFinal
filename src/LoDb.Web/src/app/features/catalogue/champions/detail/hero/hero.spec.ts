@@ -5,6 +5,7 @@ import type { PageContext } from '../../../../../core/context/page-context';
 import { provideTestTransloco } from '../../../../../core/testing/provide-test-transloco';
 import { ChampionHero } from './champion-hero';
 import { ratingGaugesOf } from './rating-gauges-of';
+import { detailStateOf } from '../../../../../core/testing/detail-state-of';
 
 const CONTEXT: PageContext = { locale: 'en', version: '16.19.1', pinned: false, language: 'en_US' };
 
@@ -15,6 +16,7 @@ function detailsOf(
   const art = (kind: string) => `https://cdn.test/${id}_0.${kind}.jpg`;
   return {
     canonicalPath: `champions/${id}`,
+    ...detailStateOf(`champions/${id}`),
     version: '16.19.1',
     language: 'en_US',
     profile: {

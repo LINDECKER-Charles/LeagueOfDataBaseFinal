@@ -50,6 +50,7 @@ import {
   type PassDetailResult,
 } from './passes/pass-detail-dialog';
 import { PassesTab } from './passes/passes-tab';
+import { RevisionBlock } from './revision/revision-block';
 import { SpeedBlock } from './speed/speed-block';
 
 /** What the title of the document follows. */
@@ -68,7 +69,8 @@ const PHONE = '(max-width: 639.98px)';
  * `/admin/prerender`: the pre-rendering of the older patches into the object store (§ 2).
  * Its head launches a pass and says how fresh the page is; bands say what needs doing; then
  * the live monitor of the active pass, the recap of one just ended, or what to do without
- * one; the key figures; the automatic queue of the refused pages; and three tabs: coverage,
+ * one; the key figures; the automatic queue of the refused pages, the queue of the closed
+ * states; and three tabs: coverage,
  * storage and costs, history. The page alone
  * opens the launch dialog and the detail of a pass: every other block hands it a preset.
  */
@@ -88,6 +90,7 @@ const PHONE = '(max-width: 639.98px)';
     PassesTab,
     PrerenderBands,
     PrerenderKpis,
+    RevisionBlock,
     SpeedBlock,
     Tab,
     Tabs,

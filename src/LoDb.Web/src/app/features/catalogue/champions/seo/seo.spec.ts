@@ -13,6 +13,7 @@ import { championSeo } from './champion-seo';
 import { championsListSeo } from './champions-list-seo';
 import type { HeadSource } from './head-source';
 import type { Translate } from './translate';
+import { detailStateOf } from '../../../../core/testing/detail-state-of';
 
 const CONTEXT: PageContext = { locale: 'en', version: '16.19.1', pinned: false, language: 'en_US' };
 const PINNED: PageContext = { ...CONTEXT, version: '15.14.1', pinned: true };
@@ -44,6 +45,7 @@ const ANNIE: ChampionCard = {
 
 const DETAILS: ChampionDetails = {
   canonicalPath: 'champions/Annie',
+  ...detailStateOf('champions/Annie'),
   version: '16.19.1',
   language: 'en_US',
   profile: ANNIE,
@@ -90,10 +92,35 @@ describe('championSeo', () => {
   it('hands over the canonical the API places a pinned champion at', () => {
     const canonical = { version: null, path: 'champions/Annie' };
     const page = championSeo({ context: PINNED, details: { ...DETAILS, canonical } }, translate);
-    const unplaced = championSeo({ context: PINNED, details: DETAILS }, translate);
 
     expect(page).toMatchObject({ version: '15.14.1', canonical });
-    expect(unplaced).toMatchObject({ canonical: null });
+  });
+
+  // The opener of a closed state: the page search engines index for that run of patches.
+  it('names the run of patches of the closed state it opens, and what its patch changed', () => {
+    const opener = { version: '15.14.1', path: 'champions/Annie' };
+    const state = {
+      openerVersion: '15.14.1',
+      lastVersion: '15.16.1',
+      isOpen: false,
+      isOpener: true,
+      kind: 'new' as const,
+      changedFields: [],
+      openerLink: opener,
+      canonical: opener,
+    };
+    const page = championSeo(
+      { context: PINNED, details: { ...DETAILS, canonical: opener, state } },
+      translate,
+    );
+
+    expect(page).toMatchObject({
+      canonical: opener,
+      titlePatches: { first: '15.14.1', last: '15.16.1' },
+      description:
+        'seo.state.summary_new {"version":"15.14.1"} ' +
+        'seo.champion.detail.description {"name":"Annie","version":"15.14.1"}',
+    });
   });
 
   it('describes the path home › champions › champion, then the champion as a character', () => {

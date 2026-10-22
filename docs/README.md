@@ -1,68 +1,76 @@
 # Documentation — LeagueOfDataBase
 
-Index de la documentation du dépôt. Les conventions de code et les invariants
-d'architecture font foi dans [`../AGENTS.md`](../AGENTS.md) ; le point d'entrée
+Index de la documentation du dépôt. Les règles de code et les invariants d'architecture font
+foi dans [`../AGENTS.md`](../AGENTS.md), chaque décision dans son
+[ADR](reecriture/adr/) (amendements datés : le plus récent l'emporte). Le point d'entrée
 contributeur est [`../CONTRIBUTING.md`](../CONTRIBUTING.md).
+
+La prod tourne sur la stack .NET + Angular depuis le 2026-10-04. Les docs de l'ancienne stack
+(Symfony + Go + Vue) sont archivées sous [`../legacy/docs/`](../legacy/docs/) et ne
+s'appliquent pas à la stack en service.
 
 ## Organisation
 
     docs/
-      README.md          ← ce fichier
-      contribution.md    ← guide contributeur détaillé (FR / EN / ES)
-      reecriture/        ← décisions de la réécriture .NET + Angular (ADR, plan)
-      architecture/      ← comment le système fonctionne
-      guides/            ← comment l'installer, le configurer, l'exploiter
-      audits/            ← index public ; les audits datés restent privés
-      produit/           ← SEO technique
-      changelog/         ← journal technique interne (une entrée par livraison)
-      assets/            ← images et icônes utilisées par le README
-
-## `reecriture/` — réécriture .NET 10 + Angular
-
-Décisions actées le 2026-09-24 pour remplacer Symfony + Go + Vue par un hôte
-ASP.NET Core et un front Angular unique (web SSR, desktop, Android). Tant que la bascule
-n'a pas eu lieu, les sections ci-dessous décrivent la stack **en service**.
-
-| Doc | Contenu |
-|---|---|
-| [README.md](reecriture/README.md) | Pourquoi, tableau des décisions, architecture et versions cibles |
-| [heritage.md](reecriture/heritage.md) | Contournements hérités → réponse, bugs latents, particularités Data Dragon, invariants à porter |
-| [plan-migration.md](reecriture/plan-migration.md) | Lots et critères de sortie, bascule, retour arrière, table des 301, risques |
-| [plan-implementation.md](reecriture/plan-implementation.md) | Chantiers de chaque lot, conventions de la nouvelle stack, ordre d'exécution, couverture ; détail par lot dans [implementation/](reecriture/implementation/) |
-| [adr/](reecriture/adr/) | Une décision par fichier : hôte, ingestion, stockage, SSR, front, coquilles, mises à jour, identité, observabilité |
-| [rapports/](reecriture/rapports/) | Rapports produits pendant la construction : relevés mémoire de la stack ([memoire.md](reecriture/rapports/memoire.md)), rapports de jalon par lot ([jalons/](reecriture/rapports/jalons/), dont [lot 0](reecriture/rapports/jalons/lot-00.md)) |
-
-Pour développer : guide [developpement.md](guides/developpement.md) et
-[`../AGENTS.md`](../AGENTS.md).
+      README.md        ← ce fichier
+      architecture/    ← comment le système fonctionne
+      guides/          ← l'installer, le configurer, l'exploiter
+      produit/         ← SEO et catalogue pré-rendu : règle en vigueur, spécifications
+      reecriture/      ← ADR et runbook de la bascule (font foi) ; plans et rapports de la
+                         construction (historiques)
+      changelog/       ← journal technique interne (une entrée par livraison)
+      audits/          ← index public ; les audits datés restent privés
+      assets/          ← images et icônes utilisées par le README
 
 ## `architecture/` — comment ça marche
 
 | Doc | Contenu |
 |---|---|
-| [architecture.md](architecture/architecture.md) | Vue d'ensemble : services, flux, arborescence |
-| [analytics.md](architecture/analytics.md) | Analytics sans base de données (NDJSON local → agrégats journaliers sur le volume de stockage) et panneau `/admin` |
-| [api-publique.md](architecture/api-publique.md) | API REST v1 payante servie par le micro-service Go `go-api` |
-| [responsive-mobile.md](architecture/responsive-mobile.md) | Stratégie responsive, breakpoints, composants mobile |
-| [pieges.md](architecture/pieges.md) | Nouvelle stack : pièges connus, comportements voulus à ne pas « corriger » (build, SSR, E2E, nginx, déploiement) |
+| [architecture.md](architecture/architecture.md) | Vue d'ensemble : services, chemin d'une requête, flux, environnements, dépôt |
+| [analytics.md](architecture/analytics.md) | Mesure d'audience : capture maison (miroir nginx, balise) en Postgres, Umami, `/v1/trends`, panneau `/admin` |
+| [api-publique.md](architecture/api-publique.md) | API REST `/v1` payante, module `PublicApi` de `LoDb.Api` : contrat, clés, quotas, tarifs, Stripe |
+| [responsive-mobile.md](architecture/responsive-mobile.md) | Stratégie responsive du front Angular, RTL, méthode d'audit |
+| [pieges.md](architecture/pieges.md) | Pièges connus, comportements voulus à ne pas « corriger » (build, SSR, E2E, nginx, déploiement, précalcul) |
 
 ## `guides/` — comment l'exploiter
 
 | Doc | Contenu |
 |---|---|
-| [setup.md](../legacy/docs/guides/setup.md) | *Ancienne stack, archivée* — Prérequis, installation détaillée, dépannage |
-| [configuration.md](../legacy/docs/guides/configuration.md) | *Ancienne stack, archivée* — Variables d'environnement et paramètres applicatifs |
-| [docker.md](../legacy/docs/guides/docker.md) | *Ancienne stack, archivée* — Référence des commandes de la stack Compose |
-| [developpement.md](guides/developpement.md) | Nouvelle stack `lodb-dev` (.NET + Angular) : build et tests, stack d'intégration, ports, emplacements, E2E, dépannage |
-| [tests.md](guides/tests.md) | Stratégie de test : quelle couche teste quoi, budgets de durée et de mémoire, infrastructure des tests .NET |
-| [configuration.md](guides/configuration.md) | Nouvelle stack : inventaire des secrets GitHub, des lignes `.env` de `staging` et de `prod`, des fichiers et volumes de l'hôte et des services externes |
-| [github-actions-secrets.md](guides/github-actions-secrets.md) | Nouvelle stack : pipeline CI/CD, `dev` → `test` (déploiement de `staging`) → `main` (promotion en `prod`) |
-| [migration-edge-proxy.md](guides/migration-edge-proxy.md) | Edge proxy partagé du VPS : porté par le dépôt d'infrastructure `infra-vps`, ce que ce projet attend de l'hôte et déclare |
-| [sauvegardes.md](guides/sauvegardes.md) | Sauvegardes hors hôte de la base de prod : réseau `sauvegardes`, rôle `lodb_sauvegarde`, journal `backup_run` et page `/admin/backups`, activation |
-| [observabilite.md](guides/observabilite.md) | Chaîne de logs vers Grafana : fonctionnement, ce qu'il ne faut surtout pas déclarer, requêtes LogsQL / PromQL, dépannage |
-| [logging.md](guides/logging.md) | Convention de journalisation applicative : clé d'événement, contexte, niveaux, canaux, interdictions |
-| [metriques.md](guides/metriques.md) | Contrat des métriques de l'API et du SSR : port 9464, collecte par `observability`, noms, labels, règle de cardinalité |
-| [oauth-google-setup.md](guides/oauth-google-setup.md) | Configuration « Sign in with Google » côté Google Cloud Console |
-| [packaging-apk.md](../legacy/docs/guides/packaging-apk.md) | *Ancienne stack, archivée* — Distribution Android (TWA / APK) à partir de la PWA |
+| [developpement.md](guides/developpement.md) | Stack locale `lodb-dev` : build et tests, ports, emplacements, E2E, dépannage |
+| [tests.md](guides/tests.md) | Stratégie de test : quelle couche teste quoi, budgets, infrastructure des tests .NET |
+| [configuration.md](guides/configuration.md) | Secrets GitHub, lignes `.env` de `staging` et de `prod`, fichiers et volumes de l'hôte, services externes |
+| [github-actions-secrets.md](guides/github-actions-secrets.md) | Pipeline CI/CD : `dev` → `test` (déploiement de `staging`) → `main` (promotion en `prod`) |
+| [migration-edge-proxy.md](guides/migration-edge-proxy.md) | Edge proxy partagé du VPS (dépôt `infra-vps`) : ce que ce projet attend de l'hôte et déclare |
+| [sauvegardes.md](guides/sauvegardes.md) | Sauvegardes hors hôte de la base de prod : réseau `sauvegardes`, rôle, journal, page `/admin/backups` |
+| [observabilite.md](guides/observabilite.md) | Chaîne de logs vers Grafana, requêtes LogsQL / PromQL, dépannage |
+| [logging.md](guides/logging.md) | Convention de journalisation de l'API et du SSR : clé d'événement, champs, niveaux, interdictions |
+| [metriques.md](guides/metriques.md) | Contrat des métriques de l'API et du SSR : port 9464, noms, labels, cardinalité |
+| [oauth-google-setup.md](guides/oauth-google-setup.md) | « Sign in with Google » côté Google Cloud Console |
+| [release-desktop.md](guides/release-desktop.md) | Release des apps desktop (Velopack, flux signés), lancée à la main |
+| [release-android.md](guides/release-android.md) | Release Android (AAB, live update signé), lancée à la main |
+
+## `produit/` — SEO et catalogue pré-rendu
+
+| Doc | Contenu |
+|---|---|
+| [seo-indexabilite.md](produit/seo-indexabilite.md) | **Fait foi pour le SEO** : cap, règle en vigueur dans le code, règle servie en prod jusqu'à la bascule, mesure, chronologie |
+| [seo-une-page-par-etat.md](produit/seo-une-page-par-etat.md) | Spécification de la règle « une page indexée par état » (décidée le 2026-10-22, en vigueur dans le code, en prod à sa bascule) et ce que l'implémentation a tranché |
+| [seo-anciens-patchs.md](produit/seo-anciens-patchs.md) | Diagnostic de la désindexation d'août et demande du 2026-10-14 (réalisée, remplacée le 2026-10-22) |
+| [pre-rendu-catalogue-cdn.md](produit/pre-rendu-catalogue-cdn.md) | Spécification du catalogue pré-rendu et du CDN : lots, réglages, tests ; état des lots en tête |
+| [pre-rendu-admin-ux.md](produit/pre-rendu-admin-ux.md) | Spécification de l'écran `/admin/prerender` (livrée le 2026-10-21) |
+
+## `reecriture/` — décisions et bascule
+
+| Doc | Contenu |
+|---|---|
+| [README.md](reecriture/README.md) | Pourquoi la réécriture, table des ADR, ce qui fait foi dans ce dossier |
+| [adr/](reecriture/adr/) | **Font foi** : une décision par fichier (0001 à 0012), amendements datés, état en tête |
+| [bascule.md](reecriture/bascule.md) | **Fait foi jusqu'à la décommission** : runbook de la bascule (faite le 2026-10-04), retour arrière, *contract* ; état daté en tête |
+| [heritage.md](reecriture/heritage.md) | Historique, sauf les §§ 5 et 6 : particularités Data Dragon et invariants métier |
+| [plan-migration.md](reecriture/plan-migration.md) | Historique, sauf la table des 301 |
+| [plan-implementation.md](reecriture/plan-implementation.md), [implementation/](reecriture/implementation/) | Historiques : chantiers de la construction (septembre 2026) |
+| [rapports/](reecriture/rapports/) | Rapports de construction et jalons (historiques) ; `contrat-v1.md` (écarts du contrat `/v1`) et `schema-baseline.md` font foi ; `i18n-completude.md`, `diff-seo.md`, `lighthouse.md` sont réécrits par leurs outils |
+| [changelog-bascule/](reecriture/changelog-bascule/README.md) | Dernier brouillon de changelog de la bascule (`applications`) |
 
 ## `audits/` — constats datés
 
@@ -73,15 +81,15 @@ en privé ([`../SECURITY.md`](../SECURITY.md)).
 > `report/` (métriques de conformité aux règles chiffrées de `AGENTS.md`) est
 > **généré** par le skill `archi-report` et git-ignoré : ne pas l'éditer à la main.
 
-## `produit/` — SEO
-
-| Doc | Contenu |
-|---|---|
-| [seo-indexabilite.md](produit/seo-indexabilite.md) | État des lieux et feuille de route SEO technique |
-| [pre-rendu-catalogue-cdn.md](produit/pre-rendu-catalogue-cdn.md) | Pages des anciens patchs calculées une fois, rangées dans un stockage objet et servies derrière un CDN : constat, décisions, lots |
-
 ## `changelog/` — journal technique
 
 Une entrée par feature ou correctif livré, jointe au commit correspondant.
 Format et workflow : [`changelog/README.md`](changelog/README.md), gabarit
 [`changelog/TEMPLATE.md`](changelog/TEMPLATE.md).
+
+## Archives de l'ancienne stack
+
+Sous [`../legacy/docs/`](../legacy/docs/), supprimées avec `legacy/` à la décommission :
+`guides/` (`setup.md`, `configuration.md`, `docker.md`, `github-actions-secrets.md`,
+`packaging-apk.md`, `logging.md`), `architecture/` (`architecture.md`, `analytics.md`,
+`responsive-mobile.md`), `produit/seo-indexabilite.md` et `contribution.md`.

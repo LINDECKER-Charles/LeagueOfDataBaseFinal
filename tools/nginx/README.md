@@ -17,7 +17,8 @@ cache and one for the temporary files, which a slow client's answer must reach r
 
 ```bash
 docker build -f docker/nginx/Dockerfile -t lodb-nginx:check .
-LODB_NGINX_IMAGE=lodb-nginx:check node --test tools/nginx/test/*.test.mjs
+LODB_NGINX_IMAGE=lodb-nginx:check node --test \
+  tools/nginx/test/*.test.mjs tools/nginx/test/*/*.test.mjs
 ```
 
 Without `LODB_NGINX_IMAGE` the image checks are skipped. `nginx-image.test.mjs` tightens the
@@ -47,8 +48,8 @@ switch is gone.
 crawlers (`$lodb_ai_crawler`, `nginx.conf`) get a `403` on both hosts, while a search engine and
 a visitor get their answer, each with the `X-Robots-Tag` noindex.
 
-`nginx-pages-store.test.mjs` boots the image in front of the stub's page store (lot 3 of
-ADR 0011): an S3 bucket read in path style on the alias `lodb-pages-store`, over plain HTTP on
+`pages-store/nginx-pages-store.test.mjs` boots the image in front of the stub's page store (lot
+3 of ADR 0011): an S3 bucket read in path style on the alias `lodb-pages-store`, over plain HTTP on
 `9000` and over TLS on `9443`, under a certificate no authority signed
 (`lib/self-signed-certificate.mjs`, the image has no `openssl`). The stub keeps a page
 compressed with its headers in metadata, answers `404` for a key it does not hold, and one
@@ -56,9 +57,9 @@ version stands for each of its other answers (`403`, `429`, `500`, `503`, a list
 answers); `storeRequests()` (`lib/stack.mjs`) reads what reached it. A stored page comes from the
 store then from the cache (`X-LoDb-Source`: `store`, `cache`), with its policy, report-only
 policy, reporting endpoints and `Link` posed again from the metadata (an object without its
-policy gets a strict one, and any stored page the type of a page), the `archived` class's
-one-year `Cache-Control`, none of the store's own headers (`x-amz-*`, `x-amzn-*`, CORS, as the
-local stack's simulated store sends them, nor the validators and ranges S3 states of the
+policy gets a strict one, and any stored page the type of a page), none of the store's own
+headers (`x-amz-*`, `x-amzn-*`, CORS, as the local stack's simulated store sends them, nor the
+validators and ranges S3 states of the
 compressed object: a `HEAD` gets the headers of a `GET`, a conditional request on the store's
 `ETag` or `Last-Modified` and a `Range` get the whole page), and decompressed for a client
 without gzip; the store gets the key with its own `Host` and none of the client's headers; each
@@ -72,8 +73,14 @@ comes from the store's `build/`, then from the bundles' cache under its name, wi
 store's own headers; a name neither has is a plain `404`, whatever the store answered, and past
 the pages' rate a client gets their `429` without the store being asked. Switched off
 (`LODB_PAGES_STORE_ENABLED=0`, the image's default), nginx never asks the store.
-`nginx-pages-store-unreachable.test.mjs` boots it twice more, in front of a store whose
-certificate it cannot verify, then one whose name does not resolve: each time it starts and
+`pages-store/nginx-pages-store-classes.test.mjs` boots it once more in front of the same stub
+for the classes: a stored page gets the `Cache-Control` of its object's class (`revisable` for an
+object of that class, the `archived` class's year otherwise) and stays in the hot cache as long
+as its object says (an object living a second is read from the store again, `EXPIRED`, while a
+bundle is kept a year whatever its object says); a patch page (`/{locale}/{version}/changes`)
+comes from the store as any other page.
+`pages-store/nginx-pages-store-unreachable.test.mjs` boots it twice more, in front of a store
+whose certificate it cannot verify, then one whose name does not resolve: each time it starts and
 renders every page with the SSR server.
 
 `maintenance-page.test.mjs` and `maintenance-sources.test.mjs` need neither Docker nor the image:
@@ -83,8 +90,9 @@ second holds the page to the site: the 21 locales and their texts, each identity
 faces against `src/LoDb.Web/src/styles`, the English a visitor without JavaScript reads.
 
 `archived-cache-control.test.mjs` needs neither: the `Cache-Control` nginx gives a page from the
-store (`sites/site.conf`) is the SSR server's `archived` class
-(`src/LoDb.Web/src/app/core/routing/response/cache-control.ts`), the same constant twice.
+store (`sites/site.conf`) is the SSR server's `archived` class, or its `revisable` one for an
+object of that class (`src/LoDb.Web/src/app/core/routing/response/cache-control.ts`), the same
+constants in both languages.
 
 `compose-environment.test.mjs` needs the Docker CLI only (`docker compose config`): every
 `LODB_*` default of the image reaches nginx with the same value through `compose.yaml`, on a

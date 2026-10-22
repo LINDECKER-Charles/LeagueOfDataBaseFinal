@@ -23,6 +23,8 @@ export type { GetSummoner$Params as GetSummoner$Params } from './fn/catalog/get-
 export { getSummoner as getSummoner } from './fn/catalog/get-summoner';
 export type { SearchCatalog$Params as SearchCatalog$Params } from './fn/catalog/search-catalog';
 export { searchCatalog as searchCatalog } from './fn/catalog/search-catalog';
+export type { GetPatchChanges$Params as GetPatchChanges$Params } from './fn/catalog/get-patch-changes';
+export { getPatchChanges as getPatchChanges } from './fn/catalog/get-patch-changes';
 export type { WarmUpCatalog$Params as WarmUpCatalog$Params } from './fn/catalog/warm-up-catalog';
 export { warmUpCatalog as warmUpCatalog } from './fn/catalog/warm-up-catalog';
 export type { PickChampions$Params as PickChampions$Params } from './fn/pickers/pick-champions';
@@ -195,6 +197,8 @@ export type { ReadAdminPrerenderPassVersion$Params as ReadAdminPrerenderPassVers
 export { readAdminPrerenderPassVersion as readAdminPrerenderPassVersion } from './fn/admin-prerender/read-admin-prerender-pass-version';
 export type { ReadAdminPrerenderDemand$Params as ReadAdminPrerenderDemand$Params } from './fn/admin-prerender/read-admin-prerender-demand';
 export { readAdminPrerenderDemand as readAdminPrerenderDemand } from './fn/admin-prerender/read-admin-prerender-demand';
+export type { ReadAdminPrerenderRevision$Params as ReadAdminPrerenderRevision$Params } from './fn/admin-prerender/read-admin-prerender-revision';
+export { readAdminPrerenderRevision as readAdminPrerenderRevision } from './fn/admin-prerender/read-admin-prerender-revision';
 export type { ReadAdminPrerenderSpeed$Params as ReadAdminPrerenderSpeed$Params } from './fn/admin-prerender/read-admin-prerender-speed';
 export { readAdminPrerenderSpeed as readAdminPrerenderSpeed } from './fn/admin-prerender/read-admin-prerender-speed';
 export type { SetAdminPrerenderSpeed$Params as SetAdminPrerenderSpeed$Params } from './fn/admin-prerender/set-admin-prerender-speed';

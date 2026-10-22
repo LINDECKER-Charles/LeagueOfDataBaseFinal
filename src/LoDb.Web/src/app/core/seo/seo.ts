@@ -12,6 +12,10 @@ import type { SeoPage } from './seo-page';
 
 /** The Transloco scope of the SEO texts (`public/i18n/seo/`). */
 const SEO_SCOPE = 'seo';
+/** "(patch {{ version }})", after the title of a pinned page. */
+const VERSIONED_SUFFIX = 'versioned_suffix';
+/** "(patches {{ first }} to {{ last }})", after the title of a closed state's opener. */
+const RANGE_SUFFIX = 'state_range_suffix';
 
 /**
  * The head of every page: title, description, robots, canonical, `hreflang` alternates,
@@ -38,8 +42,7 @@ export class Seo {
 
   private async write(page: SeoPage, call: number): Promise<void> {
     const locale = page.locale ?? this.activeLocale();
-    const version = 'version' in page ? (page.version ?? null) : null;
-    const texts = await this.textsOf(locale, version);
+    const texts = await this.textsOf(locale, page);
     if (call === this.latest) {
       this.writer.write(buildHeadTags({ page, texts, origin: this.origin, locale }));
     }
@@ -50,15 +53,29 @@ export class Seo {
     return isLocale(active) ? active : DEFAULT_LOCALE;
   }
 
-  private async textsOf(locale: Locale, version: string | null): Promise<SeoTexts> {
+  private async textsOf(locale: Locale, page: SeoPage): Promise<SeoTexts> {
     const scoped = `${SEO_SCOPE}/${locale}`;
     await Promise.all([this.load(locale), this.load(scoped)]);
     return {
       siteTitle: this.transloco.translate('base.title', {}, locale),
       siteDescription: this.transloco.translate('base.description', {}, locale),
-      versionedSuffix:
-        version === null ? null : this.transloco.translate('versioned_suffix', { version }, scoped),
+      versionedSuffix: this.patchSuffixOf(page, scoped),
     };
+  }
+
+  // A pinned page names its patch after its title, or the run of patches of the state it
+  // opens: one suffix, never two.
+  private patchSuffixOf(page: SeoPage, scoped: string): string | null {
+    const version = 'version' in page ? (page.version ?? null) : null;
+    const patches = 'titlePatches' in page ? page.titlePatches : undefined;
+    if (version === null || patches === false) {
+      return null;
+    }
+    if (patches === undefined || patches.first === patches.last) {
+      const named = patches?.first ?? version;
+      return this.transloco.translate(VERSIONED_SUFFIX, { version: named }, scoped);
+    }
+    return this.transloco.translate(RANGE_SUFFIX, { ...patches }, scoped);
   }
 
   // A catalogue that fails to load must not leave the page without a head: keys then fall

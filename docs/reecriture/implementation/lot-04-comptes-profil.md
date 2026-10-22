@@ -1,5 +1,9 @@
 # Lot 4 — Comptes et profil
 
+> **Historique** : spécification de construction de septembre 2026, exécutée (bascule le
+> 2026-10-04). Les règles en vigueur sont dans [`AGENTS.md`](../../../AGENTS.md) et les
+> [ADR](../adr/) ; plusieurs choix de ce lot ont changé depuis, par amendement daté.
+
 Objectif du lot : ASP.NET Core Identity sur la table `users` existante, sans session
 serveur, avec une migration des mots de passe invisible et réversible ; les contrats
 d'outbox et d'audit dont tous les lots suivants se servent ; le socle d'authentification du

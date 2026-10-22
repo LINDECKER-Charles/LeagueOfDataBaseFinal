@@ -1,11 +1,13 @@
 import type { SummonerDetails } from '../../../../../core/api/generated/models/summoner-details';
 import type { Translate } from '../../../shared/codex/texts/translate';
 import { summonerPlaquesOf } from './summoner-plaques-of';
+import { detailStateOf } from '../../../../../core/testing/detail-state-of';
 
 const t: Translate = (key, params) => (params ? `${key} ${JSON.stringify(params)}` : key);
 
 const FLASH: SummonerDetails = {
   canonicalPath: 'summoners/SummonerFlash',
+  ...detailStateOf('summoners/SummonerFlash'),
   language: 'en_US',
   version: '16.19.1',
   cost: [0],

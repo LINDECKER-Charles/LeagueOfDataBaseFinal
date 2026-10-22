@@ -24,6 +24,13 @@ internal sealed class PromotedVersions(IDbContextFactory<LoDbDbContext> contexts
         return versions.FirstOrDefault(version => version < promoted);
     }
 
+    /// <summary>The version the last promotion made the latest; null before any.</summary>
+    public async Task<PatchVersion?> LatestAsync(CancellationToken cancellationToken)
+    {
+        var versions = await NewestFirstAsync(cancellationToken);
+        return versions.FirstOrDefault();
+    }
+
     /// <summary>The version the latest one replaced, at the last promotion.</summary>
     public async Task<PatchVersion?> PreviousOfLatestAsync(CancellationToken cancellationToken)
     {

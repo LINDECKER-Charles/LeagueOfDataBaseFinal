@@ -7,7 +7,7 @@ import { canonical } from '../canonical';
 import { injectOutcomeCommand } from '../outcome/inject-outcome-command';
 import { NOT_FOUND } from '../outcome/not-found';
 import { PageResponse } from '../response/page-response';
-import { cacheClassOf } from '../version/cache-class-of';
+import { entryCacheClassOf } from '../version/entry-cache-class-of';
 import type { CatalogueEntry } from './catalogue-entry';
 import { cataloguePageOf } from './catalogue-page-of';
 import type { DetailsByResource } from './details-by-resource';
@@ -18,7 +18,8 @@ import { openCatalogue } from './open-catalogue';
 /**
  * Resolver of a catalogue detail (`entry`): the rules `/api/meta` decides come first, so an
  * unknown or latest pinned version never reaches the API; then the entity, whose
- * `canonicalPath` fixes the slug or, when absent, sends to its version's list or to a 404.
+ * `canonicalPath` fixes the slug or, when absent, sends to its version's list or to a 404,
+ * and whose state decides how long a page of an older version is kept.
  */
 export function resolveCatalogueEntry<R extends ResourceType>(
   resource: R,
@@ -40,7 +41,7 @@ export function resolveCatalogueEntry<R extends ResourceType>(
     if (outcome !== null || details === null) {
       return answer(outcome ?? NOT_FOUND, state.url);
     }
-    response.cache(cacheClassOf(version, meta));
+    response.cache(entryCacheClassOf(version, meta, details.state));
     return { context, details };
   };
 }

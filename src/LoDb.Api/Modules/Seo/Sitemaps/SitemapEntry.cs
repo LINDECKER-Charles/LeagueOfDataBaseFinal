@@ -6,7 +6,8 @@ namespace LoDb.Api.Modules.Seo.Sitemaps;
 /// </summary>
 /// <param name="Location">The absolute URL of the page or of the sitemap.</param>
 /// <param name="LastModified">
-/// The promotion of the latest patch for a page that patch changed; null when no date is
-/// known, which is better than a guessed one.
+/// When the content last changed: the latest promotion for a page of the latest patch, the
+/// closing of its state for a past opener, the moment a past patch page stopped changing; null
+/// when no date is known, which is better than a guessed one.
 /// </param>
 internal sealed record SitemapEntry(string Location, DateTimeOffset? LastModified = null);

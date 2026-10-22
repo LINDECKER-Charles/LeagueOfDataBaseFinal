@@ -5,6 +5,7 @@ import { ROOT_CATALOGUES } from '../../../../core/testing/root-catalogues';
 import { SEO_CATALOGUES } from '../../../../core/testing/seo-catalogues';
 import type { CatalogueTexts } from '../../shared/codex/head/catalogue-texts';
 import { itemDescriptionOf } from './item-description-of';
+import { detailStateOf } from '../../../../core/testing/detail-state-of';
 
 const MAX_LENGTH = 160;
 const CONTEXT: PageContext = { locale: 'en', version: '16.20.1', pinned: false, language: 'en_US' };
@@ -29,6 +30,7 @@ const CARD: ItemCard = {
 const DETAILS: ItemDetails = {
   availableMaps: [],
   canonicalPath: CARD.canonicalPath,
+  ...detailStateOf(CARD.canonicalPath),
   description: '',
   language: 'en_US',
   version: CONTEXT.version,

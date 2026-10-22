@@ -5,14 +5,13 @@ Every `*.conf` file of this folder is included inside the site's `server` block
 new file needs no change to the Dockerfile. Like `sites/` and `snippets/`, every file is a
 template: `${LODB_…}` is replaced at start (Dockerfile), nginx's own `$variables` are not.
 
-Reserved files (plan, §7.3):
-
-| File | Chantier |
+| File | Role |
 |---|---|
-| `seo.conf` | L3.4 (sitemaps, robots.txt, llms.txt routed to the API, cached) |
-| `legacy-redirects.conf` | L3.12 (301 of the old URLs, cached) |
-| `analytics.conf` | L7.1 (internal target of the page-view mirror) |
+| `seo.conf` | crawler files built by the API (`/sitemap.xml`, `/sitemaps/`, `/robots.txt`, `/llms.txt`, the IndexNow key file `/{key}.txt`), cached (`../snippets/seo-cache.conf`) |
+| `legacy-redirects.conf` | the former site's URLs: one 301 to their new form, resolved by the API (`/api/legacy`), cached |
+| `analytics.conf` | `/_analytics/page`, internal target of the page-view mirror (`../snippets/analytics-mirror.conf`), forwarded to the API |
 | `maintenance.conf` | maintenance page of the deploys (the page itself: `../maintenance/`) |
+| `assetlinks.conf`, `android-latest.conf` | files of the served environment for the Android app (below) |
 
 What goes inside a `location` belongs in `../snippets/` instead. The guards both server
 blocks share (refused agents, client timeouts, paths that exist nowhere, the 429 answer)

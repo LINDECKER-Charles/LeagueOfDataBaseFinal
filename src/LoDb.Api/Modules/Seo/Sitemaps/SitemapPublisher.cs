@@ -1,7 +1,8 @@
 using LoDb.Domain.Languages;
 using LoDb.Domain.Versions;
 using LoDb.Ingestion.Catalog.Reading;
-using Microsoft.Extensions.Options;
+using LoDb.Ingestion.Catalog.States;
+using LoDb.Ingestion.Catalog.States.Snapshots;
 
 namespace LoDb.Api.Modules.Seo.Sitemaps;
 
@@ -11,34 +12,35 @@ namespace LoDb.Api.Modules.Seo.Sitemaps;
 /// </summary>
 /// <remarks>
 /// <list type="bullet">
-/// <item><c>/sitemap.xml</c>: the index of every locale's sitemaps, the past versions
-/// limited to <see cref="SeoOptions.SitemapVersionWindow"/>.</item>
-/// <item><c>/sitemaps/{locale}/latest.xml</c>: unversioned pages and short entity URLs.</item>
-/// <item><c>/sitemaps/{locale}/{version}.xml</c>: the pages still canonical in one past
-/// version, inside the window or not; the latest one moves to <c>latest.xml</c>.</item>
+/// <item><c>/sitemap.xml</c>: every locale's <c>latest.xml</c>, then the files of the covered
+/// past versions that list something, read in the index of states.</item>
+/// <item><c>/sitemaps/{locale}/latest.xml</c>: unversioned pages and short entity URLs, read in
+/// the latest catalog.</item>
+/// <item><c>/sitemaps/{locale}/{version}.xml</c>: the indexable pages of a covered past
+/// version, read in the index of states alone, empty or not; the latest version moves to
+/// <c>latest.xml</c>, a newer or uncovered one is missing.</item>
 /// <item>Previous forms: <c>/sitemaps/latest.xml</c> moves to the index,
 /// <c>/sitemaps/{version}.xml</c> to its <c>en</c> sitemap, in a single hop.</item>
 /// </list>
+/// A 503 only while the index of states has no copy loaded, or the latest catalog is queued.
 /// </remarks>
 internal sealed class SitemapPublisher(
     CrawlerCatalog catalog,
-    SiteOrigin origins,
-    IOptions<SeoOptions> options)
+    IEntityStateIndex states,
+    SiteOrigin origins)
 {
     public async Task<SeoAnswer> IndexAsync(
         HttpRequest request,
         CancellationToken cancellationToken)
     {
-        var versions = await catalog.GetVersionsAsync(cancellationToken);
-        if (versions is null)
+        if (await ReadIndexAsync(cancellationToken) is not { } index)
         {
             return SeoAnswer.Unavailable();
         }
 
-        var window = options.Value.SitemapVersionWindow;
-        var locations = SitemapLocations.Index(origins.Of(request), versions, window);
-        var body = SitemapXml.Index(locations);
-        return SeoAnswer.File(body, SitemapXml.ContentType, SeoCaching.Hour);
+        var latest = await LatestOfAsync(index, cancellationToken);
+        var locations = SitemapLocations.Index(origins.Of(request), latest, index);
+        return Document(SitemapXml.Index(locations));
     }
 
     /// <summary>A file of the previous site, moved to its locale-prefixed form.</summary>
@@ -70,68 +72,84 @@ internal sealed class SitemapPublisher(
         }
 
         var latest = await catalog.GetLatestAsync(cancellationToken);
-        var promotedAt = await catalog.GetLatestPromotedAtAsync(cancellationToken);
-        var scope = new SitemapScope(origins.Of(request), uiLocale, latest, promotedAt);
-        if (sitemap.Version is not { } version)
+        if (sitemap.Version is { } version && NotPast(uiLocale, version, latest) is { } answer)
         {
-            return await LatestAsync(scope, cancellationToken);
+            return answer;
         }
 
-        return version == latest
-            ? SeoAnswer.MovedTo(SitemapFile.PathOf(uiLocale, null))
-            : await VersionAsync(scope, version, cancellationToken);
+        if (await ReadIndexAsync(cancellationToken) is not { } index)
+        {
+            return SeoAnswer.Unavailable();
+        }
+
+        var prefix = SitePages.Prefix(origins.Of(request), uiLocale, sitemap.Version);
+        return sitemap.Version is { } past
+            ? VersionFile(prefix, past, index)
+            : await LatestFileAsync(prefix, index, cancellationToken);
     }
 
-    private async Task<SeoAnswer> LatestAsync(
-        SitemapScope scope,
+    // The latest version moves to latest.xml; a newer one, or any before the first promotion,
+    // has no file. Null for a past version.
+    private static SeoAnswer? NotPast(UiLocale locale, PatchVersion version, PatchVersion? latest)
+    {
+        if (version == latest)
+        {
+            return SeoAnswer.MovedTo(SitemapFile.PathOf(locale, null));
+        }
+
+        return latest is null || version > latest ? SeoAnswer.Missing() : null;
+    }
+
+    private static SeoAnswer VersionFile(
+        string prefix,
+        PatchVersion version,
+        EntityStateSnapshot index) =>
+        index.Coverage.Contains(version)
+            ? Document(SitemapXml.UrlSet(SitemapLocations.Version(prefix, version, index)))
+            : SeoAnswer.Missing();
+
+    private async Task<SeoAnswer> LatestFileAsync(
+        string prefix,
+        EntityStateSnapshot index,
         CancellationToken cancellationToken)
     {
+        var latest = await LatestOfAsync(index, cancellationToken);
         CatalogLoad? load = null;
-        if (scope.Latest is { } latest)
+        if (latest.Version is { } version)
         {
-            load = await catalog.OpenAsync(latest, cancellationToken);
+            load = await catalog.OpenAsync(version, cancellationToken);
             if (load?.IsReady != true)
             {
                 return SeoAnswer.Unavailable();
             }
         }
 
-        var prefix = SitePages.Prefix(scope.Origin, scope.Locale, null);
-        var pages = SitemapLocations.Latest(prefix, load?.Catalog, scope.PromotedAt);
-        return SeoAnswer.File(SitemapXml.UrlSet(pages), SitemapXml.ContentType, SeoCaching.Hour);
+        return Document(SitemapXml.UrlSet(SitemapLocations.Latest(prefix, load?.Catalog, latest)));
     }
 
-    private async Task<SeoAnswer> VersionAsync(
-        SitemapScope scope,
-        PatchVersion version,
+    private async Task<LatestPatch> LatestOfAsync(
+        EntityStateSnapshot index,
         CancellationToken cancellationToken)
     {
-        var load = await catalog.OpenAsync(version, cancellationToken);
-        if (load?.Status == CatalogLoadStatus.Unknown)
-        {
-            return SeoAnswer.Missing();
-        }
-
-        if (load is null || !load.IsReady)
-        {
-            return SeoAnswer.Unavailable();
-        }
-
-        // What stays canonical in a past version follows the latest one: never immutable.
-        var references = await catalog.ReferencesAsync(version, cancellationToken);
-        if (references is null)
-        {
-            return SeoAnswer.Unavailable();
-        }
-
-        var prefix = SitePages.Prefix(scope.Origin, scope.Locale, version);
-        var pages = SitemapLocations.Version(prefix, load.Catalog, references);
-        return SeoAnswer.File(SitemapXml.UrlSet(pages), SitemapXml.ContentType, SeoCaching.Hour);
+        var version = await catalog.GetLatestAsync(cancellationToken);
+        var promotedAt = await catalog.GetLatestPromotedAtAsync(cancellationToken);
+        return LatestPatch.Of(version, promotedAt, index);
     }
 
-    private sealed record SitemapScope(
-        string Origin,
-        UiLocale Locale,
-        PatchVersion? Latest,
-        DateTimeOffset? PromotedAt);
+    // The in-memory copy; null while none is loaded and the database cannot give one, which
+    // the index already logs and counts.
+    private async Task<EntityStateSnapshot?> ReadIndexAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await states.GetAsync(cancellationToken);
+        }
+        catch (StateIndexUnavailableException)
+        {
+            return null;
+        }
+    }
+
+    private static SeoAnswer Document(byte[] body) =>
+        SeoAnswer.File(body, SitemapXml.ContentType, SeoCaching.Hour);
 }

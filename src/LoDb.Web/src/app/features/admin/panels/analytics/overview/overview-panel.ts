@@ -16,7 +16,7 @@ import { OverviewTraffic } from './overview-traffic';
  * `/admin`: the site at a glance, in the order of the legacy console. The figures of the
  * application and the services, the traffic of the period, the storage: three reports loaded
  * side by side, each failing on its own. "Consolidate" rolls the raw events of the last days
- * into the daily aggregates the reports read, as the nightly job does.
+ * into the daily aggregates the reports read, as the rollup job does every five minutes.
  */
 @Component({
   selector: 'lodb-overview-panel',

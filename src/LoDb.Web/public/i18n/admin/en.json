@@ -762,7 +762,8 @@
         "locales": "{count, plural, one {# locale} other {# locales}}",
         "types_all": "every type",
         "priority": "{count, plural, one {# first} other {# first}}",
-        "skip": "gaps only"
+        "skip": "gaps only",
+        "openers": "openers first"
       },
       "units": {
         "title": "{version} in pass #{id}",
@@ -1180,7 +1181,8 @@
         "standby_exists": "Epoch {epoch} already holds pages not served: continue it rather than open a new one.",
         "default_estimate": "No measure: the estimate is rough.",
         "priority_capped": "Beyond 100, the versions are ticked without priority.",
-        "nothing": "Nothing to render: everything selected is already complete in epoch {epoch}."
+        "nothing": "Nothing to render: everything selected is already complete in epoch {epoch}.",
+        "openers": "“Openers first” pass: launch a pass over every page next; the patches promoted meanwhile wait for its end."
       },
       "errors": {
         "versions": {
@@ -1220,7 +1222,15 @@
       "session": "Session expired: sign in again, then relaunch.",
       "done": "Pass #{id} launched on epoch {epoch}: {units, plural, one {# unit} other {# units}}{skipped, plural, =0 {} one {, # already complete left out} other {, # already complete left out}}.",
       "done_ignored": "{count, plural, one {# version left out, not} other {# versions left out, not}} among the older patches: {versions}.",
-      "season_count": "{count, plural, one {# patch} other {# patches}} · {selected, plural, =0 {none selected} other {# selected}}"
+      "season_count": "{count, plural, one {# patch} other {# patches}} · {selected, plural, =0 {none selected} other {# selected}}",
+      "pages": {
+        "title": "Pages",
+        "every_title": "Every page",
+        "every_body": "The lists, the patch page and every entity page of each patch.",
+        "openers_title": "Openers first",
+        "openers_body": "The patch page and the entity pages that open a state at that patch: the pages that may be indexed.",
+        "openers_note": "This pass leaves every other page to the next one; the patches promoted while it runs wait for its end, and it never makes an epoch complete."
+      }
     },
     "coverage": {
       "epoch_label": "Epoch read",
@@ -1241,7 +1251,8 @@
         "pages": "Pages",
         "volume": "Volume",
         "failed": "Failures",
-        "last": "Last written (UTC)"
+        "last": "Last written (UTC)",
+        "indexed": "Index (openers · frozen · revisable)"
       },
       "season_select": "Select season {season}",
       "row_select": "Select {version}",
@@ -1253,7 +1264,8 @@
       "error": "Coverage unavailable ({reason}).",
       "retry": "Try again",
       "empty": "No older patch.",
-      "season_counts": "{versions, plural, one {# patch} other {# patches}} · {complete} complete{missing, plural, =0 {} other { · # to complete}}"
+      "season_counts": "{versions, plural, one {# patch} other {# patches}} · {complete} complete{missing, plural, =0 {} other { · # to complete}}",
+      "indexed": "{openers} · {frozen} · {revisable}"
     },
     "costs": {
       "title": "What the store holds",
@@ -1422,6 +1434,28 @@
         "cost": "Cost",
         "cost_value": "+ {euros} / month of storage for these pages · VPS already paid: no extra cost, the pass takes {share} of its CPU"
       }
+    },
+    "revision": {
+      "title": "Queue of the closed states",
+      "lede": "At each promotion, the pages of the states it closes are rendered again here, frozen, into the served epoch and the active pass's: no pass to launch.",
+      "states": {
+        "active": "active",
+        "dormant": "dormant"
+      },
+      "why": {
+        "dormant": "Dormant until the store is configured on this host."
+      },
+      "figures": {
+        "pending": "Pending",
+        "due": "{count, plural, other {# due now}}",
+        "hour": "Written (1 h)",
+        "day": "Written (24 h)",
+        "failed": "Failed",
+        "skipped": "{count, plural, one {# page skipped} other {# pages skipped}}"
+      },
+      "next": "Next page due: {at} UTC · closures taken up to {closed} UTC",
+      "epoch": "Epoch {epoch}{served, select, true { (served)} other {}}: {pending} pending · {done} written · {failed} failed",
+      "empty": "The queue is empty."
     }
   },
   "scaleway_bill": {

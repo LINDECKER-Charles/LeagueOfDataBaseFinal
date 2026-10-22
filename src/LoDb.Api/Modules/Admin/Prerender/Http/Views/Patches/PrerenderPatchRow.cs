@@ -33,4 +33,10 @@ internal sealed record PrerenderPatchRow
 
     /// <summary>When a unit of the epoch last ended for it; null when none did.</summary>
     public DateTimeOffset? LastEndedAt { get; init; }
+
+    /// <summary>
+    /// What the index of states expects of it, in each locale; null for a version the index
+    /// does not cover.
+    /// </summary>
+    public PrerenderIndexedPages? Indexed { get; init; }
 }

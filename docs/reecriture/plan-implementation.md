@@ -1,6 +1,13 @@
 # Plan d'implémentation de la réécriture
 
-> **Statut** : prêt à exécuter — 2026-09-24.
+> **Statut** : **exécuté, historique** (bilan du 2026-09-27 :
+> [`rapports/jalons/bilan-final.md`](rapports/jalons/bilan-final.md) ; bascule le 2026-10-04).
+> Ne pas appliquer ses règles de chantier : les chemins `next` (`docker/next/`,
+> `compose.next*.yaml`, `lodb-next`, `tools/next/`) n'existent plus, et `compose.yaml`,
+> `compose.deploy.yaml` et `docker/nginx/` sont ceux de la stack en service. Les règles en
+> vigueur sont dans [`AGENTS.md`](../../AGENTS.md) et les [ADR](adr/).
+>
+> Texte d'origine, prêt à exécuter le 2026-09-24 :
 > Ce plan décline le [plan de migration](plan-migration.md) en **chantiers** exécutables :
 > chaque lot y est découpé en chantiers à périmètre de fichiers borné, avec ses entrées, ses
 > tests et son critère d'acceptation. Il fixe aussi les conventions communes, l'ordre
@@ -620,7 +627,7 @@ Ce qui ne se fait pas dans le dépôt, placé au moment où cela bloque.
 | Clés Stripe de test, client OAuth Google (web, Android, desktop) avec l'URI de retour `/api/account/google/callback`, SMTP, certificat Data Protection | essais réels (les tests utilisent des doublures) | avant la répétition de bascule |
 | Apple Developer ID + profil de notarisation, abonnement Azure Artifact Signing | release desktop signée (L9.4) | avant l'ouverture publique des mises à jour |
 | Compte Play Console, clé d'envoi, clé RSA des bundles (sauvegarde hors ligne), vérification développeur, empreinte du certificat pour `assetlinks.json` | release Android (L10.4) | avant la piste de test interne |
-| Répétition de bascule avec un dump réel chiffré, fenêtre de bascule, Search Console, surveillance 72 h, *contract* après 30 jours, décommission | lot 8 | suivant le [runbook](plan-migration.md#bascule-lot-8) |
+| Répétition de bascule avec un dump réel chiffré, fenêtre de bascule, Search Console, surveillance 72 h, *contract* après 30 jours, décommission | lot 8 | suivant le [runbook](bascule.md) |
 
 ## 12. Risques d'exécution
 

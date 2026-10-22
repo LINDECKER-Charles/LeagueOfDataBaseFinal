@@ -19,6 +19,7 @@ import { PrerenderPassProgress } from '../models/prerender-pass-progress';
 import { PrerenderPassStarted } from '../models/prerender-pass-started';
 import { PrerenderPatchesReport } from '../models/prerender-patches-report';
 import { PrerenderReport } from '../models/prerender-report';
+import { PrerenderRevisionReport } from '../models/prerender-revision-report';
 import { PrerenderSpeedReport } from '../models/prerender-speed-report';
 import { PrerenderVersionUnits } from '../models/prerender-version-units';
 import { readAdminPrerender } from '../fn/admin-prerender/read-admin-prerender';
@@ -31,6 +32,8 @@ import { readAdminPrerenderPassVersion } from '../fn/admin-prerender/read-admin-
 import { ReadAdminPrerenderPassVersion$Params } from '../fn/admin-prerender/read-admin-prerender-pass-version';
 import { readAdminPrerenderPatches } from '../fn/admin-prerender/read-admin-prerender-patches';
 import { ReadAdminPrerenderPatches$Params } from '../fn/admin-prerender/read-admin-prerender-patches';
+import { readAdminPrerenderRevision } from '../fn/admin-prerender/read-admin-prerender-revision';
+import { ReadAdminPrerenderRevision$Params } from '../fn/admin-prerender/read-admin-prerender-revision';
 import { readAdminPrerenderSpeed } from '../fn/admin-prerender/read-admin-prerender-speed';
 import { ReadAdminPrerenderSpeed$Params } from '../fn/admin-prerender/read-admin-prerender-speed';
 import { resumeAdminPrerenderPass } from '../fn/admin-prerender/resume-admin-prerender-pass';
@@ -358,6 +361,41 @@ export class AdminPrerenderService extends BaseService {
     const resp = this.readAdminPrerenderDemand$Response(params, context);
     return resp.pipe(
       map((r: StrictHttpResponse<PrerenderDemandReport>): PrerenderDemandReport => r.body)
+    );
+  }
+
+  /** Path part for operation `readAdminPrerenderRevision()` */
+  static readonly ReadAdminPrerenderRevisionPath = '/api/admin/prerender/revision';
+
+  /**
+   * The queue of the pages of the states a promotion closed.
+   *
+   *
+   *
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `readAdminPrerenderRevision()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  readAdminPrerenderRevision$Response(params?: ReadAdminPrerenderRevision$Params, context?: HttpContext): Observable<StrictHttpResponse<PrerenderRevisionReport>> {
+    const obs = readAdminPrerenderRevision(this.http, this.rootUrl, params, context);
+    return obs;
+  }
+
+  /**
+   * The queue of the pages of the states a promotion closed.
+   *
+   *
+   *
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `readAdminPrerenderRevision$Response()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  readAdminPrerenderRevision(params?: ReadAdminPrerenderRevision$Params, context?: HttpContext): Observable<PrerenderRevisionReport> {
+    const resp = this.readAdminPrerenderRevision$Response(params, context);
+    return resp.pipe(
+      map((r: StrictHttpResponse<PrerenderRevisionReport>): PrerenderRevisionReport => r.body)
     );
   }
 

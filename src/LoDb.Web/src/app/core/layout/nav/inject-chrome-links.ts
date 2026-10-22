@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import type { NavSelection } from '../../context/nav/nav-selection';
 import type { Locale } from '../../i18n/locales';
 import { cataloguePath } from '../../routing/url/catalogue-path';
-import { isCatalogueRoute } from '../../routing/url/is-catalogue-route';
+import { isVersionedRoute } from '../../routing/url/is-versioned-route';
 import { PageDirection } from '../direction/page-direction';
 import { localePath } from '../shell/locale-path';
 import type { NavEntry } from '../shell/nav-entry';
@@ -12,10 +12,11 @@ import { NavContext } from './nav-context';
 
 const LATEST: Pick<NavSelection, 'version' | 'lang'> = { version: null, lang: null };
 
-// Only the catalogue keeps the page's version and variant, as the legacy navigation did:
-// the home page, the trends or the editorial pages have one address whatever the patch.
+// Only the catalogue and a patch's changes keep the page's version and variant, as the legacy
+// navigation did: the home page, the trends or the editorial pages have one address whatever
+// the patch.
 function chromePath(locale: Locale, path: string, selection: typeof LATEST): string {
-  return isCatalogueRoute([path])
+  return isVersionedRoute([path])
     ? cataloguePath(locale, path, selection)
     : localePath(locale, path);
 }

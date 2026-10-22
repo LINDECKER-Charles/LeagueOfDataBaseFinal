@@ -1,14 +1,15 @@
 # Ancienne stack (archivée) — règles
 
 Symfony 7.4 / PHP 8.5, passerelle Go, îlots Vue 3 : la version du site servie en production
-jusqu'à la bascule vers la stack .NET + Angular, puis supprimée à la décommission
-([runbook](../docs/reecriture/bascule.md) § 10). Le tag `archive/stack-php` fige `main`
-avant l'archivage.
+jusqu'à la bascule du 2026-10-04 vers la stack .NET + Angular ; elle sera supprimée à la
+décommission, après le *contract* ([runbook](../docs/reecriture/bascule.md) § 10). Le tag
+`archive/stack-php` fige `main` avant l'archivage.
 
-**En lecture seule.** On n'y touche que pour un correctif exigé par la prod avant la
-bascule. Ses workflows sont archivés dans `.github/workflows/` de ce dossier et ne tournent
-plus : un correctif se déploie depuis le tag, ou après avoir remis les workflows en place
-(chemins préfixés de `legacy/`, runbook § 8.2). Tous les chemins ci-dessous sont relatifs à
+**En lecture seule : on n'y touche pas.** Elle ne servirait plus qu'à un retour arrière, qui
+n'est plus jouable tel qu'écrit (runbook, état en tête). Ses workflows sont archivés dans
+`.github/workflows/` de ce dossier et ne tournent
+plus : si un retour arrière l'exigeait malgré tout, un correctif se déploierait depuis le tag,
+ou après avoir remis les workflows en place (chemins préfixés de `legacy/`, runbook § 8.2). Tous les chemins ci-dessous sont relatifs à
 `legacy/`, et les commandes Compose se lancent depuis ce dossier (`cd legacy`, ou
 `docker compose --project-directory legacy …` depuis la racine), qui porte son `.env`.
 

@@ -10,6 +10,7 @@ export interface LaunchWarning {
     | 'rerender'
     | 'long'
     | 'types'
+    | 'openers'
     | 'new_epoch'
     | 'standby_exists'
     | 'default_estimate'
@@ -47,9 +48,12 @@ const RULES: readonly Rule[] = [
       ? gold('long', { duration: duration(estimate.seconds) })
       : null,
   (draft, _, report) =>
-    draft.pageTypes.length < RESOURCE_TYPE.length && report.enqueuesPromotions
+    draft.pageTypes.length < RESOURCE_TYPE.length &&
+    report.enqueuesPromotions &&
+    !draft.isOpenersFirst
       ? gold('types')
       : null,
+  (draft) => (draft.isOpenersFirst ? gold('openers') : null),
   (draft) => (draft.epochKind === 'served' ? null : gold('new_epoch', { epoch: draft.epoch })),
   (draft, _, report) => {
     const standby = report.storage.epochs.find((volume) => volume.state === STANDBY);

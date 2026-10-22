@@ -3,6 +3,7 @@ import { expect, type APIRequestContext, type Page, type Response } from '@playw
 interface RawMeta {
   readonly latest: string | null;
   readonly versions: readonly string[];
+  readonly oldestChangesVersion: string | null;
 }
 
 interface DetailNeighbour {
@@ -23,13 +24,22 @@ export interface DetailNeighbours {
 export interface CatalogMeta {
   readonly latest: string;
   readonly versions: readonly string[];
+  /**
+   * The oldest version with a page of changes: every one from it up to the latest has one.
+   * Null while the index of states covers fewer than two versions.
+   */
+  readonly oldestChangesVersion: string | null;
 }
 
 /** The versions of the stack; fails when it has not ingested any. */
 export async function metaOf(request: APIRequestContext): Promise<CatalogMeta> {
   const meta = (await (await request.get('/api/meta')).json()) as RawMeta;
   expect(meta.latest, 'the stack must have ingested a version').not.toBeNull();
-  return { latest: meta.latest ?? '', versions: meta.versions };
+  return {
+    latest: meta.latest ?? '',
+    versions: meta.versions,
+    oldestChangesVersion: meta.oldestChangesVersion,
+  };
 }
 
 /** The version `steps` patches before the latest, pinned in the path of an archived page. */

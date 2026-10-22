@@ -1,5 +1,6 @@
 {
   "versioned_suffix": "(แพตช์ {{ version }})",
+  "state_range_suffix": "(แพตช์ {{ first }} ถึง {{ last }})",
   "home": {
     "title": "League Of Data Base — สารานุกรม League of Legends",
     "description": "แชมเปี้ยน ไอเทม รูน และเวทอัญเชิญของ League of Legends สำหรับแพตช์ {{ version }} — ค่าสถานะ สกิล และรายละเอียดใน 21 ภาษา"
@@ -98,5 +99,11 @@
       "title": "คำถามที่พบบ่อย",
       "description": "คำตอบเกี่ยวกับ League Of Data Base: คืออะไร ข้อมูล League of Legends มาจากไหน อัปเดตบ่อยแค่ไหน และต้องมีบัญชีหรือไม่"
     }
+  },
+  "state": {
+    "summary": "เปลี่ยนในแพตช์ {{ version }}: {{ fields }}",
+    "summary_more": "เปลี่ยนในแพตช์ {{ version }}: {{ fields }}…",
+    "summary_new": "ใหม่ในแพตช์ {{ version }}",
+    "summary_returned": "กลับมาในแพตช์ {{ version }}"
   }
 }

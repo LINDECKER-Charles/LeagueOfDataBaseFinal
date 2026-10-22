@@ -7,6 +7,16 @@ summary: Un ancien lien qui nommait un patch ouvre directement la fiche ou la li
 tags: [seo]
 ---
 
+> **Remplacé le 2026-10-22** par [`une-page-par-etat-dans-google`](2026-10-22-une-page-par-etat-dans-google.md) :
+> un ancien lien qui nomme un patch ne mène plus à la fiche du patch en cours dès qu'elle
+> existe : il mène à la page indexée de ce que ce patch montrait, celle du patch qui a
+> ouvert cet état (avec le nom de l'époque), ou à la fiche du patch en cours si cet état
+> dure encore. Un champion, un objet ou un sort retiré du jeu mène à la page du patch qui a
+> ouvert son dernier état, même sans patch nommé ; une voie de runes absente du patch en
+> cours garde la règle ci-dessous. La liste du patch en cours, la 302 vers la liste d'un
+> patch non stocké et la réponse d'attente tant que le catalogue du dernier patch n'est pas
+> lu valent toujours.
+
 ## Ce qui change
 
 Les liens de l'ancien site qui nommaient un patch (`/16.4.1/champion/Poppy`,

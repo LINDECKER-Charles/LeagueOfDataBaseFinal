@@ -102,13 +102,23 @@ Logs et requêtes LogsQL : [`observabilite.md`](observabilite.md) et [`logging.m
 | `lodb_publicapi_usage_pending` | jauge | — | oui | `LoDb.PublicApi` |
 | `lodb_publicapi_usage_dropped_total`, `…_flush_duration_seconds`, `…_flush_failures_total` | compteurs, histogramme | — | non | `LoDb.PublicApi` |
 | `lodb_client_policy_upgrade_required_total` | compteur | `platform` (`desktop`, `android`) | non | `LoDb.ClientPolicy`, réponses `426` |
-| `lodb_prerender_pages_total` | compteur | `outcome` (`written` : page écrite au stockage ; `skipped` : rendu qui ne se stocke pas, `301`, `404` ou classe autre qu'`archived` ; `refused` : `503` du SSR, la page est retentée après son `Retry-After` ; `failed` : page abandonnée après ses nouvelles tentatives) | non | `LoDb.Prerender` (instrument `lodb.prerender.pages`), une incrémentation par page de la passe de précalcul ; la ligne de synthèse par unité (version, langue) en donne le détail |
+| `lodb_states_updates_total` | compteur | `trigger` (`build` : commande `catalog states build` ; `promotion` ; `reconcile`), `outcome` (`unchanged`, `extended`, `built`, `locked` : verrou `catalog:states` tenu par un autre écrivain, `failed`) | non | `LoDb.States` (instrument `lodb.states.updates`), une incrémentation par mise à jour de l'index des états ; la ligne `states.update.completed` en donne le détail |
+| `lodb_states_update_duration_seconds` | histogramme, bornes 0,01 · 0,05 · 0,25 · 1 · 5 · 30 · 120 · 600 s | `trigger` | non | `LoDb.States`, attente du verrou comprise : d'une opération vide à une reconstruction complète |
+| `lodb_states_versions_indexed_total` | compteur | `trigger` | non | `LoDb.States`, versions ajoutées à l'index |
+| `lodb_states_opened_total` | compteur | `kind` (`new`, `changed`, `returned`) | non | `LoDb.States`, états ouverts ; un premier état au début de la couverture compte `new` (l'API le dit `baseline`) |
+| `lodb_states_closed_total` | compteur | — | non | `LoDb.States`, états clos par un changement ou un retrait |
+| `lodb_states_copy_loads_total` | compteur | `outcome` (`loaded`, `failed`) | non | `LoDb.States`, chargements de la copie de l'index que tient chaque processus |
+| `lodb_states_unavailable_total` | compteur | — | non | `LoDb.States`, lectures de l'index répondues indisponibles (503 `state-index-unavailable`) : aucune copie tenue et son chargement a échoué. Au-dessus de 0, l'API sert des 503 sur les fiches, les pages de patch et les sitemaps |
+| `lodb_prerender_pages_total` | compteur | `outcome` (`written` : page écrite au stockage ; `skipped` : rendu qui ne se stocke pas, `301`, `404` ou classe autre qu'`archived` et `revisable` ; `refused` : `503` du SSR, la page est retentée après son `Retry-After` ; `failed` : page abandonnée après ses nouvelles tentatives) | non | `LoDb.Prerender` (instrument `lodb.prerender.pages`), une incrémentation par page de la passe de précalcul ; la ligne de synthèse par unité (version, langue) en donne le détail |
 | `lodb_prerender_pace_renders_per_minute` | jauge | — | non : seulement pendant que le moteur de cette instance écrit une passe | `LoDb.Prerender` (instrument `lodb.prerender.pace.renders_per_minute`), le droit du régulateur : rendus que la passe peut démarrer par minute, 0 en retenue, le plancher quand aucune décision ne l'a renouvelé depuis 90 s, le rythme fixe en mode `fixed` |
 | `lodb_prerender_pace_limit` | jauge | `reason` (`none`, `warming_up`, `ceiling`, `host_cpu`, `host_cpu_sustained`, `host_steal`, `visitors_ssr`, `visitors_refused`, `api_cpu`, `pass_latency`, `pass_ssr_pressure`, `signal_missing`, `fixed`) | non : idem | `LoDb.Prerender`, 1 pour la raison qui borne le rythme, 0 pour les autres |
 | `lodb_prerender_pace_changes_total` | compteur | `change` (`increased`, `decreased`, `held`, `released`), `reason` (idem) | non | `LoDb.Prerender`, une incrémentation par mouvement du régulateur : quelques-unes par heure |
 | `lodb_prerender_demand_pages_total` | compteur | `outcome` (`written`, `skipped` : déjà écrite par une passe ou rendu qui ne se stocke pas ; `refused` : `503` du SSR de la passe attendu ; `failed` : essai raté) | non | `LoDb.Prerender` (instrument `lodb.prerender.demand.pages`), une incrémentation par page de la file automatique ; la ligne `prerender.demand.drained` de chaque lot en donne le détail |
 | `lodb_prerender_demand_captured_total` | compteur | `result` (`queued` : page du catalogue ajoutée ou recomptée ; `rejected` : hors du catalogue ; `deferred` : catalogue de sa version pas encore stocké) | non | `LoDb.Prerender` (instrument `lodb.prerender.demand.captured`), par page refusée relevée sur le SSR des visiteurs |
 | `lodb_prerender_demand_pending` | jauge | — | non : au premier relevé ou lot de l'instance | `LoDb.Prerender` (instrument `lodb.prerender.demand.pending`), les pages en attente au dernier compte de la file, jamais une requête au scrape |
+| `lodb_prerender_revision_enqueued_total` | compteur | — | non | `LoDb.Prerender` (instrument `lodb.prerender.revision.enqueued`), lignes que le producteur de la file des états clos a écrites (une page dans une epoch) |
+| `lodb_prerender_revision_pages_total` | compteur | `outcome` (`written`, `skipped` : rendu qui ne se stocke pas ou epoch retirée ; `refused` : `503` du SSR de la passe attendu ; `failed` : essai raté, page rendue de nouveau `revisable` comprise) | non | `LoDb.Prerender` (instrument `lodb.prerender.revision.pages`), une incrémentation par page de la file des états clos ; la ligne `prerender.revision.drained` de chaque lot en donne le détail |
+| `lodb_prerender_revision_pending` | jauge | — | non : au premier lot de l'instance | `LoDb.Prerender` (instrument `lodb.prerender.revision.pending`), les pages en attente au dernier compte de la file, jamais une requête au scrape |
 
 `lodb_job_period_seconds` et `lodb_job_last_success_seconds` se lisent ensemble : une tâche
 est en retard quand `time() - lodb_job_last_success_seconds > 3 * lodb_job_period_seconds`
@@ -139,9 +149,37 @@ s'arrête (SSR injoignable, réglage refusé), `prerender.demand.unreadable` (Wa
 `prerender.demand.collect_failed` ou `prerender.demand.tick_failed` (Error) sur un tour en
 échec. Aucune ligne ne porte de chemin : le pupitre liste les pages les plus demandées.
 
+La file des états clos ([`configuration.md`](configuration.md), § 4.13) écrit
+`prerender.revision.enqueued` par passage du producteur qui met des pages en file (lignes,
+pages, états, epochs, échéance), `prerender.revision.generation` quand il lit une génération
+neuve de l'index (son historique n'est pas mis en file), `prerender.revision.drained` par lot
+rendu, `prerender.revision.stopped` (Warning) quand un lot s'arrête et
+`prerender.revision.tick_failed` (Error) sur un tour en échec. Tant que l'index des états ne
+couvre pas le dernier patch promu, la promotion et `prerender.reconcile` n'ajoutent ni unité ni
+page et écrivent `prerender.promotion.index_behind` (Warning, version et fin de couverture,
+`none` sans index).
+
+L'index des états d'entité ([`configuration.md`](configuration.md), § 4.12) écrit une ligne
+par mise à jour, jamais par version ni par état : `states.update.completed` (déclencheur, issue,
+génération, début et fin de la couverture, versions indexées et jeux ingérés, états ouverts et
+clos, états et états ouverts de la génération, comptes par ressource, durée : c'est là que se
+lisent les comptes réels d'une construction), `states.update.progress` toutes les 50 versions
+d'une longue construction, `states.update.locked` (Warning) quand le verrou reste pris,
+`states.coverage.interrupted` (Warning) quand une version listée après la fin de la couverture
+manque de son en_US et que l'index reste en retard. Sa copie
+en mémoire écrit `states.copy.loaded` à chaque chargement et `states.copy.failed` (Warning,
+avec l'exception) sur un échec, la copie tenue restant servie. La commande
+`catalog states build` écrit en plus `states.build.deferred` (Warning) ou `states.build.failed`
+(Error) quand la liste de Data Dragon est illisible. Côté API : `catalog.state.unavailable`
+(fiche sans index lisible), `catalog.state.failed` (catalogue du dernier patch ou de comparaison
+illisible chez Data Dragon), `catalog.changes.unavailable` (page de patch),
+`catalog.meta.degraded` (`/api/meta` sans pages de patch) et
+`legacy.redirect.unavailable`, toutes en Warning.
+
 ## API — métriques du framework
 
-Noms à confirmer au premier scrape d'un hôte (`.NET 10`, OpenTelemetry 1.x) :
+Noms des conventions sémantiques (`.NET 10`, OpenTelemetry 1.x), à revoir à chaque montée de
+version :
 
 - ASP.NET Core : `http_server_request_duration_seconds` (`http_route`,
   `http_request_method`, `http_response_status_code`…), `http_server_active_requests`,
@@ -150,7 +188,9 @@ Noms à confirmer au premier scrape d'un hôte (`.NET 10`, OpenTelemetry 1.x) :
 - Sécurité du framework, ajoutés explicitement (`TelemetryRegistration.cs`) : meters
   `Microsoft.AspNetCore.Identity`, `Microsoft.AspNetCore.Authentication` et
   `Microsoft.AspNetCore.Authorization` (connexions, défis, refus, résultats des politiques).
-- Runtime : `dotnet_thread_pool_queue_length`, `dotnet_gc_*`, `dotnet_process_*`.
+- Runtime : `dotnet_thread_pool_queue_length_total` (une jauge, que l'exportateur Prometheus
+  publie avec `_total`, constaté au premier scrape de la prod), `dotnet_gc_*`,
+  `dotnet_process_*`.
 - Données : meters `Npgsql` (pool de connexions) et `Microsoft.EntityFrameworkCore`.
 - Client HTTP sortant (Data Dragon) : `http_client_request_duration_seconds`.
 

@@ -6,8 +6,9 @@ using LoDb.Ingestion.Catalog.Reading;
 namespace LoDb.Api.Modules.Admin.Prerender.Demand.Validation;
 
 /// <summary>
-/// The page lists of the older patches, kept an hour each: a crawl refuses pages of a few
-/// hundred versions, whose catalogue the queue would otherwise read at each of its reads.
+/// The page lists of the older patches and their openers, kept an hour each: a crawl refuses
+/// pages of a few hundred versions, whose catalogue the queue would otherwise read at each of
+/// its reads. A version's openers no longer change once the index covers it.
 /// </summary>
 /// <remarks>
 /// Bounded: past <see cref="MostVersions"/> lists, it forgets them all. A version whose
@@ -49,7 +50,8 @@ internal sealed class PageIndexCache(IPrerenderCatalog catalog, TimeProvider clo
             _indexes.Clear();
         }
 
-        var index = new VersionPageIndex(list.Paths);
+        var openers = await catalog.OpenersAsync(version, cancellationToken);
+        var index = new VersionPageIndex(list.Paths, openers);
         _indexes[version.Value] = (index, now);
         return index;
     }

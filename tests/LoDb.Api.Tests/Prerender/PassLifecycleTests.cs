@@ -8,6 +8,7 @@ using LoDb.Infrastructure.Persistence.Prerender;
 using LoDb.Ingestion.Catalog;
 using LoDb.Ingestion.Catalog.Reading;
 using LoDb.Testing;
+using LoDb.Testing.States;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -207,6 +208,7 @@ public sealed class PassLifecycleTests(PostgresContainerFixture postgres)
         var lifetime = TimeSpan.FromSeconds(45);
         var catalog = new CatalogPages(
             reader,
+            new InMemoryEntityStateIndex(),
             Options.Create(new CatalogOptions { VersionsLifetime = lifetime }));
 
         async Task<DateTimeOffset?> From(string version) =>

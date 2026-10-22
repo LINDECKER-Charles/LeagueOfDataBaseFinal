@@ -1,289 +1,240 @@
-# 🏗️ Architecture du projet
+# Architecture de LeagueOfDataBase
 
-## Vue d'ensemble
+Vue d'ensemble du système tel qu'il tourne aujourd'hui : services, chemin d'une requête, flux
+principaux, environnements et dépôt. Les invariants font foi dans [`AGENTS.md`](../../AGENTS.md) ;
+chaque décision dans son ADR ([`docs/reecriture/adr/`](../reecriture/adr/), l'amendement daté le
+plus récent l'emporte). Comportements voulus : [`pieges.md`](pieges.md). Réglages et secrets :
+[`configuration.md`](../guides/configuration.md). Commandes et ports :
+[`developpement.md`](../guides/developpement.md).
 
-League of Database utilise une architecture modulaire basée sur Symfony 7, organisée autour de services spécialisés et d'une séparation claire des responsabilités.
+## Services
 
-## 📁 Structure du projet
+Un seul hôte applicatif, `LoDb.Api`, sert `/api`, `/v1` et `/webhooks` et porte l'ingestion et
+toutes les tâches de fond ([ADR 0002](../reecriture/adr/0002-hote-serveur-unique.md)). Chaque
+service est durci (`x-hardening` de `compose.yaml` : racine en lecture seule, aucune capacité,
+sauf les quelques-unes que l'entrypoint de `postgres` reprend par `cap_add`) et appelle ses voisins par leur alias préfixé (`lodb-api`, `lodb-postgres`…).
 
-```
-league-of-database/
-├── app/                          # Application Symfony principale
-│   ├── src/
-│   │   ├── Controller/          # Contrôleurs MVC
-│   │   ├── Service/            # Services métier
-│   │   │   ├── API/           # Gestionnaires de données externes
-│   │   │   ├── Client/         # Gestion des clients et sessions
-│   │   │   └── Tools/         # Utilitaires et helpers
-│   │   ├── Dto/               # Data Transfer Objects
-│   │   └── EventListener/    # Écouteurs d'événements
-│   ├── templates/             # Templates Twig
-│   ├── public/               # Assets publics et uploads
-│   └── config/               # Configuration Symfony
-├── go/                      # Micro-services Go (un module par service)
-│   ├── fetcher/            # Passerelle de fetch Data Dragon / CommunityDragon
-│   └── api/                # API REST v1 publique (payante)
-└── docs/                    # Documentation (voir docs/README.md)
-    ├── architecture/        # Fonctionnement interne des sous-systèmes
-    ├── guides/             # Installation, exploitation, opérations
-    ├── audits/            # Index public ; les audits datés restent privés
-    ├── produit/           # SEO technique
-    └── changelog/         # Journal technique interne
-```
+| Service | Image | Rôle |
+|---|---|---|
+| `api` | `docker/api/` | `LoDb.Api` sur 8080, métriques sur 9464 ; seul écrivain du volume `ddragon` |
+| `migrate` | même image, `migrate` | one-shot : migrations EF, rôles `lodb_app` et `lodb_sauvegarde` ; l'API attend sa réussite |
+| `states` | même image, `catalog states build` | one-shot après `migrate` : rattrape l'index des états d'entité (`ddragon` en lecture seule, rôle `lodb_app`) ; l'API attend sa réussite |
+| `web-ssr` | `docker/web-ssr/` | Angular SSR (Node) des visiteurs sur 4000 ; écrit les bundles dans `front-builds` |
+| `web-ssr-prerender` | même image | SSR de la passe de précalcul, joint par l'API seule, jamais par nginx ([ADR 0011](../reecriture/adr/0011-catalogue-pre-rendu-et-cdn.md)) |
+| `nginx` | `docker/nginx/` | frontal sur 8080 : caches de pages, `/cdn/blobs/`, lecture du stockage objet |
+| `postgres` | `postgres:17-alpine` | sur le réseau `data` seul, partagé avec `api`, `migrate` et `states` |
+| `mailpit` | dev seulement | puits SMTP des e-mails de compte (`compose.override.yaml`) |
+| `pages-store` | dev seulement | stockage objet simulé par moto, en mémoire (`compose.override.yaml`) |
 
-## 🔧 Architecture des services
+Fichiers Compose et environnements qui les appliquent (`.github/workflows/_deploy.yml` construit
+`COMPOSE_FILE` ; jamais `compose.override.yaml` sur un hôte) :
 
-### Hiérarchie des services
+| Fichier | Local | Staging | Prod | Apport |
+|---|---|---|---|---|
+| `compose.yaml` | oui | oui | oui | services, volumes, réseaux `default` et `data`, défauts locaux |
+| `compose.override.yaml` | oui | — | — | ports publiés, `Development`, limites relevées pour l'E2E, `mailpit`, `pages-store` |
+| `compose.deploy.yaml` | — | oui | oui | images du registre, secrets en fichiers, quotas CPU/mémoire, réseaux `edge` et `observability`, `data` interne, labels de l'edge |
+| `compose.staging.yaml` | — | oui | — | petite part de l'hôte partagé avec la prod (~0,75 cœur), passe ralentie |
+| `compose.staging-auth.yaml` | — | si `LODB_STAGING_BASIC_AUTH_*` | — | authentification basique à l'edge sur les pages |
+| `compose.umami.yaml` | — | — | oui | déclaration du site à l'Umami de l'hôte, tableau `stats.`, relevé d'audience |
+| `compose.sauvegarde.yaml` | — | — | oui | Postgres rejoint le réseau `sauvegardes` d'`infra-vps` |
 
-```mermaid
-graph TD
-    A[AbstractManager] --> B[SummonerManager]
-    A --> C[ChampionManager]
-    A --> D[ItemManager]
-    A --> E[RuneManager]
-    
-    F[ClientManager] --> G[VersionManager]
-    H[UploadManager] --> I[APICaller]
-    
-    J[UrlGenerator] --> K[ClientData DTO]
-```
-
-### Services principaux
-
-#### 🎯 AbstractManager
-**Rôle** : Classe abstraite de base pour tous les gestionnaires de données
-- Définit les méthodes communes (cache, téléchargement, pagination)
-- Implémente le pattern Template Method
-- Gère la logique de cache avec hard links
-
-#### 🏆 ChampionManager
-**Rôle** : Gestion des données des champions
-- Hérite d'`AbstractManager`
-- Implémente `CategoriesInterface`
-- Méthodes spécialisées : `getByName()`, `searchByName()`, `getImages()` — projection par
-  défaut **indexée par id** (champions, objets, sorts) ; seules les runes gardent leur
-  forme d'arbre
-
-#### ⚔️ ItemManager
-**Rôle** : Gestion des objets du jeu
-- Structure similaire au ChampionManager
-- Gestion des images et métadonnées des objets — `getImages()` indexé par **id**, jamais
-  par nom : les jumeaux League of Legends Classic partagent leur nom (`1004` / `771004`)
-- Support de la recherche et pagination
-- Édition (`Service/API/Edition`) : implémente `EditionAwareInterface` (`editionOf`,
-  `counterpart`) ; règle objet = id `^77\d{4}$` (les flags `maps` sont incohérents)
-
-#### 🔮 SummonerManager
-**Rôle** : Gestion des sorts d'invocateur
-- Premier manager implémenté
-- Modèle de référence pour les autres managers
-- Gestion complète du cycle de vie des données
-- Édition : implémente `EditionAwareInterface` ; sort Classic = mode `JADE`
-  (`SummonerFlash` ↔ `SummonerFlash_Jade`)
-
-#### 🎨 RuneManager
-**Rôle** : Gestion des runes reforgées
-- Gestion des arbres de runes
-- Support des images et descriptions
-- Intégration avec le système de cache
-
-### Services utilitaires
-
-#### 👤 ClientManager
-**Rôle** : Gestion des préférences utilisateur
-- Détection automatique de la langue navigateur
-- Gestion des sessions et cookies
-- Hydratation des données client
-
-#### 📊 VersionManager
-**Rôle** : Gestion des versions et langues
-- Récupération des versions disponibles depuis Data Dragon
-- Validation des versions et langues
-- Cache des métadonnées de version
-
-#### 📁 UploadManager
-**Rôle** : Gestion du stockage local
-- Sauvegarde des JSON et images
-- Optimisation avec hard links
-- Gestion des répertoires par version/langue
-
-#### 🌐 APICaller
-**Rôle** : Client HTTP minimaliste
-- Communication avec l'API Data Dragon
-- Gestion des erreurs réseau
-- Cache des réponses HTTP
-
-## 🎨 Architecture frontend
-
-### Templates Twig
+## Chemin d'une requête
 
 ```
-templates/
-├── base.html.twig           # Template de base
-├── partials/               # Composants réutilisables
-│   ├── header.html.twig
-│   ├── navigation.html.twig
-│   └── pagination.html.twig
-├── home/                   # Pages d'accueil
-├── champion/               # Pages champions
-├── item/                   # Pages objets
-├── summoner/               # Pages sorts d'invocateur
-└── rune/                   # Pages runes
+visiteur, app
+   │ HTTPS
+   ▼
+Caddy, edge partagé (infra-vps) ── /u/* (prod) ──► Umami (infra-vps)
+   │ réseau `edge`, en-tête X-LoDb-Edge (sinon 403)
+   ▼
+nginx :8080 ── www., .fr ──► 301 vers l'hôte canonique
+   │
+   ├─ api.*  /v1/ /healthz /readyz ───────────────────────────────► api :8080
+   ├─ /api/  /v1/  /webhooks/ ────────────────────────────────────► api :8080
+   ├─ /cdn/blobs/{sha256}.{ext} ──► volume ddragon (lecture seule)
+   ├─ /build/ ──► lodb_assets ──► web-ssr ── 404 ──► stockage build/
+   ├─ /{locale}/{version}/… (ancien patch, sans query)
+   │      ──► lodb_archive ──► stockage pages/{epoch}/… ── raté ──► web-ssr (épinglée)
+   └─ autres pages ──► lodb_pages ──► web-ssr :4000 ──► api ──► postgres
 ```
 
-### Assets et styles
+- Le site (`sites/site.conf`) et le sous-domaine `api.` (`sites/api.conf`, `server_name
+  ~^api\.`) vivent dans le même conteneur ; Caddy les distingue par `Host` (labels `caddy_0`,
+  `caddy_1` de `compose.deploy.yaml`). Le sous-domaine ne sert que `/v1/`, `/healthz`, `/readyz`.
+- Le dernier patch épinglé dans le chemin ne passe jamais par le stockage : nginx le lit dans
+  `/api/meta` toutes les 30 s (`njs/latest-version.js`).
+- Tout raté du stockage (404, 403, 429, 5xx, délai) retombe sans bruit sur le SSR ;
+  `X-LoDb-Source: cache|store|ssr` dit d'où vient une page épinglée.
+- Le SSR ne lit aucun cookie et ne détient aucun secret ; la locale est en préfixe d'URL, l'id
+  fait foi, le slug est décoratif ([ADR 0005](../reecriture/adr/0005-web-ssr-urls-et-seo.md)).
+- Pendant le remplacement des conteneurs, toute page reçoit la page de maintenance en 503
+  (`server.d/maintenance.conf`) ; l'API, `/v1/` et les blobs gardent leur réponse.
+- **Cloudflare devant le site est prévu, pas construit** : section « CDN Cloudflare » de la
+  [spécification](../produit/pre-rendu-catalogue-cdn.md) et § « CDN » de l'ADR 0011.
 
-- **Tailwind CSS 4.1** : Framework CSS utilitaire
-- **Stimulus** : Framework JavaScript léger
-- **Turbo** : Navigation rapide sans rechargement
-- **Webpack Encore** : Compilation des assets
+## Flux principaux
 
-## 🔄 Flux de données
+**Ingestion Data Dragon et CommunityDragon**
+([ADR 0003](../reecriture/adr/0003-ingestion-proactive-et-taches-de-fond.md),
+[ADR 0004](../reecriture/adr/0004-stockage-etat-et-scaling.md)). `PatchWatchJob` découvre les
+versions, `VersionIngestionWorker` en ingère une à la fois sous verrou (datasets, puis images),
+`OnDemandIngestionWorker` sert la longue traîne dans des budgets bornés. Toute sortie passe par
+le client nommé `ddragon` (`src/LoDb.Ingestion/Egress/`), limité à `ddragon.leagueoflegends.com`
+et `raw.communitydragon.org`. Sur le volume `ddragon` (`StorageLayout.cs`) : datasets
+`data/{version}/{lang}/{type}.json` et blobs `blobs/{sha256}.{ext}`, écrits de façon atomique ;
+nginx ne sert que `/cdn/blobs/`. Le manifeste (`ddragon_version`, `ddragon_asset`) est en
+Postgres.
 
-### 1. Initialisation
-```mermaid
-sequenceDiagram
-    participant U as Utilisateur
-    participant C as ClientManager
-    participant V as VersionManager
-    participant M as Manager
-    
-    U->>C: Accès à l'application
-    C->>V: Récupération versions/langues
-    V->>C: Retour métadonnées
-    C->>U: Redirection vers setup si nécessaire
+**Promotion d'un patch.** Une version complète devient la dernière si aucune plus récente n'est
+promue (`Pipeline/Versions/VersionStates.cs`). Les `IPromotionListener` réagissent dans l'ordre
+de l'étape que chacun déclare (`PromotionStage`, tri stable de `VersionIngestion`, quel que soit
+l'enregistrement) :
+
+1. `StateIndex` : l'index des états d'entité s'étend jusqu'à la version promue
+   (`StateIndexPromotionListener`, `LoDb.Ingestion/Catalog/States/`) ;
+2. `Prerender` : une fois l'index à jour, l'unité du patch remplacé (seulement si
+   `LoDb__Prerender__AutoEnqueueOnPromotion`), puis la file des pages des états que la promotion
+   a clos (`PrerenderPromotionListener`) ;
+3. `Announce` : IndexNow (`Modules/Seo/IndexNow/`) : les URL courtes, les pages de patch qui ont
+   changé quelque chose et les ouvreurs des états clos depuis le patch promu avant.
+
+Les étapes 2 et 3 lisent dans l'index ce que la promotion a changé ; un écouteur qui échoue est
+journalisé sans défaire la promotion, et les réconciliations (`catalog.states.reconcile`,
+`prerender.reconcile`) rattrapent l'index puis le précalcul. `LatestCatalogWarmer` épingle en
+mémoire les catalogues de la nouvelle version.
+
+**Index des états d'entité** ([ADR 0005](../reecriture/adr/0005-web-ssr-urls-et-seo.md) et
+[ADR 0003](../reecriture/adr/0003-ingestion-proactive-et-taches-de-fond.md), amendements du
+2026-10-22). Pour chaque champion, objet, arbre de runes et sort listé, la suite des versions
+où sa fiche ne change pas (empreinte SHA-256 de ce qu'elle affiche, catalogue en_US,
+`LoDb.Domain/States/`). Tables `catalog_state_generation`, `catalog_state_version` et
+`catalog_entity_state`, écrites sous le verrou `catalog:states` par la commande
+`catalog states build` (service `states`), la promotion et la réconciliation ; chaque processus
+en tient une copie en mémoire (`IEntityStateIndex`) qui se recharge d'elle-même. L'API en tire
+la canonique des fiches (`StateView`), leur état, leur historique et leurs changements, les
+pages de patch et les sitemaps des anciens patchs.
+
+**Précalcul des anciens patchs** ([ADR 0011](../reecriture/adr/0011-catalogue-pre-rendu-et-cdn.md),
+[spécification](../produit/pre-rendu-catalogue-cdn.md)). `PrerenderWorker` parcourt une passe par
+(version, langue) et appelle `web-ssr-prerender` en direct (`X-LoDb-Prerender: 1`, que nginx
+efface côté public), copie le jeu de bundles du build, puis écrit chaque page en gzip dans le
+stockage objet Scaleway de l'environnement (`src/LoDb.Infrastructure/PageStore/`, clés
+`pages/{epoch}/…` et `build/…`). nginx lit ce stockage anonymement depuis l'adresse de l'hôte,
+derrière `LODB_PAGES_STORE_ENABLED`, dans l'epoch `LODB_ARCHIVE_SERVE_EPOCH`. Le rythme suit le
+CPU libre de l'hôte (`PrerenderPaceWorker`) ou une cible manuelle. La file de la demande :
+`web-ssr` compte les pages d'anciens patchs qu'il refuse en 503 (`GET /refused` sur 9464),
+`PrerenderDemandCollectWorker` les verse dans `prerender_demand`, `PrerenderDemandWorker` les
+précalcule, la plus demandée d'abord. Les pages figées (état clos, `archived`, un an) et
+révisables (état ouvert, `revisable`, une heure) sont stockées toutes deux : à chaque
+promotion, la file des états clos (`prerender_revision`, `PrerenderRevisionWorker`) recalcule
+les pages des états que la promotion a clos, dans l'epoch servie et celle de la passe active.
+Une passe peut se limiter aux ouvreurs (`{"pages":"openers"}`). État en Postgres
+(`prerender_pass`, `prerender_unit`, `prerender_build`, `prerender_revision`), pupitre
+`/api/admin/prerender`, CLI `prerender unit|pause|resume`.
+
+**Mesure d'audience.** Interne : nginx copie chaque requête de page
+(`snippets/analytics-mirror.conf`) vers `/internal/analytics/page`, le routeur du front poste
+`/api/analytics/view` pour les navigations internes ; une file en mémoire est écrite par lots
+dans `analytics_event` (`AnalyticsWriterWorker`), agrégée dans `analytics_daily`
+(`AnalyticsRollupJob`) et purgée après 13 mois (`AnalyticsRetentionJob`).
+Umami, en prod seulement : le front poste `/u/api/send` depuis l'hôte canonique, jamais
+`/u/script.js` ; `AudienceTrendsWorker` relève chaque heure les vues par page pour `/v1/trends`
+([ADR 0012](../reecriture/adr/0012-audience-umami.md)). Détail : [`analytics.md`](analytics.md).
+
+**API publique `/v1` et facturation** ([ADR 0002](../reecriture/adr/0002-hote-serveur-unique.md),
+détail : [`api-publique.md`](api-publique.md)).
+Clé `lodb_` + 40 hex en `Authorization: Bearer` ou `X-Api-Key`, hash seul stocké ; limites par
+clé, métrage par lots, erreurs `{error:{code,message}}` ; contrat
+`src/LoDb.Api/openapi/LoDb.Api_public-v1.json`. Stripe : paiement, abonnements, dons et crédits
+(`Modules/Billing/`), événements reçus sur `POST /webhooks/stripe`.
+
+**Comptes et identité** ([ADR 0009](../reecriture/adr/0009-identite-authentification-sessions.md)).
+ASP.NET Core Identity, hash argon2id, Google OAuth, TOTP. Web : cookie `__Host-` avec garde XSRF
+et contrôle d'`Origin` ; apps : jetons bearer et refresh par familles révocables. Aucune session
+serveur ; clés Data Protection en Postgres, chiffrées par le certificat `data-protection.pfx`.
+E-mails par une outbox en Postgres (`EmailOutboxWorker`, SMTP).
+
+**Apps** ([ADR 0007](../reecriture/adr/0007-coquilles-desktop-et-android.md),
+[ADR 0008](../reecriture/adr/0008-mises-a-jour-integrees.md)). Desktop : `src/LoDb.Desktop`,
+Photino derrière `IDesktopShell`, proxy loopback qui détient les jetons, mises à jour Velopack.
+Android : Capacitor 8 (`src/LoDb.Web/android`), live update signé
+(`@capawesome/capacitor-live-update`) publié par `/api/admin/client-policy`. Chaque requête d'app
+porte `X-LoDb-Client: {plateforme}/{version}` ; l'API répond `426` à une version refusée.
+Releases : `release-desktop.yml`, `release-android.yml`
+([`release-desktop.md`](../guides/release-desktop.md),
+[`release-android.md`](../guides/release-android.md)).
+
+**Observabilité** ([ADR 0010](../reecriture/adr/0010-observabilite-tests-ci.md)). Logs JSON
+d'une ligne sur stdout (`Hosting/Logging/JsonLineConsoleFormatter.cs`, pino côté SSR), driver
+`json-file`, collectés par `infra-vps`. nginx ouvre un `traceparent` par requête relayée.
+`/metrics` sur 9464 pour `api`, `web-ssr` et `web-ssr-prerender`, lu par la collecte sur le
+réseau `observability`, jamais publié ni routé. `/healthz` ne dépend de rien, `/readyz` vérifie
+Postgres et le stockage. Contrat des métriques : [`metriques.md`](../guides/metriques.md).
+
+**Sauvegardes.** Avant chaque `migrate`, le job de déploiement prend un `pg_dump` relu, dix
+gardés dans `.deploy/backups/` (retour arrière). En prod, `infra-vps` sauvegarde la base hors
+de l'hôte chaque nuit par le réseau `sauvegardes` et le rôle en lecture `lodb_sauvegarde`,
+journal dans `backup_run` ([`sauvegardes.md`](../guides/sauvegardes.md)).
+
+**SEO.** Sitemaps, `robots.txt` et `llms.txt` viennent de l'API (`server.d/seo.conf`), les
+anciennes URL du site passent par `/api/legacy` (`server.d/legacy-redirects.conf`). Le code
+applique une page indexée par état d'entité (ADR 0005, amendement du 2026-10-22,
+[`seo-une-page-par-etat.md`](../produit/seo-une-page-par-etat.md)) : la canonique de chaque
+fiche vient de l'index des états (`StateView`), transmise au SSR, et chaque patch a sa page de
+changements (`/{locale}/[{version}/]changes`, `GET /api/catalog/{version}/{lang}/changes`). La
+prod sert la règle du 2026-10-14 (une page indexée par entité) jusqu'à la bascule de son
+déploiement. Doc vivante : [`seo-indexabilite.md`](../produit/seo-indexabilite.md).
+
+## Environnements et livraison
+
+| Env | Projet Compose | Hôtes | Particularités |
+|---|---|---|---|
+| local | `lodb-dev`, emplacements `lodb-dev-e1`, `-e2` | `localhost:18080` (181xx, 182xx) | aucun secret, stockage simulé |
+| staging | `lodb-staging`, `:staging` | `test.league-of-data-base.com`, `api.test.` | `LODB_NOINDEX=1`, même hôte que la prod |
+| prod | `lodb-prod`, `:prod` `:latest` | `league-of-data-base.com` (`.fr` en 301), `api.` | Umami, sauvegardes hors hôte |
+
+Chemin d'un changement (`.github/workflows/ci.yml`) :
+
+1. Push sur `dev` : contrôles en parallèle (.NET, front, contrat, workflows, chaîne
+   d'approvisionnement, E2E ; i18n informatif).
+2. Fusion automatique `dev` → `test`, build des trois images `api`, `web-ssr`, `nginx`
+   (`_build.yml`, scan Trivy, tag `:staging`), déploiement du staging (`_deploy.yml`).
+3. Staging sain : ses digests reçoivent le tag `:staging-validated`.
+4. Fusion manuelle `test` → `main` : `_promote.yml` pose `:prod` et `:latest` sur les digests
+   `:staging-validated`, sans rebuild, et refuse si `:staging` les a quittés ; puis
+   déploiement de la prod.
+
+Un déploiement : `.env` découpé (secrets en fichiers sous `.deploy/secrets/`), pull, `pg_dump`,
+`migrate`, `states` (index des états), page de maintenance, `up --wait` des services des visiteurs puis du SSR de la passe,
+tests de fumée. Détail : [`github-actions-secrets.md`](../guides/github-actions-secrets.md).
+
+## Dépôt
+
+```
+compose*.yaml  .env.staging.example  .env.prod.example
+docker/{api,web-ssr,nginx,android-build}/   images ; nginx : sites/ snippets/ server.d/ njs/
+src/LoDb.Domain/          pur : Versions/ Languages/ Editions/ Paths/ Catalog/ Builds/ Derived/
+                          Text/
+src/LoDb.Ingestion/       Egress/ Ddragon/ Pipeline/ Queue/ Catalog/ Images/ Normalization/
+src/LoDb.Infrastructure/  Persistence/ Storage/ PageStore/ Jobs/ Locks/ Outbox/ Audit/
+                          Analytics/ Audience/ DataProtection/
+src/LoDb.Api/             Program.cs Hosting/ Cli/<Zone>/ Workers/<Zone>/ Modules/<M>/ openapi/
+src/LoDb.Web/             Angular : src/app/{core,ui,features}  src/server/  public/i18n/  android/
+src/LoDb.Desktop/         coquille Photino : Shell/ Proxy/ Auth/ Updates/ …
+tests/LoDb.{Domain,Ingestion,Infrastructure,Api,Desktop}.Tests/  LoDb.Testing/  LoDb.E2E/
+tests/LoDb.Parity/  tests/fixtures/
+tools/                    ci, deploy, compose, nginx, prerender, routing, umami, i18n, contract…
 ```
 
-### 2. Chargement des données
-```mermaid
-sequenceDiagram
-    participant C as Controller
-    participant M as Manager
-    participant U as UploadManager
-    participant A as APICaller
-    
-    C->>M: Demande de données
-    M->>U: Vérification cache local
-    alt Cache disponible
-        U->>M: Retour données cachées
-    else Cache indisponible
-        M->>A: Appel API Data Dragon
-        A->>M: Retour données JSON
-        M->>U: Sauvegarde en cache
-    end
-    M->>C: Retour données formatées
-```
-
-### 3. Gestion des images
-```mermaid
-sequenceDiagram
-    participant M as Manager
-    participant U as UploadManager
-    participant A as APICaller
-    
-    M->>U: Demande d'image
-    U->>U: Vérification existence
-    alt Image existe
-        U->>M: Retour chemin local
-    else Image manquante
-        M->>A: Téléchargement depuis DDragon
-        A->>U: Retour binaire image
-        U->>U: Vérification doublons (hard link)
-        U->>M: Retour chemin local
-    end
-```
-
-## 🗄️ Système de stockage
-
-### Architecture du stockage
-
-Les données et images Data Dragon vivent en fichiers sur le volume Docker `storage`,
-monté sur `/srv/storage` (`STORAGE_DIR`) : en lecture-écriture pour `php` (Flysystem,
-adaptateur local), en lecture seule pour `nginx` et `go-api`.
-
-```
-/srv/storage/
-├── blobs/{sha256}.{ext}               # Images adressées par contenu (+ sibling .webp)
-├── data/{version}/{lang}/{type}.json  # Datasets Data Dragon
-├── manifest/{version}/{type}.json     # nom → chemin cdn (null = absence définitive)
-├── analytics/daily/{Y-m-d}.json       # Agrégats analytics (cf. analytics.md)
-└── audit/{Y-m-d}.ndjson               # Journal d'audit archivé (journées closes)
-```
-
-### Optimisations
-
-1. **Adressage par contenu** : une image identique entre versions n'est stockée qu'une fois (clé = SHA-256 des octets)
-2. **Écritures atomiques** : `AtomicWriteAdapter` écrit dans un fichier caché `.staging/` puis le `rename()` en place — nginx, `go-api` et les requêtes concurrentes ne lisent jamais un fichier partiel
-3. **Service direct par nginx** : `/cdn/blobs/` est un `alias` vers le disque (`Cache-Control: public, immutable`, 1 an) ; tout autre chemin `/cdn/*` répond 404
-4. **Manifeste en read-merge-write** : les ajouts concurrents (loader SSE ↔ flush `kernel.terminate`) ne s'écrasent pas
-
-## 🔌 Intégration API
-
-### Data Dragon Integration
-
-```php
-// Exemple d'intégration
-$data = $this->aPICaller->call(
-    "https://ddragon.leagueoflegends.com/cdn/{$version}/data/{$lang}/champion.json"
-);
-```
-
-### Endpoints supportés
-
-- **Champions** : `/cdn/{version}/data/{lang}/champion.json`
-- **Items** : `/cdn/{version}/data/{lang}/item.json`
-- **Summoner Spells** : `/cdn/{version}/data/{lang}/summoner.json`
-- **Runes** : `/cdn/{version}/data/{lang}/runesReforged.json`
-- **Images** : `/cdn/{version}/img/{type}/{name}.png`
-
-## 👤 Comptes & contenus utilisateur
-
-Les contenus créés par les joueurs vivent dans **PostgreSQL 17** via **Doctrine ORM** —
-séparation stricte avec les données Data Dragon, qui restent hors base (volume `storage`).
-
-- **Entités** : `users` (identité, favoris par type de ressource) et `builds`
-  (builds de champion ; colonnes **JSONB** pour les runes et les étapes d'objets).
-- **Authentification** : `form_login` Symfony (CSRF stateless), *remember-me* cookie
-  et *login throttling* natif contre le brute-force.
-- **Pickers** `/api/picker/*` : endpoints JSON qui projettent côté serveur les données
-  Data Dragon (id, nom, image) pour la recherche de favoris/builds — le client ne
-  télécharge jamais les datasets complets.
-- **Partage de build** : URL capacité `/b/{token}` (token opaque non devinable) —
-  le préfixe `/build/` étant réservé aux assets Vite par nginx.
-- **Dons** : Stripe Checkout héberge tout le parcours de paiement ; aucune donnée
-  bancaire ni transaction persistée localement (le dashboard Stripe fait foi),
-  webhook signé `POST /webhooks/stripe` pour la traçabilité.
-
-## 🚀 Déploiement
-
-### Environnements
-
-- **Development** : Symfony CLI + Webpack 
-- **Production** : Appache
-
-### CI/CD Pipeline
-
-```yaml
-# GitHub Actions
-- Installation PHP 8.2+
-- Installation dépendances Composer
-- Lint YAML/Twig/Container
-- Tests PHPUnit
-- Build assets production
-- Déploiement automatique
-```
-
-## 📈 Performance et scalabilité
-
-### Optimisations actuelles
-
-1. **Stockage intelligent** : Réduction des appels API
-2. **Hard links** : Économie d'espace disque
-3. **Pagination** : Limitation des données chargées
-4. **Compression** : Optimisation des assets
-
-### Améliorations futures
-
-1. **Base de données** : Persistance des données fréquentes
-2. **Queue system** : Traitement asynchrone
-3. **CDN** : Distribution des images
+- Références : `Api` → `Ingestion` → `Infrastructure` → `Domain` (`ProjectReference` des
+  `.csproj`) ; découpage en projets :
+  [ADR 0001](../reecriture/adr/0001-reecriture-dotnet-angular.md).
+- `Infrastructure` : `PageStore/` (client S3 signé du stockage des pages), `Audience/` (relevé
+  Umami), `Locks/` (verrou consultatif Postgres), `Jobs/` (`PeriodicJob`), `Outbox/` (e-mails).
+- `Api` : modules `Accounts`, `Admin`, `Analytics`, `Audit`, `Billing`, `Builds`, `Catalog`,
+  `ClientPolicy`, `Contact`, `Legacy`, `Profiles`, `PublicApi`, `Seo`, `Trends` ; tâches sous
+  `Workers/<Zone>/`, sous-commandes sous `Cli/<Zone>/`, découvertes par convention.
+- `src/LoDb.Web/src/server/` : serveur SSR (admission des rendus, compression, CSP, métriques,
+  file des refus) ; le front n'utilise que le client généré depuis OpenAPI
+  ([ADR 0006](../reecriture/adr/0006-front-angular-multi-cibles.md)).

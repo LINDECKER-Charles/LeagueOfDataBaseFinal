@@ -3,6 +3,10 @@
 
 import { CanonicalLink } from '../models/canonical-link';
 import { DetailNeighbours } from '../models/detail-neighbours';
+import { EntityChanges } from '../models/entity-changes';
+import { EntityState } from '../models/entity-state';
+import { StateHistoryEntry } from '../models/state-history-entry';
+import { StateNext } from '../models/state-next';
 import { SummonerCard } from '../models/summoner-card';
 
 /**
@@ -10,12 +14,18 @@ import { SummonerCard } from '../models/summoner-card';
  * and charges, the image resolved, and the spells on either side of it in the list.
  */
 export interface SummonerDetails {
-  canonical?: (null | CanonicalLink);
+
+  /**
+   * The page search engines index for the entity: never null, the page itself when no
+   * other is.
+   */
+  canonical: CanonicalLink;
 
   /**
    * The page the routing redirects a stale or slugless URL to.
    */
   canonicalPath: string;
+  changes: (null | EntityChanges);
   charges?: (number | null);
   contentLanguage?: (string | null);
   cost: Array<number>;
@@ -29,12 +39,23 @@ export interface SummonerDetails {
    * Whether the range is Data Dragon's "whole map" sentinel.
    */
   globalRange: boolean;
+
+  /**
+   * The entity's states up to the page's, newest first; every state on the short URL.
+   */
+  history: Array<StateHistoryEntry>;
+
+  /**
+   * Whether the latest version holds the entity (« Dans le dernier patch »).
+   */
+  isPresentInLatest: boolean;
   language: string;
 
   /**
    * The spells before and after it in the list's order.
    */
   neighbours: DetailNeighbours;
+  next: (null | StateNext);
 
   /**
    * The facts of the list's card, the edition and its twin among them.
@@ -45,5 +66,6 @@ export interface SummonerDetails {
    * Range per rank; see bool SummonerDetails.GlobalRange.
    */
   range: Array<number>;
+  state: (null | EntityState);
   version: string;
 }

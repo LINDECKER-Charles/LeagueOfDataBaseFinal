@@ -1,8 +1,20 @@
 {
   "title": "Histórico de patches",
-  "description": "Todos os patches de League of Legends listados pelo Data Dragon, cada um com seus campeões, itens, runas e feitiços de invocador como eram naquele patch.",
-  "intro": "Todos os patches listados pelo Data Dragon, do mais recente ao mais antigo. Cada um abre seus campeões, itens, runas e feitiços de invocador como eram na época.",
+  "description": "Todos os patches de League of Legends listados pelo Data Dragon, cada um com o que mudou e seus campeões, itens, runas e feitiços de invocador como eram naquele patch.",
+  "intro": "Todos os patches listados pelo Data Dragon, do mais recente ao mais antigo. Cada um abre o que mudou e depois seus campeões, itens, runas e feitiços de invocador como eram na época.",
   "group": "Patches {{ major }}.x",
   "latest": "Atual",
-  "empty": "Nenhum patch listado por enquanto."
+  "empty": "Nenhum patch listado por enquanto.",
+  "changes_link": "Mudanças",
+  "changes": {
+    "title": "Mudanças do patch {{ version }}",
+    "description": "O que o patch {{ version }} de League of Legends mudou em relação ao patch {{ previous }}: campeões, itens, runas e feitiços de invocador alterados, novos, de volta ou removidos.",
+    "description_empty": "O patch {{ version }} de League of Legends não mudou nenhum campeão, item, runa ou feitiço de invocador em relação ao patch {{ previous }}.",
+    "intro": "O que o patch {{ version }} mudou em relação ao patch {{ previous }}, segundo os dados do Data Dragon da Riot.",
+    "empty": "Este patch não mudou nada do que a enciclopédia mostra.",
+    "changed": "Alterados",
+    "new": "Novos",
+    "returned": "De volta",
+    "retired": "Removidos"
+  }
 }

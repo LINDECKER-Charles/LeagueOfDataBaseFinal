@@ -1,6 +1,8 @@
 using System.Text.Json.Serialization;
 using LoDb.Api.Modules.Catalog.Reading;
 using LoDb.Api.Modules.Catalog.Shared;
+using LoDb.Api.Modules.Catalog.States;
+using LoDb.Api.Modules.Catalog.States.Details;
 using LoDb.Domain.Catalog.Champions;
 using LoDb.Domain.Derived.Champions;
 using LoDb.Domain.Text;
@@ -32,11 +34,35 @@ internal sealed record ChampionDetails
     public required string CanonicalPath { get; init; }
 
     /// <summary>
-    /// The page search engines index for the entity (ADR 0005, amendment of 2026-10-14): its
-    /// short URL at the latest version, or its page in the last version that held it;
-    /// <see langword="null"/> when this page stays out of the index.
+    /// The page search engines index for the entity: never null, the page itself when no
+    /// other is.
     /// </summary>
-    public CanonicalLink? Canonical { get; init; }
+    public required CanonicalLink Canonical { get; init; }
+
+    /// <summary>
+    /// The state that holds the page's version; null outside the index (a version older than
+    /// it, listed after the latest, or before any promotion).
+    /// </summary>
+    public required EntityState? State { get; init; }
+
+    /// <summary>
+    /// The entity's states up to the page's, newest first; every state on the short URL.
+    /// </summary>
+    public required IReadOnlyList<StateHistoryEntry> History { get; init; }
+
+    /// <summary>What followed the page's state, when it is closed; null otherwise.</summary>
+    public required StateNext? Next { get; init; }
+
+    /// <summary>
+    /// Whether the latest version holds the entity (« Dans le dernier patch »).
+    /// </summary>
+    public required bool IsPresentInLatest { get; init; }
+
+    /// <summary>
+    /// What the page's state changed: on its opener, and on the short URL when the open state
+    /// opened at the latest version; null otherwise, and for a state of kind baseline.
+    /// </summary>
+    public required EntityChanges? Changes { get; init; }
 
     /// <summary>The facts of the list's card.</summary>
     public required ChampionCard Profile { get; init; }
@@ -99,6 +125,12 @@ internal sealed record ChampionDetails
             Language = catalog.Language.Code,
             ContentLanguage = catalog.Champions.ContentLanguage?.Code,
             CanonicalPath = profile.CanonicalPath,
+            Canonical = CanonicalLink.PageItself(catalog, profile.CanonicalPath),
+            State = null,
+            History = [],
+            Next = null,
+            IsPresentInLatest = false,
+            Changes = null,
             Profile = profile,
             Blurb = DdragonText.Clean(champion.Summary.Blurb),
             Lore = champion.Lore is { } lore ? DdragonText.Clean(lore) : null,
@@ -123,4 +155,19 @@ internal sealed record ChampionDetails
     /// <summary>The same page with every skin, for an app whose front reads them here.</summary>
     public ChampionDetails WithSkins(ChampionDetail champion, CatalogSnapshot catalog) =>
         this with { Skins = ChampionSkins.Of(champion, catalog).Skins };
+
+    /// <summary>The same page with what the index of states tells of it.</summary>
+    public ChampionDetails WithState(DetailState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        return this with
+        {
+            Canonical = state.Canonical,
+            State = state.State,
+            History = state.History,
+            Next = state.Next,
+            IsPresentInLatest = state.IsPresentInLatest,
+            Changes = state.Changes,
+        };
+    }
 }

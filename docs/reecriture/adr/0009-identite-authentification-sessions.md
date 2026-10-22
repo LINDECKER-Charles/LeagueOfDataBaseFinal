@@ -3,6 +3,15 @@
 - **Statut** : acceptée — 2026-09-24
 - **Remplace** : Symfony Security, sessions PHP en fichiers, admin unique défini par
   variables d'environnement
+- **Suivi** (2026-10-22), écarts entre le texte et le code :
+  - **administrateur racine tenu depuis l'environnement** (2026-10-04, `55a44dd5`) : à chaque
+    déploiement, le job lance `api admin root` avec `LODB_ADMIN_LOGIN` / `LODB_ADMIN_PASSWORD`
+    du `.env` de l'hôte, qui garantit que ce compte existe, avec ce mot de passe et le rôle
+    `Admin` (`Cli/Admin/AdminRootCommand.cs`, `.github/workflows/_deploy.yml`). Les autres
+    admins se créent toujours par la CLI, et le TOTP s'enrôle sur invitation ;
+  - les jetons passent par des points d'accès propres à l'API, pas par `MapIdentityApi` ;
+  - l'exception à « pas de session serveur » est dans l'amendement du 2026-10-11
+    (familles de jetons de rafraîchissement).
 
 ## Contexte
 

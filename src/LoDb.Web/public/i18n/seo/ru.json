@@ -1,5 +1,6 @@
 {
   "versioned_suffix": "(патч {{ version }})",
+  "state_range_suffix": "(патчи {{ first }}–{{ last }})",
   "home": {
     "title": "League Of Data Base — энциклопедия League of Legends",
     "description": "Чемпионы, предметы, руны и заклинания призывателя League of Legends для патча {{ version }} — характеристики, умения и подробности на 21 языке."
@@ -98,5 +99,11 @@
       "title": "Часто задаваемые вопросы",
       "description": "Ответы о League Of Data Base: что это, откуда берутся данные о League of Legends, как часто они обновляются и нужна ли учётная запись."
     }
+  },
+  "state": {
+    "summary": "Изменено в патче {{ version }}: {{ fields }}.",
+    "summary_more": "Изменено в патче {{ version }}: {{ fields }}…",
+    "summary_new": "Новое в патче {{ version }}.",
+    "summary_returned": "Вернулось в патче {{ version }}."
   }
 }

@@ -1,8 +1,8 @@
 namespace LoDb.Api.Tests.Seo;
 
 /// <summary>
-/// The SEO tests share one database, apart from the catalog tests: those warm cold versions
-/// synchronously, which would make a pending sitemap depend on the order of the runs.
+/// The SEO tests share one database and one index of states, apart from the other tests: they
+/// run one at a time, so that a test that makes the index unavailable disturbs no other.
 /// </summary>
 [CollectionDefinition(Name)]
 public sealed class SeoApiGroup : ICollectionFixture<SeoApiFixture>

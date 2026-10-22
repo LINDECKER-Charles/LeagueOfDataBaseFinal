@@ -1,8 +1,20 @@
 {
   "title": "Historie patchů",
-  "description": "Všechny patche League of Legends, které uvádí Data Dragon, každý se svými šampiony, předměty, runami a přivolávacími kouzly tak, jak byly v daném patchi.",
-  "intro": "Všechny patche, které uvádí Data Dragon, od nejnovějšího. Každý otevírá své šampiony, předměty, runy a přivolávací kouzla tak, jak byly tehdy.",
+  "description": "Všechny patche League of Legends, které uvádí Data Dragon, každý se svými změnami a se šampiony, předměty, runami a přivolávacími kouzly tak, jak byly v daném patchi.",
+  "intro": "Všechny patche, které uvádí Data Dragon, od nejnovějšího. Každý otevírá své změny, pak své šampiony, předměty, runy a přivolávací kouzla tak, jak byly tehdy.",
   "group": "Patche {{ major }}.x",
   "latest": "Aktuální",
-  "empty": "Zatím není uveden žádný patch."
+  "empty": "Zatím není uveden žádný patch.",
+  "changes_link": "Změny",
+  "changes": {
+    "title": "Změny v patchi {{ version }}",
+    "description": "Co patch {{ version }} League of Legends změnil oproti patchi {{ previous }}: šampioni, předměty, runy a přivolávací kouzla – změněné, nové, vrácené i odstraněné.",
+    "description_empty": "Patch {{ version }} League of Legends oproti patchi {{ previous }} nezměnil žádného šampiona, předmět, runu ani přivolávací kouzlo.",
+    "intro": "Co patch {{ version }} změnil oproti patchi {{ previous }}, podle dat Data Dragon od Riotu.",
+    "empty": "Tento patch nezměnil nic z toho, co encyklopedie ukazuje.",
+    "changed": "Změněné",
+    "new": "Nové",
+    "returned": "Vrácené",
+    "retired": "Odstraněné"
+  }
 }

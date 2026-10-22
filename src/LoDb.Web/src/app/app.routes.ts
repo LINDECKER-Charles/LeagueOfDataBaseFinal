@@ -6,6 +6,7 @@ import { activateLocale } from './core/i18n/activate-locale';
 import { localeGuard } from './core/i18n/locale-guard';
 import { redirectToPreferredLocale } from './core/routing/locale/redirect-to-preferred-locale';
 import { isOutcomeNavigation } from './core/routing/outcome/is-outcome-navigation';
+import { PATCH_CHANGES_PATH } from './core/routing/patch-changes-path';
 import { resolveOutcome } from './core/routing/outcome/resolve-outcome';
 import { canMatchVersion } from './core/routing/version/can-match-version';
 import { PRELOADED_ROUTE } from './features/catalogue/shared/preloading/preloaded-route';
@@ -85,6 +86,19 @@ function catalogueRoutes(): Routes {
   ];
 }
 
+// The pages whose version lives in their path: the catalogue, then the page of a patch's
+// changes, mounted alike.
+function versionedRoutes(): Routes {
+  return [
+    ...catalogueRoutes(),
+    {
+      path: PATCH_CHANGES_PATH,
+      loadChildren: () =>
+        import('./features/catalogue/changes/changes.routes').then((m) => m.CHANGES_ROUTES),
+    },
+  ];
+}
+
 // Sections with a path of their own come first. The mounts at the locale root (home,
 // editorial pages) follow, so that no other page loads their chunks on the way, and precede
 // `:version`, whose guard asks the API: a prerendered page never reaches it.
@@ -92,7 +106,7 @@ const localeRoutes: Routes = [
   outcomeRoute,
   bareNotFound('u'),
   bareNotFound('account'),
-  ...catalogueRoutes(),
+  ...versionedRoutes(),
   {
     path: 'trends',
     loadChildren: () =>
@@ -144,11 +158,12 @@ const localeRoutes: Routes = [
     loadChildren: () =>
       import('./features/editorial/editorial.routes').then((m) => m.EDITORIAL_ROUTES),
   },
-  // A pinned version only prefixes the catalogue: alone or before another page, a 404.
+  // A pinned version only prefixes the catalogue and a patch's changes: alone or before
+  // another page, a 404.
   {
     path: ':version',
     canMatch: [canMatchVersion],
-    children: [...catalogueRoutes(), notFoundRoute],
+    children: [...versionedRoutes(), notFoundRoute],
   },
   notFoundRoute,
 ];

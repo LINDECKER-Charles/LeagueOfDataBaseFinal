@@ -1,9 +1,10 @@
 <a id="top"></a>
 
 > [!IMPORTANT]
-> **Stack archivée.** Ce README décrit l'ancienne version du site (Symfony + Go + Vue), qui
-> reste en production jusqu'à la bascule vers la réécriture .NET + Angular
-> ([runbook](../docs/reecriture/bascule.md)). Son code vit désormais sous `legacy/`, et le
+> **Stack archivée.** Ce README décrit l'ancienne version du site (Symfony + Go + Vue), remplacée
+> en production le 2026-10-04 par la réécriture .NET + Angular
+> ([runbook](../docs/reecriture/bascule.md)) ; elle sera supprimée à la décommission. Son
+> code vit sous `legacy/`, et le
 > tag `archive/stack-php` fige l'état de `main` avant l'archivage. Les commandes ci-dessous
 > se lancent **depuis `legacy/`** (`cd legacy`), avec son propre `.env`
 > (`cp .env.example .env`). Ses workflows sont archivés dans `legacy/.github/workflows/`
@@ -57,7 +58,7 @@ Ce README est organisé en **deux parties** indépendantes :
 <a id="partie-1--design"></a>
 ## <img src="../docs/assets/icons/palette.svg" width="26" align="top" alt=""> Partie 1 — Design
 
-Interface **responsive** sur **Tailwind CSS 4** (du petit mobile 320 px à l'iPad — voir [Responsive & mobile](../docs/architecture/responsive-mobile.md)), **PWA installable** (manifest + service worker), îlots interactifs **Vue 3**, typographie officielle (*Beaufort for LoL* + *Spiegel*). Les visuels vivent dans [`screenshot/`](screenshot/) et sont régénérables via Playwright (`node tools/screenshots/capture.mjs`).
+Interface **responsive** sur **Tailwind CSS 4** (du petit mobile 320 px à l'iPad — voir [Responsive & mobile](docs/architecture/responsive-mobile.md)), **PWA installable** (manifest + service worker), îlots interactifs **Vue 3**, typographie officielle (*Beaufort for LoL* + *Spiegel*). Les visuels vivent dans [`screenshot/`](screenshot/) et sont régénérables via Playwright (`node tools/screenshots/capture.mjs`).
 
 > <img src="../docs/assets/icons/camera.svg" width="15" align="top" alt=""> *Les captures sont des instantanés de l'état actuel — remplaçables librement, les chemins restent stables.*
 
@@ -491,7 +492,7 @@ flowchart LR
 ```bash
 # 1. Cloner
 git clone https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal.git
-cd LeagueOfDataBaseFinal
+cd LeagueOfDataBaseFinal/legacy
 
 # 2. Configurer l'environnement (secrets CI : docs/guides/github-actions-secrets.md)
 cp .env.example .env
@@ -525,19 +526,19 @@ Captures Playwright : `node tools/screenshots/capture.mjs` → [`screenshot/`](s
 | Doc | Contenu |
 |---|---|
 | [Installation](docs/guides/setup.md) | Prérequis, installation détaillée, dépannage |
-| [Architecture](../docs/architecture/architecture.md) | Détail des services et flux |
-| [Responsive &amp; mobile](../docs/architecture/responsive-mobile.md) | Stratégie mobile, breakpoints, composants, méthode d'audit |
+| [Architecture](docs/architecture/architecture.md) | Détail des services et flux |
+| [Responsive &amp; mobile](docs/architecture/responsive-mobile.md) | Stratégie mobile, breakpoints, composants, méthode d'audit |
 | [Docker](docs/guides/docker.md) | Référence complète des commandes de la stack |
 | [Configuration](docs/guides/configuration.md) | Variables d'environnement |
 | [Secrets CI](docs/guides/github-actions-secrets.md) | Secrets GitHub Actions / GHCR |
-| [Contribution](../CONTRIBUTING.md) | Démarrage contributeur — [version détaillée FR/EN/ES](../docs/contribution.md) |
+| [Contribution](../CONTRIBUTING.md) | Démarrage contributeur — [version détaillée FR/EN/ES](docs/contribution.md) |
 
 ---
 
 <a id="contribuer"></a>
 ## <img src="../docs/assets/icons/handshake.svg" width="24" align="top" alt=""> Contribuer
 
-Les contributions sont les bienvenues — commencez par [`CONTRIBUTING.md`](../CONTRIBUTING.md) (guide court et à jour), puis le [guide détaillé multilingue](../docs/contribution.md) (FR / EN / ES). Toute contribution est distribuée sous [CC BY-NC 4.0](../LICENSE).
+Les contributions sont les bienvenues — commencez par [`CONTRIBUTING.md`](../CONTRIBUTING.md) (guide court et à jour), puis le [guide détaillé multilingue](docs/contribution.md) (FR / EN / ES). Toute contribution est distribuée sous [CC BY-NC 4.0](../LICENSE).
 
 <a id="support"></a>
 ## <img src="../docs/assets/icons/life-buoy.svg" width="24" align="top" alt=""> Support

@@ -4,6 +4,7 @@ import { configureAdminTestBed } from '../../../testing/admin-test-bed';
 import { prerenderDemand } from '../../../testing/fixtures/prerender-demand';
 import { prerenderPatches } from '../../../testing/fixtures/prerender-patches';
 import { prerenderReport } from '../../../testing/fixtures/prerender-report';
+import { prerenderRevision } from '../../../testing/fixtures/revision/prerender-revision';
 import { scalewayBillReport } from '../../../testing/fixtures/scaleway-bill-report';
 import { provideAdminCatalogues } from '../../../testing/i18n/provide-admin-catalogues';
 import type { PanelCall } from '../../../testing/panels/panel-call';
@@ -29,13 +30,15 @@ const PRERENDER = '/api/admin/prerender';
 const PATCHES = `${PRERENDER}/patches`;
 // The Scaleway bill of the « Stockage et coûts » tab: every tab renders at once.
 const BILL = '/api/admin/scaleway/bill';
-// The automatic queue, which reads itself under the key figures.
+// The automatic queue and the queue of the closed states, which read themselves under the key
+// figures.
 const DEMAND = `${PRERENDER}/demand`;
+const REVISION = `${PRERENDER}/revision`;
 
 /**
  * Opens `/admin/prerender` in a spec and answers what it reads on opening: the report, then
- * `calls` (the progress of a pass), the coverage of the served epoch, the bill and the
- * automatic queue.
+ * `calls` (the progress of a pass), the coverage of the served epoch, the bill, the automatic
+ * queue and the queue of the closed states.
  */
 export function openPrerender(opening: PrerenderOpening = {}): Promise<PanelVisit> {
   const report = opening.report ?? prerenderReport();
@@ -50,5 +53,6 @@ export function openPrerender(opening: PrerenderOpening = {}): Promise<PanelVisi
     { path: PATCHES, body: prerenderPatches() },
     { path: BILL, body: scalewayBillReport() },
     { path: DEMAND, body: prerenderDemand() },
+    { path: REVISION, body: prerenderRevision() },
   ]);
 }

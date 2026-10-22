@@ -5,7 +5,7 @@
   chaque référence, `source.goApiTree`). L'image publiée de l'ancienne stack ne diffère des
   sources que par son Dockerfile (commit `5dcb6cf`, passage à Go 1.26).
 - **Livrables** : références et jeu de données dans [`tests/fixtures/v1/`](../../../tests/fixtures/v1/README.md),
-  outil rejouable dans [`tools/next/v1-capture/`](../../../tools/next/v1-capture/README.md).
+  outil rejouable dans [`tools/next/v1-capture/`](../../../tools/v1-capture/README.md).
 - **Chantier suivant** : L6.3 rejoue ces scénarios contre le module `/v1`
   ([lot 6](../implementation/lot-06-api-publique-paiements.md#l63--module-v1)).
 
@@ -260,7 +260,7 @@ après le quota.
 | 4 | Profil banni servi en 200 | `404 not_found`, comme un profil inconnu | `03-profiles/banned` |
 | 5 | Builds des comptes bannis listés et comptés | Retirés de `data` et de `total` | pages de `04-builds` : l'oracle, bannis compris, redonne chaque page de go-api, puis sert d'attendu sans eux |
 | 6 | `//` redirigé (307) vers le chemin nettoyé | 404 texte avec CORS, sans `X-RateLimit-*` | `04-builds/missing-champion-segment` |
-| 7 | Tendances lues dans les fichiers du stockage : base arrêtée, 200 | Lues dans `analytics_daily` : base arrêtée, `503 internal` | `10-outage/trends-database-down` |
+| 7 | Tendances lues dans les fichiers du stockage : base arrêtée, 200 | Lues dans `analytics_daily` (puis `audience_entity_daily` à partir de `LoDb__Audience__TrendsSwitchDate`, [ADR 0012](../adr/0012-audience-umami.md)) : base arrêtée, `503 internal` | `10-outage/trends-database-down` |
 | 8 | Stockage absent : 200 et `entries: []` | `503 internal` dès qu'un nom est à résoudre (catalogue absent du stockage) | `10-outage/trends-storage-down` |
 | 9 | Noms tirés du dataset le plus récent du stockage | Noms du dernier catalogue promu en `en_US`, tels que le catalogue les enregistre ; avant toute ingestion, noms omis | hors références (le rejeu nomme depuis `seed/storage`) ; `CatalogTrendNamesTests` |
 | 10 | Classement gardé 5 min par type et fenêtre, à cheval sur minuit | Gardé 5 min par type, fenêtre et jour UTC : la fenêtre change à minuit | hors références |

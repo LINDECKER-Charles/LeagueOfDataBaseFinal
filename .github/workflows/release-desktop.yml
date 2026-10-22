@@ -4,10 +4,10 @@ name: Release desktop
 # of LoDb.Desktop for every RID, signed, with real deltas, published to the GitHub Releases
 # of this repository, which the installed apps read (Updates/Engine/UpdateFeeds.cs).
 #
-# Called after a deployment, on the exact SHA deployed: `stable` after prod (a
-# desktop-vX.Y.Z tag on the SHA gives the version; without one, nothing is released),
-# `beta` after staging (VersionPrefix-beta.N). The caller grants contents: write and
-# id-token: write. Can also be run by hand on a SHA.
+# Run by hand on the exact SHA deployed (`gh workflow run`): no deployment calls it yet,
+# although workflow_call is ready for one. `stable` for prod (a desktop-vX.Y.Z tag on the
+# SHA gives the version; without one, nothing is released), `beta` for staging
+# (VersionPrefix-beta.N). A caller grants contents: write and id-token: write.
 #
 # shell (npm) -> per RID: build (dotnet publish, no secret) -> pack (vpk download of N-1
 # BEFORE vpk pack, so that vpk writes the delta N-1 -> N; signing: Authenticode through

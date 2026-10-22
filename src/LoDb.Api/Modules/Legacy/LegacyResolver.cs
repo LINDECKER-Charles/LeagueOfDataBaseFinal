@@ -1,11 +1,14 @@
 using LoDb.Api.Modules.Catalog.Http;
 using LoDb.Api.Modules.Legacy.Paths;
 using LoDb.Api.Modules.Legacy.Targets;
+using LoDb.Domain.Catalog;
 using LoDb.Domain.Languages;
 using LoDb.Domain.Paths;
 using LoDb.Domain.Versions;
 using LoDb.Ingestion.Catalog;
 using LoDb.Ingestion.Catalog.Reading;
+using LoDb.Ingestion.Catalog.States;
+using LoDb.Ingestion.Catalog.States.Snapshots;
 using LoDb.Ingestion.Egress.Errors;
 using Microsoft.AspNetCore.Http.HttpResults;
 
@@ -22,21 +25,26 @@ namespace LoDb.Api.Modules.Legacy;
 /// them by the thousand, across every version.
 /// </para>
 /// <para>
-/// The latest catalog answers first, held in memory and with ids stable across versions. An
-/// entry it holds lands on its short URL, whatever version the old URL named: the pinned page
-/// of an entry still in the game is canonical to it (ADR 0005, amendment of 2026-10-14), and
-/// pinned renders are the SSR's scarcest. So does a list, a pinned one being canonical to the
-/// latest bare list.
+/// The latest catalog answers first, held in memory and with ids stable across versions: it
+/// turns the old name into an id. The index of states then lands the URL on the canonical of
+/// the page it named (ADR 0005, amendments of 2026-10-16 and 2026-10-22), without opening any
+/// other catalog: the opener of the state that held the version, the short URL while that
+/// state is open. Without a version, an entry the latest catalog holds lands on its short URL,
+/// one it lacks on the opener of its last state. A list lands on the latest bare list, a pinned
+/// one being canonical to it.
 /// </para>
 /// <para>
-/// Only a name the latest catalog lacks, once read, opens the catalog of the version the URL
-/// names, and only if that version is stored: the entry left the game, and keeps the pinned
-/// page and slug of that version. A version that is not stored stays unread: its list stands
-/// in, by a 302, for an entry that may have left the game, which must not become a 404.
+/// Where the index has no state at the version named, an entry the latest catalog holds lands
+/// on its short URL. Only a name it lacks, once read, opens the catalog of the version the URL
+/// names, and only if that version is stored: the entry keeps the pinned page and slug of
+/// that version. A version that is not stored stays unread: its list stands in, by a 302, for
+/// an entry that may have left the game, which must not become a 404. A version listed after
+/// the latest one never asks the index.
 /// </para>
 /// </remarks>
 internal sealed partial class LegacyResolver(
     ICatalogReader reader,
+    IEntityStateIndex states,
     ILogger<LegacyResolver> logger)
 {
     public async Task<Results<LegacyRedirect, CatalogProblem>> ResolveAsync(
@@ -63,6 +71,11 @@ internal sealed partial class LegacyResolver(
         {
             LogListsFailed(logger, exception);
             return CatalogProblem.UpstreamUnavailable();
+        }
+        catch (StateIndexUnavailableException exception)
+        {
+            LogStatesFailed(logger, exception);
+            return CatalogProblem.StateIndexUnavailable();
         }
     }
 
@@ -107,31 +120,89 @@ internal sealed partial class LegacyResolver(
         EntityLookup lookup,
         CancellationToken cancellationToken)
     {
-        var latest = await OpenAsync(lookup.Latest, lookup.Demand, cancellationToken);
-        if (Find(latest, lookup) is { } fromLatest)
-        {
-            return lookup.MovedToLatest(fromLatest);
-        }
-
         // A latest catalog not read yet may still hold the name, whose target is then its short
-        // URL: nothing answers before. Before any promotion, only the version's own can tell.
-        var isLatestUnread = latest is { IsReady: false };
-        if (isLatestUnread || lookup.Version.Pinned is not { } pinned)
+        // URL: nothing answers before.
+        var latest = await OpenAsync(lookup.Latest, lookup.Demand, cancellationToken);
+        if (latest is { IsReady: false })
         {
-            return latest is { IsReady: true } ? UnknownEntity(lookup) : CatalogProblem.Pending();
+            return CatalogProblem.Pending();
         }
 
-        var own = await OpenAsync(pinned, lookup.Demand, cancellationToken);
+        var fromLatest = Find(latest, lookup);
+        if (await IndexedAsync(lookup, fromLatest, cancellationToken) is { } indexed)
+        {
+            return indexed;
+        }
+
+        if (fromLatest is { } path)
+        {
+            return lookup.MovedToLatest(path);
+        }
+
+        // Without a version, the latest catalog decided once read; before any promotion,
+        // nothing tells yet whether the entry exists.
+        if (lookup.Version.Pinned is null)
+        {
+            return latest is null ? CatalogProblem.Pending() : UnknownEntity(lookup);
+        }
+
+        return await FromOwnCatalogAsync(lookup, latest, cancellationToken);
+    }
+
+    // The rule of 2026-10-16 for a name the latest catalog lacks: the catalog of the version
+    // named, if stored, keeps the entry's pinned page and slug.
+    private async Task<Results<LegacyRedirect, CatalogProblem>> FromOwnCatalogAsync(
+        EntityLookup lookup,
+        CatalogLoad? latest,
+        CancellationToken cancellationToken)
+    {
+        var own = await OpenAsync(lookup.Version.Pinned, lookup.Demand, cancellationToken);
         return own switch
         {
-            { IsReady: true } => Find(own, lookup) is { } path
-                ? lookup.MovedToPinned(path)
+            { IsReady: true } => Find(own, lookup) is { } found
+                ? lookup.MovedToPinned(found)
                 : UnknownEntity(lookup),
             // The list stands in only for a name the latest catalog, once read, lacks too:
             // before any promotion, nothing tells yet whether the entry left the game.
-            { Status: CatalogLoadStatus.Pending, Refused: false } when latest is { IsReady: true }
+            { Status: CatalogLoadStatus.Pending, Refused: false } when latest is not null
                 => lookup.ToList(),
             _ => CatalogProblem.Pending(),
+        };
+    }
+
+    // The redirect the index of states decides, if any: at the version named, the opener of a
+    // closed state, the short URL of an open one, or its opener when the latest catalog lacks
+    // the entry (an index behind the promotion that retired it, as StateView rules); without a
+    // version, the opener of the last state of an entry the latest catalog lacks. The rule of
+    // 2026-10-16 decides the rest.
+    private async Task<LegacyRedirect?> IndexedAsync(
+        EntityLookup lookup,
+        CanonicalPath? fromLatest,
+        CancellationToken cancellationToken)
+    {
+        var id = fromLatest?.Id ?? lookup.IndexedId;
+        var pinned = lookup.Version.Pinned;
+        if (id is null || lookup.Latest is not { } latest || pinned > latest
+            || (pinned is null && fromLatest is not null))
+        {
+            return null;
+        }
+
+        var snapshot = await states.GetAsync(cancellationToken);
+        var entity = new IndexedEntity(lookup.Legacy.Resource, id);
+        if (pinned is null)
+        {
+            return snapshot.StatesOf(entity) is [.., var last]
+                ? lookup.MovedToOpener(last)
+                : null;
+        }
+
+        return snapshot.Locate(entity, pinned, latest).State switch
+        {
+            { IsOpen: false } closed => lookup.MovedToOpener(closed),
+            { } open when fromLatest is not null => lookup.MovedToLatest(fromLatest),
+            { } open => lookup.MovedToOpener(open),
+            _ => null,
         };
     }
 
@@ -158,6 +229,12 @@ internal sealed partial class LegacyResolver(
         Message = "Former URL unresolved: Data Dragon's lists could not be read.")]
     private static partial void LogListsFailed(ILogger logger, Exception exception);
 
+    [LoggerMessage(
+        EventName = "legacy.redirect.unavailable",
+        Level = LogLevel.Warning,
+        Message = "Former URL unresolved: the index of states could not be read.")]
+    private static partial void LogStatesFailed(ILogger logger, Exception exception);
+
     /// <summary>An old detail URL being resolved, and where its redirects land.</summary>
     private sealed record EntityLookup(
         LegacyPath Legacy,
@@ -169,9 +246,24 @@ internal sealed partial class LegacyResolver(
 
         public required ColdDemand Demand { get; init; }
 
+        /// <summary>
+        /// The old name as the index keys an entry, which is its id but for a rune path: the
+        /// old site named those by their key ("Domination"), which only a catalog turns into an
+        /// id.
+        /// </summary>
+        public string? IndexedId =>
+            Legacy.Resource == ResourceType.Runes ? null : Legacy.Name;
+
         /// <summary>An entry of the latest patch: its short URL.</summary>
         public LegacyRedirect MovedToLatest(CanonicalPath path) =>
             LegacyRedirect.Permanent(LegacyTarget.Of(Locale, null, path.Value));
+
+        /// <summary>
+        /// The page the index indexes for a closed state: its opener, with the slug of that
+        /// version.
+        /// </summary>
+        public LegacyRedirect MovedToOpener(IndexedState state) =>
+            LegacyRedirect.Permanent(LegacyTarget.Of(Locale, state.Opener, state.Path));
 
         /// <summary>An entry gone from the latest patch: its page in the version named.</summary>
         public LegacyRedirect MovedToPinned(CanonicalPath path) =>
