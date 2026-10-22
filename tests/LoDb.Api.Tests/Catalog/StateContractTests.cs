@@ -37,5 +37,6 @@ public sealed class StateContractTests(CatalogApiFixture api)
 
         Assert.Equal("no-patch-page", problem.Text("code"));
         Assert.True(meta.IsNull("oldestChangesVersion"));
+        Assert.True(meta.IsNull("newestChangesVersion"));
     }
 }

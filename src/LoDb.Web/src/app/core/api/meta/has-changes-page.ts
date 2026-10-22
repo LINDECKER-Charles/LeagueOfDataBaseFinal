@@ -1,21 +1,24 @@
 // What `/api/meta` says of the pages of changes; the patch history passes its own copy.
 interface ChangesWindow {
-  readonly latest?: string | null;
   /** Every version Data Dragon lists, newest first. */
   readonly versions: readonly string[];
   readonly oldestChangesVersion: string | null;
+  /** The end of the index's coverage: the latest version, but while the index lags. */
+  readonly newestChangesVersion: string | null;
 }
 
 /**
- * Whether a version has a page of changes: one from the oldest that has one up to the latest,
+ * Whether a version has a page of changes: one from the oldest that has one up to the newest,
  * in the order Data Dragon lists them (newest first). None before the first promotion, nor for
- * a version listed after the latest one: any other address answers a 404.
+ * a version the index of states does not cover yet (one listed after the latest, the latest
+ * while the index lags behind its promotion): any other address answers a 404.
  */
 export function hasChangesPage(version: string, meta: ChangesWindow): boolean {
-  const { latest, versions, oldestChangesVersion } = meta;
-  if (!latest || oldestChangesVersion === null) {
+  const { versions, oldestChangesVersion, newestChangesVersion } = meta;
+  if (oldestChangesVersion === null || newestChangesVersion === null) {
     return false;
   }
+  const newest = versions.indexOf(newestChangesVersion);
   const index = versions.indexOf(version);
-  return index >= versions.indexOf(latest) && index <= versions.indexOf(oldestChangesVersion);
+  return newest >= 0 && index >= newest && index <= versions.indexOf(oldestChangesVersion);
 }

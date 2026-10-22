@@ -8821,6 +8821,7 @@
         "required": [
           "versions",
           "oldestChangesVersion",
+          "newestChangesVersion",
           "readyVersions",
           "versionPattern",
           "languages",
@@ -8852,7 +8853,14 @@
               "null",
               "string"
             ],
-            "description": "The oldest version that has a page of changes: every version from it up to the latest\none has one. Null while the index covers fewer than two versions."
+            "description": "The oldest version that has a page of changes: every version from it up to\nstring? CatalogMeta.NewestChangesVersion has one. Null while the index covers fewer than two\nversions."
+          },
+          "newestChangesVersion": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The newest version that has a page of changes, the end of the index's coverage: the\nlatest one, but while the index lags behind its promotion. Null with\nstring? CatalogMeta.OldestChangesVersion."
           },
           "readyVersions": {
             "type": "array",

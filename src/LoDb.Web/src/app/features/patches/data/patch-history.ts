@@ -8,8 +8,10 @@ export interface PatchHistory {
   /** Every version Data Dragon lists, newest first, the long tail included. */
   readonly versions: readonly string[];
   /**
-   * The oldest version that has a page of changes, every version from it up to the latest
+   * The oldest version that has a page of changes, every version from it up to the newest
    * one having one; null while the index of the entities' states covers fewer than two.
    */
   readonly oldestChangesVersion: string | null;
+  /** The newest version that has a page of changes: the latest, but while the index lags. */
+  readonly newestChangesVersion: string | null;
 }

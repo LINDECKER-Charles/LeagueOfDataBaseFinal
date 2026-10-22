@@ -55,7 +55,8 @@ août. Chaque contenu distinct a maintenant une page, et une seule.
   étendu à chaque promotion (étape `StateIndex`) et par la tâche `catalog.states.reconcile`.
 - API : `canonical` toujours présent (`StateView`), `state`, `history`, `next`,
   `presentInLatest` et `changes` sur les quatre fiches ; `GET /api/catalog/{version}/{lang}/changes` ;
-  `CatalogMeta.oldestChangesVersion` ; anciennes URL menées à la canonique de leur état.
+  `CatalogMeta.oldestChangesVersion` et `newestChangesVersion` ; anciennes URL menées à la
+  canonique de leur état.
   `CanonicalReferences`, `CanonicalReader` et `LoDb__Seo__SitemapVersionWindow` sont retirés.
 - Front : blocs de `features/catalogue/shared/codex/state/`, page `features/catalogue/changes/`,
   `isVersionedRoute`, titre `seo.state_range_suffix` et résumé `seo.state.*`, libellés

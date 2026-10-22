@@ -25,16 +25,18 @@ const CATALOGUES: Record<string, Translation> = {
   'patches/fr': PATCHES_CATALOGUES.fr,
 };
 
-// The oldest version with a page of changes: every one from it up to the latest has one.
+// The oldest version with a page of changes: every one from it up to the newest has one, the
+// latest unless the index lags behind its promotion.
 const OLDEST_CHANGES = '15.24.1';
 
-// Only what the page reads of `/api/meta`.
+// Only what the page reads of `/api/meta`, over an index that covers the latest version.
 function metaOf(
   latest: string | null,
   versions: readonly string[],
   oldestChangesVersion: string | null = OLDEST_CHANGES,
 ): Partial<CatalogMeta> {
-  return { latest, versions: [...versions], oldestChangesVersion };
+  const newestChangesVersion = oldestChangesVersion && latest;
+  return { latest, versions: [...versions], oldestChangesVersion, newestChangesVersion };
 }
 
 async function visit(meta: Partial<CatalogMeta>) {
@@ -121,6 +123,15 @@ describe('PatchHistoryPage', () => {
     expect(hrefsOf(page.querySelector('tbody tr'))).toEqual(
       LISTS.map((list) => `/fr/16.20.1/${list}`),
     );
+  });
+
+  it('links no page of changes past the end of an index left behind the promotion', async () => {
+    const { page } = await visit({ ...metaOf(LATEST, VERSIONS), newestChangesVersion: '16.18.1' });
+    const firsts = Array.from(page.querySelectorAll('tbody tr'), (row) =>
+      row.querySelector('td a')?.getAttribute('href'),
+    );
+
+    expect(firsts.slice(0, 2)).toEqual(['/fr/champions', '/fr/16.18.1/changes']);
   });
 
   it('links no page of changes while the index covers fewer than two versions', async () => {

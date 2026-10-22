@@ -17,10 +17,18 @@ internal sealed record CatalogMeta
     public required IReadOnlyList<string> Versions { get; init; }
 
     /// <summary>
-    /// The oldest version that has a page of changes: every version from it up to the latest
-    /// one has one. Null while the index covers fewer than two versions.
+    /// The oldest version that has a page of changes: every version from it up to
+    /// <see cref="NewestChangesVersion"/> has one. Null while the index covers fewer than two
+    /// versions.
     /// </summary>
     public required string? OldestChangesVersion { get; init; }
+
+    /// <summary>
+    /// The newest version that has a page of changes, the end of the index's coverage: the
+    /// latest one, but while the index lags behind its promotion. Null with
+    /// <see cref="OldestChangesVersion"/>.
+    /// </summary>
+    public required string? NewestChangesVersion { get; init; }
 
     /// <summary>The versions ingested ahead of any visit, newest first.</summary>
     public required IReadOnlyList<string> ReadyVersions { get; init; }

@@ -49,11 +49,16 @@ public sealed class MetaMemoTests
         Assert.Equal((await BodyAsync(Endpoint(reader))).Tag, after.Tag);
     }
 
+    // The index covers 16.17.1 to 16.19.1: the first covered version has no page of changes,
+    // and the newest is the coverage end, behind the latest version, 16.20.1, while the index
+    // lags behind its promotion.
     [Fact]
-    public async Task OldestPageOfChangesFollowsTheIndex()
+    public async Task PagesOfChangesFollowTheIndex()
     {
         var states = new InMemoryEntityStateIndex();
-        var endpoint = Endpoint(new ListsReader(), states);
+        var reader = new ListsReader();
+        reader.Promote(PatchVersion.Parse("16.20.1"));
+        var endpoint = Endpoint(reader, states);
         var before = await MetaAsync(endpoint);
 
         states.Snapshot = TestStates.Snapshot(["16.17.1", "16.18.1", "16.19.1"], []);
@@ -61,9 +66,13 @@ public sealed class MetaMemoTests
         states.IsUnavailable = true;
         var unreadable = await MetaAsync(endpoint);
 
-        Assert.Null(before.OldestChangesVersion);
-        Assert.Equal("16.18.1", covered.OldestChangesVersion);
-        Assert.Null(unreadable.OldestChangesVersion);
+        Assert.Equal((null, null), (before.OldestChangesVersion, before.NewestChangesVersion));
+        Assert.Equal(
+            ("16.18.1", "16.19.1"),
+            (covered.OldestChangesVersion, covered.NewestChangesVersion));
+        Assert.Equal(
+            (null, null),
+            (unreadable.OldestChangesVersion, unreadable.NewestChangesVersion));
     }
 
     private static MetaEndpoint Endpoint(

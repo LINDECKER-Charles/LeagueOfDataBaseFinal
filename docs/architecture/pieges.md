@@ -128,8 +128,9 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   que la réponse de la fiche, jamais `/api/meta` (les specs des fiches ne la fournissent
   plus). Une page de patch (`/{locale}/[{version}/]changes`) n'existe pas pour la
   première version couverte ni hors de l'index : sur elle, la version mémorisée ou choisie dans
-  le sélecteur ne s'applique qu'entre `oldestChangesVersion` et le dernier patch
-  (`core/api/meta/has-changes-page.ts`, la règle de `/patches`), sinon la page reste sur le
+  le sélecteur ne s'applique qu'entre `oldestChangesVersion` et `newestChangesVersion` (la fin
+  de la couverture : le dernier patch, sauf tant que l'index est en retard sur sa promotion ;
+  `core/api/meta/has-changes-page.ts`, la règle de `/patches`), sinon la page reste sur le
   dernier patch.
 - Une page qui oublie `Seo.apply` n'a ni canonique ni hreflang. Une clé `about.*`, `api.*`
   ou `seo.*` n'est traduite que si un ancêtre fournit son scope (`provideTranslocoScope`) ;
@@ -678,7 +679,7 @@ L'index qui décide la page indexée de chaque fiche d'ancien patch
   503 `state-index-unavailable` avec `Retry-After` (fiche, `…/changes`, anciennes URL,
   `/sitemap.xml`, `latest.xml` et `{version}.xml`), ligne `states.copy.failed` et compteur
   `lodb_states_unavailable_total` ; `/api/meta` répond quand même, sans `oldestChangesVersion`
-  (`catalog.meta.degraded`).
+  ni `newestChangesVersion` (`catalog.meta.degraded`).
 - **Première construction dans l'API** : sans aucune génération (pile locale neuve, E2E), la
   première promotion construit tout l'index dans le processus de l'API, sous ses limites. Sur
   un hôte, `states` passe à chaque déploiement : n'arrive pas.

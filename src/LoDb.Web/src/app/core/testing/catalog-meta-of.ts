@@ -7,6 +7,7 @@ const BASE: CatalogMeta = {
   versions: ['16.19.1'],
   readyVersions: ['16.19.1'],
   oldestChangesVersion: null,
+  newestChangesVersion: null,
   versionPattern: String.raw`\d+(?:\.\d+)+`,
   languages: ['en_US'],
   languagePattern: '[a-z]{2}_[A-Z]{2}',
@@ -19,9 +20,11 @@ const BASE: CatalogMeta = {
 
 /**
  * An `/api/meta` for a spec: the fields it names, over a catalogue of 16.19.1 in en_US alone.
- * The latest version is the one ingested ahead, unless the spec says otherwise.
+ * The latest version is the one ingested ahead, and the newest page of changes the latest's
+ * when the spec names the oldest one (an index caught up), unless the spec says otherwise.
  */
 export function catalogMetaOf(fields: Partial<CatalogMeta> = {}): CatalogMeta {
   const latest = fields.latest === undefined ? BASE.latest : fields.latest;
-  return { ...BASE, readyVersions: latest ? [latest] : [], ...fields };
+  const newestChangesVersion = fields.oldestChangesVersion ? (latest ?? null) : null;
+  return { ...BASE, readyVersions: latest ? [latest] : [], newestChangesVersion, ...fields };
 }

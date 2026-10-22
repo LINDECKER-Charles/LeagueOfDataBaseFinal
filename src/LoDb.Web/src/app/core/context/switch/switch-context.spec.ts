@@ -181,12 +181,13 @@ describe('switchContext', () => {
   });
 });
 
-// A patch's changes exist from the oldest version that has some up to the latest: 15.14.1
+// A patch's changes exist from the oldest version that has some up to the newest: 15.14.1
 // does, 14.1.1 (the first version the index covers, say) does not.
 const CHANGES_META = {
   ...META,
   versions: [LATEST, '15.14.1', '14.1.1'],
   oldestChangesVersion: '15.14.1',
+  newestChangesVersion: LATEST,
 };
 
 const CHANGES_CASES: Case[] = [
@@ -213,7 +214,7 @@ const CHANGES_CASES: Case[] = [
     from: '/fr/changes',
     target: { version: '15.14.1' },
     to: '/fr/changes',
-    meta: { ...CHANGES_META, oldestChangesVersion: null },
+    meta: { ...CHANGES_META, oldestChangesVersion: null, newestChangesVersion: null },
   },
   {
     rule: 'still pins that patch on its lists',

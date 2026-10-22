@@ -173,7 +173,7 @@ avec l'exception) sur un échec, la copie tenue restant servie. La commande
 (Error) quand la liste de Data Dragon est illisible. Côté API : `catalog.state.unavailable`
 (fiche sans index lisible), `catalog.state.failed` (catalogue du dernier patch ou de comparaison
 illisible chez Data Dragon), `catalog.changes.unavailable` (page de patch),
-`catalog.meta.degraded` (`/api/meta` sans `oldestChangesVersion`) et
+`catalog.meta.degraded` (`/api/meta` sans pages de patch) et
 `legacy.redirect.unavailable`, toutes en Warning.
 
 ## API — métriques du framework

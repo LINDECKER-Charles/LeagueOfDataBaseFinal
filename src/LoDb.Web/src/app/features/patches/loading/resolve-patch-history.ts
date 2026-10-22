@@ -23,5 +23,6 @@ export const resolvePatchHistory: ResolveFn<PatchHistory> = async (route) => {
     latest: meta.latest ?? null,
     versions: meta.versions,
     oldestChangesVersion: meta.oldestChangesVersion,
+    newestChangesVersion: meta.newestChangesVersion,
   };
 };

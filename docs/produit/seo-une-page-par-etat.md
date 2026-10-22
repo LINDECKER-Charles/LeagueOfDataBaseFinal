@@ -918,8 +918,10 @@ lui. Elles l'emportent sur les sections citées ; les ADR en reprennent l'essent
 - **Page de patch** : une entité que le catalogue n'a pas est nommée par son id, sans image ;
   une réponse dont des icônes sont en attente est gardée 5 s (`public, max-age=5`, avec
   `Retry-After`) ; validation dans l'ordre 400 (version), 400 (langue), 503, 404.
-- **`/api/meta`** ne répond jamais 503 pour l'index : `oldestChangesVersion` nul et une ligne
-  `catalog.meta.degraded`.
+- **`/api/meta`** ne répond jamais 503 pour l'index : `oldestChangesVersion` et
+  `newestChangesVersion` nuls et une ligne `catalog.meta.degraded`. `newestChangesVersion` est
+  la fin de la couverture : tant que l'index est en retard sur une promotion, `/patches` ne
+  lie pas la page de patch du dernier patch, qui répondrait 404.
 - **Anciennes URL** : une voie de runes absente du dernier patch garde la règle du 2026-10-16
   (sa page épinglée avec une version, 404 sans) : seul le catalogue du dernier patch traduit sa
   clé en id.
@@ -929,8 +931,8 @@ lui. Elles l'emportent sur les sections citées ; les ADR en reprennent l'essent
   de sorts, de runes et de skins par les noms de la page ; les codes sans table du front
   (modes, type de coût, ressource) s'affichent tels quels ; une page `noindex` n'a plus de
   JSON-LD du site. Sur une page de patch, la version mémorisée ou choisie ne s'applique
-  qu'entre `oldestChangesVersion` et le dernier patch (`has-changes-page.ts`, la règle de
-  `/patches`) ; sinon la page reste sur le dernier patch et la pastille le dit.
+  qu'entre `oldestChangesVersion` et `newestChangesVersion` (`has-changes-page.ts`, la règle
+  de `/patches`) ; sinon la page reste sur le dernier patch et la pastille le dit.
 - **`check-urls.sh`** suit ce que dit l'API : une page de patch peut répondre 404 sur une
   petite couverture, et les lignes des pages figée et révisable s'écrivent « skip » quand
   l'historique de l'objet n'en a pas.

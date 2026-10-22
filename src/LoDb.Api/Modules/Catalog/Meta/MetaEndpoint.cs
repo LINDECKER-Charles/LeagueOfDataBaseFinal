@@ -19,9 +19,9 @@ namespace LoDb.Api.Modules.Catalog.Meta;
 /// <remarks>
 /// Short-lived: a promotion changes <c>latest</c>, and the reader already caches the lists
 /// it is built from. The renderer asks for it on every page: the body and its tag are kept
-/// while the lists read the same, so most calls neither serialize nor hash. The oldest page
-/// of changes comes from the index of states; an index that cannot be read leaves it null
-/// rather than failing every page the renderer draws.
+/// while the lists read the same, so most calls neither serialize nor hash. The oldest and the
+/// newest pages of changes come from the index of states; an index that cannot be read leaves
+/// them null rather than failing every page the renderer draws.
 /// </remarks>
 internal sealed partial class MetaEndpoint(
     ICatalogReader reader,
@@ -48,8 +48,8 @@ internal sealed partial class MetaEndpoint(
         {
             var versions = await reader.GetVersionsAsync(cancellationToken);
             var languages = await reader.GetLanguagesAsync(cancellationToken);
-            var oldestChanges = await OldestChangesAsync(cancellationToken);
-            var answer = AnswerOf(new MetaSource(versions, languages, oldestChanges));
+            var changes = await ChangesAsync(cancellationToken);
+            var answer = AnswerOf(new MetaSource(versions, languages, changes));
             return new CachedJson<CatalogMeta>(answer.Meta, CacheHeaders.Current, answer.Body);
         }
         catch (EgressException exception)
@@ -78,7 +78,8 @@ internal sealed partial class MetaEndpoint(
         Latest = source.Versions.Latest?.Value,
         Versions = [.. source.Versions.Listed.Select(static version => version.Value)],
         ReadyVersions = [.. source.Versions.Ready.Select(static version => version.Value)],
-        OldestChangesVersion = source.OldestChanges?.Value,
+        OldestChangesVersion = source.Changes?.Oldest.Value,
+        NewestChangesVersion = source.Changes?.Newest.Value,
         VersionPattern = PatchVersion.Pattern,
         Languages = [.. source.Languages.Select(static language => language.Code)],
         LanguagePattern = DdragonLanguage.Pattern,
@@ -97,13 +98,16 @@ internal sealed partial class MetaEndpoint(
         DefaultGameMode = GameModes.Default,
     };
 
-    // Every covered version from the one after the coverage start has a page of changes.
-    private async Task<PatchVersion?> OldestChangesAsync(CancellationToken cancellationToken)
+    // Every covered version from the one after the coverage start has a page of changes, up
+    // to the coverage end, which lags behind the latest version while the index does.
+    private async Task<ChangesWindow?> ChangesAsync(CancellationToken cancellationToken)
     {
         try
         {
-            var snapshot = await states.GetAsync(cancellationToken);
-            return snapshot.Coverage.Start is { } start ? snapshot.Coverage.After(start) : null;
+            var coverage = (await states.GetAsync(cancellationToken)).Coverage;
+            return coverage.Start is { } start && coverage.After(start) is { } oldest
+                ? new ChangesWindow(oldest, coverage.End!)
+                : null;
         }
         catch (StateIndexUnavailableException exception)
         {
@@ -121,21 +125,24 @@ internal sealed partial class MetaEndpoint(
     [LoggerMessage(
         EventName = "catalog.meta.degraded",
         Level = LogLevel.Warning,
-        Message = "Meta without its oldest page of changes: the index of states is unreadable.")]
+        Message = "Meta without its pages of changes: the index of states is unreadable.")]
     private static partial void LogStatesFailed(ILogger logger, Exception exception);
+
+    // The versions that have a page of changes, oldest and newest.
+    private sealed record ChangesWindow(PatchVersion Oldest, PatchVersion Newest);
 
     // The lists an answer is built from; the rest of the answer is constant.
     private sealed record MetaSource(
         CatalogVersions Versions,
         IReadOnlyList<DdragonLanguage> Languages,
-        PatchVersion? OldestChanges)
+        ChangesWindow? Changes)
     {
         public bool Matches(MetaSource other) =>
             Versions.Latest == other.Versions.Latest
             && Versions.Listed.SequenceEqual(other.Versions.Listed)
             && Versions.Ready.SequenceEqual(other.Versions.Ready)
             && Languages.SequenceEqual(other.Languages)
-            && OldestChanges == other.OldestChanges;
+            && Changes == other.Changes;
     }
 
     private sealed record MetaAnswer(MetaSource Source, CatalogMeta Meta, JsonBody Body);
