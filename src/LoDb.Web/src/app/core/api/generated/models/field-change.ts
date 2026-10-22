@@ -16,13 +16,13 @@ import { ValueKind } from '../models/value-kind';
 export interface FieldChange {
 
   /**
-   * The values after; empty when the field is gone.
+   * The values after; empty when the field is gone, and for a text.
    */
   after: Array<ChangeValue>;
 
   /**
-   * The values before; empty when the field is new, or when its localized values are equal
-   * (the value after shows alone).
+   * The values before; empty when the field is new, when its localized values are equal
+   * (the value after shows alone), and for a text, which its segments carry.
    */
   before: Array<ChangeValue>;
   field: ChangeField;
@@ -35,7 +35,8 @@ export interface FieldChange {
 
   /**
    * A text's diff, word by word (character by character in ja, zh, th), to write as text in
-   * `&lt;del&gt;` and `&lt;ins&gt;`, never as HTML; empty for another kind.
+   * `&lt;del&gt;` and `&lt;ins&gt;`, never as HTML; one `same` segment when
+   * its localized texts are equal; empty for another kind.
    */
   segments: Array<TextSegment>;
   subject: (null | ChangeSubject);

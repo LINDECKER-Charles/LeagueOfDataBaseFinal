@@ -23,17 +23,18 @@ internal sealed record FieldChange
     public required ValueKind ValueKind { get; init; }
 
     /// <summary>
-    /// The values before; empty when the field is new, or when its localized values are equal
-    /// (the value after shows alone).
+    /// The values before; empty when the field is new, when its localized values are equal
+    /// (the value after shows alone), and for a text, which its segments carry.
     /// </summary>
     public required IReadOnlyList<ChangeValue> Before { get; init; }
 
-    /// <summary>The values after; empty when the field is gone.</summary>
+    /// <summary>The values after; empty when the field is gone, and for a text.</summary>
     public required IReadOnlyList<ChangeValue> After { get; init; }
 
     /// <summary>
     /// A text's diff, word by word (character by character in ja, zh, th), to write as text in
-    /// <c>&lt;del&gt;</c> and <c>&lt;ins&gt;</c>, never as HTML; empty for another kind.
+    /// <c>&lt;del&gt;</c> and <c>&lt;ins&gt;</c>, never as HTML; one <c>same</c> segment when
+    /// its localized texts are equal; empty for another kind.
     /// </summary>
     public required IReadOnlyList<TextSegment> Segments { get; init; }
 }
