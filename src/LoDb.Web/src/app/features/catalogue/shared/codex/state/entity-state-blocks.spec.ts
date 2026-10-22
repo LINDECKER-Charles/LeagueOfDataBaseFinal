@@ -122,6 +122,8 @@ describe('EntityStateBlocks', () => {
       'Patches 11.5.1 to 11.9.1',
       'Patch 10.1.1',
     ]);
+    const current = Array.from(block.querySelectorAll('[aria-current="page"]'), textOf);
+    expect(current).toEqual(['Patches 11.5.1 to 11.9.1']);
   });
 
   it('writes a text diff as text, struck out and inserted, never as HTML', async () => {

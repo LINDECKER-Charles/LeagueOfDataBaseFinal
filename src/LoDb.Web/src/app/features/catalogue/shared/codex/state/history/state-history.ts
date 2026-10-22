@@ -44,6 +44,8 @@ const NEXT_KEYS: Readonly<Record<StateNextKind, string>> = {
           <a
             class="hx-chip nav-link px-3 py-1.5 hover:text-hex"
             [class.text-hex]="row.isPage"
+            [class.font-semibold]="row.isPage"
+            [attr.aria-current]="row.isPage ? 'page' : null"
             [routerLink]="row.url"
             >{{ row.range }}</a
           >
