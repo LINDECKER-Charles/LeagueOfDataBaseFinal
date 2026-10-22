@@ -75,7 +75,12 @@ internal sealed class PatchCoverageReader(
         IReadOnlyDictionary<PatchVersion, IndexedPageCounts> indexed,
         PatchVersion version) =>
         indexed.TryGetValue(version, out var counts)
-            ? new PrerenderIndexedPages { Openers = counts.Openers }
+            ? new PrerenderIndexedPages
+            {
+                Openers = counts.Openers,
+                Frozen = counts.Frozen,
+                Revisable = counts.Revisable,
+            }
             : null;
 
     private static PrerenderPatchRow RowOf(

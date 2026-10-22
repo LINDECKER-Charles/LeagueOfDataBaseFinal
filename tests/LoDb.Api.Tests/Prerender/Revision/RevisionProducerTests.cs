@@ -1,0 +1,195 @@
+using LoDb.Api.Modules.Admin.Prerender.Promotion;
+using LoDb.Api.Modules.Admin.Prerender.Passes;
+using LoDb.Api.Modules.Admin.Prerender.Pages;
+using LoDb.Domain.Catalog;
+using LoDb.Domain.Languages;
+using LoDb.Infrastructure.Persistence.Prerender.Demand;
+using LoDb.Ingestion.Catalog.States.Snapshots;
+using LoDb.Ingestion.Pipeline.Versions;
+using LoDb.Testing;
+using LoDb.Testing.States;
+
+namespace LoDb.Api.Tests.Prerender.Revision;
+
+/// <summary>
+/// The producer of the queue of the closed states: at a promotion, every version of each state
+/// it closed but the one it made an older patch, in the 21 locales, due once the servers settle,
+/// for the served epoch and the active pass's; once each, through its watermark, whoever calls
+/// it; a new generation of the index is history, but for its last promotion.
+/// </summary>
+public sealed class RevisionProducerTests(PostgresContainerFixture postgres)
+{
+    private static readonly DateTimeOffset ClosedByPromotion = RevisionRig.BuiltAt.AddHours(1);
+
+    private static CancellationToken Token => TestContext.Current.CancellationToken;
+
+    [Fact]
+    public async Task PromotionEnqueuesTheOlderVersionsOfEachStateItClosedInEveryLocale()
+    {
+        await using var rig = await RevisionRig.StartAsync(postgres);
+        await rig.SettleAsync();
+        rig.Index(1, RevisionRig.Closed("16.8.1", "16.10.1", ClosedByPromotion));
+        var now = rig.Harness.Clock.GetUtcNow();
+
+        await Listener(rig).OnPromotedAsync(RevisionRig.Latest, Token);
+
+        var rows = await rig.RowsAsync();
+        Assert.Equal(2 * UiLocales.All.Count, rows.Count);
+        Assert.Equal(
+            ["16.8.1", "16.9.1"],
+            rows.Select(static row => row.Version).Distinct().Order(StringComparer.Ordinal));
+        Assert.Contains(rows, static row => row.Path == "/zh-hant/16.9.1/items/1036-long-sword");
+        Assert.All(rows, row =>
+        {
+            Assert.Equal(
+                (1, PrerenderDemandState.Pending, 0),
+                (row.Epoch, row.State, row.Attempts));
+            Assert.InRange(row.DueAt, now + TimeSpan.FromMinutes(21), now.AddMinutes(22));
+        });
+        Assert.Contains(
+            rig.Harness.Logs.GetSnapshot(),
+            static record => record.Id.Name == "prerender.revision.enqueued");
+    }
+
+    [Fact]
+    public async Task ClosureIsEnqueuedOnceWhoeverAsksAgain()
+    {
+        await using var rig = await RevisionRig.StartAsync(postgres);
+        await rig.SettleAsync();
+        rig.Index(1, RevisionRig.Closed("16.9.1", "16.10.1", ClosedByPromotion));
+
+        var first = await rig.Producer.ProduceAsync(RevisionRig.Latest, Token);
+        var again = await rig.Harness.Get<PrerenderReconciler>().ReconcileAsync(Token);
+        var rows = await rig.RowsAsync();
+
+        Assert.Equal((UiLocales.All.Count, 0), (first, again));
+        Assert.Equal(UiLocales.All.Count, rows.Count);
+        var mark = await rig.WatermarkAsync();
+        Assert.Equal((1L, ClosedByPromotion), (mark!.GenerationId, mark.ClosedThrough));
+    }
+
+    [Fact]
+    public async Task ActivePassOfAnotherEpochGetsThePagesTooWhateverItsScope()
+    {
+        await using var rig = await RevisionRig.StartAsync(postgres);
+        await rig.SettleAsync();
+        await rig.Harness.OpenAsync(new PassLaunch
+        {
+            Epoch = 2,
+            Scope = PassScope.Of(RevisionRig.Older) with { PageTypes = [ResourceType.Runes] },
+        });
+        rig.Index(1, RevisionRig.Closed("16.9.1", "16.10.1", ClosedByPromotion));
+
+        await rig.Producer.ProduceAsync(RevisionRig.Latest, Token);
+
+        var rows = await rig.RowsAsync();
+        Assert.Equal(
+            [(1, UiLocales.All.Count), (2, UiLocales.All.Count)],
+            rows.GroupBy(static row => row.Epoch)
+                .Select(static epoch => (epoch.Key, epoch.Count())));
+    }
+
+    [Fact]
+    public async Task ReconciliationEnqueuesTheClosedStatesWithoutAutomaticUnits()
+    {
+        await using var rig = await RevisionRig.StartAsync(postgres);
+        await rig.SettleAsync();
+        rig.Index(1, RevisionRig.Closed("16.9.1", "16.10.1", ClosedByPromotion));
+
+        var units = await rig.Harness.Get<PrerenderReconciler>().ReconcileAsync(Token);
+
+        Assert.Equal(0, units);
+        Assert.Equal(UiLocales.All.Count, (await rig.RowsAsync()).Count);
+    }
+
+    [Fact]
+    public async Task NewGenerationIsHistoryButForWhatItsLastPromotionClosedAfterIt()
+    {
+        await using var rig = await RevisionRig.StartAsync(postgres);
+        await rig.SettleAsync();
+        var history = RevisionRig.Closed("16.8.1", "16.8.1", RevisionRig.BuiltAt);
+        var rebuiltClosure = RevisionRig.Closed(
+            "16.9.1",
+            "16.10.1",
+            RevisionRig.BuiltAt,
+            new IndexedEntity(ResourceType.Items, "3078"));
+        var closedAfter = RevisionRig.Closed(
+            "16.9.1",
+            "16.10.1",
+            ClosedByPromotion,
+            new IndexedEntity(ResourceType.Items, "3001"));
+        rig.Index(2, history, rebuiltClosure, closedAfter);
+
+        await rig.Producer.ProduceAsync(null, Token);
+
+        var rows = await rig.RowsAsync();
+        Assert.All(rows, static row => Assert.EndsWith(
+            "/16.9.1/items/3001-long-sword",
+            row.Path,
+            StringComparison.Ordinal));
+        Assert.Equal(UiLocales.All.Count, rows.Count);
+        Assert.Equal(2L, (await rig.WatermarkAsync())!.GenerationId);
+    }
+
+    [Fact]
+    public async Task FirstRunTakesTheGenerationAsHistory()
+    {
+        await using var rig = await RevisionRig.StartAsync(postgres);
+        rig.Index(1, RevisionRig.Closed("16.8.1", "16.9.1", RevisionRig.BuiltAt));
+
+        var rows = await rig.Producer.ProduceAsync(null, Token);
+
+        Assert.Equal(0, rows);
+        var mark = await rig.WatermarkAsync();
+        Assert.Equal((1L, RevisionRig.BuiltAt), (mark!.GenerationId, mark.ClosedThrough));
+        Assert.Contains(
+            rig.Harness.Logs.GetSnapshot(),
+            static record => record.Id.Name == "prerender.revision.generation");
+    }
+
+    [Fact]
+    public async Task IndexThatDoesNotCoverThePromotionYetEnqueuesNothing()
+    {
+        await using var rig = await RevisionRig.StartAsync(postgres);
+        rig.Harness.Index.Snapshot = TestStates.Snapshot(
+            ["16.8.1", "16.9.1", "16.10.1"],
+            [RevisionRig.Closed("16.8.1", "16.9.1", ClosedByPromotion)]);
+
+        var rows = await rig.Producer.ProduceAsync(RevisionRig.Latest, Token);
+
+        Assert.Equal(0, rows);
+        Assert.Null(await rig.WatermarkAsync());
+        Assert.Contains(
+            rig.Harness.Logs.GetSnapshot(),
+            static record => record.Id.Name == "prerender.revision.index_behind");
+    }
+
+    [Fact]
+    public async Task CopyOfAnOlderGenerationThanTheWatermarkMovesNothing()
+    {
+        await using var rig = await RevisionRig.StartAsync(postgres);
+        rig.Index(3);
+        await rig.Producer.ProduceAsync(null, Token);
+        rig.Index(2, RevisionRig.Closed("16.9.1", "16.10.1", ClosedByPromotion));
+
+        var rows = await rig.Producer.ProduceAsync(null, Token);
+
+        Assert.Equal(0, rows);
+        Assert.Equal(3L, (await rig.WatermarkAsync())!.GenerationId);
+    }
+
+    [Fact]
+    public async Task NoIndexYetEnqueuesNothing()
+    {
+        await using var rig = await RevisionRig.StartAsync(postgres);
+        rig.Harness.Index.Snapshot = EntityStateSnapshot.Empty;
+
+        Assert.Equal(0, await rig.Producer.ProduceAsync(null, Token));
+        Assert.Null(await rig.WatermarkAsync());
+    }
+
+    private static IPromotionListener Listener(RevisionRig rig) =>
+        Assert.Single(
+            rig.Harness.Get<IEnumerable<IPromotionListener>>(),
+            static listener => listener is PrerenderPromotionListener);
+}

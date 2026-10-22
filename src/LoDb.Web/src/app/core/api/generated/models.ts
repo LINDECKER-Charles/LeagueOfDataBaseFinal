@@ -171,6 +171,8 @@ export type { PrerenderPatchesReport } from './models/prerender-patches-report';
 export type { PrerenderPatchRow } from './models/prerender-patch-row';
 export type { PrerenderReport } from './models/prerender-report';
 export type { PrerenderResourcesView } from './models/prerender-resources-view';
+export type { PrerenderRevisionEpoch } from './models/prerender-revision-epoch';
+export type { PrerenderRevisionReport } from './models/prerender-revision-report';
 export type { PrerenderScopeView } from './models/prerender-scope-view';
 export type { PrerenderSpeedLimits } from './models/prerender-speed-limits';
 export type { PrerenderSpeedReport } from './models/prerender-speed-report';

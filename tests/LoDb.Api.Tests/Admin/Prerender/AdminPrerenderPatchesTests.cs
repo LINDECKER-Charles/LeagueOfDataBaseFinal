@@ -69,7 +69,7 @@ public sealed class AdminPrerenderPatchesTests(PostgresContainerFixture postgres
     }
 
     [Fact]
-    public async Task EachCoveredPatchSaysWhatTheIndexExpectsOfIt()
+    public async Task EachCoveredPatchCountsItsOpenersFrozenAndRevisablePages()
     {
         using var admin = await AdminBrowser.OpenAsync(App);
         var item = new IndexedEntity(ResourceType.Items, "1001");
@@ -91,10 +91,13 @@ public sealed class AdminPrerenderPatchesTests(PostgresContainerFixture postgres
             .ToDictionary(
                 static row => row.GetProperty("version").GetString()!,
                 static row => row.GetProperty("indexed"));
-        Assert.Equal(
-            (1, 2),
-            (rows[Newer].GetProperty("openers").GetInt32(),
-                rows[Older].GetProperty("openers").GetInt32()));
+        Assert.Equal((1, 0, 2), Counts(rows[Newer]));
+        Assert.Equal((2, 1, 2), Counts(rows[Older]));
+
+        static (int, int, int) Counts(JsonElement indexed) => (
+            indexed.GetProperty("openers").GetInt32(),
+            indexed.GetProperty("frozen").GetInt32(),
+            indexed.GetProperty("revisable").GetInt32());
     }
 
     [Fact]

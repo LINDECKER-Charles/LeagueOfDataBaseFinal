@@ -8,8 +8,20 @@
 export interface PrerenderIndexedPages {
 
   /**
+   * The entity pages of the closed states it holds: stored `archived`, they never
+   * change again. Its lists and its patch page are frozen too, and not counted here.
+   */
+  frozen: number;
+
+  /**
    * The pages an openers pass renders: the patch page, when the patch has one, and the
    * pages that open a state at it, open or closed.
    */
   openers: number;
+
+  /**
+   * The entity pages of the open states it holds: stored `revisable`, each rendered
+   * again once a promotion closes its state.
+   */
+  revisable: number;
 }
