@@ -174,8 +174,24 @@
   },
   "detail": {
     "history": {
-      "title": "In früheren Patches",
-      "latest": "Im aktuellen Patch"
+      "title": "Verlauf",
+      "latest": "Im aktuellen Patch",
+      "since": "Seit Patch {{ version }}",
+      "single": "Patch {{ version }}",
+      "range": "Patches {{ first }} bis {{ last }}",
+      "new": "Neu",
+      "returned": "Zurück",
+      "changed_at": "Geändert in Patch {{ version }}",
+      "removed_at": "Entfernt in Patch {{ version }}"
+    },
+    "changes": {
+      "title": "Was sich in diesem Patch geändert hat",
+      "new": "Neu in diesem Patch",
+      "returned": "Zurück in diesem Patch",
+      "compared": "Verglichen mit Patch {{ version }}.",
+      "unchanged": "Unverändert seit Patch {{ version }}",
+      "yes": "Ja",
+      "no": "Nein"
     },
     "field": {
       "name": "Name",

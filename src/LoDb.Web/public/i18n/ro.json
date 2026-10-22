@@ -174,8 +174,24 @@
   },
   "detail": {
     "history": {
-      "title": "În patch-urile anterioare",
-      "latest": "În cel mai recent patch"
+      "title": "Istoric",
+      "latest": "În cel mai recent patch",
+      "since": "Din patch-ul {{ version }}",
+      "single": "Patch-ul {{ version }}",
+      "range": "Patch-urile {{ first }} – {{ last }}",
+      "new": "Nou",
+      "returned": "Revenit",
+      "changed_at": "Modificat în patch-ul {{ version }}",
+      "removed_at": "Eliminat în patch-ul {{ version }}"
+    },
+    "changes": {
+      "title": "Ce s-a schimbat în acest patch",
+      "new": "Nou în acest patch",
+      "returned": "Revenit în acest patch",
+      "compared": "Comparat cu patch-ul {{ version }}.",
+      "unchanged": "Neschimbat din patch-ul {{ version }}",
+      "yes": "Da",
+      "no": "Nu"
     },
     "field": {
       "name": "Nume",

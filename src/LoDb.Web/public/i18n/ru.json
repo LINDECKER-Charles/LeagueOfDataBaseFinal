@@ -174,8 +174,24 @@
   },
   "detail": {
     "history": {
-      "title": "В предыдущих патчах",
-      "latest": "В последнем патче"
+      "title": "История",
+      "latest": "В последнем патче",
+      "since": "С патча {{ version }}",
+      "single": "Патч {{ version }}",
+      "range": "Патчи {{ first }}–{{ last }}",
+      "new": "Новое",
+      "returned": "Вернулось",
+      "changed_at": "Изменено в патче {{ version }}",
+      "removed_at": "Удалено в патче {{ version }}"
+    },
+    "changes": {
+      "title": "Что изменилось в этом патче",
+      "new": "Новое в этом патче",
+      "returned": "Вернулось в этом патче",
+      "compared": "По сравнению с патчем {{ version }}.",
+      "unchanged": "Без изменений с патча {{ version }}",
+      "yes": "Да",
+      "no": "Нет"
     },
     "field": {
       "name": "Название",

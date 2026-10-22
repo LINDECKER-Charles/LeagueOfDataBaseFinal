@@ -192,8 +192,24 @@
       "back_to_list": "Back to list"
     },
     "history": {
-      "title": "In previous patches",
-      "latest": "In the latest patch"
+      "title": "History",
+      "latest": "In the latest patch",
+      "since": "Since patch {{ version }}",
+      "single": "Patch {{ version }}",
+      "range": "Patches {{ first }} to {{ last }}",
+      "new": "New",
+      "returned": "Back",
+      "changed_at": "Changed in patch {{ version }}",
+      "removed_at": "Removed in patch {{ version }}"
+    },
+    "changes": {
+      "title": "What changed in this patch",
+      "new": "New in this patch",
+      "returned": "Back in this patch",
+      "compared": "Compared with patch {{ version }}.",
+      "unchanged": "Unchanged since patch {{ version }}",
+      "yes": "Yes",
+      "no": "No"
     },
     "field": {
       "name": "Name",

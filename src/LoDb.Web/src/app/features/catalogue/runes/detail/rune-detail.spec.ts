@@ -10,7 +10,6 @@ import type { SeoPage } from '../../../../core/seo/seo-page';
 import { provideTestTransloco } from '../../../../core/testing/provide-test-transloco';
 import { CatalogueHead } from '../../shared/codex/head/catalogue-head';
 import type { CatalogueTexts } from '../../shared/codex/head/catalogue-texts';
-import { provideMeta } from '../../shared/testing/provide-meta';
 import { RuneDetail } from './rune-detail';
 import { detailStateOf } from '../../../../core/testing/detail-state-of';
 
@@ -73,7 +72,6 @@ async function render(entry = ENTRY) {
   const write = (_: string, build: (texts: CatalogueTexts) => SeoPage) => heads.push(build(TEXTS));
   TestBed.configureTestingModule({
     providers: [
-      provideMeta(),
       provideRouter([{ path: 'en/runes/:id', component: RuneDetail, data: { entry } }]),
       provideTestTransloco(),
       { provide: CatalogueHead, useValue: { write } },

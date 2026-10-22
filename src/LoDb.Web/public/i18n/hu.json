@@ -174,8 +174,24 @@
   },
   "detail": {
     "history": {
-      "title": "Korábbi patchekben",
-      "latest": "A legújabb patchben"
+      "title": "Előzmények",
+      "latest": "A legújabb patchben",
+      "since": "{{ version }} patch óta",
+      "single": "{{ version }} patch",
+      "range": "{{ first }}–{{ last }} patchek",
+      "new": "Új",
+      "returned": "Visszatért",
+      "changed_at": "Módosítva: {{ version }} patch",
+      "removed_at": "Eltávolítva: {{ version }} patch"
+    },
+    "changes": {
+      "title": "Mi változott ebben a patchben",
+      "new": "Új ebben a patchben",
+      "returned": "Visszatért ebben a patchben",
+      "compared": "Összevetve: {{ version }} patch.",
+      "unchanged": "Változatlan {{ version }} patch óta",
+      "yes": "Igen",
+      "no": "Nem"
     },
     "field": {
       "name": "Név",

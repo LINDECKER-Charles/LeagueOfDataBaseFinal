@@ -174,8 +174,24 @@
   },
   "detail": {
     "history": {
-      "title": "過去のパッチ",
-      "latest": "最新パッチ"
+      "title": "履歴",
+      "latest": "最新パッチ",
+      "since": "パッチ {{ version }} 以降",
+      "single": "パッチ {{ version }}",
+      "range": "パッチ {{ first }}〜{{ last }}",
+      "new": "新規",
+      "returned": "復帰",
+      "changed_at": "パッチ {{ version }} で変更",
+      "removed_at": "パッチ {{ version }} で削除"
+    },
+    "changes": {
+      "title": "このパッチでの変更点",
+      "new": "このパッチで追加",
+      "returned": "このパッチで復帰",
+      "compared": "パッチ {{ version }} との比較。",
+      "unchanged": "パッチ {{ version }} から変更なし",
+      "yes": "はい",
+      "no": "いいえ"
     },
     "field": {
       "name": "名前",

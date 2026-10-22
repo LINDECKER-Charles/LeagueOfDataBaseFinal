@@ -174,8 +174,24 @@
   },
   "detail": {
     "history": {
-      "title": "Trong các phiên bản trước",
-      "latest": "Trong phiên bản mới nhất"
+      "title": "Lịch sử",
+      "latest": "Trong phiên bản mới nhất",
+      "since": "Từ phiên bản {{ version }}",
+      "single": "Phiên bản {{ version }}",
+      "range": "Phiên bản {{ first }} đến {{ last }}",
+      "new": "Mới",
+      "returned": "Trở lại",
+      "changed_at": "Thay đổi ở phiên bản {{ version }}",
+      "removed_at": "Bị gỡ ở phiên bản {{ version }}"
+    },
+    "changes": {
+      "title": "Những thay đổi trong phiên bản này",
+      "new": "Mới trong phiên bản này",
+      "returned": "Trở lại trong phiên bản này",
+      "compared": "So với phiên bản {{ version }}.",
+      "unchanged": "Không đổi từ phiên bản {{ version }}",
+      "yes": "Có",
+      "no": "Không"
     },
     "field": {
       "name": "Tên",

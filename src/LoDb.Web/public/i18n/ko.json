@@ -174,8 +174,24 @@
   },
   "detail": {
     "history": {
-      "title": "이전 패치에서",
-      "latest": "최신 패치에서"
+      "title": "기록",
+      "latest": "최신 패치에서",
+      "since": "패치 {{ version }}부터",
+      "single": "패치 {{ version }}",
+      "range": "패치 {{ first }}~{{ last }}",
+      "new": "신규",
+      "returned": "복귀",
+      "changed_at": "패치 {{ version }}에서 변경",
+      "removed_at": "패치 {{ version }}에서 제거"
+    },
+    "changes": {
+      "title": "이번 패치의 변경 사항",
+      "new": "이번 패치에서 추가",
+      "returned": "이번 패치에서 복귀",
+      "compared": "패치 {{ version }}과(와) 비교.",
+      "unchanged": "패치 {{ version }} 이후 변경 없음",
+      "yes": "예",
+      "no": "아니요"
     },
     "field": {
       "name": "이름",

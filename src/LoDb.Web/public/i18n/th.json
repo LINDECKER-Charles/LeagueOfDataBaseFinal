@@ -174,8 +174,24 @@
   },
   "detail": {
     "history": {
-      "title": "ในแพตช์ก่อนหน้า",
-      "latest": "ในแพตช์ล่าสุด"
+      "title": "ประวัติ",
+      "latest": "ในแพตช์ล่าสุด",
+      "since": "ตั้งแต่แพตช์ {{ version }}",
+      "single": "แพตช์ {{ version }}",
+      "range": "แพตช์ {{ first }} ถึง {{ last }}",
+      "new": "ใหม่",
+      "returned": "กลับมา",
+      "changed_at": "เปลี่ยนในแพตช์ {{ version }}",
+      "removed_at": "ถูกนำออกในแพตช์ {{ version }}"
+    },
+    "changes": {
+      "title": "สิ่งที่เปลี่ยนในแพตช์นี้",
+      "new": "ใหม่ในแพตช์นี้",
+      "returned": "กลับมาในแพตช์นี้",
+      "compared": "เทียบกับแพตช์ {{ version }}",
+      "unchanged": "ไม่เปลี่ยนตั้งแต่แพตช์ {{ version }}",
+      "yes": "ใช่",
+      "no": "ไม่"
     },
     "field": {
       "name": "ชื่อ",

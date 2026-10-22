@@ -13,7 +13,6 @@ import type { CatalogueEntry } from '../../../../core/routing/catalogue/catalogu
 import { Seo } from '../../../../core/seo/seo';
 import type { SeoPage } from '../../../../core/seo/seo-page';
 import { provideTestTransloco } from '../../../../core/testing/provide-test-transloco';
-import { provideMeta } from '../../shared/testing/provide-meta';
 import { ChampionPage } from './champion-page';
 import { detailStateOf } from '../../../../core/testing/detail-state-of';
 
@@ -98,7 +97,6 @@ async function visit(details: ChampionDetails, url = '/en/champions/Annie') {
     providers: [
       provideHttpClient(),
       provideHttpClientTesting(),
-      provideMeta(),
       provideRouter([
         { path: 'en/champions/:id', resolve: { entry: () => entry }, component: ChampionPage },
         { path: '**', component: Blank },

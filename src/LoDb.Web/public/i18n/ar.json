@@ -174,8 +174,24 @@
   },
   "detail": {
     "history": {
-      "title": "في الإصدارات السابقة",
-      "latest": "في أحدث إصدار"
+      "title": "السجل",
+      "latest": "في أحدث إصدار",
+      "since": "منذ الإصدار {{ version }}",
+      "single": "الإصدار {{ version }}",
+      "range": "الإصدارات {{ first }} إلى {{ last }}",
+      "new": "جديد",
+      "returned": "عاد",
+      "changed_at": "تغيّر في الإصدار {{ version }}",
+      "removed_at": "أُزيل في الإصدار {{ version }}"
+    },
+    "changes": {
+      "title": "ما الذي تغيّر في هذا الإصدار",
+      "new": "جديد في هذا الإصدار",
+      "returned": "عاد في هذا الإصدار",
+      "compared": "مقارنةً بالإصدار {{ version }}.",
+      "unchanged": "دون تغيير منذ الإصدار {{ version }}",
+      "yes": "نعم",
+      "no": "لا"
     },
     "field": {
       "name": "الاسم",

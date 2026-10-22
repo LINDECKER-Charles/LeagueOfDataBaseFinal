@@ -174,8 +174,24 @@
   },
   "detail": {
     "history": {
-      "title": "在先前的版本中",
-      "latest": "在最新版本中"
+      "title": "歷史",
+      "latest": "在最新版本中",
+      "since": "自版本 {{ version }} 起",
+      "single": "版本 {{ version }}",
+      "range": "版本 {{ first }} 至 {{ last }}",
+      "new": "新增",
+      "returned": "回歸",
+      "changed_at": "於版本 {{ version }} 變更",
+      "removed_at": "於版本 {{ version }} 移除"
+    },
+    "changes": {
+      "title": "本版本的變更",
+      "new": "本版本新增",
+      "returned": "本版本回歸",
+      "compared": "與版本 {{ version }} 比較。",
+      "unchanged": "自版本 {{ version }} 起未變更",
+      "yes": "是",
+      "no": "否"
     },
     "field": {
       "name": "名稱",

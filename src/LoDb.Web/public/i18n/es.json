@@ -174,8 +174,24 @@
   },
   "detail": {
     "history": {
-      "title": "En parches anteriores",
-      "latest": "En el último parche"
+      "title": "Historial",
+      "latest": "En el último parche",
+      "since": "Desde el parche {{ version }}",
+      "single": "Parche {{ version }}",
+      "range": "Parches {{ first }} a {{ last }}",
+      "new": "Nuevo",
+      "returned": "De vuelta",
+      "changed_at": "Cambiado en el parche {{ version }}",
+      "removed_at": "Retirado en el parche {{ version }}"
+    },
+    "changes": {
+      "title": "Qué cambió en este parche",
+      "new": "Nuevo en este parche",
+      "returned": "De vuelta en este parche",
+      "compared": "Comparado con el parche {{ version }}.",
+      "unchanged": "Sin cambios desde el parche {{ version }}",
+      "yes": "Sí",
+      "no": "No"
     },
     "field": {
       "name": "Nombre",

@@ -174,8 +174,24 @@
   },
   "detail": {
     "history": {
-      "title": "V předchozích patchích",
-      "latest": "V nejnovějším patchi"
+      "title": "Historie",
+      "latest": "V nejnovějším patchi",
+      "since": "Od patche {{ version }}",
+      "single": "Patch {{ version }}",
+      "range": "Patche {{ first }} až {{ last }}",
+      "new": "Nové",
+      "returned": "Zpět",
+      "changed_at": "Změněno v patchi {{ version }}",
+      "removed_at": "Odstraněno v patchi {{ version }}"
+    },
+    "changes": {
+      "title": "Co se v tomto patchi změnilo",
+      "new": "Nové v tomto patchi",
+      "returned": "Zpět v tomto patchi",
+      "compared": "Ve srovnání s patchem {{ version }}.",
+      "unchanged": "Beze změny od patche {{ version }}",
+      "yes": "Ano",
+      "no": "Ne"
     },
     "field": {
       "name": "Název",

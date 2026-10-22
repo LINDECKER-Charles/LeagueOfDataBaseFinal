@@ -174,8 +174,24 @@
   },
   "detail": {
     "history": {
-      "title": "Di patch sebelumnya",
-      "latest": "Di patch terbaru"
+      "title": "Riwayat",
+      "latest": "Di patch terbaru",
+      "since": "Sejak patch {{ version }}",
+      "single": "Patch {{ version }}",
+      "range": "Patch {{ first }} hingga {{ last }}",
+      "new": "Baru",
+      "returned": "Kembali",
+      "changed_at": "Diubah di patch {{ version }}",
+      "removed_at": "Dihapus di patch {{ version }}"
+    },
+    "changes": {
+      "title": "Apa yang berubah di patch ini",
+      "new": "Baru di patch ini",
+      "returned": "Kembali di patch ini",
+      "compared": "Dibandingkan dengan patch {{ version }}.",
+      "unchanged": "Tidak berubah sejak patch {{ version }}",
+      "yes": "Ya",
+      "no": "Tidak"
     },
     "field": {
       "name": "Nama",

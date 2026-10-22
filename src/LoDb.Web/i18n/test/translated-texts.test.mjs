@@ -1,6 +1,6 @@
-// The texts no locale may leave to the `en` fallback: the patch history, and the links that
-// lead to it from every page of the catalogue (the footer, the previous patches of a detail),
-// and what the head of a state's opener says of it. The other scopes are not all translated
+// The texts no locale may leave to the `en` fallback: the patch history, the links that lead
+// to it from every page of the catalogue (the footer, the history of a detail), and what a
+// detail and its head say of its entity's states. The other scopes are not all translated
 // yet (`npm run i18n:report`), hence a list of keys.
 import assert from 'node:assert/strict';
 import { join } from 'node:path';
@@ -13,8 +13,8 @@ const PATCHES = 'patches';
 const SEO = 'seo';
 const ROOT = '';
 const ROOT_KEYS = ['footer.navigation.patches', 'detail.history.title'];
-// Every key of en under these, in every locale: the field labels of the states.
-const ROOT_GROUPS = ['detail.field'];
+// Every key of en under these, in every locale: the blocks of a detail and their field labels.
+const ROOT_GROUPS = ['detail.history', 'detail.changes', 'detail.field'];
 const SEO_KEYS = [
   'state_range_suffix',
   'state.summary',
@@ -77,7 +77,7 @@ describe('the texts translated in every locale', () => {
     }
   });
 
-  test('the field labels of the states, with the same parameters', () => {
+  test('the blocks of the states and their field labels, with the same parameters', () => {
     for (const group of ROOT_GROUPS) {
       const reference = valueAt(scopes.get(ROOT).get(REFERENCE), group);
       for (const locale of locales) {
