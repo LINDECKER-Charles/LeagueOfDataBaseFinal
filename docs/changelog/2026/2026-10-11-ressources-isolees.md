@@ -2,7 +2,7 @@
 date: 2026-10-11
 type: perf
 scope: full-stack
-title: Le site tient mieux la charge, et la mesure d'audience ne garde plus votre adresse IP
+title: Le site tient mieux la charge et la mesure d'audience oublie votre adresse IP
 summary: Chaque partie du site a sa part du serveur, et la mesure d'audience n'enregistre plus ni votre adresse IP ni votre navigateur.
 tags: [disponibilite, performance, confidentialite]
 ---

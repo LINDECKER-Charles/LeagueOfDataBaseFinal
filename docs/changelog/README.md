@@ -56,6 +56,16 @@ dans archived/YYYY/ — la racine YYYY/ ne contient plus que le backlog de la pr
 - Si du contexte technique est utile, l'isoler en fin sous `## Technique`.
 - Pas d'emoji dans le frontmatter ni le titre.
 
+## Entrée remplacée avant la release
+
+Quand un changement remplace le comportement d'une entrée encore dans `YYYY/`, l'ancienne
+entrée reçoit, juste sous son frontmatter, une note qui dit ce qui ne vaut plus :
+
+    > **Remplacé le AAAA-MM-JJ** par [`slug`](AAAA-MM-JJ-slug.md) : ce qui ne vaut plus.
+
+La synthèse de la release publie le dernier état et ne reprend jamais ce qu'une note déclare
+remplacé.
+
 ## Workflow
 
 ### Quotidien (journal technique)
@@ -67,6 +77,9 @@ dans archived/YYYY/ — la racine YYYY/ ne contient plus que le backlog de la pr
 
 ### Avant chaque release publique
 
-1. Synthétiser le contenu de YYYY/ dans le changelog public (si le projet en a un).
+1. Synthétiser le contenu de YYYY/ en une release du changelog public : un fichier
+   `<id>.json` dans `src/LoDb.Web/src/app/features/editorial/changelog/published/`, que la
+   page `/changelog` lit, et sa ligne dans `manifest.json` du même dossier (scope de commit
+   `changelog`). Les entrées marquées « Remplacé » ne passent que pour leur dernier état.
 2. Déplacer toutes les entrées synthétisées vers archived/YYYY/.
 3. YYYY/ redevient le slot vide pour la prochaine release.

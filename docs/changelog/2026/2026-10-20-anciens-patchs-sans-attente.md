@@ -35,8 +35,8 @@ masse.
 - `X-LoDb-Source: cache|store|ssr` sur ces pages, pour le journal de l'edge : une part de `ssr`
   qui reste haute après une passe signale un stockage illisible (politique, adresse du VPS).
 - Un client au-delà de son débit garde sa 429 et son `Retry-After` ; la 429 du stockage
-  (limitation de Scaleway) mène au SSR. `LODB_PAGES_STORE_ENABLED=0` (local, CI) ne demande
-  jamais rien au stockage.
+  (limitation de Scaleway) mène au SSR. `LODB_PAGES_STORE_ENABLED=0` (défaut de `compose.yaml`)
+  ne demande jamais rien au stockage ; la pile de développement l'allume sur le stockage simulé.
 - Mesure : 503 par jour du site et rendus épinglés refusés
   (`lodb_ssr_renders_total{lane="pinned",outcome="refused"}`), avant et 7 jours après la fin de
   la première passe (lot 5).

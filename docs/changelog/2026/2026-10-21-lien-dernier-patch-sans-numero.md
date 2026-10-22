@@ -2,7 +2,7 @@
 date: 2026-10-21
 type: fix
 scope: front
-title: Le lien « Dans le dernier patch » d'un ancien patch ne nomme plus un patch dépassé
+title: Le lien « Dans le dernier patch » ne nomme plus un patch dépassé
 summary: Sur la fiche d'un ancien patch, le lien vers la même fiche au dernier patch ne porte plus de numéro de version, qui pouvait rester celui d'un patch précédent.
 tags: [catalogue]
 ---

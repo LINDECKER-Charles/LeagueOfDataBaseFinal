@@ -7,6 +7,11 @@ summary: Tous les patchs publiés par Riot sont listés sur une seule page, chac
 tags: [navigation, anciens-patchs, referencement]
 ---
 
+> **Remplacé en partie le 2026-10-14** par [`une-fiche-par-entite-dans-google`](2026-10-14-une-fiche-par-entite-dans-google.md) :
+> les pages des anciens patchs ne sont plus « canoniques et indexables », et l'index des
+> sitemaps n'annonce plus que le dernier patch (fenêtre à 0, plus 12). La page « Historique
+> des patchs » et le bloc « Dans les patchs précédents » valent toujours.
+
 ## Ce qui change
 
 Le pied de page mène à une nouvelle page, « Historique des patchs ». Elle liste tous les
