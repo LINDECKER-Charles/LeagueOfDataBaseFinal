@@ -11,7 +11,10 @@
   traîne est borné à chaque étage de l'API (voir § « Amendement du 2026-10-10 »). Le
   2026-10-11, un warm-up dont les images sont refusées se termine `done` (même section,
   point 4). Le 2026-10-20, la tâche de précalcul du catalogue (voir § « Amendement du
-  2026-10-20 »).
+  2026-10-20 »). Le 2026-10-22, les écouteurs de promotion s'exécutent dans un ordre qu'ils
+  déclarent, l'index des états a sa tâche de réconciliation et les pages des états clos sont
+  pré-calculées de nouveau sans dépendre de `AutoEnqueueOnPromotion` (voir § « Amendement
+  du 2026-10-22 ») : décidé, pas encore implémenté.
 - **Suivi** (2026-10-22), écarts entre la table des tâches et le code :
   - le rollup des analytics tourne toutes les 5 minutes (`analytics.rollup`) ;
   - la rétention (`analytics.retention`, quotidienne) supprime les événements bruts à
@@ -229,3 +232,48 @@ Le catalogue pré-rendu ([ADR 0011](0011-catalogue-pre-rendu-et-cdn.md)) ajoute 
   rapprochement rattrape un avis perdu. Les deux obéissent à
   `LoDb:Prerender:AutoEnqueueOnPromotion`, faux au staging et en prod tant que la passe
   complète n'est pas terminée, puis vrai en prod.
+
+## Amendement du 2026-10-22 — index des états et ordre de la promotion
+
+*Décidé, pas encore implémenté (lots L0, L2 et L6 de la
+[spécification](../../produit/seo-une-page-par-etat.md)) : il part au même déploiement que la
+règle par état de l'[ADR 0005](0005-web-ssr-urls-et-seo.md) (amendement du 2026-10-22).*
+
+La règle par état lit un index des états d'entité, tenu en Postgres, que chaque promotion
+étend avant tout le reste. Or `VersionIngestion` appelle aujourd'hui les écouteurs dans
+l'ordre de leur enregistrement : IndexNow passe avant le précalcul. Et le précalcul d'une
+promotion ne sait refaire que des unités entières (version, langue), pas les pages précises
+des états qu'elle clôt.
+
+| Tâche | Fréquence | Remplace |
+|---|---|---|
+| Réconciliation de l'index des états (`Workers/Catalog/`) | toutes les 10 minutes, une instance à la fois | rien : elle rattrape une promotion dont l'étape de l'index a échoué ou s'est faite dans un autre processus |
+| Précalcul des pages des états clos (file `prerender_revision`) | continu, tant que la file a des lignes | rien : sans elle, une page révisable stockée garderait sa canonique périmée |
+
+- **Écouteurs ordonnés** : `IPromotionListener` déclare son étape (`PromotionStage` :
+  `StateIndex`, `Prerender`, `Announce`), et `VersionIngestion.NotifyAsync` les appelle dans
+  cet ordre, par un tri stable, quel que soit leur enregistrement. Le reste ne change pas : un
+  écouteur n'est appelé qu'une fois, sur l'instance qui a promu, sans nouvel essai ; son échec
+  est journalisé sans annuler la promotion.
+- **Ce qui a changé se lit dans l'index** : les étapes `Prerender` et `Announce` y lisent
+  les états que la promotion a clos. Si l'index ne couvre pas la version promue, elles
+  journalisent et s'arrêtent.
+- **Réconciliation de l'index** : une tâche périodique (`PeriodicJob`) qui étend l'index
+  jusqu'au dernier patch promu, version listée par version listée, en ingérant l'en_US d'une
+  version intermédiaire qui manque (en_US seulement). Elle ne garantit pas de passage au
+  démarrage. Toute écriture de l'index, la sienne, celle de la promotion et celle de la
+  commande `catalog states build`, prend le verrou consultatif `catalog:states`.
+- **Copie en mémoire** de l'index : chaque instance tient la sienne et la recharge d'elle-même
+  quand la génération ou la couverture change (vérifié toutes les `VersionsLifetime`), sans
+  verrou consultatif, comme `LatestCatalogWarmer`. Elle ne dépend jamais du processus qui a
+  promu, que la commande `ingest` peut être.
+- **Pages des états clos** : après chaque extension de l'index, l'écouteur `Prerender` et le
+  rapprochement du précalcul mettent en file, de façon idempotente (une marque sur la
+  dernière clôture traitée), les pages de toutes les versions de chaque état nouvellement
+  clos, dans les 21 langues, pour l'epoch servie et pour celle qu'écrit la passe active. Un
+  worker les rend par le chemin de la file de la demande, dont il partage les places.
+- **`LoDb:Prerender:AutoEnqueueOnPromotion`** ne commande plus que l'unité de la version qui
+  quitte le dernier patch (écouteur et rapprochement). La file des états clos n'en dépend
+  pas : elle tourne dès que le stockage est configuré, staging compris.
+- **Une ligne de synthèse par lot**, jamais une par page ni par état ; métriques sans
+  version, langue ni adresse en label.
