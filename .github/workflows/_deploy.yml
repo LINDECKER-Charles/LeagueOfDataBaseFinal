@@ -21,7 +21,8 @@ name: _deploy
 # the baseline first. The legacy `storage` and `app_state` volumes are left untouched.
 #
 # Order (heritage.md F3, ADR 0010): pull, migrations in the ephemeral `migrate` container,
-# then `up -d`, then smoke tests. A failed migration stops the job while the running
+# the index of entity states in the ephemeral `states` one, then the maintenance page and
+# `up -d`, then smoke tests. A failed migration or index build stops the job while the running
 # containers keep serving.
 on:
   workflow_call:
@@ -193,7 +194,7 @@ jobs:
           printf '%s' "$DATA_PROTECTION_PFX" | base64 -d \
             | ssh "$ssh_target" "umask 022 && cat > $remote_path/.deploy/data-protection.pfx"
 
-      - name: Deploy (pull, migrate, up, smoke test)
+      - name: Deploy (pull, migrate, index, up, smoke test)
         env:
           GHCR_USER: ${{ github.actor }}
           GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -541,6 +542,14 @@ jobs:
             # keeps the API's role (lodb_app) and sets its password from .deploy/secrets, before
             # `up` recreates the API, which signs in with it.
             docker compose run --rm migrate
+
+            # The index of entity states, caught up before the maintenance page while the running
+            # stack serves (its tables are additive, the image in place ignores them): the first
+            # build reads the en_US catalogs of every covered version, later ones extend the
+            # index or do nothing, and the run inside `up` finds nothing to do. A failure stops
+            # the job here, the running containers still serving. Without its dependencies:
+            # migrate has just run.
+            docker compose run --rm --no-deps states
 
             # --wait: the job fails if a probe does not turn healthy. --remove-orphans
             # retires the containers of the legacy stack (php, go-fetcher, go-api, mailer).
