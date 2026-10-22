@@ -100,6 +100,13 @@ la réutilisent. Avant de rendre un travail, elle se reconstruit avec
 | `mailpit` | interface des e-mails de dev | 18025 | `LODB_MAIL_PORT` |
 | `pages-store` | stockage objet simulé des pages pré-rendues (moto, l'API S3 en mémoire ; 5000 dans le réseau, alias `lodb-pages-store`), bucket `lodb-pages-dev` ([`configuration.md`](configuration.md), § 7) | aucun | — |
 
+Deux conteneurs éphémères passent avant l'API, qui attend leur réussite : `migrate`
+(migrations, rôles) puis `states` (`catalog states build`, l'index des états d'entité,
+[`configuration.md`](configuration.md) § 4.12). Avant toute promotion, `states` ne fait rien ;
+la première promotion construit alors l'index dans l'API. Il ne couvre ensuite que les
+versions consécutives dont l'en_US est stocké, jusqu'au dernier patch : sur une pile neuve,
+souvent la seule dernière version, sans page de patch ni historique.
+
 Vérifier la stack :
 
 ```bash
@@ -261,6 +268,13 @@ Les deux causes connues sont corrigées ([rapport du jalon](../reecriture/rappor
 multi-lignes du SSR, qu'écrit désormais en une ligne JSON son dernier gestionnaire
 d'erreurs (`src/server/failure-handler.ts`). Une nouvelle ligne hors JSON ne se filtre pas :
 corrigez-la à la source.
+
+**L'API ne démarre pas, `states` a échoué.** `docker compose -p lodb-dev -f compose.yaml -f
+compose.override.yaml logs states` : `states.build.failed` dit que la liste des versions de
+Data Dragon est illisible alors qu'aucun index n'existe (réseau coupé) ; relancer une fois le
+réseau rétabli. Un historique plus long s'obtient en ingérant l'en_US de chaque version listée
+depuis la plus ancienne voulue (`ingest --version <v> --languages en_US`), puis en relançant
+`states`, qui reconstruit l'index sur le nouveau début de couverture.
 
 **Les E2E ne trouvent pas de navigateur.** Relancez
 `npm --prefix tests/LoDb.E2E run browsers:install`.

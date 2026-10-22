@@ -10,7 +10,7 @@ Le transport et les requêtes : [`observabilite.md`](observabilite.md). Les mét
 
 - **stdout, une ligne JSON par événement**, et rien d'autre. Le driver `json-file`
   (`x-logging` de `compose.yaml`) les garde, Vector les collecte ; un fichier n'est jamais lu.
-- `api` et `migrate` (même image) écrivent par `AddLoDbJsonConsole()`
+- `api`, `migrate` et `states` (même image) écrivent par `AddLoDbJsonConsole()`
   (`Hosting/Logging/LoggingRegistration.cs`), posé par `AddLoDbCommon` pour l'hôte web comme
   pour les commandes. `web-ssr` et `web-ssr-prerender` écrivent par `createLogger()` (pino).
 - `nginx` et `postgres` écrivent du texte, hors de cette convention : nginx ses seules
@@ -23,7 +23,7 @@ Le transport et les requêtes : [`observabilite.md`](observabilite.md). Les mét
 
 ## La ligne
 
-| Rôle | API (`api`, `migrate`) | SSR (`web-ssr`, `web-ssr-prerender`) |
+| Rôle | API (`api`, `migrate`, `states`) | SSR (`web-ssr`, `web-ssr-prerender`) |
 |---|---|---|
 | Horodatage UTC | `Timestamp` (`2026-09-26T08:30:15.250Z`) | `time` (ISO 8601) |
 | Niveau | `LogLevel` : `Information`, `Warning`, `Error`, `Critical` | `level` : `info`, `warn`, `error` |
@@ -145,7 +145,9 @@ Jamais une ligne par URL, par fichier ou par page : une par lot, avec ses compte
 |---|---|
 | `prerender.unit.completed` | (version, langue) de la passe de précalcul |
 | `prerender.demand.drained` | lot de la file automatique |
-| `seo.indexnow.submitted` | version soumise (`{Urls}`, `{Requests}`) |
+| `prerender.revision.drained` | lot de la file des états clos ; `prerender.revision.enqueued` par passage du producteur |
+| `states.update.completed` | mise à jour de l'index des états (commande, promotion, réconciliation), avec les comptes par ressource ; `states.update.progress` toutes les 50 versions d'une construction |
+| `seo.indexnow.submitted` | version soumise (`{Urls}`, `{Requests}`) ; sans clé IndexNow, `seo.indexnow.planned` (URL courtes, pages de patch, ouvreurs, rien d'envoyé) |
 | `fetch.batch.degraded` | lot de téléchargements (`{Failed} of {Batch}`) |
 | `web.csp.violated`, `ssr.admission.summary` | intervalle (une minute) |
 

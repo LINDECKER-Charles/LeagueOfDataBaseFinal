@@ -7,7 +7,7 @@ summary: Le plan du site date chaque page du dernier patch de sa mise en ligne, 
 tags: [seo, patchs]
 ---
 
-> **Remplacé en partie le 2026-10-22** par [`seo-une-page-par-etat`](../../produit/seo-une-page-par-etat.md) :
+> **Remplacé en partie le 2026-10-22** par [`une-page-par-etat-dans-google`](2026-10-22-une-page-par-etat-dans-google.md) :
 > les sitemaps des anciens patchs ne restent plus sans date. Une page d'ouverture d'un état
 > porte la date de clôture de l'état, la page des changements d'un patch celle de la
 > promotion qui l'a fait passer (ou de la reconstruction de l'index), et chaque entrée de

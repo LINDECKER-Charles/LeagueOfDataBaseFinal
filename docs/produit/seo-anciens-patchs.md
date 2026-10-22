@@ -7,14 +7,15 @@ site lui présente des dizaines de milliers de pages quasi identiques : chaque e
 chaque patch épinglé et dans chaque langue.
 
 > **Réalisé le 2026-10-14** (PR #67, [ADR 0005](../reecriture/adr/0005-web-ssr-urls-et-seo.md),
-> amendement du 2026-10-14) : c'est la règle que le code applique aujourd'hui. Les 301 de
-> l'ancienne grammaire, hors périmètre ci-dessous, ont changé le 2026-10-16 (PR #71, amendement
-> du 2026-10-16). Règle en vigueur : [`seo-indexabilite.md`](seo-indexabilite.md).
+> amendement du 2026-10-14). Les 301 de l'ancienne grammaire, hors périmètre ci-dessous, ont
+> changé le 2026-10-16 (PR #71, amendement du 2026-10-16). Règle en vigueur :
+> [`seo-indexabilite.md`](seo-indexabilite.md).
 >
-> **Suite, le 22 octobre 2026** : la règle qui a suivi ce diagnostic (une page indexée par
-> entité, celle du dernier patch) laisse tout l'historique hors de Google. Elle sera remplacée
-> par une page indexée par état d'entité, décidée mais pas encore implémentée :
-> [`seo-une-page-par-etat.md`](seo-une-page-par-etat.md).
+> **Remplacé le 22 octobre 2026** : la règle qui a suivi ce diagnostic (une page indexée par
+> entité, celle du dernier patch) laisse tout l'historique hors de Google. Le code applique
+> désormais une page indexée par état d'entité
+> ([`seo-une-page-par-etat.md`](seo-une-page-par-etat.md)) ; la prod garde la règle du
+> 14 octobre jusqu'à la bascule de son déploiement.
 
 ## 1. Constat (Search Console, relevé le 14 octobre 2026)
 

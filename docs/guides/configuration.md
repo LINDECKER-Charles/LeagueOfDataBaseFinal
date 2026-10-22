@@ -260,12 +260,12 @@ création d'une base, sur un volume vide.
 | `LODB_HTML_GZIP_LEVEL` | ➖ | ➖ | ➖ | Niveau gzip (`6`, de `1` à `9`) auquel le SSR compresse une page, une fois par rendu ; nginx garde la copie compressée. |
 | `LODB_API_META_TTL_SECONDS` | ➖ | ➖ | ➖ | Durée (`60`, le `max-age` de l'API) pendant laquelle le SSR réutilise sa copie de `/api/meta` pour tous les rendus ; quand l'API ne répond pas, il sert la dernière. |
 | `LODB_PAGES_RATE`, `LODB_PAGES_BURST`, `LODB_API_READS_*`, `LODB_LEGACY_*`, `LODB_SITEMAPS_*`, `LODB_READYZ_*`, `LODB_RATE_LIMITED_RETRY_AFTER`, `LODB_MAX_BODY_SIZE`, `LODB_WEBHOOK_MAX_BODY_SIZE`, `LODB_PAGE_CACHE_SIZE`, `LODB_PAGE_CACHE_KEYS_SIZE`, `LODB_PAGE_CACHE_INACTIVE`, `LODB_ARCHIVE_CACHE_SIZE`, `LODB_ARCHIVE_CACHE_KEYS_SIZE`, `LODB_ARCHIVE_CACHE_INACTIVE`, `LODB_ASSETS_CACHE_SIZE`, `LODB_ASSETS_CACHE_KEYS_SIZE`, `LODB_ASSETS_CACHE_INACTIVE` | ➖ | ➖ | ➖ | Bornes de nginx, par adresse : débit (`_RATE`) et rafale (`_BURST`) des pages (`20r/s`, `100`), des lectures publiques de l'API (`10r/s`, `40`), de l'ancien site (`2r/s`, `10`), de `/sitemaps/` (`1r/s`, `20`) et de `/readyz` (`1r/s`, `5`), au-delà `429` avec `Retry-After` (`10`) ; corps de requête (`128k`, `1m` pour `/webhooks/`) ; cache des pages du dernier patch (`2g`, clés `32m`, inactivité `24h`), des anciens patchs (`20g`, clés `64m`, inactivité `90d` : la copie chaude du stockage objet, § 4.8) et des bundles de `/build/` (`1g`, clés `8m`, inactivité `30d`), soit ≈ 23 Go de disque au plus. Absents ou vides : ces défauts, ceux de `docker/nginx/Dockerfile`, que `compose.yaml` reprend (`tools/nginx` vérifie l'accord). |
-| `LODB_ARCHIVE_EPOCH` | ➖ | ➖ | ➖ | Première partie de la clé du cache des anciens patchs (`3`), leur seule purge : voir « Monter l'epoch des anciens patchs » ci-dessous. |
+| `LODB_ARCHIVE_EPOCH` | ➖ | ➖ | ➖ | Première partie de la clé du cache des anciens patchs (`3`), qu'on ne monte qu'à la main : voir « Monter l'epoch des anciens patchs » ci-dessous. Changer `LODB_ARCHIVE_SERVE_EPOCH`, la seconde partie, purge déjà ce cache : la bascule vers une page indexée par état la laisse à `3`. |
 | `LODB_ARCHIVE_CACHE_MIN_USES` | ➖ | ➖ | ➖ | Demandes d'une page d'ancien patch avant que nginx la garde (`1` : dès la première, sa copie venant du stockage objet plutôt que d'un rendu, § 4.8). Au-dessus, chaque URL distincte tient quand même une clé jusqu'à son inactivité, quelle que soit la réponse (`301`, `503` de délestage) : un balayage évince les pages les moins récemment demandées dès qu'il dépasse la zone des clés (`LODB_ARCHIVE_CACHE_KEYS_SIZE`, ≈ 8 000 clés par Mo). À `1`, seules les réponses gardées tiennent une clé. |
 | `LODB_PAGES_STORE_ENABLED` | `0`, puis `1` | `0`, puis `1` | ➖ | `1` : nginx cherche une page d'ancien patch dans le stockage objet avant de la faire rendre par le SSR, qui reste le repli (§ 4.8). À poser une fois `scaleway-bucket.sh verifier` passé sur l'hôte. `0`, le défaut et celui d'une stack locale sans stockage : tout passe par le SSR. |
 | `LODB_PAGES_STORE_BUCKET` | `lodb-pages-staging` | `lodb-pages-prod` | avec le précédent | Bucket que nginx lit, le même que `LoDb__Prerender__Bucket` (§ 4.2). Défaut `none` : aucun (une valeur vide est refusée par nginx). |
 | `LODB_PAGES_STORE_SCHEME`, `LODB_PAGES_STORE_HOST`, `LODB_PAGES_STORE_PORT` | ➖ | ➖ | ➖ | Adresse du stockage pour nginx : `https`, `s3.fr-par.scw.cloud`, `443`. Le stockage simulé de la stack locale les remplace (§ 7). nginx lit sans clé, depuis l'adresse de l'hôte, la seule que la politique du bucket admette. |
-| `LODB_ARCHIVE_SERVE_EPOCH` | `1` | `1` | ➖ | Epoch que nginx lit dans le stockage (`pages/<epoch>/…`), aussi transmise à l'API (`LoDb__Prerender__ServedEpoch`) pour le panneau d'administration. Changée à la main, puis redéploiement : voir « Changer l'epoch servie » (§ 4.8). Distincte de `LODB_ARCHIVE_EPOCH`, le compteur des clés du cache de nginx. |
+| `LODB_ARCHIVE_SERVE_EPOCH` | `1`, puis une epoch neuve avant la fusion de la règle par état (§ 4.8) | `1`, puis `2` à la bascule par état (§ 4.8) | ➖ | Epoch que nginx lit dans le stockage (`pages/<epoch>/…`), aussi transmise à l'API (`LoDb__Prerender__ServedEpoch`) pour le panneau d'administration. Changée à la main, puis redéploiement : voir « Changer l'epoch servie » (§ 4.8). Distincte de `LODB_ARCHIVE_EPOCH`, le compteur des clés du cache de nginx. |
 | `LODB_PRERENDER_RENDERS_PER_MINUTE`, `LODB_PRERENDER_RENDER_BURST`, `LODB_PRERENDER_MAX_IN_FLIGHT`, `LODB_PRERENDER_VISITOR_RESERVE` | ➖ (§ 4.5) | ➖ | ➖ | Voie `prerender` du SSR des visiteurs : rendus par minute (`120`) et d'affilée (`10`), rendus simultanés de la passe (`2`, strictement sous `LODB_RENDER_MAX_IN_FLIGHT`), rendus toujours laissés aux visiteurs (`4`). Inutilisée depuis que la passe a son propre SSR (§ 4.10), gardée telle quelle. Deux de ces lignes servent ailleurs : `LODB_PRERENDER_RENDERS_PER_MINUTE` est aussi le **rythme fixe** de la passe (`LoDb__Prerender__RendersPerMinute`, § 4.3 : interrupteur `LODB_PRERENDER_PACE_MODE=fixed` et commande `prerender unit`), jamais au-dessus de `LODB_PRERENDER_PACE_MAX` ; `LODB_PRERENDER_RENDER_BURST` règle aussi la rafale de la voie des moteurs de la passe. `LODB_PRERENDER_MAX_IN_FLIGHT` ne donne plus les pages en vol de la passe (`LODB_PRERENDER_PAGES_IN_FLIGHT`, § 4.10) ni la voie de ses moteurs (`15`, fixe), sauf au staging qui la pose à `1`. |
 | `LODB_PRERENDER_PACE_MODE` | ➖ | ➖ | ➖ | Rythme de la passe de précalcul (§ 4.10) : `adaptive` (défaut), il suit le CPU libre de l'hôte entre le plancher et le plafond ci-dessous ; `fixed`, il reste à `LODB_PRERENDER_RENDERS_PER_MINUTE` sans rien mesurer. L'interrupteur, appliqué par un redéploiement de l'API ; le levier immédiat reste la pause au pupitre. |
 | `LODB_PRERENDER_MANUAL_MAX`, `LODB_PRERENDER_RENDERERS`, `LODB_PRERENDER_RENDERER_CPUS`, `LODB_PRERENDER_PAGES_IN_FLIGHT` | ➖ (§ 4.5) | ➖ | ➖ | Vitesse réglable de la passe (§ 4.10) : maximum du mode manuel (`900` sur un hôte, `600` en local, le plafond `30` au staging), aussi budget de la voie de **chaque** moteur ; moteurs de précalcul, répliques de `web-ssr-prerender` (`2` sur un hôte, `1` au staging et en local) ; quota de chacun (`1.0`) ; pages en vol au plus (`24`). |
@@ -280,9 +280,11 @@ création d'une base, sur un volume vide.
 
 **Monter l'epoch des anciens patchs.** Les pages d'une version épinglée dans l'URL sont
 gardées par nginx à travers les déploiements, avec le chrome, la CSP et les bundles du build
-qui les a rendues. Monter `LODB_ARCHIVE_EPOCH` (`3` → `4`…) dans `ENV_STAGING` / `ENV_PROD`
-quand le chrome (en-tête, pied, puce de release), la CSP ou le contrat `/api` changent de
-façon visible, et **après tout correctif de sécurité du front** ; le déploiement suivant
+qui les a rendues : un an pour une page d'état clos (`archived`), une heure pour une page de
+l'état ouvert (`revisable`, § 4.13). Monter `LODB_ARCHIVE_EPOCH` (`3` → `4`…) dans
+`ENV_STAGING` / `ENV_PROD` quand le chrome (en-tête, pied, puce de release), la CSP ou le
+contrat `/api` changent de façon visible, **après tout correctif de sécurité du front**, et
+après des pages recalculées en place dans l'epoch servie (nouveau schéma d'empreinte, § 4.13) ; le déploiement suivant
 recrée nginx sur des clés neuves, les anciennes s'éteignent après 90 jours sans demande
 (`LODB_ARCHIVE_CACHE_INACTIVE`), ou plus tôt quand le cache est plein.
 
@@ -399,8 +401,7 @@ même nom.
 | `LoDb__Audit__IdentifierKey` 🔒 | recommandé | Clé du condensat (HMAC) que le journal garde à la place de l'identifiant saisi lors d'une connexion refusée : il relie les tentatives sur un même identifiant sans en garder le texte. Absente : une clé aléatoire par processus, les condensats ne se recoupent plus d'un redémarrage à l'autre. |
 | `LoDb__Audience__Username`, `LoDb__Audience__Password` 🔒 | prod, une fois le compte créé | Compte Umami en lecture seule du tirage des tendances (§ 4.6). Absents : le tirage reste en sommeil (une ligne `audience.trends.dormant` au démarrage), `/v1/trends` lit la mesure maison. |
 | `LoDb__Audience__TrendsSwitchDate` | ➖ (prod) | Premier jour où `/v1/trends` lit les chiffres d'Umami (§ 4.6). Absente : la mesure maison seule. |
-| `LoDb__Seo__SitemapVersionWindow` | ➖ | Versions passées annoncées par l'index des sitemaps, après le dernier patch : `0` par défaut, le dernier patch seul. Le sitemap d'une version passée reste servi, mais ne liste que ses fiches canoniques, celles des entités dont c'est la dernière version (ADR 0005, amendement du 2026-10-14) : une fenêtre annonce les entités retirées par les derniers patchs. |
-| `LoDb__Seo__IndexNowKey` | prod | Clé IndexNow (`openssl rand -hex 16`), publique par nature : servie à `/{clé}.txt`. Posée, chaque promotion d'un patch soumet à IndexNow (Bing, Yandex, Naver, Seznam…) les pages qu'il change, dans les 21 langues (`seo.indexnow.submitted`). Absente, comme sur `staging` : rien n'est soumis. |
+| `LoDb__Seo__IndexNowKey` | prod | Clé IndexNow (`openssl rand -hex 16`), publique par nature : servie à `/{clé}.txt`. Posée, chaque promotion d'un patch soumet à IndexNow (Bing, Yandex, Naver, Seznam…), dans les 21 langues et dans cet ordre : toutes les URL courtes (accueil, quatre listes, `patches`, chaque entité listée) ; `/{locale}/changes` si le patch promu a changé quelque chose ; `/{locale}/{version}/changes` de chaque version couverte depuis le patch promu avant (compris) qui a changé quelque chose ; les ouvreurs (`/{locale}/{ouvreur}/{chemin}`) des états clos depuis ce patch. Requêtes de 10 000 URL au plus, les URL courtes d'abord ; un refus arrête le reste, sans nouvel essai (`seo.indexnow.submitted`, `.refused`). Rien si l'index des états ne couvre pas la version (`seo.indexnow.unindexed`) : les sitemaps datés prennent le relais. Absente, comme sur `staging` : rien n'est envoyé ; avec `LoDb__Seo__CanonicalOrigin`, une ligne `seo.indexnow.planned` donne les comptes par catégorie. L'historique n'est jamais soumis d'un coup, à la bascule par état non plus : les sitemaps l'annoncent. |
 | `LoDb__Catalog__MaxEntries`, `PinnedLanguages`, `PinnedBudgetMegabytes` | ➖ | Catalogues en mémoire : ceux du dernier patch dans les langues épinglées (défaut : les 21 de l'interface, en_US en tête), jamais évincés, dans `256` Mio estimés ; `16` autres au plus, le moins récemment lu évincé. |
 | `LoDb__Catalog__ColdLoadConcurrency`, `ColdLoadsPerSecond`, `ColdLoadBurst`, `PublicColdLoadsPerSecond`, `InternalColdLoadWait`, `MaxPendingLoads` | ➖ | Chargement d'un catalogue absent de la mémoire : `2` à la fois, `3` par seconde (rafale `6`), dont `1` pour les appels publics, refusés sans attente ; le SSR attend `2` s au plus, derrière `16` autres. Refus : `503` + `Retry-After`. |
 | `LoDb__Catalog__WarmUp__MaxStreams`, `MaxStreamsPerClient`, `StreamLifetime`, `PerClientPerHour` | ➖ | Loader de changement de patch : `8` flux ouverts, `2` par client, `120` s chacun, `20` démarrages par heure et par client (`429` au-delà). |
@@ -409,7 +410,7 @@ même nom.
 | `LoDb__Prerender__AllowInsecureEndpoint` | dev seulement | `true` autorise un `Endpoint` en `http`, celui du stockage simulé de `compose.override.yaml` (§ 7). **Jamais posé sur un hôte** : absent, un point d'accès en `http` est refusé au démarrage. |
 | `LoDb__Prerender__Bucket` | avec le stockage | Bucket de l'environnement : `lodb-pages-staging`, `lodb-pages-prod`. Absent : la passe reste en sommeil. |
 | `LoDb__Prerender__AccessKey`, `LoDb__Prerender__SecretKey` 🔒 | avec le stockage | Clé API de l'application `lodb-pages-writer-<env>` : écriture d'objets seule, sur le projet de l'environnement seul ([`tools/prerender/README.md`](../../tools/prerender/README.md)). Absente : la passe reste en sommeil, nginx sert par le SSR. |
-| `LoDb__Prerender__AutoEnqueueOnPromotion` | ➖ | `false` tant que la passe complète de la prod n'est pas terminée : l'opérateur la lance à la main ; à `true`, le rapprochement (toutes les 30 min) ouvrirait de lui-même, sans promotion, une passe pour le patch précédent, et celle de l'opérateur répondrait `409`. Puis `true` en prod : un patch qui quitte le dernier rang rejoint la passe en cours, ou en ouvre une sur l'epoch servie. `false` sur le staging (son calque, § 4.5), qui reste presque vide. |
+| `LoDb__Prerender__AutoEnqueueOnPromotion` | ➖ | Ne commande que les unités du patch qui quitte le dernier rang, à sa promotion et au rapprochement ; la file des états clos (§ 4.13) n'en dépend pas. `false` tant que la passe complète de la prod n'est pas terminée : l'opérateur la lance à la main ; à `true`, le rapprochement (toutes les 30 min) ouvrirait de lui-même, sans promotion, une passe pour le patch précédent, et celle de l'opérateur répondrait `409`. Puis `true` en prod : un patch qui quitte le dernier rang rejoint la passe en cours, ou en ouvre une sur l'epoch servie, une fois l'index des états à jour. `false` sur le staging (son calque, § 4.5), qui reste presque vide. |
 | `LoDb__ScalewayBilling__SecretKey` 🔒 | ➖ | Clé secrète de l'application `lodb-facturation-lecture` (§ 4.9), une par environnement. Absente : les panneaux « Sauvegardes » et « Précalcul du catalogue » disent que la facture n'est pas configurée. |
 | `LoDb__ScalewayBilling__OrganizationId`, `BackupsProjectId`, `PagesProjectId` | avec la clé | Organisation, projet du bucket des sauvegardes et projet des pages de l'environnement, en UUID (§ 4.9). Requis une fois la clé posée ; un id qui n'est pas un UUID est refusé au démarrage, clé posée ou non. |
 | `LoDb__Database__AppRole__StatementTimeout`, `ConnectionLimit` | ➖ | Transmis à `migrate` seulement, qui les pose sur le rôle de l'API (§ 4.3) : `00:00:15` (une requête plus longue est annulée par le serveur) et `50` sessions (`-1` : sans limite ; sous les 60 du serveur, moins les 3 réservées aux superutilisateurs). Pris en compte au déploiement suivant, par les nouvelles connexions. |
@@ -419,7 +420,9 @@ même nom.
 
 `ConnectionStrings__LoDb` (hôte `lodb-postgres`, base `LODB_DB_NAME`, **sans mot de passe** :
 le service y pose `LoDb__Database__Password`, lu dans `/run/secrets` ; pour l'API, rôle
-`lodb_app`, pool borné par `Maximum Pool Size=32;Timeout=5` ; pour `migrate`, `LODB_DB_USER`),
+`lodb_app`, pool borné par `Maximum Pool Size=32;Timeout=5` ; pour `migrate`, `LODB_DB_USER` ;
+pour `states`, `lodb_app` sous `Application Name=lodb-states`, avec `LoDb__Storage__Root`
+sur `ddragon` monté en lecture seule),
 `LoDb__Accounts__SiteOrigin`, `LoDb__Seo__CanonicalOrigin` et `LoDb__PublicApi__SiteOrigin`
 (`https://` + `LODB_CANONICAL_HOST`), `LoDb__PublicApi__Reference__BaseUrl`
 (`LODB_PUBLIC_API_ORIGIN`), `LoDb__DataProtection__CertificatePath`,
@@ -482,12 +485,15 @@ processus (`pids`).
 | `postgres` | `0.5` | `1024` | `256` | `512m` |
 | `nginx` | `0.25` | `2048` | `256` | `512m` |
 | `migrate` | — | — | `256` | `128m` |
+| `states` | `0.5` | `512` | `256` | `512m` |
 
 Les quotas des services des visiteurs totalisent 3 des 4 vCPU de l'hôte : sous une charge
 qui les dépasse, la stack déleste (`503` avec `Retry-After`) au lieu de prendre l'hôte des
 autres projets. Le SSR de la passe (`web-ssr-prerender`) s'y ajoute au poids le plus bas :
 le noyau ne lui cède que le CPU que personne ne demande, et son régulateur le freine avant
-(§ 4.10). Le bridage se
+(§ 4.10). `states` (§ 4.12) ne tourne que pendant le déploiement, avant la page de
+maintenance, à côté des visiteurs : sous leur poids, au-dessus du SSR de la passe ; ses limites
+et la durée de sa première construction sont à mesurer au staging. Le bridage se
 lit dans `container_cpu_cfs_throttled_seconds_total` (alerte `ConteneurCpuBride`,
 `infra-vps`) : recalibrer après 7 jours, en regard de la latence. La sonde de santé de l'API
 démarre un runtime .NET dans ce quota : toutes les 60 s en marche, toutes les 2 s au
@@ -500,15 +506,15 @@ un tmpfs borné, compté dans sa limite mémoire.
 
 | Service | Utilisateur | Écrit dans | Capacités reprises |
 |---|---|---|---|
-| `api`, `migrate` | `app` (image chiseled) | `ddragon` (`api`), tmpfs `/tmp` (64 Mio) | — |
+| `api`, `migrate`, `states` | `app` (image chiseled) | `ddragon` (`api` ; `states` le lit en lecture seule), tmpfs `/tmp` (64 Mio) | — |
 | `web-ssr` | `node` | `front-builds`, tmpfs `/tmp` (16 Mio) | — |
 | `web-ssr-prerender` | `node` | tmpfs `/tmp` (16 Mio) : aucun volume | — |
 | `nginx` | `nginx`, port 8080 | caches et fichiers temporaires (volumes), tmpfs `/tmp` (64 Mio : configuration rendue, pid) | — |
 | `postgres` | root, puis `postgres` | `pgdata`, tmpfs `/var/run/postgresql` (8 Mio) et `/tmp` (16 Mio) | `CHOWN`, `DAC_OVERRIDE`, `FOWNER`, `SETGID`, `SETUID` (entrée de l'image), toutes parmi celles que Docker accorde par défaut |
 
-Réseaux : `default` (nginx, SSR, API, `migrate`) porte le HTTP, sur `LODB_STACK_SUBNET`
-(§ 6.8) ; `data` (Postgres, API, `migrate`) est interne sur un hôte, sans route vers
-l'extérieur : nginx et les SSR ne joignent pas la base. nginx rejoint aussi `edge`, l'API et
+Réseaux : `default` (nginx, SSR, API, `migrate`, `states`) porte le HTTP, sur
+`LODB_STACK_SUBNET` (§ 6.8) ; `data` (Postgres, API, `migrate`, `states`) est interne sur un
+hôte, sans route vers l'extérieur : nginx et les SSR ne joignent pas la base. nginx rejoint aussi `edge`, l'API et
 les deux SSR `observability` ; en prod, Postgres rejoint `sauvegardes` (§ 4.7).
 
 <details>
@@ -578,7 +584,8 @@ quotas se revoient avec ceux de la prod :
 | `LODB_PRERENDER_RENDERS_PER_MINUTE`, `LODB_PRERENDER_RENDER_BURST`, `LODB_PRERENDER_MAX_IN_FLIGHT`, `LODB_PRERENDER_VISITOR_RESERVE` | `30`, `5`, `1`, `1` | `120`, `10`, `2`, `4` |
 | `LODB_PRERENDER_PACE_MIN`, `LODB_PRERENDER_PACE_MAX`, `LoDb__Prerender__Pace__StepRendersPerMinute` | `10`, `30`, `10` | `30`, `240`, `30` |
 | `web-ssr-prerender` : `cpus`, `cpu_shares` | `0.25`, `64` | `1.0`, `128` |
-| `LoDb__Prerender__AutoEnqueueOnPromotion` | `false` | `false` jusqu'à la fin de la passe complète, puis `true` (`.env.prod.example`) |
+| `states` (index des états, § 4.12) : `cpu_shares` | `128` | `512` |
+| `LoDb__Prerender__AutoEnqueueOnPromotion` (unités du patch remplacé seulement ; la file des états clos tourne partout, § 4.13) | `false` | `false` jusqu'à la fin de la passe complète, puis `true` (`.env.prod.example`) |
 | `LoDb__Ingestion__SyncConcurrency`, `LoDb__Ingestion__LanguageConcurrency`, `LoDb__Egress__FetchConcurrency` | `1`, `1`, `1` | `4`, `4`, `16` |
 | Sonde de santé de l'API au démarrage | toutes les 10 s pendant 60 s | toutes les 2 s pendant 20 s |
 
@@ -673,13 +680,15 @@ depuis l'hôte, retrait d'une epoch et reprise après une politique fautive :
 | Application d'écriture (`ObjectStorageObjectsWrite`, son projet seul) | `lodb-pages-writer-staging` | `lodb-pages-writer-prod` |
 | Cycle de vie | `expire-pages` : toute page effacée après 14 jours | une règle `retire-pages-<N>` par epoch retirée |
 | Passe lancée à la promotion d'un patch | non : passes manuelles, sur peu de versions | oui |
+| Pages des états clos recalculées à la promotion (§ 4.13) | oui | oui |
 
-Clés des objets : `pages/{epoch}/{locale}/{version}/{ressource}[/{id}-{slug}]`, `build/{nom}`
+Clés des objets : `pages/{epoch}/{locale}/{version}/{ressource}[/{id}-{slug}]` (la page de
+patch : `pages/{epoch}/{locale}/{version}/changes`), `build/{nom}`
 et `build/media/{nom}` : tout le jeu de fichiers hachés de chaque build stocké, copié avant la
 première de ses pages (les modules chargés à la demande ne sont nommés que dans le
 JavaScript). L'epoch `0` est réservée aux sondes de `scaleway-bucket.sh verifier`. Chaque page
-porte ses en-têtes : `Content-Type`, `Content-Encoding: gzip` et `Cache-Control` comme en-têtes
-de l'objet, la CSP, la CSP en rapport seul, `Reporting-Endpoints`, `Link` et le build qui l'a
+porte ses en-têtes : `Content-Type`, `Content-Encoding: gzip` et `Cache-Control` (celle de sa
+classe, `archived` ou `revisable`) comme en-têtes de l'objet, la CSP, la CSP en rapport seul, `Reporting-Endpoints`, `Link` et le build qui l'a
 rendue (`lodb-build`) en métadonnées (`x-amz-meta-*`, 2 Ko au plus).
 L'API écrit avec sa clé (`LoDb__Prerender__*`, § 4.2) ; nginx lit sans clé, depuis l'adresse de
 l'hôte, que la politique du bucket est seule à admettre.
@@ -708,6 +717,22 @@ temps de la passe. Le reste, retrait des bundles du stockage compris, est décri
 
 Deux epochs à ne pas confondre : `LODB_ARCHIVE_EPOCH` numérote les clés du cache de nginx,
 `LODB_ARCHIVE_SERVE_EPOCH` le préfixe des pages dans le stockage.
+
+**La bascule vers une page indexée par état** (spécification
+[`seo-une-page-par-etat.md`](../produit/seo-une-page-par-etat.md), § 4) sert une epoch vide, sans
+attendre qu'elle soit prête : relire l'ancienne ferait coexister les deux règles. Au staging,
+`LODB_ARCHIVE_SERVE_EPOCH` passe sur une epoch neuve **avant** la fusion dans `dev` qui porte la
+règle (ses pages stockées, gardées 14 jours, portent l'ancienne). En prod, dans cet ordre :
+annuler au pupitre la passe active de l'epoch `1` ; `LODB_ARCHIVE_SERVE_EPOCH=2` dans
+`ENV_PROD`, rien d'autre (`LODB_ARCHIVE_EPOCH` reste à `3`, aucune variable ne règle d'epoch
+d'écriture) ; déployer ; puis, au pupitre, une passe `{"pages":"openers"}` sur l'epoch `2`,
+puis une passe entière `{}`. Jusqu'à ce qu'elles l'aient remplie, une page absente part au SSR
+(budget épinglé, 503 au-delà) et à la file de la demande. Retour arrière : annuler la passe
+active de l'epoch `2`, `LODB_ARCHIVE_SERVE_EPOCH=1` et `LODB_ARCHIVE_EPOCH` monté à une valeur
+explicite (celle du coffre plus un), puis le revert par le chemin normal. Deux semaines après
+la bascule, retirer l'epoch `1` (`SERVED_EPOCH=2 WRITE_EPOCH=2 RETIRED_EPOCHS=1`,
+[`tools/prerender/README.md`](../../tools/prerender/README.md), § 4). Toute valeur passe par
+`coffre`, puis par `ENV_STAGING` ou `ENV_PROD`.
 
 **Ce que coûte le stockage.** Le panneau « Précalcul du catalogue » (`GET /api/admin/prerender`)
 montre ce que le stockage contient, epoch par epoch (servie, en écriture, en attente de bascule,
@@ -876,6 +901,124 @@ qui recrée l'API : le relevé et le rendu s'arrêtent, la table reste. Le pupit
 **Ce qui la montre** : le bloc « File automatique des pages refusées » de `/admin/prerender`,
 les métriques `lodb_prerender_demand_*` ([`metriques.md`](metriques.md)) et les lignes
 `prerender.demand.*` de l'API, une par relevé qui apporte des pages et une par lot rendu.
+
+### 4.12 Index des états d'entité
+
+La canonique des fiches, les sitemaps des anciens patchs, les pages de patch, IndexNow et la
+file des états clos (§ 4.13) lisent l'index des états d'entité, en Postgres
+([spécification](../produit/seo-une-page-par-etat.md), § 3.2 et § 4). Aucune ligne du `.env`
+ne le règle : il dépend du code (schéma d'empreinte) et des jeux en_US stockés.
+
+**Le service `states`** (`compose.yaml`, surchargé par `compose.deploy.yaml`) : l'image de
+l'API, commande `catalog states build`, `lodb_app` (`Application Name=lodb-states`, mot de
+passe `LODB_APP_DB_PASSWORD` en fichier sur un hôte), `ddragon` en lecture seule, réseaux
+`default` et `data`, `restart: "no"`, après `migrate` ; `api` attend sa réussite
+(`service_completed_successfully`). Le déploiement le lance juste après `migrate`, avant la page
+de maintenance (`docker compose run --rm --no-deps states`) ; son passage dans `up` ne fait
+plus rien. Ressources : § 4.3 ; poids au staging : § 4.5.
+
+**La commande** `catalog states build [--rebuild] [--ingest-missing]`, dans l'image de l'API
+(un réglage d'hôte s'écrit `--clé=valeur`, jamais juste après une option) :
+
+| Situation | Ce qu'elle fait |
+|---|---|
+| La génération courante du schéma compilé couvre déjà jusqu'au dernier patch promu | rien |
+| Seule la fin de la couverture a avancé | elle étend la génération courante |
+| Aucune génération courante, début de la couverture déplacé, ou `--rebuild` | elle construit une génération neuve, la rend courante en une transaction, puis supprime l'ancienne |
+
+Elle lit les jeux en_US stockés, un catalogue à la fois, une transaction par version, et
+reprend une construction interrompue. Elle ne télécharge aucun jeu, sauf avec
+`--ingest-missing`, qui ingère d'abord l'en_US de chaque version listée qui en manque ; elle
+lit en revanche la liste des versions de Data Dragon dès qu'une version est promue.
+
+| Code | Cas |
+|---|---|
+| `0` | index à jour (rien, étendu ou construit) ; ou liste de Data Dragon illisible sans `--ingest-missing` alors qu'une génération est courante (`states.build.deferred`, Warning) : l'API sert l'index en retard jusqu'à sa réconciliation |
+| `1` | liste illisible et aucune génération courante (`states.build.failed`, Error : premier déploiement, nouveau schéma d'empreinte), verrou `catalog:states` tenu par un autre écrivain pendant une minute, ou tout autre échec (`cli.command.failed`), liste illisible avec `--ingest-missing` compris |
+| `2` | arguments invalides |
+
+**Rattrapages.** La promotion d'un patch étend l'index en premier (étape `StateIndex`), en
+ingérant l'en_US des versions listées après la fin de la couverture qui en manquent. La tâche
+`catalog.states.reconcile` (toutes les 10 min, une instance à la fois, coupée par
+`LoDb:Workers:Enabled=false`) fait de même, et construit l'index s'il n'y en a aucun ; aucun
+passage n'est garanti au démarrage. Seule la commande reconstruit quand le début de la
+couverture bouge, en général au déploiement suivant.
+
+**Copie en mémoire** : chaque processus de l'API tient la sienne, relit son repère au plus
+toutes les `LoDb:Catalog:VersionsLifetime` (1 min) et la recharge quand la génération ou la fin
+de couverture a changé. Sans copie et base injoignable : 503 `state-index-unavailable`
+(§ « Index des états » de [`pieges.md`](../architecture/pieges.md)).
+
+**Vérifier la couverture avant une bascule** (spécification, § 4.2 et 4.3) : chaque version
+listée doit avoir ses jeux en_US stockés, sinon la couverture commence après le trou. Ingérer
+ceux qui manquent, version par version (`--latest` est plafonné à 50) :
+
+```bash
+docker compose exec -T api dotnet LoDb.Api.dll ingest --version <v> --languages en_US
+# ou, toutes les versions listées d'un coup, dans un conteneur qui écrit ddragon :
+docker compose run --rm --no-deps api catalog states build --ingest-missing
+```
+
+**Reconstruire** après un changement de mapper qui modifie les entrées stockées (en_US
+réingéré de toutes les versions d'abord) : `docker compose run --rm --no-deps states catalog
+states build --rebuild`. Un nouveau schéma d'empreinte (`FingerprintScheme.Current`) se
+construit de lui-même au déploiement qui le porte ; ses pages se recalculent ensuite (§ 4.13).
+
+**Ce qui le montre** : la ligne `states.update.completed` de chaque mise à jour (déclencheur,
+issue, début et fin de la couverture, états ouverts et clos, comptes par ressource), les
+métriques `lodb_states_*` ([`metriques.md`](metriques.md)) et, au pupitre `/admin/prerender`,
+les ouvreurs, pages figées et révisables attendus par version.
+
+### 4.13 Pages révisables et file des états clos
+
+Une page d'ancien patch dont l'état est clos est **figée** : classe `archived`, gardée un an.
+Celle d'une version de l'état encore ouvert est **révisable** : classe `revisable`
+(`public, max-age=3600, s-maxage=3600, stale-while-revalidate=3600`), puisque sa canonique,
+son titre et son historique changent quand une promotion clôt l'état. Le SSR choisit la
+classe d'une fiche selon l'état que rend l'API (une fiche épinglée sans état connu est
+`revisable`, jamais `archived`) ; listes, accueil et pages de patch gardent la règle par
+version. La passe, la file de la demande et cette file stockent les deux classes ; nginx garde
+chaque page autant que dit son objet (§ 4.8). Aucune ligne du `.env` ne règle ce qui suit.
+
+| Élément | Valeur |
+|---|---|
+| Producteur | l'écouteur de l'étape `Prerender` de chaque promotion, puis `prerender.reconcile` (toutes les 30 min), une fois l'index des états à jour jusqu'au dernier patch ; idempotent par une marque (`prerender_revision_watermark` : génération, dernière clôture traitée) |
+| Pages mises en file | chaque version, de l'ouvreur à la dernière, de chaque état clos depuis la marque (la version qui quitte le dernier patch comprise), dans les 21 langues, sous la graphie de chaque version |
+| Epochs | l'epoch servie (`LoDb__Prerender__ServedEpoch`), plus celle qu'écrit la passe active quand elle diffère |
+| Délai avant rendu | `2 × LoDb:Catalog:VersionsLifetime` + 1 min (21 min) : tous les processus lisent alors un index qui couvre la clôture |
+| Rendu | `PrerenderRevisionWorker`, toutes les 30 s, verrou `prerender:revision`, lots de 20, sur le SSR de la passe, au rythme et dans les places de la file de la demande (§ 4.11) |
+| Essais | 3 ; nouvel essai 5 min après ; une page rendue de nouveau `revisable` compte comme un essai raté ; les lignes d'une epoch retirée sont sautées |
+| Condition | le stockage et la passe configurés (§ 4.8), **quel que soit** `LoDb__Prerender__AutoEnqueueOnPromotion` : staging compris |
+
+Au plus ~24 000 pages par promotion (spécification, § 1.2, un majorant), ~27 minutes à
+900 pages par minute. Une génération neuve de l'index (reconstruction) n'est pas mise en
+file : ses clôtures sont de l'historique, que les passes rendent ; seules celles de la
+dernière promotion le sont (`prerender.revision.generation`).
+
+**Passe « ouvreurs d'abord ».** Le formulaire de lancement du pupitre propose « Pages » :
+toutes, ou les ouvreurs (`POST /api/admin/prerender/passes` avec `"pages": "openers"`, gardé
+`{"pages":"openers"}`) : chaque unité rend la page de patch et les fiches qui ouvrent un état à
+sa version, ouvert ou clos, lues dans l'index. Elle ne complète jamais une epoch et aucune
+promotion ne la rejoint (les unités d'un patch promu attendent sa fin,
+`prerender.promotion.deferred`) : une passe entière `{}` la suit. Avant un retour arrière vers
+une image d'avant la règle par état, l'annuler : cette image lirait son périmètre comme toutes
+les pages.
+
+**Nouveau schéma d'empreinte** (spécification, § 3.7) : l'index se reconstruit au déploiement
+qui le porte (§ 4.12). Peu de pages changent d'état : les recalculer dans l'epoch servie, puis
+monter `LODB_ARCHIVE_EPOCH` (§ 4.1). Beaucoup : une passe sur une epoch neuve, puis la bascule
+de `LODB_ARCHIVE_SERVE_EPOCH` (§ 4.8). Une page figée ne l'est que pour un schéma.
+
+**Limite** : une epoch qu'une passe terminée a remplie, ni servie ni écrite par une passe
+active, ne reçoit pas les pages des états clos entre-temps ; basculer dessus sans tarder, ou
+relancer une passe sur les versions de ces états avant la bascule.
+
+**Ce qui la montre** : le bloc « File des états clos » de `/admin/prerender` (en attente,
+dues, écrites en 1 h et 24 h, en échec, par epoch ; `GET /api/admin/prerender/revision`) et la
+colonne « Index » de l'onglet de couverture (ouvreurs, pages figées et révisables attendues
+par version et par langue) ; les métriques `lodb_prerender_revision_*`
+([`metriques.md`](metriques.md)) et les lignes `prerender.revision.*` de l'API, une par passage
+du producteur qui met en file et une par lot rendu.
 
 ## 5. Fichiers et volumes de l'hôte
 

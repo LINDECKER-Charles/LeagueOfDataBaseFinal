@@ -14,7 +14,7 @@
   2026-10-20 »). Le 2026-10-22, les écouteurs de promotion s'exécutent dans un ordre qu'ils
   déclarent, l'index des états a sa tâche de réconciliation et les pages des états clos sont
   pré-calculées de nouveau sans dépendre de `AutoEnqueueOnPromotion` (voir § « Amendement
-  du 2026-10-22 ») : décidé, pas encore implémenté.
+  du 2026-10-22 ») : en vigueur dans le code, en prod à la bascule de la règle par état.
 - **Suivi** (2026-10-22), écarts entre la table des tâches et le code :
   - le rollup des analytics tourne toutes les 5 minutes (`analytics.rollup`) ;
   - la rétention (`analytics.retention`, quotidienne) supprime les événements bruts à
@@ -235,9 +235,10 @@ Le catalogue pré-rendu ([ADR 0011](0011-catalogue-pre-rendu-et-cdn.md)) ajoute 
 
 ## Amendement du 2026-10-22 — index des états et ordre de la promotion
 
-*Décidé, pas encore implémenté (lots L0, L2 et L6 de la
-[spécification](../../produit/seo-une-page-par-etat.md)) : il part au même déploiement que la
-règle par état de l'[ADR 0005](0005-web-ssr-urls-et-seo.md) (amendement du 2026-10-22).*
+*En vigueur dans le code (lots L0, L2 et L6 de la
+[spécification](../../produit/seo-une-page-par-etat.md)) ; il part en prod au même déploiement
+que la règle par état de l'[ADR 0005](0005-web-ssr-urls-et-seo.md) (amendement du
+2026-10-22).*
 
 La règle par état lit un index des états d'entité, tenu en Postgres, que chaque promotion
 étend avant tout le reste. Or `VersionIngestion` appelle aujourd'hui les écouteurs dans
@@ -277,3 +278,16 @@ des états qu'elle clôt.
   pas : elle tourne dès que le stockage est configuré, staging compris.
 - **Une ligne de synthèse par lot**, jamais une par page ni par état ; métriques sans
   version, langue ni adresse en label.
+
+**Dans le code.** `PromotionStage` et `IPromotionListener.Stage`
+(`LoDb.Ingestion/Pipeline/Versions/`) ; l'étape `StateIndex` est
+`StateIndexPromotionListener`, qui ingère d'abord l'en_US des versions listées après la fin de
+la couverture. La réconciliation est `catalog.states.reconcile` (`Workers/Catalog/`, toutes
+les 10 minutes) ; elle construit l'index s'il n'y en a aucun, mais seule la commande
+`catalog states build` le reconstruit quand le début de la couverture bouge. Le verrou
+`catalog:states` attend 5 s pour la promotion et la réconciliation, qui rendent la main sans
+échec, une minute pour la commande. La file des états clos est remplie par
+`PrerenderPromotionListener` et `prerender.reconcile`, seulement une fois l'index à jour
+jusqu'au dernier patch (`prerender.promotion.index_behind` sinon), et vidée par
+`PrerenderRevisionWorker` (toutes les 30 s, verrou `prerender:revision`). Réglages et lignes :
+[`configuration.md`](../../guides/configuration.md), § 4.12 et 4.13.

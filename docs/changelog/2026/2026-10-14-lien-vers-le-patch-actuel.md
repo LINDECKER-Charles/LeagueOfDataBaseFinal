@@ -7,7 +7,7 @@ summary: Les fiches des anciens patchs ont un lien vers la même fiche au patch 
 tags: [seo, catalogue]
 ---
 
-> **Remplacé le 2026-10-22** par [une page indexée par état](../../produit/seo-une-page-par-etat.md) :
+> **Remplacé le 2026-10-22** par [`une-page-par-etat-dans-google`](2026-10-22-une-page-par-etat-dans-google.md) :
 > « Dans les patchs précédents » (six versions) devient « Historique » (les états de la fiche,
 > chacun lié par sa page indexée), et « Dans le dernier patch » s'affiche sur toute fiche d'un
 > ancien patch dont l'entité existe au dernier patch, selon l'API (`presentInLatest`), plus

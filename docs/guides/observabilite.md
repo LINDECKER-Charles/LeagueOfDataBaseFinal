@@ -41,8 +41,9 @@ applicatif de l'API ou du SSR, Vector ne produit rien de tel : `EventName`, `Log
 `State` (API), `level`, `msg` et les champs du SSR n'existent que comme texte dans `_msg`.
 
 Les services de la stack (`compose.yaml`) : `api`, `migrate` (conteneur éphémère des
-migrations), `web-ssr`, `web-ssr-prerender` (le SSR de la passe de précalcul), `nginx` et
-`postgres`. Les quatre premiers écrivent la ligne JSON de [`logging.md`](logging.md) ;
+migrations), `states` (conteneur éphémère de l'index des états d'entité), `web-ssr`,
+`web-ssr-prerender` (le SSR de la passe de précalcul), `nginx` et `postgres`. Les cinq
+premiers écrivent la ligne JSON de [`logging.md`](logging.md) ;
 `nginx` n'écrit que ses erreurs (`access_log off`, `docker/nginx/nginx.conf`) et `postgres`
 ses requêtes lentes, en texte. Les services de l'ancienne stack (`php`, `go-fetcher`,
 `go-api`, `mailer`) sont retirés au déploiement (`--remove-orphans`,
@@ -130,6 +131,11 @@ stack:lodb-prod service:api _time:1d ("prerender.unit.completed" OR "prerender.s
 
 # Le dernier passage des migrations (conteneur éphémère `migrate`)
 stack:lodb-prod service:migrate _time:7d ("db.migrate.completed" OR "db.baseline.refused" OR "db.roles.applied")
+
+# L'index des états d'entité : le passage du déploiement (conteneur éphémère `states`), puis
+# ses mises à jour par la promotion et la réconciliation, et les copies illisibles de l'API
+stack:lodb-prod service:states _time:7d ("states.update.completed" OR "states.build.")
+stack:lodb-prod service:api _time:1d ("states.update." OR "states.copy.failed")
 
 # Requêtes Postgres de plus de 500 ms (texte de Postgres, jamais leurs paramètres)
 stack:lodb-prod service:postgres _time:6h "duration:"
@@ -224,6 +230,7 @@ Ce que chaque source voit de ces pages :
 | Métriques du SSR (`lodb_ssr_renders_total`) | `lane="pinned"` compte tout rendu d'une URL à version épinglée, dans le chemin ou en `?version=` : les replis du stockage, mais aussi les 301 du dernier patch épinglé et les `?version=` ; ses refus (`outcome="refused"`) doivent rester proches de zéro. Les rendus de la passe sont à part, sous `lane="prerender"` ([`metriques.md`](metriques.md)). |
 | Métriques de l'API (`lodb_prerender_pages_total{outcome}`) | Les pages de la passe : `written`, `skipped`, `refused`, `failed`, et une ligne `prerender.unit.completed` par (version, langue). Rien de ce que nginx sert. |
 | File automatique (`lodb_prerender_demand_*`) | Les pages refusées aux visiteurs relevées sur le SSR (`captured_total{result}`), celles qui attendent (`pending`) et celles que la file a rendues (`pages_total{outcome}`), une ligne `prerender.demand.drained` par lot. Un `pending` qui ne baisse pas pendant que `captured_total{result="queued"}` monte : la file ne suit pas la demande. |
+| File des états clos (`lodb_prerender_revision_*`) | Les pages d'anciens patchs que chaque promotion fait recalculer, parce qu'elle a clos leur état (`enqueued_total`, `pending`, `pages_total{outcome}`), une ligne `prerender.revision.drained` par lot. Un `pending` qui ne redescend pas dans l'heure qui suit une promotion, ou des `failed` : des pages révisables gardent l'URL courte pour canonique. |
 | Journaux du SSR (`http.request.served`) | Les rendus servis aux visiteurs, replis compris ; aucune ligne par page de la passe, sauf ses `5xx`. Une page servie par le cache ou le stockage n'y paraît pas. |
 | Audience interne (miroir de nginx, balise) | Le miroir ne compte jamais une version épinglée, et la passe ne passe pas par nginx. |
 | Umami | Il mesure dans le navigateur, quelle que soit la source de la page. |
