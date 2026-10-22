@@ -1,6 +1,5 @@
 using LoDb.Api.Modules.Admin.Prerender.Demand.Validation;
 using LoDb.Api.Modules.Admin.Prerender.Pages;
-using LoDb.Domain.Catalog;
 using LoDb.Infrastructure.Persistence;
 using LoDb.Infrastructure.Persistence.Prerender;
 using Microsoft.EntityFrameworkCore;
@@ -9,7 +8,9 @@ namespace LoDb.Api.Modules.Admin.Prerender.Demand.Queue;
 
 /// <summary>
 /// What the passes wrote of some versions into the served epoch: a page is in the store once a
-/// unit of its (version, locale) over its type completed, or walked past it.
+/// unit of its (version, locale) whose list holds it (<see cref="UnitPages"/>: its type, the
+/// patch page only over every type, an opener for an openers scope) completed, or walked past
+/// it.
 /// </summary>
 /// <remarks>
 /// Whatever the pass's state: a cancelled pass keeps what it wrote. A page a completed unit
@@ -49,7 +50,7 @@ internal sealed class ServedUnits
             row.Locale,
             row.State == PrerenderUnitState.Completed,
             row.Cursor,
-            PassScopeJson.Read(row.Scope).PageTypes)));
+            PassScopeJson.Read(row.Scope))));
     }
 
     /// <summary>Whether a pass already stored <paramref name="page"/> in the epoch.</summary>
@@ -58,9 +59,9 @@ internal sealed class ServedUnits
         ArgumentNullException.ThrowIfNull(page);
         ArgumentNullException.ThrowIfNull(index);
         return _units[(page.Version.Value, page.LocaleCode)].Any(unit =>
-            (unit.Types is null || unit.Types.Contains(page.Type))
-            && (unit.IsCompleted || index.IndexIn(unit.Types, page.PagePath) is var at
-                && at >= 0 && at < unit.Cursor));
+            index.IndexIn(unit.Scope, page.PagePath) is var at
+            && at >= 0
+            && (unit.IsCompleted || at < unit.Cursor));
     }
 
     private sealed record ServedUnit(
@@ -68,5 +69,5 @@ internal sealed class ServedUnits
         string Locale,
         bool IsCompleted,
         int Cursor,
-        IReadOnlyList<ResourceType>? Types);
+        PassScope Scope);
 }

@@ -18,6 +18,14 @@ internal interface IPrerenderCatalog
     Task<PatchVersion?> LatestVersionAsync(CancellationToken cancellationToken);
 
     /// <summary>
+    /// How long the servers may take to see a promotion: the API's cache of the versions, which
+    /// also bounds how stale its copy of the index of states is, then the SSR's copy of
+    /// <c>/api/meta</c>. A page rendered sooner may show what the promotion changed only in
+    /// part.
+    /// </summary>
+    TimeSpan SettlingDelay { get; }
+
+    /// <summary>
     /// From when every server renders <paramref name="version"/> as an older patch: the API
     /// and the SSR each keep the latest version a while, so a version that just left the latest
     /// rank still renders as the latest one for some minutes after its promotion. Null while it
@@ -29,9 +37,21 @@ internal interface IPrerenderCatalog
 
     /// <summary>
     /// The pages of <paramref name="version"/>, the same paths in every locale: the four lists,
-    /// then every entity they show.
+    /// the patch page, then every entity they show.
     /// </summary>
     Task<VersionPageList> PagesAsync(PatchVersion version, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// The paths of the pages that open a state at <paramref name="version"/>, open or closed
+    /// (<c>items/3371-molten-edge</c>), as the index of states holds them: the pages of the
+    /// version that may be indexed. None for a version the index does not cover.
+    /// </summary>
+    /// <exception cref="LoDb.Ingestion.Catalog.States.StateIndexUnavailableException">
+    /// The index cannot be read: never taken for a version without openers.
+    /// </exception>
+    Task<IReadOnlySet<string>> OpenersAsync(
+        PatchVersion version,
+        CancellationToken cancellationToken);
 
     /// <summary>
     /// Stores the datasets of <paramref name="version"/> now, waiting for their ingestion as a

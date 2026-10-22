@@ -59,6 +59,10 @@ describe('scopeSummary', () => {
     );
   });
 
+  it('says when only the patch pages and the openers of the index were rendered', () => {
+    expect(summary({ pages: 'openers' })).toBe('all · openers');
+  });
+
   it('counts the priorities and says when the units held were left out', () => {
     expect(summary({ priority: ['16.18.1', '16.12.1', '15.2.1'], skipComplete: true })).toBe(
       'all · priority(3) · skip',

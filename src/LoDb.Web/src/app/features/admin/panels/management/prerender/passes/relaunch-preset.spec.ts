@@ -33,8 +33,15 @@ describe('relaunchPreset', () => {
       pageTypes: ['items'],
       epoch: 2,
       skipComplete: false,
+      pages: null,
       fromPass: 11,
     });
+  });
+
+  it('keeps the openers of a pass that rendered them alone', () => {
+    const openers = { ...LISTED, scope: { ...LISTED.scope, pages: 'openers' } };
+
+    expect(relaunchPreset(openers, SOURCES).pages).toBe('openers');
   });
 
   it('takes every older patch when the pass did', () => {

@@ -51,6 +51,24 @@ public sealed class PageWritingTests(
     }
 
     [Fact]
+    public async Task RevisablePageIsStoredWithTheCacheControlOfItsClass()
+    {
+        await using var harness = await PrerenderHarness.StartAsync(postgres, store.Settings);
+        var version = PatchVersion.Parse("16.13.1");
+        var path = $"/en/{version.Value}/{Entity}";
+        harness.Catalog.Pinned.Add(version);
+        harness.Ssr.Answer(path, () => FakeSsr.Revisable(path, FakeSsr.BuildA));
+        await harness.LaunchAsync(Scope(version));
+
+        await harness.RunAsync();
+
+        var stored = await harness.Get<IPageStore>().HeadAsync($"pages/1{path}", Token);
+        Assert.NotNull(stored);
+        Assert.Equal(FakeSsr.RevisableCaching, stored.CacheControl);
+        Assert.Equal(FakeSsr.BuildA, stored.Metadata["lodb-build"]);
+    }
+
+    [Fact]
     public async Task BuildFilesAreStoredForAYearInEveryZone()
     {
         await using var harness = await PrerenderHarness.StartAsync(postgres, store.Settings);

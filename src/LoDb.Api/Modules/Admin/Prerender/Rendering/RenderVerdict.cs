@@ -3,12 +3,15 @@ namespace LoDb.Api.Modules.Admin.Prerender.Rendering;
 /// <summary>What the pass does with a page the SSR answered.</summary>
 internal enum RenderVerdict
 {
-    /// <summary>A 200 of the <c>archived</c> class, gzip, with its build: written.</summary>
+    /// <summary>
+    /// A 200 of a stored class (<c>archived</c> or <c>revisable</c>), gzip, with its build:
+    /// written.
+    /// </summary>
     Storable,
 
     /// <summary>
-    /// A page that is not stored, for good: a redirect, a 404, a class that is not
-    /// <c>archived</c>. Counted <c>skipped</c>.
+    /// A page that is not stored, for good: a redirect, a 404, a class the pass does not
+    /// store (the latest patch's, a mark it does not know). Counted <c>skipped</c>.
     /// </summary>
     Skipped,
 

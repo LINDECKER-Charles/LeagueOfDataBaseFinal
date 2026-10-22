@@ -143,6 +143,7 @@
               }}</span>
             </th>
             <th scope="col">{{ 'admin.prerender.coverage.columns.version' | adminText }}</th>
+            <th scope="col">{{ 'admin.prerender.coverage.columns.indexed' | adminText }}</th>
             <th scope="col" class="min-w-[12rem]">
               {{ 'admin.prerender.coverage.columns.locales' | adminText }}
             </th>
@@ -174,7 +175,7 @@
                   (click)="tickSeason(season, $event)"
                 />
               </td>
-              <th scope="rowgroup" colspan="6" class="text-start">
+              <th scope="rowgroup" colspan="7" class="text-start">
                 <button
                   class="inline-flex items-center gap-2 text-gold-bright"
                   type="button"
@@ -215,6 +216,9 @@
                     />
                   </td>
                   <td class="font-mono">{{ row.version }}</td>
+                  <td class="whitespace-nowrap text-[0.78rem] text-text-muted" data-indexed>
+                    {{ indexedOf(row) }}
+                  </td>
                   <td>
                     <span class="flex items-center gap-2">
                       <lodb-cell-strip class="grow" [cells]="row.cells" [label]="stripLabel(row)" />
@@ -234,7 +238,7 @@
         } @empty {
           <tbody>
             <tr>
-              <td colspan="7" class="t-empty">
+              <td colspan="8" class="t-empty">
                 {{ 'admin.prerender.coverage.empty' | adminText }}
               </td>
             </tr>

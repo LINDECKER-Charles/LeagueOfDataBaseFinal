@@ -10,7 +10,10 @@ using LoDb.Domain.Languages;
 using LoDb.Domain.Catalog;
 using LoDb.Domain.Versions;
 using LoDb.Infrastructure.Persistence.Prerender;
+using LoDb.Ingestion.Catalog.States;
+using LoDb.Ingestion.Catalog.States.Snapshots;
 using LoDb.Testing;
+using LoDb.Testing.States;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -38,6 +41,7 @@ public sealed class AdminPrerenderPatchesTests(PostgresContainerFixture postgres
         Latest = PatchVersion.Parse("16.19.1"),
     };
 
+    private readonly InMemoryEntityStateIndex _index = new();
     private AccountsApp? _app;
 
     private AccountsApp App => _app ?? throw new InvalidOperationException("Not started.");
@@ -52,8 +56,9 @@ public sealed class AdminPrerenderPatchesTests(PostgresContainerFixture postgres
                 ["LoDb:Prerender:ServedEpoch"] =
                     ServedEpoch.ToString(CultureInfo.InvariantCulture),
             },
-            services => services.Replace(
-                ServiceDescriptor.Singleton<IPrerenderCatalog>(_catalog)));
+            services => services
+                .Replace(ServiceDescriptor.Singleton<IPrerenderCatalog>(_catalog))
+                .Replace(ServiceDescriptor.Singleton<IEntityStateIndex>(_index)));
 
     public async ValueTask DisposeAsync()
     {
@@ -61,6 +66,51 @@ public sealed class AdminPrerenderPatchesTests(PostgresContainerFixture postgres
         {
             await _app.DisposeAsync();
         }
+    }
+
+    [Fact]
+    public async Task EachCoveredPatchCountsItsOpenersFrozenAndRevisablePages()
+    {
+        using var admin = await AdminBrowser.OpenAsync(App);
+        var item = new IndexedEntity(ResourceType.Items, "1001");
+        var champion = new IndexedEntity(ResourceType.Champions, "Ahri");
+        var tree = new IndexedEntity(ResourceType.Runes, "8000");
+        _index.Snapshot = TestStates.Snapshot(
+            ["16.16.1", Older, Newer],
+            [
+                TestStates.Closed(item, "16.16.1", "16.16.1"),
+                TestStates.Open(item, Older),
+                TestStates.Open(champion, "16.16.1"),
+                TestStates.Closed(tree, "16.16.1", Older),
+            ]);
+
+        using var response = await admin.GetAsync(Patches);
+
+        var rows = (await ApiJson.ReadAsync(response, HttpStatusCode.OK))
+            .GetProperty("patches").EnumerateArray()
+            .ToDictionary(
+                static row => row.GetProperty("version").GetString()!,
+                static row => row.GetProperty("indexed"));
+        Assert.Equal((1, 0, 2), Counts(rows[Newer]));
+        Assert.Equal((2, 1, 2), Counts(rows[Older]));
+
+        static (int, int, int) Counts(JsonElement indexed) => (
+            indexed.GetProperty("openers").GetInt32(),
+            indexed.GetProperty("frozen").GetInt32(),
+            indexed.GetProperty("revisable").GetInt32());
+    }
+
+    [Fact]
+    public async Task PatchOutOfTheIndexExpectsNothingOfIt()
+    {
+        using var admin = await AdminBrowser.OpenAsync(App);
+
+        using var response = await admin.GetAsync(Patches);
+
+        Assert.All(
+            (await ApiJson.ReadAsync(response, HttpStatusCode.OK))
+                .GetProperty("patches").EnumerateArray(),
+            static row => Assert.Equal(JsonValueKind.Null, row.GetProperty("indexed").ValueKind));
     }
 
     [Fact]

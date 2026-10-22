@@ -49,6 +49,7 @@ describe('failuresPreset', () => {
       pageTypes: ['items'],
       epoch: 2,
       skipComplete: true,
+      pages: null,
       fromPass: 12,
     });
   });

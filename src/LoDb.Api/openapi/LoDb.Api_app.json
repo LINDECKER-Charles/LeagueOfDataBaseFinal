@@ -6373,6 +6373,47 @@
         }
       }
     },
+    "/api/admin/prerender/revision": {
+      "get": {
+        "tags": [
+          "AdminPrerender"
+        ],
+        "summary": "The queue of the pages of the states a promotion closed.",
+        "operationId": "readAdminPrerenderRevision",
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrerenderRevisionReport"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/prerender/speed": {
       "get": {
         "tags": [
@@ -11804,6 +11845,13 @@
             },
             "description": "The types of page rendered (champions, items, runes, summoners); null for all four."
           },
+          "pages": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "`openers` for the patch page and the pages that open a state at each version, open\nor closed (the pages that may be indexed, rendered first); null for every page. A pass\nover every page follows it: a promotion never joins it, and it makes no epoch whole."
+          },
           "priority": {
             "type": [
               "null",
@@ -12429,6 +12477,32 @@
         },
         "description": "What the admin estimates a pass with, all measured here."
       },
+      "PrerenderIndexedPages": {
+        "required": [
+          "openers",
+          "frozen",
+          "revisable"
+        ],
+        "type": "object",
+        "properties": {
+          "openers": {
+            "type": "integer",
+            "description": "The pages an openers pass renders: the patch page, when the patch has one, and the\npages that open a state at it, open or closed.",
+            "format": "int32"
+          },
+          "frozen": {
+            "type": "integer",
+            "description": "The entity pages of the closed states it holds: stored `archived`, they never\nchange again. Its lists and its patch page are frozen too, and not counted here.",
+            "format": "int32"
+          },
+          "revisable": {
+            "type": "integer",
+            "description": "The entity pages of the open states it holds: stored `revisable`, each rendered\nagain once a promotion closes its state.",
+            "format": "int32"
+          }
+        },
+        "description": "What the index of states expects of an older patch, in each locale."
+      },
       "PrerenderPaceView": {
         "required": [
           "mode",
@@ -12873,6 +12947,17 @@
             ],
             "description": "When a unit of the epoch last ended for it; null when none did.",
             "format": "date-time"
+          },
+          "indexed": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "What the index of states expects of it, in each locale; null for a version the index\ndoes not cover.",
+                "$ref": "#/components/schemas/PrerenderIndexedPages"
+              }
+            ]
           }
         },
         "description": "One older patch in an epoch."
@@ -13036,6 +13121,126 @@
         },
         "description": "The host's resources as this instance last read them, every 30 s: shares in 0..1 and cores,\neach null while it cannot be told. Counts and CPU only, nothing of a visitor."
       },
+      "PrerenderRevisionEpoch": {
+        "required": [
+          "epoch",
+          "pending",
+          "done",
+          "failed",
+          "skipped"
+        ],
+        "type": "object",
+        "properties": {
+          "epoch": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pending": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "done": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "failed": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "skipped": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "description": "What the queue of the closed states holds of one epoch."
+      },
+      "PrerenderRevisionReport": {
+        "required": [
+          "generatedAt",
+          "isActive",
+          "servedEpoch",
+          "pending",
+          "due",
+          "done",
+          "failed",
+          "skipped",
+          "writtenLastHour",
+          "writtenLastDay",
+          "epochs"
+        ],
+        "type": "object",
+        "properties": {
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "isActive": {
+            "type": "boolean",
+            "description": "Whether it renders: the store is configured. It never depends on\n`AutoEnqueueOnPromotion`."
+          },
+          "servedEpoch": {
+            "type": "integer",
+            "description": "The epoch nginx serves.",
+            "format": "int32"
+          },
+          "pending": {
+            "type": "integer",
+            "description": "Pages waiting, due or not.",
+            "format": "int64"
+          },
+          "due": {
+            "type": "integer",
+            "description": "Pending pages due now: the servers read an index that covers their closure.",
+            "format": "int64"
+          },
+          "done": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "failed": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "skipped": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "writtenLastHour": {
+            "type": "integer",
+            "description": "Pages it wrote in the last hour.",
+            "format": "int64"
+          },
+          "writtenLastDay": {
+            "type": "integer",
+            "description": "Pages it wrote in the last 24 hours.",
+            "format": "int64"
+          },
+          "nextDueAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "When the next pending page is due; null when none waits.",
+            "format": "date-time"
+          },
+          "closedThrough": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The `closed_at` of the last closure its producer enqueued; null before its first\nrun.",
+            "format": "date-time"
+          },
+          "epochs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PrerenderRevisionEpoch"
+            },
+            "description": "What it holds of each epoch, the newest first."
+          }
+        },
+        "description": "The queue of the closed states as the admin shows it: whether it runs, what it holds by\nepoch, what it wrote lately, and how far its producer went through the closures of the\nindex."
+      },
       "PrerenderScopeView": {
         "required": [
           "priority",
@@ -13098,6 +13303,13 @@
               "type": "string"
             },
             "description": "The types of page rendered; null for all four."
+          },
+          "pages": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "`openers` when only the patch page and the openers of the index are rendered; null\nfor every page."
           },
           "priority": {
             "type": "array",

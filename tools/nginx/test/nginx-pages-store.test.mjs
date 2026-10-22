@@ -4,8 +4,9 @@
 // writes reach the SSR server, which the store never sees, and so does the latest patch pinned
 // in the path; the rate holds across both; a bundle the SSR server no longer has comes from the
 // store, under the same rate. Switched off, nginx never asks the store; a store it cannot trust
-// or find is nginx-pages-store-unreachable.test.mjs's. Needs Docker and the image's tag in
-// LODB_NGINX_IMAGE (tools/nginx/README.md); skipped without it.
+// or find is nginx-pages-store-unreachable.test.mjs's, how long a page is kept by its class
+// nginx-pages-store-classes.test.mjs's. Needs Docker and the image's tag in LODB_NGINX_IMAGE
+// (tools/nginx/README.md); skipped without it.
 import assert from 'node:assert/strict';
 import { after, before, describe, test } from 'node:test';
 import { gunzipSync } from 'node:zlib';
@@ -248,6 +249,8 @@ describe('nginx image in front of the page store',
           ['/en/15.2.1/champions/../items'],
           ['/en/15.2.1//champions'],
           ['/en/15.2.1/patches'],
+          ['/en/15.2.1/changes/items'],
+          ['/en/15.2.1/changesets'],
           [STORED, { method: 'POST', body: Buffer.from('x') }],
         ];
         for (const [path, options] of requests) {
