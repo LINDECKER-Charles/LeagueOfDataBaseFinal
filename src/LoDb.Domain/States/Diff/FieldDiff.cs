@@ -7,10 +7,12 @@ namespace LoDb.Domain.States.Diff;
 /// « Ce qui a changé » shows of it.
 /// </summary>
 /// <remarks>
-/// <see cref="Before"/> and <see cref="After"/> are the projected values
-/// (<c>ProjectedField.Values</c>). When the two localized values are equal (a translation
+/// For a field of kind Text, <see cref="Before"/> and <see cref="After"/> are empty and the
+/// diff is in <see cref="Segments"/>. For any other kind, <see cref="Before"/> and
+/// <see cref="After"/> are the projected values (<c>ProjectedField.Values</c>) and
+/// <see cref="Segments"/> is empty. When the two localized values are equal (a translation
 /// that lags, a fallback to en_US), <see cref="Before"/> is empty and the field shows its value
-/// after alone. A text field also carries its <see cref="Segments"/>, empty otherwise.
+/// after alone.
 /// </remarks>
 public sealed record FieldDiff
 {
