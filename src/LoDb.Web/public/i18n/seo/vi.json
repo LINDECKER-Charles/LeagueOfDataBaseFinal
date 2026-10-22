@@ -1,5 +1,6 @@
 {
   "versioned_suffix": "(bản {{ version }})",
+  "state_range_suffix": "(bản {{ first }} đến {{ last }})",
   "home": {
     "title": "League Of Data Base — bách khoa toàn thư Liên Minh Huyền Thoại",
     "description": "Tướng, trang bị, ngọc bổ trợ và phép bổ trợ Liên Minh Huyền Thoại cho phiên bản {{ version }} — chỉ số, kỹ năng và chi tiết bằng 21 ngôn ngữ."
@@ -98,5 +99,11 @@
       "title": "Câu hỏi thường gặp",
       "description": "Giải đáp về League Of Data Base: đây là gì, dữ liệu League of Legends lấy từ đâu, cập nhật bao lâu một lần và có cần tài khoản không."
     }
+  },
+  "state": {
+    "summary": "Thay đổi ở bản {{ version }}: {{ fields }}.",
+    "summary_more": "Thay đổi ở bản {{ version }}: {{ fields }}…",
+    "summary_new": "Mới ở bản {{ version }}.",
+    "summary_returned": "Trở lại ở bản {{ version }}."
   }
 }

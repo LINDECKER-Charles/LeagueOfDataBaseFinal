@@ -1,5 +1,6 @@
 {
   "versioned_suffix": "(patch {{ version }})",
+  "state_range_suffix": "(patches {{ first }} to {{ last }})",
   "home": {
     "title": "League Of Data Base — League of Legends database",
     "description": "The League of Legends (LoL) database: champions, items, runes and summoner spells for patch {{ version }} — stats, abilities and details in 21 languages."
@@ -98,5 +99,11 @@
       "title": "Frequently asked questions",
       "description": "Answers about League Of Data Base: what it is, where its League of Legends data comes from, how often it updates, and whether an account is needed."
     }
+  },
+  "state": {
+    "summary": "Changed in patch {{ version }}: {{ fields }}.",
+    "summary_more": "Changed in patch {{ version }}: {{ fields }}…",
+    "summary_new": "New in patch {{ version }}.",
+    "summary_returned": "Back in patch {{ version }}."
   }
 }

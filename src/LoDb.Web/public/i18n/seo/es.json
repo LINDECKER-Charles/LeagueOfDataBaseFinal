@@ -1,5 +1,6 @@
 {
   "versioned_suffix": "(parche {{ version }})",
+  "state_range_suffix": "(parches {{ first }} a {{ last }})",
   "home": {
     "title": "League Of Data Base — la enciclopedia de League of Legends",
     "description": "Campeones, objetos, runas y hechizos de invocador de League of Legends para el parche {{ version }}: estadísticas, habilidades y detalles en 21 idiomas."
@@ -98,5 +99,11 @@
       "title": "Preguntas frecuentes",
       "description": "Respuestas sobre League Of Data Base: qué es, de dónde vienen sus datos de League of Legends, con qué frecuencia se actualizan y si hace falta una cuenta."
     }
+  },
+  "state": {
+    "summary": "Cambiado en el parche {{ version }}: {{ fields }}.",
+    "summary_more": "Cambiado en el parche {{ version }}: {{ fields }}…",
+    "summary_new": "Nuevo en el parche {{ version }}.",
+    "summary_returned": "De vuelta en el parche {{ version }}."
   }
 }

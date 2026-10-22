@@ -5,6 +5,7 @@ import { previewImage } from '../../../../core/seo/images/preview-image';
 import type { SeoPage } from '../../../../core/seo/seo-page';
 import type { CatalogueTexts } from '../../shared/codex/head/catalogue-texts';
 import { detailTrail } from '../../shared/codex/head/detail-trail';
+import { stateHeadOf } from '../../shared/codex/state/head/state-head-of';
 
 // The level that unlocks a spell is what players search it by ("barrier level"); a spell
 // Data Dragon gives no level keeps the plain description.
@@ -42,11 +43,11 @@ export function summonerHeadOf(
   };
   return {
     title: texts.seo('summoner.detail.title', { name }),
-    description: descriptionOf(entry, texts, name),
+    ...stateHeadOf(entry, texts, descriptionOf(entry, texts, name)),
     locale: context.locale,
     path: details.canonicalPath,
     version: context.pinned ? context.version : null,
-    canonical: details.canonical ?? null,
+    canonical: details.canonical,
     image: previewImage('summoners'),
     jsonLd: (urls) => [
       detailTrail(trail, urls),

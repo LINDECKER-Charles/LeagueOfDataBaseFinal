@@ -96,6 +96,33 @@ describe('championSeo', () => {
     expect(page).toMatchObject({ version: '15.14.1', canonical });
   });
 
+  // The opener of a closed state: the page search engines index for that run of patches.
+  it('names the run of patches of the closed state it opens, and what its patch changed', () => {
+    const opener = { version: '15.14.1', path: 'champions/Annie' };
+    const state = {
+      openerVersion: '15.14.1',
+      lastVersion: '15.16.1',
+      isOpen: false,
+      isOpener: true,
+      kind: 'new' as const,
+      changedFields: [],
+      openerLink: opener,
+      canonical: opener,
+    };
+    const page = championSeo(
+      { context: PINNED, details: { ...DETAILS, canonical: opener, state } },
+      translate,
+    );
+
+    expect(page).toMatchObject({
+      canonical: opener,
+      titlePatches: { first: '15.14.1', last: '15.16.1' },
+      description:
+        'seo.state.summary_new {"version":"15.14.1"} ' +
+        'seo.champion.detail.description {"name":"Annie","version":"15.14.1"}',
+    });
+  });
+
   it('describes the path home › champions › champion, then the champion as a character', () => {
     const [breadcrumb, character] = nodesOf(
       championSeo({ context: CONTEXT, details: DETAILS }, translate),

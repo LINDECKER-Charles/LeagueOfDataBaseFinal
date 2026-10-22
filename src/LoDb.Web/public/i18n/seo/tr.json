@@ -1,5 +1,6 @@
 {
   "versioned_suffix": "(yama {{ version }})",
+  "state_range_suffix": "({{ first }} – {{ last }} yamaları)",
   "home": {
     "title": "League Of Data Base — League of Legends ansiklopedisi",
     "description": "{{ version }} yaması için League of Legends şampiyonları, eşyaları, rünleri ve sihirdar büyüleri — 21 dilde istatistikler, yetenekler ve ayrıntılar."
@@ -98,5 +99,11 @@
       "title": "Sıkça sorulan sorular",
       "description": "League Of Data Base hakkında yanıtlar: nedir, League of Legends verileri nereden gelir, ne sıklıkla güncellenir ve hesap gerekir mi."
     }
+  },
+  "state": {
+    "summary": "{{ version }} yamasında değişti: {{ fields }}.",
+    "summary_more": "{{ version }} yamasında değişti: {{ fields }}…",
+    "summary_new": "{{ version }} yamasında yeni.",
+    "summary_returned": "{{ version }} yamasında geri döndü."
   }
 }

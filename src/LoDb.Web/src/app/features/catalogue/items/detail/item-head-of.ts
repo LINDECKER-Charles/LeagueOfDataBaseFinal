@@ -6,6 +6,7 @@ import type { SeoPage } from '../../../../core/seo/seo-page';
 import type { CatalogueEntry } from '../../../../core/routing/catalogue/catalogue-entry';
 import type { CatalogueTexts } from '../../shared/codex/head/catalogue-texts';
 import { detailTrail } from '../../shared/codex/head/detail-trail';
+import { stateHeadOf } from '../../shared/codex/state/head/state-head-of';
 import { mapLabelKey } from './aside/map-label-key';
 import { itemDescriptionOf } from './item-description-of';
 
@@ -32,11 +33,11 @@ export function itemHeadOf(entry: CatalogueEntry<ItemDetails>, texts: CatalogueT
   };
   return {
     title: texts.seo('item.detail.title', { name }),
-    description: itemDescriptionOf(entry, texts, name),
+    ...stateHeadOf(entry, texts, itemDescriptionOf(entry, texts, name)),
     locale: context.locale,
     path: details.canonicalPath,
     version: context.pinned ? context.version : null,
-    canonical: details.canonical ?? null,
+    canonical: details.canonical,
     image: previewImage('items'),
     jsonLd: (urls) => [
       detailTrail(trail, urls),

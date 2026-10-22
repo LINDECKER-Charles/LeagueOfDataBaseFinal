@@ -1,5 +1,6 @@
 {
   "versioned_suffix": "(patch {{ version }})",
+  "state_range_suffix": "(patch da {{ first }} a {{ last }})",
   "home": {
     "title": "League Of Data Base — l'enciclopedia di League of Legends",
     "description": "Campioni, oggetti, rune e incantesimi dell'evocatore di League of Legends per la patch {{ version }}: statistiche, abilità e dettagli in 21 lingue."
@@ -98,5 +99,11 @@
       "title": "Domande frequenti",
       "description": "Risposte su League Of Data Base: che cos'è, da dove provengono i suoi dati di League of Legends, ogni quanto si aggiornano e se serve un account."
     }
+  },
+  "state": {
+    "summary": "Modificato nella patch {{ version }}: {{ fields }}.",
+    "summary_more": "Modificato nella patch {{ version }}: {{ fields }}…",
+    "summary_new": "Nuovo nella patch {{ version }}.",
+    "summary_returned": "Di ritorno nella patch {{ version }}."
   }
 }
