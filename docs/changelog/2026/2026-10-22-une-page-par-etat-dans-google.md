@@ -45,9 +45,8 @@ août. Chaque contenu distinct a maintenant une page, et une seule.
 ## Technique
 
 - Décision : ADR 0005, ADR 0011 et ADR 0003, amendements du 2026-10-22 ; spécification
-  `docs/produit/seo-une-page-par-etat.md` (écarts de l'implémentation : § 11). Le changement
-  est en vigueur dans le code ; la prod le sert à la bascule de son déploiement (§ 4), sans
-  interrupteur.
+  `docs/produit/seo-une-page-par-etat.md` (écarts de l'implémentation : § 11). En prod depuis
+  le 2026-10-22 à 16:55 UTC, d'un seul coup et sans interrupteur (§ 4 ; résultats : § 12).
 - Index des états d'entité en Postgres (`catalog_state_generation`, `catalog_state_version`,
   `catalog_entity_state`), empreinte SHA-256 de la projection affichée de chaque entité
   (`LoDb.Domain/States/`, `FingerprintScheme.Current = 1`), construit par

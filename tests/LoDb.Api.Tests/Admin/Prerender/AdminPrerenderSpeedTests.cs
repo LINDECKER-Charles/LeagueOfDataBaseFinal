@@ -36,6 +36,7 @@ public sealed class AdminPrerenderSpeedTests(PostgresContainerFixture postgres)
         Assert.Equal(JsonValueKind.Null, setting.GetProperty("updatedAt").ValueKind);
         var limits = report.GetProperty("limits");
         Assert.Equal(900, limits.GetProperty("manualMaxRendersPerMinute").GetInt32());
+        Assert.Equal(1300, limits.GetProperty("manualWarnRendersPerMinute").GetInt32());
         Assert.Equal(2, limits.GetProperty("renderers").GetInt32());
         Assert.Equal(3, limits.GetProperty("brakeMinutes").GetInt32());
         Assert.False(limits.GetProperty("isCostMeasured").GetBoolean());

@@ -8,8 +8,10 @@
   - le SSR dédié et le régulateur sont en prod le 2026-10-21 (PR #96), la file de la demande
     et la vitesse réglable le 2026-10-22 (PR #99) ;
   - **le CDN (lot 4) n'est pas construit** : rien de Cloudflare dans le dépôt ;
-  - les pages révisables (amendement du 2026-10-22) sont en vigueur dans le code ; la prod les
-    sert à la bascule de la règle par état (ADR 0005, amendement du 2026-10-22).
+  - les pages révisables (amendement du 2026-10-22) sont en vigueur en prod depuis le
+    2026-10-22, avec la règle par état (ADR 0005, amendement du 2026-10-22) ; l'epoch 2,
+    servie depuis, attend ses passes, et nginx ne lit pas encore le stockage en prod
+    (`LODB_PAGES_STORE_ENABLED=0`).
 - **Révise** (amendements du 2026-10-20) : [ADR 0002](0002-hote-serveur-unique.md) (un second
   hôte sortant), [ADR 0003](0003-ingestion-proactive-et-taches-de-fond.md) (la tâche de
   précalcul), [ADR 0004](0004-stockage-etat-et-scaling.md) (nginx sert aussi depuis un
@@ -26,7 +28,10 @@
   - le 2026-10-22 encore, le stockage garde aussi des pages révisables, celles des anciens
     patchs dont l'état est encore ouvert, pré-calculées de nouveau page par page quand une
     promotion le clôt ; une passe peut se limiter aux ouvreurs (voir § « Amendement du
-    2026-10-22 — pages révisables »). En vigueur dans le code, en prod à la bascule.
+    2026-10-22 — pages révisables »). En vigueur en prod depuis le 2026-10-22 ;
+  - le 2026-10-23, le maximum de la vitesse manuelle monte à 4 000 sur un hôte, avec un
+    avertissement au pupitre au-delà de 1 300 (voir § « Amendement du 2026-10-23 — vitesse
+    manuelle jusqu'à 4 000 »).
 - **Remplace** : la spécification du cache recyclé de 68 Go, interrompue et jamais
   publiée
 - **Détail** : [spécification](../../produit/pre-rendu-catalogue-cdn.md) (lots, réglages,
@@ -342,8 +347,8 @@ Débit attendu à 900 pages par minute : 4,2 millions de pages en un peu plus de
 
 ## Amendement du 2026-10-22 — pages révisables
 
-*En vigueur dans le code ; il part en prod au même déploiement que la règle par état de
-l'ADR 0005 (amendement du 2026-10-22), sa bascule.*
+*En vigueur en prod depuis le 2026-10-22, parti au même déploiement que la règle par état
+de l'ADR 0005 (amendement du 2026-10-22), sa bascule.*
 
 L'[ADR 0005](0005-web-ssr-urls-et-seo.md) (amendement du 2026-10-22) indexe une page par état
 d'entité. La page d'un ancien patch n'est donc plus immuable dans tous les cas. Celle d'un
@@ -398,3 +403,22 @@ canonique, son titre et son historique changent alors. Cela concerne 5 à 15 % d
   `tools/prerender/scaleway-bucket.sh` (`RETIRED_EPOCHS=1`, règle `retire-pages-1`).
 - **Conséquence** : la classe `archived` ne garde plus que des pages vraiment immuables. Une
   page révisable coûte une relecture du stockage par heure au plus.
+
+## Amendement du 2026-10-23 — vitesse manuelle jusqu'à 4 000
+
+Le propriétaire veut de la marge au pupitre : fixer une cible plus haute que ce que les
+moteurs tiennent aujourd'hui, sans redéployer pour la relever.
+
+- **Maximum** : `LODB_PRERENDER_MANUAL_MAX` passe de 900 à **4 000** sur un hôte (staging et
+  local inchangés). Il reste le budget de la voie de chaque moteur.
+- **Avertissement** : au pupitre, dès que la cible dépasse **1 300** pages/min
+  (`Pace:ManualWarnRendersPerMinute`, affiché, jamais appliqué). Le VPS a 4 vCPU, chaque moteur
+  est un thread Node d'un cœur au plus (~450 pages/min) : les 2 moteurs d'aujourd'hui tiennent
+  ~900 pages/min, et ~1 300 est ce qu'en tiendraient 3, le plus que le VPS peut donner à la
+  passe sans priver les visiteurs.
+- **Ce qui ne change pas** : le débit réel reste borné par les moteurs
+  (`LODB_PRERENDER_RENDERERS`) et par les pages en vol (`LODB_PRERENDER_PAGES_IN_FLIGHT`, 24) ;
+  le frein d'urgence (hôte à 90 % de CPU pendant 3 min) peut couper les nouveaux rendus 5 min.
+  Aller vraiment plus vite demande plus de moteurs, et des pages en vol en proportion.
+
+Détail : [configuration](../../guides/configuration.md), § 4.10.

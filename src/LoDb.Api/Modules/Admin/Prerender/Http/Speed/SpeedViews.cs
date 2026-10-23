@@ -34,6 +34,7 @@ internal static class SpeedViews
             MinRendersPerMinute = pace.MinRendersPerMinute,
             MaxRendersPerMinute = pace.MaxRendersPerMinute,
             ManualMaxRendersPerMinute = pace.ManualMaxRendersPerMinute,
+            ManualWarnRendersPerMinute = pace.ManualWarnRendersPerMinute,
             Renderers = options.Renderers,
             RendererCpus = Round(pace.RendererCpus),
             BrakeHostBusy = Round(ManualDecision.BrakeHostBusy),
