@@ -1402,6 +1402,7 @@
         "unit": "pages/min"
       },
       "brake": "Emergency brake: no render for {hold} min as soon as a visitor of the latest patch is refused, or after {minutes} min over {busy} % of the VPS's CPU (the host's steal included), with the visitors' SSR slowed or the API throttled, or without the visitors' load. The pass then resumes at the chosen speed.",
+      "warn": "Above {warn} pages/min the target exceeds what the VPS (4 vCPU) can give the pass: each renderer (one Node thread, one core) renders about 450 pages/min, and 3 renderers are the most it runs without starving the visitors. With {renderers} renderers, the real pace stays bounded by them (see the renderers' capacity below), and the emergency brake (VPS at {busy} % CPU for {minutes} min) may stop new renders for {hold} min. To really go faster, raise LODB_PRERENDER_RENDERERS (and the pages in flight, LODB_PRERENDER_PAGES_IN_FLIGHT).",
       "apply": "Apply",
       "applied": "Set on {at} UTC; applied within 30 s by the instance writing the pass.",
       "never_set": "Never set: adaptive by default.",

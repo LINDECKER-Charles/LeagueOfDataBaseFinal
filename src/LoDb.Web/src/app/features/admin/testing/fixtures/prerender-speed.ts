@@ -8,7 +8,8 @@ const SPEED: PrerenderSpeedReport = {
   limits: {
     minRendersPerMinute: 30,
     maxRendersPerMinute: 240,
-    manualMaxRendersPerMinute: 900,
+    manualMaxRendersPerMinute: 4000,
+    manualWarnRendersPerMinute: 1300,
     renderers: 2,
     rendererCpus: 1,
     brakeHostBusy: 0.9,

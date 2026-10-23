@@ -100,6 +100,21 @@
             </span>
           </span>
         </label>
+        @if (isOverWarning()) {
+          <p class="m-0 mt-3 border-s-2 border-gold ps-3 text-[0.85rem] text-gold" data-speed-warn>
+            {{
+              'admin.prerender.speed.warn'
+                | adminText
+                  : {
+                      warn: limits.manualWarnRendersPerMinute,
+                      renderers: limits.renderers,
+                      busy: limits.brakeHostBusy * 100,
+                      minutes: limits.brakeMinutes,
+                      hold: limits.holdMinutes,
+                    }
+            }}
+          </p>
+        }
         <p class="m-0 mt-3 border-s-2 border-warn ps-3 text-[0.85rem]" data-speed-brake>
           {{
             'admin.prerender.speed.brake'
