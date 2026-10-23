@@ -30,7 +30,7 @@ internal sealed class LenientIntConverter : JsonConverter<int?>
                     ? parsed
                     : null;
             default:
-                reader.Skip();
+                ValueSkipping.Skip(ref reader);
                 return null;
         }
     }

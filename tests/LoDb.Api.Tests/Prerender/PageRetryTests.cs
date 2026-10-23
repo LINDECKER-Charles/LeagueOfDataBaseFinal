@@ -4,6 +4,7 @@ using LoDb.Api.Modules.Admin.Prerender.Pages;
 using LoDb.Api.Modules.Admin.Prerender.Passes;
 using LoDb.Api.Modules.Admin.Prerender.Rendering;
 using LoDb.Api.Modules.Admin.Prerender.Telemetry;
+using LoDb.Api.Modules.Admin.Prerender.Writing;
 using LoDb.Api.Tests.Prerender.Support;
 using LoDb.Domain.Languages;
 using LoDb.Domain.Versions;
@@ -46,6 +47,53 @@ public sealed class PageRetryTests(PostgresContainerFixture postgres)
         Assert.Equal((6, 0), (unit.PagesWritten, unit.PagesFailed));
         Assert.Equal(2, Count(pages, "refused"));
         Assert.Equal(6, Count(pages, "written"));
+    }
+
+    // The SSR answers 503 too when the API cannot give it the page's data (a file Data Dragon
+    // serves that the API cannot read): the page must not hold the pass for good.
+    [Fact]
+    public async Task PageRefusedOverAndOverIsCountedFailedAndTheUnitGoesOn()
+    {
+        await using var harness = await StartAsync();
+        using var pages = Pages(harness);
+        harness.Ssr.Answer(
+            First,
+            [.. Enumerable.Repeat(Unavailable, PageRunner.MostRefusals)]);
+        var passId = await harness.LaunchAsync(Scope());
+
+        await harness.RunAsync();
+
+        var pass = await harness.PassAsync(passId);
+        var unit = Assert.Single(pass.Units);
+        Assert.Equal((5, 1, 6), (unit.PagesWritten, unit.PagesFailed, unit.Cursor));
+        Assert.Equal(PrerenderPassState.Completed, pass.State);
+        Assert.Equal(PageRunner.MostRefusals, Count(pages, "refused"));
+        Assert.Equal(PageRunner.MostRefusals, harness.Ssr.Pages.Count(static path => path == First));
+
+        static HttpResponseMessage Unavailable() =>
+            FakeSsr.Status(HttpStatusCode.ServiceUnavailable, retryAfterSeconds: 3);
+    }
+
+    // The monitor reads a pulse older than 2 minutes as no engine at all.
+    [Fact]
+    public async Task PageWaitingOutRefusalsKeepsTheEngineBeating()
+    {
+        await using var harness = await StartAsync();
+        var pulse = harness.Get<EnginePulse>();
+        var beats = new List<DateTimeOffset?>();
+        harness.Ssr.Answer(First, Seen, Seen, Seen);
+        await harness.LaunchAsync(Scope());
+
+        await harness.RunAsync();
+
+        Assert.Equal(3, beats.Distinct().Count());
+        Assert.True(beats[^1] - beats[0] >= TimeSpan.FromMinutes(4));
+
+        HttpResponseMessage Seen()
+        {
+            beats.Add(pulse.LastBeatAt);
+            return FakeSsr.Status(HttpStatusCode.ServiceUnavailable, retryAfterSeconds: 120);
+        }
     }
 
     [Fact]
