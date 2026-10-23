@@ -1,15 +1,15 @@
 # Catalogue pré-rendu : stockage objet et CDN
 
-> **État des lots au 2026-10-22**
+> **État des lots au 2026-10-23**
 >
 > | Lot | État |
 > |---|---|
 > | 0 — Décision écrite | fait : [ADR 0011](../reecriture/adr/0011-catalogue-pre-rendu-et-cdn.md) (2026-10-20) |
 > | 1 — Stockage | fait, en prod le 2026-10-21 (PR #85, #93) |
 > | 2 — Passe de précalcul | fait, en prod le 2026-10-21 ; capacité adaptative (PR #94, en prod par #96), file automatique (PR #98) et vitesse réglable (PR #97), en prod le 2026-10-22 (#99) |
-> | 3 — nginx sert depuis le stockage | fait, en prod le 2026-10-21 (PR #85, #91), la lecture derrière `LODB_PAGES_STORE_ENABLED` |
+> | 3 — nginx sert depuis le stockage | fait, en prod le 2026-10-21 (PR #85, #91), la lecture derrière `LODB_PAGES_STORE_ENABLED`, allumée en prod le 2026-10-23 (PR #107) |
 > | 4 — CDN Cloudflare (4a `infra-vps`, 4b DNS, 4c LoDb) | **non commencé** ; date à fixer |
-> | 5 — Mesure de l'effet | à relever, 7 jours après la lecture du stockage en prod |
+> | 5 — Mesure de l'effet | à relever le 2026-10-30, 7 jours après la lecture du stockage en prod |
 > | 6 — Alléger les pages | plus tard |
 >
 > Le cap d'indexation a changé depuis cette spécification : une page indexée par état
@@ -389,8 +389,10 @@ conteneur à elle, `http://lodb-web-ssr-prerender:4000`, et non plus celui des v
 `ONEZONE_IA`. Un `PUT` est atomique pour un objet. L'API n'écrit qu'une `200` marquée
 `X-LoDb-Cache-Class: archived` (*ou `revisable`, depuis le 2026-10-22*), compressée en gzip et
 dont le build (`X-LoDb-Build`) est déjà copié (§ 3) ; une 301 ou une 404 est comptée `skipped`, pas en échec. Une 503 fait
-reculer la tâche selon son `Retry-After`. Une page en échec est retentée plus tard dans la
-passe, puis comptée en échec. Le stockage est joint par un client nommé à lui
+reculer la tâche selon son `Retry-After`, 20 fois au plus pour une page (*depuis le
+2026-10-23 : le SSR répond aussi 503 quand l'API ne peut pas lui donner les données de la page,
+ce qui peut durer ; la page est alors comptée en échec et l'unité continue*). Une page en échec
+est retentée plus tard dans la passe, puis comptée en échec. Le stockage est joint par un client nommé à lui
 (`page-store`), avec sa propre allow-list, sans redirection : jamais en élargissant
 `LoDb:Egress:AllowedHosts`. La signature SigV4 ne couvre que le `PUT` : la clé
 d'écriture ne lit rien, une lecture signée répondrait toujours 403. L'API ne vérifie
@@ -639,7 +641,8 @@ fond qui mesure.
 **Avec ce qui existe.**
 
 - L'admission du SSR dédié borne la passe à son plafond. Un refus (`503`) reste attendu selon
-  son `Retry-After` et compté `refused`, comme aujourd'hui ; il ne devrait plus arriver.
+  son `Retry-After` et compté `refused`, comme aujourd'hui ; il ne devrait plus arriver (20 au
+  plus par page depuis le 2026-10-23, voir « Écriture »).
 - `SsrOutage` : le SSR de la passe injoignable rend sa source illisible, donc le plancher ; la
   passe attend comme avant.
 - Pause, reprise, annulation : le régulateur ne tourne que pendant que son instance écrit une

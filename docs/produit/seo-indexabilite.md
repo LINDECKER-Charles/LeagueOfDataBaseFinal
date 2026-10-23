@@ -47,20 +47,21 @@ catalogues, jamais celui de l'index.
 | IndexNow | À chaque promotion : toutes les URL courtes, puis les pages de patch qui ont changé quelque chose depuis le patch promu avant, puis les ouvreurs des états clos depuis ; rien si l'index ne couvre pas la version ; coupé sans clé (`seo.indexnow.planned`) | `src/LoDb.Api/Modules/Seo/IndexNow/` |
 | `robots.txt`, `llms.txt` | Générés par l'API ; `llms.txt` cite `/en/changes` | `src/LoDb.Api/Modules/Seo/Files/` |
 | Staging | `LODB_NOINDEX=1` : `X-Robots-Tag: noindex, nofollow` et 403 aux robots d'IA, jamais `Disallow: /` | `docker/nginx/snippets/security-headers.conf`, `docker/nginx/nginx.conf` |
-| Pages des anciens patchs | Servies par le cache `lodb_archive` (autant que dit la `Cache-Control` de l'objet : un an figée, une heure révisable), le stockage pré-rendu (derrière `LODB_PAGES_STORE_ENABLED`, à `0` en prod au 2026-10-22), puis le SSR dans un budget borné (503 avec `Retry-After` au-delà) ; chaque page refusée entre dans la file de la demande, chaque page d'un état que la promotion clôt dans la file des états clos | ADR 0011, `docker/nginx/sites/site.conf`, `src/LoDb.Api/Modules/Admin/Prerender/Revision/` |
+| Pages des anciens patchs | Servies par le cache `lodb_archive` (autant que dit la `Cache-Control` de l'objet : un an figée, une heure révisable), le stockage pré-rendu (derrière `LODB_PAGES_STORE_ENABLED`, à `1` en prod depuis le 2026-10-23), puis le SSR dans un budget borné (503 avec `Retry-After` au-delà) ; chaque page refusée entre dans la file de la demande, chaque page d'un état que la promotion clôt dans la file des états clos | ADR 0011, `docker/nginx/sites/site.conf`, `src/LoDb.Api/Modules/Admin/Prerender/Revision/` |
 
 Comportements voulus à ne pas « corriger » : [`pieges.md`](../architecture/pieges.md)
 (« Historique des patchs », « Index des états d'entité », pages révisables).
 
 ### Limites connues
 
-- **L'epoch servie est vide et la prod ne lit pas le stockage** : l'epoch 2, servie depuis la
-  bascule, attend ses passes, et `LODB_PAGES_STORE_ENABLED` vaut `0`. Une page d'ancien patch
-  absente du cache `lodb_archive` (purgé par le changement d'epoch, que sa clé porte) passe donc
-  par le budget épinglé du SSR (503 au-delà) et la file de la demande. Le levier : remplir
-  l'epoch 2 (~409 000 ouvreurs des états clos, environ 7 h 30 à 900 pages par minute, puis le
-  reste), puis poser `LODB_PAGES_STORE_ENABLED=1`. La part de 503 servies à Googlebot se suit
-  pendant les passes (spécification, § 4.3 et § 12).
+- **L'epoch servie n'est pas remplie** : nginx lit le stockage en prod depuis le 2026-10-23
+  (`LODB_PAGES_STORE_ENABLED=1`), mais l'epoch 2, servie depuis la bascule, attend ses passes.
+  Elle ne tient encore que les pages que la file de la demande y a écrites (~29 500 au
+  branchement). Une page d'ancien patch absente du cache `lodb_archive` et du stockage passe
+  donc par le budget épinglé du SSR (503 au-delà) et la file de la demande. Le levier : la passe
+  « ouvreurs d'abord » (~409 000 ouvreurs des états clos, environ 7 h 30 à 900 pages par
+  minute), puis la passe entière. La part de 503 servies à Googlebot se suit pendant les
+  passes (spécification, § 4.3 et § 12).
 - **Pages révisables** : la copie d'avant d'une page dont l'état vient de se clore peut être
   servie environ deux heures après son nouveau rendu ; Bing peut la lire via IndexNow. Accepté.
 - **Ce que l'empreinte ne voit pas** : une correction de traduction seule, un changement de
@@ -119,7 +120,7 @@ résultats s'écrivent dans la spécification et dans l'amendement de l'ADR 0005
 | 2026-10-12 | `?page=N` canonique, `lastmod` daté par patch, IndexNow, 301 de la barre finale | changelog du 2026-10-12 | Oui |
 | 2026-10-14 | Une page indexée par entité : canonique d'un ancien patch sur l'URL courte, entité retirée indexée à sa dernière version | ADR 0005, am. 10-14 | En prod jusqu'au 2026-10-22 (bascule par état) |
 | 2026-10-16 | Anciennes URL versionnées en 301 vers l'URL courte | ADR 0005, am. 10-16 | En prod jusqu'au 2026-10-22, sauf pour une voie de runes retirée, où elle reste |
-| 2026-10-20 | Pages des anciens patchs pré-rendues dans un stockage objet, `archived` gardée un an ; CDN prévu | ADR 0011, ADR 0005 am. 10-20 | Stockage écrit, pas encore lu par nginx en prod (`LODB_PAGES_STORE_ENABLED=0`) ; CDN non construit |
+| 2026-10-20 | Pages des anciens patchs pré-rendues dans un stockage objet, `archived` gardée un an ; CDN prévu | ADR 0011, ADR 0005 am. 10-20 | Stockage écrit, lu par nginx en prod depuis le 2026-10-23 (`LODB_PAGES_STORE_ENABLED=1`) ; CDN non construit |
 | 2026-10-21/22 | SSR dédié et régulateur de la passe, file de la demande, vitesse réglable | ADR 0011, amendements | Oui |
 | **2026-10-22** | **Une page indexée par état** : un ouvreur indexé par état d'entité, une page par patch, sitemaps des versions passées, pages révisables | ADR 0005, 0003 et 0011, am. 10-22 ; [spécification](seo-une-page-par-etat.md) | **Oui** : en prod depuis le 2026-10-22 |
 | 2026-10-22, 16:55 UTC | Bascule de la prod sur la règle par état (PR #102, `9b94ddec`), epoch 2 servie | [spécification](seo-une-page-par-etat.md), § 12 | — |
