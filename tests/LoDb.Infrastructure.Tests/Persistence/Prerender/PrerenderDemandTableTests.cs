@@ -7,7 +7,7 @@ namespace LoDb.Infrastructure.Tests.Persistence.Prerender;
 
 /// <summary>
 /// The table of the automatic queue: one row per page, rows the queue could not make sense
-/// of refused, its states round-tripped, and its two partial indexes.
+/// of refused, its states round-tripped, and its three partial indexes.
 /// </summary>
 public sealed class PrerenderDemandTableTests(PostgresContainerFixture postgres)
     : MigratedDatabase(postgres)
@@ -59,10 +59,12 @@ public sealed class PrerenderDemandTableTests(PostgresContainerFixture postgres)
             """,
             Cancellation);
 
-        Assert.Equal(2, indexes.Count);
+        Assert.Equal(3, indexes.Count);
         Assert.Contains("demand DESC", indexes[0], StringComparison.Ordinal);
         Assert.Contains("'pending'", indexes[0], StringComparison.Ordinal);
         Assert.Contains("rendered_at IS NOT NULL", indexes[1], StringComparison.Ordinal);
+        Assert.Contains("(epoch) INCLUDE (bytes)", indexes[2], StringComparison.Ordinal);
+        Assert.Contains("superseded_at IS NULL", indexes[2], StringComparison.Ordinal);
     }
 
     private Task InsertAsync(string values) => Database.ExecuteAsync(

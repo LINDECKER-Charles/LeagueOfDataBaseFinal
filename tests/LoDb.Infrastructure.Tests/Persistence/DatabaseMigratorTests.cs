@@ -29,6 +29,7 @@ public sealed class DatabaseMigratorTests(PostgresContainerFixture postgres)
     private const string PrerenderPaceSetting = "20261021213445_PrerenderPaceSetting";
     private const string CatalogStateIndex = "20261022103012_CatalogStateIndex";
     private const string RevisionCoverage = "20261022144136_PrerenderRevisionCoverage";
+    private const string DemandLedger = "20261023120246_PrerenderDemandLedger";
     private const string EfHistory = "__EFMigrationsHistory";
 
     private static readonly string[] AllMigrations =
@@ -36,7 +37,7 @@ public sealed class DatabaseMigratorTests(PostgresContainerFixture postgres)
             DoctrineBaseline.MigrationId, Lot1, Lot4, Lot6, PaymentStates, QueryStatistics,
             IdentifierScrub, RefreshFamilies, AudienceEntityDaily, BackupRuns,
             PrerenderPasses, PrerenderBuildSizes, PrerenderDiagnostics, PrerenderDemand,
-            PrerenderPaceSetting, CatalogStateIndex, RevisionCoverage,
+            PrerenderPaceSetting, CatalogStateIndex, RevisionCoverage, DemandLedger,
         ];
 
     private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
@@ -98,7 +99,7 @@ public sealed class DatabaseMigratorTests(PostgresContainerFixture postgres)
                 Lot1, Lot4, Lot6, PaymentStates, QueryStatistics, IdentifierScrub,
                 RefreshFamilies, AudienceEntityDaily, BackupRuns, PrerenderPasses,
                 PrerenderBuildSizes, PrerenderDiagnostics, PrerenderDemand,
-                PrerenderPaceSetting, CatalogStateIndex, RevisionCoverage,
+                PrerenderPaceSetting, CatalogStateIndex, RevisionCoverage, DemandLedger,
             ],
             report.Applied);
         Assert.Equal(AllMigrations, await database.AppliedMigrationsAsync(Cancellation));

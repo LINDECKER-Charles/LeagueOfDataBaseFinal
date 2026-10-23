@@ -1,3 +1,4 @@
+using LoDb.Api.Modules.Admin.Prerender.Options;
 using LoDb.Infrastructure.Persistence;
 using LoDb.Infrastructure.Persistence.Prerender.Demand;
 using Microsoft.EntityFrameworkCore;
@@ -11,9 +12,15 @@ namespace LoDb.Api.Modules.Admin.Prerender.Demand.Queue;
 /// least requested pending pages past <see cref="DemandOptions.MaxPendingPages"/>. A page
 /// failed for a day is tried again: still refused to visitors, it would never be pruned.
 /// </summary>
+/// <remarks>
+/// The pages the queue holds in the served epoch stay, however old: done, no pass wrote them
+/// again, they are the ledger of what the queue stored there. Served from the store, they are
+/// refused to no one, so their last refusal only ages.
+/// </remarks>
 internal sealed class DemandPruner(
     IDbContextFactory<LoDbDbContext> contexts,
     IOptions<DemandOptions> options,
+    IOptions<PrerenderOptions> pass,
     TimeProvider clock)
 {
     /// <summary>How long a failed page rests before the queue tries it again.</summary>
@@ -27,13 +34,12 @@ internal sealed class DemandPruner(
     {
         var settings = options.Value;
         var now = clock.GetUtcNow();
-        var forgotten = now - TimeSpan.FromDays(settings.RetentionDays);
         var rested = now - FailedRest;
         await using var db = await contexts.CreateDbContextAsync(cancellationToken);
-        var stale = await db.PrerenderDemand
-            .Where(page => page.State != PrerenderDemandState.Rendering
-                && page.LastSeenAt < forgotten)
-            .ExecuteDeleteAsync(cancellationToken);
+        var stale = await DeleteStaleAsync(
+            db,
+            now - TimeSpan.FromDays(settings.RetentionDays),
+            cancellationToken);
         var surplus = await db.PrerenderDemand
             .Where(static page => page.State == PrerenderDemandState.Pending)
             .OrderByDescending(static page => page.Demand)
@@ -50,5 +56,20 @@ internal sealed class DemandPruner(
                     .SetProperty(page => page.Epoch, (int?)null),
                 cancellationToken);
         return stale + surplus + retried;
+    }
+
+    private Task<int> DeleteStaleAsync(
+        LoDbDbContext db,
+        DateTimeOffset forgotten,
+        CancellationToken cancellationToken)
+    {
+        var served = pass.Value.ServedEpoch;
+        return db.PrerenderDemand
+            .Where(page => page.State != PrerenderDemandState.Rendering
+                && page.LastSeenAt < forgotten
+                && !(page.State == PrerenderDemandState.Done
+                    && page.Epoch == served
+                    && page.SupersededAt == null))
+            .ExecuteDeleteAsync(cancellationToken);
     }
 }

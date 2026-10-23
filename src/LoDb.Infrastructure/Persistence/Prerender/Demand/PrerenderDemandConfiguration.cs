@@ -35,6 +35,8 @@ internal sealed class PrerenderDemandConfiguration : IEntityTypeConfiguration<Pr
         builder.Property(page => page.Attempts).HasDefaultValue(0).ValueGeneratedNever();
         builder.Property(page => page.UpdatedAt).HasDefaultValueSql("now()");
         builder.Property(page => page.Reason).HasMaxLength(PrerenderDemandPage.ReasonMaxLength);
+        builder.Property(page => page.StoredClass)
+            .HasMaxLength(PrerenderDemandPage.StoredClassMaxLength);
 
         // The worker takes the most requested pending pages, and the admin the first ten: a
         // partial index, as small as the queue itself.
@@ -47,5 +49,12 @@ internal sealed class PrerenderDemandConfiguration : IEntityTypeConfiguration<Pr
         builder.HasIndex(page => page.RenderedAt)
             .HasFilter("rendered_at IS NOT NULL")
             .HasDatabaseName("ix_prerender_demand_rendered");
+
+        // The admin counts and weighs the pages the queue holds in each epoch, at every read
+        // of the report: the done rows no pass wrote again, read from the index alone.
+        builder.HasIndex(page => page.Epoch)
+            .IncludeProperties(page => page.Bytes)
+            .HasFilter("state = 'done' AND superseded_at IS NULL")
+            .HasDatabaseName("ix_prerender_demand_stored");
     }
 }

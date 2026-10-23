@@ -41,6 +41,7 @@ internal static class DemandRegistration
         services.TryAddSingleton<DemandValidator>();
         services.TryAddSingleton<DemandUpserts>();
         services.TryAddSingleton<DemandQueue>();
+        services.TryAddSingleton<DemandRewrites>();
         services.TryAddSingleton<DemandPruner>();
         services.TryAddSingleton<DemandCollector>();
         services.TryAddSingleton<DemandPageWriter>();
