@@ -13341,6 +13341,7 @@
           "minRendersPerMinute",
           "maxRendersPerMinute",
           "manualMaxRendersPerMinute",
+          "manualWarnRendersPerMinute",
           "renderers",
           "rendererCpus",
           "brakeHostBusy",
@@ -13365,6 +13366,11 @@
           "manualMaxRendersPerMinute": {
             "type": "integer",
             "description": "The hard maximum of the manual target.",
+            "format": "int32"
+          },
+          "manualWarnRendersPerMinute": {
+            "type": "integer",
+            "description": "The manual target above which the admin warns (never enforced).",
             "format": "int32"
           },
           "renderers": {

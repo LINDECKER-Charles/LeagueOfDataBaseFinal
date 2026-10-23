@@ -109,7 +109,10 @@ describe("the pass's pace through Compose", { skip: !hasCompose && 'no docker co
       assert.ok(Number(renderers.manualMax) <= Number(lane.perMinute),
         'the lane would refuse the manual maximum');
       assert.ok(Number(api.max) <= Number(lane.perMinute), 'the lane would refuse the ceiling');
-      const widest = Math.ceil(Number(renderers.manualMax) * SECONDS_PER_PAGE_IN_FLIGHT / 60);
+      // InFlightWidth.Of clamps the window to the API's MaxInFlight.
+      const widest = Math.min(
+        Math.ceil(Number(renderers.manualMax) * SECONDS_PER_PAGE_IN_FLIGHT / 60),
+        Number(api.maxInFlight));
       assert.ok(widest <= Number(renderers.count) * Number(lane.maxInFlight),
         'the pages in flight at the manual maximum fit the renderers');
     });
@@ -134,10 +137,10 @@ describe("the pass's pace through Compose", { skip: !hasCompose && 'no docker co
       { min: '30', max: '240', step: undefined, fixed: '120', maxInFlight: '24' });
   });
 
-  it('gives prod two renderers of 15 slots each, at a manual maximum of 900', () => {
+  it('gives prod two renderers of 15 slots each, at a manual maximum of 4000', () => {
     const { renderers, lane } = paceOf('prod');
     assert.deepEqual({ ...renderers, lane },
-      { count: '2', manualMax: '900', lane: { perMinute: '900', maxInFlight: '15' } });
+      { count: '2', manualMax: '4000', lane: { perMinute: '4000', maxInFlight: '15' } });
   });
 
   it('gives a local stack a wide range, to watch the regulator climb', () => {
@@ -172,7 +175,7 @@ describe("the pass's pace through Compose", { skip: !hasCompose && 'no docker co
       });
       // Prod's lane is the manual maximum's; staging's follows its ceiling.
       assert.deepEqual(lane, isProd
-        ? { perMinute: '900', maxInFlight: '15' }
+        ? { perMinute: '4000', maxInFlight: '15' }
         : { perMinute: '300', maxInFlight: '3' });
       // The visitors' lane still follows the pass lines, unused since the pass left it.
       assert.deepEqual(visitorsLane, { perMinute: '240', maxInFlight: '3' });

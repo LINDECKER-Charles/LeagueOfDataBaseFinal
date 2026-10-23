@@ -34,6 +34,11 @@ export interface PrerenderSpeedLimits {
   manualMaxRendersPerMinute: number;
 
   /**
+   * The manual target above which the admin warns (never enforced).
+   */
+  manualWarnRendersPerMinute: number;
+
+  /**
    * The adaptive ceiling.
    */
   maxRendersPerMinute: number;
