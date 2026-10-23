@@ -1066,8 +1066,31 @@ lecture du stockage.
 - **Passes de l'epoch 2** au pupitre (`/admin/prerender`, compte admin avec TOTP) : une passe
   `{"pages":"openers"}`, puis une passe entière `{}` (§ 4.3, étape 6). La part de 503 servies
   à Googlebot sur les pages épinglées se suit pendant ce temps (§ 4.3).
-- **Lecture du stockage par nginx** : `LODB_PAGES_STORE_ENABLED=1` dans `ENV_PROD`, une fois
-  l'epoch 2 remplie, puis un redéploiement.
+- **Lecture du stockage par nginx** : faite le 2026-10-23 (PR #107), sans attendre que
+  l'epoch 2 soit remplie : une page absente du stockage retombe sur le SSR sans erreur, et les
+  ~29 500 pages que la file y avait écrites sont servies dès le branchement (§ 12.5).
 - **Retrait de l'epoch 1** (§ 4.5) : à partir du 2026-11-05.
 - **Points de contrôle** (§ 5) : 2026-11-05, 2026-11-19 et 2026-12-17 ; leurs relevés
   s'écrivent ici.
+
+### 12.5 Lecture du stockage (2026-10-23)
+
+Déploiement de la PR #107 (`test` → `main`, fusion `c6bbcc69`), fini à 13:25 UTC :
+`LODB_PAGES_STORE_ENABLED=1` dans `ENV_PROD`, avant les passes de l'epoch 2. L'epoch 2 tenait
+alors les ~29 500 pages que la file de la demande y avait écrites depuis la bascule, jusque-là
+jamais servies ; aucune passe n'avait tourné.
+
+Journal de l'edge, pages épinglées (`/{locale}/{version}/…`), 25 minutes de part et d'autre :
+
+| | 12:50 → 13:15 (avant) | 13:22 → 13:47 (après) |
+|---|---|---|
+| Servies par le stockage (`store`) | 0 | 49 |
+| Servies par le cache chaud (`cache`, 200) | 141 | 147 |
+| Rendues par le SSR (`ssr`, 200) | 1 002 | 945 |
+| 503 | 1 208 | 1 256, dont 19 au redémarrage |
+| Googlebot (`asn:15169`) | 0 | 0 |
+
+Le stockage sert, mais la part de 503 ne baisse pas encore : les robots (vague de Tencent
+Cloud surtout) demandent des pages éparses parmi ~4 millions, et l'epoch 2 n'en tient que
+~29 500. La baisse viendra de la passe « ouvreurs d'abord » ; le relevé se refait pendant et
+après elle.
