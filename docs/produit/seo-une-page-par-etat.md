@@ -1,9 +1,10 @@
 # Une page indexée par état : tout l'historique dans Google, sans copie
 
-> **État** (2026-10-22) : **en vigueur dans le code** (lots L0 à L7, § 6, sur
-> `feat/seo-une-page-par-etat`). La prod applique la règle du 14 octobre (une page indexée
-> par entité) jusqu'à la bascule du § 4, son déploiement. Ce que l'implémentation a tranché
-> autrement que le texte ci-dessous est au § 11, qui l'emporte. Règle en vigueur et
+> **État** (2026-10-22) : **en vigueur en prod depuis le 2026-10-22 (16:55 UTC)**, au
+> déploiement de la PR #102, qui a remplacé la règle du 14 octobre (une page indexée par
+> entité) ; au staging depuis la fusion de la PR #101 dans `dev`. Ce que l'implémentation a
+> tranché autrement que le texte ci-dessous est au § 11, qui l'emporte ; la bascule, le relevé
+> de départ, les comptes réels et ce qui reste à faire sont au § 12. Règle en vigueur et
 > avancement : [`seo-indexabilite.md`](seo-indexabilite.md).
 
 Chantier décidé le 22 octobre 2026. Le site est une base de données : chaque contenu
@@ -58,8 +59,8 @@ comparée à celle de la version listée juste avant, en ignorant les champs d'i
 
 **Ces chiffres sont des majorants.** La mesure porte sur le JSON brut de Data Dragon.
 L'empreinte (§ 3.1) ne voit que ce que la fiche affiche, après la mise en forme de
-l'ingestion : elle trouve au plus autant de changements. Les comptes réels viendront des
-lignes de synthèse de la construction de l'index (§ 3.2) et s'écriront au § Résultats.
+l'ingestion : elle trouve au plus autant de changements. Les comptes réels de la première
+construction de l'index en prod sont au § 12 : 20 540 états, pour ~28 000 estimés ici.
 
 ### 1.3 Rappel de la chute d'août
 
@@ -712,9 +713,9 @@ moins 9 jours à disparaître.
   scinde les sitemaps de version, ou on classe l'index par ancienneté.
 - Les 429 sur `/sitemaps/` montent : on relève `LODB_SITEMAPS_RATE`, sans toucher au code.
 
-Les résultats s'écrivent ici (§ Résultats, à créer) et dans l'amendement de l'ADR 0005, à
-commencer par les comptes réels de la première construction (états par ressource, début de
-la couverture), qui remplacent les majorants du § 1.2.
+Les résultats s'écrivent au § 12 et dans l'amendement de l'ADR 0005, à commencer par les
+comptes réels de la première construction (états par ressource, début de la couverture), qui
+remplacent les majorants du § 1.2.
 
 ## 6. Lots
 
@@ -997,3 +998,76 @@ lui. Elles l'emportent sur les sections citées ; les ADR en reprennent l'essent
   d'option pour le périmètre des ouvreurs.
 - **En-tête client de nginx** : sans build stocké, celui de l'amont ; avec, `revisable` pour
   un objet qui porte exactement sa valeur, `archived` sinon.
+
+## 12. Résultats
+
+### 12.1 Bascule (2026-10-22)
+
+| | Staging | Prod |
+|---|---|---|
+| Fusion | PR #101 dans `dev` (`524caa9a`), 15:41 UTC | PR #102, `test` → `main` (`9b94ddec`) |
+| Déploiement | ~15:56 UTC | job fini à 16:55:21 UTC ; `states` fini à 16:54:12 UTC, avant la page de maintenance |
+| Epoch servie | 2 | 2 (`LODB_ARCHIVE_SERVE_EPOCH=2`, `LODB_ARCHIVE_EPOCH` inchangée) |
+| Index, génération 1 | 16.13.1 → 16.21.1, 1 654 états | 0.151.2 → 16.21.1 (§ 12.2) |
+
+- **Stockage** : `LODB_PAGES_STORE_ENABLED` reste à `0` en prod, nginx ne lit pas le stockage.
+- **Passe** : aucune active à la bascule, rien à annuler (§ 4.3, étape 2) ; la dernière, la
+  passe 2 (epoch 1, 16.1.1 → 16.20.1), était terminée avec 379 928 pages écrites.
+- **Vérifié après le déploiement** : `/sitemap.xml` annonce 7 518 fichiers (21 `latest.xml` et
+  21 × 357 fichiers de version non vides) ; `/api/meta` donne `oldestChangesVersion` 0.151.101
+  et `newestChangesVersion` 16.21.1 ; `/en/16.18.1/champions/Aphelios` a pour canonique
+  `/en/16.16.1/champions/Aphelios` ; `/en/changes` répond 200 (« Patch 16.21.1 changes »).
+
+### 12.2 Première construction de l'index en prod
+
+Ligne `states.update.completed` : génération 1, de 0.151.2 à 16.21.1, 404 versions indexées,
+aucune ingérée, 123 533 ms.
+
+| Ressource | États |
+|---|---|
+| Champions | 7 385 |
+| Objets | 12 441 |
+| Voies de runes | 250 |
+| Sorts d'invocateur | 464 |
+| **Total** | **20 540** (19 472 clos, 1 068 ouverts) |
+
+Ces comptes remplacent les majorants du § 1.2 : 20 540 états pour ~28 000 estimés, soit
+~431 000 fiches indexables dans les 21 langues (ouvreurs des états clos et URL courtes des
+états ouverts) pour ~600 000, sur une couverture pourtant plus longue que la mesure (dès
+0.151.2). La passe « ouvreurs d'abord » rend ~409 000 fiches (19 472 × 21) et les pages de
+patch : environ 7 h 30 à 900 pages par minute, pour les ~11 h du § 4.3.
+
+### 12.3 Relevé de départ (§ 5)
+
+Pris le 2026-10-22, avant le déploiement.
+
+- **Search Console**, 28 jours (2026-09-24 → 2026-10-21) : 2 clics, 460 impressions, CTR
+  0,43 %, position 8,3 ; 0 à 9 impressions par jour sur les 7 derniers jours. `/sitemap.xml`
+  lu par Google pour la dernière fois le 2026-10-19 à 23:51Z, 22 950 URL envoyées, 0 erreur.
+- **Indexation des pages** (indexées, « Explorée, actuellement non indexée », « Autre page avec
+  balise canonique correcte », « Google n'a pas choisi la même URL canonique que
+  l'utilisateur ») : l'API de la Search Console ne la donne pas ; le propriétaire la relève
+  dans son interface.
+- **Journal de l'edge, Googlebot** (`asn:"15169"`), 24 h : 869 requêtes, dont 703 × 200,
+  134 × 301, 25 × 503 (2,9 %), 6 × 302, 1 × 404 ; sur les pages épinglées, 25 × 503 sur 34
+  (74 %) ; sitemaps : 1 lecture, en 200, aucune 429.
+- **Journal de l'edge, tous clients, pages épinglées** : 3 236 × 200 et 10 047 × 503 entre
+  15:50 et 16:50 UTC (la vague de Tencent Cloud domine) ; dans les 10 minutes après le
+  déploiement, 506 × 200, 3 483 × 503 et 80 × 502 (redémarrage).
+
+**Le seuil de report du § 4.3 n'a pas été appliqué.** Plus de 10 % de 503 à Googlebot au
+relevé de départ devait reporter la bascule : cette règle vise une epoch 2 vide servie par le
+stockage. La prod ne lit pas le stockage (`LODB_PAGES_STORE_ENABLED=0`) : la bascule ne change
+rien à cette exposition. Le levier est de remplir l'epoch 2 par les passes, puis d'activer la
+lecture du stockage.
+
+### 12.4 Ce qui reste
+
+- **Passes de l'epoch 2** au pupitre (`/admin/prerender`, compte admin avec TOTP) : une passe
+  `{"pages":"openers"}`, puis une passe entière `{}` (§ 4.3, étape 6). La part de 503 servies
+  à Googlebot sur les pages épinglées se suit pendant ce temps (§ 4.3).
+- **Lecture du stockage par nginx** : `LODB_PAGES_STORE_ENABLED=1` dans `ENV_PROD`, une fois
+  l'epoch 2 remplie, puis un redéploiement.
+- **Retrait de l'epoch 1** (§ 4.5) : à partir du 2026-11-05.
+- **Points de contrôle** (§ 5) : 2026-11-05, 2026-11-19 et 2026-12-17 ; leurs relevés
+  s'écrivent ici.

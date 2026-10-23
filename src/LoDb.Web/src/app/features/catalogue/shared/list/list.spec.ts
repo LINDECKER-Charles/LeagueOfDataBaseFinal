@@ -9,6 +9,7 @@ import type { CatalogueListSource } from '../source/catalogue-list-source';
 import type { ListStatus } from '../source/list-status';
 import type { CatalogueCardAdapter } from '../state/catalogue-card-adapter';
 import type { CatalogueListLike } from '../state/catalogue-list-like';
+import { PAGE_SIZES } from '../state/page-sizes';
 import { facetOf } from '../testing/facet-of';
 import { CatalogueCardTemplate } from './catalogue-card-template';
 import { CatalogueList } from './catalogue-list';
@@ -28,6 +29,13 @@ const ITEMS: Item[] = [
 ];
 const WHOLE: List = { entries: ITEMS, total: ITEMS.length };
 const FIRST: List = { entries: ITEMS.slice(0, 2), total: ITEMS.length };
+// One card more than the smallest page size holds.
+const LONG_ITEMS: Item[] = Array.from({ length: PAGE_SIZES[0] + 1 }, (_, index) => ({
+  name: `Item ${index + 1}`,
+  tags: [],
+}));
+const LONG: List = { entries: LONG_ITEMS, total: LONG_ITEMS.length };
+const LONG_FIRST: List = { entries: LONG_ITEMS.slice(0, 2), total: LONG_ITEMS.length };
 const SCHEMA = [facetOf({ key: 'tag', kind: 'choice', label: 'Tag', primary: true })];
 // A second group, folded by default: nothing in it is a main axis of the list.
 const WITH_KIND = [
@@ -221,6 +229,25 @@ describe('lodb-catalogue-list', () => {
     next.click();
     await fixture.whenStable();
     expect(names(fixture)).toEqual(['Dagger', 'Ward']);
+  });
+
+  it('repeats the page sizes under a grid the smallest page cannot hold', async () => {
+    const fixture = await render('/en/items', sourceOf(LONG, 'ready', LONG_FIRST).source);
+    expect(all(fixture, 'lodb-page-size-picker')).toHaveLength(2);
+    const foot = all(fixture, '.list__sizes .segment');
+    foot.find((size) => size.textContent?.trim() === '24')?.click();
+    await fixture.whenStable();
+    expect(names(fixture)).toHaveLength(LONG_ITEMS.length);
+    const pressed = all(fixture, '.segment[aria-pressed=true]');
+    expect(pressed.map((size) => size.textContent?.trim())).toEqual(['24', '24']);
+    await new Promise((resolve) => setTimeout(resolve, WINDOW_MS + 50));
+    expect(TestBed.inject(Router).url).toBe('/en/items?size=24');
+  });
+
+  it('leaves the page sizes to the head when the smallest page holds all', async () => {
+    const fixture = await render('/en/items', sourceOf(WHOLE).source);
+    expect(all(fixture, 'lodb-page-size-picker')).toHaveLength(1);
+    expect(all(fixture, '.list__sizes')).toHaveLength(0);
   });
 
   it('warns while the version is being prepared', async () => {

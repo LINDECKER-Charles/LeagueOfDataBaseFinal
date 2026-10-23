@@ -1293,6 +1293,10 @@ namespace LoDb.Infrastructure.Persistence.Migrations
                         .HasDefaultValue(0)
                         .HasColumnName("attempts");
 
+                    b.Property<long?>("Bytes")
+                        .HasColumnType("bigint")
+                        .HasColumnName("bytes");
+
                     b.Property<long>("Demand")
                         .HasColumnType("bigint")
                         .HasDefaultValue(0L)
@@ -1347,6 +1351,15 @@ namespace LoDb.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(16)")
                         .HasColumnName("state");
 
+                    b.Property<string>("StoredClass")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("stored_class");
+
+                    b.Property<DateTimeOffset?>("SupersededAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("superseded_at");
+
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
@@ -1366,6 +1379,12 @@ namespace LoDb.Infrastructure.Persistence.Migrations
                         .IsDescending()
                         .HasDatabaseName("ix_prerender_demand_next")
                         .HasFilter("state = 'pending'");
+
+                    b.HasIndex("Epoch")
+                        .HasDatabaseName("ix_prerender_demand_stored")
+                        .HasFilter("state = 'done' AND superseded_at IS NULL");
+
+                    NpgsqlIndexBuilderExtensions.IncludeProperties(b.HasIndex("Epoch"), new[] { "Bytes" });
 
                     b.HasIndex("RenderedAt")
                         .HasDatabaseName("ix_prerender_demand_rendered")

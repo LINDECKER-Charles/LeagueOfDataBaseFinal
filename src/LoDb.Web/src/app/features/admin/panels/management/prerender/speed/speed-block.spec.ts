@@ -62,17 +62,17 @@ describe('SpeedBlock', () => {
     const { api, fixture, page } = await open();
 
     pick(fixture, 'manual');
-    type(fixture, '5000');
+    type(fixture, '9000');
     expect(page.querySelector('[data-speed-brake]')).not.toBeNull();
     element<HTMLButtonElement>(page, '[data-speed-apply]').click();
 
     const request = await sent(api, SPEED, 'PUT');
-    expect(request.request.body).toEqual({ mode: 'manual', rendersPerMinute: 900 });
+    expect(request.request.body).toEqual({ mode: 'manual', rendersPerMinute: 4000 });
     request.flush(null, { status: 204, statusText: 'No Content' });
     await fixture.whenStable();
     (await sent(api, SPEED)).flush(
       prerenderSpeed({
-        setting: { mode: 'manual', rendersPerMinute: 900, updatedAt: '2026-10-21T21:40:00Z' },
+        setting: { mode: 'manual', rendersPerMinute: 4000, updatedAt: '2026-10-21T21:40:00Z' },
       }),
     );
     await fixture.whenStable();
@@ -81,6 +81,18 @@ describe('SpeedBlock', () => {
       'admin.prerender.done.speed',
     );
     expect(element<HTMLButtonElement>(page, '[data-speed-apply]').disabled).toBe(true);
+  });
+
+  it('warns above the threshold of the renderers, not at it nor below', async () => {
+    const { fixture, page } = await open();
+
+    pick(fixture, 'manual');
+    type(fixture, '1300');
+    expect(page.querySelector('[data-speed-warn]')).toBeNull();
+    type(fixture, '1301');
+    expect(page.querySelector('[data-speed-warn]')).not.toBeNull();
+    type(fixture, '600');
+    expect(page.querySelector('[data-speed-warn]')).toBeNull();
   });
 
   it('locks the setting under the kill switch', async () => {

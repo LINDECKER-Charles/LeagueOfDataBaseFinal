@@ -7,6 +7,10 @@ import { PrerenderEpochCoverage } from '../models/prerender-epoch-coverage';
  * The pages of one epoch of the store, and what keeping them costs each month.
  */
 export interface PrerenderEpochVolume {
+
+  /**
+   * Bytes of the passes and of the automatic queue.
+   */
   bytes: number;
   coverage?: (null | PrerenderEpochCoverage);
   epoch: number;
@@ -20,7 +24,21 @@ export interface PrerenderEpochVolume {
    * The bytes in GB times the One Zone price, to four decimals.
    */
   monthlyCost: number;
+
+  /**
+   * Pages of the passes and of the automatic queue.
+   */
   pages: number;
+
+  /**
+   * Of long PrerenderEpochVolume.Bytes, those of long PrerenderEpochVolume.QueuePages.
+   */
+  queueBytes: number;
+
+  /**
+   * Of long PrerenderEpochVolume.Pages, those the automatic queue wrote and no pass wrote again since.
+   */
+  queuePages: number;
 
   /**
    * served, writing, standby (written, not served) or retired.

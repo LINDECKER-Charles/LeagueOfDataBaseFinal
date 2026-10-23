@@ -44,6 +44,11 @@ internal static class PaceOptionsRules
             yield return $"Pace:ManualMaxRendersPerMinute must be between 1 and {most}.";
         }
 
+        if (pace.ManualWarnRendersPerMinute < 1 || pace.ManualWarnRendersPerMinute > most)
+        {
+            yield return $"Pace:ManualWarnRendersPerMinute must be between 1 and {most}.";
+        }
+
         if (pace.RendererCpus is not (> 0 and <= MostRendererCpus))
         {
             yield return $"Pace:RendererCpus must be over 0 and at most {MostRendererCpus}.";

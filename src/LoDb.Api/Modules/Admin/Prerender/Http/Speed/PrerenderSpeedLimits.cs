@@ -15,6 +15,9 @@ internal sealed record PrerenderSpeedLimits
     /// <summary>The hard maximum of the manual target.</summary>
     public required int ManualMaxRendersPerMinute { get; init; }
 
+    /// <summary>The manual target above which the admin warns (never enforced).</summary>
+    public required int ManualWarnRendersPerMinute { get; init; }
+
     /// <summary>The renderers the stack runs (web-ssr-prerender's replicas).</summary>
     public required int Renderers { get; init; }
 

@@ -936,6 +936,22 @@ stockage objet, puis lues par nginx
   aussi la voie des SSR, où une valeur au-dessus de leurs créneaux les arrête au démarrage :
   l'API lit `LODB_PRERENDER_PAGES_IN_FLIGHT` (24), la fenêtre suit le rythme, et chaque moteur
   admet 15 rendus simultanés. Le staging garde `1` partout.
+- **La file de la demande garde au-delà de 30 jours ce qu'elle tient dans l'epoch servie.**
+  Une page `done` de `prerender_demand` dans l'epoch servie, qu'aucune passe n'a réécrite, n'est
+  jamais élaguée, quelle que soit la date de son dernier refus : servie depuis le stockage,
+  elle n'est plus refusée à personne, et ces lignes sont le seul registre des pages que la file
+  y a écrites (chiffres du stockage, onglet « File des 503 »). La table grossit donc d'une
+  ligne par page écrite par la file, bornée par les pages du catalogue. Au changement d'epoch
+  servie, ces lignes repassent `pending` et perdent octets et classe : l'epoch retirée ne
+  compte plus les pages de la file, qui coûtent pourtant jusqu'à sa suppression.
+- **Une passe qui réécrit une page de la file la prend à son compte.** Quand une passe écrit
+  une page que la file avait écrite dans la même epoch, la ligne de la file reçoit
+  `superseded_at` et sort de la part de la file (`queuePages`) : la page compte avec l'unité,
+  une seule fois. Les chiffres de l'epoch ne bougent donc presque pas quand une passe repasse
+  sur des pages de la file, mais la part de la file baisse. Une passe sur une autre epoch, ou
+  la file des états clos qui recalcule une page de la file, n'y touchent pas. Une page que la
+  file et une passe écrivent au même instant peut compter deux fois : rare, voulu (aucun
+  verrou sur le chemin de la passe).
 - **Les `503` des anciens patchs ne freinent pas le mode manuel.** Seul un refus de la voie du
   dernier patch (`current`) est un signe que les visiteurs manquent de place ; la voie
   `pinned` refuse au-delà de son budget même sur un hôte au repos.

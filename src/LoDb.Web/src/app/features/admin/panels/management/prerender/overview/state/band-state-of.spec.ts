@@ -22,6 +22,8 @@ function standby(coverage: PrerenderEpochCoverage, changes: Partial<PrerenderEpo
     isWriting: false,
     pages: 1_380_000,
     bytes: 53_820_000_000,
+    queuePages: 0,
+    queueBytes: 0,
     monthlyCost: 0.4322,
     coverage,
     ...changes,

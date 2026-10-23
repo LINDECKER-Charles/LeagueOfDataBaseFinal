@@ -52,14 +52,18 @@ internal sealed class DemandQueue(IDbContextFactory<LoDbDbContext> contexts, Tim
     }
 
     /// <summary>
-    /// Ends a page taken by <see cref="ClaimAsync"/>, for <paramref name="epoch"/>.
+    /// Ends a page taken by <see cref="ClaimAsync"/>, for <paramref name="epoch"/>: a written
+    /// page keeps its bytes and class, the queue's own again until a pass writes it anew.
     /// </summary>
     public async Task EndAsync(string path, DemandEnd end, int epoch, CancellationToken token)
     {
         ArgumentNullException.ThrowIfNull(end);
         var now = clock.GetUtcNow();
+        var isWritten = end.State == PrerenderDemandState.Done;
         int? endedIn = end.State == PrerenderDemandState.Pending ? null : epoch;
-        DateTimeOffset? writtenAt = end.State == PrerenderDemandState.Done ? now : null;
+        DateTimeOffset? writtenAt = isWritten ? now : null;
+        long? bytes = isWritten ? end.Bytes : null;
+        var storedClass = isWritten ? end.StoredClass : null;
         var tries = end.IsFailedTry ? 1 : 0;
         var reason = DiagnosticText.Clip(end.Reason, PrerenderDemandPage.ReasonMaxLength);
         await using var db = await contexts.CreateDbContextAsync(token);
@@ -70,13 +74,17 @@ internal sealed class DemandQueue(IDbContextFactory<LoDbDbContext> contexts, Tim
                 .SetProperty(page => page.Epoch, endedIn)
                 .SetProperty(page => page.RenderedAt, page => writtenAt ?? page.RenderedAt)
                 .SetProperty(page => page.Reason, reason)
+                .SetProperty(page => page.Bytes, bytes)
+                .SetProperty(page => page.StoredClass, storedClass)
+                .SetProperty(page => page.SupersededAt, (DateTimeOffset?)null)
                 .SetProperty(page => page.UpdatedAt, now),
             token);
     }
 
     /// <summary>
     /// Puts back to pending the pages a stopped worker left rendering, and those ended in
-    /// another epoch than <paramref name="epoch"/>, the served one: the store serves another.
+    /// another epoch than <paramref name="epoch"/>, the served one: the store serves another,
+    /// and what the queue wrote in theirs no longer counts as the queue's.
     /// </summary>
     public async Task<int> ReviveAsync(int epoch, CancellationToken token)
     {
@@ -90,6 +98,9 @@ internal sealed class DemandQueue(IDbContextFactory<LoDbDbContext> contexts, Tim
                     .SetProperty(page => page.Attempts, 0)
                     .SetProperty(page => page.Epoch, (int?)null)
                     .SetProperty(page => page.Reason, (string?)null)
+                    .SetProperty(page => page.Bytes, (long?)null)
+                    .SetProperty(page => page.StoredClass, (string?)null)
+                    .SetProperty(page => page.SupersededAt, (DateTimeOffset?)null)
                     .SetProperty(page => page.UpdatedAt, clock.GetUtcNow()),
                 token);
     }

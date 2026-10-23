@@ -14,6 +14,7 @@ import { cancelAdminPrerenderPass } from '../fn/admin-prerender/cancel-admin-pre
 import { CancelAdminPrerenderPass$Params } from '../fn/admin-prerender/cancel-admin-prerender-pass';
 import { pauseAdminPrerenderPass } from '../fn/admin-prerender/pause-admin-prerender-pass';
 import { PauseAdminPrerenderPass$Params } from '../fn/admin-prerender/pause-admin-prerender-pass';
+import { PrerenderDemandPages } from '../models/prerender-demand-pages';
 import { PrerenderDemandReport } from '../models/prerender-demand-report';
 import { PrerenderPassProgress } from '../models/prerender-pass-progress';
 import { PrerenderPassStarted } from '../models/prerender-pass-started';
@@ -26,6 +27,8 @@ import { readAdminPrerender } from '../fn/admin-prerender/read-admin-prerender';
 import { ReadAdminPrerender$Params } from '../fn/admin-prerender/read-admin-prerender';
 import { readAdminPrerenderDemand } from '../fn/admin-prerender/read-admin-prerender-demand';
 import { ReadAdminPrerenderDemand$Params } from '../fn/admin-prerender/read-admin-prerender-demand';
+import { readAdminPrerenderDemandPages } from '../fn/admin-prerender/read-admin-prerender-demand-pages';
+import { ReadAdminPrerenderDemandPages$Params } from '../fn/admin-prerender/read-admin-prerender-demand-pages';
 import { readAdminPrerenderPassProgress } from '../fn/admin-prerender/read-admin-prerender-pass-progress';
 import { ReadAdminPrerenderPassProgress$Params } from '../fn/admin-prerender/read-admin-prerender-pass-progress';
 import { readAdminPrerenderPassVersion } from '../fn/admin-prerender/read-admin-prerender-pass-version';
@@ -361,6 +364,41 @@ export class AdminPrerenderService extends BaseService {
     const resp = this.readAdminPrerenderDemand$Response(params, context);
     return resp.pipe(
       map((r: StrictHttpResponse<PrerenderDemandReport>): PrerenderDemandReport => r.body)
+    );
+  }
+
+  /** Path part for operation `readAdminPrerenderDemandPages()` */
+  static readonly ReadAdminPrerenderDemandPagesPath = '/api/admin/prerender/demand/pages';
+
+  /**
+   * The pages of the automatic queue in one state, a page of 50.
+   *
+   *
+   *
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `readAdminPrerenderDemandPages()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  readAdminPrerenderDemandPages$Response(params?: ReadAdminPrerenderDemandPages$Params, context?: HttpContext): Observable<StrictHttpResponse<PrerenderDemandPages>> {
+    const obs = readAdminPrerenderDemandPages(this.http, this.rootUrl, params, context);
+    return obs;
+  }
+
+  /**
+   * The pages of the automatic queue in one state, a page of 50.
+   *
+   *
+   *
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `readAdminPrerenderDemandPages$Response()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  readAdminPrerenderDemandPages(params?: ReadAdminPrerenderDemandPages$Params, context?: HttpContext): Observable<PrerenderDemandPages> {
+    const resp = this.readAdminPrerenderDemandPages$Response(params, context);
+    return resp.pipe(
+      map((r: StrictHttpResponse<PrerenderDemandPages>): PrerenderDemandPages => r.body)
     );
   }
 

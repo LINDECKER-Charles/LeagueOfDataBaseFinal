@@ -833,14 +833,16 @@
         "stored_sub": "{pages, plural, one {# page} other {# pages}}, epochs retirées exclues",
         "cost": "Coût estimé / mois",
         "cost_sub": "hors sortie ; détail sous « Stockage et coûts »",
-        "cost_sub_retired": "+ {retired} pour les epochs retirées, jusqu'à leur suppression ; hors sortie"
+        "cost_sub_retired": "+ {retired} pour les epochs retirées, jusqu'à leur suppression ; hors sortie",
+        "stored_sub_queue": "{pages, plural, one {# page} other {# pages}}, dont {queue} par la file, epochs retirées exclues"
       },
       "tabs": {
         "label": "Vues du précalcul",
         "coverage": "Couverture",
         "costs": "Stockage et coûts",
         "costs_short": "Coûts",
-        "history": "Historique"
+        "history": "Historique",
+        "demand": "File des 503"
       },
       "doc_title": {
         "idle": "Précalcul du catalogue",
@@ -1278,7 +1280,7 @@
       "empty": "Aucune page stockée.",
       "prices": "Estimation à {oneZone} par Go et par mois en One Zone (pages), {multiAz} en Multi-AZ (bundles).",
       "egress": "Hors sortie : 75 Go gratuits par mois, puis 0,01 € par Go, suivie dans Grafana.",
-      "counters": "Ces chiffres disent ce que les passes ont écrit, pas ce qu'une règle d'expiration a supprimé depuis : sur le staging, les pages expirent après 14 jours, une unité terminée n'est pas réécrite et ses pages repassent sans bruit par le SSR.",
+      "counters": "Ces chiffres disent ce que les passes et la file des 503 ont écrit, pas ce qu'une règle d'expiration a supprimé depuis : sur le staging, les pages expirent après 14 jours, une unité terminée n'est pas réécrite et ses pages repassent sans bruit par le SSR.",
       "retired": "Une epoch retirée coûte jusqu'à ce que le cycle de vie du stockage l'ait supprimée, 500 000 objets par jour au plus : 9 jours au moins pour 4 millions de pages.",
       "columns": {
         "epoch": "Epoch",
@@ -1294,7 +1296,8 @@
       "retire": "Retirer…",
       "projection_title": "Si une nouvelle epoch était écrite",
       "projection": "Elle pèserait ≈ {size} comme l'epoch servie : + {cost} / mois tant que les deux coexistent (jusqu'au retrait de l'ancienne, 9 jours au moins après la bascule).",
-      "bill_note": "La facture compte aussi la sortie et les requêtes, que l'estimation laisse de côté."
+      "bill_note": "La facture compte aussi la sortie et les requêtes, que l'estimation laisse de côté.",
+      "queue_sub": "dont {count} par la file"
     },
     "passes": {
       "columns": {
@@ -1381,6 +1384,38 @@
         "demand": "{count, plural, one {# refus} other {# refus}}",
         "last": "dernier le {at} UTC",
         "attempts": "{count, plural, one {# essai raté} other {# essais ratés}}"
+      },
+      "queue": {
+        "title": "Pages de la file",
+        "epoch": "Epoch {epoch} : {written, plural, one {{writtenText} page écrite} other {{writtenText} pages écrites}} par la file ; elle y tient {kept, plural, one {{keptText} page} other {{keptText} pages}} ({size}).",
+        "epoch_superseded": "{superseded, plural, one {{supersededText} a été réécrite depuis par une passe et compte désormais avec les passes.} other {{supersededText} ont été réécrites depuis par une passe et comptent désormais avec les passes.}}",
+        "epoch_empty": "Epoch {epoch} : la file n'y a encore écrit aucune page.",
+        "chart": {
+          "title": "Dernières 24 heures (UTC)",
+          "label": "Pages entrées dans la file et pages écrites, heure par heure sur les dernières 24 heures ; la barre la plus haute vaut {peak} pages.",
+          "caption": "Pages entrées et écrites par heure, en UTC",
+          "hour": "Heure (UTC)",
+          "entered": "Entrées (503)",
+          "written": "Écrites",
+          "tooltip": "{hour} h UTC : {entered} entrées, {written} écrites"
+        },
+        "filter": "Pages par état",
+        "states": {
+          "pending": "En attente",
+          "rendering": "En rendu",
+          "done": "Écrites",
+          "failed": "En échec",
+          "skipped": "Ignorées"
+        },
+        "total": "{count, plural, one {# page} other {# pages}} dans cet état",
+        "empty": "Aucune page dans cet état.",
+        "new_tab": "(s'ouvre dans un nouvel onglet)",
+        "written": "écrite le {at} UTC",
+        "classes": {
+          "archived": "figée",
+          "revisable": "révisable"
+        },
+        "superseded": "réécrite par une passe"
       }
     },
     "speed": {
@@ -1402,6 +1437,7 @@
         "unit": "pages/min"
       },
       "brake": "Frein d'urgence : plus aucun rendu pendant {hold} min dès qu'un visiteur du dernier patch est refusé, ou après {minutes} min au-delà de {busy} % de CPU sur le VPS (vol de l'hébergeur compris), avec le SSR des visiteurs ralenti ou l'API bridée, ou sans mesure des visiteurs. La passe reprend ensuite à la vitesse choisie.",
+      "warn": "Au-delà de {warn} pages/min, la cible dépasse ce que le VPS (4 vCPU) peut donner à la passe : chaque moteur (un fil Node, un cœur) rend environ 450 pages/min, et 3 moteurs sont le plus qu'il fait tourner sans priver les visiteurs. Avec {renderers} moteurs, la vitesse réelle reste bornée par eux (voir la capacité des moteurs, plus bas), et le frein d'urgence (VPS à {busy} % de CPU pendant {minutes} min) peut couper les nouveaux rendus {hold} min. Pour aller vraiment plus vite, relever LODB_PRERENDER_RENDERERS (et les pages en vol, LODB_PRERENDER_PAGES_IN_FLIGHT).",
       "apply": "Appliquer",
       "applied": "Réglé le {at} UTC ; appliqué en moins de 30 s par l'instance qui écrit la passe.",
       "never_set": "Jamais réglé : adaptatif par défaut.",

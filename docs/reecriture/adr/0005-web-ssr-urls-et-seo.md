@@ -2,13 +2,12 @@
 
 - **Statut** : acceptée — 2026-09-24
 - **Remplace** : rendu Twig + îlots Vue, locale portée par la session et un cookie
-- **En vigueur dans le code** (2026-10-22) : la grammaire d'URL, le hreflang et la CSP du texte
-  et de leurs amendements ; pour les canoniques, les sitemaps et les anciennes URL,
-  **l'amendement du 2026-10-22** (une page indexée par état). La prod sert encore
-  l'amendement du 2026-10-14, complété le 2026-10-16, jusqu'au déploiement qui porte la règle
-  par état : sa bascule, d'un seul coup et sans interrupteur. Le CDN de l'amendement du
-  2026-10-20 n'est pas construit. Règle en vigueur et avancement :
-  [`seo-indexabilite.md`](../../produit/seo-indexabilite.md).
+- **En vigueur** (2026-10-22) : la grammaire d'URL, le hreflang et la CSP du texte et de
+  leurs amendements ; pour les canoniques, les sitemaps et les anciennes URL,
+  **l'amendement du 2026-10-22** (une page indexée par état), en prod depuis le 2026-10-22 à
+  16:55 UTC, d'un seul coup et sans interrupteur, à la place de l'amendement du 2026-10-14,
+  complété le 2026-10-16. Le CDN de l'amendement du 2026-10-20 n'est pas construit. Règle en
+  vigueur et avancement : [`seo-indexabilite.md`](../../produit/seo-indexabilite.md).
 - **Amendements** :
   - le 2026-10-10, les pages des anciens patchs ont leur propre cache, dont la clé ne contient
     plus la révision de déploiement (voir § « Amendement du 2026-10-10 ») ;
@@ -31,7 +30,7 @@
     et l'index des sitemaps annonce de nouveau les versions passées (voir § « Amendement du
     2026-10-22 »).
     Il remplace l'amendement du 2026-10-14 pour les canoniques et les sitemaps : en vigueur
-    dans le code, servi en prod **à sa bascule**.
+    en prod **depuis le 2026-10-22**.
 
 ## Contexte
 
@@ -96,7 +95,7 @@ nginx. Le mode de rendu est choisi route par route :
 /{locale}/champions                             liste, dernier patch
 /{locale}/champions/{id}                        détail, dernier patch (URL canonique courte)
 /{locale}/{version}/champions/{id}              détail, patch passé (canonique : amendements du 2026-10-14 et du 2026-10-22)
-/{locale}/[{version}/]changes                   ce qu'un patch a changé (amendement du 2026-10-22, à venir)
+/{locale}/[{version}/]changes                   ce qu'un patch a changé (amendement du 2026-10-22)
 /{locale}/items/{id}-{slug}   /{locale}/runes/{id}-{slug}   /{locale}/summoners/{id}
 /{locale}/u/{username}                          profil public
 /b/{token}                                      partage de build (hors locale, noindex)
@@ -128,10 +127,9 @@ nginx. Le mode de rendu est choisi route par route :
   l'edge (nginx), pas dans l'app. *Exception depuis le 2026-10-12 : au-delà de la première
   page, une liste est sa propre canonique avec `?page=N` (`catalogue-list-seo.ts`).*
 - **hreflang** entre les 21 locales + `x-default` (nouveau).
-- **Sitemaps par locale**. Aujourd'hui (amendement du 2026-10-14), l'index n'annonce que les
-  `latest.xml` des 21 langues ; à la bascule de l'amendement du 2026-10-22, celui d'une
-  version passée liste sa page de changements et les fiches indexées chez elle, et l'index
-  annonce tous ceux qui ne sont pas vides.
+- **Sitemaps par locale**. Depuis l'amendement du 2026-10-22 (en prod le 2026-10-22), celui
+  d'une version passée liste sa page de changements et les fiches indexées chez elle, et
+  l'index annonce, après les `latest.xml` des 21 langues, tous ceux qui ne sont pas vides.
 - JSON-LD conservé à l'identique : `@graph` du site, BreadcrumbList, VideoGame,
   PropertyValue pour les stats (jamais Product ou Offer), ItemList, ProfilePage, FAQPage,
   Dataset… Encodage sûr contre la XSS, champs vides retirés.
@@ -265,9 +263,8 @@ compromis des deux semaines ci-dessous) et la rétention des bundles (400 jours,
 ## Amendement du 2026-10-14 — une page indexée par entité
 
 *Remplacé pour la règle des canoniques et les sitemaps par l'amendement du 2026-10-22 (une
-page indexée par état d'entité), en vigueur dans le code : cette règle reste celle que la prod
-sert jusqu'au déploiement qui porte la règle par état. Les notes datées ci-dessous disent ce
-qui ne vaut plus.*
+page indexée par état d'entité), en prod depuis le 2026-10-22 : la prod a servi cette règle
+jusqu'à cette bascule. Les notes datées ci-dessous disent ce qui ne vaut plus.*
 
 Le site a perdu presque toute sa visibilité dans Google depuis le 16 août 2026
 ([diagnostic](../../produit/seo-anciens-patchs.md)) : 2 570 pages indexées contre ~20 000 fin
@@ -420,10 +417,10 @@ chaque page d'ancien patch dans un stockage objet. Pour cette ADR :
 
 ## Amendement du 2026-10-22 — une page indexée par état
 
-*En vigueur dans le code (lots L0 à L7 de la
-[spécification](../../produit/seo-une-page-par-etat.md), dont le § 11 dit ce que
-l'implémentation a tranché). La prod sert l'amendement du 2026-10-14 jusqu'au déploiement qui
-le porte : sa bascule.*
+*En vigueur en prod depuis le 2026-10-22 à 16:55 UTC, au déploiement qui l'a porté, sa bascule
+(lots L0 à L7 de la [spécification](../../produit/seo-une-page-par-etat.md), dont le § 11 dit
+ce que l'implémentation a tranché ; relevé de départ et comptes réels au § 12 : 20 540 états
+à la première construction).*
 
 La règle du 2026-10-14 n'indexe qu'une page par entité et par langue, celle du dernier patch :
 ~22 800 pages. L'historique des patchs, qui est le contenu propre de la base, reste hors de
@@ -521,8 +518,8 @@ détail : [spécification](../../produit/seo-une-page-par-etat.md).
   un revert, avec l'epoch 1 du stockage gardée deux semaines (ADR 0011, amendement du
   2026-10-22).
 
-**Mesure** (propriétaire), dans la Search Console, 2, 4 et 8 semaines après la bascule,
-comparée au relevé du jour de la bascule :
+**Mesure** (propriétaire), dans la Search Console, 2, 4 et 8 semaines après la bascule
+(2026-11-05, 2026-11-19, 2026-12-17), comparée au relevé du jour de la bascule :
 
 - les pages indexées, les impressions des URL versionnées et des pages de patch montent ;
 - « Explorée, actuellement non indexée » baisse ;

@@ -1,9 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { PAGE_SIZE_ALL } from '../filtering/grid/page-size-all';
 import { CatalogueFilter } from '../state/catalogue-filter';
-import { PAGE_SIZES } from '../state/page-sizes';
 import { isPlainClick } from './is-plain-click';
+import { PageSizePicker } from './page-size-picker';
 import { splitAroundCount } from './split-around-count';
 
 // The legacy pager's chevrons, drawn toward the inline start and end; mirrored in RTL.
@@ -27,15 +26,13 @@ interface PagerStep {
  */
 @Component({
   selector: 'lodb-filter-toolbar',
-  imports: [TranslocoPipe],
+  imports: [PageSizePicker, TranslocoPipe],
   templateUrl: './filter-toolbar.html',
   styleUrl: './filter-toolbar.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FilterToolbar {
   protected readonly filter = inject(CatalogueFilter);
-  protected readonly sizes = PAGE_SIZES;
-  protected readonly all = PAGE_SIZE_ALL;
   /** The count cut around its figure: the figure in cyan mono, the words in the body face. */
   protected readonly split = splitAroundCount;
 

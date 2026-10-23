@@ -51,7 +51,17 @@
                 —
               }
             </td>
-            <td class="num">{{ epoch.pages | figure }}</td>
+            <td class="num">
+              {{ epoch.pages | figure }}
+              @if (epoch.queuePages > 0) {
+                <span class="block text-[0.75rem] text-text-dim" data-queue-share>
+                  {{
+                    'admin.prerender.costs.queue_sub'
+                      | adminText: { count: (epoch.queuePages | figure) }
+                  }}
+                </span>
+              }
+            </td>
             <td class="num whitespace-nowrap">{{ epoch.bytes | decimalBytes }}</td>
             <td class="num whitespace-nowrap">{{ cost(epoch.monthlyCost) }}</td>
             <td class="actions">

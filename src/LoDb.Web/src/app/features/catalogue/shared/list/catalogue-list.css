@@ -42,6 +42,10 @@
 .list__results > .empty {
   order: 1;
 }
+/* At the inline end, where the head of the results shows them too. */
+.list__sizes {
+  align-self: flex-end;
+}
 @media (width >= 64rem) {
   .list {
     grid-template-columns: 18.75rem minmax(0, 1fr);

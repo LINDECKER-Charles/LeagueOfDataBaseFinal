@@ -13,21 +13,7 @@
     </span>
   </p>
   <div class="toolbar__tools">
-    <div class="toolbar__sizes">
-      <span class="toolbar__label">{{ 'filter.per_page' | transloco }}</span>
-      <div class="segments" role="group" [attr.aria-label]="'filter.per_page' | transloco">
-        @for (size of sizes; track size) {
-          <button
-            type="button"
-            class="segment"
-            [attr.aria-pressed]="filter.state().size === size"
-            (click)="filter.setSize(size)"
-          >
-            {{ size === all ? ('filter.all' | transloco) : size }}
-          </button>
-        }
-      </div>
-    </div>
+    <lodb-page-size-picker />
     @if (filter.view().pageCount > 1) {
       <nav class="toolbar__pager" [attr.aria-label]="'catalogue.pages' | transloco">
         @for (step of steps(); track step.rel) {

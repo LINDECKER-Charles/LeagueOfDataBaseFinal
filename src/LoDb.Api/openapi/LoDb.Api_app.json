@@ -6373,6 +6373,74 @@
         }
       }
     },
+    "/api/admin/prerender/demand/pages": {
+      "get": {
+        "tags": [
+          "AdminPrerender"
+        ],
+        "summary": "The pages of the automatic queue in one state, a page of 50.",
+        "operationId": "readAdminPrerenderDemandPages",
+        "parameters": [
+          {
+            "name": "state",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrerenderDemandPages"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/prerender/revision": {
       "get": {
         "tags": [
@@ -12150,6 +12218,133 @@
         },
         "description": "The front builds copied to the store, every hashed file of each, and what keeping them\ncosts each month."
       },
+      "PrerenderDemandHour": {
+        "required": [
+          "start",
+          "entered",
+          "written"
+        ],
+        "type": "object",
+        "properties": {
+          "start": {
+            "type": "string",
+            "description": "The start of the hour, in UTC.",
+            "format": "date-time"
+          },
+          "entered": {
+            "type": "integer",
+            "description": "Pages first refused in that hour.",
+            "format": "int64"
+          },
+          "written": {
+            "type": "integer",
+            "description": "Pages the queue wrote in that hour, whatever became of them since.",
+            "format": "int64"
+          }
+        },
+        "description": "One hour of the automatic queue: the pages that entered it, those it wrote."
+      },
+      "PrerenderDemandListedPage": {
+        "required": [
+          "path",
+          "version",
+          "locale",
+          "pageType",
+          "state",
+          "demand",
+          "attempts",
+          "firstSeenAt",
+          "lastSeenAt"
+        ],
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "The page on the site: `/fr/15.13.1/items/1036-long-sword`."
+          },
+          "version": {
+            "type": "string"
+          },
+          "locale": {
+            "type": "string",
+            "description": "The locale as the URLs spell it: `fr`, `zh-hans`."
+          },
+          "pageType": {
+            "type": "string",
+            "description": "The first segment of the page: `champions`, `changes`…"
+          },
+          "state": {
+            "type": "string",
+            "description": "`pending`, `rendering`, `done`, `failed` or `skipped`."
+          },
+          "demand": {
+            "type": "integer",
+            "description": "Refusals of it the SSR counted since it entered the queue.",
+            "format": "int64"
+          },
+          "attempts": {
+            "type": "integer",
+            "description": "Failed tries so far.",
+            "format": "int32"
+          },
+          "firstSeenAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastSeenAt": {
+            "type": "string",
+            "description": "When a visitor was last refused it.",
+            "format": "date-time"
+          },
+          "renderedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "When the queue last wrote it; null until then.",
+            "format": "date-time"
+          },
+          "epoch": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "The epoch it was written to or found in; null while pending.",
+            "format": "int32"
+          },
+          "bytes": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "Bytes written, for a done page; null otherwise or when not kept.",
+            "format": "int64"
+          },
+          "storedClass": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "`archived` or `revisable`, for a done page; null otherwise."
+          },
+          "supersededAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "When a pass wrote it again in its epoch; null while the queue's copy stands.",
+            "format": "date-time"
+          },
+          "reason": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Why it failed, was skipped or waits; null otherwise."
+          }
+        },
+        "description": "A page of the automatic queue, whatever its state, as the admin lists them."
+      },
       "PrerenderDemandPage": {
         "required": [
           "path",
@@ -12197,6 +12392,44 @@
         },
         "description": "A pending page of the automatic queue, as the admin lists the most requested."
       },
+      "PrerenderDemandPages": {
+        "required": [
+          "state",
+          "page",
+          "pageSize",
+          "total",
+          "pages"
+        ],
+        "type": "object",
+        "properties": {
+          "state": {
+            "type": "string",
+            "description": "The state listed: `pending`, `rendering`, `done`…"
+          },
+          "page": {
+            "type": "integer",
+            "description": "The page of the list, from 1.",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "total": {
+            "type": "integer",
+            "description": "Pages of the queue in that state, all pages of the list together.",
+            "format": "int64"
+          },
+          "pages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PrerenderDemandListedPage"
+            },
+            "description": "Pending ones in the worker's order (the most requested, then the oldest), done ones the\nlast written first, the others the last changed first."
+          }
+        },
+        "description": "A page of the list of the automatic queue's pages in one state."
+      },
       "PrerenderDemandReport": {
         "required": [
           "generatedAt",
@@ -12206,11 +12439,16 @@
           "queueSharePercent",
           "epoch",
           "pending",
+          "rendering",
           "done",
           "failed",
           "skipped",
           "writtenLastHour",
           "writtenLastDay",
+          "servedEpochPages",
+          "servedEpochBytes",
+          "superseded",
+          "hours",
           "top"
         ],
         "type": "object",
@@ -12245,6 +12483,11 @@
             "type": "integer",
             "format": "int64"
           },
+          "rendering": {
+            "type": "integer",
+            "description": "Pages the worker renders now.",
+            "format": "int64"
+          },
           "done": {
             "type": "integer",
             "format": "int64"
@@ -12267,6 +12510,28 @@
             "description": "Pages it wrote in the last 24 hours.",
             "format": "int64"
           },
+          "servedEpochPages": {
+            "type": "integer",
+            "description": "Pages the queue holds in the served epoch: written there, and no pass wrote them again\nsince.",
+            "format": "int64"
+          },
+          "servedEpochBytes": {
+            "type": "integer",
+            "description": "Bytes of long PrerenderDemandReport.ServedEpochPages; a page written before they were kept counts\nnone.",
+            "format": "int64"
+          },
+          "superseded": {
+            "type": "integer",
+            "description": "Pages the queue wrote into the served epoch that a pass wrote again since: they count\namong the passes' pages.",
+            "format": "int64"
+          },
+          "hours": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PrerenderDemandHour"
+            },
+            "description": "The last 24 hours, the oldest first, the current one last."
+          },
           "top": {
             "type": "array",
             "items": {
@@ -12275,7 +12540,7 @@
             "description": "The ten most requested pending pages, the most requested first."
           }
         },
-        "description": "The automatic queue of the pre-rendering as the admin shows it: whether it runs, what it\nholds, what it wrote lately, and its most requested pending pages."
+        "description": "The automatic queue of the pre-rendering as the admin shows it: whether it runs, what it\nholds, what it wrote lately and holds in the served epoch, hour by hour over a day, and its\nmost requested pending pages."
       },
       "PrerenderEnginePulse": {
         "required": [
@@ -12394,6 +12659,8 @@
           "isWriting",
           "pages",
           "bytes",
+          "queuePages",
+          "queueBytes",
           "monthlyCost"
         ],
         "type": "object",
@@ -12412,10 +12679,22 @@
           },
           "pages": {
             "type": "integer",
+            "description": "Pages of the passes and of the automatic queue.",
             "format": "int64"
           },
           "bytes": {
             "type": "integer",
+            "description": "Bytes of the passes and of the automatic queue.",
+            "format": "int64"
+          },
+          "queuePages": {
+            "type": "integer",
+            "description": "Of long PrerenderEpochVolume.Pages, those the automatic queue wrote and no pass wrote again since.",
+            "format": "int64"
+          },
+          "queueBytes": {
+            "type": "integer",
+            "description": "Of long PrerenderEpochVolume.Bytes, those of long PrerenderEpochVolume.QueuePages.",
             "format": "int64"
           },
           "monthlyCost": {
@@ -13341,6 +13620,7 @@
           "minRendersPerMinute",
           "maxRendersPerMinute",
           "manualMaxRendersPerMinute",
+          "manualWarnRendersPerMinute",
           "renderers",
           "rendererCpus",
           "brakeHostBusy",
@@ -13365,6 +13645,11 @@
           "manualMaxRendersPerMinute": {
             "type": "integer",
             "description": "The hard maximum of the manual target.",
+            "format": "int32"
+          },
+          "manualWarnRendersPerMinute": {
+            "type": "integer",
+            "description": "The manual target above which the admin warns (never enforced).",
             "format": "int32"
           },
           "renderers": {
@@ -13540,7 +13825,7 @@
             "items": {
               "$ref": "#/components/schemas/PrerenderVersionVolume"
             },
-            "description": "The pages of the served epoch, version by version, newest first."
+            "description": "The pages the passes wrote into the served epoch, version by version, newest first; the\nqueue's count in the epoch's row alone."
           },
           "pages": {
             "type": "integer",
@@ -13576,7 +13861,7 @@
             "description": "Always true: the downloads (75 GB a month free, then billed per GB) are not in the\nestimate; Grafana follows them."
           }
         },
-        "description": "What the page store holds, read from the counters the passes keep as they write (the\nwriter key cannot list), and what storing it is estimated to cost each month."
+        "description": "What the page store holds, read from the counters the passes keep as they write and from\nthe pages the automatic queue wrote (the writer key cannot list), and what storing it is\nestimated to cost each month."
       },
       "PrerenderTypeShares": {
         "required": [

@@ -54,6 +54,7 @@ internal sealed class PrerenderJournal(
                 new StorageFacts
                 {
                     Units = await census.UnitsAsync(cancellationToken),
+                    Queue = await census.QueueAsync(cancellationToken),
                     Builds = await census.BuildsAsync(cancellationToken),
                     ServedEpoch = served,
                     WritingEpoch = writing,

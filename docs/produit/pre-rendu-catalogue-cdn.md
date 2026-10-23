@@ -13,8 +13,8 @@
 > | 6 — Alléger les pages | plus tard |
 >
 > Le cap d'indexation a changé depuis cette spécification : une page indexée par état
-> ([`seo-une-page-par-etat.md`](seo-une-page-par-etat.md), décidée le 2026-10-22, en vigueur
-> dans le code, en prod à sa bascule ; [ADR 0011](../reecriture/adr/0011-catalogue-pre-rendu-et-cdn.md),
+> ([`seo-une-page-par-etat.md`](seo-une-page-par-etat.md), décidée et en prod le 2026-10-22 ;
+> [ADR 0011](../reecriture/adr/0011-catalogue-pre-rendu-et-cdn.md),
 > amendement du 2026-10-22). Elle change ici ce que la passe stocke (les classes `archived` et
 > `revisable`), les pages d'une version (la page de patch), la `Cache-Control` que nginx
 > donne et garde, et ajoute la file des états clos et la passe « ouvreurs d'abord » ; les
@@ -466,8 +466,9 @@ l'opérateur répondrait `409`. En attendant, ses pages passent par le SSR et le
 
 **Administration.** Un panneau « Précalcul du catalogue », sur le modèle de `backups/` :
 
-- l'état du stockage : pages et volume par epoch, tirés des compteurs des unités (lister
-  coûterait ~4 200 appels par epoch, et la clé d'écriture ne liste pas). Au staging, ces
+- l'état du stockage : pages et volume par epoch, tirés des compteurs des unités et des pages
+  que la file de la demande y a écrites (lister coûterait ~4 200 appels par epoch, et la clé
+  d'écriture ne liste pas ; « File automatique des pages refusées » plus bas). Au staging, ces
   compteurs disent ce qui a été écrit, pas ce qui reste après l'expiration à 14 jours : une
   unité marquée faite n'est pas réécrite, et ses pages retombent sans bruit sur le SSR ; il
   faut une nouvelle passe pour les remettre ;
@@ -806,12 +807,24 @@ sans passe ni clic.
   le rythme s'arrête quand ni l'une ni l'autre ne le pilote. En mode fixe, elle suit le rythme
   fixe.
 - **Bornes.** Toutes les heures (`prerender.demand.prune`) : les pages qu'aucun visiteur ne
-  s'est vu refuser depuis 30 jours partent, quel que soit leur état (sauf en rendu), puis les
+  s'est vu refuser depuis 30 jours partent, quel que soit leur état (sauf en rendu, et sauf
+  les pages `done` de l'epoch servie qu'aucune passe n'a réécrites, le registre de ce que la
+  file y tient : servies depuis le stockage, elles ne sont plus refusées à personne), puis les
   pages `pending` les moins demandées au-delà de 100 000 ; une page en échec définitif
   depuis un jour repasse `pending` (toujours refusée aux visiteurs, elle ne serait jamais
   élaguée). Index partiels : `pending` par
   demande décroissante (lots et top 10 du pupitre), date d'écriture (dernière heure, dernier
-  jour).
+  jour, heures du pupitre), epoch des pages `done` non réécrites, octets inclus (chiffres du
+  stockage).
+- **Registre** (ajouté le 2026-10-23, migration additive `PrerenderDemandLedger`). Une page
+  `done` garde les octets écrits (`bytes`) et sa classe (`stored_class`, `archived` ou
+  `revisable`) ; une page qui repasse `pending` les perd. Quand une passe écrit de nouveau une
+  page que la file avait écrite dans la même epoch (`UnitRunner`, à chaque page écrite, par la
+  clé de la table), la ligne reçoit `superseded_at` : la page compte dès lors avec l'unité de
+  la passe. Les chiffres du stockage (`StorageCensus`) ajoutent à chaque epoch ses pages `done`
+  non réécrites (`queuePages`, `queueBytes`, compris dans `pages` et `bytes`, et dans le coût) ;
+  une epoch que la file seule a écrite apparaît. Une page écrite avant la migration compte sans
+  octets. La répartition par version de l'epoch servie reste celle des passes.
 - **Epoch.** La file écrit l'epoch servie (`LoDb__Prerender__ServedEpoch`). Une page `done`,
   `skipped` ou `failed` dans une autre epoch repasse `pending` au premier lot qui suit le
   changement ; une page laissée `rendering` par un arrêt aussi.
@@ -822,7 +835,15 @@ sans passe ni clic.
 - **Pupitre.** Un bloc sous les chiffres clés de `/admin/prerender` : état (active, coupée, en
   veille, sans relevé) et sa raison, pages en attente, écrites dans l'heure et le jour, en
   échec et ignorées, la part de la file pendant une passe, et les dix pages en attente les
-  plus demandées (`GET /api/admin/prerender/demand`). Lecture seule.
+  plus demandées (`GET /api/admin/prerender/demand`). Un onglet « File des 503 » (ajouté le
+  2026-10-23) : ce que la file a écrit dans l'epoch servie, ce qu'elle y tient (pages, octets)
+  et ce qu'une passe a réécrit depuis ; les 24 dernières heures en barres, pages entrées et
+  écrites par heure UTC (tableau pour les lecteurs d'écran) ; ses pages par état (puces avec
+  leurs comptes, `done` d'abord), 50 par page, lien vers la page publique, refus, dernier
+  refus, écriture, classe (« figée », « révisable »), « réécrite par une passe », essais et
+  raison (`GET /api/admin/prerender/demand/pages?state=…&page=…`, `400` pour un état inconnu
+  ou une page sous 1). La colonne des pages de l'onglet des coûts et le chiffre clé « Stocké »
+  disent la part de la file. Lecture seule.
 - **Mesure.** `lodb_prerender_demand_pages_total{outcome}`,
   `lodb_prerender_demand_captured_total{result}` (`queued`, `rejected`, `deferred`) et la jauge
   `lodb_prerender_demand_pending` ([`metriques.md`](../guides/metriques.md)).
@@ -862,7 +883,8 @@ poste : 2 moteurs y tiennent environ 1 000 à 1 200 pages/min.
 **Ce qui change.**
 
 - **Mode manuel**, réglé en direct au pupitre (bloc « Vitesse du précalcul ») : une cible en
-  pages par minute, de 1 à `LODB_PRERENDER_MANUAL_MAX` (900 sur un hôte), gardée dans
+  pages par minute, de 1 à `LODB_PRERENDER_MANUAL_MAX` (4 000 sur un hôte, avec un avertissement au pupitre au-delà de
+  1 300 : les moteurs ne suivent pas plus haut), gardée dans
   `prerender_pace_setting` (une ligne, migration additive). Le mode adaptatif reste le défaut ;
   `LODB_PRERENDER_PACE_MODE=fixed` reste le coupe-circuit et passe avant tout réglage.
   Une nouvelle cible s'applique tout de suite sur l'instance qui répond ; l'échantillonneur
@@ -888,7 +910,8 @@ poste : 2 moteurs y tiennent environ 1 000 à 1 200 pages/min.
   premières pages d'une unité attendent son catalogue ensemble, et un refus leur coûterait
   30 s. Son budget par minute est `LODB_PRERENDER_MANUAL_MAX`.
 - **Pages en vol au rythme** : la fenêtre d'une unité suit l'allocation, 1,5 s par page
-  (`InFlightWidth`), jusqu'à `LODB_PRERENDER_PAGES_IN_FLIGHT` (24) : à 900 pages/min, 23 pages
+  (`InFlightWidth`), jusqu'à `LODB_PRERENDER_PAGES_IN_FLIGHT` (24, la fenêtre ne dépasse jamais cette borne, même à
+  4 000 pages/min) : à 900 pages/min, 23 pages
   rendues, téléversées et comptées à la fois ; au plancher, une. Une fenêtre fixe plus large
   ne ferait qu'attendre le cadenceur, et une pause l'attendrait.
 - **Un cache des réponses du catalogue dans le moteur** n'est pas fait : l'API ne coûte
