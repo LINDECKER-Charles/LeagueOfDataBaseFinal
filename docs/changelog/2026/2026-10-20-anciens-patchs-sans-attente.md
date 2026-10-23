@@ -7,6 +7,11 @@ summary: Les fiches et les listes des anciens patchs viennent d'une copie déjà
 tags: [performance, seo, anciens-patchs]
 ---
 
+> **En service en prod le 2026-10-23** : la réserve était écrite depuis le 2026-10-21, mais le
+> site ne la lisait pas encore en prod (`LODB_PAGES_STORE_ENABLED=0`). Depuis le 2026-10-23,
+> une page déjà calculée est servie depuis la réserve ; la réserve se remplit page après page
+> (d'abord les pages refusées aux visiteurs, puis les pages indexées de chaque état).
+
 > **Remplacé le 2026-10-22** par [`une-page-par-etat-dans-google`](2026-10-22-une-page-par-etat-dans-google.md) :
 > une page du stockage n'est plus toujours gardée un an en classe `archived`. Elle garde la
 > `Cache-Control` de sa classe : `archived` (un an) pour une page d'état clos, `revisable` (une

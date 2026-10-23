@@ -1,7 +1,7 @@
 # ADR 0011 — Catalogue pré-rendu et CDN
 
 - **Statut** : acceptée — 2026-10-20
-- **État** (2026-10-22) :
+- **État** (2026-10-23) :
   - le stockage, la passe et la lecture par nginx (lots 0 à 3 de la spécification) sont en
     prod depuis le 2026-10-21 (PR #93), la lecture par nginx derrière
     `LODB_PAGES_STORE_ENABLED` ;
@@ -10,8 +10,10 @@
   - **le CDN (lot 4) n'est pas construit** : rien de Cloudflare dans le dépôt ;
   - les pages révisables (amendement du 2026-10-22) sont en vigueur en prod depuis le
     2026-10-22, avec la règle par état (ADR 0005, amendement du 2026-10-22) ; l'epoch 2,
-    servie depuis, attend ses passes, et nginx ne lit pas encore le stockage en prod
-    (`LODB_PAGES_STORE_ENABLED=0`).
+    servie depuis, attend ses passes ;
+  - nginx lit le stockage en prod depuis le 2026-10-23 (`LODB_PAGES_STORE_ENABLED=1`,
+    PR #107), avec la file au pupitre et la vitesse manuelle jusqu'à 4 000 (amendements du
+    2026-10-23).
 - **Révise** (amendements du 2026-10-20) : [ADR 0002](0002-hote-serveur-unique.md) (un second
   hôte sortant), [ADR 0003](0003-ingestion-proactive-et-taches-de-fond.md) (la tâche de
   précalcul), [ADR 0004](0004-stockage-etat-et-scaling.md) (nginx sert aussi depuis un
@@ -31,10 +33,11 @@
     2026-10-22 — pages révisables »). En vigueur en prod depuis le 2026-10-22 ;
   - le 2026-10-23, le maximum de la vitesse manuelle monte à 4 000 sur un hôte, avec un
     avertissement au pupitre au-delà de 1 300 (voir § « Amendement du 2026-10-23 — vitesse
-    manuelle jusqu'à 4 000 ») ;
+    manuelle jusqu'à 4 000 »). En prod depuis le 2026-10-23 ;
   - le 2026-10-23 encore, les pages que la file de la demande écrit comptent dans leur epoch, une
     seule fois, et le pupitre montre la file page par page (voir § « Amendement du
-    2026-10-23 — file de la demande au pupitre et dans l'epoch »). Pas encore déployé.
+    2026-10-23 — file de la demande au pupitre et dans l'epoch »). En prod depuis le
+    2026-10-23.
 - **Remplace** : la spécification du cache recyclé de 68 Go, interrompue et jamais
   publiée
 - **Détail** : [spécification](../../produit/pre-rendu-catalogue-cdn.md) (lots, réglages,
@@ -428,7 +431,7 @@ Détail : [configuration](../../guides/configuration.md), § 4.10.
 
 ## Amendement du 2026-10-23 — file de la demande au pupitre et dans l'epoch
 
-*Sur `dev`, pas encore déployé.*
+*En prod depuis le 2026-10-23 (PR #107).*
 
 Les chiffres du stockage (pages, volume, coût de chaque epoch) se lisaient sur les compteurs
 des unités des passes (`prerender_unit.pages_written`) : les pages que la file de la demande

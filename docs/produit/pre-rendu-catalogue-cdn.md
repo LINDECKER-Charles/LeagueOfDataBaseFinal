@@ -1,15 +1,15 @@
 # Catalogue pré-rendu : stockage objet et CDN
 
-> **État des lots au 2026-10-22**
+> **État des lots au 2026-10-23**
 >
 > | Lot | État |
 > |---|---|
 > | 0 — Décision écrite | fait : [ADR 0011](../reecriture/adr/0011-catalogue-pre-rendu-et-cdn.md) (2026-10-20) |
 > | 1 — Stockage | fait, en prod le 2026-10-21 (PR #85, #93) |
 > | 2 — Passe de précalcul | fait, en prod le 2026-10-21 ; capacité adaptative (PR #94, en prod par #96), file automatique (PR #98) et vitesse réglable (PR #97), en prod le 2026-10-22 (#99) |
-> | 3 — nginx sert depuis le stockage | fait, en prod le 2026-10-21 (PR #85, #91), la lecture derrière `LODB_PAGES_STORE_ENABLED` |
+> | 3 — nginx sert depuis le stockage | fait, en prod le 2026-10-21 (PR #85, #91), la lecture derrière `LODB_PAGES_STORE_ENABLED`, allumée en prod le 2026-10-23 (PR #107) |
 > | 4 — CDN Cloudflare (4a `infra-vps`, 4b DNS, 4c LoDb) | **non commencé** ; date à fixer |
-> | 5 — Mesure de l'effet | à relever, 7 jours après la lecture du stockage en prod |
+> | 5 — Mesure de l'effet | à relever le 2026-10-30, 7 jours après la lecture du stockage en prod |
 > | 6 — Alléger les pages | plus tard |
 >
 > Le cap d'indexation a changé depuis cette spécification : une page indexée par état
