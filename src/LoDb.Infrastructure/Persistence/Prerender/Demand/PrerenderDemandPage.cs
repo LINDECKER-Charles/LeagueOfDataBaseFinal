@@ -24,6 +24,9 @@ public sealed class PrerenderDemandPage
     /// <summary>The longest reason kept; a longer one is cut.</summary>
     public const int ReasonMaxLength = 300;
 
+    /// <summary>The longest class a stored page carries (<c>archived</c>, <c>revisable</c>).</summary>
+    public const int StoredClassMaxLength = 16;
+
     /// <summary>The page on the site: <c>/fr/15.13.1/items/1036-long-sword</c>.</summary>
     public required string Path { get; set; }
 
@@ -65,4 +68,22 @@ public sealed class PrerenderDemandPage
 
     /// <summary>Why it failed or was skipped; null otherwise.</summary>
     public string? Reason { get; set; }
+
+    /// <summary>
+    /// Bytes the queue wrote to the store for a done page; null for any other state, and for
+    /// a page written before the column existed.
+    /// </summary>
+    public long? Bytes { get; set; }
+
+    /// <summary>
+    /// The class the SSR marked a done page with (<c>archived</c>, <c>revisable</c>); null for
+    /// any other state.
+    /// </summary>
+    public string? StoredClass { get; set; }
+
+    /// <summary>
+    /// When a pass wrote a done page again in the same epoch: from then on the page counts
+    /// among the passes' pages, never twice. Null while the queue's copy is the one stored.
+    /// </summary>
+    public DateTimeOffset? SupersededAt { get; set; }
 }

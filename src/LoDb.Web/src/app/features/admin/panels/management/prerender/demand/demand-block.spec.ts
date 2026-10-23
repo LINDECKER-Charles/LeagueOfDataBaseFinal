@@ -5,6 +5,7 @@ import { configureAdminTestBed } from '../../../../testing/admin-test-bed';
 import { prerenderDemand } from '../../../../testing/fixtures/prerender-demand';
 import { sent } from '../../../../testing/http/sent';
 import { DemandBlock } from './demand-block';
+import { DemandReportStore } from './demand-report-store';
 
 const DEMAND = '/api/admin/prerender/demand';
 
@@ -15,7 +16,7 @@ function texts(root: ParentNode, selector: string): string[] {
 }
 
 async function render(report: PrerenderDemandReport): Promise<HTMLElement> {
-  configureAdminTestBed();
+  configureAdminTestBed([], [DemandReportStore]);
   const fixture = TestBed.createComponent(DemandBlock);
   fixture.detectChanges();
   const http = TestBed.inject(HttpTestingController);

@@ -31,7 +31,10 @@
     2026-10-22 — pages révisables »). En vigueur en prod depuis le 2026-10-22 ;
   - le 2026-10-23, le maximum de la vitesse manuelle monte à 4 000 sur un hôte, avec un
     avertissement au pupitre au-delà de 1 300 (voir § « Amendement du 2026-10-23 — vitesse
-    manuelle jusqu'à 4 000 »).
+    manuelle jusqu'à 4 000 ») ;
+  - le 2026-10-23 encore, les pages que la file de la demande écrit comptent dans leur epoch, une
+    seule fois, et le pupitre montre la file page par page (voir § « Amendement du
+    2026-10-23 — file de la demande au pupitre et dans l'epoch »). Pas encore déployé.
 - **Remplace** : la spécification du cache recyclé de 68 Go, interrompue et jamais
   publiée
 - **Détail** : [spécification](../../produit/pre-rendu-catalogue-cdn.md) (lots, réglages,
@@ -422,3 +425,30 @@ moteurs tiennent aujourd'hui, sans redéployer pour la relever.
   Aller vraiment plus vite demande plus de moteurs, et des pages en vol en proportion.
 
 Détail : [configuration](../../guides/configuration.md), § 4.10.
+
+## Amendement du 2026-10-23 — file de la demande au pupitre et dans l'epoch
+
+*Sur `dev`, pas encore déployé.*
+
+Les chiffres du stockage (pages, volume, coût de chaque epoch) se lisaient sur les compteurs
+des unités des passes (`prerender_unit.pages_written`) : les pages que la file de la demande
+écrit dans l'epoch servie y manquaient, et le pupitre n'en montrait qu'un résumé.
+
+- **Registre de la file** (migration additive `PrerenderDemandLedger`) : une page `done` de
+  `prerender_demand` garde ses octets (`bytes`) et sa classe (`stored_class`, `archived` ou
+  `revisable`) ; une page qui repasse `pending` (changement d'epoch servie) les perd.
+- **Une page, un compte.** Quand une passe écrit de nouveau une page que la file avait écrite
+  dans la même epoch, la ligne de la file reçoit `superseded_at` : la page compte dès lors
+  avec l'unité de la passe, jamais deux fois. Une passe sur une autre epoch n'y touche pas.
+- **L'epoch compte la file.** Les pages, octets et coûts d'une epoch ajoutent ses pages `done`
+  de la file non réécrites (`queuePages`, `queueBytes` à part) ; une epoch que la file seule a
+  remplie apparaît, et les totaux suivent. La répartition par version reste celle des passes.
+- **Rétention** : l'élagage de 30 jours ne supprime plus une page `done` non réécrite de
+  l'epoch servie. Servie depuis le stockage, elle n'est plus refusée à personne et sa date de
+  dernier refus vieillit, mais elle reste ce que la file tient dans l'epoch.
+- **Pupitre** : un onglet « File des 503 » (pages par état, 50 par page, 24 dernières heures
+  entrées et écrites, ce que la file tient dans l'epoch servie), lu sur
+  `GET /api/admin/prerender/demand/pages` et le rapport de la file enrichi. Lecture seule.
+
+Détail : [spécification](../../produit/pre-rendu-catalogue-cdn.md), lot 2, « File automatique
+des pages refusées ».

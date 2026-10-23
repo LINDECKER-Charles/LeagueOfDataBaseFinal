@@ -4,6 +4,7 @@ using LoDb.Api.Modules.Admin.Prerender.Http.Storage;
 using LoDb.Api.Tests.Accounts.Support;
 using LoDb.Api.Tests.Audit.Support;
 using LoDb.Infrastructure.Persistence.Prerender;
+using LoDb.Infrastructure.Persistence.Prerender.Demand;
 using LoDb.Testing;
 
 namespace LoDb.Api.Tests.Admin.Prerender;
@@ -143,6 +144,35 @@ public sealed class AdminPrerenderReportTests(PostgresContainerFixture postgres)
                 storage.GetProperty("excludesEgress").GetBoolean()));
     }
 
+    // The queue's pages count in their epoch, once: a page a pass wrote again is the pass's;
+    // an epoch the queue alone wrote shows as well.
+    [Fact]
+    public async Task QueuePagesCountInTheirEpochOnce()
+    {
+        using var admin = await AdminBrowser.OpenAsync(App);
+        await SeedAsync();
+        await SeedQueueAsync(
+            Stored("/fr/16.18.1/runes", 2, Gigabyte, null),
+            Stored("/en/16.18.1/runes", 2, Gigabyte, null),
+            Stored("/de/16.18.1/runes", 2, Gigabyte, Now),
+            Stored("/es/16.18.1/runes", 4, Gigabyte, null));
+
+        var storage = (await ReadAsync(admin)).GetProperty("storage");
+
+        Assert.Equal(
+            [(4, 1L, 1L, 1 * Gigabyte), (3, 200L, 0L, 2 * Gigabyte), (2, 502L, 2L, 7 * Gigabyte),
+                (1, 100L, 0L, 1 * Gigabyte)],
+            storage.GetProperty("epochs").EnumerateArray().Select(static epoch =>
+                (epoch.GetProperty("epoch").GetInt32(), epoch.GetProperty("pages").GetInt64(),
+                    epoch.GetProperty("queuePages").GetInt64(),
+                    epoch.GetProperty("bytes").GetInt64())));
+        Assert.Equal(2 * Gigabyte, storage.GetProperty("epochs")[2]
+            .GetProperty("queueBytes").GetInt64());
+        Assert.Equal(
+            (703L, 16 * Gigabyte),
+            (storage.GetProperty("pages").GetInt64(), storage.GetProperty("bytes").GetInt64()));
+    }
+
     [Fact]
     public async Task EmptyHistoryShowsTheServedEpochEmpty()
     {
@@ -202,6 +232,34 @@ public sealed class AdminPrerenderReportTests(PostgresContainerFixture postgres)
         });
         await db.SaveChangesAsync(Cancellation);
     }
+
+    private async Task SeedQueueAsync(params PrerenderDemandPage[] pages)
+    {
+        await using var db = App.Database();
+        db.PrerenderDemand.AddRange(pages);
+        await db.SaveChangesAsync(Cancellation);
+    }
+
+    // A page the queue wrote into an epoch, which a pass wrote again at supersededAt, if ever.
+    private PrerenderDemandPage Stored(
+        string path,
+        int epoch,
+        long bytes,
+        DateTimeOffset? supersededAt) => new()
+    {
+        Path = path,
+        Version = "16.18.1",
+        Locale = path.Split('/')[1],
+        PageType = "runes",
+        State = PrerenderDemandState.Done,
+        FirstSeenAt = Now,
+        LastSeenAt = Now,
+        RenderedAt = Now,
+        Epoch = epoch,
+        Bytes = bytes,
+        StoredClass = "archived",
+        SupersededAt = supersededAt,
+    };
 
     // 600 pages in ten minutes, 1,000 listed over two units, two units not reached yet.
     private PrerenderPass Running()

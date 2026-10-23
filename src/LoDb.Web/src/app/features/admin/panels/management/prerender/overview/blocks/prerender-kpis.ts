@@ -40,9 +40,7 @@ const RETIRED = 'retired';
         data-kpi="stored"
         [label]="'admin.prerender.overview.kpis.stored' | adminText"
         [value]="stored()"
-        [sub]="
-          'admin.prerender.overview.kpis.stored_sub' | adminText: { pages: data.storage.pages }
-        "
+        [sub]="storedSub()"
       />
       <lodb-kpi
         accent="green"
@@ -83,6 +81,16 @@ export class PrerenderKpis {
     };
   });
   protected readonly stored = computed(() => decimalBytes(this.report().storage.bytes));
+  // The pages, and the automatic queue's share of them once it wrote some.
+  protected readonly storedSub = computed(() => {
+    const storage = this.report().storage;
+    const queue = storage.epochs
+      .filter((epoch) => epoch.state !== RETIRED)
+      .reduce((sum, epoch) => sum + epoch.queuePages, 0);
+    return queue > 0
+      ? this.texts.text(`${KPIS}.stored_sub_queue`, { pages: storage.pages, queue: figure(queue) })
+      : this.texts.text(`${KPIS}.stored_sub`, { pages: storage.pages });
+  });
   protected readonly cost = computed(() => {
     const { monthlyCost: amount, currency } = this.report().storage;
     return monthlyCost(amount, currency);

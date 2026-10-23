@@ -29,6 +29,8 @@ import { CostsTab } from './costs/costs-tab';
 import { SwitchDialog, type SwitchData } from './costs/switch/switch-dialog';
 import { CoverageTab } from './coverage/coverage-tab';
 import { DemandBlock } from './demand/demand-block';
+import { DemandReportStore } from './demand/demand-report-store';
+import { DemandQueueTab } from './demand/queue/demand-queue-tab';
 import { injectAdminDialogs } from './dialogs/inject-admin-dialogs';
 import { LaunchOpener } from './launch/dialog/launch-opener';
 import { LiveMonitor } from './monitor/live-monitor';
@@ -62,7 +64,7 @@ interface TitleSource {
 // The pass a visitor dismissed from the recap, kept in this browser by PassRecap.
 const DISMISSED_KEY = 'lodb.admin.prerender.recap-dismissed';
 const MONITOR_ID = 'prerender-monitor';
-// Under the `sm` breakpoint the three tabs must hold in 328px: « Coûts » stands for the costs.
+// Under the `sm` breakpoint the tabs must hold in 328px: « Coûts » stands for the costs.
 const PHONE = '(max-width: 639.98px)';
 
 /**
@@ -70,8 +72,8 @@ const PHONE = '(max-width: 639.98px)';
  * Its head launches a pass and says how fresh the page is; bands say what needs doing; then
  * the live monitor of the active pass, the recap of one just ended, or what to do without
  * one; the key figures; the automatic queue of the refused pages, the queue of the closed
- * states; and three tabs: coverage,
- * storage and costs, history. The page alone
+ * states; and four tabs: coverage, storage and costs, the pages of the automatic queue,
+ * history. The page alone
  * opens the launch dialog and the detail of a pass: every other block hands it a preset.
  */
 @Component({
@@ -81,6 +83,7 @@ const PHONE = '(max-width: 639.98px)';
     CostsTab,
     CoverageTab,
     DemandBlock,
+    DemandQueueTab,
     IdleCard,
     LaunchCta,
     LiveMonitor,
@@ -96,6 +99,8 @@ const PHONE = '(max-width: 639.98px)';
     Tabs,
   ],
   templateUrl: './prerender-panel.html',
+  // The summary card and the tab of the automatic queue show one read of its report.
+  providers: [DemandReportStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PrerenderPanel {

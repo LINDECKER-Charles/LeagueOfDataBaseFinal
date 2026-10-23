@@ -41,12 +41,14 @@ internal static class DemandRegistration
         services.TryAddSingleton<DemandValidator>();
         services.TryAddSingleton<DemandUpserts>();
         services.TryAddSingleton<DemandQueue>();
+        services.TryAddSingleton<DemandRewrites>();
         services.TryAddSingleton<DemandPruner>();
         services.TryAddSingleton<DemandCollector>();
         services.TryAddSingleton<DemandPageWriter>();
         services.TryAddSingleton<DemandPageRunner>();
         services.TryAddSingleton<DemandDrain>();
         services.TryAddScoped<DemandReader>();
+        services.TryAddScoped<DemandPagesReader>();
         services.TryAddSingleton<IRefusedPagesReader, RefusedPagesClient>();
         AddRefusedClient(services);
         return services;

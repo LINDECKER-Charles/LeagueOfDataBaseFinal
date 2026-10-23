@@ -1,4 +1,5 @@
 using System.Globalization;
+using LoDb.Api.Modules.Admin.Prerender.Demand.Queue;
 using LoDb.Api.Modules.Admin.Prerender.Options;
 using LoDb.Api.Modules.Admin.Prerender.Pace;
 using LoDb.Api.Modules.Admin.Prerender.Pages;
@@ -34,6 +35,7 @@ internal sealed class UnitRunner(
     UnitQueue queue,
     PageRunner pages,
     PassControl control,
+    DemandRewrites rewrites,
     UnitWaits waits,
     PaceRegulator regulator,
     IOptions<PrerenderOptions> options,
@@ -115,9 +117,9 @@ internal sealed class UnitRunner(
             {
                 stop ??= result;
             }
-            else if (window.End(index, result) is { } step)
+            else
             {
-                await queue.RecordAsync(walk.Unit, step, cancellationToken);
+                await SaveAsync(walk, window, (index, result), cancellationToken);
             }
 
             if (stop is null)
@@ -134,6 +136,27 @@ internal sealed class UnitRunner(
                 IsOpening = index - walk.Unit.Cursor < options.Value.MaxInFlight,
             },
             cancellationToken);
+    }
+
+    // A page ended: a written one is the pass's from now on, even if the queue wrote it first
+    // in this epoch; then the pages ended in a row from the cursor are saved.
+    private async Task SaveAsync(
+        UnitWalk walk,
+        PageWindow window,
+        (int Index, PageResult Result) ended,
+        CancellationToken cancellationToken)
+    {
+        var (index, result) = ended;
+        if (result.Outcome == PageOutcome.Written)
+        {
+            var job = new PageJob(walk.Unit, walk.Paths[index]);
+            await rewrites.MarkAsync(walk.Unit.Pass.Epoch, job.RequestPath, cancellationToken);
+        }
+
+        if (window.End(index, result) is { } step)
+        {
+            await queue.RecordAsync(walk.Unit, step, cancellationToken);
+        }
     }
 
     // The pages the unit walks; an openers scope reads the openers of its version in the index.

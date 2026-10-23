@@ -7,6 +7,9 @@ internal sealed record StorageFacts
 {
     public required IReadOnlyList<StoredUnit> Units { get; init; }
 
+    /// <summary>The pages the automatic queue holds, epoch by epoch.</summary>
+    public IReadOnlyList<StoredQueuePages> Queue { get; init; } = [];
+
     public required StoredBuilds Builds { get; init; }
 
     /// <summary>The epoch nginx serves, from the settings.</summary>

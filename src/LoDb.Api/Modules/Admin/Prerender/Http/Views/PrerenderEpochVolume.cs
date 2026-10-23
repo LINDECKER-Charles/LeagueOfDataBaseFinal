@@ -13,9 +13,19 @@ internal sealed record PrerenderEpochVolume
     /// <summary>Whether the active pass writes it: the served epoch while it fills, say.</summary>
     public required bool IsWriting { get; init; }
 
+    /// <summary>Pages of the passes and of the automatic queue.</summary>
     public required long Pages { get; init; }
 
+    /// <summary>Bytes of the passes and of the automatic queue.</summary>
     public required long Bytes { get; init; }
+
+    /// <summary>
+    /// Of <see cref="Pages"/>, those the automatic queue wrote and no pass wrote again since.
+    /// </summary>
+    public required long QueuePages { get; init; }
+
+    /// <summary>Of <see cref="Bytes"/>, those of <see cref="QueuePages"/>.</summary>
+    public required long QueueBytes { get; init; }
 
     /// <summary>The bytes in GB times the One Zone price, to four decimals.</summary>
     public required decimal MonthlyCost { get; init; }

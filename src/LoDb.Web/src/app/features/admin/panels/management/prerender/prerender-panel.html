@@ -76,6 +76,9 @@
     >
       <lodb-costs-tab [report]="data" [lock]="lock()" (launch)="openLaunch($event)" />
     </lodb-tab>
+    <lodb-tab key="prerender-demand" [label]="'admin.prerender.overview.tabs.demand' | adminText">
+      <lodb-demand-queue-tab />
+    </lodb-tab>
     <lodb-tab key="prerender-history" [label]="'admin.prerender.overview.tabs.history' | adminText">
       <lodb-passes-tab [report]="data" (detail)="openDetail($event)" (follow)="follow()" />
     </lodb-tab>
