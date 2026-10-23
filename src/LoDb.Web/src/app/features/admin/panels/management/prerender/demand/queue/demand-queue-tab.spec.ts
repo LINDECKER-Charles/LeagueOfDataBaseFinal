@@ -83,6 +83,7 @@ describe('DemandQueueTab', () => {
     expect([query.get('state'), query.get('page')]).toEqual(['failed', '1']);
     expect(pressed(opened.host)).toEqual(['failed']);
     expect(opened.host.querySelector('[data-queue-empty]')).not.toBeNull();
+    expect(opened.host.querySelector('[data-queue-total]')).toBeNull();
     expect(opened.host.querySelector('[data-queue-pager]')).toBeNull();
   });
 

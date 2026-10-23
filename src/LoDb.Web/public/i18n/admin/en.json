@@ -1407,7 +1407,7 @@
           "failed": "Failed",
           "skipped": "Skipped"
         },
-        "total": "{count, plural, =0 {No page} one {# page} other {# pages}} in this state",
+        "total": "{count, plural, one {# page} other {# pages}} in this state",
         "empty": "No page in this state.",
         "new_tab": "(opens in a new tab)",
         "written": "written on {at} UTC",

@@ -31,9 +31,11 @@
       </section>
 
       @if (listing(); as shown) {
-        <p class="m-0 text-[0.8rem] text-text-dim" data-queue-total>
-          {{ 'admin.prerender.demand.queue.total' | adminText: { count: shown.total } }}
-        </p>
+        @if (shown.total > 0) {
+          <p class="m-0 text-[0.8rem] text-text-dim" data-queue-total>
+            {{ 'admin.prerender.demand.queue.total' | adminText: { count: shown.total } }}
+          </p>
+        }
         <lodb-demand-page-list [pages]="shown.pages" />
         @if (pageCount() > 1) {
           <nav
