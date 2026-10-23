@@ -25,6 +25,12 @@ internal sealed class PaceOptions
     /// </summary>
     public const int DefaultManualMaxRendersPerMinute = 600;
 
+    /// <summary>
+    /// Above this manual target the admin warns: about three renderers at a core each (450
+    /// pages a minute a core), what the renderers of a 4 vCPU host can sustain.
+    /// </summary>
+    public const int DefaultManualWarnRendersPerMinute = 1300;
+
     /// <summary>The CPU quota of one renderer on a host (compose.deploy.yaml).</summary>
     public const double DefaultRendererCpus = 1.0;
 
@@ -66,6 +72,12 @@ internal sealed class PaceOptions
     /// or the lane refuses the adaptive pass's renders over it.
     /// </summary>
     public int ManualMaxRendersPerMinute { get; set; } = DefaultManualMaxRendersPerMinute;
+
+    /// <summary>
+    /// The manual target above which the admin warns that the renderers cannot keep up: shown,
+    /// never enforced (the target is still accepted up to <see cref="ManualMaxRendersPerMinute"/>).
+    /// </summary>
+    public int ManualWarnRendersPerMinute { get; set; } = DefaultManualWarnRendersPerMinute;
 
     /// <summary>
     /// The CPU quota of one renderer (<c>cpus</c> of web-ssr-prerender): what the admin's

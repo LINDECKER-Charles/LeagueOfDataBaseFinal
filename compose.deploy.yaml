@@ -135,7 +135,7 @@ services:
       # minute at most: some 2 cores at 0.13 s of CPU a page, the brake past 90 % of the
       # VPS (configuration.md § 4.10). The same lines feed web-ssr-prerender below.
       LoDb__Prerender__Renderers: ${LODB_PRERENDER_RENDERERS:-2}
-      LoDb__Prerender__Pace__ManualMaxRendersPerMinute: ${LODB_PRERENDER_MANUAL_MAX:-900}
+      LoDb__Prerender__Pace__ManualMaxRendersPerMinute: ${LODB_PRERENDER_MANUAL_MAX:-4000}
       # The Scaleway bill of the admin panels (configuration.md § 4.9): the organization and
       # the projects of the backups and of the pages, read with the key below.
       LoDb__ScalewayBilling__OrganizationId:
@@ -276,7 +276,7 @@ services:
       # As web-ssr: the public hosts of CADDY_DOMAINS, and the stack's subnet alone.
       LODB_ALLOWED_HOSTS: ${LODB_ALLOWED_HOSTS:?LODB_ALLOWED_HOSTS is required (the public hosts)}
       LODB_STACK_NETWORKS: ${LODB_STACK_SUBNET:?LODB_STACK_SUBNET is required (set by the deploy job)}
-      LODB_PRERENDER_RENDERS_PER_MINUTE: ${LODB_PRERENDER_MANUAL_MAX:-900}
+      LODB_PRERENDER_RENDERS_PER_MINUTE: ${LODB_PRERENDER_MANUAL_MAX:-4000}
     # Scraped like web-ssr (the `service` label tells them apart), and read by the API's
     # regulator on the same metrics port (/load), over `observability` too; never published.
     networks:

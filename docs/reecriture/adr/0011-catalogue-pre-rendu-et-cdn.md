@@ -28,7 +28,10 @@
   - le 2026-10-22 encore, le stockage garde aussi des pages révisables, celles des anciens
     patchs dont l'état est encore ouvert, pré-calculées de nouveau page par page quand une
     promotion le clôt ; une passe peut se limiter aux ouvreurs (voir § « Amendement du
-    2026-10-22 — pages révisables »). En vigueur en prod depuis le 2026-10-22.
+    2026-10-22 — pages révisables »). En vigueur en prod depuis le 2026-10-22 ;
+  - le 2026-10-23, le maximum de la vitesse manuelle monte à 4 000 sur un hôte, avec un
+    avertissement au pupitre au-delà de 1 300 (voir § « Amendement du 2026-10-23 — vitesse
+    manuelle jusqu'à 4 000 »).
 - **Remplace** : la spécification du cache recyclé de 68 Go, interrompue et jamais
   publiée
 - **Détail** : [spécification](../../produit/pre-rendu-catalogue-cdn.md) (lots, réglages,
@@ -400,3 +403,22 @@ canonique, son titre et son historique changent alors. Cela concerne 5 à 15 % d
   `tools/prerender/scaleway-bucket.sh` (`RETIRED_EPOCHS=1`, règle `retire-pages-1`).
 - **Conséquence** : la classe `archived` ne garde plus que des pages vraiment immuables. Une
   page révisable coûte une relecture du stockage par heure au plus.
+
+## Amendement du 2026-10-23 — vitesse manuelle jusqu'à 4 000
+
+Le propriétaire veut de la marge au pupitre : fixer une cible plus haute que ce que les
+moteurs tiennent aujourd'hui, sans redéployer pour la relever.
+
+- **Maximum** : `LODB_PRERENDER_MANUAL_MAX` passe de 900 à **4 000** sur un hôte (staging et
+  local inchangés). Il reste le budget de la voie de chaque moteur.
+- **Avertissement** : au pupitre, dès que la cible dépasse **1 300** pages/min
+  (`Pace:ManualWarnRendersPerMinute`, affiché, jamais appliqué). Le VPS a 4 vCPU, chaque moteur
+  est un thread Node d'un cœur au plus (~450 pages/min) : les 2 moteurs d'aujourd'hui tiennent
+  ~900 pages/min, et ~1 300 est ce qu'en tiendraient 3, le plus que le VPS peut donner à la
+  passe sans priver les visiteurs.
+- **Ce qui ne change pas** : le débit réel reste borné par les moteurs
+  (`LODB_PRERENDER_RENDERERS`) et par les pages en vol (`LODB_PRERENDER_PAGES_IN_FLIGHT`, 24) ;
+  le frein d'urgence (hôte à 90 % de CPU pendant 3 min) peut couper les nouveaux rendus 5 min.
+  Aller vraiment plus vite demande plus de moteurs, et des pages en vol en proportion.
+
+Détail : [configuration](../../guides/configuration.md), § 4.10.

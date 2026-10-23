@@ -59,6 +59,11 @@ export class SpeedBlock {
     () => this.speed.value()?.setting.rendersPerMinute ?? 0,
   );
   protected readonly isManual = computed(() => this.mode() === MANUAL);
+  /** Whether the manual target is past what the renderers can sustain (never at the threshold). */
+  protected readonly isOverWarning = computed(() => {
+    const limits = this.speed.value()?.limits;
+    return !!limits && this.pace() > limits.manualWarnRendersPerMinute;
+  });
   protected readonly isChanged = computed(() => {
     const setting = this.speed.value()?.setting;
     return !!setting && (setting.mode !== this.mode() || setting.rendersPerMinute !== this.pace());

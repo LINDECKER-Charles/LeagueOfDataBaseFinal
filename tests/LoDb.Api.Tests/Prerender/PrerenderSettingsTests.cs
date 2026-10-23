@@ -39,6 +39,8 @@ public sealed class PrerenderSettingsTests
         { "Renderers", "9" },
         { "Pace:ManualMaxRendersPerMinute", "0" },
         { "Pace:ManualMaxRendersPerMinute", "6001" },
+        { "Pace:ManualWarnRendersPerMinute", "0" },
+        { "Pace:ManualWarnRendersPerMinute", "6001" },
         { "Pace:RendererCpus", "0" },
         { "Endpoint", "http://s3.fr-par.scw.cloud" },
         { "Pace:MinRendersPerMinute", "0" },
