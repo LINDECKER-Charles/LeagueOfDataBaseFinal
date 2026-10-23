@@ -1,5 +1,10 @@
+import type { PrerenderDemandHour } from '../../../../core/api/generated/models/prerender-demand-hour';
 import type { PrerenderDemandPage } from '../../../../core/api/generated/models/prerender-demand-page';
 import type { PrerenderDemandReport } from '../../../../core/api/generated/models/prerender-demand-report';
+
+const HOUR_MS = 3_600_000;
+// The oldest of the 24 hours the report charts, the current one (20:00) last.
+const FIRST_HOUR = Date.parse('2026-10-20T21:00:00Z');
 
 // The two most requested pages, the second tried once.
 const TOP: readonly PrerenderDemandPage[] = [
@@ -24,8 +29,21 @@ const TOP: readonly PrerenderDemandPage[] = [
 ];
 
 /**
+ * The last 24 hours of the queue, the oldest first: 60 pages entered and 50 written each hour,
+ * but the current one, 30 entered and 64 written.
+ */
+export function demandHours(): PrerenderDemandHour[] {
+  return Array.from({ length: 24 }, (_, index) => ({
+    start: new Date(FIRST_HOUR + index * HOUR_MS).toISOString(),
+    entered: index === 23 ? 30 : 60,
+    written: index === 23 ? 64 : 50,
+  }));
+}
+
+/**
  * The automatic queue as the API reports it: active, reading the SSR, 412 pages pending, the
- * two most requested listed, one of them tried once.
+ * two most requested listed, one of them tried once; 1,790 pages held in epoch 1, 40 more
+ * written there and rewritten since by a pass.
  */
 export function prerenderDemand(
   overrides: Partial<PrerenderDemandReport> = {},
@@ -38,11 +56,16 @@ export function prerenderDemand(
     queueSharePercent: 50,
     epoch: 1,
     pending: 412,
+    rendering: 3,
     done: 1_830,
     failed: 2,
     skipped: 37,
     writtenLastHour: 64,
     writtenLastDay: 1_210,
+    servedEpochPages: 1_790,
+    servedEpochBytes: 179_000_000,
+    superseded: 40,
+    hours: demandHours(),
     top: [...TOP],
     ...overrides,
   };

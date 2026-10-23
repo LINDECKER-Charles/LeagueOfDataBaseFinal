@@ -1,8 +1,9 @@
 namespace LoDb.Api.Modules.Admin.Prerender.Http.Views;
 
 /// <summary>
-/// What the page store holds, read from the counters the passes keep as they write (the
-/// writer key cannot list), and what storing it is estimated to cost each month.
+/// What the page store holds, read from the counters the passes keep as they write and from
+/// the pages the automatic queue wrote (the writer key cannot list), and what storing it is
+/// estimated to cost each month.
 /// </summary>
 /// <remarks>
 /// An estimate: the egress is left out (<see cref="ExcludesEgress"/>), and on the staging,
@@ -17,7 +18,10 @@ internal sealed record PrerenderStorageView
 
     public required PrerenderBuildVolume Builds { get; init; }
 
-    /// <summary>The pages of the served epoch, version by version, newest first.</summary>
+    /// <summary>
+    /// The pages the passes wrote into the served epoch, version by version, newest first; the
+    /// queue's count in the epoch's row alone.
+    /// </summary>
     public required IReadOnlyList<PrerenderVersionVolume> ServedVersions { get; init; }
 
     /// <summary>Pages of every epoch but the retired ones.</summary>

@@ -48,6 +48,7 @@ internal static class DemandRegistration
         services.TryAddSingleton<DemandPageRunner>();
         services.TryAddSingleton<DemandDrain>();
         services.TryAddScoped<DemandReader>();
+        services.TryAddScoped<DemandPagesReader>();
         services.TryAddSingleton<IRefusedPagesReader, RefusedPagesClient>();
         AddRefusedClient(services);
         return services;

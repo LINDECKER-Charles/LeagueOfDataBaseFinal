@@ -6,8 +6,9 @@ import { PrerenderEpochVolume } from '../models/prerender-epoch-volume';
 import { PrerenderVersionVolume } from '../models/prerender-version-volume';
 
 /**
- * What the page store holds, read from the counters the passes keep as they write (the
- * writer key cannot list), and what storing it is estimated to cost each month.
+ * What the page store holds, read from the counters the passes keep as they write and from
+ * the pages the automatic queue wrote (the writer key cannot list), and what storing it is
+ * estimated to cost each month.
  */
 export interface PrerenderStorageView {
   builds: PrerenderBuildVolume;
@@ -54,7 +55,8 @@ export interface PrerenderStorageView {
   pricePerGbMonthOneZone: number;
 
   /**
-   * The pages of the served epoch, version by version, newest first.
+   * The pages the passes wrote into the served epoch, version by version, newest first; the
+   * queue's count in the epoch's row alone.
    */
   servedVersions: Array<PrerenderVersionVolume>;
 }

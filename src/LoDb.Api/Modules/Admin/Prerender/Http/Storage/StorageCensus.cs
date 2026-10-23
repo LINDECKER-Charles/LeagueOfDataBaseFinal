@@ -1,12 +1,14 @@
 using LoDb.Infrastructure.Persistence;
+using LoDb.Infrastructure.Persistence.Prerender.Demand;
 using Microsoft.EntityFrameworkCore;
 
 namespace LoDb.Api.Modules.Admin.Prerender.Http.Storage;
 
 /// <summary>
 /// Reads what the page store holds from the counters of <c>prerender_unit</c> and
-/// <c>prerender_build</c>: listing the bucket would cost thousands of calls per epoch, and the
-/// writer key cannot list.
+/// <c>prerender_build</c>, and from the pages the automatic queue wrote
+/// (<c>prerender_demand</c>): listing the bucket would cost thousands of calls per epoch, and
+/// the writer key cannot list.
 /// </summary>
 internal sealed class StorageCensus(LoDbDbContext db)
 {
@@ -23,6 +25,23 @@ internal sealed class StorageCensus(LoDbDbContext db)
                 stored.Key.Version,
                 stored.Max(static unit => unit.PagesWritten),
                 stored.Max(static unit => unit.BytesWritten)))
+            .ToListAsync(cancellationToken);
+
+    /// <summary>
+    /// Each epoch the queue wrote pages into, with those no pass wrote again since: a page a
+    /// pass rewrote counts under its unit, never twice.
+    /// </summary>
+    public async Task<IReadOnlyList<StoredQueuePages>> QueueAsync(
+        CancellationToken cancellationToken) =>
+        await db.PrerenderDemand.AsNoTracking()
+            .Where(static page => page.State == PrerenderDemandState.Done
+                && page.SupersededAt == null
+                && page.Epoch != null)
+            .GroupBy(static page => page.Epoch!.Value)
+            .Select(static stored => new StoredQueuePages(
+                stored.Key,
+                stored.LongCount(),
+                stored.Sum(static page => page.Bytes ?? 0)))
             .ToListAsync(cancellationToken);
 
     public async Task<StoredBuilds> BuildsAsync(CancellationToken cancellationToken)
