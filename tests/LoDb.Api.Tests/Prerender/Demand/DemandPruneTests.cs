@@ -1,6 +1,7 @@
 using LoDb.Api.Modules.Admin.Prerender.Demand;
 using LoDb.Api.Modules.Admin.Prerender.Demand.Queue;
 using LoDb.Testing;
+using Microsoft.EntityFrameworkCore;
 
 namespace LoDb.Api.Tests.Prerender.Demand;
 
@@ -27,6 +28,37 @@ public sealed class DemandPruneTests(PostgresContainerFixture postgres)
 
         Assert.Equal(1, removed);
         Assert.Equal([DemandRig.PathOf("items")], (await rig.RowsAsync()).Select(r => r.Path));
+    }
+
+    // Served from the store, the queue's pages are refused to no one: their last refusal ages,
+    // yet they are what the queue holds in the served epoch.
+    [Fact]
+    public async Task PagesTheQueueHoldsInTheServedEpochOutliveTheRetention()
+    {
+        await using var rig = await DemandRig.StartAsync(postgres);
+        string[] pages = ["champions", "items", "runes"];
+        foreach (var page in pages)
+        {
+            rig.Refused.Refuse(DemandRig.PathOf(page));
+        }
+
+        await rig.CollectAsync();
+        await rig.DrainAsync();
+        await using (var db = rig.Harness.Database.CreateContext())
+        {
+            await db.PrerenderDemand.Where(row => row.Path == DemandRig.PathOf("items"))
+                .ExecuteUpdateAsync(set => set.SetProperty(row => row.Epoch, 3), Token);
+            await db.PrerenderDemand.Where(row => row.Path == DemandRig.PathOf("runes"))
+                .ExecuteUpdateAsync(
+                    set => set.SetProperty(row => row.SupersededAt, DateTimeOffset.UtcNow),
+                    Token);
+        }
+
+        rig.Harness.Clock.Advance(TimeSpan.FromDays(31));
+        var removed = await rig.Harness.Get<DemandPruner>().PruneAsync(Token);
+
+        Assert.Equal(2, removed);
+        Assert.Equal([DemandRig.PathOf("champions")], (await rig.RowsAsync()).Select(r => r.Path));
     }
 
     [Fact]

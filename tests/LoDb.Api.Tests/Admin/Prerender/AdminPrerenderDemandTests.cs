@@ -40,12 +40,14 @@ public sealed class AdminPrerenderDemandTests(PostgresContainerFixture postgres)
             Page("/en/16.11.1/items/1036-long-sword", PrerenderDemandState.Pending, 9),
             Page("/en/16.11.1/runes", PrerenderDemandState.Done, 4, now.AddMinutes(-10)),
             Page("/de/16.11.1/runes", PrerenderDemandState.Done, 2, now.AddHours(-5)),
-            Page("/es/16.11.1/runes", PrerenderDemandState.Failed, 1));
+            Page("/es/16.11.1/runes", PrerenderDemandState.Failed, 1),
+            Page("/it/16.11.1/runes", PrerenderDemandState.Rendering, 1));
         using var admin = await AdminBrowser.OpenAsync(App);
 
         using var response = await admin.GetAsync(Demand);
 
         var report = await ApiJson.ReadAsync(response, HttpStatusCode.OK);
+        Assert.Equal(1L, report.GetProperty("rendering").GetInt64());
         Assert.Equal(
             (2L, 2L, 1L, 0L, 1L, 2L, 50),
             (report.GetProperty("pending").GetInt64(), report.GetProperty("done").GetInt64(),
@@ -58,6 +60,44 @@ public sealed class AdminPrerenderDemandTests(PostgresContainerFixture postgres)
             report.GetProperty("top").EnumerateArray()
                 .Select(static page => page.GetProperty("path").GetString()));
         Assert.True(report.GetProperty("isEnabled").GetBoolean());
+    }
+
+    // Served epoch 1: a page a pass wrote again counts apart, one of another epoch not at all;
+    // a page written before its bytes were kept weighs nothing.
+    [Fact]
+    public async Task ReportWeighsTheServedEpochAndCountsTheLastDayHourByHour()
+    {
+        var now = App.Clock.GetUtcNow();
+        var kept = Page("/en/16.11.1/runes", PrerenderDemandState.Done, 1, now.AddHours(-2));
+        kept.Bytes = 3000;
+        var unweighed = Page("/fr/16.11.1/runes", PrerenderDemandState.Done, 1, now);
+        var rewritten = Page("/de/16.11.1/runes", PrerenderDemandState.Done, 1, now.AddDays(-3));
+        (rewritten.Bytes, rewritten.SupersededAt) = (5000, now);
+        var elsewhere = Page("/es/16.11.1/runes", PrerenderDemandState.Done, 1, now.AddDays(-3));
+        (elsewhere.Bytes, elsewhere.Epoch) = (7000, 2);
+        var entered = Page("/it/16.11.1/runes", PrerenderDemandState.Pending, 1);
+        PrerenderDemandPage[] seen = [kept, unweighed, rewritten, elsewhere];
+        Array.ForEach(seen, page => page.FirstSeenAt = now);
+        entered.FirstSeenAt = now.AddHours(-2);
+        await SeedAsync([.. seen, entered]);
+        using var admin = await AdminBrowser.OpenAsync(App);
+
+        using var response = await admin.GetAsync(Demand);
+
+        var report = await ApiJson.ReadAsync(response, HttpStatusCode.OK);
+        Assert.Equal(
+            (2L, 3000L, 1L),
+            (report.GetProperty("servedEpochPages").GetInt64(),
+                report.GetProperty("servedEpochBytes").GetInt64(),
+                report.GetProperty("superseded").GetInt64()));
+        var hours = report.GetProperty("hours").EnumerateArray().ToList();
+        Assert.Equal(24, hours.Count);
+        Assert.True(hours[^1].GetProperty("start").GetDateTimeOffset() <= now);
+        Assert.Equal(
+            [(21, 1L, 1L), (23, 4L, 1L)],
+            hours.Select(static (hour, index) => (index, hour.GetProperty("entered").GetInt64(),
+                    hour.GetProperty("written").GetInt64()))
+                .Where(static hour => hour.Item2 + hour.Item3 > 0));
     }
 
     [Fact]

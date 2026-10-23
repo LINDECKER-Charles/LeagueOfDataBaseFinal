@@ -50,6 +50,21 @@ describe('CostsTab', () => {
     document.querySelectorAll('.cdk-overlay-container').forEach((node) => node.remove()),
   );
 
+  it('says the share of an epoch the automatic queue wrote, once it wrote some', async () => {
+    const { fixture, page } = await open();
+    expect(page.querySelector('[data-queue-share]')).toBeNull();
+
+    const epochs = REPORT.storage.epochs.map((epoch) =>
+      epoch.epoch === 2 ? { ...epoch, queuePages: 1_790 } : epoch,
+    );
+    fixture.componentRef.setInput('report', { ...REPORT, storage: { ...REPORT.storage, epochs } });
+    fixture.detectChanges();
+
+    const shares = page.querySelectorAll('[data-queue-share]');
+    expect(shares).toHaveLength(1);
+    expect(page.querySelector('tr[data-epoch="2"] [data-queue-share]')).not.toBeNull();
+  });
+
   it('lists the epochs with their coverage, volume, cost and what each offers', async () => {
     const { page } = await open();
 

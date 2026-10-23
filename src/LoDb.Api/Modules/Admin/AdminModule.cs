@@ -106,6 +106,7 @@ internal static class AdminModule
         PrerenderProgressEndpoint.Map(prerender);
         PrerenderPassVersionEndpoint.Map(prerender);
         PrerenderDemandEndpoint.Map(prerender);
+        PrerenderDemandPagesEndpoint.Map(prerender);
         PrerenderRevisionEndpoint.Map(prerender);
         PrerenderSpeedEndpoints.Map(prerender);
         ScalewayBillEndpoint.Map(Admin(endpoints, "/scaleway", AdminRoutes.ScalewayTag));

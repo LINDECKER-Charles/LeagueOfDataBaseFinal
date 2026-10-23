@@ -53,13 +53,14 @@ async function settled(visit: AdminVisit): Promise<void> {
 }
 
 describe('PrerenderPanel, its tabs and presets', () => {
-  it('shows three tabs, the coverage first', async () => {
+  it('shows four tabs, the coverage first', async () => {
     const { visit } = await openWith(IDLE);
     const tabs = [...visit.page.querySelectorAll('[role="tab"]')];
 
     expect(tabs.map((tab) => tab.textContent?.trim())).toEqual([
       'admin.prerender.overview.tabs.coverage',
       'admin.prerender.overview.tabs.costs',
+      'admin.prerender.overview.tabs.demand',
       'admin.prerender.overview.tabs.history',
     ]);
     expect(tabs[0].getAttribute('aria-selected')).toBe('true');

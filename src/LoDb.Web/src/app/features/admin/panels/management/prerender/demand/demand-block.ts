@@ -1,17 +1,18 @@
-import { ChangeDetectionStrategy, Component, computed } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import type { PrerenderDemandPage } from '../../../../../../core/api/generated/models/prerender-demand-page';
 import { figure } from '../../../../format/figure';
 import { stamp } from '../../../../format/stamp';
 import { AdminCard } from '../../../../layout/admin-card';
 import { AdminTextPipe } from '../../../../shared/admin-text-pipe';
 import { Badge } from '../../../../widgets/badge';
+import { DemandReportStore } from './demand-report-store';
 import { demandStatusOf } from './demand-status-of';
-import { injectDemandReport } from './inject-demand-report';
 
 /**
  * The automatic queue of the pages the visitors' SSR refused: whether it runs (read-only,
  * its switch is a setting), what it holds and wrote in the last hour and day, and its ten
- * most requested pending pages. It reads itself, beside the passes: it needs no launch.
+ * most requested pending pages. It reads the page's report of the queue
+ * (`DemandReportStore`), beside the passes: it needs no launch.
  */
 @Component({
   selector: 'lodb-demand-block',
@@ -21,7 +22,7 @@ import { injectDemandReport } from './inject-demand-report';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DemandBlock {
-  protected readonly report = injectDemandReport();
+  protected readonly report = inject(DemandReportStore).report;
   protected readonly status = computed(() => {
     const report = this.report.value();
     return report ? demandStatusOf(report) : null;

@@ -54,34 +54,45 @@ internal static class StorageLedger
         };
     }
 
-    // Every epoch holding pages, and the served, written and covered ones even while empty: the
-    // panel shows the epoch it fills from its first page on.
+    // Every epoch holding pages, of the passes or of the queue, and the served, written and
+    // covered ones even while empty: the panel shows the epoch it fills from its first page on.
     private static List<PrerenderEpochVolume> EpochsOf(StorageFacts facts, decimal price)
     {
-        var byEpoch = facts.Units.ToLookup(static unit => unit.Epoch);
-        var epochs = byEpoch.Select(static units => units.Key)
+        var held = new EpochHoldings(
+            facts.Units.ToLookup(static unit => unit.Epoch),
+            facts.Queue.ToDictionary(static stored => stored.Epoch),
+            price);
+        var epochs = held.Units.Select(static units => units.Key)
+            .Concat(held.Queue.Keys)
             .Append(facts.ServedEpoch)
             .Concat(facts.WritingEpoch is { } writing ? [writing] : [])
             .Concat(facts.Coverages.Keys)
             .Distinct()
             .OrderDescending();
-        return
-        [
-            .. epochs.Select(epoch =>
-            {
-                var bytes = byEpoch[epoch].Sum(static unit => unit.Bytes);
-                return new PrerenderEpochVolume
-                {
-                    Epoch = epoch,
-                    State = EpochStates.Of(epoch, facts),
-                    IsWriting = epoch == facts.WritingEpoch,
-                    Pages = byEpoch[epoch].Sum(static unit => (long)unit.Pages),
-                    Bytes = bytes,
-                    MonthlyCost = Rounded(ExactCost(bytes, price)),
-                    Coverage = facts.Coverages.GetValueOrDefault(epoch),
-                };
-            }),
-        ];
+        return [.. epochs.Select(epoch => EpochOf(epoch, held, facts))];
+    }
+
+    private static PrerenderEpochVolume EpochOf(
+        int epoch,
+        EpochHoldings held,
+        StorageFacts facts)
+    {
+        var units = held.Units[epoch];
+        var queue = held.Queue.GetValueOrDefault(epoch);
+        var (queuePages, queueBytes) = (queue?.Pages ?? 0, queue?.Bytes ?? 0);
+        var bytes = units.Sum(static unit => unit.Bytes) + queueBytes;
+        return new PrerenderEpochVolume
+        {
+            Epoch = epoch,
+            State = EpochStates.Of(epoch, facts),
+            IsWriting = epoch == facts.WritingEpoch,
+            Pages = units.Sum(static unit => (long)unit.Pages) + queuePages,
+            Bytes = bytes,
+            QueuePages = queuePages,
+            QueueBytes = queueBytes,
+            MonthlyCost = Rounded(ExactCost(bytes, held.PricePerGbMonth)),
+            Coverage = facts.Coverages.GetValueOrDefault(epoch),
+        };
     }
 
     private static List<PrerenderVersionVolume> VersionsOf(StorageFacts facts) =>
@@ -108,4 +119,10 @@ internal static class StorageLedger
         bytes / BytesPerGb * pricePerGbMonth;
 
     private static decimal Rounded(decimal cost) => Math.Round(cost, CostDecimals);
+
+    // What the passes and the queue hold, epoch by epoch, and the price of a GB of pages.
+    private sealed record EpochHoldings(
+        ILookup<int, StoredUnit> Units,
+        Dictionary<int, StoredQueuePages> Queue,
+        decimal PricePerGbMonth);
 }

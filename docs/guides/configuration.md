@@ -898,7 +898,7 @@ comme la passe. Règles : [spécification](../produit/pre-rendu-catalogue-cdn.md
 | `LODB_PRERENDER_DEMAND_ENABLED` | `true` | `true` | `false` : l'interrupteur, rien n'entre ni ne se rend |
 | `LODB_PRERENDER_DEMAND_SHARE` | `50` | `50` | part (%) des places en vol du SSR de la passe pour la file pendant une passe manuelle ; toutes sans passe |
 | `LoDb__Prerender__Demand__RefusedPagesUrl` | fixé | fixé | `http://lodb-web-ssr:9464/refused` (`compose.yaml`) : le port de métriques du SSR des visiteurs, jamais publié |
-| `LoDb__Prerender__Demand__RetentionDays` | `30` | `30` | jours sans refus avant qu'une page quitte la table (code) |
+| `LoDb__Prerender__Demand__RetentionDays` | `30` | `30` | jours sans refus avant qu'une page quitte la table, sauf une page écrite que la file tient dans l'epoch servie (code) |
 | `LoDb__Prerender__Demand__MaxPendingPages` | `100000` | `100000` | pages en attente gardées au plus, les plus demandées (code) |
 | `LoDb__Prerender__Demand__MaxAttempts` | `3` | `3` | essais ratés avant l'échec définitif d'une page (code) |
 
@@ -906,7 +906,8 @@ comme la passe. Règles : [spécification](../produit/pre-rendu-catalogue-cdn.md
 qui recrée l'API : le relevé et le rendu s'arrêtent, la table reste. Le pupitre dit alors
 « coupée ». Les pages en vol finissent.
 
-**Ce qui la montre** : le bloc « File automatique des pages refusées » de `/admin/prerender`,
+**Ce qui la montre** : le bloc « File automatique des pages refusées » et l'onglet « File des
+503 » de `/admin/prerender`,
 les métriques `lodb_prerender_demand_*` ([`metriques.md`](metriques.md)) et les lignes
 `prerender.demand.*` de l'API, une par relevé qui apporte des pages et une par lot rendu.
 

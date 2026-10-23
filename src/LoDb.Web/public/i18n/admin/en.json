@@ -833,14 +833,16 @@
         "stored_sub": "{pages, plural, one {# page} other {# pages}}, retired epochs left out",
         "cost": "Estimated cost / month",
         "cost_sub": "egress left out; detail under “Storage and costs”",
-        "cost_sub_retired": "+ {retired} for the retired epochs, until deleted; egress left out"
+        "cost_sub_retired": "+ {retired} for the retired epochs, until deleted; egress left out",
+        "stored_sub_queue": "{pages, plural, one {# page} other {# pages}}, {queue} of them by the queue, retired epochs left out"
       },
       "tabs": {
         "label": "Pre-rendering views",
         "coverage": "Coverage",
         "costs": "Storage and costs",
         "costs_short": "Costs",
-        "history": "History"
+        "history": "History",
+        "demand": "503 queue"
       },
       "doc_title": {
         "idle": "Catalogue pre-rendering",
@@ -1278,7 +1280,7 @@
       "empty": "No page stored.",
       "prices": "Estimated at {oneZone} per GB and month in One Zone (pages), {multiAz} in Multi-AZ (bundles).",
       "egress": "Egress excluded: 75 GB free a month, then €0.01 per GB, followed in Grafana.",
-      "counters": "These figures tell what the passes wrote, not what an expiry rule has deleted since: on staging, pages expire after 14 days, a completed unit is not rewritten and its pages fall back to the SSR silently.",
+      "counters": "These figures tell what the passes and the 503 queue wrote, not what an expiry rule has deleted since: on staging, pages expire after 14 days, a completed unit is not rewritten and its pages fall back to the SSR silently.",
       "retired": "A retired epoch keeps costing until the store's lifecycle has deleted it, 500,000 objects a day at most: 9 days at least for 4 million pages.",
       "columns": {
         "epoch": "Epoch",
@@ -1294,7 +1296,8 @@
       "retire": "Retire…",
       "projection_title": "If a new epoch were written",
       "projection": "It would weigh ≈ {size} like the served epoch: + {cost} / month while both coexist (until the old one is retired, 9 days at least after the switch).",
-      "bill_note": "The bill also counts the egress and the requests, which the estimate leaves out."
+      "bill_note": "The bill also counts the egress and the requests, which the estimate leaves out.",
+      "queue_sub": "of which {count} by the queue"
     },
     "passes": {
       "columns": {
@@ -1381,6 +1384,38 @@
         "demand": "{count, plural, one {# refusal} other {# refusals}}",
         "last": "last on {at} UTC",
         "attempts": "{count, plural, one {# failed try} other {# failed tries}}"
+      },
+      "queue": {
+        "title": "Pages of the queue",
+        "epoch": "Epoch {epoch}: {written, plural, one {{writtenText} page written} other {{writtenText} pages written}} by the queue; it holds {kept, plural, one {{keptText} page} other {{keptText} pages}} there ({size}).",
+        "epoch_superseded": "{superseded, plural, one {{supersededText} was written again since by a pass and now counts with the passes.} other {{supersededText} were written again since by a pass and now count with the passes.}}",
+        "epoch_empty": "Epoch {epoch}: the queue has written no page there yet.",
+        "chart": {
+          "title": "Last 24 hours (UTC)",
+          "label": "Pages that entered the queue and pages written, hour by hour over the last 24 hours; the tallest bar stands for {peak} pages.",
+          "caption": "Pages entered and written per hour, in UTC",
+          "hour": "Hour (UTC)",
+          "entered": "Entered (503)",
+          "written": "Written",
+          "tooltip": "{hour}:00 UTC: {entered} entered, {written} written"
+        },
+        "filter": "Pages by state",
+        "states": {
+          "pending": "Pending",
+          "rendering": "Rendering",
+          "done": "Written",
+          "failed": "Failed",
+          "skipped": "Skipped"
+        },
+        "total": "{count, plural, one {# page} other {# pages}} in this state",
+        "empty": "No page in this state.",
+        "new_tab": "(opens in a new tab)",
+        "written": "written on {at} UTC",
+        "classes": {
+          "archived": "frozen",
+          "revisable": "revisable"
+        },
+        "superseded": "written again by a pass"
       }
     },
     "speed": {
