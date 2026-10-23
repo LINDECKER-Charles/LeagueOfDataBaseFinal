@@ -1,5 +1,7 @@
 import type { PrerenderDemandHour } from '../../../../core/api/generated/models/prerender-demand-hour';
+import type { PrerenderDemandListedPage } from '../../../../core/api/generated/models/prerender-demand-listed-page';
 import type { PrerenderDemandPage } from '../../../../core/api/generated/models/prerender-demand-page';
+import type { PrerenderDemandPages } from '../../../../core/api/generated/models/prerender-demand-pages';
 import type { PrerenderDemandReport } from '../../../../core/api/generated/models/prerender-demand-report';
 
 const HOUR_MS = 3_600_000;
@@ -69,4 +71,50 @@ export function prerenderDemand(
     top: [...TOP],
     ...overrides,
   };
+}
+
+// Two pages the queue wrote: the last one revisable and its own, the other frozen and written
+// again since by a pass.
+const DONE: readonly PrerenderDemandListedPage[] = [
+  {
+    path: '/fr/15.13.1/champions/Aatrox',
+    version: '15.13.1',
+    locale: 'fr',
+    pageType: 'champions',
+    state: 'done',
+    demand: 48,
+    attempts: 0,
+    firstSeenAt: '2026-10-21T18:00:00Z',
+    lastSeenAt: '2026-10-21T19:58:00Z',
+    renderedAt: '2026-10-21T19:59:00Z',
+    epoch: 1,
+    bytes: 98_000,
+    storedClass: 'revisable',
+    supersededAt: null,
+    reason: null,
+  },
+  {
+    path: '/en/14.1.1/items/1036-long-sword',
+    version: '14.1.1',
+    locale: 'en',
+    pageType: 'items',
+    state: 'done',
+    demand: 12,
+    attempts: 1,
+    firstSeenAt: '2026-10-21T17:00:00Z',
+    lastSeenAt: '2026-10-21T19:40:00Z',
+    renderedAt: '2026-10-21T19:45:00Z',
+    epoch: 1,
+    bytes: 87_000,
+    storedClass: 'archived',
+    supersededAt: '2026-10-21T19:50:00Z',
+    reason: null,
+  },
+];
+
+/** The first page of the queue's written pages: two of 1,830, the last written first. */
+export function prerenderDemandPages(
+  overrides: Partial<PrerenderDemandPages> = {},
+): PrerenderDemandPages {
+  return { state: 'done', page: 1, pageSize: 50, total: 1_830, pages: [...DONE], ...overrides };
 }

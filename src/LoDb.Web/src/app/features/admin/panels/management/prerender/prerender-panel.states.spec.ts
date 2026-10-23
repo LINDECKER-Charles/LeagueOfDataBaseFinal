@@ -85,7 +85,7 @@ describe('PrerenderPanel, its states', () => {
       'admin.prerender.overview.cta.follow',
     ]);
     expect(visit.page.querySelectorAll('lodb-kpi')).toHaveLength(4);
-    expect(visit.page.querySelectorAll('lodb-tab')).toHaveLength(3);
+    expect(visit.page.querySelectorAll('lodb-tab')).toHaveLength(4);
   });
 
   it('keeps the report on screen, without a band, when a refresh fails', async () => {
@@ -183,7 +183,7 @@ describe('PrerenderPanel, its states', () => {
     expect(launched.current()).toBeNull();
   });
 
-  it('names its tabs short on a phone, so that all three hold in its width', async () => {
+  it('names its tabs short on a phone, so that they hold in its width', async () => {
     const phone = { observe: () => of({ matches: true, breakpoints: {} }), isMatched: () => true };
     const visit = await openPrerender({
       report: IDLE,
@@ -193,6 +193,7 @@ describe('PrerenderPanel, its states', () => {
     expect(texts(visit.page, '[role="tab"]')).toEqual([
       'admin.prerender.overview.tabs.coverage',
       'admin.prerender.overview.tabs.costs_short',
+      'admin.prerender.overview.tabs.demand',
       'admin.prerender.overview.tabs.history',
     ]);
   });

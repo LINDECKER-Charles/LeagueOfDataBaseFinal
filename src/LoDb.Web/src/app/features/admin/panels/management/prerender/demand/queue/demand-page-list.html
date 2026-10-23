@@ -1,0 +1,57 @@
+@if (pages().length > 0) {
+  <ol class="m-0 flex list-none flex-col gap-2 p-0" data-queue-pages>
+    @for (page of pages(); track page.path) {
+      <li
+        class="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-gold/16 pb-2 text-[0.85rem]"
+        [attr.data-queue-page]="page.path"
+      >
+        <a
+          class="min-w-0 break-all font-mono text-gold-bright underline-offset-2 hover:underline"
+          target="_blank"
+          rel="noopener"
+          [href]="page.path"
+        >
+          {{ page.path }}
+          <span class="sr-only">{{ 'admin.prerender.demand.queue.new_tab' | adminText }}</span>
+        </a>
+        <span class="badges">
+          @if (page.storedClass) {
+            <span lodbBadge="good" data-queue-class>
+              {{ 'admin.prerender.demand.queue.classes.' + page.storedClass | adminText }}
+            </span>
+          }
+          @if (page.supersededAt) {
+            <span lodbBadge="muted" data-queue-superseded>
+              {{ 'admin.prerender.demand.queue.superseded' | adminText }}
+            </span>
+          }
+          @if (page.attempts > 0) {
+            <span lodbBadge="warn" data-queue-attempts>
+              {{ 'admin.prerender.demand.top.attempts' | adminText: { count: page.attempts } }}
+            </span>
+          }
+        </span>
+        <span class="ms-auto text-text-muted">
+          {{ 'admin.prerender.demand.top.demand' | adminText: { count: page.demand } }}
+        </span>
+        <span class="w-full text-[0.8rem] text-text-dim">
+          {{ 'admin.prerender.demand.top.last' | adminText: { at: at(page.lastSeenAt) } }}
+          @if (page.renderedAt) {
+            ·
+            {{ 'admin.prerender.demand.queue.written' | adminText: { at: at(page.renderedAt) } }}
+          }
+          @if (page.bytes) {
+            · {{ page.bytes | decimalBytes }}
+          }
+        </span>
+        @if (page.reason) {
+          <span class="w-full text-[0.8rem] text-gold" data-queue-reason>{{ page.reason }}</span>
+        }
+      </li>
+    }
+  </ol>
+} @else {
+  <p class="m-0 text-[0.9rem] text-text-muted" data-queue-empty>
+    {{ 'admin.prerender.demand.queue.empty' | adminText }}
+  </p>
+}

@@ -1,7 +1,7 @@
 import type { EnvironmentProviders, Provider } from '@angular/core';
 import type { PrerenderReport } from '../../../../../core/api/generated/models/prerender-report';
 import { configureAdminTestBed } from '../../../testing/admin-test-bed';
-import { prerenderDemand } from '../../../testing/fixtures/prerender-demand';
+import { prerenderDemand, prerenderDemandPages } from '../../../testing/fixtures/prerender-demand';
 import { prerenderPatches } from '../../../testing/fixtures/prerender-patches';
 import { prerenderReport } from '../../../testing/fixtures/prerender-report';
 import { prerenderRevision } from '../../../testing/fixtures/revision/prerender-revision';
@@ -34,11 +34,13 @@ const BILL = '/api/admin/scaleway/bill';
 // figures.
 const DEMAND = `${PRERENDER}/demand`;
 const REVISION = `${PRERENDER}/revision`;
+// The written pages of the automatic queue, listed by its tab.
+const DEMAND_PAGES = `${DEMAND}/pages`;
 
 /**
  * Opens `/admin/prerender` in a spec and answers what it reads on opening: the report, then
  * `calls` (the progress of a pass), the coverage of the served epoch, the bill, the automatic
- * queue and the queue of the closed states.
+ * queue and its written pages, and the queue of the closed states.
  */
 export function openPrerender(opening: PrerenderOpening = {}): Promise<PanelVisit> {
   const report = opening.report ?? prerenderReport();
@@ -53,6 +55,7 @@ export function openPrerender(opening: PrerenderOpening = {}): Promise<PanelVisi
     { path: PATCHES, body: prerenderPatches() },
     { path: BILL, body: scalewayBillReport() },
     { path: DEMAND, body: prerenderDemand() },
+    { path: DEMAND_PAGES, body: prerenderDemandPages() },
     { path: REVISION, body: prerenderRevision() },
   ]);
 }
