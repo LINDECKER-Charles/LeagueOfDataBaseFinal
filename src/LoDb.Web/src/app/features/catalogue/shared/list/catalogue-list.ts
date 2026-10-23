@@ -26,17 +26,21 @@ import type { FacetDefinition } from '../facets/model/facet-definition';
 import { PAGE_SIZE_ALL } from '../filtering/grid/page-size-all';
 import { ActiveFilters } from '../results/active-filters';
 import { FilterToolbar } from '../results/filter-toolbar';
+import { PageSizePicker } from '../results/page-size-picker';
 import { isSearchShortcut } from '../search/is-search-shortcut';
 import type { CatalogueListSource } from '../source/catalogue-list-source';
 import { DEFAULT_PAGE_SIZE } from '../source/default-page-size';
 import type { CatalogueCardAdapter } from '../state/catalogue-card-adapter';
 import { CatalogueFilter } from '../state/catalogue-filter';
 import type { CatalogueListLike } from '../state/catalogue-list-like';
+import { PAGE_SIZES } from '../state/page-sizes';
 import { FilterUrlSync } from '../url/sync/filter-url-sync';
 import { CatalogueCardTemplate } from './catalogue-card-template';
 
 /** Beyond a screenful, more placeholder tiles only lengthen the page. */
 const MAX_SKELETON_TILES = 24;
+/** The smallest page size offered, first of the list. */
+const [SMALLEST_PAGE_SIZE] = PAGE_SIZES;
 
 /**
  * The filterable list of a catalogue page: the filter rail (a sticky search bar and a
@@ -60,6 +64,7 @@ const MAX_SKELETON_TILES = 24;
     FilterSearch,
     FilterToolbar,
     NgTemplateOutlet,
+    PageSizePicker,
     Skeleton,
     TranslocoPipe,
   ],
@@ -127,6 +132,13 @@ export class CatalogueList<C> implements OnInit {
     const tiles = size === PAGE_SIZE_ALL ? DEFAULT_PAGE_SIZE : size;
     return Array.from({ length: Math.min(tiles, MAX_SKELETON_TILES) });
   });
+  /**
+   * The page sizes come again under the grid, where the reader who went through it stands,
+   * unless the smallest page already holds every match: then no size changes anything.
+   */
+  protected readonly isSizePickerRepeated = computed(
+    () => this.filter.view().matching > SMALLEST_PAGE_SIZE,
+  );
 
   constructor() {
     afterRenderEffect(() => {
