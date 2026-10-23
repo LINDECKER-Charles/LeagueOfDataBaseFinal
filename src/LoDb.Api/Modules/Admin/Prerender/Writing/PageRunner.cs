@@ -15,8 +15,10 @@ namespace LoDb.Api.Modules.Admin.Prerender.Writing;
 /// </summary>
 /// <remarks>
 /// <para>
-/// A refusal of the SSR (503, 429) is waited out as its Retry-After asks, as often as it comes:
-/// it says the visitors need the room, not that the page is broken. So is an SSR out of reach
+/// A refusal of the SSR (503, 429) is waited out as its Retry-After asks: it says the visitors
+/// need the room, not that the page is broken. But the SSR answers 503 too when the API cannot
+/// give it the page's data, which may last: after <see cref="MostRefusals"/> of them, the page
+/// is counted failed and the unit goes on. So is an SSR out of reach
 /// (connection refused, during a redeploy), uncounted but logged once (<see cref="SsrOutage"/>):
 /// an outage must not fail every page of a unit one after the other. A failure that may not
 /// last (a 5xx, a timeout, a store that throttles) is tried again a little later, then later
@@ -27,7 +29,8 @@ namespace LoDb.Api.Modules.Admin.Prerender.Writing;
 /// Whether the pass still runs is read before each try: a pause or a cancel stops the page
 /// there. A page the regulator holds back (<see cref="RenderPacer"/>) is no try: it reads it
 /// again every 10 s, uncounted. An answer that refuses the pass itself ends the page
-/// unfinished, and the pass pauses.
+/// unfinished, and the pass pauses. Each try beats the <see cref="EnginePulse"/>: a page that
+/// waits is no engine gone.
 /// </para>
 /// <para>
 /// Each render holds one of the SSR's slots, which the automatic queue shares
@@ -44,37 +47,55 @@ internal sealed class PageRunner(
     UnitQueue queue,
     PrerenderMetrics metrics,
     PassRenderTimes renders,
+    EnginePulse pulse,
     TimeProvider clock)
 {
+    /// <summary>The refusals a page waits out before it is counted failed.</summary>
+    public const int MostRefusals = 20;
+
+    private static readonly string TooManyRefusals =
+        $"The SSR refused the page {MostRefusals} times (503 or 429).";
+
     public async Task<PageResult> RunAsync(PageJob job, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(job);
-        var (failures, refusals) = (0, 0);
+        var tries = new Tries();
         while (await queue.IsRunningAsync(job.Unit.Pass.Id, cancellationToken))
         {
+            pulse.Beat();
             var attempt = await AttemptAsync(job, cancellationToken);
-            if (attempt.Result is { } result)
+            if (EndOf(attempt, tries) is { } result)
             {
-                return Ended(result with { Refusals = refusals });
+                return Ended(result with { Refusals = tries.Refusals });
             }
 
-            if (attempt.Failure is { } reason)
-            {
-                if (++failures >= RetryDelays.MaxAttempts)
-                {
-                    return Ended(PageResult.Failed(reason) with { Refusals = refusals });
-                }
-            }
-            else if (attempt is { IsOutage: false, IsHeld: false })
-            {
-                refusals++;
-                metrics.Count(PageOutcome.Refused);
-            }
-
-            await Task.Delay(attempt.WaitFor(failures), clock, cancellationToken);
+            await Task.Delay(attempt.WaitFor(tries.Failures), clock, cancellationToken);
         }
 
-        return PageResult.Interrupted with { Refusals = refusals };
+        return PageResult.Interrupted with { Refusals = tries.Refusals };
+    }
+
+    // How a try ends the page, if it does, counting it in its kind: an outage of the SSR and a
+    // hold of the regulator count nothing.
+    private PageResult? EndOf(Attempt attempt, Tries tries)
+    {
+        if (attempt.Result is { } result)
+        {
+            return result;
+        }
+
+        if (attempt.Failure is { } reason)
+        {
+            return ++tries.Failures >= RetryDelays.MaxAttempts ? PageResult.Failed(reason) : null;
+        }
+
+        if (attempt.IsOutage || attempt.IsHeld)
+        {
+            return null;
+        }
+
+        metrics.Count(PageOutcome.Refused);
+        return ++tries.Refusals >= MostRefusals ? PageResult.Failed(TooManyRefusals) : null;
     }
 
     private PageResult Ended(PageResult result)
@@ -214,5 +235,13 @@ internal sealed class PageRunner(
         public static Attempt Again(string reason) => new(null, reason, TimeSpan.Zero);
 
         public TimeSpan WaitFor(int failures) => Wait ?? RetryDelays.AfterFailure(failures);
+    }
+
+    // The tries of one page so far, by kind.
+    private sealed class Tries
+    {
+        public int Failures { get; set; }
+
+        public int Refusals { get; set; }
     }
 }
