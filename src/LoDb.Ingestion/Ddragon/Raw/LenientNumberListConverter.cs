@@ -20,7 +20,7 @@ internal sealed class LenientNumberListConverter : JsonConverter<List<double>>
     {
         if (reader.TokenType != JsonTokenType.StartArray)
         {
-            reader.Skip();
+            ValueSkipping.Skip(ref reader);
             return [];
         }
 
@@ -67,7 +67,7 @@ internal sealed class LenientNumberListConverter : JsonConverter<List<double>>
                     ? parsed
                     : null;
             default:
-                reader.Skip();
+                ValueSkipping.Skip(ref reader);
                 return null;
         }
     }
