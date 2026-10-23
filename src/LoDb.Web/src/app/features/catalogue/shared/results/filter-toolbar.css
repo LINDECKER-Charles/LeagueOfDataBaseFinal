@@ -34,57 +34,18 @@
   color: var(--color-text-dim);
 }
 .toolbar__tools,
-.toolbar__sizes,
 .toolbar__pager {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem 0.9rem;
 }
-.toolbar__sizes {
-  flex-wrap: nowrap;
-  gap: 0.5rem;
-}
 .toolbar__pager {
   gap: 0.25rem;
 }
-.toolbar__label {
-  font-family: var(--font-mono);
-  font-size: 0.625rem;
-  text-transform: uppercase;
-  letter-spacing: 0.09em;
-  color: var(--color-text-dim);
-}
-.segments {
-  display: flex;
-}
-.segment {
-  display: grid;
-  place-items: center;
-  min-inline-size: 2rem;
-  block-size: 2rem;
-  padding-inline: 0.55rem;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-  border: 1px solid color-mix(in srgb, var(--color-gold-deep) 55%, transparent);
-  background: color-mix(in srgb, var(--color-void) 60%, transparent);
-  cursor: pointer;
-}
-.segment + .segment {
-  border-inline-start: 0;
-}
-.segment:hover {
-  color: var(--color-hex);
-}
-.segment:focus-visible,
 .nav:focus-visible {
   outline: none;
   box-shadow: inset 0 0 0 2px var(--color-hex);
-}
-.segment[aria-pressed='true'] {
-  color: var(--color-hextech-black);
-  background: linear-gradient(180deg, var(--color-gold-bright), var(--color-gold));
 }
 .nav {
   display: grid;
@@ -115,7 +76,6 @@
   scale: -1 1;
 }
 @media (pointer: coarse) {
-  .segment,
   .nav {
     min-inline-size: 2.5rem;
     block-size: 2.5rem;
