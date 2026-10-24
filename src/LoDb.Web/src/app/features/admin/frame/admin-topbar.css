@@ -1,0 +1,117 @@
+/* The bar over the page: sticky, translucent, the line of the frame under it. */
+:host {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: 20;
+  display: block;
+}
+
+.admin-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-block-size: 3.4rem;
+  padding: 0.7rem 1.75rem;
+  border-block-end: 1px solid var(--admin-line);
+  background: color-mix(in srgb, var(--color-hextech-black) 88%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.admin-brand {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  font-family: var(--font-beaufort);
+  text-transform: uppercase;
+}
+
+.admin-brand b {
+  color: var(--color-gold-bright);
+  font-size: 0.9rem;
+  letter-spacing: 0.16em;
+}
+
+.admin-brand span {
+  color: var(--color-hex);
+  font-size: 0.62rem;
+  letter-spacing: 0.34em;
+}
+
+.admin-crumbs {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin: 0;
+  font-family: var(--font-beaufort);
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--color-text-dim);
+}
+
+.admin-crumbs b {
+  font-weight: 700;
+  color: var(--color-gold-bright);
+}
+
+.admin-crumbs-sep {
+  inline-size: 5px;
+  block-size: 5px;
+  rotate: 45deg;
+  border: 1px solid var(--color-gold-deep);
+}
+
+/* The button of the drawer: three gold lines, a narrow screen's only. */
+.admin-menu {
+  display: none;
+  flex: none;
+  place-items: center;
+  inline-size: 2.75rem;
+  block-size: 2.75rem;
+  border: 1px solid var(--admin-line);
+  background: none;
+  cursor: pointer;
+}
+
+.admin-menu:focus-visible {
+  outline: 1px solid var(--color-hex);
+  outline-offset: 2px;
+}
+
+.admin-menu span,
+.admin-menu span::before,
+.admin-menu span::after {
+  display: block;
+  inline-size: 1.1rem;
+  block-size: 1px;
+  background: var(--color-gold);
+}
+
+.admin-menu span {
+  position: relative;
+}
+
+.admin-menu span::before,
+.admin-menu span::after {
+  content: '';
+  position: absolute;
+  inset-inline-start: 0;
+}
+
+.admin-menu span::before {
+  inset-block-start: -0.35rem;
+}
+
+.admin-menu span::after {
+  inset-block-start: 0.35rem;
+}
+
+@media (width <= 1024px) {
+  .admin-bar {
+    padding-inline: 1rem;
+  }
+
+  .admin-menu {
+    display: grid;
+  }
+}

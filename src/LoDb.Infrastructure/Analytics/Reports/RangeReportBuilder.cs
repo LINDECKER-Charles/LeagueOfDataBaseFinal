@@ -56,6 +56,18 @@ internal static class RangeReportBuilder
         GeoAvailable = geoAvailable,
     };
 
+    /// <param name="dailies">Every day of a period, in order; at least one.</param>
+    public static AnalyticsTotals Totals(IReadOnlyList<DailyAggregate> dailies) =>
+        TotalsOf(new MergedDays(dailies));
+
+    /// <summary>A counter map of <see cref="DailyBuckets.Names"/>, summed over the days.</summary>
+    /// <param name="dailies">Every day of a period, in order; at least one.</param>
+    /// <param name="bucket">The map.</param>
+    public static IReadOnlyDictionary<string, long> Counts(
+        IReadOnlyList<DailyAggregate> dailies,
+        string bucket) =>
+        new MergedDays(dailies)[bucket];
+
     private static AnalyticsTotals TotalsOf(MergedDays days)
     {
         var daysSeen = new Dictionary<string, int>(StringComparer.Ordinal);

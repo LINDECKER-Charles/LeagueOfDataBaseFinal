@@ -1,5 +1,5 @@
 /** A link of the admin's navigation: its key under `admin.nav`, its path, its pages. */
-interface NavLink {
+export interface NavLink {
   readonly key: string;
   readonly path: string;
   /**
@@ -9,35 +9,54 @@ interface NavLink {
   readonly current: RegExp;
 }
 
-/** A group of links under a label, as the legacy top bar had them. */
-interface NavSection {
-  readonly key: string;
+/** The glyph of a section of the sidebar (`NavIcon`). */
+export type NavIconName = 'dashboard' | 'analytics' | 'management' | 'health';
+
+/**
+ * A section of the sidebar: its key under `admin.nav`, its glyph, its links. A section of a
+ * single link is that link itself, its label the section's.
+ */
+export interface NavSection {
+  readonly key: NavIconName;
   readonly links: readonly NavLink[];
 }
 
-/** The sections of the admin, in the order of the legacy top bar. */
+/** The page the URL shows, and the section it belongs to. */
+export interface NavPlace {
+  readonly section: NavSection;
+  readonly link: NavLink;
+}
+
+// The paths of a page and of the pages under it: /admin/robots, /admin/robots/googlebot.
+const pageAndBelow = (path: string): RegExp => new RegExp(`^${path}(?:/.*)?$`);
+const page = (path: string): RegExp => new RegExp(`^${path}/?$`);
+
+/**
+ * The four sections of the admin: the dashboard; what the site's traffic says (Analytics);
+ * the accounts and what they send (Gestion); how the application holds up (Health).
+ */
 export const ADMIN_NAV: readonly NavSection[] = [
+  {
+    key: 'dashboard',
+    links: [{ key: 'dashboard', path: '/admin', current: /^\/admin\/?$/ }],
+  },
   {
     key: 'analytics',
     links: [
-      { key: 'overview', path: '/admin', current: /^\/admin\/?$/ },
-      { key: 'traffic', path: '/admin/traffic', current: /^\/admin\/traffic\/?$/ },
-      { key: 'audience', path: '/admin/audience', current: /^\/admin\/audience\/?$/ },
-      { key: 'storage', path: '/admin/storage', current: /^\/admin\/storage\/?$/ },
+      { key: 'traffic', path: '/admin/traffic', current: page('/admin/traffic') },
+      { key: 'robots', path: '/admin/robots', current: pageAndBelow('/admin/robots') },
+      { key: 'audience', path: '/admin/audience', current: page('/admin/audience') },
     ],
   },
   {
     key: 'management',
     links: [
-      { key: 'users', path: '/admin/users', current: /^\/admin\/users\/?$/ },
-      { key: 'builds', path: '/admin/builds', current: /^\/admin\/builds\/?$/ },
-      { key: 'donations', path: '/admin/donations', current: /^\/admin\/donations\/?$/ },
-      { key: 'contacts', path: '/admin/contacts', current: /^\/admin\/contacts\/?$/ },
-      { key: 'api_clients', path: '/admin/api-clients', current: /^\/admin\/api-clients\/?$/ },
-      { key: 'monitoring', path: '/admin/monitoring', current: /^\/admin\/monitoring\/?$/ },
-      { key: 'backups', path: '/admin/backups', current: /^\/admin\/backups\/?$/ },
-      { key: 'prerender', path: '/admin/prerender', current: /^\/admin\/prerender\/?$/ },
-      // The activity of an account is a view of the journal, as the legacy bar had it.
+      { key: 'users', path: '/admin/users', current: page('/admin/users') },
+      { key: 'contacts', path: '/admin/contacts', current: page('/admin/contacts') },
+      { key: 'builds', path: '/admin/builds', current: page('/admin/builds') },
+      { key: 'donations', path: '/admin/donations', current: page('/admin/donations') },
+      { key: 'api_clients', path: '/admin/api-clients', current: page('/admin/api-clients') },
+      // The activity of an account is a view of the journal.
       {
         key: 'journal',
         path: '/admin/journal',
@@ -45,4 +64,24 @@ export const ADMIN_NAV: readonly NavSection[] = [
       },
     ],
   },
+  {
+    key: 'health',
+    links: [
+      { key: 'monitoring', path: '/admin/monitoring', current: page('/admin/monitoring') },
+      { key: 'prerender', path: '/admin/prerender', current: page('/admin/prerender') },
+      { key: 'storage', path: '/admin/storage', current: page('/admin/storage') },
+      { key: 'backups', path: '/admin/backups', current: page('/admin/backups') },
+    ],
+  },
 ];
+
+/** The page of a path, query and fragment left out; null off every link. */
+export function navPlaceOf(path: string): NavPlace | null {
+  for (const section of ADMIN_NAV) {
+    const link = section.links.find((candidate) => candidate.current.test(path));
+    if (link) {
+      return { section, link };
+    }
+  }
+  return null;
+}

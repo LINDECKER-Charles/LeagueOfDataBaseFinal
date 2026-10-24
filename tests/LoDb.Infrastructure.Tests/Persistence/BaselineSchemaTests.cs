@@ -58,6 +58,9 @@ public sealed class BaselineSchemaTests(PostgresContainerFixture postgres)
     internal static readonly string[] StateIndexTables =
         ["catalog_entity_state", "catalog_state_generation", "catalog_state_version"];
 
+    /// <summary>Tables of the robots journal; like lot 4's, not in NewTables.</summary>
+    internal static readonly string[] RobotTables = ["robot_agent", "robot_daily", "robot_hit"];
+
     // Everything a migration adds to a Doctrine table, frozen: Identity's columns on users
     // (nullable, with a default or generated, so that the legacy stack keeps inserting rows)
     // and the indexes of the generated ones. The catalog shows a generated column as a default.
@@ -186,7 +189,8 @@ public sealed class BaselineSchemaTests(PostgresContainerFixture postgres)
             .Concat(AudienceTables)
             .Concat(BackupTables)
             .Concat(PrerenderTables)
-            .Concat(StateIndexTables);
+            .Concat(StateIndexTables)
+            .Concat(RobotTables);
 
     // The table itself, its columns, constraints, indexes and triggers, and the sequences of
     // its identity columns, which PostgreSQL names after it.

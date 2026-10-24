@@ -3,7 +3,6 @@
     "label": "Navigation de l'administration",
     "analytics": "Analytics",
     "management": "Gestion",
-    "overview": "Vue d'ensemble",
     "traffic": "Trafic",
     "audience": "Audience",
     "storage": "Stockage",
@@ -16,7 +15,12 @@
     "backups": "Sauvegardes",
     "prerender": "Précalcul",
     "journal": "Journal",
-    "sign_out": "Déconnexion"
+    "sign_out": "Déconnexion",
+    "dashboard": "Dashboard",
+    "health": "Health",
+    "robots": "Robots",
+    "menu_open": "Ouvrir le menu",
+    "menu_close": "Fermer le menu"
   },
   "login": {
     "title": "Panneau d'administration",
@@ -188,12 +192,14 @@
       "versions": "Versions",
       "versions_sub": "jeux de données ingérés",
       "webp": "Couverture WebP",
-      "webp_sub": "{done} / {total} images"
+      "webp_sub": "{done} / {total} images",
+      "robots": "Robots",
+      "robots_sub": "{mismatch} usurpations probables"
     }
   },
   "traffic": {
     "title": "Trafic",
-    "lede": "Pages les plus consultées et rythme de fréquentation.",
+    "lede": "Ce que lisent les visiteurs, d'où ils viennent, et les robots à côté.",
     "daily": "Fréquentation dans le temps",
     "heatmap": "Rythme horaire",
     "top_pages": "Pages les plus consultées",
@@ -207,11 +213,14 @@
       "visitors_sub": "{count} récurrents",
       "pages_sub": "URL suivies",
       "per_day": "Vues / jour",
-      "per_day_sub": "moyenne"
+      "per_day_sub": "moyenne",
+      "robots": "Robots",
+      "robots_sub": "{share} des requêtes"
     },
     "series": {
       "views": "Vues",
-      "visitors": "Visiteurs"
+      "visitors": "Visiteurs",
+      "robots": "Requêtes de robots"
     },
     "types": {
       "home": "Accueil",
@@ -232,6 +241,37 @@
       "status": "Statut",
       "views": "Vues",
       "share": "Part"
+    },
+    "daily_chip": "vues · visiteurs · robots",
+    "locales": "Langues de l'interface",
+    "langs": "Langues Data Dragon",
+    "trend": {
+      "up": "▲ {change} vs période précédente",
+      "down": "▼ {change} vs période précédente",
+      "flat": "= stable vs période précédente",
+      "none": "sans période de comparaison"
+    },
+    "rules": {
+      "content": "Contenu",
+      "quality": "Langues et réponses"
+    },
+    "explorer": {
+      "title": "Explorateur",
+      "chip": "toutes les clés de la période",
+      "dimension": "Dimension",
+      "search": "Rechercher…",
+      "count": "{count, plural, one {# clé} other {# clés}} · total {total}",
+      "empty": "Aucune clé ne correspond.",
+      "dimensions": {
+        "pages": "Pages",
+        "entities": "Entités",
+        "referers": "Référents"
+      },
+      "columns": {
+        "pages": "Page",
+        "entities": "Entité",
+        "referers": "Hôte référent"
+      }
     }
   },
   "audience": {
@@ -822,27 +862,50 @@
         "gaps_cta": "Les compléter",
         "whole": "L'epoch servie couvre tous les anciens patchs."
       },
-      "kpis": {
-        "served": "Epoch servie",
-        "served_sub": "LODB_ARCHIVE_SERVE_EPOCH, changée par un redéploiement",
-        "served_ready": "l'epoch {epoch} est prête",
-        "coverage": "Couverture servie",
-        "coverage_sub": "des unités · {complete} / {total, plural, one {# patch} other {# patchs}} complets",
-        "coverage_none": "aucun ancien patch",
-        "stored": "Stocké",
-        "stored_sub": "{pages, plural, one {# page} other {# pages}}, epochs retirées exclues",
-        "cost": "Coût estimé / mois",
-        "cost_sub": "hors sortie ; détail sous « Stockage et coûts »",
-        "cost_sub_retired": "+ {retired} pour les epochs retirées, jusqu'à leur suppression ; hors sortie",
-        "stored_sub_queue": "{pages, plural, one {# page} other {# pages}}, dont {queue} par la file, epochs retirées exclues"
-      },
-      "tabs": {
+      "views": {
         "label": "Vues du précalcul",
-        "coverage": "Couverture",
-        "costs": "Stockage et coûts",
-        "costs_short": "Coûts",
-        "history": "Historique",
-        "demand": "File des 503"
+        "pass": {
+          "label": "Passe",
+          "sub_running": "n°{id} · epoch {epoch} · en cours",
+          "sub_paused": "n°{id} · epoch {epoch} · en pause",
+          "sub_paused_itself": "n°{id} · en pause d'elle-même",
+          "value_completed": "Terminée",
+          "value_cancelled": "Annulée",
+          "sub_ended": "n°{id} · {date} UTC",
+          "value_idle": "Aucune",
+          "sub_idle": "{promotions, select, on {les patchs promus en ouvrent une} other {à lancer à la main}}",
+          "sub_dormant": "précalcul non configuré"
+        },
+        "coverage": {
+          "label": "Couverture",
+          "sub": "epoch {epoch} servie · {complete} / {total, plural, one {# patch} other {# patchs}} complets",
+          "sub_ready": "epoch {epoch} servie · l'epoch {ready} est prête",
+          "sub_none": "epoch {epoch} servie"
+        },
+        "queues": {
+          "label": "Files automatiques",
+          "sub": "en attente : {demand} refusées (503) · {revision} d'états clos"
+        },
+        "speed": {
+          "label": "Vitesse",
+          "value_adaptive": "Adaptative",
+          "value_manual": "Manuelle",
+          "value_fixed": "Fixe",
+          "sub_now": "{pace} pages/min en ce moment",
+          "sub_manual": "cible : {pace} pages/min",
+          "sub_adaptive": "entre {min} et {max} pages/min",
+          "sub_fixed": "régulateur coupé par l'environnement"
+        },
+        "storage": {
+          "label": "Stockage et coûts",
+          "sub": "{cost} / mois · {pages, plural, one {# page} other {# pages}}"
+        },
+        "history": {
+          "label": "Historique",
+          "value": "{count, plural, =0 {Aucune} one {# passe} other {# passes}}",
+          "sub": "dernière : n°{id} ({state}), {date}",
+          "sub_none": "aucune passe lancée"
+        }
       },
       "doc_title": {
         "idle": "Précalcul du catalogue",
@@ -1267,7 +1330,9 @@
       "retry": "Réessayer",
       "empty": "Aucun ancien patch.",
       "season_counts": "{versions, plural, one {# patch} other {# patchs}} · {complete, plural, one {# complet} other {# complets}}{missing, plural, =0 {} one { · # à compléter} other { · # à compléter}}",
-      "indexed": "{openers} · {frozen} · {revisable}"
+      "indexed": "{openers} · {frozen} · {revisable}",
+      "fold_all": "Tout replier",
+      "unfold_all": "Tout déplier"
     },
     "costs": {
       "title": "Ce que le stockage garde",
@@ -1282,6 +1347,7 @@
       "egress": "Hors sortie : 75 Go gratuits par mois, puis 0,01 € par Go, suivie dans Grafana.",
       "counters": "Ces chiffres disent ce que les passes et la file des 503 ont écrit, pas ce qu'une règle d'expiration a supprimé depuis : sur le staging, les pages expirent après 14 jours, une unité terminée n'est pas réécrite et ses pages repassent sans bruit par le SSR.",
       "retired": "Une epoch retirée coûte jusqu'à ce que le cycle de vie du stockage l'ait supprimée, 500 000 objets par jour au plus : 9 jours au moins pour 4 millions de pages.",
+      "served_note": "L'epoch servie est celle que nomme LODB_ARCHIVE_SERVE_EPOCH : seul un redéploiement la change.",
       "columns": {
         "epoch": "Epoch",
         "state": "État",
@@ -1386,7 +1452,7 @@
         "attempts": "{count, plural, one {# essai raté} other {# essais ratés}}"
       },
       "queue": {
-        "title": "Pages de la file",
+        "title": "Pages de la file des refusées (503)",
         "epoch": "Epoch {epoch} : {written, plural, one {{writtenText} page écrite} other {{writtenText} pages écrites}} par la file ; elle y tient {kept, plural, one {{keptText} page} other {{keptText} pages}} ({size}).",
         "epoch_superseded": "{superseded, plural, one {{supersededText} a été réécrite depuis par une passe et compte désormais avec les passes.} other {{supersededText} ont été réécrites depuis par une passe et comptent désormais avec les passes.}}",
         "epoch_empty": "Epoch {epoch} : la file n'y a encore écrit aucune page.",
@@ -1642,12 +1708,10 @@
     "all": "tout l'historique"
   },
   "eyebrows": {
-    "console": "Console",
     "analytics": "Analytics",
-    "infrastructure": "Infrastructure",
-    "moderation": "Modération",
     "management": "Gestion",
-    "surveillance": "Surveillance"
+    "dashboard": "Dashboard",
+    "health": "Health"
   },
   "rules": {
     "traffic": "Trafic",
@@ -1666,5 +1730,164 @@
     "maintenance": "Maintenance",
     "databases": "Bases sauvegardées",
     "nights": "Nuits"
+  },
+  "robots": {
+    "title": "Robots",
+    "lede": "Qui explore le site, ce qu'il demande et comment nginx lui répond.",
+    "back": "Robots",
+    "no_agent": "Sans user-agent",
+    "undeclared_name": "Non déclaré · {network}",
+    "unknown_network": "réseau inconnu",
+    "daily": "Requêtes par catégorie",
+    "daily_chip": "requêtes · jour",
+    "by_category": "Par catégorie",
+    "hits_caption": "requêtes",
+    "statuses": "Codes de réponse",
+    "by_section": "Ce qu'ils demandent",
+    "networks": "Réseaux d'origine",
+    "network": "Réseau (DNS inverse)",
+    "network_robots": "Robots",
+    "networks_empty": "Aucun réseau confirmé par DNS.",
+    "verification": "Vérification",
+    "verification_note": "Google, Bing, Apple, Yandex, Baidu, Amazon, Seznam et Petal se vérifient par DNS inverse confirmé. Les autres ne publient que des plages d'adresses : non vérifiables ici.",
+    "retention": "Requêtes conservées une à une depuis le {since} (30 jours) ; les comptes par jour sont gardés sans limite.",
+    "views": {
+      "label": "Vues des robots",
+      "overview": "Vue d'ensemble",
+      "journal": "Journal"
+    },
+    "kpi": {
+      "hits": "Requêtes de robots",
+      "hits_sub": "{count} de crawlers",
+      "robots": "Robots distincts",
+      "robots_sub": "{count, plural, one {# catégorie} other {# catégories}}",
+      "verified": "Vérifiés par DNS",
+      "verified_sub": "{count} requêtes authentifiées",
+      "mismatch": "Usurpations probables",
+      "mismatch_sub": "UA d'un robot, réseau d'un autre",
+      "mismatch_count": "{count, plural, one {# usurpation probable} other {# usurpations probables}}",
+      "refused": "Refusées (403 · 429 · 503)",
+      "refused_sub": "{count} erreurs serveur (5xx)",
+      "errors_split": "{client} en 4xx · {server} en 5xx",
+      "mean": "Temps de réponse moyen",
+      "mean_sub": "{count} au-delà d'1 s",
+      "bytes": "Volume servi",
+      "bytes_sub": "corps des réponses"
+    },
+    "categories": {
+      "search": "Moteurs de recherche",
+      "ai": "IA · collecte",
+      "assistant": "À la demande",
+      "seo": "SEO & marketing",
+      "social": "Aperçus de liens",
+      "monitoring": "Surveillance & audit",
+      "archive": "Archives du web",
+      "tool": "Scripts & outils",
+      "unidentified": "Robots non identifiés",
+      "undeclared": "Non déclarés (cadence)"
+    },
+    "nature": {
+      "crawler": "Explore de lui-même",
+      "other": "À la demande ou outil"
+    },
+    "verdicts": {
+      "verified": "vérifié",
+      "mismatch": "usurpation",
+      "unresolved": "non résolu",
+      "unverifiable": "non vérifiable"
+    },
+    "sections": {
+      "home": "Accueil",
+      "list": "Listes",
+      "detail": "Fiches",
+      "archive": "Anciens patchs",
+      "page": "Autres pages",
+      "sitemap": "Sitemaps",
+      "robots": "robots.txt",
+      "api": "API",
+      "asset": "Fichiers",
+      "other": "Autres"
+    },
+    "status_classes": {
+      "2": "2xx · succès",
+      "3": "3xx · redirections",
+      "4": "4xx · erreurs client",
+      "5": "5xx · erreurs serveur"
+    },
+    "table": {
+      "title": "Tous les robots",
+      "chip": "un clic ouvre sa fiche",
+      "search": "Nom, opérateur, réseau…",
+      "category": "Catégorie",
+      "any_category": "Toutes les catégories",
+      "sort": "Tri",
+      "count": "{count, plural, one {# robot} other {# robots}}",
+      "robot": "Robot",
+      "hits": "Requêtes",
+      "verification": "Vérification",
+      "answers": "Réponses",
+      "mean": "Moy.",
+      "last": "Dernière visite",
+      "networks": "Réseaux",
+      "unchecked": "non vérifié",
+      "errors": "{count} en erreur",
+      "empty": "Aucun robot sur la période.",
+      "sorts": {
+        "hits": "Par requêtes",
+        "name": "Par nom",
+        "verified": "Par part vérifiée",
+        "errors": "Par erreurs",
+        "mean": "Par lenteur",
+        "last": "Par dernière visite"
+      },
+      "mismatch": "{count, plural, one {# usurpation} other {# usurpations}}"
+    },
+    "hits": {
+      "at": "Date (UTC)",
+      "robot": "Robot",
+      "verdict": "Vérification",
+      "status": "Statut",
+      "target": "Requête",
+      "duration": "Durée",
+      "bytes": "Taille",
+      "network": "Réseau",
+      "empty": "Aucune requête."
+    },
+    "detail": {
+      "journal": "Journal de ce robot",
+      "unseen": "Aucune requête de ce robot sur la période.",
+      "identity": "Identité",
+      "check": "Vérification",
+      "check_dns": "DNS inverse confirmé sous",
+      "check_none": "Aucun domaine publié par l'opérateur : non vérifiable.",
+      "seen": "Vu",
+      "seen_span": "du {first} au {last}",
+      "key": "Clé",
+      "share": "{share} des requêtes de robots",
+      "daily": "Réponses jour par jour",
+      "daily_chip": "2xx · 3xx · 4xx · 5xx",
+      "paths": "Chemins les plus demandés",
+      "paths_chip": "depuis le {since}",
+      "last_status": "Dernier statut",
+      "last_at": "Dernière fois",
+      "agents": "User-agents envoyés",
+      "agent": "User-agent",
+      "agent_seen": "Première → dernière vue",
+      "recent": "Dernières requêtes"
+    },
+    "journal": {
+      "title": "Journal des robots",
+      "lede": "Chaque requête de robot des 30 derniers jours, la plus récente d'abord.",
+      "robot": "Clé du robot (googlebot…)",
+      "category": "Catégorie",
+      "any_category": "Toutes les catégories",
+      "status": "Statut",
+      "any_status": "Tous les statuts",
+      "verdict": "Vérification",
+      "any_verdict": "Toutes les vérifications",
+      "section": "Section",
+      "any_section": "Toutes les sections",
+      "q": "Texte du chemin"
+    }
   }
 }

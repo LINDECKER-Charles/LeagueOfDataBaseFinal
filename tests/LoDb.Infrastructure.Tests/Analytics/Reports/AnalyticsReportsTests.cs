@@ -1,6 +1,8 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using LoDb.Infrastructure.Analytics.Import;
 using LoDb.Infrastructure.Analytics.Reports;
+using LoDb.Infrastructure.Analytics.Reports.Breakdowns;
 using LoDb.Infrastructure.Tests.Analytics.Support;
 using LoDb.Testing;
 
@@ -13,7 +15,11 @@ namespace LoDb.Infrastructure.Tests.Analytics.Reports;
 public sealed class AnalyticsReportsTests(PostgresContainerFixture postgres)
     : AnalyticsDatabase(postgres)
 {
-    private static readonly JsonSerializerOptions Web = new(JsonSerializerDefaults.Web);
+    // The legacy report had no previous totals: a report of all the history has none either.
+    private static readonly JsonSerializerOptions Web = new(JsonSerializerDefaults.Web)
+    {
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    };
 
     private IAnalyticsReports Reports => Get<IAnalyticsReports>();
 
@@ -60,6 +66,36 @@ public sealed class AnalyticsReportsTests(PostgresContainerFixture postgres)
         var report = await Reports.BuildAsync(Range(AnalyticsRange.All), Cancellation);
 
         Assert.Equal((new DateOnly(2026, 7, 14), 7), (report.From, report.Days));
+    }
+
+    [Fact]
+    public async Task APeriodComparesWithThePeriodBeforeIt()
+    {
+        await ImportLegacyDaysAsync();
+        Time.SetUtcNow(new DateTimeOffset(2026, 7, 22, 12, 0, 0, TimeSpan.Zero));
+
+        var week = await Reports.BuildAsync(Range(AnalyticsRange.LastWeek), Cancellation);
+        var all = await Reports.BuildAsync(Range(AnalyticsRange.All), Cancellation);
+
+        // 2026-07-16 (20 views) opens the week; 07-14 and 07-15 (16 and 17) close the one before.
+        Assert.Equal((20L, 33L), (week.Totals.Views, week.Previous?.Views));
+        Assert.Null(all.Previous);
+    }
+
+    [Fact]
+    public async Task ABreakdownListsEveryKeyOfThePeriod()
+    {
+        await ImportLegacyDaysAsync();
+        Time.SetUtcNow(new DateTimeOffset(2026, 7, 16, 18, 0, 0, TimeSpan.Zero));
+        var whole = await Reports.BuildAsync(Range(AnalyticsRange.All), Cancellation);
+
+        var pages = await Reports.BreakdownAsync(
+            Range(AnalyticsRange.All),
+            new AnalyticsBreakdownQuery { Dimension = AnalyticsDimensions.Pages },
+            Cancellation);
+
+        Assert.Equal(whole.Totals.PagesTracked, pages.Matched);
+        Assert.Equal(whole.TopPages[0], pages.Rows[0]);
     }
 
     [Fact]

@@ -99,7 +99,8 @@ L'exception passe **en objet**, jamais son seul message :
 - **C#** : un paramètre `Exception exception` de la méthode `[LoggerMessage]`. Le formateur
   écrit `Exception` = `exception.ToString()` (type, message, pile, causes), échappé sur une
   ligne. Ce message est donc écrit : quand il peut citer une donnée personnelle, on n'écrit
-  que le type (`{ErrorType} {SqlState}` de `analytics.views.write_failed`). Quand la cause
+  que le type (`{ErrorType} {SqlState}` de `analytics.views.write_failed`, de
+  `robots.hits.write_failed`). Quand la cause
   est connue et le volume fort, on l'omet : `database.pool.exhausted` ne porte pas de pile.
 - **SSR** : `{ exception: error }`. Le sérialiseur de `create-logger.ts` n'en garde que
   `class` (le `name`, les constructeurs étant minifiés) et `code` (`ECONNREFUSED`…), jamais

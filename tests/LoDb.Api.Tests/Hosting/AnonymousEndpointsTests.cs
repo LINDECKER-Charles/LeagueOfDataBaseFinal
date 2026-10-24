@@ -7,7 +7,8 @@ namespace LoDb.Api.Tests.Hosting;
 
 /// <summary>
 /// No endpoint skips authorization, and with it the forgery guard every policy carries, save
-/// the two analytics captures due to leave with the in-house analytics.
+/// the two analytics captures due to leave with the in-house analytics and nginx's reports to
+/// the robots journal (ADR 0013), which only the stack's network reaches.
 /// </summary>
 public sealed class AnonymousEndpointsTests
 {
@@ -15,10 +16,11 @@ public sealed class AnonymousEndpointsTests
     [
         "/api/analytics/view",
         "/internal/analytics/page",
+        "/internal/robots/journal",
     ];
 
     [Fact]
-    public async Task OnlyTheAnalyticsCapturesAllowAnonymous()
+    public async Task OnlyTheInternalCapturesAllowAnonymous()
     {
         await using var factory = new ApiFactory();
         var endpoints = factory.Services.GetRequiredService<EndpointDataSource>().Endpoints;

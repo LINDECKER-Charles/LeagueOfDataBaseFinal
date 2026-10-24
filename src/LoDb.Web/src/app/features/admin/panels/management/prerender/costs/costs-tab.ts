@@ -68,6 +68,12 @@ export class CostsTab {
   protected readonly hasRetired = computed(() =>
     this.storage().epochs.some((epoch) => epoch.state === RETIRED),
   );
+  // The automatic queue's share of the pages counted in the total: retired epochs left out.
+  protected readonly queuePages = computed(() =>
+    this.storage()
+      .epochs.filter((epoch) => epoch.state !== RETIRED)
+      .reduce((sum, epoch) => sum + epoch.queuePages, 0),
+  );
   protected readonly prices = computed(() => {
     const storage = this.storage();
     return {

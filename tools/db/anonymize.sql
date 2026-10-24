@@ -103,6 +103,12 @@ BEGIN
           'ddragon_version.status', 'ddragon_version.version',
           'periodic_job.name',
           'prerender_build.hash',
+          -- The robots journal: robots' user agents and networks, paths of the site.
+          'robot_agent.agent',
+          'robot_daily.detection', 'robot_daily.network', 'robot_daily.section',
+          'robot_daily.verdict',
+          'robot_hit.cache', 'robot_hit.detection', 'robot_hit.method', 'robot_hit.network',
+          'robot_hit.section', 'robot_hit.target', 'robot_hit.verdict',
           'prerender_demand.locale', 'prerender_demand.page_type', 'prerender_demand.path',
           'prerender_demand.reason', 'prerender_demand.ssr_instance', 'prerender_demand.state',
           'prerender_demand.stored_class', 'prerender_demand.version',

@@ -1,0 +1,129 @@
+<div class="toolbar" role="search">
+  <input
+    type="search"
+    class="admin-input admin-input--wide"
+    [value]="search()"
+    [placeholder]="'admin.robots.table.search' | adminText"
+    [attr.aria-label]="'admin.robots.table.search' | adminText"
+    (input)="onSearch($event)"
+  />
+  <select
+    class="hx-select admin-input"
+    [attr.aria-label]="'admin.robots.table.category' | adminText"
+    (change)="onCategory($event)"
+  >
+    <option value="">{{ 'admin.robots.table.any_category' | adminText }}</option>
+    @for (choice of categories(); track choice) {
+      <option [value]="choice" [selected]="category() === choice">
+        {{ 'admin.robots.categories.' + choice | adminText }}
+      </option>
+    }
+  </select>
+  <select
+    class="hx-select admin-input"
+    [attr.aria-label]="'admin.robots.table.sort' | adminText"
+    (change)="onSort($event)"
+  >
+    @for (choice of sorts; track choice) {
+      <option [value]="choice" [selected]="sort() === choice">
+        {{ 'admin.robots.table.sorts.' + choice | adminText }}
+      </option>
+    }
+  </select>
+  <span class="toolbar-count">
+    {{ 'admin.robots.table.count' | adminText: { count: rows().length } }}
+  </span>
+</div>
+
+<div class="hx-table-scroll">
+  <table class="hx-table hx-table--flush admin-tbl">
+    <thead>
+      <tr>
+        <th scope="col">{{ 'admin.robots.table.robot' | adminText }}</th>
+        <th scope="col">{{ 'admin.robots.table.category' | adminText }}</th>
+        <th scope="col" class="num">{{ 'admin.robots.table.hits' | adminText }}</th>
+        <th scope="col">{{ 'admin.robots.table.verification' | adminText }}</th>
+        <th scope="col">{{ 'admin.robots.table.answers' | adminText }}</th>
+        <th scope="col" class="num">{{ 'admin.robots.table.mean' | adminText }}</th>
+        <th scope="col">{{ 'admin.robots.table.last' | adminText }}</th>
+        <th scope="col">{{ 'admin.robots.table.networks' | adminText }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (row of rows(); track row.robot.key) {
+        <tr>
+          <td>
+            <a
+              class="font-semibold text-gold-bright hover:text-hex"
+              [routerLink]="['/admin/robots', row.robot.key]"
+              [queryParams]="{ range: range() }"
+              >{{ row.label }}</a
+            >
+            @if (operatorOf(row.robot)) {
+              <span class="cell-sub">{{ operatorOf(row.robot) }}</span>
+            }
+          </td>
+          <td>
+            <span class="inline-flex items-center gap-2 whitespace-nowrap text-[0.82rem]">
+              <span
+                class="inline-block size-2 rotate-45"
+                aria-hidden="true"
+                [style.background]="color(row.robot.category)"
+              ></span>
+              {{ 'admin.robots.categories.' + row.robot.category | adminText }}
+            </span>
+            <span class="cell-sub">
+              {{ 'admin.robots.nature.' + (row.robot.isCrawler ? 'crawler' : 'other') | adminText }}
+            </span>
+          </td>
+          <td class="num">
+            {{ row.robot.figures.hits | figure }}
+            <span class="cell-sub">{{ row.robot.pct | figure: 'pct' }}</span>
+          </td>
+          <td>
+            <span class="badges">
+              @if (row.robot.figures.verified > 0) {
+                <span lodbBadge="good">
+                  {{ verifiedShare(row.robot) | figure: 'share' }}
+                  {{ 'admin.robots.verdicts.verified' | adminText }}
+                </span>
+              }
+              @if (row.robot.figures.mismatch > 0) {
+                <span lodbBadge="bad">
+                  {{
+                    'admin.robots.table.mismatch' | adminText: { count: row.robot.figures.mismatch }
+                  }}
+                </span>
+              }
+              @if (row.robot.figures.verified === 0 && row.robot.figures.mismatch === 0) {
+                <span lodbBadge>{{ 'admin.robots.table.unchecked' | adminText }}</span>
+              }
+            </span>
+          </td>
+          <td>
+            <lodb-status-bar [figures]="row.robot.figures" />
+            @if (errors(row.robot) > 0) {
+              <span class="cell-sub">
+                {{ 'admin.robots.table.errors' | adminText: { count: errors(row.robot) } }}
+              </span>
+            }
+          </td>
+          <td class="num">{{ row.robot.figures.meanMs | figure }} ms</td>
+          <td class="whitespace-nowrap">
+            {{ row.robot.lastDay | stamp }}
+            <span class="cell-sub">
+              {{ 'admin.robots.sections.' + row.robot.topSection | adminText }}
+            </span>
+          </td>
+          <td class="font-mono text-[0.76rem] text-text-muted">
+            {{ row.robot.networks.join(', ') || '—' }}
+          </td>
+        </tr>
+      } @empty {
+        <tr>
+          <td colspan="8" class="t-empty">{{ 'admin.robots.table.empty' | adminText }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>

@@ -1,0 +1,144 @@
+<lodb-page-head
+  [eyebrow]="'admin.eyebrows.analytics' | adminText"
+  [title]="'admin.robots.title' | adminText"
+  [subtitle]="'admin.robots.lede' | adminText"
+>
+  <lodb-robot-tabs current="overview" />
+  <lodb-segment-bar
+    param="range"
+    label="admin.range.label"
+    [segments]="ranges"
+    [current]="query.range()"
+  />
+</lodb-page-head>
+
+<lodb-panel-state [panel]="report" shape="chart" />
+@if (report.value(); as data) {
+  <div class="kpi-grid mb-6" [attr.aria-busy]="report.busy()">
+    <lodb-kpi
+      [label]="'admin.robots.kpi.hits' | adminText"
+      [value]="data.totals.figures.hits | figure: 'compact'"
+      [sub]="
+        'admin.robots.kpi.hits_sub'
+          | adminText: { count: (data.totals.crawlerHits | figure: 'compact') }
+      "
+    >
+      <lodb-sparkline [values]="daily()" color="var(--color-gold)" />
+    </lodb-kpi>
+    <lodb-kpi
+      accent="hex"
+      [label]="'admin.robots.kpi.robots' | adminText"
+      [value]="data.totals.robots"
+      [sub]="'admin.robots.kpi.robots_sub' | adminText: { count: data.categories.length }"
+    />
+    <lodb-kpi
+      accent="good"
+      [label]="'admin.robots.kpi.verified' | adminText"
+      [value]="verifiedShare() | figure: 'share'"
+      [sub]="
+        'admin.robots.kpi.verified_sub'
+          | adminText: { count: (data.totals.figures.verified | figure: 'compact') }
+      "
+    />
+    <lodb-kpi
+      accent="bad"
+      [label]="'admin.robots.kpi.mismatch' | adminText"
+      [value]="data.totals.figures.mismatch | figure: 'compact'"
+      [sub]="'admin.robots.kpi.mismatch_sub' | adminText"
+    />
+    <lodb-kpi
+      accent="warn"
+      [label]="'admin.robots.kpi.refused' | adminText"
+      [value]="data.totals.figures.refused | figure: 'compact'"
+      [sub]="
+        'admin.robots.kpi.refused_sub'
+          | adminText: { count: (data.totals.figures.serverErrors | figure: 'compact') }
+      "
+    />
+    <lodb-kpi
+      accent="blue"
+      [label]="'admin.robots.kpi.mean' | adminText"
+      [value]="(data.totals.figures.meanMs | figure) + ' ms'"
+      [sub]="
+        'admin.robots.kpi.mean_sub'
+          | adminText: { count: (data.totals.figures.slowHits | figure: 'compact') }
+      "
+    />
+  </div>
+
+  <lodb-admin-card
+    [heading]="'admin.robots.daily' | adminText"
+    [chip]="'admin.robots.daily_chip' | adminText"
+  >
+    <lodb-time-series-chart
+      [dates]="data.dates"
+      [series]="chart().series"
+      [label]="'admin.robots.daily' | adminText"
+    />
+    <lodb-legend [items]="chart().legend" />
+  </lodb-admin-card>
+
+  <div class="admin-grid admin-grid--3 mt-[1.15rem]">
+    <lodb-admin-card [heading]="'admin.robots.by_category' | adminText">
+      <lodb-donut-chart
+        [slices]="categories()"
+        [label]="'admin.robots.by_category' | adminText"
+        [total]="data.totals.figures.hits | figure: 'compact'"
+        [caption]="'admin.robots.hits_caption' | adminText"
+      />
+    </lodb-admin-card>
+    <lodb-admin-card [heading]="'admin.robots.statuses' | adminText">
+      <lodb-rank-list [rows]="statuses()" [limit]="6" />
+    </lodb-admin-card>
+    <lodb-admin-card [heading]="'admin.robots.by_section' | adminText">
+      <lodb-rank-list tone="hex" [rows]="sections()" [limit]="6" />
+    </lodb-admin-card>
+  </div>
+
+  <lodb-admin-card
+    class="mt-[1.15rem]"
+    [heading]="'admin.robots.table.title' | adminText"
+    [chip]="'admin.robots.table.chip' | adminText"
+  >
+    <lodb-robots-table [robots]="data.robots" [range]="query.range()" />
+  </lodb-admin-card>
+
+  <div class="admin-grid admin-grid--3 mt-[1.15rem]">
+    <lodb-admin-card class="span-2" [heading]="'admin.robots.networks' | adminText">
+      <div class="hx-table-scroll">
+        <table class="hx-table hx-table--flush admin-tbl">
+          <thead>
+            <tr>
+              <th scope="col">{{ 'admin.robots.network' | adminText }}</th>
+              <th scope="col" class="num">{{ 'admin.robots.table.hits' | adminText }}</th>
+              <th scope="col" class="num">{{ 'admin.robots.network_robots' | adminText }}</th>
+              <th scope="col" class="num">{{ 'admin.traffic.columns.share' | adminText }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (network of data.networks; track network.domain) {
+              <tr>
+                <td class="font-mono">{{ network.domain }}</td>
+                <td class="num">{{ network.hits | figure }}</td>
+                <td class="num">{{ network.robots }}</td>
+                <td class="num">{{ network.pct | figure: 'pct' }}</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="4" class="t-empty">{{ 'admin.robots.networks_empty' | adminText }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </lodb-admin-card>
+    <lodb-admin-card [heading]="'admin.robots.verification' | adminText">
+      <lodb-rank-list tone="hex" [rows]="verdicts()" />
+      <p class="readout-text mt-4">{{ 'admin.robots.verification_note' | adminText }}</p>
+    </lodb-admin-card>
+  </div>
+
+  <p class="readout-text mt-6">
+    {{ 'admin.robots.retention' | adminText: { since: (data.hitsSince | stamp) } }}
+  </p>
+}

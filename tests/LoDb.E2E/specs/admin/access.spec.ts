@@ -85,11 +85,11 @@ test('signs the administrator in with the code of the authenticator, then out', 
   await expect(page).toHaveURL(/\/admin\/login\?returnUrl=%2Fadmin$/);
 });
 
-test('opens on the overview, then moves to another panel', async ({ page, consoleErrors }) => {
+test('opens on the dashboard, then moves to another panel', async ({ page, consoleErrors }) => {
   await openPanel(page, '/admin', "Vue d'ensemble");
 
   const nav = page.getByRole('navigation', { name: "Navigation de l'administration" });
-  await expect(nav.getByRole('link', { name: "Vue d'ensemble" })).toHaveAttribute(
+  await expect(nav.getByRole('link', { name: 'Dashboard' })).toHaveAttribute(
     'aria-current',
     'page',
   );

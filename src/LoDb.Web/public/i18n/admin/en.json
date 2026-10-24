@@ -3,7 +3,6 @@
     "label": "Administration navigation",
     "analytics": "Analytics",
     "management": "Management",
-    "overview": "Overview",
     "traffic": "Traffic",
     "audience": "Audience",
     "storage": "Storage",
@@ -16,7 +15,12 @@
     "backups": "Backups",
     "prerender": "Pre-rendering",
     "journal": "Journal",
-    "sign_out": "Sign out"
+    "sign_out": "Sign out",
+    "dashboard": "Dashboard",
+    "health": "Health",
+    "robots": "Robots",
+    "menu_open": "Open the menu",
+    "menu_close": "Close the menu"
   },
   "login": {
     "title": "Administration panel",
@@ -188,12 +192,14 @@
       "versions": "Versions",
       "versions_sub": "ingested datasets",
       "webp": "WebP coverage",
-      "webp_sub": "{done} / {total} images"
+      "webp_sub": "{done} / {total} images",
+      "robots": "Robots",
+      "robots_sub": "{mismatch} likely impostors"
     }
   },
   "traffic": {
     "title": "Traffic",
-    "lede": "Most viewed pages and rhythm of the traffic.",
+    "lede": "What readers view, where they come from, and the robots beside them.",
     "daily": "Traffic over time",
     "heatmap": "Hourly rhythm",
     "top_pages": "Most viewed pages",
@@ -207,11 +213,14 @@
       "visitors_sub": "{count} returning",
       "pages_sub": "tracked URLs",
       "per_day": "Views / day",
-      "per_day_sub": "average"
+      "per_day_sub": "average",
+      "robots": "Robots",
+      "robots_sub": "{share} of requests"
     },
     "series": {
       "views": "Views",
-      "visitors": "Visitors"
+      "visitors": "Visitors",
+      "robots": "Robot requests"
     },
     "types": {
       "home": "Home",
@@ -232,6 +241,37 @@
       "status": "Status",
       "views": "Views",
       "share": "Share"
+    },
+    "daily_chip": "views · visitors · robots",
+    "locales": "Interface locales",
+    "langs": "Data Dragon languages",
+    "trend": {
+      "up": "▲ {change} vs previous period",
+      "down": "▼ {change} vs previous period",
+      "flat": "= level with the previous period",
+      "none": "no period to compare with"
+    },
+    "rules": {
+      "content": "Content",
+      "quality": "Languages and answers"
+    },
+    "explorer": {
+      "title": "Explorer",
+      "chip": "every key of the period",
+      "dimension": "Dimension",
+      "search": "Search…",
+      "count": "{count, plural, one {# key} other {# keys}} · {total} in all",
+      "empty": "No key matches.",
+      "dimensions": {
+        "pages": "Pages",
+        "entities": "Entities",
+        "referers": "Referrers"
+      },
+      "columns": {
+        "pages": "Page",
+        "entities": "Entity",
+        "referers": "Referring host"
+      }
     }
   },
   "audience": {
@@ -822,27 +862,50 @@
         "gaps_cta": "Complete them",
         "whole": "The served epoch covers every older patch."
       },
-      "kpis": {
-        "served": "Served epoch",
-        "served_sub": "LODB_ARCHIVE_SERVE_EPOCH, changed by a redeploy",
-        "served_ready": "epoch {epoch} is ready",
-        "coverage": "Served coverage",
-        "coverage_sub": "of the units · {complete} / {total, plural, one {# patch} other {# patches}} complete",
-        "coverage_none": "no older patch",
-        "stored": "Stored",
-        "stored_sub": "{pages, plural, one {# page} other {# pages}}, retired epochs left out",
-        "cost": "Estimated cost / month",
-        "cost_sub": "egress left out; detail under “Storage and costs”",
-        "cost_sub_retired": "+ {retired} for the retired epochs, until deleted; egress left out",
-        "stored_sub_queue": "{pages, plural, one {# page} other {# pages}}, {queue} of them by the queue, retired epochs left out"
-      },
-      "tabs": {
+      "views": {
         "label": "Pre-rendering views",
-        "coverage": "Coverage",
-        "costs": "Storage and costs",
-        "costs_short": "Costs",
-        "history": "History",
-        "demand": "503 queue"
+        "pass": {
+          "label": "Pass",
+          "sub_running": "#{id} · epoch {epoch} · running",
+          "sub_paused": "#{id} · epoch {epoch} · paused",
+          "sub_paused_itself": "#{id} · paused by itself",
+          "value_completed": "Completed",
+          "value_cancelled": "Cancelled",
+          "sub_ended": "#{id} · {date} UTC",
+          "value_idle": "None",
+          "sub_idle": "{promotions, select, on {promoted patches open one} other {launched by hand}}",
+          "sub_dormant": "pre-rendering not configured"
+        },
+        "coverage": {
+          "label": "Coverage",
+          "sub": "epoch {epoch} served · {complete} / {total, plural, one {# patch} other {# patches}} complete",
+          "sub_ready": "epoch {epoch} served · epoch {ready} is ready",
+          "sub_none": "epoch {epoch} served"
+        },
+        "queues": {
+          "label": "Automatic queues",
+          "sub": "pending: {demand} refused (503) · {revision} of closed states"
+        },
+        "speed": {
+          "label": "Speed",
+          "value_adaptive": "Adaptive",
+          "value_manual": "Manual",
+          "value_fixed": "Fixed",
+          "sub_now": "{pace} pages/min right now",
+          "sub_manual": "target: {pace} pages/min",
+          "sub_adaptive": "between {min} and {max} pages/min",
+          "sub_fixed": "regulator switched off by the environment"
+        },
+        "storage": {
+          "label": "Storage and costs",
+          "sub": "{cost} / month · {pages, plural, one {# page} other {# pages}}"
+        },
+        "history": {
+          "label": "History",
+          "value": "{count, plural, =0 {None} one {# pass} other {# passes}}",
+          "sub": "latest: #{id} ({state}), {date}",
+          "sub_none": "no pass launched"
+        }
       },
       "doc_title": {
         "idle": "Catalogue pre-rendering",
@@ -1267,7 +1330,9 @@
       "retry": "Try again",
       "empty": "No older patch.",
       "season_counts": "{versions, plural, one {# patch} other {# patches}} · {complete} complete{missing, plural, =0 {} other { · # to complete}}",
-      "indexed": "{openers} · {frozen} · {revisable}"
+      "indexed": "{openers} · {frozen} · {revisable}",
+      "fold_all": "Fold all",
+      "unfold_all": "Unfold all"
     },
     "costs": {
       "title": "What the store holds",
@@ -1282,6 +1347,7 @@
       "egress": "Egress excluded: 75 GB free a month, then €0.01 per GB, followed in Grafana.",
       "counters": "These figures tell what the passes and the 503 queue wrote, not what an expiry rule has deleted since: on staging, pages expire after 14 days, a completed unit is not rewritten and its pages fall back to the SSR silently.",
       "retired": "A retired epoch keeps costing until the store's lifecycle has deleted it, 500,000 objects a day at most: 9 days at least for 4 million pages.",
+      "served_note": "The served epoch is the one LODB_ARCHIVE_SERVE_EPOCH names: only a redeploy changes it.",
       "columns": {
         "epoch": "Epoch",
         "state": "State",
@@ -1386,7 +1452,7 @@
         "attempts": "{count, plural, one {# failed try} other {# failed tries}}"
       },
       "queue": {
-        "title": "Pages of the queue",
+        "title": "Pages of the refused pages queue (503)",
         "epoch": "Epoch {epoch}: {written, plural, one {{writtenText} page written} other {{writtenText} pages written}} by the queue; it holds {kept, plural, one {{keptText} page} other {{keptText} pages}} there ({size}).",
         "epoch_superseded": "{superseded, plural, one {{supersededText} was written again since by a pass and now counts with the passes.} other {{supersededText} were written again since by a pass and now count with the passes.}}",
         "epoch_empty": "Epoch {epoch}: the queue has written no page there yet.",
@@ -1642,12 +1708,10 @@
     "all": "the whole history"
   },
   "eyebrows": {
-    "console": "Console",
     "analytics": "Analytics",
-    "infrastructure": "Infrastructure",
-    "moderation": "Moderation",
     "management": "Management",
-    "surveillance": "Surveillance"
+    "dashboard": "Dashboard",
+    "health": "Health"
   },
   "rules": {
     "traffic": "Traffic",
@@ -1666,5 +1730,164 @@
     "maintenance": "Maintenance",
     "databases": "Backed-up databases",
     "nights": "Nights"
+  },
+  "robots": {
+    "title": "Robots",
+    "lede": "Who explores the site, what they ask for and how nginx answers them.",
+    "back": "Robots",
+    "no_agent": "No user agent",
+    "undeclared_name": "Undeclared · {network}",
+    "unknown_network": "unknown network",
+    "daily": "Requests by category",
+    "daily_chip": "requests · day",
+    "by_category": "By category",
+    "hits_caption": "requests",
+    "statuses": "Response codes",
+    "by_section": "What they ask for",
+    "networks": "Origin networks",
+    "network": "Network (reverse DNS)",
+    "network_robots": "Robots",
+    "networks_empty": "No network confirmed by DNS.",
+    "verification": "Verification",
+    "verification_note": "Google, Bing, Apple, Yandex, Baidu, Amazon, Seznam and Petal are verified by forward-confirmed reverse DNS. The others publish address ranges only: unverifiable here.",
+    "retention": "Requests kept one by one since {since} (30 days); the daily counts are kept with no end.",
+    "views": {
+      "label": "Robot views",
+      "overview": "Overview",
+      "journal": "Journal"
+    },
+    "kpi": {
+      "hits": "Robot requests",
+      "hits_sub": "{count} from crawlers",
+      "robots": "Distinct robots",
+      "robots_sub": "{count, plural, one {# category} other {# categories}}",
+      "verified": "DNS-verified",
+      "verified_sub": "{count} requests verified",
+      "mismatch": "Likely impostors",
+      "mismatch_sub": "a robot's user agent, another network",
+      "mismatch_count": "{count, plural, one {# likely impostor} other {# likely impostors}}",
+      "refused": "Refused (403 · 429 · 503)",
+      "refused_sub": "{count} server errors (5xx)",
+      "errors_split": "{client} 4xx · {server} 5xx",
+      "mean": "Mean response time",
+      "mean_sub": "{count} over 1 s",
+      "bytes": "Bytes served",
+      "bytes_sub": "response bodies"
+    },
+    "categories": {
+      "search": "Search engines",
+      "ai": "AI · collection",
+      "assistant": "On demand",
+      "seo": "SEO & marketing",
+      "social": "Link previews",
+      "monitoring": "Monitoring & audit",
+      "archive": "Web archives",
+      "tool": "Scripts & tools",
+      "unidentified": "Unidentified robots",
+      "undeclared": "Undeclared (pace)"
+    },
+    "nature": {
+      "crawler": "Crawls on its own",
+      "other": "On demand or tool"
+    },
+    "verdicts": {
+      "verified": "verified",
+      "mismatch": "impostor",
+      "unresolved": "unresolved",
+      "unverifiable": "unverifiable"
+    },
+    "sections": {
+      "home": "Home",
+      "list": "Lists",
+      "detail": "Details",
+      "archive": "Past patches",
+      "page": "Other pages",
+      "sitemap": "Sitemaps",
+      "robots": "robots.txt",
+      "api": "API",
+      "asset": "Files",
+      "other": "Other"
+    },
+    "status_classes": {
+      "2": "2xx · success",
+      "3": "3xx · redirects",
+      "4": "4xx · client errors",
+      "5": "5xx · server errors"
+    },
+    "table": {
+      "title": "Every robot",
+      "chip": "a click opens its page",
+      "search": "Name, operator, network…",
+      "category": "Category",
+      "any_category": "Every category",
+      "sort": "Sort",
+      "count": "{count, plural, one {# robot} other {# robots}}",
+      "robot": "Robot",
+      "hits": "Requests",
+      "verification": "Verification",
+      "answers": "Answers",
+      "mean": "Mean",
+      "last": "Last visit",
+      "networks": "Networks",
+      "unchecked": "unchecked",
+      "errors": "{count} in error",
+      "empty": "No robot over the period.",
+      "sorts": {
+        "hits": "By requests",
+        "name": "By name",
+        "verified": "By verified share",
+        "errors": "By errors",
+        "mean": "By slowness",
+        "last": "By last visit"
+      },
+      "mismatch": "{count, plural, one {# impostor} other {# impostors}}"
+    },
+    "hits": {
+      "at": "Date (UTC)",
+      "robot": "Robot",
+      "verdict": "Verification",
+      "status": "Status",
+      "target": "Request",
+      "duration": "Time",
+      "bytes": "Size",
+      "network": "Network",
+      "empty": "No request."
+    },
+    "detail": {
+      "journal": "This robot's journal",
+      "unseen": "No request from this robot over the period.",
+      "identity": "Identity",
+      "check": "Verification",
+      "check_dns": "Forward-confirmed reverse DNS under",
+      "check_none": "Its operator publishes no domain: unverifiable.",
+      "seen": "Seen",
+      "seen_span": "from {first} to {last}",
+      "key": "Key",
+      "share": "{share} of robot requests",
+      "daily": "Answers day by day",
+      "daily_chip": "2xx · 3xx · 4xx · 5xx",
+      "paths": "Most requested paths",
+      "paths_chip": "since {since}",
+      "last_status": "Last status",
+      "last_at": "Last time",
+      "agents": "User agents sent",
+      "agent": "User agent",
+      "agent_seen": "First → last seen",
+      "recent": "Latest requests"
+    },
+    "journal": {
+      "title": "Robot journal",
+      "lede": "Every robot request of the last 30 days, newest first.",
+      "robot": "Robot key (googlebot…)",
+      "category": "Category",
+      "any_category": "Every category",
+      "status": "Status",
+      "any_status": "Every status",
+      "verdict": "Verification",
+      "any_verdict": "Every verdict",
+      "section": "Section",
+      "any_section": "Every section",
+      "q": "Text of the path"
+    }
   }
 }

@@ -54,6 +54,7 @@ internal static class AccountsModule
                 $"{RefreshTokenOptions.SectionName}:ReuseGrace must lie in 0 – 5 min.")
             .ValidateOnStart();
         services.TryAddSingleton<TrustedOrigins>();
+        services.TryAddSingleton<SecondFactorWaiver>();
         services.AddOptions<AuditIdentifierOptions>()
             .Bind(configuration.GetSection(AuditIdentifierOptions.SectionName));
         services.TryAddSingleton<IdentifierDigest>();

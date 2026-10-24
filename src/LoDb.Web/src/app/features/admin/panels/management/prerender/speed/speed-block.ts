@@ -18,9 +18,9 @@ import { AdminCard } from '../../../../layout/admin-card';
 import { AdminTextPipe } from '../../../../shared/admin-text-pipe';
 import { AdminCommand } from '../../../../shared/http/admin-command';
 import { injectAdminText } from '../../../../shared/inject-admin-text';
-import { injectSpeedReport } from './inject-speed-report';
 import { speedFigures } from './math/speed-figures';
 import { speedLines } from './speed-lines';
+import { SpeedReportStore } from './speed-report-store';
 
 /** The mode the operator picks. */
 export type SpeedMode = 'adaptive' | 'manual';
@@ -50,7 +50,7 @@ export class SpeedBlock {
   private readonly command = inject(AdminCommand);
 
   protected readonly step = STEP;
-  protected readonly speed = injectSpeedReport();
+  protected readonly speed = inject(SpeedReportStore).report;
   protected readonly busy = signal(false);
   protected readonly outcome = signal<AdminNotice | null>(null);
   /** The mode and the pace shown, the stored ones until the operator changes them. */

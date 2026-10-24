@@ -57,6 +57,7 @@ Bloodborne Legendary Run (Angular + Capacitor + mises à jour Android).
 | [0010](adr/0010-observabilite-tests-ci.md) | **OpenTelemetry** + logs JSON + `/metrics` ; Testcontainers, fixtures Data Dragon, Playwright ; un seul contrat OpenAPI |
 | [0011](adr/0011-catalogue-pre-rendu-et-cdn.md) | **Catalogue pré-rendu** : pages des anciens patchs calculées une fois dans un stockage objet Scaleway, servies par nginx avec le SSR en repli (2026-10-20) ; **Cloudflare** devant le site prévu, pas encore construit |
 | [0012](adr/0012-audience-umami.md) | **Audience Umami** à côté de la mesure maison ; `/v1/trends` passe sur Umami à une date de bascule (2026-10-11) |
+| [0013](adr/0013-journal-des-robots.md) | **Journal des robots** : nginx rapporte chaque requête de robot (njs), l'API les identifie, vérifie par DNS inverse confirmé, repère les robots non déclarés à leur cadence (2026-10-24) |
 
 Bascule, retour arrière et *contract* : [`bascule.md`](bascule.md). Plan et découpage de la
 construction (historiques) : [`plan-migration.md`](plan-migration.md),

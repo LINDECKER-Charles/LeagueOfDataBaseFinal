@@ -75,6 +75,7 @@ export interface AnalyticsReport {
    */
   locale: Array<AnalyticsRank>;
   os: Array<AnalyticsRank>;
+  previous?: (null | AnalyticsTotals);
 
   /**
    * `7d`, `30d`, `90d` or `all`.
