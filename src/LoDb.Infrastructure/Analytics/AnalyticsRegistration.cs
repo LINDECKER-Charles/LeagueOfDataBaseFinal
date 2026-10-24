@@ -6,6 +6,7 @@ using LoDb.Infrastructure.Analytics.Reports;
 using LoDb.Infrastructure.Analytics.Retention;
 using LoDb.Infrastructure.Analytics.Rollup;
 using LoDb.Infrastructure.Audience;
+using LoDb.Infrastructure.Robots;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -14,8 +15,9 @@ using Microsoft.Extensions.Options;
 namespace LoDb.Infrastructure.Analytics;
 
 /// <summary>
-/// Registrations of the analytics zone: capture storage and aggregation, and the audience
-/// pulled from Umami that is to replace them (<see cref="AudienceRegistration"/>).
+/// Registrations of the analytics zone: capture storage and aggregation, the audience
+/// pulled from Umami that is to replace them (<see cref="AudienceRegistration"/>), and the
+/// robots journal (<see cref="RobotsRegistration"/>).
 /// </summary>
 /// <remarks>
 /// Program.cs calls it from the start and the zone's owner fills it, so no shared file
@@ -50,6 +52,7 @@ public static class AnalyticsRegistration
         services.TryAddSingleton<IAnalyticsRetention, AnalyticsRetention>();
         services.TryAddSingleton<ILegacyDailyImport, LegacyDailyImport>();
         services.AddLoDbAudience(configuration);
+        services.AddLoDbRobots(configuration);
         return services;
     }
 

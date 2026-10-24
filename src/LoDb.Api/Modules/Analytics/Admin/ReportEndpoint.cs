@@ -11,11 +11,6 @@ namespace LoDb.Api.Modules.Analytics.Admin;
 /// </summary>
 internal static class ReportEndpoint
 {
-    /// <summary>The period is none of <see cref="AnalyticsRange.Names"/>.</summary>
-    public const string InvalidRange = "invalid-range";
-
-    private const string RangeKey = "range";
-
     public static void Map(IEndpointRouteBuilder group) =>
         group.MapGet("/report", BuildAsync)
             .WithName("getAnalyticsReport")
@@ -28,15 +23,8 @@ internal static class ReportEndpoint
     private static async Task<Results<Ok<AnalyticsReport>, AccountProblem>> BuildAsync(
         [FromQuery] string? range,
         [FromServices] IAnalyticsReports reports,
-        CancellationToken cancellationToken)
-    {
-        if (!AnalyticsRange.TryParse(range ?? AnalyticsRange.Default, out var period))
-        {
-            var errors = new FieldErrors();
-            errors.Add(RangeKey, InvalidRange);
-            return errors.ToProblem();
-        }
-
-        return TypedResults.Ok(await reports.BuildAsync(period, cancellationToken));
-    }
+        CancellationToken cancellationToken) =>
+        RangeParameter.Read(range) is { } period
+            ? TypedResults.Ok(await reports.BuildAsync(period, cancellationToken))
+            : RangeParameter.Invalid();
 }

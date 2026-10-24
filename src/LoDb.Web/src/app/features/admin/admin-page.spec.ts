@@ -6,6 +6,7 @@ import { AdminNotices } from './layout/admin-notices';
 import { PANEL_ROUTES } from './panels/panel.routes';
 import { analyticsReport } from './testing/fixtures/analytics-report';
 import { monitoringReport } from './testing/fixtures/monitoring-report';
+import { robotReport } from './testing/fixtures/robot-report';
 import { storageReport } from './testing/fixtures/storage-report';
 import { configureAdminTestBed } from './testing/admin-test-bed';
 import { openAdminPage } from './testing/open-admin-page';
@@ -16,6 +17,7 @@ class Probe {}
 
 const OVERVIEW_CALLS = [
   { path: '/api/admin/analytics/report', body: analyticsReport() },
+  { path: '/api/admin/analytics/robots', body: robotReport() },
   { path: '/api/admin/monitoring', body: monitoringReport() },
   { path: '/api/admin/storage', body: storageReport() },
 ] as const;

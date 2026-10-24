@@ -1,0 +1,196 @@
+<lodb-page-head [eyebrow]="'admin.nav.robots' | adminText" [title]="name()" [subtitle]="operator()">
+  <a lodbButton="ghost" lodbButtonSize="small" routerLink="/admin/robots">
+    ← {{ 'admin.robots.back' | adminText }}
+  </a>
+  <a
+    lodbButton="ghost"
+    lodbButtonSize="small"
+    routerLink="/admin/robots/journal"
+    [queryParams]="{ robot: key() }"
+  >
+    {{ 'admin.robots.detail.journal' | adminText }}
+  </a>
+  <lodb-segment-bar
+    param="range"
+    label="admin.range.label"
+    [segments]="ranges"
+    [current]="query.range()"
+  />
+</lodb-page-head>
+
+@if (unseen()) {
+  <lodb-admin-card>
+    <p class="text-text-muted">{{ 'admin.robots.detail.unseen' | adminText }}</p>
+  </lodb-admin-card>
+} @else {
+  <lodb-panel-state [panel]="detail" shape="chart" />
+}
+@if (detail.value(); as data) {
+  <div class="admin-grid admin-grid--3 mb-[1.15rem]">
+    <lodb-admin-card class="span-2" [heading]="'admin.robots.detail.identity' | adminText">
+      <dl class="grid grid-cols-[auto_1fr] gap-x-6 gap-y-3 text-[0.9rem]">
+        <dt class="readout-label">{{ 'admin.robots.table.category' | adminText }}</dt>
+        <dd class="m-0 inline-flex items-center gap-2">
+          <span
+            class="inline-block size-2.5 rotate-45"
+            aria-hidden="true"
+            [style.background]="color(data.robot.category)"
+          ></span>
+          {{ 'admin.robots.categories.' + data.robot.category | adminText }}
+          <span lodbBadge>{{
+            'admin.robots.nature.' + (data.robot.isCrawler ? 'crawler' : 'other') | adminText
+          }}</span>
+        </dd>
+        <dt class="readout-label">{{ 'admin.robots.detail.check' | adminText }}</dt>
+        <dd class="m-0">
+          @if (data.verifyDomains.length > 0) {
+            {{ 'admin.robots.detail.check_dns' | adminText }}
+            <span class="font-mono text-gold-bright">{{ data.verifyDomains.join(', ') }}</span>
+          } @else {
+            <span class="text-text-muted">{{ 'admin.robots.detail.check_none' | adminText }}</span>
+          }
+        </dd>
+        <dt class="readout-label">{{ 'admin.robots.table.networks' | adminText }}</dt>
+        <dd class="m-0 font-mono text-[0.84rem]">{{ data.robot.networks.join(', ') || '—' }}</dd>
+        <dt class="readout-label">{{ 'admin.robots.detail.seen' | adminText }}</dt>
+        <dd class="m-0">
+          {{
+            'admin.robots.detail.seen_span'
+              | adminText
+                : { first: (data.robot.firstDay | stamp), last: (data.robot.lastDay | stamp) }
+          }}
+        </dd>
+        <dt class="readout-label">{{ 'admin.robots.detail.key' | adminText }}</dt>
+        <dd class="m-0 font-mono text-[0.8rem] text-text-muted">{{ data.robot.key }}</dd>
+      </dl>
+    </lodb-admin-card>
+    <lodb-admin-card [heading]="'admin.robots.verification' | adminText">
+      <lodb-rank-list tone="hex" [rows]="verdicts()" />
+    </lodb-admin-card>
+  </div>
+
+  <div class="kpi-grid mb-6" [attr.aria-busy]="detail.busy()">
+    <lodb-kpi
+      [label]="'admin.robots.kpi.hits' | adminText"
+      [value]="data.robot.figures.hits | figure: 'compact'"
+      [sub]="'admin.robots.detail.share' | adminText: { share: (data.robot.pct | figure: 'pct') }"
+    />
+    <lodb-kpi
+      accent="good"
+      [label]="'admin.robots.kpi.verified' | adminText"
+      [value]="verifiedShare() | figure: 'share'"
+      [sub]="'admin.robots.kpi.mismatch_count' | adminText: { count: data.robot.figures.mismatch }"
+    />
+    <lodb-kpi
+      accent="warn"
+      [label]="'admin.robots.kpi.refused' | adminText"
+      [value]="data.robot.figures.refused | figure: 'compact'"
+      [sub]="
+        'admin.robots.kpi.errors_split'
+          | adminText
+            : { client: data.robot.figures.clientErrors, server: data.robot.figures.serverErrors }
+      "
+    />
+    <lodb-kpi
+      accent="blue"
+      [label]="'admin.robots.kpi.mean' | adminText"
+      [value]="(data.robot.figures.meanMs | figure) + ' ms'"
+      [sub]="'admin.robots.kpi.mean_sub' | adminText: { count: data.robot.figures.slowHits }"
+    />
+    <lodb-kpi
+      accent="hex"
+      [label]="'admin.robots.kpi.bytes' | adminText"
+      [value]="data.robot.figures.bytes | figure: 'bytes'"
+      [sub]="'admin.robots.kpi.bytes_sub' | adminText"
+    />
+  </div>
+
+  <lodb-admin-card
+    [heading]="'admin.robots.detail.daily' | adminText"
+    [chip]="'admin.robots.detail.daily_chip' | adminText"
+  >
+    <lodb-time-series-chart
+      [dates]="data.dates"
+      [series]="chart().series"
+      [label]="'admin.robots.detail.daily' | adminText"
+    />
+    <lodb-legend [items]="chart().legend" />
+  </lodb-admin-card>
+
+  <div class="admin-grid admin-grid--2 mt-[1.15rem]">
+    <lodb-admin-card [heading]="'admin.robots.statuses' | adminText">
+      <lodb-rank-list [rows]="statuses()" [limit]="6" />
+    </lodb-admin-card>
+    <lodb-admin-card [heading]="'admin.robots.by_section' | adminText">
+      <lodb-rank-list tone="hex" [rows]="sections()" [limit]="6" />
+    </lodb-admin-card>
+  </div>
+
+  <lodb-admin-card
+    class="mt-[1.15rem] block"
+    [heading]="'admin.robots.detail.paths' | adminText"
+    [chip]="'admin.robots.detail.paths_chip' | adminText: { since: (data.hitsSince | stamp) }"
+  >
+    <div class="hx-table-scroll">
+      <table class="hx-table hx-table--flush admin-tbl">
+        <thead>
+          <tr>
+            <th scope="col">{{ 'admin.robots.hits.target' | adminText }}</th>
+            <th scope="col" class="num">{{ 'admin.robots.table.hits' | adminText }}</th>
+            <th scope="col">{{ 'admin.robots.detail.last_status' | adminText }}</th>
+            <th scope="col">{{ 'admin.robots.detail.last_at' | adminText }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (path of data.paths; track path.target) {
+            <tr>
+              <td class="max-w-[34rem] truncate font-mono text-[0.8rem]" [title]="path.target">
+                {{ path.target }}
+              </td>
+              <td class="num">{{ path.hits | figure }}</td>
+              <td>
+                <span [lodbBadge]="statusTone(path.lastStatus)">{{ path.lastStatus }}</span>
+              </td>
+              <td class="num whitespace-nowrap">{{ path.lastAt | stamp: 'minute' }}</td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="4" class="t-empty">{{ 'admin.robots.hits.empty' | adminText }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </lodb-admin-card>
+
+  <lodb-admin-card class="mt-[1.15rem] block" [heading]="'admin.robots.detail.agents' | adminText">
+    <div class="hx-table-scroll">
+      <table class="hx-table hx-table--flush admin-tbl">
+        <thead>
+          <tr>
+            <th scope="col">{{ 'admin.robots.detail.agent' | adminText }}</th>
+            <th scope="col" class="num">{{ 'admin.robots.table.hits' | adminText }}</th>
+            <th scope="col">{{ 'admin.robots.detail.agent_seen' | adminText }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (agent of data.agents; track agent.agent) {
+            <tr>
+              <td class="font-mono text-[0.78rem] break-all">
+                {{ agent.agent || ('admin.robots.no_agent' | adminText) }}
+              </td>
+              <td class="num">{{ agent.hits | figure }}</td>
+              <td class="whitespace-nowrap">
+                {{ agent.firstSeen | stamp }} → {{ agent.lastSeen | stamp }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </lodb-admin-card>
+
+  <lodb-admin-card class="mt-[1.15rem] block" [heading]="'admin.robots.detail.recent' | adminText">
+    <lodb-robot-hits-table [hits]="data.recent" [showRobot]="false" />
+  </lodb-admin-card>
+}

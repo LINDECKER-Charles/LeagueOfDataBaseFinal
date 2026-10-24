@@ -1999,6 +1999,189 @@ namespace LoDb.Infrastructure.Persistence.Migrations
                     b.ToTable("api_usage", (string)null);
                 });
 
+            modelBuilder.Entity("LoDb.Infrastructure.Persistence.Robots.RobotAgent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Agent")
+                        .IsRequired()
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)")
+                        .HasColumnName("agent");
+
+                    b.Property<DateTimeOffset>("FirstSeen")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("first_seen");
+
+                    b.Property<DateTimeOffset>("LastSeen")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_seen");
+
+                    b.HasKey("Id")
+                        .HasName("pk_robot_agent");
+
+                    b.HasIndex("Agent")
+                        .IsUnique()
+                        .HasDatabaseName("ux_robot_agent_agent");
+
+                    b.ToTable("robot_agent", (string)null);
+                });
+
+            modelBuilder.Entity("LoDb.Infrastructure.Persistence.Robots.RobotDay", b =>
+                {
+                    b.Property<DateOnly>("Day")
+                        .HasColumnType("date")
+                        .HasColumnName("day");
+
+                    b.Property<int>("AgentId")
+                        .HasColumnType("integer")
+                        .HasColumnName("agent_id");
+
+                    b.Property<string>("Detection")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("detection");
+
+                    b.Property<string>("Verdict")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("verdict");
+
+                    b.Property<string>("Network")
+                        .HasMaxLength(253)
+                        .HasColumnType("character varying(253)")
+                        .HasColumnName("network");
+
+                    b.Property<string>("Section")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("section");
+
+                    b.Property<short>("Status")
+                        .HasColumnType("smallint")
+                        .HasColumnName("status");
+
+                    b.Property<long>("Bytes")
+                        .HasColumnType("bigint")
+                        .HasColumnName("bytes");
+
+                    b.Property<long>("DurationMs")
+                        .HasColumnType("bigint")
+                        .HasColumnName("duration_ms");
+
+                    b.Property<long>("Hits")
+                        .HasColumnType("bigint")
+                        .HasColumnName("hits");
+
+                    b.Property<long>("SlowHits")
+                        .HasColumnType("bigint")
+                        .HasColumnName("slow_hits");
+
+                    b.HasKey("Day", "AgentId", "Detection", "Verdict", "Network", "Section", "Status")
+                        .HasName("pk_robot_daily");
+
+                    b.HasIndex("AgentId", "Day")
+                        .HasDatabaseName("ix_robot_daily_agent_day");
+
+                    b.ToTable("robot_daily", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_robot_daily_counts", "hits >= 0 AND bytes >= 0 AND duration_ms >= 0 AND slow_hits >= 0");
+
+                            t.HasCheckConstraint("ck_robot_daily_detection", "detection IN ('agent', 'rate')");
+                        });
+                });
+
+            modelBuilder.Entity("LoDb.Infrastructure.Persistence.Robots.RobotHit", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<int>("AgentId")
+                        .HasColumnType("integer")
+                        .HasColumnName("agent_id");
+
+                    b.Property<long>("Bytes")
+                        .HasColumnType("bigint")
+                        .HasColumnName("bytes");
+
+                    b.Property<string>("Cache")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("cache");
+
+                    b.Property<string>("Detection")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("detection");
+
+                    b.Property<int>("DurationMs")
+                        .HasColumnType("integer")
+                        .HasColumnName("duration_ms");
+
+                    b.Property<string>("Method")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("method");
+
+                    b.Property<string>("Network")
+                        .HasMaxLength(253)
+                        .HasColumnType("character varying(253)")
+                        .HasColumnName("network");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("occurred_at");
+
+                    b.Property<string>("Section")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("section");
+
+                    b.Property<short>("Status")
+                        .HasColumnType("smallint")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Target")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)")
+                        .HasColumnName("target");
+
+                    b.Property<string>("Verdict")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("verdict");
+
+                    b.HasKey("Id")
+                        .HasName("pk_robot_hit");
+
+                    b.HasIndex("OccurredAt")
+                        .HasDatabaseName("ix_robot_hit_occurred_at");
+
+                    b.HasIndex("AgentId", "OccurredAt")
+                        .HasDatabaseName("ix_robot_hit_agent_occurred_at");
+
+                    b.ToTable("robot_hit", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_robot_hit_detection", "detection IN ('agent', 'rate')");
+
+                            t.HasCheckConstraint("ck_robot_hit_duration", "duration_ms >= 0");
+                        });
+                });
+
             modelBuilder.Entity("LoDb.Infrastructure.Persistence.Scheduling.PeriodicJobState", b =>
                 {
                     b.Property<string>("Name")
@@ -2400,6 +2583,26 @@ namespace LoDb.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_f47e0aa08be312b3");
 
                     b.Navigation("ApiKey");
+                });
+
+            modelBuilder.Entity("LoDb.Infrastructure.Persistence.Robots.RobotDay", b =>
+                {
+                    b.HasOne("LoDb.Infrastructure.Persistence.Robots.RobotAgent", null)
+                        .WithMany()
+                        .HasForeignKey("AgentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_robot_daily_robot_agent_agent_id");
+                });
+
+            modelBuilder.Entity("LoDb.Infrastructure.Persistence.Robots.RobotHit", b =>
+                {
+                    b.HasOne("LoDb.Infrastructure.Persistence.Robots.RobotAgent", null)
+                        .WithMany()
+                        .HasForeignKey("AgentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_robot_hit_robot_agent_agent_id");
                 });
 
             modelBuilder.Entity("LoDb.Infrastructure.Persistence.States.CatalogEntityState", b =>

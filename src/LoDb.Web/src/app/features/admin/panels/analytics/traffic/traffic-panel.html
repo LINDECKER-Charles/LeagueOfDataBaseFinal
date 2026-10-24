@@ -17,48 +17,76 @@
     <lodb-kpi
       [label]="'admin.traffic.kpi.views' | adminText"
       [value]="data.totals.views | figure: 'compact'"
-      [sub]="data.range"
+      [sub]="
+        'admin.traffic.trend.' + viewsTrend().direction
+          | adminText: { change: (viewsTrend().change | figure: 'share') }
+      "
     >
-      <lodb-sparkline [values]="traffic().series[0]?.values ?? []" color="var(--color-gold)" />
+      <lodb-sparkline [values]="chart().series[0]?.values ?? []" color="var(--color-gold)" />
     </lodb-kpi>
     <lodb-kpi
       accent="hex"
       [label]="'admin.traffic.kpi.visitors' | adminText"
       [value]="data.totals.uniqueVisitors | figure: 'compact'"
-      [sub]="'admin.traffic.kpi.visitors_sub' | adminText: { count: data.totals.returningVisitors }"
+      [sub]="
+        'admin.traffic.trend.' + visitorsTrend().direction
+          | adminText: { change: (visitorsTrend().change | figure: 'share') }
+      "
     >
-      <lodb-sparkline [values]="traffic().series[1]?.values ?? []" />
+      <lodb-sparkline [values]="chart().series[1]?.values ?? []" />
     </lodb-kpi>
     <lodb-kpi
       accent="green"
+      [label]="'admin.traffic.kpi.per_day' | adminText"
+      [value]="perDay() | figure"
+      [sub]="'admin.traffic.kpi.visitors_sub' | adminText: { count: data.totals.returningVisitors }"
+    />
+    <lodb-kpi
+      accent="blue"
       [label]="'admin.traffic.kpi.pages' | adminText"
       [value]="data.totals.pagesTracked | figure: 'compact'"
       [sub]="'admin.traffic.kpi.pages_sub' | adminText"
     />
-    <lodb-kpi
-      accent="blue"
-      [label]="'admin.traffic.kpi.per_day' | adminText"
-      [value]="perDay()"
-      [sub]="'admin.traffic.kpi.per_day_sub' | adminText"
-    />
+    @if (robots.value(); as journal) {
+      <a
+        lodbKpi
+        accent="red"
+        routerLink="/admin/robots"
+        [queryParams]="{ range: query.range() }"
+        [isLink]="true"
+        [label]="'admin.traffic.kpi.robots' | adminText"
+        [value]="journal.totals.figures.hits | figure: 'compact'"
+        [sub]="
+          'admin.traffic.kpi.robots_sub' | adminText: { share: (robotShare() | figure: 'share') }
+        "
+      >
+        <lodb-sparkline [values]="robotDays()" color="var(--color-series-red)" />
+      </a>
+    }
   </div>
 
   <lodb-admin-card
     [heading]="'admin.traffic.daily' | adminText"
-    [chip]="'admin.overview.frequentation_chip' | adminText"
+    [chip]="'admin.traffic.daily_chip' | adminText"
   >
     <lodb-time-series-chart
-      [dates]="traffic().dates"
-      [series]="traffic().series"
+      [dates]="chart().dates"
+      [series]="chart().series"
       [label]="'admin.traffic.daily' | adminText"
     />
-    <lodb-legend [items]="traffic().legend" />
+    <lodb-legend [items]="chart().legend" />
   </lodb-admin-card>
 
-  <div class="admin-grid admin-grid--2 mt-[1.15rem]">
-    <lodb-admin-card [heading]="'admin.traffic.top_pages' | adminText">
-      <lodb-rank-list [rows]="pages()" [limit]="8" empty="admin.overview.top_pages_empty" />
-    </lodb-admin-card>
+  <lodb-admin-card
+    class="mt-[1.15rem] block"
+    [heading]="'admin.traffic.explorer.title' | adminText"
+    [chip]="'admin.traffic.explorer.chip' | adminText"
+  >
+    <lodb-traffic-explorer [range]="query.range()" />
+  </lodb-admin-card>
+
+  <lodb-admin-rule [label]="'admin.traffic.rules.content' | adminText" />
+  <div class="admin-grid admin-grid--3">
     <lodb-admin-card [heading]="'admin.traffic.top_entities' | adminText">
       <lodb-rank-list
         tone="hex"
@@ -67,14 +95,21 @@
         empty="admin.traffic.top_entities_empty"
       />
     </lodb-admin-card>
-  </div>
-
-  <div class="admin-grid admin-grid--3 mt-[1.15rem]">
     <lodb-admin-card [heading]="'admin.overview.by_resource' | adminText">
       <lodb-rank-list [rows]="types()" [limit]="6" />
     </lodb-admin-card>
     <lodb-admin-card [heading]="'admin.traffic.by_kind' | adminText">
       <lodb-rank-list tone="hex" [rows]="kinds()" [limit]="6" />
+    </lodb-admin-card>
+  </div>
+
+  <lodb-admin-rule [label]="'admin.traffic.rules.quality' | adminText" />
+  <div class="admin-grid admin-grid--3">
+    <lodb-admin-card [heading]="'admin.traffic.locales' | adminText">
+      <lodb-rank-list [rows]="locales()" [limit]="8" />
+    </lodb-admin-card>
+    <lodb-admin-card [heading]="'admin.traffic.langs' | adminText">
+      <lodb-rank-list tone="hex" [rows]="langs()" [limit]="8" />
     </lodb-admin-card>
     <lodb-admin-card [heading]="'admin.traffic.statuses' | adminText">
       <lodb-status-table [statuses]="data.status" />
@@ -82,7 +117,7 @@
   </div>
 
   <lodb-admin-card
-    class="mt-[1.15rem]"
+    class="mt-[1.15rem] block"
     [heading]="'admin.traffic.heatmap' | adminText"
     [chip]="'admin.traffic.heatmap_chip' | adminText"
   >

@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { getAnalyticsReport } from '../../../../../core/api/generated/fn/admin-analytics/get-analytics-report';
+import { getRobotsReport } from '../../../../../core/api/generated/fn/admin-analytics/get-robots-report';
 import { Chip } from '../../../../../ui/controls/chip';
 import { categorySlices } from '../../../charts/category-slices';
 import { DonutChart } from '../../../charts/donut-chart';
@@ -24,11 +25,12 @@ import { Kpi } from '../../../widgets/kpi';
 import { Legend } from '../../../widgets/legend';
 import { RankList } from '../../../widgets/rank-list';
 import { rankRows } from '../rank-rows';
+import { totalOf } from '../robots/shared/robot-chart';
 import { trafficSeries } from '../traffic-series';
 
 /**
  * The traffic of the overview, the legacy `overview-traffic` panel, for the period of the
- * URL: its views, its visitors and its most viewed page, their days, the resources viewed,
+ * URL: its views, its visitors, its most viewed page and the robots, their days, the resources viewed,
  * the pages most viewed and where the visitors came from, each linking to its page. A new
  * `revision` (a consolidation just ran) reads the report again.
  */
@@ -57,11 +59,12 @@ export class OverviewTraffic {
   readonly revision = input(0);
 
   private readonly texts = injectAdminText();
-  private readonly query = injectQuery();
-
+  protected readonly query = injectQuery();
   protected readonly report = injectPanel(getAnalyticsReport, () => ({
     range: this.query.range(),
   }));
+  protected readonly robots = injectPanel(getRobotsReport, () => ({ range: this.query.range() }));
+  protected readonly robotDays = computed(() => totalOf(this.robots.value()?.categorySeries ?? []));
   protected readonly traffic = computed(() =>
     trafficSeries(this.report.value()?.series ?? [], this.texts),
   );

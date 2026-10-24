@@ -97,6 +97,9 @@ Logs et requêtes LogsQL : [`observabilite.md`](observabilite.md) et [`logging.m
 | `lodb_outbox_deferred` | jauge | — | oui (tâches de fond actives) | `LoDb.Outbox`, messages dus que le plafond horaire de leur modèle retient (`LoDb:Outbox:HourlyCaps`) |
 | `lodb_outbox_batch_duration_seconds`, `lodb_outbox_batch_failures_total` | histogramme, compteur | — | non | `LoDb.Outbox` |
 | `lodb_analytics_views_queued_total`, `…_written_total`, `…_dropped_total` | compteurs | `origin` ; `reason` (`queue_full`, `unresolved`, `write_failed`) | non | `LoDb.Analytics` |
+| `lodb_robots_records_received_total`, `lodb_robots_records_dropped_total` | compteurs | `reason` (`queue_full`, `unreadable`, `write_failed`) | non | `LoDb.Robots`, requêtes que nginx a rapportées au journal des robots, et celles perdues avant `robot_hit` |
+| `lodb_robots_hits_written_total` | compteur | `detection` (`agent`, `rate`) | non | `LoDb.Robots`, requêtes de robots écrites, déclarés par leur user-agent ou trahis par leur cadence |
+| `lodb_robots_dns_lookups_total` | compteur | `outcome` (`confirmed`, `unconfirmed`, `no_name`, `failed`) | non | `LoDb.Robots`, recherches DNS inverses des adresses de robots |
 | `lodb_audience_vues_tirees` | jauge | — | non : au premier tirage réussi (jamais tant que le tirage dort) | `LoDb.Audience`, pages vues qu'Umami a comptées sur le site pendant la dernière heure close, relevées par le tirage horaire (`audience.trends`) : la sentinelle de toute la chaîne (émetteur, edge, Umami, tirage). Préfixe `lodb_`, jamais `umami_` (réservé au reconciler d'`infra-vps`) |
 | `lodb_publicapi_refusals_total` | compteur | `code` (codes d'erreur de `/v1`) | non | `LoDb.PublicApi` |
 | `lodb_publicapi_usage_pending` | jauge | — | oui | `LoDb.PublicApi` |

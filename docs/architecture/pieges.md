@@ -602,6 +602,14 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   (`states.build.failed`), le déploiement s'arrête avant la page de maintenance. Voulu : une API
   qui démarrerait sur un index vide servirait la règle résiduelle partout, sans historique dans
   les sitemaps ; ne pas « corriger » en différant.
+- **Journal des robots** (ADR 0013) : l'`access_log /dev/null lodb_robot_journal` du site
+  n'est pas une configuration morte, c'est le point d'accroche du journal (formater la ligne
+  exécute `record()` de `njs/robot-journal.js`). njs n'accepte pas `for…of` (`forEach`), et
+  `js_shared_dict_zone … evict` exige un `timeout=` (nginx refuse de démarrer sinon). Les pages
+  des lecteurs atteignent l'API **voulu** : elles nourrissent la cadence qui trahit un robot non
+  déclaré, puis sont jetées ; ses requêtes d'avant le seuil ne sont jamais gardées. Un
+  « Googlebot » `mismatch` est une usurpation probable, pas une panne DNS (`unresolved`). Les
+  tests de l'API posent `LoDb:Robots:DnsLookupsPerBatch=0` : aucune question DNS ne sort.
 
 ## Index des états d'entité
 

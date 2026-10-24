@@ -23,6 +23,12 @@ public sealed record AnalyticsReport
 
     public required AnalyticsTotals Totals { get; init; }
 
+    /// <summary>
+    /// The totals of the period of the same length just before, its trend's reference; null
+    /// for all the history.
+    /// </summary>
+    public AnalyticsTotals? Previous { get; init; }
+
     /// <summary>Every day of the period, in order, those without a view included.</summary>
     public required IReadOnlyList<AnalyticsDay> Series { get; init; }
 

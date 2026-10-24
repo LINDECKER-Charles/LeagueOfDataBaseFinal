@@ -129,6 +129,14 @@ export type { GetAnalyticsReport$Params as GetAnalyticsReport$Params } from './f
 export { getAnalyticsReport as getAnalyticsReport } from './fn/admin-analytics/get-analytics-report';
 export type { RollupAnalytics$Params as RollupAnalytics$Params } from './fn/admin-analytics/rollup-analytics';
 export { rollupAnalytics as rollupAnalytics } from './fn/admin-analytics/rollup-analytics';
+export type { GetAnalyticsBreakdown$Params as GetAnalyticsBreakdown$Params } from './fn/admin-analytics/get-analytics-breakdown';
+export { getAnalyticsBreakdown as getAnalyticsBreakdown } from './fn/admin-analytics/get-analytics-breakdown';
+export type { GetRobotsReport$Params as GetRobotsReport$Params } from './fn/admin-analytics/get-robots-report';
+export { getRobotsReport as getRobotsReport } from './fn/admin-analytics/get-robots-report';
+export type { GetRobotDetail$Params as GetRobotDetail$Params } from './fn/admin-analytics/get-robot-detail';
+export { getRobotDetail as getRobotDetail } from './fn/admin-analytics/get-robot-detail';
+export type { GetRobotHits$Params as GetRobotHits$Params } from './fn/admin-analytics/get-robot-hits';
+export { getRobotHits as getRobotHits } from './fn/admin-analytics/get-robot-hits';
 export type { ReadAuditJournal$Params as ReadAuditJournal$Params } from './fn/admin-audit/read-audit-journal';
 export { readAuditJournal as readAuditJournal } from './fn/admin-audit/read-audit-journal';
 export type { ReadUserAuditActivity$Params as ReadUserAuditActivity$Params } from './fn/admin-audit/read-user-audit-activity';
