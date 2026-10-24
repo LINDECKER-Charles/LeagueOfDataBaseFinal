@@ -39,12 +39,72 @@ const CATALOGUES: Readonly<Record<string, Translation>> = {
           launch: 'Lancer une passe',
           locked_active: ['Une passe est en cours (n°', ['arg', 'id'], ') : une seule à la fois.'],
         },
-        kpis: {
-          cost_sub_retired: [
-            '+ ',
-            ['arg', 'retired'],
-            " pour les epochs retirées, jusqu'à leur suppression ; hors sortie",
-          ],
+        views: {
+          pass: {
+            label: 'Passe',
+            sub_running: ['n°', ['arg', 'id'], ' · epoch ', ['arg', 'epoch'], ' · en cours'],
+          },
+          coverage: {
+            label: 'Couverture',
+            sub: [
+              'epoch ',
+              ['arg', 'epoch'],
+              ' servie · ',
+              ['arg', 'complete'],
+              ' / ',
+              [
+                'plural',
+                'total',
+                0,
+                { one: [['#', 'total', 0], ' patch'], other: [['#', 'total', 0], ' patchs'] },
+              ],
+              ' complets',
+            ],
+          },
+          queues: {
+            label: 'Files automatiques',
+            sub: [
+              'en attente : ',
+              ['arg', 'demand'],
+              ' refusées (503) · ',
+              ['arg', 'revision'],
+              " d'états clos",
+            ],
+          },
+          speed: {
+            label: 'Vitesse',
+            value_adaptive: 'Adaptative',
+            sub_adaptive: ['entre ', ['arg', 'min'], ' et ', ['arg', 'max'], ' pages/min'],
+          },
+          storage: {
+            label: 'Stockage et coûts',
+            sub: [
+              ['arg', 'cost'],
+              ' / mois · ',
+              [
+                'plural',
+                'pages',
+                0,
+                { one: [['#', 'pages', 0], ' page'], other: [['#', 'pages', 0], ' pages'] },
+              ],
+            ],
+          },
+          history: {
+            label: 'Historique',
+            value: [
+              [
+                'plural',
+                'count',
+                0,
+                {
+                  0: ['Aucune'],
+                  one: [['#', 'count', 0], ' passe'],
+                  other: [['#', 'count', 0], ' passes'],
+                },
+              ],
+            ],
+            sub: ['dernière : n°', ['arg', 'id'], ' (', ['arg', 'state'], '), ', ['arg', 'date']],
+          },
         },
       },
     },

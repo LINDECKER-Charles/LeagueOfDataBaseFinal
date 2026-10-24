@@ -1,10 +1,9 @@
-import { BreakpointObserver } from '@angular/cdk/layout';
 import { HttpStatusCode } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
+import { Router } from '@angular/router';
 import type { PrerenderEpochCoverage } from '../../../../../core/api/generated/models/prerender-epoch-coverage';
 import type { PrerenderPassView } from '../../../../../core/api/generated/models/prerender-pass-view';
 import type { PrerenderReport } from '../../../../../core/api/generated/models/prerender-report';
-import { of } from 'rxjs';
 import { Seo } from '../../../../../core/seo/seo';
 import { AdminNotices } from '../../../layout/admin-notices';
 import { PRERENDER_CADENCE } from './common/scope/prerender-cadence';
@@ -18,7 +17,7 @@ import { settle } from '../../../testing/http/settle';
 import { panelRoute } from '../../../testing/panels/panel-route';
 import { visitPanel } from '../../../testing/panels/visit-panel';
 import { PrerenderPanel } from './prerender-panel';
-import { openPrerender } from './prerender-panel-harness';
+import { BESIDE_THE_REPORT, openPrerender } from './prerender-panel-harness';
 
 const PRERENDER = '/api/admin/prerender';
 const PATCHES = `${PRERENDER}/patches`;
@@ -44,6 +43,25 @@ function launchButton(visit: AdminVisit): HTMLButtonElement | null {
   return visit.page.querySelector<HTMLButtonElement>('lodb-launch-cta [data-launch]');
 }
 
+// The tiles of the views as read: each one's name, figure and line, one after the other.
+function tiles(visit: AdminVisit): string[] {
+  return [...visit.page.querySelectorAll('[role="tab"]')].map((tab) =>
+    ['[data-tile-name]', '[data-tile-value]', '[data-tile-sub]']
+      .flatMap((part) => texts(tab, part))
+      .join(' '),
+  );
+}
+
+// Whether the panel of a view shows: every one is rendered, the others hidden.
+function isShown(visit: AdminVisit, view: string): boolean {
+  return visit.page.querySelector<HTMLElement>(`#prerender-${view}-panel`)?.hidden === false;
+}
+
+async function choose(visit: AdminVisit, view: string): Promise<void> {
+  visit.page.querySelector<HTMLButtonElement>(`[data-view="prerender-${view}"]`)?.click();
+  await settle(visit);
+}
+
 // A standby epoch 3 beside the served one: `coverage` says how far it is.
 function withStandby(coverage: PrerenderEpochCoverage, changes: Partial<PrerenderReport> = {}) {
   const standby = { ...IDLE.storage.epochs[0], epoch: 3, state: 'standby', isWriting: false };
@@ -61,10 +79,11 @@ describe('PrerenderPanel, its states', () => {
     configureAdminTestBed([panelRoute(PrerenderPanel, '/admin/prerender')]);
     const { page } = await visitPanel('/admin/prerender', [
       { path: PRERENDER, body: null, status: HttpStatusCode.BadGateway },
+      ...BESIDE_THE_REPORT,
     ]);
 
     expect(page.querySelector('lodb-panel-state lodb-admin-band')).not.toBeNull();
-    expect(page.querySelector('lodb-tabs')).toBeNull();
+    expect(page.querySelector('lodb-status-tabs')).toBeNull();
     expect(launchButton({ page } as AdminVisit)?.disabled).toBe(true);
     expect(texts(page, '[data-launch-lock]')).toEqual([
       'admin.prerender.overview.cta.locked_loading',
@@ -84,8 +103,38 @@ describe('PrerenderPanel, its states', () => {
     expect(texts(visit.page, '[data-launch-lock] button')).toEqual([
       'admin.prerender.overview.cta.follow',
     ]);
-    expect(visit.page.querySelectorAll('lodb-kpi')).toHaveLength(4);
-    expect(visit.page.querySelectorAll('lodb-tab')).toHaveLength(4);
+    expect(visit.page.querySelectorAll('[role="tab"]')).toHaveLength(6);
+    expect(isShown(visit, 'pass')).toBe(true);
+    expect(isShown(visit, 'coverage')).toBe(false);
+  });
+
+  it('opens the view its URL names, and writes the one chosen in the URL', async () => {
+    const visit = await openPrerender({ report: IDLE, url: '/admin/prerender?view=history' });
+    const router = TestBed.inject(Router);
+    expect(isShown(visit, 'history')).toBe(true);
+    expect(isShown(visit, 'pass')).toBe(false);
+
+    await choose(visit, 'coverage');
+    expect(isShown(visit, 'coverage')).toBe(true);
+    expect(router.url).toBe('/admin/prerender?view=coverage');
+
+    await choose(visit, 'pass');
+    expect(router.url).toBe('/admin/prerender');
+  });
+
+  it('takes the operator from another view to the monitor of the active pass', async () => {
+    const visit = await openPrerender({
+      report: RUNNING,
+      calls: [PROGRESS],
+      url: '/admin/prerender?view=storage',
+    });
+    expect(isShown(visit, 'pass')).toBe(false);
+
+    press(visit, 'admin.prerender.overview.cta.follow');
+    await settle(visit);
+
+    expect(isShown(visit, 'pass')).toBe(true);
+    expect(document.activeElement?.id).toBe('prerender-monitor');
   });
 
   it('keeps the report on screen, without a band, when a refresh fails', async () => {
@@ -124,7 +173,7 @@ describe('PrerenderPanel, its states', () => {
     expect(texts(visit.page, 'lodb-idle-card button')).toEqual([
       'admin.prerender.overview.idle.detail',
     ]);
-    expect(visit.page.querySelector('lodb-tabs')).not.toBeNull();
+    expect(visit.page.querySelector('lodb-status-tabs')).not.toBeNull();
   });
 
   it('says what to do without a pass: the last one, the gaps, a launch', async () => {
@@ -183,21 +232,6 @@ describe('PrerenderPanel, its states', () => {
     expect(launched.current()).toBeNull();
   });
 
-  it('names its tabs short on a phone, so that they hold in its width', async () => {
-    const phone = { observe: () => of({ matches: true, breakpoints: {} }), isMatched: () => true };
-    const visit = await openPrerender({
-      report: IDLE,
-      providers: [{ provide: BreakpointObserver, useValue: phone }],
-    });
-
-    expect(texts(visit.page, '[role="tab"]')).toEqual([
-      'admin.prerender.overview.tabs.coverage',
-      'admin.prerender.overview.tabs.costs_short',
-      'admin.prerender.overview.tabs.demand',
-      'admin.prerender.overview.tabs.history',
-    ]);
-  });
-
   it('remembers a recap dismissed in this browser', async () => {
     localStorage.setItem(DISMISSED_KEY, '12');
     const visit = await openPrerender({ report: prerenderReport({ ...IDLE, passes: [ENDED] }) });
@@ -252,8 +286,13 @@ describe('PrerenderPanel, its states', () => {
       'Une passe est en cours (n°12) : une seule à la fois.',
     );
     expect(texts(visit.page, 'lodb-live-monitor [data-pass-state]')).toEqual(['en cours']);
-    expect(texts(visit.page, '[data-kpi="cost"]')[0]).toContain(
-      "+ < 0,01 € pour les epochs retirées, jusqu'à leur suppression",
-    );
+    expect(tiles(visit)).toEqual([
+      'Passe 71.4 % n°12 · epoch 2 · en cours',
+      'Couverture 98 % epoch 2 servie · 391 / 402 patchs complets',
+      "Files automatiques 2 218 en attente : 412 refusées (503) · 1 806 d'états clos",
+      'Vitesse Adaptative entre 30 et 240 pages/min',
+      'Stockage et coûts 9.26 GB 0,07 € / mois · 91 230 pages',
+      'Historique 2 passes dernière : n°12 (en cours), 18/10/2026',
+    ]);
   });
 });

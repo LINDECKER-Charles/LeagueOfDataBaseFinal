@@ -6,13 +6,14 @@ import { prerenderReport } from '../../../../testing/fixtures/prerender-report';
 import { prerenderSpeed } from '../../../../testing/fixtures/prerender-speed';
 import { sent } from '../../../../testing/http/sent';
 import { SpeedBlock } from './speed-block';
+import { SpeedReportStore } from './speed-report-store';
 
 const SPEED = '/api/admin/prerender/speed';
 
 type Fixture = ComponentFixture<SpeedBlock>;
 
 async function open(speed: PrerenderSpeedReport = prerenderSpeed()) {
-  configureAdminTestBed();
+  configureAdminTestBed([], [SpeedReportStore]);
   const api = { http: TestBed.inject(HttpTestingController) };
   const fixture = TestBed.createComponent(SpeedBlock);
   fixture.componentRef.setInput('report', prerenderReport());

@@ -907,8 +907,8 @@ comme la passe. Règles : [spécification](../produit/pre-rendu-catalogue-cdn.md
 qui recrée l'API : le relevé et le rendu s'arrêtent, la table reste. Le pupitre dit alors
 « coupée ». Les pages en vol finissent.
 
-**Ce qui la montre** : le bloc « File automatique des pages refusées » et l'onglet « File des
-503 » de `/admin/prerender`,
+**Ce qui la montre** : la vue « Files automatiques » de `/admin/prerender?view=queues` (bloc
+« File automatique des pages refusées » et liste « Pages de la file des refusées (503) »),
 les métriques `lodb_prerender_demand_*` ([`metriques.md`](metriques.md)) et les lignes
 `prerender.demand.*` de l'API, une par relevé qui apporte des pages et une par lot rendu.
 
@@ -1025,9 +1025,10 @@ des états clos jusqu'à sa bascule : rien à rattraper avant de basculer. Une e
 attente sans bascule les reçoit aussi, pour rien : basculer dessus, ou la retirer
 (`tools/prerender/scaleway-bucket.sh`).
 
-**Ce qui la montre** : le bloc « File des états clos » de `/admin/prerender` (en attente,
-dues, écrites en 1 h et 24 h, en échec, par epoch ; `GET /api/admin/prerender/revision`) et la
-colonne « Index » de l'onglet de couverture (ouvreurs, pages figées et révisables attendues
+**Ce qui la montre** : le bloc « File des états clos » de la vue « Files automatiques » de
+`/admin/prerender` (en attente, dues, écrites en 1 h et 24 h, en échec, par epoch ;
+`GET /api/admin/prerender/revision`) et la colonne « Index » de la vue « Couverture » (ouvreurs,
+pages figées et révisables attendues
 par version et par langue) ; les métriques `lodb_prerender_revision_*`
 ([`metriques.md`](metriques.md)) et les lignes `prerender.revision.*` de l'API, une par passage
 du producteur qui met en file et une par lot rendu.

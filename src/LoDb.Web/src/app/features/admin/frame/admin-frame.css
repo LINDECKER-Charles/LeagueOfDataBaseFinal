@@ -35,6 +35,14 @@ lodb-admin-frame.is-open .admin-main {
   margin-inline-start: var(--admin-sidebar-width);
 }
 
+/*
+ * The room of the scroll bar is kept whether the page scrolls or not: a view, a filter or a
+ * load that lengthens it never narrows the column, nor wraps its head anew.
+ */
+html:has(lodb-admin-frame) {
+  scrollbar-gutter: stable;
+}
+
 lodb-admin-frame .admin-backdrop {
   position: fixed;
   inset: 0;

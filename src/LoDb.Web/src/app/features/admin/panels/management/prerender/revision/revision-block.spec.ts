@@ -5,6 +5,7 @@ import { configureAdminTestBed } from '../../../../testing/admin-test-bed';
 import { prerenderRevision } from '../../../../testing/fixtures/revision/prerender-revision';
 import { sent } from '../../../../testing/http/sent';
 import { RevisionBlock } from './revision-block';
+import { RevisionReportStore } from './revision-report-store';
 
 const REVISION = '/api/admin/prerender/revision';
 
@@ -15,7 +16,7 @@ function texts(root: ParentNode, selector: string): string[] {
 }
 
 async function render(report: PrerenderRevisionReport): Promise<HTMLElement> {
-  configureAdminTestBed();
+  configureAdminTestBed([], [RevisionReportStore]);
   const fixture = TestBed.createComponent(RevisionBlock);
   fixture.detectChanges();
   const http = TestBed.inject(HttpTestingController);

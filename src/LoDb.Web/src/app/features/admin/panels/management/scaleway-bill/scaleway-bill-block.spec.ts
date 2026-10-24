@@ -31,6 +31,8 @@ interface BilledPanel {
   readonly report: PanelCall;
   /** What the panel reads after its report and before the bill. */
   readonly before: readonly PanelCall[];
+  /** The key figures of the panel, and how many it shows. */
+  readonly figures: { readonly selector: string; readonly count: number };
 }
 
 const BACKUPS: BilledPanel = {
@@ -39,6 +41,7 @@ const BACKUPS: BilledPanel = {
   url: '/admin/backups',
   report: { path: '/api/admin/backups', body: backupReport() },
   before: [],
+  figures: { selector: 'lodb-kpi', count: 4 },
 };
 const PAGES: BilledPanel = {
   project: 'pages',
@@ -46,12 +49,14 @@ const PAGES: BilledPanel = {
   url: '/admin/prerender',
   // No pass runs: the panel does not read itself again meanwhile.
   report: { path: '/api/admin/prerender', body: prerenderReport({ current: null }) },
-  // The coverage of the served epoch (the « Couverture » tab renders at once), and the
-  // automatic queue under the key figures.
+  // The coverage of the served epoch (every view renders at once), and the automatic queue
+  // its tile reads.
   before: [
     { path: '/api/admin/prerender/patches', body: prerenderPatches() },
     { path: '/api/admin/prerender/demand', body: prerenderDemand() },
   ],
+  // Its key figures are the tiles of its views.
+  figures: { selector: '[role="tab"]', count: 6 },
 };
 
 function texts(root: ParentNode, selector: string): string[] {
@@ -68,7 +73,7 @@ function unbilled(bill: ScalewayProjectBill | null | undefined): ScalewayProject
 
 describe.each([BACKUPS, PAGES])(
   'the Scaleway bill of the $project',
-  ({ project, panel, url, report, before }) => {
+  ({ project, panel, url, report, before, figures }) => {
     const block = `lodb-scaleway-bill[data-bill="${project}"]`;
 
     function open(bill: ScalewayBillReport | null, status?: number) {
@@ -147,7 +152,7 @@ describe.each([BACKUPS, PAGES])(
     it('fails on its own, the panel shown all the same, then tries again', async () => {
       const visit = await open(null, HttpStatusCode.BadGateway);
 
-      expect(visit.page.querySelectorAll('lodb-kpi')).toHaveLength(4);
+      expect(visit.page.querySelectorAll(figures.selector)).toHaveLength(figures.count);
       expect(texts(visit.page, `${block} [data-bill-state] span`)).toEqual([
         'admin.scaleway_bill.failed',
       ]);

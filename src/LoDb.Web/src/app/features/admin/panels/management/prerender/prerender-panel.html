@@ -25,62 +25,74 @@
     />
   }
 
-  <div class="mb-[1.15rem]">
-    @if (data.current; as current) {
-      <lodb-live-monitor
-        [pass]="current"
-        [report]="data"
-        (launch)="openLaunch($event)"
-        (changed)="report.reload()"
-        (ended)="onEnded()"
-      />
-    } @else if (recent(); as pass) {
-      <lodb-pass-recap
-        [pass]="pass"
-        [servedEpoch]="data.servedEpoch"
-        (launch)="openLaunch($event)"
-        (detail)="openDetail($event)"
-        (dismissed)="dismiss($event)"
-      />
-    } @else {
-      <lodb-idle-card
-        [report]="data"
-        [lock]="lock()"
-        (launch)="openLaunch($event)"
-        (detail)="openDetail($event)"
-      />
-    }
-  </div>
-
-  <lodb-prerender-kpis [report]="data" />
-
-  <lodb-demand-block class="mt-6" />
-  <lodb-revision-block class="mt-6" />
-  <lodb-speed-block class="mt-6" [report]="data" />
-
-  <lodb-tabs class="mt-6" [label]="'admin.prerender.overview.tabs.label' | adminText">
+  <lodb-status-tabs
+    [label]="'admin.prerender.overview.views.label' | adminText"
+    [tiles]="tiles()"
+    [selected]="selectedKey()"
+    (selectedChange)="showKey($event)"
+  >
+    <lodb-tab
+      key="prerender-pass"
+      [label]="'admin.prerender.overview.views.pass.label' | adminText"
+    >
+      @if (data.current; as current) {
+        <lodb-live-monitor
+          [pass]="current"
+          [report]="data"
+          (launch)="openLaunch($event)"
+          (changed)="report.reload()"
+          (ended)="onEnded()"
+        />
+      } @else if (recent(); as pass) {
+        <lodb-pass-recap
+          [pass]="pass"
+          [servedEpoch]="data.servedEpoch"
+          (launch)="openLaunch($event)"
+          (detail)="openDetail($event)"
+          (dismissed)="dismiss($event)"
+        />
+      } @else {
+        <lodb-idle-card
+          [report]="data"
+          [lock]="lock()"
+          (launch)="openLaunch($event)"
+          (detail)="openDetail($event)"
+        />
+      }
+    </lodb-tab>
     <lodb-tab
       key="prerender-coverage"
-      [label]="'admin.prerender.overview.tabs.coverage' | adminText"
+      [label]="'admin.prerender.overview.views.coverage.label' | adminText"
     >
       <lodb-coverage-tab [report]="data" [lock]="lock()" (launch)="openLaunch($event)" />
     </lodb-tab>
     <lodb-tab
-      key="prerender-costs"
-      [label]="
-        (isPhone()
-          ? 'admin.prerender.overview.tabs.costs_short'
-          : 'admin.prerender.overview.tabs.costs'
-        ) | adminText
-      "
+      key="prerender-queues"
+      [label]="'admin.prerender.overview.views.queues.label' | adminText"
+    >
+      <div class="admin-grid admin-grid--2">
+        <lodb-demand-block />
+        <lodb-revision-block />
+      </div>
+      <lodb-demand-queue-tab class="mt-[1.15rem]" />
+    </lodb-tab>
+    <lodb-tab
+      key="prerender-speed"
+      [label]="'admin.prerender.overview.views.speed.label' | adminText"
+    >
+      <lodb-speed-block [report]="data" />
+    </lodb-tab>
+    <lodb-tab
+      key="prerender-storage"
+      [label]="'admin.prerender.overview.views.storage.label' | adminText"
     >
       <lodb-costs-tab [report]="data" [lock]="lock()" (launch)="openLaunch($event)" />
     </lodb-tab>
-    <lodb-tab key="prerender-demand" [label]="'admin.prerender.overview.tabs.demand' | adminText">
-      <lodb-demand-queue-tab />
-    </lodb-tab>
-    <lodb-tab key="prerender-history" [label]="'admin.prerender.overview.tabs.history' | adminText">
+    <lodb-tab
+      key="prerender-history"
+      [label]="'admin.prerender.overview.views.history.label' | adminText"
+    >
       <lodb-passes-tab [report]="data" (detail)="openDetail($event)" (follow)="follow()" />
     </lodb-tab>
-  </lodb-tabs>
+  </lodb-status-tabs>
 }

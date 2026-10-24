@@ -10,7 +10,7 @@
       </p>
     }
     @if (data.isFixed) {
-      <p class="m-0 mb-4 text-[0.9rem] text-warn" data-speed-fixed>
+      <p class="m-0 mb-4 text-[0.9rem] text-gold" data-speed-fixed>
         {{ 'admin.prerender.speed.fixed' | adminText }}
       </p>
     }
@@ -115,7 +115,7 @@
             }}
           </p>
         }
-        <p class="m-0 mt-3 border-s-2 border-warn ps-3 text-[0.85rem]" data-speed-brake>
+        <p class="m-0 mt-3 border-s-2 border-gold/40 ps-3 text-[0.85rem]" data-speed-brake>
           {{
             'admin.prerender.speed.brake'
               | adminText
@@ -132,7 +132,7 @@
         @if (outcome(); as said) {
           <span
             class="me-auto text-[0.85rem]"
-            [class.text-warn]="said.tone === 'alert'"
+            [class.text-danger-light]="said.tone === 'alert'"
             role="status"
             data-speed-outcome
             >{{ said.text }}</span
@@ -167,7 +167,7 @@
           @if (all.now; as now) {
             <dl class="m-0 grid gap-2" data-speed-now>
               @for (row of now; track row.key) {
-                <div class="flex flex-col" [class.text-warn]="row.isWarning">
+                <div class="flex flex-col" [class.text-gold]="row.isWarning">
                   <dt class="text-[0.8rem] text-text-muted">{{ row.label }}</dt>
                   <dd class="m-0 text-[0.9rem]">{{ row.value }}</dd>
                 </div>
@@ -188,7 +188,7 @@
           </h3>
           <dl class="m-0 grid gap-2" data-speed-forecast>
             @for (row of all.forecast; track row.key) {
-              <div class="flex flex-col" [class.text-warn]="row.isWarning">
+              <div class="flex flex-col" [class.text-gold]="row.isWarning">
                 <dt class="text-[0.8rem] text-text-muted">{{ row.label }}</dt>
                 <dd class="m-0 text-[0.9rem]">{{ row.value }}</dd>
               </div>

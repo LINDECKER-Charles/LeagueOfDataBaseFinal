@@ -21,6 +21,7 @@ import { entryPreset } from '../overview/blocks/entry-preset';
 import type { LaunchLock } from '../overview/state/launch-lock-of';
 import { type CoverageGroup, type StatusFilter, coverageGroups } from './coverage-groups';
 import { type SeasonShares, coverageSummaryOf } from './coverage-summary-of';
+import { openSeasonsOf } from './open-seasons-of';
 
 /** A season of the table, folded or not. */
 interface Season extends CoverageGroup {
@@ -56,11 +57,12 @@ function tickedOf(group: CoverageGroup, selected: ReadonlySet<string>): Season['
 }
 
 /**
- * The « Couverture » tab (§ 5.2): what an epoch holds of each older patch. The epoch read
+ * The « Couverture » view (§ 5.2): what an epoch holds of each older patch. The epoch read
  * (the served one first), a summary by status and a small bar per season, then the patches
- * by season, the seasons without gap folded, as a list or a matrix. Ticking patches (Shift
- * for a range) offers « Pré-rendre la sélection »; « Compléter les manques » takes every patch
- * with a gap. Both wait while a pass is active, saying why.
+ * by season as a list or a matrix: the seasons with gaps open, as many as hold in a screen or
+ * two (`openSeasonsOf`), the others folded, all of them unfolded or folded at once. Ticking
+ * patches (Shift for a range) offers « Pré-rendre la sélection »; « Compléter les manques »
+ * takes every patch with a gap. Both wait while a pass is active, saying why.
  */
 @Component({
   selector: 'lodb-coverage-tab',
@@ -139,9 +141,11 @@ export class CoverageTab {
   protected readonly seasons = computed<Season[]>(() => {
     const filter = { query: this.query(), status: this.status() };
     const selected = this.selection().selected;
-    return coverageGroups(this.patches.value()?.patches ?? [], filter).map((group) => ({
+    const groups = coverageGroups(this.patches.value()?.patches ?? [], filter);
+    const opened = openSeasonsOf(groups);
+    return groups.map((group) => ({
       ...group,
-      isOpen: this.folds().get(group.key) ?? group.missing > 0,
+      isOpen: this.folds().get(group.key) ?? opened.has(group.key),
       ticked: tickedOf(group, selected),
     }));
   });
@@ -187,6 +191,14 @@ export class CoverageTab {
 
   protected fold(season: Season): void {
     this.folds.update((folds) => new Map(folds).set(season.key, !season.isOpen));
+  }
+
+  protected unfoldAll(): void {
+    this.folds.set(this.foldsOf(true));
+  }
+
+  protected foldAll(): void {
+    this.folds.set(this.foldsOf(false));
   }
 
   protected launchSelection(): void {
@@ -239,5 +251,14 @@ export class CoverageTab {
       complete: row.completeLocales,
       total: row.cells.length,
     });
+  }
+
+  // Every season of the table in the same state, the filtered-out ones included.
+  private foldsOf(isOpen: boolean): ReadonlyMap<string, boolean> {
+    const all = coverageGroups(this.patches.value()?.patches ?? [], {
+      query: '',
+      status: 'all',
+    });
+    return new Map(all.map((season) => [season.key, isOpen]));
   }
 }

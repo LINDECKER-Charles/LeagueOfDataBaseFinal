@@ -1,4 +1,3 @@
-import { BreakpointObserver } from '@angular/cdk/layout';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -13,16 +12,15 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { firstValueFrom, map } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import type { PrerenderReport } from '../../../../../core/api/generated/models/prerender-report';
 import { AdminNotices } from '../../../layout/admin-notices';
 import { PageHead } from '../../../layout/page-head';
 import { AdminTextPipe } from '../../../shared/admin-text-pipe';
 import { injectAdminText } from '../../../shared/inject-admin-text';
 import { PanelState } from '../../../state/panel-state';
+import { StatusTabs } from '../../../widgets/status-tabs/status-tabs';
 import { Tab } from '../../../../../ui/tabs/tab';
-import { Tabs } from '../../../../../ui/tabs/tabs';
 import type { LaunchPreset } from './common/scope/launch-preset';
 import { PRERENDER_CADENCE } from './common/scope/prerender-cadence';
 import { CostsTab } from './costs/costs-tab';
@@ -39,13 +37,15 @@ import { entryPreset } from './overview/blocks/entry-preset';
 import { IdleCard } from './overview/blocks/idle-card';
 import { LaunchCta } from './overview/blocks/launch-cta';
 import { PrerenderBands } from './overview/blocks/prerender-bands';
-import { PrerenderKpis } from './overview/blocks/prerender-kpis';
 import { bandStateOf } from './overview/state/band-state-of';
 import { injectPrerenderReport } from './overview/state/inject-prerender-report';
 import { launchLockOf } from './overview/state/launch-lock-of';
 import { type PassTitle, passTitleOf } from './overview/state/pass-title-of';
 import { quietPanel } from './overview/state/quiet-panel';
 import { recentPassOf } from './overview/state/recent-pass-of';
+import { tilesOf } from './overview/tiles/tiles-of';
+import { injectPrerenderView } from './overview/view/inject-prerender-view';
+import { viewKey } from './overview/view/view-key';
 import {
   PassDetailDialog,
   type PassDetailData,
@@ -53,7 +53,9 @@ import {
 } from './passes/pass-detail-dialog';
 import { PassesTab } from './passes/passes-tab';
 import { RevisionBlock } from './revision/revision-block';
+import { RevisionReportStore } from './revision/revision-report-store';
 import { SpeedBlock } from './speed/speed-block';
+import { SpeedReportStore } from './speed/speed-report-store';
 
 /** What the title of the document follows. */
 interface TitleSource {
@@ -64,17 +66,15 @@ interface TitleSource {
 // The pass a visitor dismissed from the recap, kept in this browser by PassRecap.
 const DISMISSED_KEY = 'lodb.admin.prerender.recap-dismissed';
 const MONITOR_ID = 'prerender-monitor';
-// Under the `sm` breakpoint the tabs must hold in 328px: « Coûts » stands for the costs.
-const PHONE = '(max-width: 639.98px)';
 
 /**
  * `/admin/prerender`: the pre-rendering of the older patches into the object store (§ 2).
  * Its head launches a pass and says how fresh the page is; bands say what needs doing; then
- * the live monitor of the active pass, the recap of one just ended, or what to do without
- * one; the key figures; the automatic queue of the refused pages, the queue of the closed
- * states; and four tabs: coverage, storage and costs, the pages of the automatic queue,
- * history. The page alone
- * opens the launch dialog and the detail of a pass: every other block hands it a preset.
+ * six views behind tiles that are the page's key figures too (`StatusTabs`): the pass (the
+ * live monitor of the active one, the recap of one just ended, or what to do without one),
+ * the coverage, the automatic queues, the speed, the storage and its costs, the history. The
+ * view shown is kept in the URL. The page alone opens the launch dialog and the detail of a
+ * pass: every other block hands it a preset.
  */
 @Component({
   selector: 'lodb-prerender-panel',
@@ -92,15 +92,14 @@ const PHONE = '(max-width: 639.98px)';
     PassRecap,
     PassesTab,
     PrerenderBands,
-    PrerenderKpis,
     RevisionBlock,
     SpeedBlock,
+    StatusTabs,
     Tab,
-    Tabs,
   ],
   templateUrl: './prerender-panel.html',
-  // The summary card and the tab of the automatic queue show one read of its report.
-  providers: [DemandReportStore],
+  // The tiles and the blocks of the queues and the speed show one read of each report.
+  providers: [DemandReportStore, RevisionReportStore, SpeedReportStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PrerenderPanel {
@@ -111,15 +110,14 @@ export class PrerenderPanel {
   private readonly document = inject(DOCUMENT);
   private readonly injector = inject(Injector);
   private readonly notices = inject(AdminNotices);
-  private readonly breakpoints = inject(BreakpointObserver);
+  private readonly demand = inject(DemandReportStore).report;
+  private readonly revision = inject(RevisionReportStore).report;
+  private readonly speed = inject(SpeedReportStore).report;
+  private readonly views = injectPrerenderView();
   private readonly coverage = viewChild(CoverageTab);
   // Once a pass starts, the focus goes to its monitor as soon as the report shows it.
   private readonly isFocusDue = signal(false);
 
-  protected readonly isPhone = toSignal(
-    this.breakpoints.observe(PHONE).pipe(map((state) => state.matches)),
-    { initialValue: this.breakpoints.isMatched(PHONE) },
-  );
   protected readonly report = injectPrerenderReport();
   protected readonly quiet = quietPanel(this.report);
   protected readonly dismissed = signal<number | null>(this.storedDismissal());
@@ -144,6 +142,20 @@ export class PrerenderPanel {
     const { key, params } = this.title();
     return this.texts.text(key, params);
   });
+  protected readonly tiles = computed(() => {
+    const report = this.report.value();
+    if (!report) {
+      return [];
+    }
+    const reads = {
+      demand: this.demand.value(),
+      revision: this.revision.value(),
+      speed: this.speed.value(),
+    };
+    const share = this.title().held?.share ?? 0;
+    return tilesOf({ report, recent: this.recent(), share, ...reads }, this.texts);
+  });
+  protected readonly selectedKey = computed(() => viewKey.of(this.views.view()));
 
   constructor() {
     effect(() => {
@@ -152,6 +164,13 @@ export class PrerenderPanel {
         afterNextRender(() => this.follow(), { injector: this.injector });
       }
     });
+  }
+
+  protected showKey(key: string | null): void {
+    const view = key === null ? null : viewKey.view(key);
+    if (view) {
+      this.views.show(view);
+    }
   }
 
   protected async openLaunch(preset: LaunchPreset): Promise<void> {
@@ -216,9 +235,12 @@ export class PrerenderPanel {
     }
   }
 
-  /** Takes the operator to the monitor of the active pass. */
+  /** Takes the operator to the monitor of the active pass: its view, then its card. */
   protected follow(): void {
-    this.document.getElementById(MONITOR_ID)?.focus();
+    this.views.show('pass');
+    afterNextRender(() => this.document.getElementById(MONITOR_ID)?.focus(), {
+      injector: this.injector,
+    });
   }
 
   protected dismiss(id: number): void {

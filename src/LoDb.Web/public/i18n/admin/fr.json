@@ -862,27 +862,50 @@
         "gaps_cta": "Les compléter",
         "whole": "L'epoch servie couvre tous les anciens patchs."
       },
-      "kpis": {
-        "served": "Epoch servie",
-        "served_sub": "LODB_ARCHIVE_SERVE_EPOCH, changée par un redéploiement",
-        "served_ready": "l'epoch {epoch} est prête",
-        "coverage": "Couverture servie",
-        "coverage_sub": "des unités · {complete} / {total, plural, one {# patch} other {# patchs}} complets",
-        "coverage_none": "aucun ancien patch",
-        "stored": "Stocké",
-        "stored_sub": "{pages, plural, one {# page} other {# pages}}, epochs retirées exclues",
-        "cost": "Coût estimé / mois",
-        "cost_sub": "hors sortie ; détail sous « Stockage et coûts »",
-        "cost_sub_retired": "+ {retired} pour les epochs retirées, jusqu'à leur suppression ; hors sortie",
-        "stored_sub_queue": "{pages, plural, one {# page} other {# pages}}, dont {queue} par la file, epochs retirées exclues"
-      },
-      "tabs": {
+      "views": {
         "label": "Vues du précalcul",
-        "coverage": "Couverture",
-        "costs": "Stockage et coûts",
-        "costs_short": "Coûts",
-        "history": "Historique",
-        "demand": "File des 503"
+        "pass": {
+          "label": "Passe",
+          "sub_running": "n°{id} · epoch {epoch} · en cours",
+          "sub_paused": "n°{id} · epoch {epoch} · en pause",
+          "sub_paused_itself": "n°{id} · en pause d'elle-même",
+          "value_completed": "Terminée",
+          "value_cancelled": "Annulée",
+          "sub_ended": "n°{id} · {date} UTC",
+          "value_idle": "Aucune",
+          "sub_idle": "{promotions, select, on {les patchs promus en ouvrent une} other {à lancer à la main}}",
+          "sub_dormant": "précalcul non configuré"
+        },
+        "coverage": {
+          "label": "Couverture",
+          "sub": "epoch {epoch} servie · {complete} / {total, plural, one {# patch} other {# patchs}} complets",
+          "sub_ready": "epoch {epoch} servie · l'epoch {ready} est prête",
+          "sub_none": "epoch {epoch} servie"
+        },
+        "queues": {
+          "label": "Files automatiques",
+          "sub": "en attente : {demand} refusées (503) · {revision} d'états clos"
+        },
+        "speed": {
+          "label": "Vitesse",
+          "value_adaptive": "Adaptative",
+          "value_manual": "Manuelle",
+          "value_fixed": "Fixe",
+          "sub_now": "{pace} pages/min en ce moment",
+          "sub_manual": "cible : {pace} pages/min",
+          "sub_adaptive": "entre {min} et {max} pages/min",
+          "sub_fixed": "régulateur coupé par l'environnement"
+        },
+        "storage": {
+          "label": "Stockage et coûts",
+          "sub": "{cost} / mois · {pages, plural, one {# page} other {# pages}}"
+        },
+        "history": {
+          "label": "Historique",
+          "value": "{count, plural, =0 {Aucune} one {# passe} other {# passes}}",
+          "sub": "dernière : n°{id} ({state}), {date}",
+          "sub_none": "aucune passe lancée"
+        }
       },
       "doc_title": {
         "idle": "Précalcul du catalogue",
@@ -1307,7 +1330,9 @@
       "retry": "Réessayer",
       "empty": "Aucun ancien patch.",
       "season_counts": "{versions, plural, one {# patch} other {# patchs}} · {complete, plural, one {# complet} other {# complets}}{missing, plural, =0 {} one { · # à compléter} other { · # à compléter}}",
-      "indexed": "{openers} · {frozen} · {revisable}"
+      "indexed": "{openers} · {frozen} · {revisable}",
+      "fold_all": "Tout replier",
+      "unfold_all": "Tout déplier"
     },
     "costs": {
       "title": "Ce que le stockage garde",
@@ -1322,6 +1347,7 @@
       "egress": "Hors sortie : 75 Go gratuits par mois, puis 0,01 € par Go, suivie dans Grafana.",
       "counters": "Ces chiffres disent ce que les passes et la file des 503 ont écrit, pas ce qu'une règle d'expiration a supprimé depuis : sur le staging, les pages expirent après 14 jours, une unité terminée n'est pas réécrite et ses pages repassent sans bruit par le SSR.",
       "retired": "Une epoch retirée coûte jusqu'à ce que le cycle de vie du stockage l'ait supprimée, 500 000 objets par jour au plus : 9 jours au moins pour 4 millions de pages.",
+      "served_note": "L'epoch servie est celle que nomme LODB_ARCHIVE_SERVE_EPOCH : seul un redéploiement la change.",
       "columns": {
         "epoch": "Epoch",
         "state": "État",
@@ -1426,7 +1452,7 @@
         "attempts": "{count, plural, one {# essai raté} other {# essais ratés}}"
       },
       "queue": {
-        "title": "Pages de la file",
+        "title": "Pages de la file des refusées (503)",
         "epoch": "Epoch {epoch} : {written, plural, one {{writtenText} page écrite} other {{writtenText} pages écrites}} par la file ; elle y tient {kept, plural, one {{keptText} page} other {{keptText} pages}} ({size}).",
         "epoch_superseded": "{superseded, plural, one {{supersededText} a été réécrite depuis par une passe et compte désormais avec les passes.} other {{supersededText} ont été réécrites depuis par une passe et comptent désormais avec les passes.}}",
         "epoch_empty": "Epoch {epoch} : la file n'y a encore écrit aucune page.",

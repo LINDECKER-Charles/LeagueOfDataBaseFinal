@@ -4,7 +4,10 @@
 > `features/admin/panels/management/prerender/`. Les passages « Aujourd'hui » (§ 0 et les
 > constats des lots) décrivent l'écran et le code d'avant la refonte. La vitesse réglable et la file
 > automatique (2026-10-22) l'ont complété : leur bloc est décrit dans la
-> [spécification du catalogue pré-rendu](pre-rendu-catalogue-cdn.md), lot 2.
+> [spécification du catalogue pré-rendu](pre-rendu-catalogue-cdn.md), lot 2. Le 2026-10-24, la
+> page est passée en six vues derrière des tuiles-onglets :
+> [amendement](#amendement-du-2026-10-24--la-page-en-six-vues), qui l'emporte sur les § 2.1 à
+> 2.3 et 5.1.
 
 Spécification de conception du 21 octobre 2026 pour la page `/admin/prerender` (« Précalcul du
 catalogue »). Elle complète le lot 2 de la [spécification du catalogue
@@ -41,6 +44,56 @@ Sommaire : [0. Constat et principes](#0-le-constat-et-ce-que-la-refonte-change) 
 [5. Couverture, stockage, historique](#5-couverture-stockage-et-coûts-historique) ·
 [6. Contrat d'API](#6-contrat-dapi) · [7. Architecture front](#7-architecture-front) ·
 [8. Lots parallèles](#8-découpage-en-lots-parallèles).
+
+## Amendement du 2026-10-24 : la page en six vues
+
+**Constat.** Sous l'en-tête s'empilaient le moniteur, les quatre tuiles, les blocs des deux
+files automatiques et de la vitesse (ajoutés les 22 et 23 octobre), puis les quatre onglets :
+ceux-ci commençaient à près de trois écrans du haut, la file des 503 vivait en deux endroits
+(bloc et onglet), et « Couverture » dépliait d'office toutes les saisons à manques, soit 403
+lignes sur une pile neuve et quelque 20 000 px de page.
+
+**La page.**
+
+| # | Zone | Composant |
+|---|---|---|
+| 1 | En-tête, inchangé : lancer, actualiser, fraîcheur, raison du blocage et « Suivre » | `PageHead` + `LaunchCta` |
+| 2 | Bandes d'état, inchangées | `PrerenderBands` |
+| 3 | Six tuiles-onglets, à la fois chiffres clés et navigation : Passe, Couverture, Files automatiques, Vitesse, Stockage et coûts, Historique | `StatusTabs` (`admin/widgets/status-tabs/`), `tilesOf` (`overview/tiles/`) |
+| 4 | La vue choisie, seule visible : toutes sont rendues, les autres masquées, et gardent leur état (filtres, sélection, page de liste) | `lodb-tab` |
+
+- **Passe**, vue par défaut : le moniteur, le récapitulatif ou la carte « aucune passe », comme
+  avant. Les actions de la passe (pause, reprise, annulation) et leur résultat montent en tête
+  du moniteur, au bout de la ligne de son origine : elles ne sont plus sous la matrice.
+- **Couverture** : l'ancien onglet. Les saisons à manques ne s'ouvrent d'office que tant
+  qu'elles tiennent en 60 lignes, la plus récente toujours (`openSeasonsOf`) ; « Tout déplier »
+  et « Tout replier ».
+- **Files automatiques** : les blocs des deux files côte à côte, puis la liste « Pages de la
+  file des refusées (503) », l'ancien onglet « File des 503 ».
+- **Vitesse** : le bloc « Vitesse du précalcul ».
+- **Stockage et coûts** : l'ancien onglet, qui reprend ce que seules les tuiles disaient :
+  l'epoch servie et sa variable, la part de la file dans le total des pages.
+- **Historique** : l'ancien onglet.
+
+**Les tuiles** (`tilesOf`, fonctions pures) : la part de la passe active, celle du titre du
+document, ou la fin d'une passe de moins de 24 h, ou « Aucune » et si les promotions en ouvrent
+une ; la couverture de l'epoch servie et ses patchs complets, ou l'epoch prête ; les pages en
+attente des deux files ; le mode de vitesse, puis le rythme en vigueur, la cible ou la plage ; le
+volume stocké, son coût par mois et ses pages ; le nombre de passes et la plus récente. Un
+point dit qu'une vue a quelque chose à dire : cyan animé (`live`) quand une passe tourne ou que
+la file des 503 rend ; or pour une passe en pause, le frein, une cible au-delà de ce que tiennent
+les moteurs, une file sans relevé ; rouge pour une passe en pause d'elle-même ou un hôte non
+configuré ; vert pour une epoch prête ; gris pour une file en veille. Le texte de la tuile le
+dit aussi : jamais la couleur seule (WCAG 1.4.1). Les tuiles sont des onglets ARIA nommés par
+leur vue et décrits par leur chiffre ; deux par ligne sur téléphone, sans leur ligne de
+détail, trois sur tablette, six au-delà de 1280 px.
+
+**La vue dans l'URL** : `?view=coverage|queues|speed|storage|history`, rien pour la passe. Elle
+remplace l'entrée de l'historique au lieu d'en ajouter une : un rechargement ou un lien partagé
+rouvre la vue, « Précédent » quitte la page. « Suivre » (en-tête, historique, détail d'une
+passe) ramène à la vue de la passe et y porte le focus. Les files et la vitesse sont lues par
+des magasins de la page (`DemandReportStore`, `RevisionReportStore`, `SpeedReportStore`) : une
+tuile et son bloc montrent la même réponse, lue une fois.
 
 ## 0. Le constat, et ce que la refonte change
 

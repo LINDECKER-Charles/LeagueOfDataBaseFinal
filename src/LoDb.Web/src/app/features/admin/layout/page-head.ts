@@ -11,8 +11,9 @@ import { injectAdminTitle } from './admin-title';
   selector: 'lodb-page-head',
   template: `
     <div class="flex flex-wrap items-center justify-between gap-2.5">
-      <!-- The legacy head kept its margin inside the toolbar: the actions centre on both. -->
-      <div class="mb-7 min-w-0">
+      <!-- The legacy head kept its margin inside the toolbar: the actions centre on both. The
+           text gives way before the actions wrap under it. -->
+      <div class="mb-7 min-w-0 flex-[1_1_24rem]">
         <p class="eyebrow">{{ eyebrow() }}</p>
         <h1 class="mt-1.5 font-beaufort text-[1.7rem] font-bold tracking-[0.06em] text-gold-bright">
           {{ title() }}

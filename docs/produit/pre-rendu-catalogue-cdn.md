@@ -835,12 +835,15 @@ sans passe ni clic.
   prod ; `LODB_PRERENDER_DEMAND_ENABLED=false` puis un déploiement le coupe). Sans stockage
   configuré, la file dort comme la passe ; sans `RefusedPagesUrl`, elle finit ce qu'elle tient
   et rien n'y entre.
-- **Pupitre.** Un bloc sous les chiffres clés de `/admin/prerender` : état (active, coupée, en
-  veille, sans relevé) et sa raison, pages en attente, écrites dans l'heure et le jour, en
-  échec et ignorées, la part de la file pendant une passe, et les dix pages en attente les
-  plus demandées (`GET /api/admin/prerender/demand`). Un onglet « File des 503 » (ajouté le
-  2026-10-23) : ce que la file a écrit dans l'epoch servie, ce qu'elle y tient (pages, octets)
-  et ce qu'une passe a réécrit depuis ; les 24 dernières heures en barres, pages entrées et
+- **Pupitre.** Un bloc de la vue « Files automatiques » de `/admin/prerender` (sous les
+  chiffres clés jusqu'au 2026-10-24,
+  [refonte en vues](pre-rendu-admin-ux.md#amendement-du-2026-10-24--la-page-en-six-vues)) :
+  état (active, coupée, en veille, sans relevé) et sa raison, pages en attente, écrites dans
+  l'heure et le jour, en échec et ignorées, la part de la file pendant une passe, et les dix
+  pages en attente les plus demandées (`GET /api/admin/prerender/demand`). Un onglet « File
+  des 503 » (ajouté le 2026-10-23 ; liste « Pages de la file des refusées (503) » de la même
+  vue depuis le 2026-10-24) : ce que la file a écrit dans l'epoch servie, ce qu'elle y tient
+  (pages, octets) et ce qu'une passe a réécrit depuis ; les 24 dernières heures en barres, pages entrées et
   écrites par heure UTC (tableau pour les lecteurs d'écran) ; ses pages par état (puces avec
   leurs comptes, `done` d'abord), 50 par page, lien vers la page publique, refus, dernier
   refus, écriture, classe (« figée », « révisable »), « réécrite par une passe », essais et
