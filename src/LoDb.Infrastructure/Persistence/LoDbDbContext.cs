@@ -15,6 +15,7 @@ using LoDb.Infrastructure.Persistence.Prerender.Demand;
 using LoDb.Infrastructure.Persistence.Prerender.Pace;
 using LoDb.Infrastructure.Persistence.Prerender.Revision;
 using LoDb.Infrastructure.Persistence.PublicApi;
+using LoDb.Infrastructure.Persistence.Robots;
 using LoDb.Infrastructure.Persistence.Scheduling;
 using LoDb.Infrastructure.Persistence.States;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
@@ -100,6 +101,12 @@ public sealed class LoDbDbContext(DbContextOptions<LoDbDbContext> options)
     public DbSet<CatalogStateVersion> CatalogStateVersions => Set<CatalogStateVersion>();
 
     public DbSet<CatalogEntityState> CatalogEntityStates => Set<CatalogEntityState>();
+
+    public DbSet<RobotAgent> RobotAgents => Set<RobotAgent>();
+
+    public DbSet<RobotHit> RobotHits => Set<RobotHit>();
+
+    public DbSet<RobotDay> RobotDays => Set<RobotDay>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
