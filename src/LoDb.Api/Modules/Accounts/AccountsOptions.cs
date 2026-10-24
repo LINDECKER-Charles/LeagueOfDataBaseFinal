@@ -24,5 +24,16 @@ internal sealed class AccountsOptions
     /// </summary>
     public bool? SecureCookies { get; set; }
 
+    /// <summary>
+    /// Whether a sign-in counts as made with a second factor, the password alone included,
+    /// so that the admin opens without an authenticator. Development only: the host refuses
+    /// to start with it anywhere else.
+    /// </summary>
+    /// <remarks>
+    /// Off in the local stack too, whose E2E enrol an authenticator: a local overlay turns it
+    /// on to work on the admin's pages.
+    /// </remarks>
+    public bool WaiveSecondFactor { get; set; }
+
     public GoogleAccountOptions Google { get; set; } = new();
 }
