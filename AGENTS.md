@@ -4,7 +4,9 @@ Encyclopédie League of Legends (champions, objets, runes, sorts d'invocateur) p
 version et chaque langue de **Data Dragon**, plus CommunityDragon pour les chromas. Un seul
 front sert le web, le desktop et Android. Ce fichier fixe l'architecture, les règles de code
 et les conventions du dépôt ; il complète les préférences globales de l'agent sans les
-redire. Claude Code le lit par `CLAUDE.md`, qui ne fait que l'importer : ne pas le supprimer.
+redire. Claude Code le lit par `CLAUDE.md`, qui l'importe puis porte la section `## graphify`
+(graphe de connaissances local `graphify-out/`, périmètre dans `.graphifyignore`), écrite par
+`graphify claude install` : ne pas le supprimer, ne pas éditer cette section à la main.
 
 La prod tourne sur cette stack depuis la **bascule du 2026-10-04**. L'ancienne version
 (Symfony + Go + Vue) est **archivée sous `legacy/`**, ses règles dans
