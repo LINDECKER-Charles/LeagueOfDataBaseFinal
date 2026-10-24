@@ -1,0 +1,45 @@
+<a class="admin-brand" routerLink="/admin">
+  <b>{{ 'admin.brand_name' | adminText }}</b>
+  <span>{{ 'admin.brand_tag' | adminText }}</span>
+</a>
+<nav class="admin-nav" [attr.aria-label]="'admin.nav.label' | adminText">
+  @for (section of nav; track section.key) {
+    <section class="admin-nav-section" [class.is-current]="isCurrentSection(section)">
+      @if (section.links.length === 1) {
+        <a
+          class="admin-nav-head admin-nav-head--link"
+          [class.is-active]="isCurrent(section.links[0])"
+          [routerLink]="section.links[0].path"
+          [attr.aria-current]="isCurrent(section.links[0]) ? 'page' : null"
+        >
+          <lodb-nav-icon [name]="section.key" />
+          {{ 'admin.nav.' + section.key | adminText }}
+        </a>
+      } @else {
+        <h2 class="admin-nav-head">
+          <lodb-nav-icon [name]="section.key" />
+          {{ 'admin.nav.' + section.key | adminText }}
+        </h2>
+        <ul class="admin-nav-links">
+          @for (link of section.links; track link.key) {
+            <li>
+              <a
+                class="admin-nav-link"
+                [class.is-active]="isCurrent(link)"
+                [routerLink]="link.path"
+                [attr.aria-current]="isCurrent(link) ? 'page' : null"
+                >{{ 'admin.nav.' + link.key | adminText }}</a
+              >
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  }
+</nav>
+<div class="admin-account">
+  <span class="admin-account-name" [title]="username()">{{ username() }}</span>
+  <button type="button" class="admin-logout" [disabled]="signingOut()" (click)="signOut.emit()">
+    {{ 'admin.nav.sign_out' | adminText }}
+  </button>
+</div>

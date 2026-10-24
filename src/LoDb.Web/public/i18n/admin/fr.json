@@ -3,7 +3,6 @@
     "label": "Navigation de l'administration",
     "analytics": "Analytics",
     "management": "Gestion",
-    "overview": "Vue d'ensemble",
     "traffic": "Trafic",
     "audience": "Audience",
     "storage": "Stockage",
@@ -16,7 +15,12 @@
     "backups": "Sauvegardes",
     "prerender": "Précalcul",
     "journal": "Journal",
-    "sign_out": "Déconnexion"
+    "sign_out": "Déconnexion",
+    "dashboard": "Dashboard",
+    "health": "Health",
+    "robots": "Robots",
+    "menu_open": "Ouvrir le menu",
+    "menu_close": "Fermer le menu"
   },
   "login": {
     "title": "Panneau d'administration",
@@ -1642,12 +1646,10 @@
     "all": "tout l'historique"
   },
   "eyebrows": {
-    "console": "Console",
     "analytics": "Analytics",
-    "infrastructure": "Infrastructure",
-    "moderation": "Modération",
     "management": "Gestion",
-    "surveillance": "Surveillance"
+    "dashboard": "Dashboard",
+    "health": "Health"
   },
   "rules": {
     "traffic": "Trafic",

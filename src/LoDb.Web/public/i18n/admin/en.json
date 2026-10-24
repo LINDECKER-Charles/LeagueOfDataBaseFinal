@@ -3,7 +3,6 @@
     "label": "Administration navigation",
     "analytics": "Analytics",
     "management": "Management",
-    "overview": "Overview",
     "traffic": "Traffic",
     "audience": "Audience",
     "storage": "Storage",
@@ -16,7 +15,12 @@
     "backups": "Backups",
     "prerender": "Pre-rendering",
     "journal": "Journal",
-    "sign_out": "Sign out"
+    "sign_out": "Sign out",
+    "dashboard": "Dashboard",
+    "health": "Health",
+    "robots": "Robots",
+    "menu_open": "Open the menu",
+    "menu_close": "Close the menu"
   },
   "login": {
     "title": "Administration panel",
@@ -1642,12 +1646,10 @@
     "all": "the whole history"
   },
   "eyebrows": {
-    "console": "Console",
     "analytics": "Analytics",
-    "infrastructure": "Infrastructure",
-    "moderation": "Moderation",
     "management": "Management",
-    "surveillance": "Surveillance"
+    "dashboard": "Dashboard",
+    "health": "Health"
   },
   "rules": {
     "traffic": "Traffic",

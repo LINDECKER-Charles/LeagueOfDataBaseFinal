@@ -1,0 +1,222 @@
+/*
+ * The sidebar: fixed along the start edge of the viewport, as wide as the frame's
+ * --admin-sidebar-width; on a narrow screen a drawer, out of sight until opened.
+ */
+:host {
+  position: fixed;
+  inset-block: 0;
+  inset-inline-start: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  inline-size: var(--admin-sidebar-width);
+  border-inline-end: 1px solid var(--admin-line);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--color-hex-deep) 7%, transparent),
+      transparent 40%
+    ),
+    color-mix(in srgb, var(--color-hextech-black) 96%, transparent);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.admin-brand {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  padding: 1.35rem 1.35rem 1.1rem;
+  border-block-end: 1px solid var(--admin-line-soft);
+  font-family: var(--font-beaufort);
+  text-transform: uppercase;
+}
+
+.admin-brand b {
+  color: var(--color-gold-bright);
+  font-size: 0.95rem;
+  letter-spacing: 0.16em;
+}
+
+.admin-brand span {
+  color: var(--color-hex);
+  font-size: 0.62rem;
+  letter-spacing: 0.34em;
+}
+
+.admin-nav {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding: 1.2rem 0.75rem;
+}
+
+.admin-nav-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid transparent;
+  font-family: var(--font-beaufort);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--color-text-dim);
+}
+
+.admin-nav-head lodb-nav-icon {
+  color: var(--color-gold-deep);
+}
+
+.is-current .admin-nav-head {
+  color: var(--color-gold);
+}
+
+.is-current .admin-nav-head lodb-nav-icon {
+  color: var(--color-hex);
+}
+
+/* The dashboard: a section of one link, the link itself. */
+.admin-nav-head--link {
+  padding-block: 0.6rem;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+.admin-nav-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  margin: 0.25rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-nav-link {
+  position: relative;
+  display: block;
+  padding-block: 0.45rem;
+  padding-inline: 2.35rem 0.6rem;
+  border: 1px solid transparent;
+  font-size: 0.86rem;
+  color: var(--color-text-muted);
+}
+
+a,
+.admin-logout {
+  transition:
+    color 0.25s var(--ease-hextech),
+    border-color 0.25s var(--ease-hextech),
+    background-color 0.25s var(--ease-hextech);
+}
+
+:is(.admin-nav-link, .admin-nav-head--link):hover {
+  color: var(--color-gold-bright);
+  background: color-mix(in srgb, var(--color-gold) 4%, transparent);
+}
+
+.is-active {
+  color: var(--color-gold-bright);
+  border-color: var(--admin-line-soft);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-gold) 11%, transparent),
+    color-mix(in srgb, var(--color-gold) 3%, transparent)
+  );
+}
+
+/* The current page: a cyan bar along its start edge, and a diamond where its label starts. */
+.is-active::before {
+  content: '';
+  position: absolute;
+  inset-block: 0.35rem;
+  inset-inline-start: -1px;
+  inline-size: 2px;
+  background: linear-gradient(180deg, transparent, var(--color-hex), transparent);
+}
+
+.admin-nav-link.is-active::after {
+  content: '';
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 1.15rem;
+  inline-size: 5px;
+  block-size: 5px;
+  translate: 0 -50%;
+  rotate: 45deg;
+  background: var(--color-hex);
+}
+
+.admin-account {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.9rem 1.1rem;
+  border-block-start: 1px solid var(--admin-line-soft);
+}
+
+.admin-account-name {
+  flex: 1;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--color-text-dim);
+}
+
+.admin-logout {
+  padding: 0.42rem 0.75rem;
+  border: 1px solid var(--admin-line);
+  background: none;
+  font-family: var(--font-beaufort);
+  font-size: 0.64rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.admin-logout:hover {
+  color: var(--color-bad);
+  border-color: color-mix(in srgb, var(--color-bad) 50%, transparent);
+}
+
+:is(a, button):focus-visible {
+  outline: 1px solid var(--color-hex);
+  outline-offset: 2px;
+}
+
+@media (width <= 1024px) {
+  :host {
+    inline-size: min(var(--admin-sidebar-width), 86vw);
+    translate: -100% 0;
+    visibility: hidden;
+    transition:
+      translate 0.3s var(--ease-hextech),
+      visibility 0.3s;
+  }
+
+  :host(:dir(rtl)) {
+    translate: 100% 0;
+  }
+
+  :host(.is-drawer-open) {
+    translate: 0 0;
+    visibility: visible;
+    box-shadow: 0 0 2.5rem color-mix(in srgb, var(--color-shadow) 60%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host,
+  a,
+  .admin-logout {
+    transition: none;
+  }
+}

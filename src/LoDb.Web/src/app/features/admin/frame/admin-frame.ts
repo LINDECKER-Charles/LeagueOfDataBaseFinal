@@ -4,38 +4,72 @@ import {
   Component,
   ViewEncapsulation,
   computed,
+  effect,
   inject,
   signal,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
 import { AuthSession } from '../../../core/auth/session/auth-session';
 import { adminAccessOf } from '../access/admin-access';
 import { ADMIN_I18N } from '../shared/admin-i18n';
 import { ADMIN_PATHS } from '../shared/admin-paths';
 import { AdminTextPipe } from '../shared/admin-text-pipe';
-import { ADMIN_NAV } from './admin-nav';
-
-type NavLink = (typeof ADMIN_NAV)[number]['links'][number];
+import { navPlaceOf } from './admin-nav';
+import { AdminSidebar } from './admin-sidebar';
+import { AdminTopbar } from './admin-topbar';
 
 // What follows the path of a URL: the query and the fragment.
 const AFTER_PATH = /[?#].*$/;
+const ESCAPE = 'Escape';
 
 /**
- * The frame of every admin page, `/admin/...`, as the legacy back office drew it: its own top
- * bar (the brand, then the navigation and the sign-out once an administrator is in), and one
- * column under it. The admin speaks French: the document says so, and the writing direction
- * follows (PageDirection reads `<html lang>` after each navigation). Leaving the admin for a
- * page of the site, the locale resolver writes the language of its URL again.
+ * The frame of every admin page, `/admin/...`: once an administrator is in, the sidebar of
+ * the four sections (Dashboard, Analytics, Gestion, Health) beside the page and the bar over
+ * it; before, the bar shows the brand alone over one column. On a narrow screen the sidebar
+ * is a drawer the bar opens, closed again by a navigation, its backdrop or Escape. The admin
+ * speaks French: the document says so, and the writing direction follows (PageDirection reads
+ * `<html lang>` after each navigation). Leaving the admin for a page of the site, the locale
+ * resolver writes the language of its URL again.
  */
 @Component({
   selector: 'lodb-admin-frame',
-  imports: [RouterLink, RouterOutlet, AdminTextPipe],
-  templateUrl: './admin-frame.html',
+  imports: [AdminSidebar, AdminTopbar, RouterOutlet, AdminTextPipe],
+  template: `
+    @if (open()) {
+      <lodb-admin-sidebar
+        [path]="path()"
+        [drawerOpen]="drawerOpen()"
+        [username]="username()"
+        [signingOut]="signingOut()"
+        (signOut)="signOut()"
+      />
+      @if (drawerOpen()) {
+        <button
+          type="button"
+          class="admin-backdrop"
+          [attr.aria-label]="'admin.nav.menu_close' | adminText"
+          (click)="toggleDrawer()"
+        ></button>
+      }
+    }
+    <div class="admin-main">
+      <lodb-admin-topbar
+        [open]="open()"
+        [place]="place()"
+        [drawerOpen]="drawerOpen()"
+        (menuToggle)="toggleDrawer()"
+      />
+      <div class="admin-column">
+        <router-outlet />
+      </div>
+    </div>
+  `,
   styleUrl: './admin-frame.css',
   // Its sheet sizes the buttons of the pages it frames: scoped under its host by hand.
   encapsulation: ViewEncapsulation.None,
+  host: { '[class.is-open]': 'open()', '(document:keydown)': 'onKeydown($event)' },
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminFrame {
@@ -48,20 +82,33 @@ export class AdminFrame {
     ),
     { initialValue: this.router.url },
   );
-  private readonly path = computed(() => this.url().replace(AFTER_PATH, ''));
 
-  protected readonly nav = ADMIN_NAV;
+  protected readonly path = computed(() => this.url().replace(AFTER_PATH, ''));
   /** The navigation shows to an administrator who passed the second factor only. */
   protected readonly open = computed(() => adminAccessOf(this.session.user()) === 'open');
+  protected readonly place = computed(() => navPlaceOf(this.path()));
+  protected readonly username = computed(() => this.session.user()?.username ?? '');
+  protected readonly drawerOpen = signal(false);
   protected readonly signingOut = signal(false);
 
   constructor() {
     // Before the navigation ends, so that the direction read then is the French one.
     inject(DOCUMENT).documentElement.lang = ADMIN_I18N.lang;
+    // A page opened from the drawer closes it.
+    effect(() => {
+      this.path();
+      this.drawerOpen.set(false);
+    });
   }
 
-  protected isCurrent(link: NavLink): boolean {
-    return link.current.test(this.path());
+  protected toggleDrawer(): void {
+    this.drawerOpen.update((open) => !open);
+  }
+
+  protected onKeydown(event: KeyboardEvent): void {
+    if (event.key === ESCAPE && this.drawerOpen()) {
+      this.drawerOpen.set(false);
+    }
   }
 
   protected async signOut(): Promise<void> {
