@@ -61,9 +61,9 @@ contexte technique sous `## Technique`.
 | Desktop / Android | Photino + Velopack / Capacitor 8 + live update signé |
 | Frontal | nginx (cache des pages, `/cdn/blobs/`, pages des anciens patchs lues dans un stockage objet Scaleway) derrière l'edge Caddy du VPS (`infra-vps`) ; CDN Cloudflare prévu, pas construit |
 | Précalcul | pages des anciens patchs rendues une fois par un SSR dédié (`web-ssr-prerender`) et rangées dans le stockage objet (ADR 0011) |
-| Observabilité, audience | OpenTelemetry, logs JSON d'une ligne, `/metrics` (port 9464) ; audience Umami (ADR 0012) |
+| Observabilité, audience | OpenTelemetry, logs JSON d'une ligne, `/metrics` (port 9464) ; audience Umami (ADR 0012) ; journal des robots (ADR 0013) |
 
-Décisions : [`docs/reecriture/README.md`](docs/reecriture/README.md) et ses ADR 0001 à 0012.
+Décisions : [`docs/reecriture/README.md`](docs/reecriture/README.md) et ses ADR 0001 à 0013.
 
 ```
 compose.yaml  compose.override.yaml (dev)  compose.deploy.yaml (hôtes)
@@ -136,7 +136,7 @@ Détail : [`configuration.md`](docs/guides/configuration.md).
 - **Identité** (ADR 0009) : hash argon2id PHC, lisibles par `password_verify` de PHP.
   Jamais `AllowAnonymous` : les politiques portent le garde XSRF et `Origin`. Seules
   exceptions, voulues : les deux captures de la mesure maison (balise et miroir, pièges,
-  ADR 0012).
+  ADR 0012) et le journal des robots que nginx poste (ADR 0013).
 - **Observabilité** (ADR 0010) : logs JSON d'**une ligne**, `trace_id` pendant une trace,
   `EventName` en `domaine.sujet.resultat`, **aucune clé `error`**, aucune donnée personnelle
   ([`logging.md`](docs/guides/logging.md)). `/metrics`

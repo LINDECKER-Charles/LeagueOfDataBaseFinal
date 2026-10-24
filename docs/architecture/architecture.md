@@ -142,6 +142,13 @@ Umami, en prod seulement : le front poste `/u/api/send` depuis l'hôte canonique
 `/u/script.js` ; `AudienceTrendsWorker` relève chaque heure les vues par page pour `/v1/trends`
 ([ADR 0012](../reecriture/adr/0012-audience-umami.md)). Détail : [`analytics.md`](analytics.md).
 
+**Journal des robots** ([ADR 0013](../reecriture/adr/0013-journal-des-robots.md)) : nginx range
+chaque requête de robot, et chaque page des autres, dans une zone njs une fois répondue, et la
+poste toutes les 2 s à `/internal/robots/journal` ; l'API nomme le robot (catalogue d'UA),
+repère à la cadence un navigateur qui crawle, vérifie le réseau par DNS inverse confirmé et
+écrit `robot_hit` (30 j) et `robot_daily` (`RobotJournalWorker`, `RobotRetentionJob`). Lu par
+`/admin/robots`.
+
 **API publique `/v1` et facturation** ([ADR 0002](../reecriture/adr/0002-hote-serveur-unique.md),
 détail : [`api-publique.md`](api-publique.md)).
 Clé `lodb_` + 40 hex en `Authorization: Bearer` ou `X-Api-Key`, hash seul stocké ; limites par
