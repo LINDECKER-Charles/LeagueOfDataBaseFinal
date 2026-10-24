@@ -862,27 +862,50 @@
         "gaps_cta": "Complete them",
         "whole": "The served epoch covers every older patch."
       },
-      "kpis": {
-        "served": "Served epoch",
-        "served_sub": "LODB_ARCHIVE_SERVE_EPOCH, changed by a redeploy",
-        "served_ready": "epoch {epoch} is ready",
-        "coverage": "Served coverage",
-        "coverage_sub": "of the units · {complete} / {total, plural, one {# patch} other {# patches}} complete",
-        "coverage_none": "no older patch",
-        "stored": "Stored",
-        "stored_sub": "{pages, plural, one {# page} other {# pages}}, retired epochs left out",
-        "cost": "Estimated cost / month",
-        "cost_sub": "egress left out; detail under “Storage and costs”",
-        "cost_sub_retired": "+ {retired} for the retired epochs, until deleted; egress left out",
-        "stored_sub_queue": "{pages, plural, one {# page} other {# pages}}, {queue} of them by the queue, retired epochs left out"
-      },
-      "tabs": {
+      "views": {
         "label": "Pre-rendering views",
-        "coverage": "Coverage",
-        "costs": "Storage and costs",
-        "costs_short": "Costs",
-        "history": "History",
-        "demand": "503 queue"
+        "pass": {
+          "label": "Pass",
+          "sub_running": "#{id} · epoch {epoch} · running",
+          "sub_paused": "#{id} · epoch {epoch} · paused",
+          "sub_paused_itself": "#{id} · paused by itself",
+          "value_completed": "Completed",
+          "value_cancelled": "Cancelled",
+          "sub_ended": "#{id} · {date} UTC",
+          "value_idle": "None",
+          "sub_idle": "{promotions, select, on {promoted patches open one} other {launched by hand}}",
+          "sub_dormant": "pre-rendering not configured"
+        },
+        "coverage": {
+          "label": "Coverage",
+          "sub": "epoch {epoch} served · {complete} / {total, plural, one {# patch} other {# patches}} complete",
+          "sub_ready": "epoch {epoch} served · epoch {ready} is ready",
+          "sub_none": "epoch {epoch} served"
+        },
+        "queues": {
+          "label": "Automatic queues",
+          "sub": "pending: {demand} refused (503) · {revision} of closed states"
+        },
+        "speed": {
+          "label": "Speed",
+          "value_adaptive": "Adaptive",
+          "value_manual": "Manual",
+          "value_fixed": "Fixed",
+          "sub_now": "{pace} pages/min right now",
+          "sub_manual": "target: {pace} pages/min",
+          "sub_adaptive": "between {min} and {max} pages/min",
+          "sub_fixed": "regulator switched off by the environment"
+        },
+        "storage": {
+          "label": "Storage and costs",
+          "sub": "{cost} / month · {pages, plural, one {# page} other {# pages}}"
+        },
+        "history": {
+          "label": "History",
+          "value": "{count, plural, =0 {None} one {# pass} other {# passes}}",
+          "sub": "latest: #{id} ({state}), {date}",
+          "sub_none": "no pass launched"
+        }
       },
       "doc_title": {
         "idle": "Catalogue pre-rendering",
@@ -1307,7 +1330,9 @@
       "retry": "Try again",
       "empty": "No older patch.",
       "season_counts": "{versions, plural, one {# patch} other {# patches}} · {complete} complete{missing, plural, =0 {} other { · # to complete}}",
-      "indexed": "{openers} · {frozen} · {revisable}"
+      "indexed": "{openers} · {frozen} · {revisable}",
+      "fold_all": "Fold all",
+      "unfold_all": "Unfold all"
     },
     "costs": {
       "title": "What the store holds",
@@ -1322,6 +1347,7 @@
       "egress": "Egress excluded: 75 GB free a month, then €0.01 per GB, followed in Grafana.",
       "counters": "These figures tell what the passes and the 503 queue wrote, not what an expiry rule has deleted since: on staging, pages expire after 14 days, a completed unit is not rewritten and its pages fall back to the SSR silently.",
       "retired": "A retired epoch keeps costing until the store's lifecycle has deleted it, 500,000 objects a day at most: 9 days at least for 4 million pages.",
+      "served_note": "The served epoch is the one LODB_ARCHIVE_SERVE_EPOCH names: only a redeploy changes it.",
       "columns": {
         "epoch": "Epoch",
         "state": "State",
@@ -1426,7 +1452,7 @@
         "attempts": "{count, plural, one {# failed try} other {# failed tries}}"
       },
       "queue": {
-        "title": "Pages of the queue",
+        "title": "Pages of the refused pages queue (503)",
         "epoch": "Epoch {epoch}: {written, plural, one {{writtenText} page written} other {{writtenText} pages written}} by the queue; it holds {kept, plural, one {{keptText} page} other {{keptText} pages}} there ({size}).",
         "epoch_superseded": "{superseded, plural, one {{supersededText} was written again since by a pass and now counts with the passes.} other {{supersededText} were written again since by a pass and now count with the passes.}}",
         "epoch_empty": "Epoch {epoch}: the queue has written no page there yet.",

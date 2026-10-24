@@ -24,14 +24,35 @@
     </div>
   }
 
-  <p class="monitor-head" data-pass-head>
-    <span [lodbBadge]="tone()" data-pass-state>{{
-      'admin.prerender.states.' + pass.state | adminText
-    }}</span>
-    @if (pausedSince(); as since) {
-      <span class="text-gold" data-paused-since>{{ since }}</span>
-    }
-    <span data-pass-origin>{{ origin() }} · {{ scope() }}</span>
+  <!-- The moves of the pass head it, within reach whatever the length of its matrix. -->
+  <div class="monitor-top">
+    <p class="monitor-head" data-pass-head>
+      <span [lodbBadge]="tone()" data-pass-state>{{
+        'admin.prerender.states.' + pass.state | adminText
+      }}</span>
+      @if (pausedSince(); as since) {
+        <span class="text-gold" data-paused-since>{{ since }}</span>
+      }
+      <span data-pass-origin>{{ origin() }} · {{ scope() }}</span>
+    </p>
+    <lodb-pass-actions-bar
+      [pass]="pass"
+      [busy]="actions.busy()"
+      (paused)="pause()"
+      (resumed)="resume()"
+      (cancelled)="cancel()"
+    />
+  </div>
+  @let outcome = actions.outcome();
+  <!-- Always there, its text alone changing: a status inserted with its text is not read. -->
+  <p
+    class="monitor-outcome"
+    role="status"
+    [class.monitor-outcome--said]="!!outcome?.text"
+    [class.monitor-outcome--bad]="outcome?.tone === 'alert'"
+    data-action-outcome
+  >
+    {{ outcome?.text }}
   </p>
 
   @if (stall(); as stall) {
@@ -138,25 +159,4 @@
       </div>
     }
   }
-
-  <div class="monitor-rule"></div>
-  <div class="monitor-actions">
-    @let outcome = actions.outcome();
-    <!-- Always there, its text alone changing: a status inserted with its text is not read. -->
-    <p
-      class="monitor-outcome"
-      role="status"
-      [class.monitor-outcome--bad]="outcome?.tone === 'alert'"
-      data-action-outcome
-    >
-      {{ outcome?.text }}
-    </p>
-    <lodb-pass-actions-bar
-      [pass]="pass"
-      [busy]="actions.busy()"
-      (paused)="pause()"
-      (resumed)="resume()"
-      (cancelled)="cancel()"
-    />
-  </div>
 </lodb-admin-card>

@@ -52,16 +52,20 @@ async function settled(visit: AdminVisit): Promise<void> {
   await settle(visit);
 }
 
-describe('PrerenderPanel, its tabs and presets', () => {
-  it('shows four tabs, the coverage first', async () => {
+describe('PrerenderPanel, its views and presets', () => {
+  it('shows six views, the pass first, each named by its tile', async () => {
     const { visit } = await openWith(IDLE);
     const tabs = [...visit.page.querySelectorAll('[role="tab"]')];
+    const name = (tab: Element) =>
+      visit.page.querySelector(`#${tab.getAttribute('aria-labelledby')}`)?.textContent?.trim();
 
-    expect(tabs.map((tab) => tab.textContent?.trim())).toEqual([
-      'admin.prerender.overview.tabs.coverage',
-      'admin.prerender.overview.tabs.costs',
-      'admin.prerender.overview.tabs.demand',
-      'admin.prerender.overview.tabs.history',
+    expect(tabs.map(name)).toEqual([
+      'admin.prerender.overview.views.pass.label',
+      'admin.prerender.overview.views.coverage.label',
+      'admin.prerender.overview.views.queues.label',
+      'admin.prerender.overview.views.speed.label',
+      'admin.prerender.overview.views.storage.label',
+      'admin.prerender.overview.views.history.label',
     ]);
     expect(tabs[0].getAttribute('aria-selected')).toBe('true');
   });

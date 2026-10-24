@@ -121,6 +121,16 @@
         {{ 'admin.prerender.overview.cta.locked_' + held.kind | adminText: held }}
       </p>
     }
+    @if (view() === 'list' && seasons().length > 1) {
+      <div class="flex gap-1 sm:ms-auto" data-folds>
+        <button lodbButton="ghost" lodbButtonSize="small" type="button" (click)="unfoldAll()">
+          {{ 'admin.prerender.coverage.unfold_all' | adminText }}
+        </button>
+        <button lodbButton="ghost" lodbButtonSize="small" type="button" (click)="foldAll()">
+          {{ 'admin.prerender.coverage.fold_all' | adminText }}
+        </button>
+      </div>
+    }
   </div>
 
   @if (view() === 'matrix') {

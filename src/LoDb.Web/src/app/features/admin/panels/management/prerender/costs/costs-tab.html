@@ -127,7 +127,16 @@
           <td colspan="2" class="text-text-dim">
             {{ 'admin.prerender.costs.total_sub' | adminText }}
           </td>
-          <td class="num">{{ held.pages | figure }}</td>
+          <td class="num">
+            {{ held.pages | figure }}
+            @if (queuePages() > 0) {
+              <span class="block text-[0.75rem] text-text-dim" data-total-queue>
+                {{
+                  'admin.prerender.costs.queue_sub' | adminText: { count: (queuePages() | figure) }
+                }}
+              </span>
+            }
+          </td>
           <td class="num whitespace-nowrap">{{ held.bytes | decimalBytes }}</td>
           <td class="num whitespace-nowrap">{{ cost(held.monthlyCost) }}</td>
           <td></td>
@@ -140,7 +149,10 @@
       {{ 'admin.prerender.overview.cta.locked_' + locked.kind | adminText: locked }}
     </p>
   }
-  <p class="mt-4 text-[0.8rem] text-text-dim" data-prices>
+  <p class="mt-4 text-[0.8rem] text-text-dim" data-served-note>
+    {{ 'admin.prerender.costs.served_note' | adminText }}
+  </p>
+  <p class="mt-1.5 text-[0.8rem] text-text-dim" data-prices>
     {{ 'admin.prerender.costs.prices' | adminText: prices() }}
   </p>
   @if (held.excludesEgress) {
