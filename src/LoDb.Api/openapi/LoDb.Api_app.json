@@ -4165,6 +4165,330 @@
         }
       }
     },
+    "/api/admin/analytics/breakdown": {
+      "get": {
+        "tags": [
+          "AdminAnalytics"
+        ],
+        "summary": "Every key of a breakdown of the audience over a period, by page.",
+        "operationId": "getAnalyticsBreakdown",
+        "parameters": [
+          {
+            "name": "range",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dimension",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsBreakdown"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/analytics/robots": {
+      "get": {
+        "tags": [
+          "AdminAnalytics"
+        ],
+        "summary": "The robots of the site over a period ending today (UTC).",
+        "operationId": "getRobotsReport",
+        "parameters": [
+          {
+            "name": "range",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RobotReport"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/analytics/robots/{key}": {
+      "get": {
+        "tags": [
+          "AdminAnalytics"
+        ],
+        "summary": "One robot of the site over a period ending today (UTC).",
+        "operationId": "getRobotDetail",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "range",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RobotDetail"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/analytics/robot-hits": {
+      "get": {
+        "tags": [
+          "AdminAnalytics"
+        ],
+        "summary": "A page of the hits of robots, newest first.",
+        "operationId": "getRobotHits",
+        "parameters": [
+          {
+            "name": "robot",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "verdict",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "section",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RobotHitPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/audit": {
       "get": {
         "tags": [
@@ -7474,6 +7798,52 @@
         },
         "description": "The counters above the moderation list, over every account."
       },
+      "AnalyticsBreakdown": {
+        "required": [
+          "range",
+          "dimension",
+          "total",
+          "matched",
+          "rows",
+          "page",
+          "hasMore"
+        ],
+        "type": "object",
+        "properties": {
+          "range": {
+            "type": "string"
+          },
+          "dimension": {
+            "type": "string"
+          },
+          "total": {
+            "type": "integer",
+            "description": "The views of the whole dimension, every key counted.",
+            "format": "int64"
+          },
+          "matched": {
+            "type": "integer",
+            "description": "The keys the search kept.",
+            "format": "int32"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsRank"
+            },
+            "description": "The keys of the page; each share is of long AnalyticsBreakdown.Total."
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hasMore": {
+            "type": "boolean",
+            "description": "Whether a next page follows."
+          }
+        },
+        "description": "A page of the keys of a breakdown over a period, the most viewed first."
+      },
       "AnalyticsCountry": {
         "required": [
           "name",
@@ -7606,6 +7976,17 @@
           },
           "totals": {
             "$ref": "#/components/schemas/AnalyticsTotals"
+          },
+          "previous": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "The totals of the period of the same length just before, its trend's reference; null\nfor all the history.",
+                "$ref": "#/components/schemas/AnalyticsTotals"
+              }
+            ]
           },
           "series": {
             "type": "array",
@@ -14730,6 +15111,613 @@
         ],
         "type": "string",
         "description": "The four Data Dragon resources the site catalogues, each with its own pages and paths."
+      },
+      "RobotAgentView": {
+        "required": [
+          "agent",
+          "hits",
+          "firstSeen",
+          "lastSeen"
+        ],
+        "type": "object",
+        "properties": {
+          "agent": {
+            "type": "string",
+            "description": "As sent; empty for a request without one."
+          },
+          "hits": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "firstSeen": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastSeen": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "description": "A user agent a robot sent, and its hits over the period."
+      },
+      "RobotCategoryShare": {
+        "required": [
+          "category",
+          "hits",
+          "robots",
+          "pct"
+        ],
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string"
+          },
+          "hits": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "robots": {
+            "type": "integer",
+            "description": "Distinct robots of the category.",
+            "format": "int32"
+          },
+          "pct": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "description": "The hits of one category of robots over a period."
+      },
+      "RobotDetail": {
+        "required": [
+          "range",
+          "from",
+          "to",
+          "hitsSince",
+          "robot",
+          "verifyDomains",
+          "dates",
+          "statusSeries",
+          "statuses",
+          "sections",
+          "verdicts",
+          "networks",
+          "agents",
+          "paths",
+          "recent"
+        ],
+        "type": "object",
+        "properties": {
+          "range": {
+            "type": "string"
+          },
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "to": {
+            "type": "string",
+            "format": "date"
+          },
+          "hitsSince": {
+            "type": "string",
+            "description": "The first day whose hits are still kept one by one: the paths start there.",
+            "format": "date"
+          },
+          "robot": {
+            "$ref": "#/components/schemas/RobotSummary"
+          },
+          "verifyDomains": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The domains its genuine addresses reverse to; none when it cannot be checked."
+          },
+          "dates": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          "statusSeries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RobotSeries"
+            },
+            "description": "`2xx` to `5xx`, a value for each of IReadOnlyList&lt;DateOnly&gt; RobotDetail.Dates."
+          },
+          "statuses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsRank"
+            }
+          },
+          "sections": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsRank"
+            }
+          },
+          "verdicts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsRank"
+            }
+          },
+          "networks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RobotNetwork"
+            }
+          },
+          "agents": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RobotAgentView"
+            },
+            "description": "The user agents it sent, the most frequent first."
+          },
+          "paths": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RobotPathView"
+            },
+            "description": "The paths it asked the most since DateOnly RobotDetail.HitsSince, 50 at most."
+          },
+          "recent": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RobotHitView"
+            },
+            "description": "Its latest hits, newest first."
+          }
+        },
+        "description": "One robot over a period: its figures, its days by class of status, what it asked, from\nwhich networks and with which user agents, and its latest hits."
+      },
+      "RobotFigures": {
+        "required": [
+          "hits",
+          "verified",
+          "mismatch",
+          "unresolved",
+          "success",
+          "redirects",
+          "clientErrors",
+          "serverErrors",
+          "refused",
+          "bytes",
+          "meanMs",
+          "slowHits"
+        ],
+        "type": "object",
+        "properties": {
+          "hits": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "verified": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "mismatch": {
+            "type": "integer",
+            "description": "Hits whose user agent most likely borrows a robot's name.",
+            "format": "int64"
+          },
+          "unresolved": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "success": {
+            "type": "integer",
+            "description": "Answered 2xx.",
+            "format": "int64"
+          },
+          "redirects": {
+            "type": "integer",
+            "description": "Answered 3xx.",
+            "format": "int64"
+          },
+          "clientErrors": {
+            "type": "integer",
+            "description": "Answered 4xx.",
+            "format": "int64"
+          },
+          "serverErrors": {
+            "type": "integer",
+            "description": "Answered 5xx.",
+            "format": "int64"
+          },
+          "refused": {
+            "type": "integer",
+            "description": "Answered 403, 429 or 503: a guard, a rate limit or the shedding of renders.",
+            "format": "int64"
+          },
+          "bytes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "meanMs": {
+            "type": "number",
+            "description": "The mean time nginx took to answer, in milliseconds.",
+            "format": "double"
+          },
+          "slowHits": {
+            "type": "integer",
+            "description": "Hits answered in a second or more.",
+            "format": "int64"
+          }
+        },
+        "description": "Hits, and how they were verified and answered: of one robot, or of them all."
+      },
+      "RobotHitPage": {
+        "required": [
+          "items",
+          "page",
+          "hasMore"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RobotHitView"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hasMore": {
+            "type": "boolean",
+            "description": "Whether an older page follows."
+          }
+        },
+        "description": "A page of the journal, newest first."
+      },
+      "RobotHitView": {
+        "required": [
+          "at",
+          "robotKey",
+          "robotName",
+          "operator",
+          "category",
+          "verdict",
+          "method",
+          "target",
+          "section",
+          "status",
+          "durationMs",
+          "bytes"
+        ],
+        "type": "object",
+        "properties": {
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "robotKey": {
+            "type": "string"
+          },
+          "robotName": {
+            "type": "string"
+          },
+          "operator": {
+            "type": "string",
+            "description": "Who runs the robot; for an undeclared one, its network."
+          },
+          "category": {
+            "type": "string"
+          },
+          "verdict": {
+            "type": "string"
+          },
+          "network": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "method": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          },
+          "section": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer",
+            "format": "int16"
+          },
+          "durationMs": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "bytes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "cache": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "nginx's cache status, such as `HIT`."
+          }
+        },
+        "description": "One hit of the journal, its robot named."
+      },
+      "RobotNetwork": {
+        "required": [
+          "domain",
+          "hits",
+          "robots",
+          "pct"
+        ],
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "description": "Such as `googlebot.com`, `amazonaws.com`."
+          },
+          "hits": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "robots": {
+            "type": "integer",
+            "description": "Distinct robots seen from it.",
+            "format": "int32"
+          },
+          "pct": {
+            "type": "number",
+            "format": "double"
+          }
+        },
+        "description": "A network robots came from: the registrable domain their addresses reverse to and back."
+      },
+      "RobotPathView": {
+        "required": [
+          "target",
+          "hits",
+          "lastStatus",
+          "lastAt"
+        ],
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "description": "The path and query, as requested."
+          },
+          "hits": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "lastStatus": {
+            "type": "integer",
+            "format": "int16"
+          },
+          "lastAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "description": "A path a robot asked for, how often, and how it was last answered."
+      },
+      "RobotReport": {
+        "required": [
+          "range",
+          "from",
+          "to",
+          "days",
+          "hitsSince",
+          "totals",
+          "dates",
+          "categorySeries",
+          "categories",
+          "robots",
+          "statuses",
+          "sections",
+          "verdicts",
+          "networks"
+        ],
+        "type": "object",
+        "properties": {
+          "range": {
+            "type": "string",
+            "description": "`7d`, `30d`, `90d` or `all`."
+          },
+          "from": {
+            "type": "string",
+            "format": "date"
+          },
+          "to": {
+            "type": "string",
+            "format": "date"
+          },
+          "days": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "hitsSince": {
+            "type": "string",
+            "description": "The first day whose hits are still kept one by one.",
+            "format": "date"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/RobotTotals"
+          },
+          "dates": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Every day of the period, in order."
+          },
+          "categorySeries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RobotSeries"
+            },
+            "description": "The hits of each category, a value for each of IReadOnlyList&lt;DateOnly&gt; RobotReport.Dates."
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RobotCategoryShare"
+            }
+          },
+          "robots": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RobotSummary"
+            },
+            "description": "Every robot of the period, the most active first."
+          },
+          "statuses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsRank"
+            },
+            "description": "Hits by status (`200`, `503`…)."
+          },
+          "sections": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsRank"
+            },
+            "description": "Hits by section (`detail`, `archive`, `sitemap`…)."
+          },
+          "verdicts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsRank"
+            },
+            "description": "Hits by verdict (`verified`, `mismatch`…)."
+          },
+          "networks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RobotNetwork"
+            },
+            "description": "The networks robots came from, the most active first, 25 at most."
+          }
+        },
+        "description": "The robots of a period ending today (UTC): who they are, what they asked and how they were\nanswered, day by day and robot by robot."
+      },
+      "RobotSeries": {
+        "required": [
+          "name",
+          "values"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "A category, or a class of statuses (`2xx`…)."
+          },
+          "values": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        },
+        "description": "A line of a chart: its name and a value for each date of the report."
+      },
+      "RobotSummary": {
+        "required": [
+          "key",
+          "name",
+          "operator",
+          "category",
+          "isCrawler",
+          "pct",
+          "figures",
+          "firstDay",
+          "lastDay",
+          "topSection",
+          "networks"
+        ],
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Its key, safe in a URL: `googlebot`, `undeclared:example.net`."
+          },
+          "name": {
+            "type": "string"
+          },
+          "operator": {
+            "type": "string",
+            "description": "Who runs it; for an undeclared robot, the network it came from."
+          },
+          "category": {
+            "type": "string"
+          },
+          "isCrawler": {
+            "type": "boolean",
+            "description": "Whether it explores the site on its own, rather than at a person's request."
+          },
+          "pct": {
+            "type": "number",
+            "description": "Its share of the robots' hits of the period, in percent.",
+            "format": "double"
+          },
+          "figures": {
+            "$ref": "#/components/schemas/RobotFigures"
+          },
+          "firstDay": {
+            "type": "string",
+            "format": "date"
+          },
+          "lastDay": {
+            "type": "string",
+            "format": "date"
+          },
+          "topSection": {
+            "type": "string",
+            "description": "What it asked for the most: `detail`, `archive`…"
+          },
+          "networks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The networks its hits came from, most frequent first, three at most."
+          }
+        },
+        "description": "One robot over a period: who it is, how much it asked and how it was answered."
+      },
+      "RobotTotals": {
+        "required": [
+          "figures",
+          "robots",
+          "crawlerHits"
+        ],
+        "type": "object",
+        "properties": {
+          "figures": {
+            "$ref": "#/components/schemas/RobotFigures"
+          },
+          "robots": {
+            "type": "integer",
+            "description": "Distinct robots seen.",
+            "format": "int32"
+          },
+          "crawlerHits": {
+            "type": "integer",
+            "description": "Hits of the robots that explore the site on their own.",
+            "format": "int64"
+          }
+        },
+        "description": "The hits of every robot over a period."
       },
       "RollupReceipt": {
         "required": [

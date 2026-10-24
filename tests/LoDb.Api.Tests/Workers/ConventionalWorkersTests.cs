@@ -43,6 +43,8 @@ public sealed class ConventionalWorkersTests
             typeof(AnalyticsRollupJob),
             typeof(AnalyticsWriterWorker),
             typeof(AudienceTrendsWorker),
+            typeof(RobotJournalWorker),
+            typeof(RobotRetentionJob),
             typeof(AuditRetentionJob),
             typeof(CreditExpiryJob),
             typeof(ArtVariantsJob),

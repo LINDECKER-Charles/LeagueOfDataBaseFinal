@@ -10,9 +10,21 @@ import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
 import { StrictHttpResponse } from '../strict-http-response';
 
+import { AnalyticsBreakdown } from '../models/analytics-breakdown';
 import { AnalyticsReport } from '../models/analytics-report';
+import { getAnalyticsBreakdown } from '../fn/admin-analytics/get-analytics-breakdown';
+import { GetAnalyticsBreakdown$Params } from '../fn/admin-analytics/get-analytics-breakdown';
 import { getAnalyticsReport } from '../fn/admin-analytics/get-analytics-report';
 import { GetAnalyticsReport$Params } from '../fn/admin-analytics/get-analytics-report';
+import { getRobotDetail } from '../fn/admin-analytics/get-robot-detail';
+import { GetRobotDetail$Params } from '../fn/admin-analytics/get-robot-detail';
+import { getRobotHits } from '../fn/admin-analytics/get-robot-hits';
+import { GetRobotHits$Params } from '../fn/admin-analytics/get-robot-hits';
+import { getRobotsReport } from '../fn/admin-analytics/get-robots-report';
+import { GetRobotsReport$Params } from '../fn/admin-analytics/get-robots-report';
+import { RobotDetail } from '../models/robot-detail';
+import { RobotHitPage } from '../models/robot-hit-page';
+import { RobotReport } from '../models/robot-report';
 import { rollupAnalytics } from '../fn/admin-analytics/rollup-analytics';
 import { RollupAnalytics$Params } from '../fn/admin-analytics/rollup-analytics';
 import { RollupReceipt } from '../models/rollup-receipt';
@@ -90,6 +102,146 @@ export class AdminAnalyticsService extends BaseService {
     const resp = this.rollupAnalytics$Response(params, context);
     return resp.pipe(
       map((r: StrictHttpResponse<RollupReceipt>): RollupReceipt => r.body)
+    );
+  }
+
+  /** Path part for operation `getAnalyticsBreakdown()` */
+  static readonly GetAnalyticsBreakdownPath = '/api/admin/analytics/breakdown';
+
+  /**
+   * Every key of a breakdown of the audience over a period, by page.
+   *
+   *
+   *
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `getAnalyticsBreakdown()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  getAnalyticsBreakdown$Response(params?: GetAnalyticsBreakdown$Params, context?: HttpContext): Observable<StrictHttpResponse<AnalyticsBreakdown>> {
+    const obs = getAnalyticsBreakdown(this.http, this.rootUrl, params, context);
+    return obs;
+  }
+
+  /**
+   * Every key of a breakdown of the audience over a period, by page.
+   *
+   *
+   *
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `getAnalyticsBreakdown$Response()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  getAnalyticsBreakdown(params?: GetAnalyticsBreakdown$Params, context?: HttpContext): Observable<AnalyticsBreakdown> {
+    const resp = this.getAnalyticsBreakdown$Response(params, context);
+    return resp.pipe(
+      map((r: StrictHttpResponse<AnalyticsBreakdown>): AnalyticsBreakdown => r.body)
+    );
+  }
+
+  /** Path part for operation `getRobotsReport()` */
+  static readonly GetRobotsReportPath = '/api/admin/analytics/robots';
+
+  /**
+   * The robots of the site over a period ending today (UTC).
+   *
+   *
+   *
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `getRobotsReport()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  getRobotsReport$Response(params?: GetRobotsReport$Params, context?: HttpContext): Observable<StrictHttpResponse<RobotReport>> {
+    const obs = getRobotsReport(this.http, this.rootUrl, params, context);
+    return obs;
+  }
+
+  /**
+   * The robots of the site over a period ending today (UTC).
+   *
+   *
+   *
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `getRobotsReport$Response()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  getRobotsReport(params?: GetRobotsReport$Params, context?: HttpContext): Observable<RobotReport> {
+    const resp = this.getRobotsReport$Response(params, context);
+    return resp.pipe(
+      map((r: StrictHttpResponse<RobotReport>): RobotReport => r.body)
+    );
+  }
+
+  /** Path part for operation `getRobotDetail()` */
+  static readonly GetRobotDetailPath = '/api/admin/analytics/robots/{key}';
+
+  /**
+   * One robot of the site over a period ending today (UTC).
+   *
+   *
+   *
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `getRobotDetail()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  getRobotDetail$Response(params: GetRobotDetail$Params, context?: HttpContext): Observable<StrictHttpResponse<RobotDetail>> {
+    const obs = getRobotDetail(this.http, this.rootUrl, params, context);
+    return obs;
+  }
+
+  /**
+   * One robot of the site over a period ending today (UTC).
+   *
+   *
+   *
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `getRobotDetail$Response()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  getRobotDetail(params: GetRobotDetail$Params, context?: HttpContext): Observable<RobotDetail> {
+    const resp = this.getRobotDetail$Response(params, context);
+    return resp.pipe(
+      map((r: StrictHttpResponse<RobotDetail>): RobotDetail => r.body)
+    );
+  }
+
+  /** Path part for operation `getRobotHits()` */
+  static readonly GetRobotHitsPath = '/api/admin/analytics/robot-hits';
+
+  /**
+   * A page of the hits of robots, newest first.
+   *
+   *
+   *
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `getRobotHits()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  getRobotHits$Response(params?: GetRobotHits$Params, context?: HttpContext): Observable<StrictHttpResponse<RobotHitPage>> {
+    const obs = getRobotHits(this.http, this.rootUrl, params, context);
+    return obs;
+  }
+
+  /**
+   * A page of the hits of robots, newest first.
+   *
+   *
+   *
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `getRobotHits$Response()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  getRobotHits(params?: GetRobotHits$Params, context?: HttpContext): Observable<RobotHitPage> {
+    const resp = this.getRobotHits$Response(params, context);
+    return resp.pipe(
+      map((r: StrictHttpResponse<RobotHitPage>): RobotHitPage => r.body)
     );
   }
 

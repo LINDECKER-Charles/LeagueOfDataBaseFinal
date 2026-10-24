@@ -1,5 +1,6 @@
 using LoDb.Api.Hosting;
 using LoDb.Api.Modules.Analytics.Admin;
+using LoDb.Api.Modules.Analytics.Admin.Robots;
 using LoDb.Api.Modules.Analytics.Capture;
 using LoDb.Api.Modules.Analytics.Pages;
 using LoDb.Api.Modules.Audit.Http;
@@ -10,14 +11,16 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 namespace LoDb.Api.Modules.Analytics;
 
 /// <summary>
-/// Analytics module: capture of the router beacon and the back office reports.
+/// Analytics module: capture of the router beacon and of the robots journal, and the back
+/// office reports.
 /// </summary>
 /// <remarks>
 /// Program.cs calls both methods from the start, so the module's owner fills this file
 /// without touching a shared one. Neither method may do I/O or throw. The views are taken in
 /// by nginx's mirror and the router's beacon, resolved and written by
 /// <c>Workers/Analytics</c>, which also folds and keeps them; the legacy aggregates are
-/// imported by <c>Cli/Analytics</c>.
+/// imported by <c>Cli/Analytics</c>. nginx reports the robots' requests to the journal, which
+/// <c>Workers/Analytics</c> writes and keeps too.
 /// </remarks>
 internal static class AnalyticsModule
 {
@@ -37,6 +40,7 @@ internal static class AnalyticsModule
     {
         MirrorEndpoint.Map(endpoints);
         BeaconEndpoint.Map(endpoints);
+        RobotJournalEndpoint.Map(endpoints);
 
         // Reports hold no address, but follow the session: never cached either.
         var admin = endpoints.MapGroup(AnalyticsAdminRoutes.Prefix)
@@ -47,6 +51,10 @@ internal static class AnalyticsModule
             .ProducesProblem(StatusCodes.Status403Forbidden);
         ReportEndpoint.Map(admin);
         RollupEndpoint.Map(admin);
+        BreakdownEndpoint.Map(admin);
+        RobotsReportEndpoint.Map(admin);
+        RobotDetailEndpoint.Map(admin);
+        RobotHitsEndpoint.Map(admin);
         return endpoints;
     }
 }
