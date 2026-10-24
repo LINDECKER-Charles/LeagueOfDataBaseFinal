@@ -101,6 +101,16 @@ describe('CoverageTab', () => {
     expect(versions(page)).toEqual(['16.19.1', '16.18.1', '15.24.1', '15.23.1']);
   });
 
+  it('unfolds every season at once, then folds them all', async () => {
+    const { fixture, page } = await open();
+
+    click(fixture, '[data-folds] button:first-child');
+    expect(versions(page)).toEqual(['16.19.1', '16.18.1', '15.24.1', '15.23.1']);
+
+    click(fixture, '[data-folds] button:last-child');
+    expect(versions(page)).toEqual([]);
+  });
+
   it('filters by text and by status', async () => {
     const { fixture, page } = await open();
     const filter = page.querySelector<HTMLInputElement>('input[type="search"]');

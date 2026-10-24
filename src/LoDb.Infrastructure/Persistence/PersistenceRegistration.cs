@@ -2,6 +2,7 @@ using LoDb.Infrastructure.Persistence.Analytics;
 using LoDb.Infrastructure.Persistence.Analytics.Partitions;
 using LoDb.Infrastructure.Persistence.Baseline;
 using LoDb.Infrastructure.Persistence.Ddragon;
+using LoDb.Infrastructure.Persistence.Robots.Writing;
 using LoDb.Infrastructure.Persistence.Roles;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,6 +33,7 @@ public static class PersistenceRegistration
         services.TryAddSingleton<IDdragonVersionStore, DdragonVersionStore>();
         services.TryAddSingleton<IAnalyticsPartitions, AnalyticsPartitions>();
         services.TryAddSingleton<IAnalyticsEventWriter, AnalyticsEventWriter>();
+        services.TryAddSingleton<IRobotJournalWriter, RobotJournalWriter>();
         services.AddOptions<AppRoleOptions>()
             .Bind(configuration.GetSection(AppRoleOptions.SectionName))
             .ValidateOnStart();

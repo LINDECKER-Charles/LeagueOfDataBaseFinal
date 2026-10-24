@@ -24,7 +24,8 @@ internal sealed class LoDbSignInManager(
     ILogger<SignInManager<User>> logger,
     IAuthenticationSchemeProvider schemes,
     IUserConfirmation<User> confirmation,
-    RefreshFamilies families)
+    RefreshFamilies families,
+    SecondFactorWaiver waiver)
     : SignInManager<User>(
         userManager,
         contextAccessor,
@@ -54,7 +55,8 @@ internal sealed class LoDbSignInManager(
 
     /// <remarks>
     /// Every sign-in ends here, with a password, a second factor or Google: one to the
-    /// tokens names the new family in the principal the bearer handler writes into them.
+    /// tokens names the new family in the principal the bearer handler writes into them,
+    /// and the Development waiver of the second factor marks them all.
     /// </remarks>
     public override async Task SignInWithClaimsAsync(
         User user,
@@ -62,6 +64,7 @@ internal sealed class LoDbSignInManager(
         IEnumerable<Claim> additionalClaims)
     {
         ArgumentNullException.ThrowIfNull(user);
+        additionalClaims = waiver.Complete(additionalClaims);
         if (AuthenticationScheme != IdentityConstants.BearerScheme)
         {
             await base.SignInWithClaimsAsync(user, authenticationProperties, additionalClaims);

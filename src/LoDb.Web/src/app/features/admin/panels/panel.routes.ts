@@ -10,6 +10,22 @@ export const PANEL_ROUTES: Routes = [
     loadComponent: () => import('./analytics/traffic/traffic-panel').then((m) => m.TrafficPanel),
   },
   {
+    path: 'robots',
+    loadComponent: () =>
+      import('./analytics/robots/overview/robots-panel').then((m) => m.RobotsPanel),
+  },
+  // Before the robot of a key: "journal" is no robot.
+  {
+    path: 'robots/journal',
+    loadComponent: () =>
+      import('./analytics/robots/journal/robot-journal-panel').then((m) => m.RobotJournalPanel),
+  },
+  {
+    path: 'robots/:key',
+    loadComponent: () =>
+      import('./analytics/robots/detail/robot-detail-panel').then((m) => m.RobotDetailPanel),
+  },
+  {
     path: 'audience',
     loadComponent: () => import('./analytics/audience/audience-panel').then((m) => m.AudiencePanel),
   },

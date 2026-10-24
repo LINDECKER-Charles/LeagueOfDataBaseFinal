@@ -39,6 +39,7 @@ const STUB_COMMAND = `head -c ${LARGE_ANSWER_BYTES} /dev/zero > /tmp/large`
   + ' && exec nginx -c /tmp/stub.conf -g "daemon off;"';
 // The stub's log of the requests the page store got (lib/upstream-stub.conf).
 const STORE_REQUESTS = '/tmp/store-requests.log';
+const ROBOT_JOURNAL = '/tmp/robot-journal.log';
 // The image runs as compose.yaml runs it: read-only, without any capability nor a way to gain
 // one, /tmp a tmpfs, each cache and the temporary files a volume that Docker seeds from the
 // image (owned by `nginx`). The storage, a read-only volume of the API's on the stack, and the
@@ -98,7 +99,8 @@ async function waitUntilReady(port, headers) {
 /**
  * Boots the image with the given LODB_* variables; resolves to the published port, an
  * `exec` into the nginx container, `storeRequests`, the requests the stub's page store got so
- * far ("GET /bucket/key" each), `storedPage`, the body of a page it holds, and `stop`, which
+ * far ("GET /bucket/key" each), `robotJournal`, the records nginx reported to the robots
+ * journal so far, `storedPage`, the body of a page it holds, and `stop`, which
  * removes the containers and network. With LODB_EDGE_SECRET set, the readiness probes send it
  * as the edge does.
  */
@@ -120,7 +122,14 @@ export async function startStack(image, environment) {
       const { stdout } = await docker('exec', stub, 'cat', STORE_REQUESTS);
       return stdout.split('\n').filter(Boolean);
     };
-    return { port, exec, storeRequests, storedPage: STORED_PAGE, stop };
+    const robotJournal = async () => {
+      const { stdout } = await docker('exec', stub, 'sh', '-c', `cat ${ROBOT_JOURNAL} || true`);
+      return stdout
+        .split('\n')
+        .filter((line) => line.startsWith('{'))
+        .map((line) => JSON.parse(line));
+    };
+    return { port, exec, storeRequests, robotJournal, storedPage: STORED_PAGE, stop };
   } catch (error) {
     await stop();
     throw error;

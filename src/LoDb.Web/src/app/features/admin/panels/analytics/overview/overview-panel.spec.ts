@@ -5,6 +5,7 @@ import { notice } from '../../../testing/dom/notice';
 import { press } from '../../../testing/dom/press';
 import { analyticsReport } from '../../../testing/fixtures/analytics-report';
 import { monitoringReport } from '../../../testing/fixtures/monitoring-report';
+import { robotReport } from '../../../testing/fixtures/robot-report';
 import { storageReport } from '../../../testing/fixtures/storage-report';
 import { reply } from '../../../testing/http/reply';
 import { sent } from '../../../testing/http/sent';
@@ -16,6 +17,7 @@ const REPORT = '/api/admin/analytics/report';
 const MONITORING = '/api/admin/monitoring';
 const STORAGE = '/api/admin/storage';
 const ROLLUP = '/api/admin/analytics/rollup';
+const ROBOTS = '/api/admin/analytics/robots';
 
 function words(node: Node | null | undefined): string {
   return (node?.textContent ?? '').replace(/\s+/g, ' ').trim();
@@ -29,6 +31,7 @@ function open(url = '/admin') {
   return openPanel(OverviewPanel, url, [
     { path: MONITORING, body: monitoringReport() },
     { path: REPORT, body: analyticsReport() },
+    { path: ROBOTS, body: robotReport() },
     { path: STORAGE, body: storageReport() },
   ]);
 }
@@ -47,6 +50,7 @@ describe('OverviewPanel', () => {
       'admin.overview.kpi.views 12.3k admin.overview.kpi.views_sub',
       'admin.overview.kpi.visitors 2.1k admin.overview.kpi.visitors_sub',
       'admin.overview.kpi.top_page 900 /fr/champions',
+      'admin.overview.kpi.robots 4k admin.overview.kpi.robots_sub',
       'admin.overview.kpi.storage 6.00 GB admin.overview.kpi.storage_sub',
       'admin.overview.kpi.versions 1 admin.overview.kpi.versions_sub',
       'admin.overview.kpi.webp 90 % admin.overview.kpi.webp_sub',
@@ -55,11 +59,13 @@ describe('OverviewPanel', () => {
       'admin.rules.traffic',
       'admin.rules.storage',
     ]);
-    expect(visit.page.querySelectorAll('lodb-sparkline svg')).toHaveLength(2);
+    // The views, the visitors and the robots' requests.
+    expect(visit.page.querySelectorAll('lodb-sparkline svg')).toHaveLength(3);
     expect(visit.page.querySelectorAll('lodb-time-series-chart polyline.ts-line')).toHaveLength(2);
     expect(visit.page.querySelector('a[lodbKpi]')?.getAttribute('href')).toBe('/admin/monitoring');
     expect(visit.page.querySelector('a[href="/admin/traffic?range=30d"]')).not.toBeNull();
     expect(visit.page.querySelector('a[href="/admin/audience?range=30d"]')).not.toBeNull();
+    expect(visit.page.querySelector('a[href="/admin/robots?range=30d"]')).not.toBeNull();
   });
 
   it('tints each probe of the services tile by its health', async () => {
@@ -80,6 +86,7 @@ describe('OverviewPanel', () => {
     const visit = await openPanel(OverviewPanel, '/admin', [
       { path: MONITORING, body: monitoringReport({ counters: null }) },
       { path: REPORT, body: null, status: HttpStatusCode.BadGateway },
+      { path: ROBOTS, body: robotReport() },
       { path: STORAGE, body: storageReport({ ok: false, error: 'root unreadable' }) },
     ]);
 

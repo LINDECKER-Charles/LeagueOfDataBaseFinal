@@ -4,7 +4,9 @@ Encyclopédie League of Legends (champions, objets, runes, sorts d'invocateur) p
 version et chaque langue de **Data Dragon**, plus CommunityDragon pour les chromas. Un seul
 front sert le web, le desktop et Android. Ce fichier fixe l'architecture, les règles de code
 et les conventions du dépôt ; il complète les préférences globales de l'agent sans les
-redire. Claude Code le lit par `CLAUDE.md`, qui ne fait que l'importer : ne pas le supprimer.
+redire. Claude Code le lit par `CLAUDE.md`, qui l'importe puis porte la section `## graphify`
+(graphe de connaissances local `graphify-out/`, périmètre dans `.graphifyignore`), écrite par
+`graphify claude install` : ne pas le supprimer, ne pas éditer cette section à la main.
 
 La prod tourne sur cette stack depuis la **bascule du 2026-10-04**. L'ancienne version
 (Symfony + Go + Vue) est **archivée sous `legacy/`**, ses règles dans
@@ -61,9 +63,9 @@ contexte technique sous `## Technique`.
 | Desktop / Android | Photino + Velopack / Capacitor 8 + live update signé |
 | Frontal | nginx (cache des pages, `/cdn/blobs/`, pages des anciens patchs lues dans un stockage objet Scaleway) derrière l'edge Caddy du VPS (`infra-vps`) ; CDN Cloudflare prévu, pas construit |
 | Précalcul | pages des anciens patchs rendues une fois par un SSR dédié (`web-ssr-prerender`) et rangées dans le stockage objet (ADR 0011) |
-| Observabilité, audience | OpenTelemetry, logs JSON d'une ligne, `/metrics` (port 9464) ; audience Umami (ADR 0012) |
+| Observabilité, audience | OpenTelemetry, logs JSON d'une ligne, `/metrics` (port 9464) ; audience Umami (ADR 0012) ; journal des robots (ADR 0013) |
 
-Décisions : [`docs/reecriture/README.md`](docs/reecriture/README.md) et ses ADR 0001 à 0012.
+Décisions : [`docs/reecriture/README.md`](docs/reecriture/README.md) et ses ADR 0001 à 0013.
 
 ```
 compose.yaml  compose.override.yaml (dev)  compose.deploy.yaml (hôtes)
@@ -136,7 +138,7 @@ Détail : [`configuration.md`](docs/guides/configuration.md).
 - **Identité** (ADR 0009) : hash argon2id PHC, lisibles par `password_verify` de PHP.
   Jamais `AllowAnonymous` : les politiques portent le garde XSRF et `Origin`. Seules
   exceptions, voulues : les deux captures de la mesure maison (balise et miroir, pièges,
-  ADR 0012).
+  ADR 0012) et le journal des robots que nginx poste (ADR 0013).
 - **Observabilité** (ADR 0010) : logs JSON d'**une ligne**, `trace_id` pendant une trace,
   `EventName` en `domaine.sujet.resultat`, **aucune clé `error`**, aucune donnée personnelle
   ([`logging.md`](docs/guides/logging.md)). `/metrics`

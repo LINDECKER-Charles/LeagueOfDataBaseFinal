@@ -3,7 +3,10 @@ using LoDb.Api.Hosting;
 
 namespace LoDb.Api.Modules.Analytics.Capture;
 
-/// <summary>Paths, header and rate limit of the two ways a page view comes in.</summary>
+/// <summary>
+/// Paths, header and rate limit of the two ways a page view comes in, and of the robots
+/// journal.
+/// </summary>
 internal static class CaptureRoutes
 {
     /// <summary>
@@ -11,6 +14,11 @@ internal static class CaptureRoutes
     /// routes to the API, so that no client reaches it: nginx calls it from within.
     /// </summary>
     public const string MirrorPath = "/internal/analytics/page";
+
+    /// <summary>
+    /// Target of nginx's reports to the robots journal, outside of <c>/api</c> as the mirror's.
+    /// </summary>
+    public const string RobotJournalPath = "/internal/robots/journal";
 
     /// <summary>Header in which the mirror passes the page's path and query.</summary>
     public const string OriginalUriHeader = "X-Original-URI";

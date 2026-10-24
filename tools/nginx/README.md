@@ -48,6 +48,12 @@ switch is gone.
 crawlers (`$lodb_ai_crawler`, `nginx.conf`) get a `403` on both hosts, while a search engine and
 a visitor get their answer, each with the `X-Robots-Tag` noindex.
 
+`robot-journal.test.mjs` boots a stack as a host runs it and reads what nginx reports to the robots
+journal (`njs/robot-journal.js`, ADR 0013): the stub's API keeps the body of each post to
+`/internal/robots/journal` (`robotJournal()`, `lib/stack.mjs`) and answers 202. A robot's every
+request (a past patch's page, `robots.txt`, a bundle) and a reader's pages come with their address,
+status and time; a reader's files, the probe and a request that came around the edge never do.
+
 `pages-store/nginx-pages-store.test.mjs` boots the image in front of the stub's page store (lot
 3 of ADR 0011): an S3 bucket read in path style on the alias `lodb-pages-store`, over plain HTTP on
 `9000` and over TLS on `9443`, under a certificate no authority signed

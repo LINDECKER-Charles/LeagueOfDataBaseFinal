@@ -57,18 +57,44 @@ describe('AdminFrame', () => {
     expect(document.documentElement.lang).toBe('fr');
   });
 
-  it('lays out the two sections of the navigation, the current page marked', async () => {
+  it('lays out the four sections of the sidebar, the current page marked', async () => {
     setUp();
 
     const { harness } = await openAdminPage('/admin/users?q=ahri');
     const frame = harness.fixture.nativeElement as HTMLElement;
 
-    expect(frame.querySelectorAll('nav a')).toHaveLength(13);
-    expect(frame.querySelectorAll('nav .admin-nav-sep')).toHaveLength(1);
+    expect(frame.querySelectorAll('nav a')).toHaveLength(14);
+    expect(frame.querySelectorAll('nav .admin-nav-section')).toHaveLength(4);
     expect(current(frame)).toEqual(['/admin/users']);
+    expect(frame.querySelector('.admin-nav-section.is-current')?.textContent).toContain(
+      'admin.nav.management',
+    );
+    expect(frame.querySelector('.admin-crumbs')?.textContent).toContain('admin.nav.users');
   });
 
-  it('marks the overview whatever its period, and the journal for an activity', async () => {
+  it('opens the sidebar as a drawer, closed again by Escape and by a navigation', async () => {
+    setUp();
+    const { harness } = await openAdminPage('/admin/users');
+    const frame = harness.fixture.nativeElement as HTMLElement;
+    const menu = frame.querySelector<HTMLButtonElement>('.admin-menu');
+
+    menu?.click();
+    harness.detectChanges();
+    expect(menu?.getAttribute('aria-expanded')).toBe('true');
+    expect(frame.querySelector('.admin-sidebar.is-drawer-open')).not.toBeNull();
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    harness.detectChanges();
+    expect(frame.querySelector('.admin-sidebar.is-drawer-open')).toBeNull();
+
+    menu?.click();
+    harness.detectChanges();
+    await TestBed.inject(Router).navigateByUrl('/admin');
+    harness.detectChanges();
+    expect(frame.querySelector('.admin-backdrop')).toBeNull();
+  });
+
+  it('marks the dashboard whatever its period, and the journal for an activity', async () => {
     setUp();
 
     const { harness } = await openAdminPage('/admin?range=7d');
@@ -86,7 +112,7 @@ describe('AdminFrame', () => {
     const { harness } = await openAdminPage('/admin/users');
     const frame = harness.fixture.nativeElement as HTMLElement;
 
-    frame.querySelector<HTMLButtonElement>('header button')?.click();
+    frame.querySelector<HTMLButtonElement>('.admin-logout')?.click();
     await harness.fixture.whenStable();
 
     expect(signOut).toHaveBeenCalledTimes(1);

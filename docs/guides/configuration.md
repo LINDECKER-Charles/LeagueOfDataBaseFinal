@@ -536,6 +536,7 @@ prod, ils gardent leur défaut.
 | `LoDb:Builds:Votes` | `MinimumAccountAge` (1 j : âge du compte avant son premier vote ; l'e-mail vérifié est aussi exigé) |
 | `LoDb:Mail` | `Timeout` (`00:00:30`) |
 | `LoDb:Outbox` | `BatchSize` (20), `PollInterval` (5 s), `MaxAttempts` (10), `RetryDelay` (30 s), `MaxRetryDelay` (1 h), `Lease` (5 min) ; `HourlyCaps:ConfirmEmail` (100), `HourlyCaps:ResetPassword` (50), `HourlyCaps:ContactNotification` (20) : e-mails de chaque modèle envoyés par heure glissante pour tout le site, l'excédent attend dans la table (jauge `lodb_outbox_deferred`) ; à garder sous le quota du relais |
+| `LoDb:Robots` | journal des robots (ADR 0013) : `QueueCapacity` (20000), `BatchSize` (1000), `BatchWindow` (2 s), `HitRetention` (30 j : durée de `robot_hit`, les comptes du jour restent), `UndeclaredThreshold` (40) pages en `UndeclaredWindow` (10 min) d'un même client avant de le tenir pour un robot, pendant `UndeclaredMemory` (24 h), `MaxTrackedClients` (100000), `DnsTimeout` (2 s), `DnsLookupsPerBatch` (32 ; 0 coupe toute recherche, les tests le posent), `DnsParallelism` (8 questions en vol au plus, abandonnées comprises), `DnsCacheSize` (20000), `DnsCacheLifetime` (6 h), `DnsFailureLifetime` (10 min), `JobStatementTimeout` (5 min) |
 | `LoDb:Analytics` | `GeoIpDatabase` (aucune), `QueueCapacity` (10000), `BatchSize` (500), `BatchWindow` (2 s), `ClientDataRetention` (30 j : adresse et user-agent des vues stockées avant qu'ils ne le soient plus), `ClientDataEraseDays` (3, au moins 2 : jours lus avant celui du seuil ; deux passages de la tâche quotidienne peuvent être séparés de deux jours après un redémarrage, de trois après un échec ; à relever le temps d'un passage après une panne plus longue), `EventRetentionMonths` (13, plafond CNIL 25), `PartitionsAhead` (7), `MaxVisitorsPerDay` (200000 empreintes par jour, au-delà le jour est marqué `visitorsTruncated` dans `totals`), `MaxRefererHostsPerDay` (200 hôtes référents par jour, les moins comptés au-delà sous `(autres)`), `JobStatementTimeout` (5 min, de 1 s à 1 h : délai d'une requête de l'agrégation quotidienne et de l'effacement des données client, au-dessus des 15 s du rôle de l'API) |
 | `LoDb:Egress` | `AllowedHosts` (`ddragon.leagueoflegends.com`, `raw.communitydragon.org`), `FetchConcurrency` (16), `AttemptTimeout` (15 s), `MaxRetryAttempts` (3), `RetryBaseDelay` (1 s), `MaxRedirects` (10), `MaxResponseBytes` (32 Mio) |
 | `LoDb:Ingestion` | `WatchPeriod` (10 min), `MaxAttempts` (5), `RetryDelay` (10 min), `LanguageConcurrency` (4), `RecordBatchSize` (64), `SyncConcurrency` (4), `QueueCapacity` (256), `CrawlerRequestsPerMinute` (30) |
@@ -906,8 +907,8 @@ comme la passe. Règles : [spécification](../produit/pre-rendu-catalogue-cdn.md
 qui recrée l'API : le relevé et le rendu s'arrêtent, la table reste. Le pupitre dit alors
 « coupée ». Les pages en vol finissent.
 
-**Ce qui la montre** : le bloc « File automatique des pages refusées » et l'onglet « File des
-503 » de `/admin/prerender`,
+**Ce qui la montre** : la vue « Files automatiques » de `/admin/prerender?view=queues` (bloc
+« File automatique des pages refusées » et liste « Pages de la file des refusées (503) »),
 les métriques `lodb_prerender_demand_*` ([`metriques.md`](metriques.md)) et les lignes
 `prerender.demand.*` de l'API, une par relevé qui apporte des pages et une par lot rendu.
 
@@ -1024,9 +1025,10 @@ des états clos jusqu'à sa bascule : rien à rattraper avant de basculer. Une e
 attente sans bascule les reçoit aussi, pour rien : basculer dessus, ou la retirer
 (`tools/prerender/scaleway-bucket.sh`).
 
-**Ce qui la montre** : le bloc « File des états clos » de `/admin/prerender` (en attente,
-dues, écrites en 1 h et 24 h, en échec, par epoch ; `GET /api/admin/prerender/revision`) et la
-colonne « Index » de l'onglet de couverture (ouvreurs, pages figées et révisables attendues
+**Ce qui la montre** : le bloc « File des états clos » de la vue « Files automatiques » de
+`/admin/prerender` (en attente, dues, écrites en 1 h et 24 h, en échec, par epoch ;
+`GET /api/admin/prerender/revision`) et la colonne « Index » de la vue « Couverture » (ouvreurs,
+pages figées et révisables attendues
 par version et par langue) ; les métriques `lodb_prerender_revision_*`
 ([`metriques.md`](metriques.md)) et les lignes `prerender.revision.*` de l'API, une par passage
 du producteur qui met en file et une par lot rendu.

@@ -109,6 +109,10 @@ visiteurs (`MaxVisitorsPerDay`) et hôtes référents (`MaxRefererHostsPerDay`, 
 depuis `analytics_daily`, aujourd'hui replié à la volée depuis `analytics_event`
 (`AnalyticsReports.cs`). « Consolider » appelle `POST /api/admin/analytics/rollup`, journalisé
 `admin.analytics_rollup`. Réponses `no-store`. `/admin/storage` lit `/api/admin/storage`.
+Le rapport porte aussi les totaux de la période de même longueur juste avant (`previous`,
+absent pour `all`), lus des seuls agrégats ; `/admin/traffic` en tire ses tendances.
+`GET /api/admin/analytics/breakdown?range=&dimension=pages|entities|referers&q=&page=`
+(`BreakdownEndpoint.cs`) donne toutes les clés d'une dimension, cherchées, 50 par page.
 
 **`/v1/trends/{type}`** (`TrendsSource.cs`) : les 25 entités les plus vues sur 7 ou 30 jours,
 mises en cache 5 min par instance (`TrendsLifetime`). Source par jour :
@@ -120,6 +124,36 @@ mises en cache 5 min par instance (`TrendsLifetime`). Source par jour :
 
 Le plafond existe parce que la collecte d'Umami est publique, donc gonflable
 (`AudienceOptions.cs`). Retirer la date revient à la mesure maison seule.
+
+## Journal des robots (ADR 0013)
+
+Ce que la mesure maison ne voit pas : les robots de **toutes** les pages (anciens patchs,
+`robots.txt`, sitemaps, fichiers), le statut que nginx a **rendu** et sa durée.
+
+| Étape | Où | Ce qu'elle fait |
+|---|---|---|
+| Rapport | `docker/nginx/njs/robot-journal.js`, `sites/site.conf` | le journal d'accès du site formate une ligne vide dont `js_set` range la requête (`$msec`, adresse, méthode, URI, statut, `$request_time`, octets, user-agent, cache) dans la zone `lodb_robot_journal` ; `js_periodic` la poste toutes les 2 s en NDJSON. Rapportés : tout ce que demande un user-agent de robot (`$lodb_robot_agent`, `nginx.conf`) et toute page des autres ; jamais `/healthz` ni une requête refusée par la garde de l'edge |
+| Prise | `POST /internal/robots/journal` (`RobotJournalEndpoint.cs`) | lit le corps (4 Mio au plus, 413 au-delà), met les lignes en file (`RobotJournalQueue`, `Channel` borné), répond 202 ; une ligne illisible est comptée |
+| Classement | `Robots/Capture/JournalHits.cs` | user-agent nommé par le catalogue (`RobotCatalog`) ; sinon, page d'un navigateur comptée dans la cadence de son client (`UndeclaredDetector`) et gardée une fois le seuil passé ; le reste est jeté |
+| Vérification | `Robots/Verification/` | DNS inverse puis direct (`NetworkResolver`, cache et budget par lot) : verdict, et domaine enregistrable du nom confirmé comme réseau |
+| Écriture | `Persistence/Robots/Writing/` | une transaction par lot : agents (upsert), hits (`COPY`), comptes du jour (upsert additif) |
+
+| Table | Contenu | Durée |
+|---|---|---|
+| `robot_agent` | user-agents distincts, première et dernière vue | sans limite |
+| `robot_hit` | une requête : instant, agent, détection (`agent`/`rate`), verdict, réseau, méthode, chemin et query, section, statut, durée, octets, cache | 30 j (`HitRetention`, tâche `robots.retention`) |
+| `robot_daily` | comptes par jour, agent, détection, verdict, réseau, section, statut : hits, octets, durée, lentes (≥ 1 s) | sans limite |
+
+**Lecture** (admin, `no-store`) : `GET /api/admin/analytics/robots?range=` (vue d'ensemble :
+totaux, jours par catégorie, robots, statuts, sections, verdicts, réseaux),
+`/robots/{key}` (fiche : jours par classe de statut, agents, 50 chemins les plus demandés,
+dernières requêtes ; 404 `robot-not-found` hors période), `/robot-hits` (journal, 50 par
+page, filtres `robot`, `category`, `status` (1er chiffre), `verdict`, `section`, `q`). Le robot
+d'une ligne est relu du texte de son agent à chaque lecture : un changement du catalogue
+renomme l'historique.
+
+**Clés de robot** : celle du catalogue (`googlebot`), `unidentified:{jeton}` pour un robot
+inconnu, `no-agent`, `undeclared:{réseau}` (`undeclared:unknown` sans réseau confirmé).
 
 ## Umami
 

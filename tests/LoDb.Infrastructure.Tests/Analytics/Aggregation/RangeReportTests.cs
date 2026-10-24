@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using LoDb.Infrastructure.Analytics.Aggregation;
 using LoDb.Infrastructure.Analytics.Import;
 using LoDb.Infrastructure.Analytics.Reports;
@@ -13,7 +14,11 @@ namespace LoDb.Infrastructure.Tests.Analytics.Aggregation;
 /// </summary>
 public sealed class RangeReportTests
 {
-    private static readonly JsonSerializerOptions Web = new(JsonSerializerDefaults.Web);
+    // The legacy report had no previous totals: the builder leaves them out.
+    private static readonly JsonSerializerOptions Web = new(JsonSerializerDefaults.Web)
+    {
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    };
 
     private static CancellationToken Cancellation => TestContext.Current.CancellationToken;
 

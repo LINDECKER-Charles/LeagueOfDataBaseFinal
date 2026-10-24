@@ -37,7 +37,7 @@ import { JournalFilters } from '../journal/journal-filters';
   ],
   template: `
     <lodb-page-head
-      [eyebrow]="'admin.eyebrows.moderation' | adminText"
+      [eyebrow]="'admin.eyebrows.management' | adminText"
       [title]="'admin.activity.title' | adminText: { name: name() }"
       [documentTitle]="'admin.activity.document_title' | adminText: { name: name() }"
       [subtitle]="subtitle()"
