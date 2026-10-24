@@ -132,6 +132,13 @@ docker compose -p lodb-dev -f compose.yaml -f compose.override.yaml logs --no-lo
 docker compose -p lodb-dev -f compose.yaml -f compose.override.yaml logs --no-log-prefix --tail 20 web-ssr
 ```
 
+Une base locale n'a presque aucun trafic : pour voir les pages d'analytics de l'admin
+remplies, `tools/dev/seed-admin-demo.sh` sème 90 jours plausibles de robots (journal entier,
+hits gardés 30 jours) et de lecteurs (mesure maison). Il remplace le journal des robots, et
+les vues et agrégats de ces jours ; le rollup les consolide sous cinq minutes, ou tout de
+suite par « Consolider ». Il refuse toute stack autre que `lodb-dev` et ses emplacements
+(`LODB_COMPOSE_PROJECT=lodb-dev-e1`).
+
 Arrêter sans rien perdre, puis relancer sans reconstruire :
 
 ```bash
