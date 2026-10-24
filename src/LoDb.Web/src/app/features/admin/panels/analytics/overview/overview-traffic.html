@@ -28,6 +28,23 @@
       [value]="data.topPages[0]?.count ?? 0 | figure: 'compact'"
       [sub]="data.topPages[0]?.name ?? '—'"
     />
+    @if (robots.value(); as journal) {
+      <a
+        lodbKpi
+        accent="red"
+        routerLink="/admin/robots"
+        [queryParams]="{ range: query.range() }"
+        [isLink]="true"
+        [label]="'admin.overview.kpi.robots' | adminText"
+        [value]="journal.totals.figures.hits | figure: 'compact'"
+        [sub]="
+          'admin.overview.kpi.robots_sub'
+            | adminText: { mismatch: (journal.totals.figures.mismatch | figure: 'compact') }
+        "
+      >
+        <lodb-sparkline [values]="robotDays()" color="var(--color-series-red)" />
+      </a>
+    }
   </div>
 
   <div class="admin-grid admin-grid--3">

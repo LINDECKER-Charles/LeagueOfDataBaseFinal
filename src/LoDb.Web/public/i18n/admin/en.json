@@ -192,12 +192,14 @@
       "versions": "Versions",
       "versions_sub": "ingested datasets",
       "webp": "WebP coverage",
-      "webp_sub": "{done} / {total} images"
+      "webp_sub": "{done} / {total} images",
+      "robots": "Robots",
+      "robots_sub": "{mismatch} likely impostors"
     }
   },
   "traffic": {
     "title": "Traffic",
-    "lede": "Most viewed pages and rhythm of the traffic.",
+    "lede": "What readers view, where they come from, and the robots beside them.",
     "daily": "Traffic over time",
     "heatmap": "Hourly rhythm",
     "top_pages": "Most viewed pages",
@@ -211,11 +213,14 @@
       "visitors_sub": "{count} returning",
       "pages_sub": "tracked URLs",
       "per_day": "Views / day",
-      "per_day_sub": "average"
+      "per_day_sub": "average",
+      "robots": "Robots",
+      "robots_sub": "{share} of requests"
     },
     "series": {
       "views": "Views",
-      "visitors": "Visitors"
+      "visitors": "Visitors",
+      "robots": "Robot requests"
     },
     "types": {
       "home": "Home",
@@ -236,6 +241,37 @@
       "status": "Status",
       "views": "Views",
       "share": "Share"
+    },
+    "daily_chip": "views · visitors · robots",
+    "locales": "Interface locales",
+    "langs": "Data Dragon languages",
+    "trend": {
+      "up": "▲ {change} vs previous period",
+      "down": "▼ {change} vs previous period",
+      "flat": "= level with the previous period",
+      "none": "no period to compare with"
+    },
+    "rules": {
+      "content": "Content",
+      "quality": "Languages and answers"
+    },
+    "explorer": {
+      "title": "Explorer",
+      "chip": "every key of the period",
+      "dimension": "Dimension",
+      "search": "Search…",
+      "count": "{count, plural, one {# key} other {# keys}} · {total} in all",
+      "empty": "No key matches.",
+      "dimensions": {
+        "pages": "Pages",
+        "entities": "Entities",
+        "referers": "Referrers"
+      },
+      "columns": {
+        "pages": "Page",
+        "entities": "Entity",
+        "referers": "Referring host"
+      }
     }
   },
   "audience": {
@@ -1668,5 +1704,164 @@
     "maintenance": "Maintenance",
     "databases": "Backed-up databases",
     "nights": "Nights"
+  },
+  "robots": {
+    "title": "Robots",
+    "lede": "Who explores the site, what they ask for and how nginx answers them.",
+    "back": "Robots",
+    "no_agent": "No user agent",
+    "undeclared_name": "Undeclared · {network}",
+    "unknown_network": "unknown network",
+    "daily": "Requests by category",
+    "daily_chip": "requests · day",
+    "by_category": "By category",
+    "hits_caption": "requests",
+    "statuses": "Response codes",
+    "by_section": "What they ask for",
+    "networks": "Origin networks",
+    "network": "Network (reverse DNS)",
+    "network_robots": "Robots",
+    "networks_empty": "No network confirmed by DNS.",
+    "verification": "Verification",
+    "verification_note": "Google, Bing, Apple, Yandex, Baidu, Amazon, Seznam and Petal are verified by forward-confirmed reverse DNS. The others publish address ranges only: unverifiable here.",
+    "retention": "Requests kept one by one since {since} (30 days); the daily counts are kept with no end.",
+    "views": {
+      "label": "Robot views",
+      "overview": "Overview",
+      "journal": "Journal"
+    },
+    "kpi": {
+      "hits": "Robot requests",
+      "hits_sub": "{count} from crawlers",
+      "robots": "Distinct robots",
+      "robots_sub": "{count, plural, one {# category} other {# categories}}",
+      "verified": "DNS-verified",
+      "verified_sub": "{count} requests verified",
+      "mismatch": "Likely impostors",
+      "mismatch_sub": "a robot's user agent, another network",
+      "mismatch_count": "{count, plural, one {# likely impostor} other {# likely impostors}}",
+      "refused": "Refused (403 · 429 · 503)",
+      "refused_sub": "{count} server errors (5xx)",
+      "errors_split": "{client} 4xx · {server} 5xx",
+      "mean": "Mean response time",
+      "mean_sub": "{count} over 1 s",
+      "bytes": "Bytes served",
+      "bytes_sub": "response bodies"
+    },
+    "categories": {
+      "search": "Search engines",
+      "ai": "AI · collection",
+      "assistant": "On demand",
+      "seo": "SEO & marketing",
+      "social": "Link previews",
+      "monitoring": "Monitoring & audit",
+      "archive": "Web archives",
+      "tool": "Scripts & tools",
+      "unidentified": "Unidentified robots",
+      "undeclared": "Undeclared (pace)"
+    },
+    "nature": {
+      "crawler": "Crawls on its own",
+      "other": "On demand or tool"
+    },
+    "verdicts": {
+      "verified": "verified",
+      "mismatch": "impostor",
+      "unresolved": "unresolved",
+      "unverifiable": "unverifiable"
+    },
+    "sections": {
+      "home": "Home",
+      "list": "Lists",
+      "detail": "Details",
+      "archive": "Past patches",
+      "page": "Other pages",
+      "sitemap": "Sitemaps",
+      "robots": "robots.txt",
+      "api": "API",
+      "asset": "Files",
+      "other": "Other"
+    },
+    "status_classes": {
+      "2": "2xx · success",
+      "3": "3xx · redirects",
+      "4": "4xx · client errors",
+      "5": "5xx · server errors"
+    },
+    "table": {
+      "title": "Every robot",
+      "chip": "a click opens its page",
+      "search": "Name, operator, network…",
+      "category": "Category",
+      "any_category": "Every category",
+      "sort": "Sort",
+      "count": "{count, plural, one {# robot} other {# robots}}",
+      "robot": "Robot",
+      "hits": "Requests",
+      "verification": "Verification",
+      "answers": "Answers",
+      "mean": "Mean",
+      "last": "Last visit",
+      "networks": "Networks",
+      "unchecked": "unchecked",
+      "errors": "{count} in error",
+      "empty": "No robot over the period.",
+      "sorts": {
+        "hits": "By requests",
+        "name": "By name",
+        "verified": "By verified share",
+        "errors": "By errors",
+        "mean": "By slowness",
+        "last": "By last visit"
+      },
+      "mismatch": "{count, plural, one {# impostor} other {# impostors}}"
+    },
+    "hits": {
+      "at": "Date (UTC)",
+      "robot": "Robot",
+      "verdict": "Verification",
+      "status": "Status",
+      "target": "Request",
+      "duration": "Time",
+      "bytes": "Size",
+      "network": "Network",
+      "empty": "No request."
+    },
+    "detail": {
+      "journal": "This robot's journal",
+      "unseen": "No request from this robot over the period.",
+      "identity": "Identity",
+      "check": "Verification",
+      "check_dns": "Forward-confirmed reverse DNS under",
+      "check_none": "Its operator publishes no domain: unverifiable.",
+      "seen": "Seen",
+      "seen_span": "from {first} to {last}",
+      "key": "Key",
+      "share": "{share} of robot requests",
+      "daily": "Answers day by day",
+      "daily_chip": "2xx · 3xx · 4xx · 5xx",
+      "paths": "Most requested paths",
+      "paths_chip": "since {since}",
+      "last_status": "Last status",
+      "last_at": "Last time",
+      "agents": "User agents sent",
+      "agent": "User agent",
+      "agent_seen": "First → last seen",
+      "recent": "Latest requests"
+    },
+    "journal": {
+      "title": "Robot journal",
+      "lede": "Every robot request of the last 30 days, newest first.",
+      "robot": "Robot key (googlebot…)",
+      "category": "Category",
+      "any_category": "Every category",
+      "status": "Status",
+      "any_status": "Every status",
+      "verdict": "Verification",
+      "any_verdict": "Every verdict",
+      "section": "Section",
+      "any_section": "Every section",
+      "q": "Text of the path"
+    }
   }
 }
