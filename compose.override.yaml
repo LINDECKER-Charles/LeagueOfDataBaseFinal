@@ -138,7 +138,7 @@ services:
   # anyone read pages/ and build/ (moto reads AWS's policy format, and HEAD as its own
   # action), as the bucket policy lets the host read on Scaleway; a restart empties it.
   pages-store:
-    image: motoserver/moto:5.2.3@sha256:91fd602a21f49cf9eb82fdf474015a3c131d40104c8297ea6a2ca920708ae32c
+    image: motoserver/moto:5.2.4@sha256:120b1589c6df7e35d2092935f6ff724486bb2c4189d0e36ce795baba1400ffd2
     init: true
     read_only: true
     security_opt: [no-new-privileges:true]
