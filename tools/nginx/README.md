@@ -61,15 +61,16 @@ status and time; a reader's files, the probe and a request that came around the 
 compressed with its headers in metadata, answers `404` for a key it does not hold, and one
 version stands for each of its other answers (`403`, `429`, `500`, `503`, a listener that never
 answers); `storeRequests()` (`lib/stack.mjs`) reads what reached it. A stored page comes from the
-store then from the cache (`X-LoDb-Source`: `store`, `cache`), with its policy, report-only
-policy, reporting endpoints and `Link` posed again from the metadata (an object without its
-policy gets a strict one, and any stored page the type of a page), none of the store's own
-headers (`x-amz-*`, `x-amzn-*`, CORS, as the local stack's simulated store sends them, nor the
+store at every request, never kept (`X-LoDb-Source: store`, no `X-Cache-Status`; ADR 0011,
+amendment of 2026-10-27), with its policy, report-only policy, reporting endpoints and `Link`
+posed again from the metadata (an object without its policy gets a strict one, and any stored
+page the type of a page), none of the store's own headers (`x-amz-*`, `x-amzn-*`, CORS, as the local stack's simulated store sends them, nor the
 validators and ranges S3 states of the
 compressed object: a `HEAD` gets the headers of a `GET`, a conditional request on the store's
 `ETag` or `Last-Modified` and a `Range` get the whole page), and decompressed for a client
 without gzip; the store gets the key with its own `Host` and none of the client's headers; each
-of its failures falls back to the SSR server (`ssr`) within the store's timeouts; a query,
+of its failures falls back to the SSR server (`ssr`, then `cache`: its render is kept) within
+the store's timeouts; a query,
 another method or a path no pass writes never reaches it, nor the latest patch pinned in the
 path (the stub API's `/api/meta` states `15.10.1`, read by `njs/latest-version.js`), whose
 redirect the SSR server answers, while a patch that only starts like it still asks the store;
@@ -81,10 +82,9 @@ the pages' rate a client gets their `429` without the store being asked. Switche
 (`LODB_PAGES_STORE_ENABLED=0`, the image's default), nginx never asks the store.
 `pages-store/nginx-pages-store-classes.test.mjs` boots it once more in front of the same stub
 for the classes: a stored page gets the `Cache-Control` of its object's class (`revisable` for an
-object of that class, the `archived` class's year otherwise) and stays in the hot cache as long
-as its object says (an object living a second is read from the store again, `EXPIRED`, while a
-bundle is kept a year whatever its object says); a patch page (`/{locale}/{version}/changes`)
-comes from the store as any other page.
+object of that class, the `archived` class's year otherwise), read from the store at every
+request, while a bundle is kept a year whatever its object says; a patch page
+(`/{locale}/{version}/changes`) comes from the store as any other page.
 `pages-store/nginx-pages-store-unreachable.test.mjs` boots it twice more, in front of a store
 whose certificate it cannot verify, then one whose name does not resolve: each time it starts and
 renders every page with the SSR server.
@@ -108,7 +108,7 @@ image's default.
 What no check here can show is a read of the real store: the CI's store is a stub over plain
 HTTP (and a certificate no authority signed, which must fail), the end-to-end suite's a
 simulated one. Before lot 3 serves a host, once a pass has written a page to that host's
-bucket, ask that page through the host's nginx and expect `X-LoDb-Source: store` on a `MISS`:
+bucket, ask that page through the host's nginx and expect `X-LoDb-Source: store`:
 `ssr` there means that nginx cannot read the store (certificate chain beyond
 `proxy_ssl_verify_depth`, authorities of the image, the bucket's policy or the host's address),
 and its error log names the cause. The deploy that brings lot 3 starts the past patches' cache

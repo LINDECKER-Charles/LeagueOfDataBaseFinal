@@ -37,7 +37,10 @@
   - le 2026-10-23 encore, les pages que la file de la demande écrit comptent dans leur epoch, une
     seule fois, et le pupitre montre la file page par page (voir § « Amendement du
     2026-10-23 — file de la demande au pupitre et dans l'epoch »). En prod depuis le
-    2026-10-23.
+    2026-10-23 ;
+  - le 2026-10-27, nginx ne garde plus les pages du stockage, seulement les rendus du SSR,
+    dans 2 Go (voir § « Amendement du 2026-10-27 — nginx ne garde plus les pages du
+    stockage »).
 - **Remplace** : la spécification du cache recyclé de 68 Go, interrompue et jamais
   publiée
 - **Détail** : [spécification](../../produit/pre-rendu-catalogue-cdn.md) (lots, réglages,
@@ -166,7 +169,8 @@ visiteur ─► Cloudflare ── en cache ────────────�
 
 - Pour une page épinglée sans query, nginx cherche `pages/{epoch servie}{chemin}` dans le
   stockage, derrière `lodb_archive`, devenu un **cache chaud** (gardé à la 1ʳᵉ demande,
-  20 Go, 90 jours d'inactivité). Une page absente répond `404 NoSuchKey` à une lecture
+  20 Go, 90 jours d'inactivité). *Amendé le 2026-10-27 : la réponse du stockage n'est plus
+  gardée, `lodb_archive` ne garde que les rendus du SSR (2 Go).* Une page absente répond `404 NoSuchKey` à une lecture
   anonyme depuis l'adresse du VPS (Scaleway le dit à une lecture que la politique admet, sans
   `s3:ListBucket`, là où AWS répondrait 403 ; mesuré le 21 octobre 2026) ;
   la `403` ne vient que d'une politique qui refuse ou d'une adresse changée. nginx traite les
@@ -455,3 +459,48 @@ des unités des passes (`prerender_unit.pages_written`) : les pages que la file 
 
 Détail : [spécification](../../produit/pre-rendu-catalogue-cdn.md), lot 2, « File automatique
 des pages refusées ».
+
+## Amendement du 2026-10-27 — nginx ne garde plus les pages du stockage
+
+Mesuré une semaine après la mise en service de la lecture du stockage, la passe 7 ayant écrit
+toutes les unités de l'epoch 2 (2026-10-26) :
+
+- **24 h d'edge** (2026-10-26 au 27) : 690 000 requêtes, dont 445 000 URL distinctes servies
+  par le stockage (18 Go, p50 46 ms, p95 130 ms), 107 000 `HIT` de `lodb_archive` (19 %,
+  p50 4 ms) et 20 000 rendus du SSR (p50 650 ms). Un robot demande chaque URL **1,13 fois
+  par jour** : une copie gardée à la 1ʳᵉ demande n'est presque jamais relue.
+- **Coût de ces copies** : 18 Go écrits par jour remplissent les 20 Go du cache en un jour
+  environ, et chaque fichier gardé charge un inode et une dentry dans la mémoire du conteneur.
+  nginx a atteint sa limite (512 Mio, dont 12 Mio de processus et 420 Mio de mémoire noyau) le
+  2026-10-26 et y est resté (`ConteneurProcheDeSaLimiteMemoire`,
+  `ConteneurMemoireSaturationPrevue`), le cache noyau des fichiers qu'il sert réduit à quelques
+  Mio ; le disque de l'hôte a perdu 20 Gio dans la semaine.
+
+Décision :
+
+- **La location du stockage n'a plus de cache.** Une page d'ancien patch est lue dans le
+  stockage à chaque requête ; elle garde ses en-têtes et sa classe (`snippets/pinned-answer.conf`,
+  commun aux deux locations). Plus de `proxy_cache_valid` ni de verrou sur cette location.
+- **`lodb_archive` ne garde que les rendus du SSR** : pages absentes du stockage, query, chemin
+  qu'aucune passe n'écrit, dernier patch épinglé. Seule la location du SSR y cherche une page,
+  après le stockage : une copie gardée ne répond jamais avant lui. Elle garde aussi la copie
+  périmée quand le SSR échoue ou déleste. **2 Go, 16 Mo de clés** (au lieu de 20 Go et 64 Mo),
+  90 jours d'inactivité, gardée au 1ᵉʳ rendu (`LODB_ARCHIVE_CACHE_MIN_USES`, `1`). Au premier
+  démarrage, le gestionnaire du cache supprime les copies du stockage au-delà des 2 Go, les
+  moins récemment demandées d'abord.
+- **`X-LoDb-Source`** garde ses trois valeurs ; `cache` ne désigne plus qu'un rendu gardé, et une
+  réponse du stockage ne porte plus de `X-Cache-Status`.
+
+Conséquences :
+
+- Une page relue paie la lecture du stockage (~40 ms de plus au p50) au lieu d'un `HIT` ;
+  l'egress du bucket monte d'environ 4,5 Go par jour (les `HIT` d'avant).
+- Une panne du stockage renvoie toutes ses pages au SSR et à son délestage, sans copie gardée
+  pour les absorber : le cas du repli de la décision initiale, désormais sans tampon.
+- Une page absente du stockage coûte une lecture (`404`) par requête avant le SSR ou sa copie.
+- La distance des visiteurs lointains reste l'affaire du CDN (lot 4), qui n'est pas construit.
+
+Alternative écartée : garder `lodb_archive` devant le stockage avec `LODB_ARCHIVE_CACHE_MIN_USES=2`
+(gardée à la 2ᵉ demande). Le nombre de fichiers écrits dépendrait du rythme des robots, qui
+peut passer à deux demandes par jour sans prévenir, pour un gain de 40 ms sur une minorité de
+pages.
