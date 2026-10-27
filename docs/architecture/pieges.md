@@ -489,16 +489,20 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   se relâche jamais ; Lighthouse en local est pessimiste (cache de transfert du SSR rangé
   sans le port).
 - **Pages des anciens patchs** (`location ~ "^/{locale}/[0-9]"`,
-  `snippets/pages-store/pages.conf`, `snippets/archive-cache.conf`) : le cache chaud
-  `lodb_archive` d'abord, puis le stockage objet (ADR 0011), puis le SSR. Clé **sans
-  révision**, préfixée par les deux epochs (`LODB_ARCHIVE_EPOCH.LODB_ARCHIVE_SERVE_EPOCH`,
-  § « Catalogue pré-rendu » ci-dessous). Elles survivent aux déploiements et gardent le
-  chrome, la CSP et les bundles du build qui les a rendues aussi longtemps que leur
-  `Cache-Control` le dit (`snippets/pages-store/pages.conf` suit l'objet du stockage) : un an
-  pour une page d'état clos (`archived`), une heure pour une page de l'état ouvert
-  (`revisable`), tant que la page est demandée avant ses 90 jours d'inactivité, puis une
-  dernière copie périmée servie pendant son rafraîchissement : voulu. `proxy_cache_valid 200
-  365d` ne vaut plus qu'en repli, pour un objet sans `Cache-Control` ; les bundles
+  `snippets/pages-store/pages.conf`, `snippets/archive-cache.conf`) : le stockage objet
+  d'abord (ADR 0011), puis le SSR et son cache `lodb_archive`. **nginx ne garde jamais la
+  réponse du stockage** (ADR 0011, amendement du 2026-10-27), voulu : un robot demande chaque
+  URL environ une fois par jour, et une copie par page lue remplissait en un jour les 20 Go du
+  cache et, par les inodes de ses fichiers, toute la limite mémoire de nginx, pour 19 % de
+  `HIT`. Ne pas le rétablir. `lodb_archive` ne garde que les rendus du SSR (page absente du
+  stockage, query, chemin qu'aucune passe n'écrit, dernier patch épinglé), 2 Go au plus. Clé
+  **sans révision**, préfixée par les deux epochs
+  (`LODB_ARCHIVE_EPOCH.LODB_ARCHIVE_SERVE_EPOCH`, § « Catalogue pré-rendu » ci-dessous). Un
+  rendu survit aux déploiements et garde le chrome, la CSP et les bundles du build qui l'a
+  produit aussi longtemps que sa `Cache-Control` le dit : un an pour une page d'état clos
+  (`archived`), une heure pour une page de l'état ouvert (`revisable`), tant que la page est
+  demandée avant ses 90 jours d'inactivité, puis une dernière copie périmée servie pendant son
+  rafraîchissement : voulu. Le client reçoit la classe de l'objet du stockage ; les bundles
   (`bundles.conf`) gardent l'année quoi que dise leur objet. Monter
   `LODB_ARCHIVE_EPOCH` quand le chrome, la CSP ou le contrat `/api` changent de façon visible,
   après tout correctif de sécurité du front, et après des pages recalculées en place dans
@@ -507,11 +511,10 @@ Les règles de code et les invariants font foi dans [`AGENTS.md`](../../AGENTS.m
   chrome, CSP et bundles compris. Le changement passe alors par une passe sur une epoch neuve
   et la bascule de `LODB_ARCHIVE_SERVE_EPOCH`, tout de suite pour un correctif de sécurité
   (procédure : [`configuration.md`](../guides/configuration.md), « Monter l'epoch des anciens
-  patchs »). Gardées dès la **1ʳᵉ** demande
-  (`LODB_ARCHIVE_CACHE_MIN_USES`, `1`) : `MISS`, puis `HIT`, la copie venant du stockage
-  plutôt que d'un rendu. Chacune des deux locations cherche la page dans le cache : une page
-  absente du stockage compte deux recherches par requête, à retenir avant de remonter le seuil
-  (à `2`, un rendu du SSR serait gardé à la 1ʳᵉ demande, une page du stockage à la 2ᵉ).
+  patchs »). Un rendu est gardé dès la **1ʳᵉ** demande
+  (`LODB_ARCHIVE_CACHE_MIN_USES`, `1`) : `MISS`, puis `HIT`. Seule la location du SSR cherche
+  la page dans le cache, après le stockage : une copie gardée ne répond jamais avant lui, et une
+  page absente du stockage coûte une lecture de l'objet (un `404`) à chaque requête.
   Au-dessus de `1`, chaque URL distincte tient une clé jusqu'à son inactivité, même une réponse
   non gardée (`301`, `503`) : la zone des clés borne les URL qu'un balayage parcourt avant
   d'évincer, pas le disque. En local aussi, une page d'ancien patch survit à un rebuild et au
@@ -720,13 +723,13 @@ stockage objet, puis lues par nginx
   `LoDb__Prerender__ServedEpoch` pour le panneau) ; l'epoch **d'écriture**, celle de la passe en
   cours, en base ; et `LODB_ARCHIVE_EPOCH` (défaut `3`), qui ne numérote que les clés du cache
   de nginx. La clé de `lodb_archive` porte les deux variables (`3.1|http://…`) : changer d'epoch
-  servie vide aussi le cache chaud, monter `LODB_ARCHIVE_EPOCH` ne change rien au stockage.
+  servie vide aussi le cache des rendus, monter `LODB_ARCHIVE_EPOCH` ne change rien au stockage.
   Monter la mauvaise laisse servir des copies périmées. nginx lit l'epoch servie au démarrage :
   la bascule est une variable d'`ENV_*` et un redéploiement, aucun point d'accès ne la fait
   (le panneau donne la consigne). L'epoch `0` est celle des sondes de `scaleway-bucket.sh
   verifier`, jamais d'une passe ; la première passe de prod écrit l'epoch `1`, servie pendant
   qu'elle se remplit. La règle par état se sert dans l'epoch `2` : à son déploiement, seule
-  `LODB_ARCHIVE_SERVE_EPOCH` passe à `2` (ce qui purge déjà le cache chaud), et
+  `LODB_ARCHIVE_SERVE_EPOCH` passe à `2` (ce qui purge déjà le cache des rendus), et
   `LODB_ARCHIVE_EPOCH` reste à `3` ; l'epoch `2` part vide et se remplit par les passes et la
   file de la demande, jamais en relisant l'epoch `1`, qui porte l'ancienne règle.
 - **Repli vers le SSR, sans bruit.** Toute réponse du stockage autre qu'un objet (`404` pour

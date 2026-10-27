@@ -1,8 +1,9 @@
 // Boots the built nginx image in front of the stub's page store (lib/upstream-stub.conf) and
-// checks lot 3 of ADR 0011: a past patch's page comes from the store, then from the cache, with
-// its own headers and none of S3's; every failure of the store, a query and a path a pass never
-// writes reach the SSR server, which the store never sees, and so does the latest patch pinned
-// in the path; the rate holds across both; a bundle the SSR server no longer has comes from the
+// checks lot 3 of ADR 0011: a past patch's page comes from the store at every request, never
+// kept (amendment of 2026-10-27), with its own headers and none of S3's; every failure of the
+// store, a query and a path a pass never writes reach the SSR server, whose render is kept, and
+// which the store never sees, and so does the latest patch pinned in the path; the rate holds
+// across both; a bundle the SSR server no longer has comes from the
 // store, under the same rate. Switched off, nginx never asks the store; a store it cannot trust
 // or find is nginx-pages-store-unreachable.test.mjs's, how long a page is kept by its class
 // nginx-pages-store-classes.test.mjs's. Needs Docker and the image's tag in LODB_NGINX_IMAGE
@@ -15,7 +16,8 @@ import { startStack } from '../../lib/stack.mjs';
 
 const IMAGE = process.env.LODB_NGINX_IMAGE;
 // The stub's store: bucket lodb-pages, its pages on epoch 5, over plain HTTP on its alias. A
-// page is kept from its first request, and each client gets a burst of four pages a minute.
+// page the SSR server renders is kept from its first request, and each client gets a burst of
+// four pages a minute.
 const STORE = {
   LODB_EDGE_CIDR: '0.0.0.0/0',
   LODB_EDGE_SECRET: '',
@@ -104,13 +106,17 @@ const storeHeadersOf = (answer) => Object.keys(answer.headers).filter((name) =>
   STORE_HEADER.test(name));
 const sourceOf = (answer) =>
   [answer.headers['x-cache-status'], answer.headers['x-lodb-source']];
+// A page the store answered: no cache looked it up, none kept it.
+const STORE_ANSWER = [undefined, 'store'];
 
 describe('nginx image in front of the page store',
   { skip: IMAGE ? false : 'LODB_NGINX_IMAGE is not set' }, () => {
     let stack;
     const get = (path, options) => send(stack.port, path, options);
+    // The keys of the files the past patches' cache holds, none at all included.
     const keysOf = async () => {
-      const { stdout } = await stack.exec('grep', '-rah', '^KEY: ', '/var/cache/nginx/archive');
+      const { stdout } = await stack.exec('sh', '-c',
+        "grep -rah '^KEY: ' /var/cache/nginx/archive || true");
       return stdout.split('\n').filter(Boolean);
     };
     // What a client would send, holding the validators the store gives a page's object, read
@@ -137,7 +143,7 @@ describe('nginx image in front of the page store',
       assert.match(stderr, /test is successful/);
     });
 
-    test("serves a stored page from the store, then from its cache, with the page's headers",
+    test("serves a stored page from the store at every request, with the page's headers",
       async () => {
         const visitor = aClient();
         const fetched = await get(STORED, { ...visitor, encoding: 'gzip' });
@@ -149,7 +155,7 @@ describe('nginx image in front of the page store',
         // A client without gzip gets it decompressed.
         assert.equal(kept.headers['content-encoding'], undefined);
         assert.equal(kept.body.toString(), stack.storedPage);
-        assert.deepEqual([fetched, kept].map(sourceOf), [['MISS', 'store'], ['HIT', 'cache']]);
+        assert.deepEqual([fetched, kept].map(sourceOf), [STORE_ANSWER, STORE_ANSWER]);
         for (const answer of [fetched, kept]) {
           for (const [name, value] of Object.entries(STORED_HEADERS)) {
             assert.equal(answer.headers[name], value, name);
@@ -157,8 +163,8 @@ describe('nginx image in front of the page store',
           assert.deepEqual(storeHeadersOf(answer), []);
           assert.equal(answer.headers['x-content-type-options'], 'nosniff');
         }
-        assert.deepEqual(await stack.storeRequests(), [`GET ${OBJECTS}${STORED}`]);
-        assert.ok((await keysOf()).includes(`KEY: 4.5|http://localhost${STORED}`));
+        assert.deepEqual(await stack.storeRequests(), Array(2).fill(`GET ${OBJECTS}${STORED}`));
+        assert.ok(!(await keysOf()).includes(`KEY: 4.5|http://localhost${STORED}`));
       });
 
     test('answers a HEAD and a conditional request with the page, under no validator of S3',
@@ -176,11 +182,11 @@ describe('nginx image in front of the page store',
 
         assert.equal(head.status, 200);
         assert.equal(head.body.length, 0);
-        assert.deepEqual(sourceOf(head), ['MISS', 'store']);
+        assert.deepEqual(sourceOf(head), STORE_ANSWER);
         assert.equal(head.headers['content-type'], STORED_HEADERS['content-type']);
         assert.equal(head.headers['cache-control'], STORED_HEADERS['cache-control']);
         for (const [plain, compressed] of conditional) {
-          assert.deepEqual([plain, compressed].map(sourceOf), [['HIT', 'cache'], ['HIT', 'cache']]);
+          assert.deepEqual([plain, compressed].map(sourceOf), [STORE_ANSWER, STORE_ANSWER]);
           assert.deepEqual([plain.status, compressed.status], [200, 200]);
           assert.equal(plain.body.toString(), stack.storedPage);
           assert.equal(gunzipSync(compressed.body).toString(), stack.storedPage);
@@ -216,10 +222,12 @@ describe('nginx image in front of the page store',
 
     test('keeps a page the SSR server rendered, with its own headers', async () => {
       const visitor = aClient();
-      const rendered = await get(FAILING.missing.replace('/en/', '/fr/'), visitor);
-      const kept = await get(FAILING.missing.replace('/en/', '/fr/'), visitor);
+      const path = FAILING.missing.replace('/en/', '/fr/');
+      const rendered = await get(path, visitor);
+      const kept = await get(path, visitor);
 
       assert.deepEqual([rendered, kept].map(sourceOf), [['MISS', 'ssr'], ['HIT', 'cache']]);
+      assert.ok((await keysOf()).includes(`KEY: 4.5|http://localhost${path}`));
       assert.equal(kept.headers['content-security-policy'], RENDERED.policy);
       assert.equal(kept.headers['cache-control'], RENDERED.cacheControl);
       assert.equal(kept.headers['content-type'], RENDERED.type);
@@ -231,7 +239,7 @@ describe('nginx image in front of the page store',
         const visitor = aClient();
         const answers = [await get(UNLABELLED, visitor), await get(UNLABELLED, visitor)];
 
-        assert.deepEqual(answers.map(sourceOf), [['MISS', 'store'], ['HIT', 'cache']]);
+        assert.deepEqual(answers.map(sourceOf), [STORE_ANSWER, STORE_ANSWER]);
         for (const answer of answers) {
           assert.equal(answer.body.toString(), stack.storedPage);
           assert.equal(answer.headers['content-type'], STORED_HEADERS['content-type']);

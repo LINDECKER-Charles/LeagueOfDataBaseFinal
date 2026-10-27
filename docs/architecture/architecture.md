@@ -55,7 +55,7 @@ nginx :8080 ── www., .fr ──► 301 vers l'hôte canonique
    ├─ /cdn/blobs/{sha256}.{ext} ──► volume ddragon (lecture seule)
    ├─ /build/ ──► lodb_assets ──► web-ssr ── 404 ──► stockage build/
    ├─ /{locale}/{version}/… (ancien patch, sans query)
-   │      ──► lodb_archive ──► stockage pages/{epoch}/… ── raté ──► web-ssr (épinglée)
+   │      ──► stockage pages/{epoch}/… ── raté ──► lodb_archive ──► web-ssr (épinglée)
    └─ autres pages ──► lodb_pages ──► web-ssr :4000 ──► api ──► postgres
 ```
 

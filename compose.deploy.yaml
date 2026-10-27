@@ -349,14 +349,16 @@ services:
       resources:
         limits:
           # Not the 2 x peak rule (19 MiB of processes): the shared memory of the cache keys
-          # (32 MiB for the latest patch's pages, 64 MiB for the past patches', 8 MiB for the
+          # (32 MiB for the latest patch's pages, 16 MiB for the past patches', 8 MiB for the
           # bundles) and of the rate zones is charged here, and so is the kernel's page cache
           # of the cached pages and blobs it serves, which fills whatever the limit leaves. Too
           # tight, every cache HIT reads the disk again. Its tmpfs (compose.yaml, 64 MiB at
-          # most, a few hundred KiB in use) counts here as well. Doubled for the past patches'
-          # hot cache in front of the object store (ADR 0011), its TLS sessions and the gunzip
-          # of a page for a client without gzip: to be measured after a week of the store
-          # (container_memory_working_set_bytes, as above).
+          # most, a few hundred KiB in use) counts here as well, and so do the inode and dentry
+          # of every cached file. Doubled for the object store (ADR 0011), its TLS sessions and
+          # the gunzip of a page for a client without gzip. Measured after a week of the store
+          # (2026-10-27): a copy of each of its answers, one file per crawled URL, filled the
+          # limit with those inodes (12 MiB of processes, 420 MiB of kernel memory), so the
+          # store's answers are no longer kept (ADR 0011, amendment of 2026-10-27).
           memory: 512m
           cpus: "0.25"
           pids: 256

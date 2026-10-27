@@ -206,14 +206,15 @@ labels, la règle de cardinalité et des requêtes types sont dans
 ## Pages des anciens patchs : ce que voit chaque source
 
 Avec le [catalogue pré-rendu](../produit/pre-rendu-catalogue-cdn.md), nginx sert
-une page d'ancien patch (`/{locale}/{version}/…`) de trois façons : sa copie du cache chaud
-`lodb_archive`, l'objet du stockage Scaleway, ou un rendu du SSR quand le stockage n'a pas la
-page ou ne répond pas. Chaque réponse le dit dans l'en-tête **`X-LoDb-Source`** :
+une page d'ancien patch (`/{locale}/{version}/…`) de trois façons : l'objet du stockage
+Scaleway, ou, quand le stockage n'a pas la page ou ne répond pas, un rendu du SSR ou sa copie
+gardée dans `lodb_archive`. nginx ne garde jamais la réponse du stockage (ADR 0011, amendement
+du 2026-10-27). Chaque réponse le dit dans l'en-tête **`X-LoDb-Source`** :
 
 | `X-LoDb-Source` | Qui a répondu | `X-Cache-Status` |
 |---|---|---|
-| `cache` | la copie gardée par nginx, d'où qu'elle vienne | `HIT`, `STALE`, `UPDATING` ou `REVALIDATED` |
-| `store` | le stockage objet, lu à l'instant | `MISS` (ou `EXPIRED`) |
+| `cache` | la copie d'un rendu du SSR gardée par nginx | `HIT`, `STALE`, `UPDATING` ou `REVALIDATED` |
+| `store` | le stockage objet, lu à l'instant | absent : aucun cache n'est consulté |
 | `ssr` | un rendu du SSR, le repli | `MISS`, ou la réponse de délestage (`503`) |
 
 Le stockage ne renvoie jamais d'erreur au visiteur : un objet absent (`404`), une `403`
