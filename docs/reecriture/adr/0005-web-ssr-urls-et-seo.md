@@ -394,6 +394,10 @@ chaque page d'ancien patch dans un stockage objet. Pour cette ADR :
   |---|---|---|---|
   | `lodb_archive` | `^/{locale}/[0-9]` | `LODB_ARCHIVE_EPOCH` **.** epoch servie + URL | 20 Go, 90 j, gardée à la 1ʳᵉ demande |
 
+  *Amendé le 2026-10-27 ([ADR 0011](0011-catalogue-pre-rendu-et-cdn.md)) : nginx ne garde
+  plus la réponse du stockage ; `lodb_archive` ne garde que les rendus du SSR, 2 Go et 16 Mo
+  de clés.*
+
   Une page absente du cache est cherchée dans le stockage (epoch servie,
   `LODB_ARCHIVE_SERVE_EPOCH`), puis rendue par le SSR en repli. Changer d'epoch servie
   change la clé. « Gardée à la 2ᵉ demande » ne protégeait que d'un balayage qui rendait ; un

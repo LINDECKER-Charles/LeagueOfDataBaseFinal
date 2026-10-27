@@ -36,8 +36,6 @@ const UNIT_SUMMARY = / (\d+) written, \d+ skipped, 0 failed of \d+,/;
 // which changes when the state closes (docs/produit/seo-une-page-par-etat.md, § 3.7).
 const ARCHIVED = 'public, max-age=3600, s-maxage=31536000';
 const REVISABLE = 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=3600';
-// The hot cache in front of the store (snippets/archive-cache.conf), one file per page.
-const ARCHIVE_CACHE = '/var/cache/nginx/archive';
 
 // Writes the pages of one type of the (version, locale) unit with the one-unit command, run in
 // the API container; resolves to how many it wrote.
@@ -48,13 +46,6 @@ function writeUnit(version: string): number {
   const written = UNIT_SUMMARY.exec(output)?.[1];
   expect(written, output).toBeDefined();
   return Number(written);
-}
-
-// A copy that nginx kept on an earlier run would answer before the store: its file goes, which
-// nginx then takes for a miss. The key is written in each file's header, the body compressed.
-function forgetKeptCopies(path: string): void {
-  const script = `grep -rlF -e "$0" ${ARCHIVE_CACHE} | xargs -r rm -f`;
-  execInStack('nginx', ['sh', '-c', script, path]);
 }
 
 test.describe('past patches served from the page store', () => {
@@ -72,7 +63,6 @@ test.describe('past patches served from the page store', () => {
 
     await test.step('write the unit with the command', () => {
       expect(writeUnit(version)).toBeGreaterThan(0);
-      forgetKeptCopies(path);
     });
 
     await test.step('answer from the store, with the headers of its object', async () => {
@@ -87,14 +77,15 @@ test.describe('past patches served from the page store', () => {
       expect(Object.keys(headers).filter((name) => name.startsWith('x-amz-'))).toEqual([]);
     });
 
-    // Its copy, now kept by nginx: the headers come back from the object's metadata on a HIT.
-    await test.step('hydrate the kept copy without a violation', async () => {
+    // Read from the store again, never from a copy of nginx's (ADR 0011, amendment of
+    // 2026-10-27): the store holds the past patches' pages, nginx only the SSR server's renders.
+    await test.step('hydrate the stored page without a violation', async () => {
       const violations = await recordViolations(page);
 
       const response = await page.goto(path);
       await hydrated(page.locator('lodb-context-switcher'));
 
-      expect(response?.headers()['x-lodb-source']).toBe('cache');
+      expect(response?.headers()['x-lodb-source']).toBe('store');
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
       expect(await violations()).toEqual([]);
       expect(consoleErrors).toEqual([]);

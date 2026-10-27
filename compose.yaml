@@ -392,10 +392,10 @@ services:
       # (LODB_ARCHIVE_SERVE_EPOCH, the key's second part) purges it already: the switch to one
       # indexed page per state (2026-10-22) leaves it at 3.
       LODB_ARCHIVE_EPOCH: ${LODB_ARCHIVE_EPOCH:-3}
-      # The past patches' cache is the hot copy of the object store (ADR 0011): every page
-      # kept at its first request, for months, within 20 GB of disk.
-      LODB_ARCHIVE_CACHE_SIZE: ${LODB_ARCHIVE_CACHE_SIZE:-20g}
-      LODB_ARCHIVE_CACHE_KEYS_SIZE: ${LODB_ARCHIVE_CACHE_KEYS_SIZE:-64m}
+      # The past patches' cache keeps the SSR server's renders alone, the pages the object store
+      # does not hold (ADR 0011, amendment of 2026-10-27): a few days of them within 2 GB.
+      LODB_ARCHIVE_CACHE_SIZE: ${LODB_ARCHIVE_CACHE_SIZE:-2g}
+      LODB_ARCHIVE_CACHE_KEYS_SIZE: ${LODB_ARCHIVE_CACHE_KEYS_SIZE:-16m}
       LODB_ARCHIVE_CACHE_INACTIVE: ${LODB_ARCHIVE_CACHE_INACTIVE:-90d}
       LODB_ARCHIVE_CACHE_MIN_USES: ${LODB_ARCHIVE_CACHE_MIN_USES:-1}
       # The object store of the pre-rendered pages (ADR 0011), read anonymously from the host's
@@ -509,7 +509,7 @@ volumes:
   # Shared with the legacy stack on a host: `migrate` brings its database up to date.
   pgdata:
   pages-cache:
-  # The hot copy of the store's past patches' pages: 20 GB at most (LODB_ARCHIVE_CACHE_SIZE).
+  # The SSR server's renders of the past patches' pages: 2 GB at most (LODB_ARCHIVE_CACHE_SIZE).
   archive-cache:
   assets-cache:
   seo-cache:
