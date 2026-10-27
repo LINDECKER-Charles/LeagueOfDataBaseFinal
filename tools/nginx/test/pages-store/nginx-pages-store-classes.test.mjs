@@ -1,9 +1,9 @@
 // Boots the built nginx image in front of the stub's page store (lib/upstream-stub.conf), as
-// nginx-pages-store.test.mjs does, and checks how long it keeps a past patch's page by the
-// class of its object: the open state's page (revisable) gets that class and leaves the hot
-// cache as soon as its object says, while a bundle is kept a year whatever its object says; a
-// patch page comes from the store as any other page. Needs Docker and the image's tag in
-// LODB_NGINX_IMAGE (tools/nginx/README.md); skipped without it.
+// nginx-pages-store.test.mjs does, and checks the class a past patch's page gets from its
+// object: the open state's page (revisable) gets that class, read from the store at every
+// request as any stored page (ADR 0011, amendment of 2026-10-27), while a bundle is kept a year
+// whatever its object says; a patch page comes from the store as any other page. Needs Docker
+// and the image's tag in LODB_NGINX_IMAGE (tools/nginx/README.md); skipped without it.
 import assert from 'node:assert/strict';
 import { after, before, describe, test } from 'node:test';
 import { send } from '../../lib/client.mjs';
@@ -30,8 +30,8 @@ const OBJECTS = '/lodb-pages/pages/5';
 // The patch page of a past patch, which the pass stores beside its lists and entities.
 const PATCH_PAGE = '/fr/15.2.1/changes';
 // A page of the open state, stored with the revisable class's lifetime; one whose object lives
-// a second, for the hot cache's expiry, and a bundle whose object says as much; and the
-// classes nginx gives the client (core/routing/response/cache-control.ts).
+// a second, and a bundle whose object says as much; and the classes nginx gives the client
+// (core/routing/response/cache-control.ts).
 const REVISABLE = '/en/14.1.1/items/1036-long-sword';
 const BRIEF = '/en/14.2.1/champions';
 const BRIEF_BUNDLE = '/build/brief-ABCD1234.js';
@@ -52,8 +52,10 @@ const storeHeadersOf = (answer) => Object.keys(answer.headers).filter((name) =>
   STORE_HEADER.test(name));
 const sourceOf = (answer) =>
   [answer.headers['x-cache-status'], answer.headers['x-lodb-source']];
+// A page the store answered: no cache looked it up, none kept it.
+const STORE_ANSWER = [undefined, 'store'];
 
-describe('nginx image keeping the store\'s pages by their class',
+describe('nginx image serving the store\'s pages by their class',
   { skip: IMAGE ? false : 'LODB_NGINX_IMAGE is not set' }, () => {
     let stack;
     const get = (path, options) => send(stack.port, path, options);
@@ -64,12 +66,12 @@ describe('nginx image keeping the store\'s pages by their class',
 
     after(() => stack?.stop());
 
-    test('serves a revisable stored page with its class, kept as long as its object says',
+    test('serves a revisable stored page with its class, from the store at every request',
       async () => {
         const visitor = aClient();
         const answers = [await get(REVISABLE, visitor), await get(REVISABLE, visitor)];
 
-        assert.deepEqual(answers.map(sourceOf), [['MISS', 'store'], ['HIT', 'cache']]);
+        assert.deepEqual(answers.map(sourceOf), [STORE_ANSWER, STORE_ANSWER]);
         for (const answer of answers) {
           assert.equal(answer.status, 200);
           assert.equal(answer.body.toString(), stack.storedPage);
@@ -78,7 +80,7 @@ describe('nginx image keeping the store\'s pages by their class',
         }
       });
 
-    test('reads the store again once a stored page outlived its object, never a bundle',
+    test('keeps a bundle a year whatever its object says, never a stored page',
       async () => {
         const before = await stack.storeRequests();
         const fetched = [await get(BRIEF, aClient()), await get(BRIEF_BUNDLE, aClient())];
@@ -86,8 +88,7 @@ describe('nginx image keeping the store\'s pages by their class',
         const page = await get(BRIEF, aClient());
         const bundle = await get(BRIEF_BUNDLE, aClient());
 
-        assert.deepEqual(sourceOf(fetched[0]), ['MISS', 'store']);
-        assert.deepEqual(sourceOf(page), ['EXPIRED', 'store']);
+        assert.deepEqual([fetched[0], page].map(sourceOf), [STORE_ANSWER, STORE_ANSWER]);
         assert.equal(page.body.toString(), stack.storedPage);
         // Not the revisable class's value: the class an object of no known class gets.
         assert.equal(page.headers['cache-control'], CLASSES.archived);
@@ -103,9 +104,9 @@ describe('nginx image keeping the store\'s pages by their class',
       const before = await stack.storeRequests();
       const answers = [await get(PATCH_PAGE, visitor), await get(PATCH_PAGE, visitor)];
 
-      assert.deepEqual(answers.map(sourceOf), [['MISS', 'store'], ['HIT', 'cache']]);
+      assert.deepEqual(answers.map(sourceOf), [STORE_ANSWER, STORE_ANSWER]);
       assert.equal(answers[1].body.toString(), stack.storedPage);
       assert.deepEqual((await stack.storeRequests()).slice(before.length),
-        [`GET ${OBJECTS}${PATCH_PAGE}`]);
+        Array(2).fill(`GET ${OBJECTS}${PATCH_PAGE}`));
     });
   });

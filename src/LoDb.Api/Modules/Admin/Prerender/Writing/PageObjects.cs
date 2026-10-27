@@ -11,9 +11,9 @@ namespace LoDb.Api.Modules.Admin.Prerender.Writing;
 /// </summary>
 /// <remarks>
 /// <para>
-/// The caching is the page's own <c>Cache-Control</c>, that of its class: nginx keeps the
-/// object in its hot cache as long as it says (a year for a closed state's page, an hour for
-/// the open state's) and gives the client the class it names.
+/// The caching is the page's own <c>Cache-Control</c>, that of its class (a year for a closed
+/// state's page, an hour for the open state's): nginx reads the object at every request and
+/// gives the client the class it names (ADR 0011, amendment of 2026-10-27).
 /// </para>
 /// <para>
 /// Neither <c>Vary</c> nor <c>Content-Length</c> is kept: nginx answers one copy whatever the
