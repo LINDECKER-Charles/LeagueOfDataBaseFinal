@@ -9,7 +9,7 @@
 # The SDK runs on the build machine and cross-publishes for the target architecture: the
 # output is IL precompiled for the target (ReadyToRun) plus the target's native assets, so
 # no emulation is needed.
-FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0@sha256:0d99ebf1ccad15037b5c98c9fe8979d6b8dbac23812feae2277a0b277b5c5ffa AS build
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0@sha256:212fe4cb74627d5adf9817a4088906ae3edff1bd853bb27565d4b46731efe61e AS build
 ARG TARGETARCH
 WORKDIR /source
 
@@ -46,7 +46,7 @@ RUN dotnet publish src/LoDb.Api/LoDb.Api.csproj -c Release -r "$(cat /tmp/lodb-r
 
 # Chiseled: no shell, no package manager, non-root by default. "extra" adds ICU and tzdata,
 # which the 21 locales need (culture-aware formatting and collation).
-FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled-extra@sha256:3ed6558056b54d5c9dfefb7ff473728e022ff2bf1d976cbf8ee07b05ec594374
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-noble-chiseled-extra@sha256:a9298ccc39c6258ae71228479e2f3f8d2ceb6639a9927262a4b0ff7d319a0e7e
 ARG APP_REVISION=unknown
 LABEL org.opencontainers.image.title="lodb-api" \
       org.opencontainers.image.source="https://github.com/LINDECKER-Charles/LeagueOfDataBaseFinal" \

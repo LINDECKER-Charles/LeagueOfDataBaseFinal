@@ -9,9 +9,9 @@
 #
 # Every image this file names is pinned by digest, its tag kept for the reader: a moved tag
 # never changes what is built. Dependabot bumps both (tools/ci/README.md, base images).
-FROM --platform=linux/amd64 node:24-bookworm-slim@sha256:a5f4366e834695d5f363b920c104953a535d3a9864d1bdf74566a0ebe01daee5 AS node
+FROM --platform=linux/amd64 node:24-bookworm-slim@sha256:01d566e8d94d8c619591d78652babfccd3c6992a3dffa9ed5ab39e11cf6c70e9 AS node
 
-FROM --platform=linux/amd64 eclipse-temurin:21-jdk-noble@sha256:b468c3fc688b14450571494f588bd939378e7fd542ed5a73f8efc13f17872a87
+FROM --platform=linux/amd64 eclipse-temurin:21-jdk-noble@sha256:114cabb73033ca4ce7ceec3deb62396bc1b716282bae051ed3c1d82e38fcab2d
 
 # Command-line tools 23.0; SHA-1 from Google's repository manifest (repository2-3.xml).
 ARG ANDROID_CMDLINE_TOOLS=16111833
