@@ -41,7 +41,7 @@
   <ItemGroup Label="Accounts, billing and mail">
     <PackageVersion Include="BCrypt.Net-Next" Version="4.2.1" />
     <PackageVersion Include="Isopoh.Cryptography.Argon2" Version="2.0.0" />
-    <PackageVersion Include="MailKit" Version="4.18.1" />
+    <PackageVersion Include="MailKit" Version="5.0.0" />
     <!--
       Pulled in by MimeKit (MailKit) at 10.0.0, which the advisories of 2026-10-13 cover
       (GHSA-846f-f764-76mx, GHSA-2fmv-rv2c-59x7): pinned to the fixed servicing release.
